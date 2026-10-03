@@ -430,6 +430,7 @@ function resolveBonusActionAttack(
       target.combatantId,
       activatedOngoingFeatureProfile,
       fillSet.targetRelationshipFacts,
+      hit,
     ),
     input.subject.actorId,
     target.combatantId,

@@ -1,3 +1,15 @@
+import {
+  resolveFeatSelectionScoreSequence,
+  type FeatScoreSelection,
+} from "./feat-selection-score-sequence.ts";
+// KERNEL-COVERAGE: runtime-owner CREATION.FEATURE.PROFICIENCY_CHOICE
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-proficiency-choice
+// KERNEL-COVERAGE: runtime-owner CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.feat-grant-occurrences
+import {
+  selectedPreparedSpellAccess,
+  CHOSEN_PREPARED_SPELL_ACCESS_CHOICE_KEY,
+} from "./chosen-prepared-spell-access.ts";
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
@@ -518,6 +530,7 @@ export function executableSupportIssues(
             selections,
             dependencies.background.success.scoresAfterBackground,
             dependencies.selectedFeatUnits.value,
+            unitLibrary,
           ),
           { tag: "selectedFeatPrerequisitesNotMet" },
         )
@@ -746,58 +759,148 @@ function selectedFeatPrerequisitesSupported(
   selections: FinalizedCharacterSelections,
   scoresAfterBackground: AbilityScoreAssignment,
   selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
+  unitLibrary: UnitCatalog,
 ): boolean {
-  return unitChoiceSelections(selections).every((selection) =>
-    selectedFeatChoicePrerequisitesSupported(
+  const choices = unitChoiceSelections(selections);
+  const selectedChoices = choices.filter(
+    (selection) => selection.source.choiceKey === CLASS_FEATURE_FEAT_CHOICE_KEY,
+  );
+  const ordered = selectedChoices
+    .flatMap((selection) => {
+      const acquisitionProgression = selectedFeatAcquisitionProgression(
+        selection,
+        selections.progression,
+        unitLibrary,
+      );
+      return acquisitionProgression === undefined
+        ? []
+        : [{ selection, acquisitionProgression }];
+    })
+    .sort(
+      (left, right) =>
+        computeTotalLevel(left.acquisitionProgression) -
+        computeTotalLevel(right.acquisitionProgression),
+    );
+  if (ordered.length !== selectedChoices.length) return false;
+  const seen = new Set<UnitRecord["id"]>();
+  const scoreSelections: FeatScoreSelection[] = [];
+  for (const { selection, acquisitionProgression } of ordered) {
+    const scoreIncreases = selectedFeatScoreIncreases(selection, choices);
+    if (scoreIncreases === undefined) return false;
+    const occurrences = selectedFeatScoreOccurrences(
       selection,
-      selections.progression,
-      scoresAfterBackground,
+      acquisitionProgression,
+      scoreIncreases,
       selectedFeatUnits,
-    ),
+      seen,
+    );
+    if (occurrences === undefined) return false;
+    scoreSelections.push(...occurrences);
+  }
+  const resolved = resolveFeatSelectionScoreSequence(
+    scoresAfterBackground,
+    scoreSelections,
   );
+  return Result.isSuccess(resolved)
+    ? true
+    : Match.value(resolved.failure.kind).pipe(
+        Match.when("prerequisiteNotMet", () => false),
+        Match.when("abilityScoreCapExceeded", () => true),
+        Match.exhaustive,
+      );
 }
 
-function selectedFeatChoicePrerequisitesSupported(
+function selectedFeatAcquisitionProgression(
   selection: UnitChoiceSelection,
-  progression: CharacterProgression,
-  scores: AbilityScoreAssignment,
-  selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
-): boolean {
-  if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) return true;
-  return selection.options.every((option) =>
-    selectedFeatOptionPrerequisitesSupported(
-      option,
-      progression,
-      scores,
-      selectedFeatUnits,
-    ),
+  progression: FinalizedCharacterSelections["progression"],
+  unitLibrary: UnitCatalog,
+): FinalizedCharacterSelections["progression"] | undefined {
+  const sourceUnit = Option.getOrUndefined(
+    unitLibrary.getUnit(selection.source.unitId),
   );
+  if (sourceUnit?.kind !== "class_feature") return undefined;
+  const owner = progressionClassUnitIds(progression).find((classId) => {
+    const unit = Option.getOrUndefined(unitLibrary.getUnit(classId));
+    return unit?.kind === "class" && unit.className === sourceUnit.className;
+  });
+  if (owner === undefined) return undefined;
+  const grantLevel = selection.source.grantLevel ?? sourceUnit.acquiredAtLevel;
+  const advancementIndex =
+    grantLevel === 1
+      ? -1
+      : progression.advancements.findIndex(
+          (entry, index) =>
+            entry.classUnitId === owner &&
+            classLevelForUnit(
+              {
+                ...progression,
+                advancements: progression.advancements.slice(0, index + 1),
+              },
+              owner,
+            ) === grantLevel,
+        );
+  if (grantLevel !== 1 && advancementIndex < 0) return undefined;
+  return {
+    ...progression,
+    advancements: progression.advancements.slice(0, advancementIndex + 1),
+  };
 }
 
-function selectedFeatOptionPrerequisitesSupported(
+function selectedFeatScoreIncreases(
+  selection: UnitChoiceSelection,
+  choices: readonly UnitChoiceSelection[],
+): readonly AbilityScoreIncreaseDeltaWithCap[] | undefined {
+  const scoreIncreases: AbilityScoreIncreaseDeltaWithCap[] = [];
+  const matching = choices.filter(
+    (choice) =>
+      choice.source.unitId === selection.source.unitId &&
+      choice.source.grantLevel === selection.source.grantLevel &&
+      choice.source.choiceKey ===
+        CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  );
+  for (const scoreChoice of matching) {
+    for (const option of scoreChoice.options) {
+      const delta = decodeAbilityScoreIncreaseOptionId(option.optionId);
+      if (Result.isFailure(delta)) return undefined;
+      scoreIncreases.push(...delta.success);
+    }
+  }
+  return scoreIncreases;
+}
+
+function selectedFeatUnitForOption(
   option: UnitChoiceSelection["options"][number],
-  progression: CharacterProgression,
-  scores: AbilityScoreAssignment,
   selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
-): boolean {
-  const featUnitId = option.unitRef?.unitId;
-  if (featUnitId === undefined) return true;
-  const featUnit = selectedFeatUnits.get(featUnitId);
-  if (featUnit === undefined) return true;
-  if (!isGrapplerFeatUnit(featUnit)) return true;
-  return (
-    computeTotalLevel(progression) >= 4 &&
-    (Number(scores.str) >= 13 || Number(scores.dex) >= 13)
-  );
+): UnitRecord | undefined {
+  return option.unitRef === undefined
+    ? undefined
+    : selectedFeatUnits.get(option.unitRef.unitId);
 }
 
-function isGrapplerFeatUnit(unit: UnitRecord): boolean {
-  const projection = projectCharacterCreationFeature(unit);
-  return (
-    projection.tag === "readable" &&
-    projection.value.kind === "feat" &&
-    projection.value.facts.mechanics.family === "grappler"
-  );
+function selectedFeatScoreOccurrences(
+  selection: UnitChoiceSelection,
+  acquisitionProgression: FinalizedCharacterSelections["progression"],
+  scoreIncreases: readonly AbilityScoreIncreaseDeltaWithCap[],
+  selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
+  seen: Set<UnitRecord["id"]>,
+): readonly FeatScoreSelection[] | undefined {
+  const occurrences: FeatScoreSelection[] = [];
+  for (const option of selection.options) {
+    const feat = selectedFeatUnitForOption(option, selectedFeatUnits);
+    if (feat === undefined) return undefined;
+    const projected = projectCharacterCreationFeature(feat);
+    if (projected.tag !== "readable" || projected.value.kind !== "feat")
+      return undefined;
+    if (seen.has(feat.id) && projected.value.facts.repeatability === "once")
+      return undefined;
+    seen.add(feat.id);
+    occurrences.push({
+      facts: projected.value.facts,
+      acquisitionProgression,
+      scoreIncreases,
+    });
+  }
+  return occurrences;
 }
 
 function spellcastingFactsAuthoredForSelectedClassLevels(
@@ -3164,6 +3267,7 @@ function supportedFinalizationChoiceHoles(
     )
     .flatMap(({ classUnitId, grant }) =>
       classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
+        grantLevel: grant.level,
         classLevel: classLevelForUnit(
           input.selections.progression,
           classUnitId,
@@ -3571,6 +3675,7 @@ function selectedSubclassFeatureGrantChoiceHoles(input: {
         .filter((grant) => grant.level <= classLevel)
         .flatMap((grant) =>
           classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
+            grantLevel: grant.level,
             classLevel,
             ownedSkillProficiencies: selectedSkillProficiencies(
               input.selections,
@@ -3672,6 +3777,7 @@ function selectedFeatAbilityScoreChoiceHoles(
             source: unitSource(
               selection.source.unitId,
               CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+              selection.source.grantLevel,
             ),
             cardinality: EXACTLY_ONE_CHOICE,
             options,
@@ -4052,10 +4158,31 @@ export function finalizedClassChoiceFeatures(
   );
 }
 
-function finalizedClassChoiceFeaturesForSupportedChoices(
+function selectedClassChoiceOption(selection: UnitChoiceSelection) {
+  return selection.source.choiceKey === HUNTERS_PREY_CHOICE_KEY
+    ? huntersPreySelectedOption(selection.options[0]?.optionId)
+    : selection.source.choiceKey === "attack_roll_defense_choice"
+      ? attackRollDefenseSelectedOption(selection.options[0]?.optionId)
+      : undefined;
+}
+
+export function finalizedClassChoiceFeaturesForSupportedChoices(
   unitChoices: readonly UnitChoiceSelection[],
 ): readonly CharacterBuildFeature[] {
   return unitChoices.flatMap((selection): readonly CharacterBuildFeature[] => {
+    if (
+      selection.source.choiceKey === CHOSEN_PREPARED_SPELL_ACCESS_CHOICE_KEY
+    ) {
+      const selected = selectedPreparedSpellAccess({
+        featureUnitId: selection.source.unitId,
+        spellIds: selection.options.flatMap((option) =>
+          option.unitRef === undefined ? [] : [option.unitRef.unitId],
+        ),
+      });
+      // Supported selections have passed the exact two-choice hole and membership checks.
+      if (Result.isFailure(selected)) throw new Error(selected.failure);
+      return [selected.success];
+    }
     if (selection.source.choiceKey === ELDRITCH_INVOCATIONS_CHOICE_KEY) {
       return selectedEldritchInvocationFeatures({
         selectedFromUnitId: selection.source.unitId,
@@ -4070,10 +4197,7 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
       });
     }
 
-    const selectedOption =
-      selection.source.choiceKey === HUNTERS_PREY_CHOICE_KEY
-        ? huntersPreySelectedOption(selection.options[0]?.optionId)
-        : undefined;
+    const selectedOption = selectedClassChoiceOption(selection);
     return unitRefsForSupportedSelectedUnitChoice(
       selection.source,
       selection.options,
@@ -4081,6 +4205,9 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
       kind: "selectedClassChoice" as const,
       unitId,
       selectedFromUnitId: selection.source.unitId,
+      ...(selection.source.grantLevel === undefined
+        ? {}
+        : { selectedFromGrantLevel: selection.source.grantLevel }),
       ...(selectedOption === undefined ? {} : { selectedOption }),
     }));
   });
@@ -5824,4 +5951,24 @@ function uniqueUnitRefs(refs: readonly UnitRef[]): readonly UnitRef[] {
 
 export function uniqueValues<T>(values: readonly T[]): readonly T[] {
   return values.filter((value, index) => values.indexOf(value) === index);
+}
+
+function attackRollDefenseSelectedOption(
+  optionId: CreationChoiceOptionId | undefined,
+): UnitRefSelectedOption | undefined {
+  // The supported choice boundary has validated membership; retain its chosen
+  // authored option as an identity-free defense selection for Sheet and Battle.
+  // authored-id-dispatch-allow: character-creation-selected-choice-runtime-projection-boundary
+  if (optionId === "escape_the_horde")
+    return {
+      kind: "attackRollDefense",
+      selection: "opportunityAttackDisadvantage",
+    };
+  // authored-id-dispatch-allow: character-creation-selected-choice-runtime-projection-boundary
+  if (optionId === "multiattack_defense")
+    return {
+      kind: "attackRollDefense",
+      selection: "repeatAttackerAfterHitDisadvantage",
+    };
+  return undefined;
 }

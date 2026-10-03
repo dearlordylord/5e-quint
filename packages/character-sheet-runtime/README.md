@@ -97,6 +97,17 @@ Read the linked owner and its adjacent tests before changing that behavior.
   execution results. Partial projections report exact consumed/unowned paths;
   feature projections accumulate independent represented-branch failures.
 
+## Installed class feature transitions
+
+Bard rest recovery and spell-slot exchange operate on the existing inspiration
+pool and ordinary slot source. Completed Short and Long Rests recover the pool;
+exchange spends an available ordinary slot and recovers one use atomically.
+The selected cross-list spell pair projects as always prepared access using the
+owning class's casting ability, without a second prepared-spell collection.
+Stored sheets retain its source and both selected spells, together with scoped
+feat occurrences and selected defense options. These transitions cover the
+installed capability subset rather than complete class support.
+
 ## Verification
 
 Run `pnpm check:character-sheet-runtime-split` from the repository root for

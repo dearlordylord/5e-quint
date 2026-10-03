@@ -4,6 +4,7 @@ let champion =
       , featureGrants =
         [ { level = 3, unitId = "fighter_improved_critical" }
         , { level = 3, unitId = "fighter_remarkable_athlete" }
+        , { level = 7, unitId = "fighter_additional_fighting_style" }
         , { level = 10, unitId = "fighter_heroic_warrior" }
         ]
       , id = "subclass_fighter_champion"

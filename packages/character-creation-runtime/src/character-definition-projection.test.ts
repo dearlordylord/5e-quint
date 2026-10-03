@@ -237,6 +237,28 @@ describe("Character Definition static projection", () => {
     });
   });
 
+  test("rejects a canonical readable root absent from the supplied Surface", () => {
+    const root = characterDefinitionRoots[0];
+    if (root === undefined) throw new Error("Canonical root required");
+    expect(
+      admitCharacterDefinitionMechanicsGraph({
+        unit: root,
+        surface: surfaceWithUnits(
+          completeSurface.units.filter((unit) => unit.id !== root.id),
+        ),
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      issues: [
+        expect.objectContaining({
+          reason: "incomplete_graph",
+          message:
+            "The Character Definition admission root is absent from the decoded Surface.",
+        }),
+      ],
+    });
+  });
+
   test("admits every canonical root with its source-free projection", () => {
     for (const root of characterDefinitionRoots) {
       const result = admitCharacterDefinitionMechanicsGraph({

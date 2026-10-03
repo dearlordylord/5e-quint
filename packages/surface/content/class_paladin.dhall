@@ -10,6 +10,7 @@
   , { level = 3, unitId = "paladin_channel_divinity" }
   , { level = 4, unitId = "paladin_ability_score_improvement_l4" }
   , { level = 5, unitId = "paladin_extra_attack" }
+  , { level = 8, unitId = "paladin_ability_score_improvement_l4" }
   , { level = 9, unitId = "paladin_abjure_foes" }
   , { level = 10, unitId = "paladin_aura_of_courage" }
   ]

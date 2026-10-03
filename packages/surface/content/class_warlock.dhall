@@ -6,6 +6,7 @@
   , { level = 1, unitId = "warlock_pact_magic" }
   , { level = 2, unitId = "warlock_magical_cunning" }
   , { level = 4, unitId = "warlock_ability_score_improvement_l4" }
+  , { level = 8, unitId = "warlock_ability_score_improvement_l4" }
   , { level = 9, unitId = "warlock_contact_patron" }
   ]
 , hitPointDie = 8

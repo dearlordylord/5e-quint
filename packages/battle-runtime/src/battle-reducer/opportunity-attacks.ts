@@ -332,6 +332,7 @@ function prepareReactionAttackRoll(
     input.input.subject.targetId,
     input.attack,
     input.targetSpatialFacts,
+    input.input.subject.command === "opportunityAttack",
   );
   const attackRoll = input.fillSet.attackRoll;
   if (attackRoll == null) {
@@ -602,6 +603,15 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
   } = afterRollInput.rollPreparation;
   const { pendingAttackDamageReductions } = afterRollInput;
   const input = resolutionInput;
+  const criticalThreshold = criticalThresholdForAttack(
+    input.state.combatants.get(subject.reactorId),
+    attack,
+  );
+  const hit = attackRollHitsWithCriticalThreshold(
+    effectiveAttackRoll,
+    currentArmorClass(activeEffectArmorClass(input.state, target)),
+    criticalThreshold,
+  );
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, subject.reactorId),
@@ -609,6 +619,7 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
       subject.targetId,
       null,
       attackRollRelationshipFacts,
+      hit,
     ),
     subject.reactorId,
     subject.targetId,
@@ -619,15 +630,6 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     attack,
     subject: input.subject,
   });
-  const criticalThreshold = criticalThresholdForAttack(
-    input.state.combatants.get(subject.reactorId),
-    attack,
-  );
-  const hit = attackRollHitsWithCriticalThreshold(
-    effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.state, target)),
-    criticalThreshold,
-  );
   const critical = attackRollHitIsCritical({
     roll: effectiveAttackRoll,
     criticalThreshold,

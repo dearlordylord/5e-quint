@@ -954,3 +954,8 @@ export {
 } from "./battle-reducer/shape-shifting.ts";
 
 export { bindCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+
+export {
+  discloseMarkedCreatureDefenses,
+  type MarkedCreatureDefensesDisclosure,
+} from "./marked-creature-defenses.ts";

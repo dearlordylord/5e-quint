@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.use-count-resource-recovery
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -942,7 +944,26 @@ function classFeatureUseCountResourcesForBuild(
     const unit = getRequiredUnit(unitLibrary, resource.unitId);
     /* v8 ignore next -- @preserve -- An admitted point-pool resource id must resolve in the same Unit catalog. */
     if (Result.isFailure(unit)) return Result.fail(unit.failure);
-    const resetCadence = restResetCadenceForUseCountResourceUnit(unit.success);
+    const baseResetCadence = restResetCadenceForUseCountResourceUnit(
+      unit.success,
+    );
+    const recoveryFeature = characterBuildFeatureUnitIds(
+      build,
+      unitLibrary,
+    ).flatMap((featureUnitId) => {
+      const featureUnit = unitLibrary.getUnit(featureUnitId);
+      if (Option.isNone(featureUnit)) return [];
+      const projection = projectCharacterSheetClassFeature(featureUnit.value);
+      return Option.isSome(projection) &&
+        projection.value.mechanics.family === "use_count_resource_recovery" &&
+        projection.value.mechanics.resourceUnitId === resource.unitId
+        ? [projection.value.mechanics]
+        : [];
+    });
+    const resetCadence =
+      recoveryFeature.length > 0
+        ? recoveryFeature[0]?.restRecovery.resetCadence
+        : baseResetCadence;
     /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: an admitted use-count resource lacks its installed rest-reset feature shape. */
     if (resource.resource.kind !== "use_count" || resetCadence === undefined) {
       return characterSheetIssue(
@@ -1311,7 +1332,7 @@ function shortRestUseCountExpendedAfterRecovery(
   );
 }
 
-function replaceUseCountResourceExpenditure(input: {
+export function replaceUseCountResourceExpenditure(input: {
   readonly expenditures: readonly CharacterSheetResourceExpenditure[];
   readonly unitId: UnitRecord["id"];
   readonly expended: ResourceCount;

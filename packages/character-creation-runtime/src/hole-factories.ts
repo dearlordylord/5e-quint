@@ -167,11 +167,13 @@ export function draftSource<Path extends CharacterDraftPath>(
 export function unitSource(
   unitId: UnitRecord["id"],
   choiceKey: UnitChoiceKey,
+  grantLevel?: UnitChoiceSource["grantLevel"],
 ): UnitChoiceSource {
   return {
     tag: "unitChoice",
     unitId: unitChoiceSourceUnitIdFromUnitId(unitId),
     choiceKey,
+    ...(grantLevel === undefined ? {} : { grantLevel }),
   };
 }
 

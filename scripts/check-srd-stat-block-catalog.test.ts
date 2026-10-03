@@ -1,4 +1,5 @@
 import { copyFileSync } from "node:fs";
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS as TEST_TIMEOUT } from "./shared-host-test-policy.mjs";
 
 import { Match } from "effect";
 import fc from "fast-check";
@@ -232,256 +233,264 @@ function applyMutation(
   );
 }
 
-describe("standalone SRD Stat Block catalog diagnostic", () => {
-  let canonical: SrdStatBlockCatalogDiagnosticObservation;
+describe(
+  "standalone SRD Stat Block catalog diagnostic",
+  () => {
+    let canonical: SrdStatBlockCatalogDiagnosticObservation;
 
-  beforeAll(() => {
-    const result = acceptedDiagnostic(
-      runSrdStatBlockCatalogDiagnostic({
-        repositoryRoot: process.cwd(),
-        compile: (sourcePath, outputPath) => {
-          copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
-          return undefined;
-        },
-      }),
-    );
-    canonical = result.diagnostic;
-  }, 30_000);
-
-  it("proves the complete current 330-occurrence, 330-identity, 330-record catalog without expanding deferred scope", () => {
-    const result = acceptedDiagnostic(
-      evaluateSrdStatBlockCatalogDiagnostic(canonical),
-    );
-    const installed = installedAssessment(result.diagnostic);
-
-    expect(result.diagnostic.sourceDenominator).toMatchObject({
-      occurrenceCount: 330,
-      identityCount: 330,
-      issues: [],
-    });
-    expect(installed.installedMembership.installedCount).toBe(330);
-    expect(result.diagnostic.catalogParity.issues).toEqual([]);
-    expect(result.diagnostic.provenance.issues).toEqual([]);
-    expect(result.diagnostic.generatedPeerAgreement.issues).toEqual([]);
-    expect(result.diagnostic.exclusions).toEqual([
-      "runtime-execution-#114",
-      "selected-graph-binding-#117",
-      "hit-dice",
-    ]);
-  });
-
-  it("accumulates every independent diagnostic failure", () => {
-    const independentMutations = MUTATIONS.filter(
-      (mutation) => mutation !== "strict-decode",
-    );
-    const mutated = independentMutations.reduce(applyMutation, canonical);
-    expect(
-      rejectedBlockers(evaluateSrdStatBlockCatalogDiagnostic(mutated)),
-    ).toEqual(
-      independentMutations.map((mutation) => EXPECTED_BLOCKER[mutation]),
-    );
-  });
-
-  it("retains precise scoped-projection issues in the public diagnostic", () => {
-    const installed = installedAssessment(canonical);
-    expect(installed.scopedFidelity.tag).toBe("assessed");
-    if (installed.scopedFidelity.tag !== "assessed") return;
-    expect(installed.scopedFidelity.result.tag).toBe("consistent");
-    if (installed.scopedFidelity.result.tag !== "consistent") return;
-    const occurrence = installed.scopedFidelity.result.occurrences[0];
-    expect(occurrence).toBeDefined();
-    if (occurrence === undefined) return;
-    const failure = {
-      tag: "projection-issues" as const,
-      issues: [
-        {
-          kind: "unsupported-evidence" as const,
-          anchor: {
-            kind: "raw" as const,
-            sourcePath: occurrence.source.anchor.sourcePath,
-            heading: occurrence.source.anchor.heading,
-            lineStart: occurrence.source.anchor.lineStart,
-            lineEnd: occurrence.source.anchor.lineEnd,
-            field: "challengeRating",
+    beforeAll(() => {
+      const result = acceptedDiagnostic(
+        runSrdStatBlockCatalogDiagnostic({
+          repositoryRoot: process.cwd(),
+          compile: (sourcePath, outputPath) => {
+            copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
+            return undefined;
           },
-          evidence: "99",
-          supported: "a canonical challenge rating",
+        }),
+      );
+      canonical = result.diagnostic;
+    }, TEST_TIMEOUT);
+
+    it("proves the complete current 330-occurrence, 330-identity, 330-record catalog without expanding deferred scope", () => {
+      const result = acceptedDiagnostic(
+        evaluateSrdStatBlockCatalogDiagnostic(canonical),
+      );
+      const installed = installedAssessment(result.diagnostic);
+
+      expect(result.diagnostic.sourceDenominator).toMatchObject({
+        occurrenceCount: 330,
+        identityCount: 330,
+        issues: [],
+      });
+      expect(installed.installedMembership.installedCount).toBe(330);
+      expect(result.diagnostic.catalogParity.issues).toEqual([]);
+      expect(result.diagnostic.provenance.issues).toEqual([]);
+      expect(result.diagnostic.generatedPeerAgreement.issues).toEqual([]);
+      expect(result.diagnostic.exclusions).toEqual([
+        "runtime-execution-#114",
+        "selected-graph-binding-#117",
+        "hit-dice",
+      ]);
+    });
+
+    it("accumulates every independent diagnostic failure", () => {
+      const independentMutations = MUTATIONS.filter(
+        (mutation) => mutation !== "strict-decode",
+      );
+      const mutated = independentMutations.reduce(applyMutation, canonical);
+      expect(
+        rejectedBlockers(evaluateSrdStatBlockCatalogDiagnostic(mutated)),
+      ).toEqual(
+        independentMutations.map((mutation) => EXPECTED_BLOCKER[mutation]),
+      );
+    });
+
+    it("retains precise scoped-projection issues in the public diagnostic", () => {
+      const installed = installedAssessment(canonical);
+      expect(installed.scopedFidelity.tag).toBe("assessed");
+      if (installed.scopedFidelity.tag !== "assessed") return;
+      expect(installed.scopedFidelity.result.tag).toBe("consistent");
+      if (installed.scopedFidelity.result.tag !== "consistent") return;
+      const occurrence = installed.scopedFidelity.result.occurrences[0];
+      expect(occurrence).toBeDefined();
+      if (occurrence === undefined) return;
+      const failure = {
+        tag: "projection-issues" as const,
+        issues: [
+          {
+            kind: "unsupported-evidence" as const,
+            anchor: {
+              kind: "raw" as const,
+              sourcePath: occurrence.source.anchor.sourcePath,
+              heading: occurrence.source.anchor.heading,
+              lineStart: occurrence.source.anchor.lineStart,
+              lineEnd: occurrence.source.anchor.lineEnd,
+              field: "challengeRating",
+            },
+            evidence: "99",
+            supported: "a canonical challenge rating",
+          },
+        ] as const,
+      };
+      const mutated: SrdStatBlockCatalogDiagnosticObservation = {
+        ...canonical,
+        catalogAssessment: {
+          ...installed,
+          scopedFidelity: {
+            tag: "assessed",
+            result: {
+              tag: "inconsistent",
+              issues: [
+                {
+                  kind: "raw-projection-failed",
+                  source: occurrence.source,
+                  failure,
+                },
+              ],
+              authoredAdmissions:
+                installed.scopedFidelity.result.authoredAdmissions,
+            },
+          },
         },
-      ] as const,
-    };
-    const mutated: SrdStatBlockCatalogDiagnosticObservation = {
-      ...canonical,
-      catalogAssessment: {
-        ...installed,
+      };
+
+      const result = evaluateSrdStatBlockCatalogDiagnostic(mutated);
+      expect(result.tag).toBe("rejected");
+      expect(result.diagnostic.catalogAssessment).toMatchObject({
+        tag: "installed",
         scopedFidelity: {
           tag: "assessed",
           result: {
             tag: "inconsistent",
-            issues: [
-              {
-                kind: "raw-projection-failed",
-                source: occurrence.source,
-                failure,
-              },
-            ],
-            authoredAdmissions:
-              installed.scopedFidelity.result.authoredAdmissions,
+            issues: [{ failure }],
           },
         },
-      },
-    };
-
-    const result = evaluateSrdStatBlockCatalogDiagnostic(mutated);
-    expect(result.tag).toBe("rejected");
-    expect(result.diagnostic.catalogAssessment).toMatchObject({
-      tag: "installed",
-      scopedFidelity: {
-        tag: "assessed",
-        result: {
-          tag: "inconsistent",
-          issues: [{ failure }],
-        },
-      },
+      });
     });
-  });
 
-  it("retains exact blocker sets for every nonempty mutation subset and order", () => {
-    fc.assert(
-      fc.property(
-        fc.uniqueArray(fc.constantFrom(...MUTATIONS), {
-          minLength: 1,
-          maxLength: MUTATIONS.length,
+    it("retains exact blocker sets for every nonempty mutation subset and order", () => {
+      fc.assert(
+        fc.property(
+          fc.uniqueArray(fc.constantFrom(...MUTATIONS), {
+            minLength: 1,
+            maxLength: MUTATIONS.length,
+          }),
+          (mutations) => {
+            const mutated = mutations.reduce(applyMutation, canonical);
+            const strictDecodeRejected = mutations.includes("strict-decode");
+            const shadowedByStrictDecode = new Set<Mutation>([
+              "catalog-parity",
+              "provenance",
+              "installed-membership",
+              "scoped-fidelity",
+              "catalog-reachability",
+            ]);
+            const observableMutations = strictDecodeRejected
+              ? mutations.filter(
+                  (mutation) => !shadowedByStrictDecode.has(mutation),
+                )
+              : mutations;
+            expect(
+              new Set(
+                rejectedBlockers(
+                  evaluateSrdStatBlockCatalogDiagnostic(mutated),
+                ),
+              ),
+            ).toEqual(
+              new Set(
+                observableMutations.map(
+                  (mutation) => EXPECTED_BLOCKER[mutation],
+                ),
+              ),
+            );
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it("accumulates strict decode, provenance, and duplicate identity issues", () => {
+      const installed = installedAssessment(canonical);
+      const first = installed.provenance.records[0]!;
+      const nonSrd = {
+        ...first,
+        provenance: { kind: "synthetic-test" as const, section: "synthetic" },
+      };
+      const result = runSrdStatBlockCatalogDiagnostic({
+        repositoryRoot: process.cwd(),
+        aggregateInputs: [{}, nonSrd, first, first],
+        compile: (sourcePath, outputPath) => {
+          copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
+          return undefined;
+        },
+      });
+
+      expect(rejectedBlockers(result)).toEqual([
+        "strict-decode",
+        "provenance",
+        "installed-membership",
+      ]);
+      expect(result.diagnostic.provenance.issues[0]).toMatchObject({
+        code: "nonSrdStatBlockProvenance",
+        inputOrdinal: 2,
+      });
+    });
+
+    it("does not invent catalog parity failures when strict decode is unavailable", () => {
+      const result = runSrdStatBlockCatalogDiagnostic({
+        repositoryRoot: process.cwd(),
+        aggregateInputs: [{}],
+        compile: (sourcePath, outputPath) => {
+          copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
+          return undefined;
+        },
+      });
+
+      expect(rejectedBlockers(result)).toEqual(["strict-decode"]);
+      expect(result.diagnostic.catalogParity.issues).toEqual([]);
+      expect(result.diagnostic.provenance.issues).toEqual([]);
+      expect(result.diagnostic.sourceDenominator).toMatchObject({
+        occurrenceCount: 330,
+        identityCount: 330,
+        issues: [],
+      });
+      expect(result.diagnostic.catalogAssessment).toMatchObject({
+        tag: "strict-decode-rejected",
+        partialProvenance: { tag: "homogeneous", records: [] },
+        decodedSrdMembership: {
+          tag: "unavailable",
+          cause: "no-decoded-srd-records",
+        },
+      });
+    });
+
+    it("does not admit Unit-only publication observations to the Stat Block result", () => {
+      expect(
+        projectSrdStatBlockPeerObservation({
+          tag: "source-failed",
+          reason: "compile",
+          recordKind: "other",
+          sourcePath: "synthetic-unit.dhall",
+          peerPath: "synthetic-unit.json",
+          message: "synthetic Unit failure",
         }),
-        (mutations) => {
-          const mutated = mutations.reduce(applyMutation, canonical);
-          const strictDecodeRejected = mutations.includes("strict-decode");
-          const shadowedByStrictDecode = new Set<Mutation>([
-            "catalog-parity",
-            "provenance",
-            "installed-membership",
-            "scoped-fidelity",
-            "catalog-reachability",
-          ]);
-          const observableMutations = strictDecodeRejected
-            ? mutations.filter(
-                (mutation) => !shadowedByStrictDecode.has(mutation),
-              )
-            : mutations;
-          expect(
-            new Set(
-              rejectedBlockers(evaluateSrdStatBlockCatalogDiagnostic(mutated)),
-            ),
-          ).toEqual(
-            new Set(
-              observableMutations.map((mutation) => EXPECTED_BLOCKER[mutation]),
-            ),
-          );
+      ).toBeUndefined();
+      expect(evaluateSrdStatBlockCatalogDiagnostic(canonical).tag).toBe(
+        "accepted",
+      );
+    });
+
+    it("turns throwing compiler callbacks into peer evidence without losing independent facts", () => {
+      const result = runSrdStatBlockCatalogDiagnostic({
+        repositoryRoot: process.cwd(),
+        compile: () => {
+          throw new Error("synthetic compiler failure");
         },
-      ),
-      { numRuns: 100 },
-    );
-  });
+      });
 
-  it("accumulates strict decode, provenance, and duplicate identity issues", () => {
-    const installed = installedAssessment(canonical);
-    const first = installed.provenance.records[0]!;
-    const nonSrd = {
-      ...first,
-      provenance: { kind: "synthetic-test" as const, section: "synthetic" },
-    };
-    const result = runSrdStatBlockCatalogDiagnostic({
-      repositoryRoot: process.cwd(),
-      aggregateInputs: [{}, nonSrd, first, first],
-      compile: (sourcePath, outputPath) => {
-        copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
-        return undefined;
-      },
+      expect(rejectedBlockers(result)).toEqual(["generated-peer-agreement"]);
+      expect(result.diagnostic.sourceDenominator).toMatchObject({
+        occurrenceCount: 330,
+        identityCount: 330,
+        issues: [],
+      });
+      expect(result.diagnostic.catalogAssessment.tag).toBe("installed");
     });
 
-    expect(rejectedBlockers(result)).toEqual([
-      "strict-decode",
-      "provenance",
-      "installed-membership",
-    ]);
-    expect(result.diagnostic.provenance.issues[0]).toMatchObject({
-      code: "nonSrdStatBlockProvenance",
-      inputOrdinal: 2,
-    });
-  });
+    it("returns typed evidence when publication discovery is unreadable", () => {
+      const result = runPublicationCheck({
+        repoRoot: process.cwd(),
+        contentDir: `${process.cwd()}/synthetic-missing-surface-content`,
+        compile: () => undefined,
+      });
 
-  it("does not invent catalog parity failures when strict decode is unavailable", () => {
-    const result = runSrdStatBlockCatalogDiagnostic({
-      repositoryRoot: process.cwd(),
-      aggregateInputs: [{}],
-      compile: (sourcePath, outputPath) => {
-        copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
-        return undefined;
-      },
+      expect(result).toMatchObject({
+        sourceCount: 0,
+        peerCount: 0,
+        peerObservations: [],
+        issues: [{ kind: "publication-check-failed", stage: "discovery" }],
+      });
     });
-
-    expect(rejectedBlockers(result)).toEqual(["strict-decode"]);
-    expect(result.diagnostic.catalogParity.issues).toEqual([]);
-    expect(result.diagnostic.provenance.issues).toEqual([]);
-    expect(result.diagnostic.sourceDenominator).toMatchObject({
-      occurrenceCount: 330,
-      identityCount: 330,
-      issues: [],
-    });
-    expect(result.diagnostic.catalogAssessment).toMatchObject({
-      tag: "strict-decode-rejected",
-      partialProvenance: { tag: "homogeneous", records: [] },
-      decodedSrdMembership: {
-        tag: "unavailable",
-        cause: "no-decoded-srd-records",
-      },
-    });
-  });
-
-  it("does not admit Unit-only publication observations to the Stat Block result", () => {
-    expect(
-      projectSrdStatBlockPeerObservation({
-        tag: "source-failed",
-        reason: "compile",
-        recordKind: "other",
-        sourcePath: "synthetic-unit.dhall",
-        peerPath: "synthetic-unit.json",
-        message: "synthetic Unit failure",
-      }),
-    ).toBeUndefined();
-    expect(evaluateSrdStatBlockCatalogDiagnostic(canonical).tag).toBe(
-      "accepted",
-    );
-  });
-
-  it("turns throwing compiler callbacks into peer evidence without losing independent facts", () => {
-    const result = runSrdStatBlockCatalogDiagnostic({
-      repositoryRoot: process.cwd(),
-      compile: () => {
-        throw new Error("synthetic compiler failure");
-      },
-    });
-
-    expect(rejectedBlockers(result)).toEqual(["generated-peer-agreement"]);
-    expect(result.diagnostic.sourceDenominator).toMatchObject({
-      occurrenceCount: 330,
-      identityCount: 330,
-      issues: [],
-    });
-    expect(result.diagnostic.catalogAssessment.tag).toBe("installed");
-  });
-
-  it("returns typed evidence when publication discovery is unreadable", () => {
-    const result = runPublicationCheck({
-      repoRoot: process.cwd(),
-      contentDir: `${process.cwd()}/synthetic-missing-surface-content`,
-      compile: () => undefined,
-    });
-
-    expect(result).toMatchObject({
-      sourceCount: 0,
-      peerCount: 0,
-      peerObservations: [],
-      issues: [{ kind: "publication-check-failed", stage: "discovery" }],
-    });
-  });
-});
+  },
+  TEST_TIMEOUT,
+);

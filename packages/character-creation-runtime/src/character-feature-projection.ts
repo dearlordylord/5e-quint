@@ -23,7 +23,12 @@ type SourceFreeFeatureFacts<Record> = Omit<
 
 export type CharacterCreationClassFeatureFacts =
   SourceFreeFeatureFacts<ClassFeatureRecord>;
-export type CharacterCreationFeatFacts = SourceFreeFeatureFacts<FeatRecord>;
+export const FEAT_REPEATABILITIES = ["once", "repeatable"] as const;
+export type FeatRepeatability = (typeof FEAT_REPEATABILITIES)[number];
+export type CharacterCreationFeatFacts = Omit<
+  SourceFreeFeatureFacts<FeatRecord>,
+  "repeatable"
+> & { readonly repeatability: FeatRepeatability };
 export type CharacterCreationSpeciesTraitFacts =
   SourceFreeFeatureFacts<SpeciesTraitRecord>;
 
@@ -146,7 +151,7 @@ export function projectCharacterCreationFeature(
       tag: "readable" as const,
       value: {
         kind: "feat" as const,
-        facts: sourceFreeFeatureFacts(feat),
+        facts: characterCreationFeatFacts(feat),
       },
     })),
     Match.when({ kind: "species_trait" }, (trait) => ({
@@ -585,5 +590,15 @@ function unsupportedFeatureRoot(unit: UnitRecord): UnitReaderResult<never> {
         unitId: unit.id,
       },
     ],
+  };
+}
+
+function characterCreationFeatFacts(
+  feat: FeatRecord,
+): CharacterCreationFeatFacts {
+  const { repeatable, ...facts } = sourceFreeFeatureFacts(feat);
+  return {
+    ...facts,
+    repeatability: repeatable === true ? "repeatable" : "once",
   };
 }

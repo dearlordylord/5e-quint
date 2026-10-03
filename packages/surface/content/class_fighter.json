@@ -43,6 +43,14 @@
       "unitId": "fighter_tactical_shift"
     },
     {
+      "level": 6,
+      "unitId": "fighter_ability_score_improvement_l4"
+    },
+    {
+      "level": 8,
+      "unitId": "fighter_ability_score_improvement_l4"
+    },
+    {
       "level": 9,
       "unitId": "fighter_indomitable"
     },

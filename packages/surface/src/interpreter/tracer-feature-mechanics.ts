@@ -39,466 +39,550 @@ export function traceClassFeatureMechanics(
   if (isResourceLinkedClassMechanics(m)) {
     return traceResourceLinkedClassMechanics(m, nodes, ids);
   }
-  switch (m.family) {
-    case "activation":
-      return [traceActivatedAbility(m, nodes, edges, ids)];
-    case "passive":
-      return [tracePassiveMechanics(m, nodes, edges, ids)];
-    case "alternate_action_cost":
-      return [traceAlternateActionCostMechanics(m, nodes, ids)];
-    case "feature_choice":
-      return [traceFeatureChoiceMechanics(m, nodes, ids)];
-    case "on_hit_trigger":
-      return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
-    case "save_damage_replacement":
-      return [traceSaveDamageReplacementMechanics(m, nodes, ids)];
-    case "reaction_roll_or_damage_reduction":
-      return [traceReactionRollOrDamageReductionMechanics(m, nodes, ids)];
-    case "weapon_mastery_choice": {
-      const masteryId = ids("mastery");
-      nodes.push({
-        id: masteryId,
-        category: "hole",
-        atomKind: "class_weapon_mastery_choice",
-        label:
-          `class_weapon_mastery_choice\n${describeWeaponMasteryChoiceCount(m.choose)}\n` +
-          `${describeWeaponMasteryEligibility(m.eligibleWeapons)}\n` +
-          `change ${m.changeOn.count} on ${m.changeOn.kind}`,
-      });
-      return [masteryId];
-    }
-    case "class_feature_acquisition_choice": {
-      const choiceId = ids("classFeatureAcquisitionChoice");
-      nodes.push({
-        id: choiceId,
-        category: "procedure",
-        atomKind: "class_feature_acquisition_choice",
-        label: `class_feature_acquisition_choice\n${m.choiceKey}\n${m.options.map((option) => option.displayName).join(" | ")}`,
-      });
-      for (const option of m.options) {
-        const optionId = tracePassiveMechanics(
-          option.mechanics,
-          nodes,
-          edges,
-          ids,
-        );
-        edges.push({ from: choiceId, to: optionId, relation: option.id });
-      }
-      return [choiceId];
-    }
-    case "resource_container":
-      return [traceResourceContainerMechanics(m, nodes, edges, ids)];
-    case "resource_pool":
-      return [traceResourcePoolMechanics(m, nodes, edges, ids)];
-    case "metamagic_options":
-      return [traceMetamagicOptionsMechanics(m, nodes, edges, ids)];
-    case "druid_wild_companion_spell_cast":
-      return [traceDruidWildCompanionSpellCastMechanics(m, nodes, edges, ids)];
-    case "class_spellcasting_projection": {
-      const spellcastingId = ids("spellcasting");
-      nodes.push({
-        id: spellcastingId,
-        category: "procedure",
-        atomKind: "class_spellcasting_projection",
-        label: `class_spellcasting_projection\n${m.spellcastingKind}\nsource ${m.source}`,
-      });
-      return [spellcastingId];
-    }
-    case "spellbook_ritual_access": {
-      const ritualId = ids("ritual");
-      nodes.push({
-        id: ritualId,
-        category: "procedure",
-        atomKind: "spellbook_ritual_access",
-        label:
-          `spellbook_ritual_access\nsource ${m.source}\n` +
-          `preparation ${m.preparationRequirement}`,
-      });
-      return [ritualId];
-    }
-    case "rest_spell_slot_recovery": {
-      const recoveryId = ids("arcane");
-      nodes.push({
-        id: recoveryId,
-        category: "resource",
-        atomKind: "rest_spell_slot_recovery",
-        label:
-          `rest_spell_slot_recovery\ntrigger ${m.recoveryTrigger}\n` +
-          `${m.recoveredSlotLevelCap.kind}\n` +
-          `slot level < ${m.recoveredSlotLevelCap.maximumSlotLevelExclusive}\n` +
-          `reset ${m.resetCadence.kind}`,
-      });
-      return [recoveryId];
-    }
-    case "wizard_spellbook_learning": {
-      const learningId = ids("wizard-spellbook-learning");
-      nodes.push({
-        id: learningId,
-        category: "hole",
-        atomKind: "wizard_spellbook_learning",
-        label:
-          `wizard_spellbook_learning\nsource ${m.spellbookSource.className}\n` +
-          m.grants
-            .map(
-              (grant) =>
-                `${grant.timing.kind}\nchoose ${grant.choiceCount} ${grant.eligibility.school}`,
-            )
-            .join("\n"),
-      });
-      return [learningId];
-    }
-    case "pact_slot_recovery": {
-      const recoveryId = ids("pact");
-      nodes.push({
-        id: recoveryId,
-        category: "resource",
-        atomKind: "pact_slot_recovery",
-        label:
-          `pact_slot_recovery\nactivation ${m.activationCost.kind}\n` +
-          `resource ${m.resource.kind}\n` +
-          `${m.recoveryCap.kind}\n` +
-          `reset ${m.resetCadence.kind}`,
-      });
-      return [recoveryId];
-    }
-    case "spell_slot_healing_modifier": {
-      const healingId = ids("spell-slot-healing");
-      nodes.push({
-        id: healingId,
-        category: "effect",
-        atomKind: "spell_slot_healing_modifier",
-        label:
-          `spell_slot_healing_modifier\n${m.trigger.kind}\n` +
-          `${m.trigger.timing}\n${m.appliesTo}\n` +
-          `${m.bonus.kind} +${m.bonus.flat}`,
-      });
-      return [healingId];
-    }
-    case "magic_action_healing_pool": {
-      const poolId = ids("healing-pool");
-      nodes.push({
-        id: poolId,
-        category: "resource",
-        atomKind: "magic_action_healing_pool",
-        label:
-          `magic_action_healing_pool\n${m.activationCost.kind}:${m.activationCost.action}\n` +
-          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
-          `${m.range.feet} feet\n` +
-          `pool ${m.pool.multiplier}x class level\n` +
-          `${m.perTargetCap}`,
-      });
-      return [poolId];
-    }
-    case "magic_action_area_save_damage_healing": {
-      const areaId = ids("area-damage-healing");
-      nodes.push({
-        id: areaId,
-        category: "procedure",
-        atomKind: "magic_action_area_save_damage_healing",
-        label:
-          `magic_action_area_save_damage_healing\n${m.activationCost.kind}:${m.activationCost.action}\n` +
-          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
-          `${m.area.origin.rangeFeet} foot point range\n` +
-          `${m.area.shape.radiusFeet} foot ${m.area.shape.kind}\n` +
-          `${m.save.ability} save ${m.save.dc.kind}\n` +
-          `${describeDiceAmount(m.damage.amount)} ${m.damage.damageType} ${m.damage.onSuccess}\n` +
-          `heals ${describeDiceAmount(m.healing.amount)}`,
-      });
-      return [areaId];
-    }
-    case "enemy_zero_hit_point_temporary_hit_points": {
-      const tempHpId = ids("enemy-zero-temp-hp");
-      nodes.push({
-        id: tempHpId,
-        category: "effect",
-        atomKind: "enemy_zero_hit_point_temporary_hit_points",
-        label:
-          `enemy_zero_hit_point_temporary_hit_points\n${m.trigger.kind}\n` +
-          `self ${m.trigger.bySelf}\n` +
-          `other within ${m.trigger.byOtherWithinFeet} feet\n` +
-          `${m.amount.ability} modifier + class level, min ${m.amount.minimum}`,
-      });
-      return [tempHpId];
-    }
-    case "bonus_action_delegated_standard_actions": {
-      const actionId = ids("delegated-bonus-actions");
-      nodes.push({
-        id: actionId,
-        category: "procedure",
-        atomKind: "bonus_action_delegated_standard_actions",
-        label:
-          `bonus_action_delegated_standard_actions\n${m.activationCost.kind}\n` +
-          `${m.sleightOfHand.abilityCheck.ability} ${m.sleightOfHand.abilityCheck.skill}\n` +
-          `${m.objectUse.actions.map((action) => action.action).join(" | ")}`,
-      });
-      return [actionId];
-    }
-    case "remarkable_athlete": {
-      const remarkableId = ids("remarkable-athlete");
-      nodes.push({
-        id: remarkableId,
-        category: "procedure",
-        atomKind: "remarkable_athlete",
-        label:
-          `remarkable_athlete\n${m.initiative.roll} ${m.initiative.kind}\n` +
-          `${m.abilityCheck.ability} ${m.abilityCheck.skill} ${m.abilityCheck.kind}\n` +
-          `${m.criticalHitMovement.trigger.kind}\n${m.criticalHitMovement.distance.kind}\n${m.criticalHitMovement.opportunityAttacks}`,
-      });
-      return [remarkableId];
-    }
-    case "open_hand_technique": {
-      const openHandId = ids("open-hand-technique");
-      nodes.push({
-        id: openHandId,
-        category: "procedure",
-        atomKind: "open_hand_technique",
-        label:
-          `open_hand_technique\n${m.trigger.resourceOptionUnitId}:${m.trigger.optionId}\n` +
-          `${m.effectSaveDc.ability} save DC\n` +
-          m.choices.map((choice) => choice.id).join(" | "),
-      });
-      return [openHandId];
-    }
-    case "stunning_strike": {
-      const stunningId = ids("stunning-strike");
-      nodes.push({
-        id: stunningId,
-        category: "procedure",
-        atomKind: "stunning_strike",
-        label:
-          `stunning_strike\n${m.trigger.kind}\n` +
-          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
-          `${m.savingThrow.ability} save via ${m.spends.resourceUnitId}\n` +
-          `${m.onFail.condition} until ${m.onFail.expires}\n` +
-          `${m.onSuccess.speed.kind} speed\n${m.onSuccess.attackRoll.mode} next attack`,
-      });
-      return [stunningId];
-    }
-    case "cunning_strike": {
-      const cunningId = ids("cunning-strike");
-      nodes.push({
-        id: cunningId,
-        category: "procedure",
-        atomKind: "cunning_strike",
-        label:
-          `cunning_strike\n${m.trigger.kind}:${m.trigger.sourceUnitId}\n` +
-          `${m.effectSaveDc.ability} save DC\n` +
-          m.options.map((option) => option.id).join(" | "),
-      });
-      return [cunningId];
-    }
-    case "brutal_strike": {
-      const brutalId = ids("brutal-strike");
-      nodes.push({
-        id: brutalId,
-        category: "procedure",
-        atomKind: "brutal_strike",
-        label:
-          `brutal_strike\n${m.trigger.kind}:${m.trigger.prerequisiteUnitId}\n` +
-          `${m.damage.dice.dice}d${m.damage.dice.dieSize} ${m.damage.damageType}\n` +
-          m.options.map((option) => option.id).join(" | "),
-      });
-      return [brutalId];
-    }
-    case "failed_saving_throw_reroll": {
-      const indomitableId = ids("indomitable");
-      nodes.push({
-        id: indomitableId,
-        category: "resource",
-        atomKind: "failed_saving_throw_reroll",
-        label:
-          `failed_saving_throw_reroll\n${m.trigger.kind}\n` +
-          `bonus ${m.reroll.bonus.className} ${m.reroll.bonus.kind}\n` +
-          `must use new roll ${m.reroll.mustUseNewRoll}\n` +
-          `reset ${m.resetCadence.kind}`,
-      });
-      return [indomitableId];
-    }
-    case "weapon_mastery_property_replacement": {
-      const tacticalId = ids("tactical-master");
-      nodes.push({
-        id: tacticalId,
-        category: "procedure",
-        atomKind: "weapon_mastery_property_replacement",
-        label:
-          `weapon_mastery_property_replacement\n${m.trigger.kind}\n` +
-          `${m.replacement.timing}\n` +
-          m.replacement.chooseOne.join(" | "),
-      });
-      return [tacticalId];
-    }
-    case "abjure_foes": {
-      const abjureId = ids("abjure-foes");
-      nodes.push({
-        id: abjureId,
-        category: "procedure",
-        atomKind: "abjure_foes",
-        label:
-          `abjure_foes\n${m.activationCost.kind}:${m.activationCost.action}\n` +
-          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
-          `${m.targetSelection.count.ability} targets min ${m.targetSelection.count.minimum}\n` +
-          `${m.save.ability} save\n${m.onFail.condition}`,
-      });
-      return [abjureId];
-    }
-    case "acrobatic_movement": {
-      const acrobaticId = ids("acrobatic-movement");
-      nodes.push({
-        id: acrobaticId,
-        category: "effect",
-        atomKind: "acrobatic_movement",
-        label:
-          `acrobatic_movement\n${m.movement.timing}\n` +
-          `${m.movement.verticalSurfaces.path}\n${m.movement.liquids.path}`,
-      });
-      return [acrobaticId];
-    }
-    case "cunning_strike_option_grant": {
-      const optionId = ids("cunning-strike-option");
-      nodes.push({
-        id: optionId,
-        category: "procedure",
-        atomKind: "cunning_strike_option_grant",
-        label:
-          `cunning_strike_option_grant\n${m.sourceUnitId}\n` +
-          `${m.option.id}\n` +
-          `${m.option.cost.dice}d${m.option.cost.dieSize}`,
-      });
-      return [optionId];
-    }
-    case "sacred_weapon": {
-      const sacredWeaponId = ids("sacred-weapon");
-      nodes.push({
-        id: sacredWeaponId,
-        category: "procedure",
-        atomKind: "sacred_weapon",
-        label:
-          `sacred_weapon\n${m.activationCost.kind}:${m.activationCost.action}\n` +
-          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
-          `${m.target.kind}\n${m.attackRollBonus.ability} modifier min ${m.attackRollBonus.minimum}\n` +
-          `${m.duration.amount} ${m.duration.unit}`,
-      });
-      return [sacredWeaponId];
-    }
-    case "hunters_prey": {
-      const preyId = ids("hunters-prey");
-      nodes.push({
-        id: preyId,
-        category: "procedure",
-        atomKind: "hunters_prey",
-        label:
-          `hunters_prey\n${m.choice.kind}\nreplace ${m.choice.replaceOn}\n` +
-          m.options.map((option) => option.id).join(" | "),
-      });
-      return [preyId];
-    }
-    case "steady_aim": {
-      const steadyAimId = ids("steady-aim");
-      nodes.push({
-        id: steadyAimId,
-        category: "procedure",
-        atomKind: "steady_aim",
-        label:
-          `steady_aim\n${m.activationCost.kind}\n${m.precondition.kind}\n` +
-          `${m.attackRoll.mode} ${m.attackRoll.appliesTo}\n` +
-          `${m.speed.kind} ${m.speed.until}`,
-      });
-      return [steadyAimId];
-    }
-    case "potent_cantrip": {
-      const cantripId = ids("potent-cantrip");
-      nodes.push({
-        id: cantripId,
-        category: "procedure",
-        atomKind: "potent_cantrip",
-        label:
-          `potent_cantrip\n${m.trigger.kind}:${m.trigger.cantripKind}\n` +
-          `${m.outcomes.join(" | ")}\n${m.damage.kind}\n${m.additionalEffect}`,
-      });
-      return [cantripId];
-    }
-    case "initiative_focus_recovery":
-      return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
-    case "sorcery_point_short_rest_recovery": {
-      const recoveryId = ids("sorceryPointShortRestRecovery");
-      nodes.push({
-        id: recoveryId,
-        category: "procedure",
-        atomKind: "sorcery_point_short_rest_recovery",
-        label:
-          `sorcery_point_short_rest_recovery\n${m.recoveryTrigger}\n` +
-          `${m.resource.resourceUnitId}\n${m.recoveryCap.kind}\n` +
-          `reset ${m.resetCadence.kind}`,
-      });
-      return [recoveryId];
-    }
-    case "combat_turn_start_heroic_inspiration": {
-      const heroicInspirationId = ids("heroicInspiration");
-      nodes.push({
-        id: heroicInspirationId,
-        category: "procedure",
-        atomKind: "combat_turn_start_heroic_inspiration",
-        label:
-          "combat_turn_start_heroic_inspiration\nstart_turn\ncombat\nrequires missing Heroic Inspiration",
-      });
-      return [heroicInspirationId];
-    }
-    case "prepared_spell_list_expansion": {
-      const expansionId = ids("prepared-spell-list-expansion");
-      nodes.push({
-        id: expansionId,
-        category: "procedure",
-        atomKind: "prepared_spell_list_expansion",
-        label:
-          `prepared_spell_list_expansion\n${m.baseSpellList}\n` +
-          m.additionalEligibleSpellLists.join(" | "),
-      });
-      return [expansionId];
-    }
-    case "spell_damage_roll_ability_modifier": {
-      const modifierId = ids("spell-damage-roll-ability-modifier");
-      nodes.push({
-        id: modifierId,
-        category: "procedure",
-        atomKind: "spell_damage_roll_ability_modifier",
-        label:
-          `spell_damage_roll_ability_modifier\n${m.spellSourceClassName}:${m.school}\n` +
-          `${m.ability} to ${m.damageRollCount} damage roll`,
-      });
-      return [modifierId];
-    }
-    case "composite":
-      return m.parts.map((part) => {
-        switch (part.family) {
-          case "activation":
-            return traceActivatedAbility(part, nodes, edges, ids);
-          case "passive":
-            return tracePassiveMechanics(part, nodes, edges, ids);
-          case "alternate_action_cost":
-            return traceAlternateActionCostMechanics(part, nodes, ids);
-          case "on_hit_trigger":
-            return traceOnHitTriggerMechanics(part, nodes, edges, ids);
-          case "save_damage_replacement":
-            return traceSaveDamageReplacementMechanics(part, nodes, ids);
-          case "reaction_roll_or_damage_reduction":
-            return traceReactionRollOrDamageReductionMechanics(
-              part,
-              nodes,
-              ids,
-            );
-          /* v8 ignore start -- @preserve -- component mechanics are decoder-narrowed to the handled families */
-          default: {
-            const _exhaustive: never = part;
-            throw new Error(
-              `unhandled class-feature component family: ${String((_exhaustive as { family: string }).family)}`,
-            );
-          }
-          /* v8 ignore stop -- @preserve */
+  return Match.value(m).pipe(
+    Match.discriminatorsExhaustive("family")({
+      activation: (m) => {
+        return [traceActivatedAbility(m, nodes, edges, ids)];
+      },
+      passive: (m) => {
+        return [tracePassiveMechanics(m, nodes, edges, ids)];
+      },
+      alternate_action_cost: (m) => {
+        return [traceAlternateActionCostMechanics(m, nodes, ids)];
+      },
+      feature_choice: (m) => {
+        return [traceFeatureChoiceMechanics(m, nodes, ids)];
+      },
+      on_hit_trigger: (m) => {
+        return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
+      },
+      save_damage_replacement: (m) => {
+        return [traceSaveDamageReplacementMechanics(m, nodes, ids)];
+      },
+      reaction_roll_or_damage_reduction: (m) => {
+        return [traceReactionRollOrDamageReductionMechanics(m, nodes, ids)];
+      },
+      weapon_mastery_choice: (m) => {
+        const masteryId = ids("mastery");
+        nodes.push({
+          id: masteryId,
+          category: "hole",
+          atomKind: "class_weapon_mastery_choice",
+          label:
+            `class_weapon_mastery_choice\n${describeWeaponMasteryChoiceCount(m.choose)}\n` +
+            `${describeWeaponMasteryEligibility(m.eligibleWeapons)}\n` +
+            `change ${m.changeOn.count} on ${m.changeOn.kind}`,
+        });
+        return [masteryId];
+      },
+      class_feature_acquisition_choice: (m) => {
+        const choiceId = ids("classFeatureAcquisitionChoice");
+        nodes.push({
+          id: choiceId,
+          category: "procedure",
+          atomKind: "class_feature_acquisition_choice",
+          label: `class_feature_acquisition_choice\n${m.choiceKey}\n${m.options.map((option) => option.displayName).join(" | ")}`,
+        });
+        for (const option of m.options) {
+          const optionId = tracePassiveMechanics(
+            option.mechanics,
+            nodes,
+            edges,
+            ids,
+          );
+          edges.push({ from: choiceId, to: optionId, relation: option.id });
         }
-      });
-  }
-  const _exhaustive: never = m;
-  return _exhaustive;
+        return [choiceId];
+      },
+      resource_container: (m) => {
+        return [traceResourceContainerMechanics(m, nodes, edges, ids)];
+      },
+      resource_pool: (m) => {
+        return [traceResourcePoolMechanics(m, nodes, edges, ids)];
+      },
+      metamagic_options: (m) => {
+        return [traceMetamagicOptionsMechanics(m, nodes, edges, ids)];
+      },
+      druid_wild_companion_spell_cast: (m) => {
+        return [
+          traceDruidWildCompanionSpellCastMechanics(m, nodes, edges, ids),
+        ];
+      },
+      class_spellcasting_projection: (m) => {
+        const spellcastingId = ids("spellcasting");
+        nodes.push({
+          id: spellcastingId,
+          category: "procedure",
+          atomKind: "class_spellcasting_projection",
+          label: `class_spellcasting_projection\n${m.spellcastingKind}\nsource ${m.source}`,
+        });
+        return [spellcastingId];
+      },
+      spellbook_ritual_access: (m) => {
+        const ritualId = ids("ritual");
+        nodes.push({
+          id: ritualId,
+          category: "procedure",
+          atomKind: "spellbook_ritual_access",
+          label:
+            `spellbook_ritual_access\nsource ${m.source}\n` +
+            `preparation ${m.preparationRequirement}`,
+        });
+        return [ritualId];
+      },
+      rest_spell_slot_recovery: (m) => {
+        const recoveryId = ids("arcane");
+        nodes.push({
+          id: recoveryId,
+          category: "resource",
+          atomKind: "rest_spell_slot_recovery",
+          label:
+            `rest_spell_slot_recovery\ntrigger ${m.recoveryTrigger}\n` +
+            `${m.recoveredSlotLevelCap.kind}\n` +
+            `slot level < ${m.recoveredSlotLevelCap.maximumSlotLevelExclusive}\n` +
+            `reset ${m.resetCadence.kind}`,
+        });
+        return [recoveryId];
+      },
+      wizard_spellbook_learning: (m) => {
+        const learningId = ids("wizard-spellbook-learning");
+        nodes.push({
+          id: learningId,
+          category: "hole",
+          atomKind: "wizard_spellbook_learning",
+          label:
+            `wizard_spellbook_learning\nsource ${m.spellbookSource.className}\n` +
+            m.grants
+              .map(
+                (grant) =>
+                  `${grant.timing.kind}\nchoose ${grant.choiceCount} ${grant.eligibility.school}`,
+              )
+              .join("\n"),
+        });
+        return [learningId];
+      },
+      pact_slot_recovery: (m) => {
+        const recoveryId = ids("pact");
+        nodes.push({
+          id: recoveryId,
+          category: "resource",
+          atomKind: "pact_slot_recovery",
+          label:
+            `pact_slot_recovery\nactivation ${m.activationCost.kind}\n` +
+            `resource ${m.resource.kind}\n` +
+            `${m.recoveryCap.kind}\n` +
+            `reset ${m.resetCadence.kind}`,
+        });
+        return [recoveryId];
+      },
+      spell_slot_healing_modifier: (m) => {
+        const healingId = ids("spell-slot-healing");
+        nodes.push({
+          id: healingId,
+          category: "effect",
+          atomKind: "spell_slot_healing_modifier",
+          label:
+            `spell_slot_healing_modifier\n${m.trigger.kind}\n` +
+            `${m.trigger.timing}\n${m.appliesTo}\n` +
+            `${m.bonus.kind} +${m.bonus.flat}`,
+        });
+        return [healingId];
+      },
+      magic_action_healing_pool: (m) => {
+        const poolId = ids("healing-pool");
+        nodes.push({
+          id: poolId,
+          category: "resource",
+          atomKind: "magic_action_healing_pool",
+          label:
+            `magic_action_healing_pool\n${m.activationCost.kind}:${m.activationCost.action}\n` +
+            `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+            `${m.range.feet} feet\n` +
+            `pool ${m.pool.multiplier}x class level\n` +
+            `${m.perTargetCap}`,
+        });
+        return [poolId];
+      },
+      magic_action_area_save_damage_healing: (m) => {
+        const areaId = ids("area-damage-healing");
+        nodes.push({
+          id: areaId,
+          category: "procedure",
+          atomKind: "magic_action_area_save_damage_healing",
+          label:
+            `magic_action_area_save_damage_healing\n${m.activationCost.kind}:${m.activationCost.action}\n` +
+            `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+            `${m.area.origin.rangeFeet} foot point range\n` +
+            `${m.area.shape.radiusFeet} foot ${m.area.shape.kind}\n` +
+            `${m.save.ability} save ${m.save.dc.kind}\n` +
+            `${describeDiceAmount(m.damage.amount)} ${m.damage.damageType} ${m.damage.onSuccess}\n` +
+            `heals ${describeDiceAmount(m.healing.amount)}`,
+        });
+        return [areaId];
+      },
+      enemy_zero_hit_point_temporary_hit_points: (m) => {
+        const tempHpId = ids("enemy-zero-temp-hp");
+        nodes.push({
+          id: tempHpId,
+          category: "effect",
+          atomKind: "enemy_zero_hit_point_temporary_hit_points",
+          label:
+            `enemy_zero_hit_point_temporary_hit_points\n${m.trigger.kind}\n` +
+            `self ${m.trigger.bySelf}\n` +
+            `other within ${m.trigger.byOtherWithinFeet} feet\n` +
+            `${m.amount.ability} modifier + class level, min ${m.amount.minimum}`,
+        });
+        return [tempHpId];
+      },
+      bonus_action_delegated_standard_actions: (m) => {
+        const actionId = ids("delegated-bonus-actions");
+        nodes.push({
+          id: actionId,
+          category: "procedure",
+          atomKind: "bonus_action_delegated_standard_actions",
+          label:
+            `bonus_action_delegated_standard_actions\n${m.activationCost.kind}\n` +
+            `${m.sleightOfHand.abilityCheck.ability} ${m.sleightOfHand.abilityCheck.skill}\n` +
+            `${m.objectUse.actions.map((action) => action.action).join(" | ")}`,
+        });
+        return [actionId];
+      },
+      remarkable_athlete: (m) => {
+        const remarkableId = ids("remarkable-athlete");
+        nodes.push({
+          id: remarkableId,
+          category: "procedure",
+          atomKind: "remarkable_athlete",
+          label:
+            `remarkable_athlete\n${m.initiative.roll} ${m.initiative.kind}\n` +
+            `${m.abilityCheck.ability} ${m.abilityCheck.skill} ${m.abilityCheck.kind}\n` +
+            `${m.criticalHitMovement.trigger.kind}\n${m.criticalHitMovement.distance.kind}\n${m.criticalHitMovement.opportunityAttacks}`,
+        });
+        return [remarkableId];
+      },
+      open_hand_technique: (m) => {
+        const openHandId = ids("open-hand-technique");
+        nodes.push({
+          id: openHandId,
+          category: "procedure",
+          atomKind: "open_hand_technique",
+          label:
+            `open_hand_technique\n${m.trigger.resourceOptionUnitId}:${m.trigger.optionId}\n` +
+            `${m.effectSaveDc.ability} save DC\n` +
+            m.choices.map((choice) => choice.id).join(" | "),
+        });
+        return [openHandId];
+      },
+      stunning_strike: (m) => {
+        const stunningId = ids("stunning-strike");
+        nodes.push({
+          id: stunningId,
+          category: "procedure",
+          atomKind: "stunning_strike",
+          label:
+            `stunning_strike\n${m.trigger.kind}\n` +
+            `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+            `${m.savingThrow.ability} save via ${m.spends.resourceUnitId}\n` +
+            `${m.onFail.condition} until ${m.onFail.expires}\n` +
+            `${m.onSuccess.speed.kind} speed\n${m.onSuccess.attackRoll.mode} next attack`,
+        });
+        return [stunningId];
+      },
+      cunning_strike: (m) => {
+        const cunningId = ids("cunning-strike");
+        nodes.push({
+          id: cunningId,
+          category: "procedure",
+          atomKind: "cunning_strike",
+          label:
+            `cunning_strike\n${m.trigger.kind}:${m.trigger.sourceUnitId}\n` +
+            `${m.effectSaveDc.ability} save DC\n` +
+            m.options.map((option) => option.id).join(" | "),
+        });
+        return [cunningId];
+      },
+      brutal_strike: (m) => {
+        const brutalId = ids("brutal-strike");
+        nodes.push({
+          id: brutalId,
+          category: "procedure",
+          atomKind: "brutal_strike",
+          label:
+            `brutal_strike\n${m.trigger.kind}:${m.trigger.prerequisiteUnitId}\n` +
+            `${m.damage.dice.dice}d${m.damage.dice.dieSize} ${m.damage.damageType}\n` +
+            m.options.map((option) => option.id).join(" | "),
+        });
+        return [brutalId];
+      },
+      failed_saving_throw_reroll: (m) => {
+        const indomitableId = ids("indomitable");
+        nodes.push({
+          id: indomitableId,
+          category: "resource",
+          atomKind: "failed_saving_throw_reroll",
+          label:
+            `failed_saving_throw_reroll\n${m.trigger.kind}\n` +
+            `bonus ${m.reroll.bonus.className} ${m.reroll.bonus.kind}\n` +
+            `must use new roll ${m.reroll.mustUseNewRoll}\n` +
+            `reset ${m.resetCadence.kind}`,
+        });
+        return [indomitableId];
+      },
+      weapon_mastery_property_replacement: (m) => {
+        const tacticalId = ids("tactical-master");
+        nodes.push({
+          id: tacticalId,
+          category: "procedure",
+          atomKind: "weapon_mastery_property_replacement",
+          label:
+            `weapon_mastery_property_replacement\n${m.trigger.kind}\n` +
+            `${m.replacement.timing}\n` +
+            m.replacement.chooseOne.join(" | "),
+        });
+        return [tacticalId];
+      },
+      abjure_foes: (m) => {
+        const abjureId = ids("abjure-foes");
+        nodes.push({
+          id: abjureId,
+          category: "procedure",
+          atomKind: "abjure_foes",
+          label:
+            `abjure_foes\n${m.activationCost.kind}:${m.activationCost.action}\n` +
+            `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+            `${m.targetSelection.count.ability} targets min ${m.targetSelection.count.minimum}\n` +
+            `${m.save.ability} save\n${m.onFail.condition}`,
+        });
+        return [abjureId];
+      },
+      acrobatic_movement: (m) => {
+        const acrobaticId = ids("acrobatic-movement");
+        nodes.push({
+          id: acrobaticId,
+          category: "effect",
+          atomKind: "acrobatic_movement",
+          label:
+            `acrobatic_movement\n${m.movement.timing}\n` +
+            `${m.movement.verticalSurfaces.path}\n${m.movement.liquids.path}`,
+        });
+        return [acrobaticId];
+      },
+      cunning_strike_option_grant: (m) => {
+        const optionId = ids("cunning-strike-option");
+        nodes.push({
+          id: optionId,
+          category: "procedure",
+          atomKind: "cunning_strike_option_grant",
+          label:
+            `cunning_strike_option_grant\n${m.sourceUnitId}\n` +
+            `${m.option.id}\n` +
+            `${m.option.cost.dice}d${m.option.cost.dieSize}`,
+        });
+        return [optionId];
+      },
+      sacred_weapon: (m) => {
+        const sacredWeaponId = ids("sacred-weapon");
+        nodes.push({
+          id: sacredWeaponId,
+          category: "procedure",
+          atomKind: "sacred_weapon",
+          label:
+            `sacred_weapon\n${m.activationCost.kind}:${m.activationCost.action}\n` +
+            `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+            `${m.target.kind}\n${m.attackRollBonus.ability} modifier min ${m.attackRollBonus.minimum}\n` +
+            `${m.duration.amount} ${m.duration.unit}`,
+        });
+        return [sacredWeaponId];
+      },
+      hunters_prey: (m) => {
+        const preyId = ids("hunters-prey");
+        nodes.push({
+          id: preyId,
+          category: "procedure",
+          atomKind: "hunters_prey",
+          label:
+            `hunters_prey\n${m.choice.kind}\nreplace ${m.choice.replaceOn}\n` +
+            m.options.map((option) => option.id).join(" | "),
+        });
+        return [preyId];
+      },
+      steady_aim: (m) => {
+        const steadyAimId = ids("steady-aim");
+        nodes.push({
+          id: steadyAimId,
+          category: "procedure",
+          atomKind: "steady_aim",
+          label:
+            `steady_aim\n${m.activationCost.kind}\n${m.precondition.kind}\n` +
+            `${m.attackRoll.mode} ${m.attackRoll.appliesTo}\n` +
+            `${m.speed.kind} ${m.speed.until}`,
+        });
+        return [steadyAimId];
+      },
+      potent_cantrip: (m) => {
+        const cantripId = ids("potent-cantrip");
+        nodes.push({
+          id: cantripId,
+          category: "procedure",
+          atomKind: "potent_cantrip",
+          label:
+            `potent_cantrip\n${m.trigger.kind}:${m.trigger.cantripKind}\n` +
+            `${m.outcomes.join(" | ")}\n${m.damage.kind}\n${m.additionalEffect}`,
+        });
+        return [cantripId];
+      },
+      initiative_focus_recovery: (m) => {
+        return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
+      },
+      sorcery_point_short_rest_recovery: (m) => {
+        const recoveryId = ids("sorceryPointShortRestRecovery");
+        nodes.push({
+          id: recoveryId,
+          category: "procedure",
+          atomKind: "sorcery_point_short_rest_recovery",
+          label:
+            `sorcery_point_short_rest_recovery\n${m.recoveryTrigger}\n` +
+            `${m.resource.resourceUnitId}\n${m.recoveryCap.kind}\n` +
+            `reset ${m.resetCadence.kind}`,
+        });
+        return [recoveryId];
+      },
+      combat_turn_start_heroic_inspiration: () => {
+        const heroicInspirationId = ids("heroicInspiration");
+        nodes.push({
+          id: heroicInspirationId,
+          category: "procedure",
+          atomKind: "combat_turn_start_heroic_inspiration",
+          label:
+            "combat_turn_start_heroic_inspiration\nstart_turn\ncombat\nrequires missing Heroic Inspiration",
+        });
+        return [heroicInspirationId];
+      },
+      use_count_resource_recovery: (m) => {
+        const recoveryId = ids("use-count-resource-recovery");
+        nodes.push({
+          id: recoveryId,
+          category: "procedure",
+          atomKind: m.family,
+          label: `${m.family}\n${m.resourceUnitId}\n${m.restRecovery.resetCadence.kind}: ${m.restRecovery.amount}\n${m.spellSlotExchange.spellSlotCount} spell slot → ${m.spellSlotExchange.restoredUses} use\n${m.spellSlotExchange.actionCost} action cost\nrequires expended use: ${m.spellSlotExchange.requiresExpendedUse}`,
+        });
+        return [recoveryId];
+      },
+      chosen_prepared_spell_access: (m) => {
+        const accessId = ids("chosen-prepared-spell-access");
+        nodes.push({
+          id: accessId,
+          category: "procedure",
+          atomKind: m.family,
+          label: `${m.family}\nchoose ${m.choiceCount}\n${m.eligibleSpellLists.join(" | ")}\n${m.eligibleSpellLevel}\n${m.preparation}\nreplace ${m.replacement.maximumCount} on ${m.replacement.trigger}`,
+        });
+        return [accessId];
+      },
+      marked_creature_defenses_disclosure: (m) => {
+        const disclosureId = ids("marked-creature-defenses-disclosure");
+        nodes.push({
+          id: disclosureId,
+          category: "procedure",
+          atomKind: m.family,
+          label: `${m.family}\n${m.spellId}`,
+        });
+        return [disclosureId];
+      },
+      attack_roll_defense_choice: (m) => {
+        const defenseId = ids("attack-roll-defense-choice");
+        nodes.push({
+          id: defenseId,
+          category: "procedure",
+          atomKind: m.family,
+          label: `${m.family}\n${m.choice.kind}\nreplace on ${m.choice.replaceOn}`,
+        });
+        for (const option of m.options) {
+          const optionId = ids("attack-roll-defense-option");
+          const detail = Match.value(option).pipe(
+            Match.when(
+              { trigger: { kind: "opportunity_attack" } },
+              (value) => `${value.trigger.kind}\n${value.attackRoll.mode}`,
+            ),
+            Match.when(
+              { trigger: { kind: "hit_by_attack_roll" } },
+              (value) =>
+                `${value.trigger.kind}\n${value.attackRoll.mode} ${value.attackRoll.appliesTo}\n${value.attackRoll.until}`,
+            ),
+            Match.exhaustive,
+          );
+          nodes.push({
+            id: optionId,
+            category: "procedure",
+            atomKind: "attack_roll_defense_option",
+            label: `${option.id}\n${detail}`,
+          });
+          edges.push({ from: defenseId, to: optionId, relation: option.id });
+        }
+        return [defenseId];
+      },
+      prepared_spell_rest_replacement: (m) => {
+        const replacementId = ids("prepared-spell-rest-replacement");
+        nodes.push({
+          id: replacementId,
+          category: "procedure",
+          atomKind: m.family,
+          label: `${m.family}\n${m.trigger}\nreplace ${m.replacementCount}\n${m.preparedSpellSource} → ${m.replacementSource}\nminimum spell level ${m.minimumSpellLevel}`,
+        });
+        return [replacementId];
+      },
+      prepared_spell_list_expansion: (m) => {
+        const expansionId = ids("prepared-spell-list-expansion");
+        nodes.push({
+          id: expansionId,
+          category: "procedure",
+          atomKind: "prepared_spell_list_expansion",
+          label:
+            `prepared_spell_list_expansion\n${m.baseSpellList}\n` +
+            m.additionalEligibleSpellLists.join(" | "),
+        });
+        return [expansionId];
+      },
+      spell_damage_roll_ability_modifier: (m) => {
+        const modifierId = ids("spell-damage-roll-ability-modifier");
+        nodes.push({
+          id: modifierId,
+          category: "procedure",
+          atomKind: "spell_damage_roll_ability_modifier",
+          label:
+            `spell_damage_roll_ability_modifier\n${m.spellSourceClassName}:${m.school}\n` +
+            `${m.ability} to ${m.damageRollCount} damage roll`,
+        });
+        return [modifierId];
+      },
+      composite: (m) => {
+        return m.parts.map((part) =>
+          Match.value(part).pipe(
+            Match.when({ family: "activation" }, (value) =>
+              traceActivatedAbility(value, nodes, edges, ids),
+            ),
+            Match.when({ family: "passive" }, (value) =>
+              tracePassiveMechanics(value, nodes, edges, ids),
+            ),
+            Match.when({ family: "alternate_action_cost" }, (value) =>
+              traceAlternateActionCostMechanics(value, nodes, ids),
+            ),
+            Match.when({ family: "on_hit_trigger" }, (value) =>
+              traceOnHitTriggerMechanics(value, nodes, edges, ids),
+            ),
+            Match.when({ family: "save_damage_replacement" }, (value) =>
+              traceSaveDamageReplacementMechanics(value, nodes, ids),
+            ),
+            Match.when(
+              { family: "reaction_roll_or_damage_reduction" },
+              (value) =>
+                traceReactionRollOrDamageReductionMechanics(value, nodes, ids),
+            ),
+            Match.exhaustive,
+          ),
+        );
+      },
+    }),
+  );
 }
 
 type ResourceLinkedClassMechanics = Extract<

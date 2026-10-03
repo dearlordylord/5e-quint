@@ -27,6 +27,56 @@ import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 
 describe("Surface trace helper branches", () => {
+  test.each([
+    [
+      "use_count_resource_recovery",
+      ["bard_bardic_inspiration", "short_or_long_rest", "1 spell slot → 1 use"],
+    ],
+    [
+      "chosen_prepared_spell_access",
+      [
+        "choose 2",
+        "cleric | druid | wizard",
+        "always_prepared",
+        "replace 1 on class_level_gain",
+      ],
+    ],
+    ["marked_creature_defenses_disclosure", ["hunters_mark"]],
+    [
+      "attack_roll_defense_choice",
+      [
+        "choose_one",
+        "short_or_long_rest",
+        "opportunity_attack",
+        "same_attacker_against_self",
+        "end_of_current_turn",
+      ],
+    ],
+    [
+      "prepared_spell_rest_replacement",
+      [
+        "short_rest_completion",
+        "replace 1",
+        "class_spellcasting → own_spellbook",
+        "minimum spell level 1",
+      ],
+    ],
+  ] as const)("traces canonical %s execution facts", (family, facts) => {
+    const unit = srdUnitCollection.units.find(
+      (unit) =>
+        unit.kind === "class_feature" && unit.mechanics.family === family,
+    );
+    if (unit?.kind !== "class_feature")
+      throw new Error(`Missing ${family} fixture`);
+    const nodes: TraceNode[] = [];
+    const edges: TraceEdge[] = [];
+    traceClassFeatureMechanics(unit.mechanics, nodes, edges, idGen());
+    expect(nodes.some((node) => node.atomKind === family)).toBe(true);
+    const labels = nodes.map((node) => node.label).join("\n");
+    for (const fact of facts) expect(labels).toContain(fact);
+    if (family === "attack_roll_defense_choice") expect(edges).toHaveLength(2);
+  });
+
   test("describes optional creature-control facts", () => {
     const actionControl = {
       initiative: "own_roll",

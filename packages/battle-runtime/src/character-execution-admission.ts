@@ -1563,6 +1563,10 @@ export function unitSupportProcedureExecution(
         kind: value.kind,
         remarkableAthlete: value.remarkableAthlete,
       }),
+      attackRollDefense: (value) => ({
+        kind: value.kind,
+        selection: value.selection,
+      }),
       huntersPrey: (value) => ({
         kind: value.kind,
         huntersPrey: value.huntersPrey,

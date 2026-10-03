@@ -6,6 +6,23 @@ import {
 } from "./check-difficulty.ts";
 import type { ReadonlyNonEmptyArray } from "./non-empty-array.d.ts";
 
+export const ATTACK_ROLL_DEFENSE_SELECTIONS = [
+  "opportunityAttackDisadvantage",
+  "repeatAttackerAfterHitDisadvantage",
+] as const;
+export type AttackRollDefenseSelection =
+  (typeof ATTACK_ROLL_DEFENSE_SELECTIONS)[number];
+export const AttackRollDefenseSelectionSchema = Schema.Literals(
+  ATTACK_ROLL_DEFENSE_SELECTIONS,
+);
+export function isAttackRollDefenseSelection(
+  value: unknown,
+): value is AttackRollDefenseSelection {
+  return ATTACK_ROLL_DEFENSE_SELECTIONS.some(
+    (selection) => selection === value,
+  );
+}
+
 export const AMMUNITION_KINDS = [
   "arrow",
   "bolt",
@@ -197,6 +214,15 @@ export const CHARACTER_CLASS_LEVELS = [
 ] as const satisfies ReadonlyArray<number>;
 
 export type CharacterClassLevel = number & Brand.Brand<"CharacterClassLevel">;
+
+export const CharacterClassLevelSchema = Schema.Number.pipe(
+  Schema.check(
+    Schema.makeFilter((value: number) =>
+      CHARACTER_CLASS_LEVELS.some((level) => level === value),
+    ),
+  ),
+  Schema.brand("CharacterClassLevel"),
+);
 
 export const CharacterClassLevel = Brand.all(
   Brand.make<CharacterClassLevel>(

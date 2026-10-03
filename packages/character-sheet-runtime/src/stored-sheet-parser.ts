@@ -1,11 +1,18 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  characterClassLevel,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   abilityScoreAssignment,
   characterBuildSorcererMetamagicFacts,
+  characterBuildFeatureUnitIds,
+  classFeatureGrantChoiceHoles,
+  UnitRefSelectedOptionSchema,
+  validateChosenPreparedSpellAccessBuild,
   characterBuildSpellcastingSlotCapacity,
   characterEquipmentItemId,
   characterDraconicAncestrySelection,
@@ -48,7 +55,6 @@ import {
 import {
   ABILITIES,
   LANGUAGES,
-  SKILLS,
   SURFACE_SKILLS,
   type Ability,
   type CharacterStartingLanguages,
@@ -756,6 +762,21 @@ function validateParsedCharacterBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Result.Result<void, CharacterSheetIssue> {
+  const chosenAccess = validateChosenPreparedSpellAccessBuild({
+    build,
+    unitLibrary,
+    earnedFeatureUnitIds: characterBuildFeatureUnitIds(build, unitLibrary),
+  });
+  if (Result.isFailure(chosenAccess))
+    return characterSheetIssue(chosenAccess.failure);
+  for (const validate of [
+    validateStoredDefenseSourceSelections,
+    validateStoredDefenseSelectionOwners,
+    validateStoredFeatGrantCoverage,
+  ]) {
+    const validated = validate(build, unitLibrary);
+    if (Result.isFailure(validated)) return Result.fail(validated.failure);
+  }
   const bookOfShadowsIssue = storedBookOfShadowsSelectionIssue(
     build,
     unitLibrary,
@@ -1542,7 +1563,7 @@ type ArmorTrainingCategory = Extract<
 >["category"];
 
 function isCharacterBuildSkill(value: unknown): value is CharacterBuildSkill {
-  return SKILLS.some((skill) => skill === value);
+  return SURFACE_SKILLS.some((skill) => skill === value);
 }
 
 function isWeaponProficiencyCategory(
@@ -1566,67 +1587,77 @@ function parseStoredFeatures(
   if (!Array.isArray(value)) {
     return characterSheetIssue("Character Build requires features.");
   }
-  const features = [];
+  const features: CharacterBuildFeature[] = [];
   for (const feature of value) {
     if (!isRecord(feature) || typeof feature.selectedFromUnitId !== "string") {
       return characterSheetIssue("Character Build feature is invalid.");
     }
-    if (
-      feature.kind === "selectedClassChoice" &&
+    const parsed = parseStoredFeature(
+      feature,
+      feature.selectedFromUnitId,
+      unitLibrary,
+    );
+    if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
+    features.push(parsed.success);
+  }
+  return Result.succeed(features);
+}
+
+function parseStoredFeature(
+  feature: Readonly<Record<string, unknown>>,
+  selectedFromUnitId: string,
+  unitLibrary: UnitCatalog,
+): Result.Result<CharacterBuildFeature, CharacterSheetIssue> {
+  return Match.value(feature.kind).pipe(
+    Match.when("selectedClassChoice", () =>
       typeof feature.unitId === "string"
-    ) {
-      features.push({
-        kind: "selectedClassChoice" as const,
-        unitId: authoredUnitId(feature.unitId),
-        selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
-      });
-    } else if (
-      feature.kind === "selectedEldritchInvocation" &&
-      isRecord(feature.selection)
-    ) {
+        ? parseStoredSelectedClassChoice(
+            feature,
+            feature.unitId,
+            selectedFromUnitId,
+          )
+        : characterSheetIssue("Character Build feature is invalid."),
+    ),
+    Match.when("selectedPreparedSpellAccess", () =>
+      parseStoredSelectedPreparedSpellAccess(feature, selectedFromUnitId),
+    ),
+    Match.when("selectedEldritchInvocation", () => {
+      if (!isRecord(feature.selection))
+        return characterSheetIssue("Character Build feature is invalid.");
       const selection = parseStoredEldritchInvocationSelection(
         feature.selection,
         unitLibrary,
       );
-      if (Result.isFailure(selection)) {
-        return Result.fail(selection.failure);
-      }
-      features.push({
+      if (Result.isFailure(selection)) return Result.fail(selection.failure);
+      return Result.succeed({
         kind: "selectedEldritchInvocation" as const,
         selection: selection.success,
-        selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
+        selectedFromUnitId: authoredUnitId(selectedFromUnitId),
       });
-    } else if (
-      feature.kind === "selectedSorcererMetamagicOption" &&
-      typeof feature.optionId === "string"
-    ) {
+    }),
+    Match.when("selectedSorcererMetamagicOption", () => {
+      if (typeof feature.optionId !== "string")
+        return characterSheetIssue("Character Build feature is invalid.");
       const optionId = sorcererMetamagicOptionId(feature.optionId);
       /* v8 ignore start -- @preserve -- Malformed stored build: a selected Metamagic option id is outside the installed closed option roster. */
-      if (Result.isFailure(optionId)) {
+      if (Result.isFailure(optionId))
         return characterSheetIssue(
           "Character Build Sorcerer Metamagic option selection is invalid.",
         );
-      }
       /* v8 ignore stop -- @preserve */
-      features.push({
+      return Result.succeed({
         kind: "selectedSorcererMetamagicOption" as const,
         optionId: optionId.success,
-        selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
+        selectedFromUnitId: authoredUnitId(selectedFromUnitId),
       });
-    } else if (feature.kind === "abilityCheckBonus") {
-      const abilityCheckBonus = parseStoredAbilityCheckBonusFeature({
-        feature,
-        selectedFromUnitId: feature.selectedFromUnitId,
-      });
-      if (Result.isFailure(abilityCheckBonus)) {
-        return Result.fail(abilityCheckBonus.failure);
-      }
-      features.push(abilityCheckBonus.success);
-    } else {
-      return characterSheetIssue("Character Build feature is invalid.");
-    }
-  }
-  return Result.succeed(features);
+    }),
+    Match.when("abilityCheckBonus", () =>
+      parseStoredAbilityCheckBonusFeature({ feature, selectedFromUnitId }),
+    ),
+    Match.orElse(() =>
+      characterSheetIssue("Character Build feature is invalid."),
+    ),
+  );
 }
 
 function parseStoredEldritchInvocationSelection(
@@ -2472,4 +2503,327 @@ function isStringArray(value: unknown): value is readonly string[] {
   return (
     Array.isArray(value) && value.every((item) => typeof item === "string")
   );
+}
+
+function parseStoredFeatureGrantLevel(
+  value: unknown,
+): Result.Result<
+  ReturnType<typeof characterClassLevel> | undefined,
+  CharacterSheetIssue
+> {
+  if (value === undefined) return Result.succeed(undefined);
+  if (
+    !isPositiveInteger(value) ||
+    !CHARACTER_CLASS_LEVELS.some((level) => level === value)
+  )
+    return characterSheetIssue(
+      "Character Build feature grant level is invalid.",
+    );
+  return Result.succeed(characterClassLevel(value));
+}
+
+function parseStoredSelectedClassChoice(
+  feature: Readonly<Record<string, unknown>>,
+  unitId: string,
+  selectedFromUnitId: string,
+): Result.Result<
+  Extract<CharacterBuildFeature, { readonly kind: "selectedClassChoice" }>,
+  CharacterSheetIssue
+> {
+  const grantLevel = parseStoredFeatureGrantLevel(
+    feature.selectedFromGrantLevel,
+  );
+  if (Result.isFailure(grantLevel)) return Result.fail(grantLevel.failure);
+  const selectedOption =
+    feature.selectedOption === undefined
+      ? undefined
+      : Schema.decodeUnknownResult(UnitRefSelectedOptionSchema)(
+          feature.selectedOption,
+        );
+  if (selectedOption !== undefined && Result.isFailure(selectedOption))
+    return characterSheetIssue(
+      "Character Build feature selected option is invalid.",
+    );
+  return Result.succeed({
+    kind: "selectedClassChoice" as const,
+    unitId: authoredUnitId(unitId),
+    selectedFromUnitId: authoredUnitId(selectedFromUnitId),
+    ...(grantLevel.success === undefined
+      ? {}
+      : { selectedFromGrantLevel: grantLevel.success }),
+    ...(selectedOption === undefined
+      ? {}
+      : { selectedOption: selectedOption.success }),
+  });
+}
+
+function parseStoredSelectedPreparedSpellAccess(
+  feature: Readonly<Record<string, unknown>>,
+  selectedFromUnitId: string,
+): Result.Result<
+  Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedPreparedSpellAccess" }
+  >,
+  CharacterSheetIssue
+> {
+  if (
+    !isStringArray(feature.spellIds) ||
+    feature.spellIds.length !== 2 ||
+    feature.spellIds[0] === feature.spellIds[1]
+  ) {
+    return characterSheetIssue(
+      "Character Build chosen prepared Spell Access requires two distinct spells.",
+    );
+  }
+  const first = feature.spellIds[0];
+  const second = feature.spellIds[1];
+  if (first === undefined || second === undefined)
+    return characterSheetIssue(
+      "Character Build chosen prepared Spell Access is invalid.",
+    );
+  return Result.succeed({
+    kind: "selectedPreparedSpellAccess" as const,
+    selectedFromUnitId: authoredUnitId(selectedFromUnitId),
+    spellIds: [authoredUnitId(first), authoredUnitId(second)] as const,
+  });
+}
+
+function validateStoredDefenseSourceSelections(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Result.Result<void, CharacterSheetIssue> {
+  const earnedFeatureUnitIds = characterBuildFeatureUnitIds(build, unitLibrary);
+  for (const id of earnedFeatureUnitIds) {
+    const source = unitLibrary.getUnit(id);
+    if (
+      Option.isNone(source) ||
+      source.value.kind !== "class_feature" ||
+      source.value.mechanics.family !== "attack_roll_defense_choice"
+    )
+      continue;
+    const validated = validateStoredDefenseSourceSelection(build, id);
+    if (Result.isFailure(validated)) return Result.fail(validated.failure);
+  }
+  return Result.succeed(undefined);
+}
+function validateStoredDefenseSourceSelection(
+  build: CharacterBuild,
+  id: CharacterBuildFeature["selectedFromUnitId"],
+): Result.Result<void, CharacterSheetIssue> {
+  const selections = build.features.filter(
+    (feature) =>
+      feature.kind === "selectedClassChoice" && feature.unitId === id,
+  );
+  const selection = selections[0];
+  if (
+    selections.length !== 1 ||
+    selection?.kind !== "selectedClassChoice" ||
+    selection.selectedFromUnitId !== id ||
+    selection.selectedOption?.kind !== "attackRollDefense"
+  )
+    return characterSheetIssue(
+      "Stored Attack Roll Defense requires exactly one earned source-scoped option.",
+    );
+  return Result.succeed(undefined);
+}
+function validateStoredDefenseSelectionOwners(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Result.Result<void, CharacterSheetIssue> {
+  const earnedFeatureUnitIds = characterBuildFeatureUnitIds(build, unitLibrary);
+  for (const feature of build.features) {
+    if (
+      feature.kind !== "selectedClassChoice" ||
+      feature.selectedOption?.kind !== "attackRollDefense"
+    )
+      continue;
+    const validated = validateStoredDefenseSelectionOwner(
+      feature,
+      earnedFeatureUnitIds,
+      unitLibrary,
+    );
+    if (Result.isFailure(validated)) return Result.fail(validated.failure);
+  }
+  return Result.succeed(undefined);
+}
+function validateStoredDefenseSelectionOwner(
+  feature: Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedClassChoice" }
+  >,
+  earnedFeatureUnitIds: readonly CharacterBuildFeature["selectedFromUnitId"][],
+  unitLibrary: UnitCatalog,
+): Result.Result<void, CharacterSheetIssue> {
+  const source = unitLibrary.getUnit(feature.unitId);
+  if (
+    Option.isNone(source) ||
+    source.value.kind !== "class_feature" ||
+    source.value.mechanics.family !== "attack_roll_defense_choice" ||
+    feature.selectedFromUnitId !== feature.unitId ||
+    !earnedFeatureUnitIds.includes(feature.unitId)
+  )
+    return characterSheetIssue(
+      "Stored Attack Roll Defense option requires its earned feature mechanics.",
+    );
+  return Result.succeed(undefined);
+}
+function validateStoredFeatGrantCoverage(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Result.Result<void, CharacterSheetIssue> {
+  const occurrences = new Set<string>();
+  for (const feature of build.features) {
+    if (feature.kind !== "selectedClassChoice") continue;
+    const resolved = storedSelectedFeatGrantOrigin(build, unitLibrary, feature);
+    if (Result.isFailure(resolved)) return Result.fail(resolved.failure);
+    const origin = resolved.success;
+    if (origin === undefined) continue;
+    if (occurrences.has(origin))
+      return characterSheetIssue(
+        "Stored selected feature grant occurrence is duplicated.",
+      );
+    occurrences.add(origin);
+  }
+  return validateStoredEarnedFeatGrantOccurrences(
+    build,
+    unitLibrary,
+    occurrences,
+  );
+}
+function storedSelectedFeatGrantOrigin(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  feature: Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedClassChoice" }
+  >,
+): Result.Result<string | undefined, CharacterSheetIssue> {
+  const source = unitLibrary.getUnit(feature.selectedFromUnitId);
+  if (Option.isNone(source) || source.value.kind !== "class_feature") {
+    if (feature.selectedFromGrantLevel !== undefined)
+      return characterSheetIssue(
+        "Stored selected feature grant has no class-feature source.",
+      );
+    return Result.succeed(undefined);
+  }
+  return storedClassFeatureFeatGrantOrigin(
+    build,
+    unitLibrary,
+    feature,
+    source.value,
+  );
+}
+function storedClassFeatureFeatGrantOrigin(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  feature: Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedClassChoice" }
+  >,
+  sourceFacts: Extract<UnitRecord, { readonly kind: "class_feature" }>,
+): Result.Result<string | undefined, CharacterSheetIssue> {
+  const grantLevel =
+    feature.selectedFromGrantLevel ?? sourceFacts.acquiredAtLevel;
+  const ownerId = progressionClassUnitIds(build.progression).find((id) => {
+    const unit = unitLibrary.getUnit(id);
+    return (
+      Option.isSome(unit) &&
+      unit.value.kind === "class" &&
+      unit.value.className === sourceFacts.className
+    );
+  });
+  if (
+    ownerId === undefined ||
+    grantLevel > classLevelForUnit(build.progression, ownerId)
+  )
+    return characterSheetIssue(
+      "Stored selected feature grant exceeds its owning class level.",
+    );
+  const owner = unitLibrary.getUnit(ownerId);
+  if (Option.isNone(owner) || owner.value.kind !== "class")
+    return characterSheetIssue(
+      "Stored selected feature grant has no owning class.",
+    );
+  const subclassGrants = storedSubclassFeatureGrants(
+    build,
+    unitLibrary,
+    ownerId,
+  );
+  if (
+    ![...owner.value.featureGrants, ...subclassGrants].some(
+      (grant) =>
+        grant.unitId === feature.selectedFromUnitId &&
+        grant.level === grantLevel,
+    )
+  )
+    return characterSheetIssue(
+      "Stored selected feature grant does not match a canonical grant occurrence.",
+    );
+  const featChoiceOwner = classFeatureGrantChoiceHoles(
+    feature.selectedFromUnitId,
+    unitLibrary,
+    { classLevel: classLevelForUnit(build.progression, ownerId), grantLevel },
+  ).some(
+    (hole) =>
+      hole.source.tag === "unitChoice" &&
+      hole.source.choiceKey === "class_feature_feat_choice",
+  );
+  if (!featChoiceOwner) return Result.succeed(undefined);
+  return Result.succeed(`${feature.selectedFromUnitId}:${grantLevel}`);
+}
+function validateStoredEarnedFeatGrantOccurrences(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  occurrences: ReadonlySet<string>,
+): Result.Result<void, CharacterSheetIssue> {
+  for (const ownerId of progressionClassUnitIds(build.progression)) {
+    const owner = unitLibrary.getUnit(ownerId);
+    if (Option.isNone(owner) || owner.value.kind !== "class") continue;
+    const level = classLevelForUnit(build.progression, ownerId);
+    const subclassGrants = storedSubclassFeatureGrants(
+      build,
+      unitLibrary,
+      ownerId,
+    );
+    for (const grant of [
+      ...owner.value.featureGrants,
+      ...subclassGrants,
+    ].filter((grant) => grant.level <= level)) {
+      const featHoles = classFeatureGrantChoiceHoles(
+        grant.unitId,
+        unitLibrary,
+        { classLevel: level, grantLevel: grant.level },
+      ).filter(
+        (hole) =>
+          hole.source.tag === "unitChoice" &&
+          hole.source.choiceKey === "class_feature_feat_choice",
+      );
+      if (
+        featHoles.length > 0 &&
+        !occurrences.has(`${grant.unitId}:${grant.level}`)
+      )
+        return characterSheetIssue(
+          "Stored selected feature is missing an earned feat grant occurrence.",
+        );
+    }
+  }
+  return Result.succeed(undefined);
+}
+function storedSubclassFeatureGrants(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  ownerId: CharacterBuildFeature["selectedFromUnitId"],
+) {
+  return build.features.flatMap((selection) => {
+    if (
+      selection.kind !== "selectedClassChoice" ||
+      selection.selectedFromUnitId !== ownerId
+    )
+      return [];
+    const unit = unitLibrary.getUnit(selection.unitId);
+    return Option.isSome(unit) && unit.value.kind === "subclass"
+      ? unit.value.featureGrants
+      : [];
+  });
 }

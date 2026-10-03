@@ -1,3 +1,7 @@
+import {
+  attackRollDefenseGrantsDisadvantage,
+  recordAttackRollDefenseHit,
+} from "./attack-roll-defense.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // Shared ongoing-feature helpers avoid a cycle between attack rolls and unit
 // features.
@@ -217,6 +221,7 @@ export function requiredAttackRollMode(
   targetId: CombatantId,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  opportunityAttack = false,
 ): AttackRollMode | undefined {
   const sources = attackRollSourceFlags(
     state,
@@ -228,7 +233,13 @@ export function requiredAttackRollMode(
   );
   return attackRollModeFromSources(
     sources.hasAdvantage,
-    sources.hasDisadvantage,
+    sources.hasDisadvantage ||
+      attackRollDefenseGrantsDisadvantage({
+        state,
+        attackerId,
+        defenderId: targetId,
+        opportunityAttack,
+      }),
   );
 }
 
@@ -283,6 +294,19 @@ function combatantHasHiddenAttackRollBenefit(
   );
 }
 
+function attackTargetIsLongRange(
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption | undefined,
+): boolean {
+  return (
+    attack !== undefined &&
+    attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
+      "long"
+  );
+}
+
 function attackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
@@ -301,10 +325,12 @@ function attackRollSourceFlags(
     hasDodgeAttackRollBenefit(state, target, attacker);
   const grappleDisadvantage =
     grapple !== undefined && grapple.grapplerId !== targetId;
-  const longRangeDisadvantage =
-    attack !== undefined &&
-    attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
-      "long";
+  const longRangeDisadvantage = attackTargetIsLongRange(
+    targetSpatialFacts,
+    attackerId,
+    targetId,
+    attack,
+  );
   const targetConditionRollModeSources = targetConditionAttackRollModeSources(
     state,
     attackerId,
@@ -362,6 +388,12 @@ function attackRollSourceFlags(
       attack,
     );
   const hasDisadvantage =
+    attackRollDefenseGrantsDisadvantage({
+      state,
+      attackerId,
+      defenderId: targetId,
+      opportunityAttack: false,
+    }) ||
     sightDisadvantage ||
     targetConditionRollModeSources.disadvantage ||
     hiddenTargetDisadvantage ||
@@ -2104,10 +2136,12 @@ export function recordAttackRollOngoingFeatures(
     >;
   } | null,
   relationshipFacts: readonly BattleAttackRollRelationshipFact[],
+  hit: boolean,
 ): BattleState {
-  const attacker = state.combatants.get(attackerId);
+  const hitState = recordAttackRollDefenseHit(state, attackerId, targetId, hit);
+  const attacker = hitState.combatants.get(attackerId);
   if (attacker === undefined || attackerId !== currentActorId(state)) {
-    return state;
+    return hitState;
   }
   const recklessAttackWhileRagingUses =
     isCharacterBattleCreatureState(attacker) &&
@@ -2123,9 +2157,9 @@ export function recordAttackRollOngoingFeatures(
       : [];
   const withActivatedOngoingFeature =
     activatedOngoingFeatureProfile === null
-      ? state
+      ? hitState
       : stateWithActiveOngoingFeatureOccurrence(
-          state,
+          hitState,
           attacker,
           attackerId,
           activatedOngoingFeatureProfile,

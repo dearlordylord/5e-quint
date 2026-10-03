@@ -11,6 +11,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  characterClassLevel,
   copperPieceAmount,
   DRUID_WILD_SHAPE_UNIT_ID,
   eldritchInvocationId,
@@ -356,7 +357,16 @@ export type {
   CharacterSheetWeaponMasteryReselection,
 };
 
-export const build = armorClassBuild({ startingClass: "class_fighter" });
+export const build = armorClassBuild({
+  startingClass: "class_fighter",
+  features: [
+    {
+      kind: "selectedClassChoice",
+      unitId: authoredUnitId("feat_archery"),
+      selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+    },
+  ],
+});
 
 export const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1089,6 +1099,53 @@ export function rogueLanguageBuild(
   };
 }
 
+function earnedFixtureFeatSelections(
+  classes: readonly string[],
+): CharacterBuild["features"] {
+  const selections: CharacterBuild["features"][number][] = [];
+  for (const classId of new Set(classes)) {
+    const owner = srdUnitCollection.units.find((unit) => unit.id === classId);
+    if (owner?.kind !== "class") continue;
+    const level = classes.filter((id) => id === classId).length;
+    for (const grant of owner.featureGrants) {
+      if (grant.level > level) continue;
+      const feature = srdUnitCollection.units.find(
+        (unit) => unit.id === grant.unitId,
+      );
+      if (
+        feature?.kind !== "class_feature" ||
+        feature.mechanics.family !== "passive"
+      )
+        continue;
+      const featGrant = feature.mechanics.grants.find(
+        (fact) => fact.kind === "grant_feat",
+      );
+      if (featGrant?.kind !== "grant_feat") continue;
+      const categories =
+        "category" in featGrant ? [featGrant.category] : featGrant.categories;
+      if (
+        !categories.includes("fighting_style") &&
+        !categories.includes("general")
+      ) {
+        throw new Error(
+          "The armor-class fixture requires an explicit selection for this feat category.",
+        );
+      }
+      selections.push({
+        kind: "selectedClassChoice",
+        selectedFromUnitId: feature.id,
+        selectedFromGrantLevel: characterClassLevel(grant.level),
+        unitId: authoredUnitId(
+          categories.includes("fighting_style")
+            ? "feat_archery"
+            : "feat_ability_score_improvement",
+        ),
+      });
+    }
+  }
+  return selections;
+}
+
 export function armorClassBuild(input: {
   readonly startingClass: string;
   readonly advancements?: readonly string[];
@@ -1158,7 +1215,12 @@ export function armorClassBuild(input: {
       }),
     ),
     proficiencyChoices: [],
-    features: input.features ?? [],
+    features:
+      input.features ??
+      earnedFixtureFeatSelections([
+        input.startingClass,
+        ...(input.advancements ?? []),
+      ]),
     magicInitiateSpellAccesses: [],
     equipment: {
       startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),

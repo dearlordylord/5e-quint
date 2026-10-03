@@ -138,6 +138,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetMonksFocusSaveDc",
   "CharacterSheetPactSlotState",
   "CharacterSheetPendingDeathSaves",
+  "CharacterSheetPreparedSpellRestReplacement",
   "CharacterSheetPointPoolResourceUnitId",
   "CharacterSheetPositiveHpUnconscious",
   "CharacterSheetRetainedCompanionCreationInput",
@@ -280,6 +281,7 @@ const EXPECTED_EXPORTS = [
   "replaceCharacterSheetCompanion",
   "rebuildCharacterSheet",
   "retainedCompanionProtocolFacts",
+  "restoreUseCountResourceWithSpellSlot",
   "spendCharacterSheetSpellAccessFreeCast",
   "startLongRest",
   "startShortRest",
@@ -297,6 +299,16 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "CharacterSheetPreparedSpellRestReplacement",
+    reason:
+      "Character Sheet owns the typed optional Short Rest replacement selection that updates the existing class Spellcasting source's prepared spells from its own Spellbook; callers reuse this contract without maintaining a parallel prepared list.",
+  },
+  {
+    name: "restoreUseCountResourceWithSpellSlot",
+    reason:
+      "Character Sheet owns the atomic Spell Slot expenditure and linked use-count resource restoration operation; public callers reuse its ownership and eligibility checks rather than sequencing separate slot and resource mutations.",
+  },
   {
     name: "projectCharacterSheetFeature",
     reason:

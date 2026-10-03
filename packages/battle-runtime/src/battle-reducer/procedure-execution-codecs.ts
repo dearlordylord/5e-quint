@@ -1,3 +1,4 @@
+import { AttackRollDefenseSelectionSchema } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -31,6 +32,7 @@ import {
 } from "./codec-building-blocks.ts";
 
 export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literals([
+  "markedCreatureDefensesDisclosure",
   "weaponOrUnarmedCriticalRange19",
   "attackDamageRider",
   "saveDamageReplacement",
@@ -1332,6 +1334,10 @@ export const UnitSupportProcedureExecutionSchema = Schema.Union([
   BonusActionDelegatedStandardActionsProcedureExecutionSchema,
   RemarkableAthleteProcedureExecutionSchema,
   HuntersPreyProcedureExecutionSchema,
+  Schema.Struct({
+    kind: Schema.Literal("attackRollDefense"),
+    selection: AttackRollDefenseSelectionSchema,
+  }),
   BrutalStrikeProcedureExecutionSchema,
   FailedAbilityCheckResourceBoostProcedureExecutionSchema,
   FailedSavingThrowRerollProcedureExecutionSchema,

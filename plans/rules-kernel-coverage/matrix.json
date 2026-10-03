@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 162,
-    "covered": 148,
+    "total": 170,
+    "covered": 156,
     "open": 8,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 128,
-      "character-creation": 16,
-      "character-sheet": 13,
+      "battle": 130,
+      "character-creation": 20,
+      "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 148,
+      "covered": 156,
       "needs-qnt-owner": 8,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5767,6 +5767,292 @@
         ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Stat Block standard action-option delegation"
+    },
+    {
+      "id": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-feat-grant-occurrences.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["character-creation.feat-grant-occurrences"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+      ],
+      "reason": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 6: Ability Score Improvement",
+        ".references/srd-5.2.1/classes.md#Level 7: Additional Fighting Style",
+        ".references/srd-5.2.1/feats.md#Repeatable"
+      ],
+      "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+    },
+    {
+      "id": "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/use-count-resource-recovery.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/use-count-resource-recovery.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-use-count-resource-recovery.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["character-sheet.use-count-resource-recovery"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt"
+      ],
+      "reason": "Typed Surface facts alter recovery of the existing Bardic Inspiration pool. Atomic no-action recovery spends an existing Spell Slot and reduces expended uses without storing a second pool.",
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/use-count-resource-recovery.ts",
+        "packages/character-sheet-runtime/src/resources.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 5: Font of Inspiration"
+      ],
+      "title": "Character Sheet recovers an existing use-count resource from rest or Spell Slot"
+    },
+    {
+      "id": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "A finite actual marked-target query observes current static and temporary resistance and immunity facts before and after effect expiry. The semantic core owns eligibility and union of current facts; canonical damage and condition owners supply effective active state.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-marked-creature-defenses.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["table-caller.marked-creature-defenses"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+      ],
+      "reason": "The admission boundary resolves the authored spell cross-reference to a procedure. Query legality uses that typed procedure and the current own mark. Known Stat Block defenses, known empty defenses, and unavailable character defenses remain distinct; no copied knowledge state.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/marked-creature-defenses.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 3: Hunter's Lore"
+      ],
+      "title": "Table query discloses canonical defenses of the character's currently marked creature"
+    },
+    {
+      "id": "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-defense.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-defense.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-attack-roll-defense.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["unit-feature.attack-roll-defense"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt"
+      ],
+      "reason": "Exactly one canonical selected option supplies typed defense facts. Finalized attack hits retain source, attacker, and defender for the current turn; turn reset clears the transient record. Rest replacement updates the selected option.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-roll-defense.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 7: Defensive Tactics"
+      ],
+      "title": "Source-owned selected defense controls Opportunity Attack and same-turn repeat attack Disadvantage"
+    },
+    {
+      "id": "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-prepared-spell-rest-replacement.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["character-sheet.prepared-spell-rest-replacement"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt"
+      ],
+      "reason": "Typed feature facts and completed Short Rest admit replacement of one prepared level 1+ spell by another level 1+ spell in the canonical source spellbook. The same prepared selection is rewritten; spellbook and Spell Slots are retained.",
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 5: Memorize Spell"
+      ],
+      "title": "Character Sheet replaces one prepared spell from the owned spellbook after a Short Rest"
+    },
+    {
+      "id": "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/bard-feature-increments.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/chosen-prepared-spell-access.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-chosen-prepared-spell-access.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["character-creation.chosen-prepared-spell-access"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt"
+      ],
+      "reason": "Canonical feature source retains exactly two distinct eligible spell identities. Cross-list eligibility is derived from canonical class spell lists and owned Spell Slots; one chosen spell may be replaced on a later class level gain independently of ordinary prepared spell replacement. Sheet and Battle derive always-prepared access from that selected source.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/chosen-prepared-spell-access.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 6: Magical Discoveries"
+      ],
+      "title": "Character Creation retains an eligible source-scoped pair of always-prepared spells and one replacement per class level gain"
+    },
+    {
+      "id": "CREATION.FEATURE.PROFICIENCY_CHOICE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/bard-feature-increments.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/granted-proficiency-choice.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-granted-proficiency-choice.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["character-creation.class-feature-proficiency-choice"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+      ],
+      "reason": "Surface grant_proficiencies facts own exact cardinality and eligible skill choices. Discovery excludes already-owned proficiency; finalization and actual class level gain reuse the same canonical selection algorithm and durable proficiency projection.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 3: Bonus Proficiencies"
+      ],
+      "title": "Character Creation grants exactly the selected eligible distinct skill proficiencies"
+    },
+    {
+      "id": "CREATION.SPELL_ACCESS.WIZARD_PROGRESSION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/wizard-memorize-spell-sdk.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The literal driver replays the finite grant, eligibility, and lifecycle cases for this source-owned projection. The reusable semantic core owns legality; random traces would repeat these closed boundary facts.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/wizard-spellcasting-gains.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-wizard-spellcasting-gains.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["character-creation.wizard-spellcasting-advancement"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt"
+      ],
+      "reason": "Adjacent canonical Spellcasting table rows derive exact new spellbook, preparation, cantrip, and Spell Slot facts. Owned typed school-learning grants optionally add an eligible spell at new Spell Slot access. The operation updates the existing owned source and rejects missing, duplicate, ineligible, and forged additions.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/wizard-spellcasting-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/classes.md#Level 3: Evocation Savant"
+      ],
+      "title": "Wizard Spellbook Spellcasting class level gain retains exact source-owned spell choices"
     }
   ],
   "battleHoleFrontier": [
@@ -8745,6 +9031,38 @@
     {
       "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "profileId": "unit-feature.weapon-mastery-slow"
+    },
+    {
+      "obligationIds": ["CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"],
+      "profileId": "character-creation.feat-grant-occurrences"
+    },
+    {
+      "obligationIds": ["SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"],
+      "profileId": "character-sheet.use-count-resource-recovery"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"],
+      "profileId": "table-caller.marked-creature-defenses"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"],
+      "profileId": "unit-feature.attack-roll-defense"
+    },
+    {
+      "obligationIds": ["SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"],
+      "profileId": "character-sheet.prepared-spell-rest-replacement"
+    },
+    {
+      "obligationIds": ["CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"],
+      "profileId": "character-creation.chosen-prepared-spell-access"
+    },
+    {
+      "obligationIds": ["CREATION.FEATURE.PROFICIENCY_CHOICE"],
+      "profileId": "character-creation.class-feature-proficiency-choice"
+    },
+    {
+      "obligationIds": ["CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"],
+      "profileId": "character-creation.wizard-spellcasting-advancement"
     }
   ],
   "qntOwnerRoles": [
@@ -12255,6 +12573,144 @@
       "obligationIds": ["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+      "obligationIds": ["CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/character-creation-feat-grant-occurrences.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Typed Surface facts alter recovery of the existing Bardic Inspiration pool. Atomic no-action recovery spends an existing Spell Slot and reduces expended uses without storing a second pool.",
+      "obligationIds": ["SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-use-count-resource-recovery.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "The admission boundary resolves the authored spell cross-reference to a procedure. Query legality uses that typed procedure and the current own mark. Known Stat Block defenses, known empty defenses, and unavailable character defenses remain distinct; no copied knowledge state.",
+      "obligationIds": ["BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Exactly one canonical selected option supplies typed defense facts. Finalized attack hits retain source, attacker, and defender for the current turn; turn reset clears the transient record. Rest replacement updates the selected option.",
+      "obligationIds": ["BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-attack-roll-defense.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Typed feature facts and completed Short Rest admit replacement of one prepared level 1+ spell by another level 1+ spell in the canonical source spellbook. The same prepared selection is rewritten; spellbook and Spell Slots are retained.",
+      "obligationIds": ["SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-prepared-spell-rest-replacement.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Canonical feature source retains exactly two distinct eligible spell identities. Cross-list eligibility is derived from canonical class spell lists and owned Spell Slots; one chosen spell may be replaced on a later class level gain independently of ordinary prepared spell replacement. Sheet and Battle derive always-prepared access from that selected source.",
+      "obligationIds": ["CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/chosen-prepared-spell-access-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/character-creation-chosen-prepared-spell-access.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Surface grant_proficiencies facts own exact cardinality and eligible skill choices. Discovery excludes already-owned proficiency; finalization and actual class level gain reuse the same canonical selection algorithm and durable proficiency projection.",
+      "obligationIds": ["CREATION.FEATURE.PROFICIENCY_CHOICE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/granted-choice-selection-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/character-creation-granted-proficiency-choice.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Adjacent canonical Spellcasting table rows derive exact new spellbook, preparation, cantrip, and Spell Slot facts. Owned typed school-learning grants optionally add an eligible spell at new Spell Slot access. The operation updates the existing owned source and rejects missing, duplicate, ineligible, and forged additions.",
+      "obligationIds": ["CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused examples for the reusable identity-independent semantic core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Literal driver with no behavioral imports; finite runtime/QNT parity projection.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/character-creation-wizard-spellcasting-gains.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Literal current-defense and expiry query parity fixture with no semantic imports.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-marked-creature-defenses.mbt.qnt",
+      "role": "mbt-fixture"
     }
   ],
   "qntRegistry": [
@@ -13562,6 +14018,16 @@
       "role": "semantic-core"
     },
     {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/character-creation-runtime/chosen-prepared-spell-access-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/character-creation-runtime/granted-choice-selection-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "category": "leaf-type-vocabulary",
       "classification": "exempt",
       "evidence": "Character-sheet reducer-route vocabulary leaf for future route connectors; executable sheet route coverage will be registered by connector owners.",
@@ -13649,6 +14115,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
       "role": "semantic-core"
     },
@@ -13685,6 +14161,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
       "role": "semantic-core"
     },
@@ -13696,6 +14182,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt",
       "role": "semantic-core"
     },
     {
@@ -13735,6 +14226,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt",
       "role": "proof-only"
     },
@@ -13756,6 +14252,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt",
       "role": "semantic-core"
     },
     {
@@ -14381,7 +14887,27 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt",
       "role": "semantic-core"
     },
     {
@@ -18978,6 +19504,199 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "all-block",
+        "arithmetic",
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "fold",
+        "forall",
+        "if-expression",
+        "int",
+        "list",
+        "membership",
+        "pure-def",
+        "record",
+        "record-update",
+        "set",
+        "size"
+      ],
+      "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt",
+        "packages/character-creation-runtime/character-creation-feat-grant-occurrences.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "all-block",
+        "bool",
+        "boolean-connective",
+        "if-expression",
+        "import",
+        "int",
+        "pure-def",
+        "record"
+      ],
+      "obligationId": "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery-examples.qnt",
+        "packages/character-sheet-runtime/character-sheet-use-count-resource-recovery.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "bool",
+        "boolean-connective",
+        "pure-def",
+        "record",
+        "record-update",
+        "set",
+        "set-operators"
+      ],
+      "obligationId": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt",
+        "packages/battle-runtime/battle-runtime-marked-creature-defenses.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "if-expression",
+        "int",
+        "pattern-match",
+        "pure-def",
+        "record",
+        "set",
+        "set-operators",
+        "variant"
+      ],
+      "obligationId": "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt",
+        "packages/battle-runtime/battle-runtime-attack-roll-defense.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "all-block",
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "fold",
+        "if-expression",
+        "list",
+        "membership",
+        "pure-def",
+        "set"
+      ],
+      "obligationId": "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement-examples.qnt",
+        "packages/character-sheet-runtime/character-sheet-prepared-spell-rest-replacement.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "int",
+        "pure-def",
+        "set",
+        "set-operators",
+        "size"
+      ],
+      "obligationId": "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
+      "proofOnly": [
+        "packages/character-creation-runtime/chosen-prepared-spell-access-examples.qnt",
+        "packages/character-creation-runtime/character-creation-chosen-prepared-spell-access.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "forall",
+        "int",
+        "list",
+        "membership",
+        "pure-def",
+        "set",
+        "set-operators"
+      ],
+      "obligationId": "CREATION.FEATURE.PROFICIENCY_CHOICE",
+      "proofOnly": [
+        "packages/character-creation-runtime/granted-choice-selection-examples.qnt",
+        "packages/character-creation-runtime/character-creation-granted-proficiency-choice.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "all-block",
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "exists",
+        "forall",
+        "int",
+        "list",
+        "membership",
+        "pure-def",
+        "set"
+      ],
+      "obligationId": "CREATION.SPELL_ACCESS.WIZARD_PROGRESSION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains-examples.qnt",
+        "packages/character-creation-runtime/character-creation-wizard-spellcasting-gains.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -19131,12 +19850,15 @@
   "profileIdsSeenFromUnitProfileCoverage": [
     "battle.spell-access-magic-initiate-casting",
     "character-creation.bard-magical-secrets-spell-access",
+    "character-creation.chosen-prepared-spell-access",
     "character-creation.class-feature-advancement-replacement",
     "character-creation.class-feature-feat-choice",
     "character-creation.class-feature-option-projection",
+    "character-creation.class-feature-proficiency-choice",
     "character-creation.class-feature-resource-projection",
     "character-creation.class-feature-source-fact-projection",
     "character-creation.eldritch-invocation-choice",
+    "character-creation.feat-grant-occurrences",
     "character-creation.fighter-fighting-style-advancement-replacement",
     "character-creation.fighting-style-cantrip-advancement-replacement",
     "character-creation.grappler-general-feat",
@@ -19151,6 +19873,7 @@
     "character-creation.weapon-mastery-choice",
     "character-creation.weapon-mastery-level-gain",
     "character-creation.wizard-spellbook-learning-choice",
+    "character-creation.wizard-spellcasting-advancement",
     "character-sheet.ability-check-ability-substitution",
     "character-sheet.ability-check-proficiency-bonus",
     "character-sheet.antilife-shell-session-invocation",
@@ -19186,6 +19909,7 @@
     "character-sheet.pact-slot-recovery",
     "character-sheet.passive-defense-projection",
     "character-sheet.passwall-session-invocation",
+    "character-sheet.prepared-spell-rest-replacement",
     "character-sheet.ranger-tireless",
     "character-sheet.rest-triggered-heroic-inspiration",
     "character-sheet.restoration-death-spell-session",
@@ -19201,6 +19925,7 @@
     "character-sheet.telepathic-bond-session-invocation",
     "character-sheet.teleportation-circle-session-invocation",
     "character-sheet.tree-stride-session-invocation",
+    "character-sheet.use-count-resource-recovery",
     "character-sheet.wall-of-force-session-invocation",
     "character-sheet.wall-of-stone-session-invocation",
     "character-sheet.weapon-mastery-class-level-reselection",
@@ -19316,6 +20041,7 @@
     "table-caller.geas-command-compliance",
     "table-caller.hallow-durable-area",
     "table-caller.legend-lore-summary",
+    "table-caller.marked-creature-defenses",
     "table-caller.mislead-illusion-remote-senses",
     "table-caller.modify-memory-edit-contract",
     "table-caller.nature-exploration-facts",
@@ -19338,6 +20064,7 @@
     "unit-feature.attack-damage-die-floor",
     "unit-feature.attack-damage-reduction-zero-damage-redirect",
     "unit-feature.attack-damage-rider",
+    "unit-feature.attack-roll-defense",
     "unit-feature.attack-roll-miss-to-hit-replacement",
     "unit-feature.bardic-inspiration-failed-d20-test",
     "unit-feature.bardic-inspiration-grant",

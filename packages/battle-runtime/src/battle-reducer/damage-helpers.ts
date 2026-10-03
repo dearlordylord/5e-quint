@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE
+// UNIT-PROFILE-COVERAGE: runtime-owner table-caller.marked-creature-defenses
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -1027,7 +1029,7 @@ export function damageAmountAfterTargetAdjustments(
   damageType: DamageType,
 ): number {
   if (target.origin.kind !== "statBlock") {
-    return targetHasRuntimeDamageResistance(state, target, damageType)
+    return combatantHasDamageResistance(state, target, damageType)
       ? Math.floor(amount / 2)
       : amount;
   }
@@ -1037,23 +1039,27 @@ export function damageAmountAfterTargetAdjustments(
     return 0;
   }
 
-  const afterResistance =
-    targetHasRuntimeDamageResistance(state, target, damageType) ||
-    statBlock.resistances.includes(damageType)
-      ? Math.floor(amount / 2)
-      : amount;
+  const afterResistance = combatantHasDamageResistance(
+    state,
+    target,
+    damageType,
+  )
+    ? Math.floor(amount / 2)
+    : amount;
 
   return statBlock.vulnerabilities.includes(damageType)
     ? afterResistance * 2
     : afterResistance;
 }
 
-function targetHasRuntimeDamageResistance(
+export function combatantHasDamageResistance(
   state: BattleState,
   target: BattleCreatureState,
   damageType: DamageType,
 ): boolean {
   return (
+    (target.origin.kind === "statBlock" &&
+      target.origin.mechanics.resistances.includes(damageType)) ||
     target.activeEffects.some(
       (effect) =>
         effect.kind === "damageResistance" && effect.damageType === damageType,

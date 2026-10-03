@@ -1,0 +1,40 @@
+{
+  "acquiredAtLevel": 7,
+  "className": "ranger",
+  "id": "ranger_defensive_tactics",
+  "kind": "class_feature",
+  "mechanics": {
+    "choice": {
+      "kind": "choose_one",
+      "replaceOn": "short_or_long_rest"
+    },
+    "family": "attack_roll_defense_choice",
+    "options": [
+      {
+        "attackRoll": {
+          "mode": "disadvantage"
+        },
+        "id": "escape_the_horde",
+        "trigger": {
+          "kind": "opportunity_attack"
+        }
+      },
+      {
+        "attackRoll": {
+          "appliesTo": "same_attacker_against_self",
+          "mode": "disadvantage",
+          "until": "end_of_current_turn"
+        },
+        "id": "multiattack_defense",
+        "trigger": {
+          "kind": "hit_by_attack_roll"
+        }
+      }
+    ]
+  },
+  "name": "Defensive Tactics",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:6825-6832"
+  }
+}

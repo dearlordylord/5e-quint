@@ -52,6 +52,9 @@ export type {
   ArmorTemplateRecord,
   BarbarianClassFeatureMechanics,
   BarbarianClassFeatureRecord,
+  UseCountResourceRecoveryMechanics,
+  ChosenPreparedSpellAccessMechanics,
+  PreparedSpellRestReplacementMechanics,
   BardClassFeatureMechanics,
   BardClassFeatureRecord,
   ClassFeatureAcquisitionChoiceMechanics,
@@ -1498,3 +1501,10 @@ function isPassiveClassFeatureUnitRecord(
 ): unit is PassiveClassFeatureUnitRecord {
   return unit.kind === "class_feature" && unit.mechanics.family === "passive";
 }
+
+export type MarkedCreatureDefensesDisclosureMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MarkedCreatureDefensesDisclosureMechanicsSchema
+>;
+export type AttackRollDefenseChoiceMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.AttackRollDefenseChoiceMechanicsSchema
+>;

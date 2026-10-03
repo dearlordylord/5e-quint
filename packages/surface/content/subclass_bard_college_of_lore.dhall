@@ -1,7 +1,9 @@
 let collegeOfLore =
       { className = "bard"
 
-      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , featureGrants = [ { level = 3, unitId = "bard_bonus_proficiencies" }
+        , { level = 6, unitId = "bard_magical_discoveries" }
+        ]
       , id = "subclass_bard_college_of_lore"
       , kind = "subclass"
       , name = "College of Lore"

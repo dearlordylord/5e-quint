@@ -1,3 +1,4 @@
+import { AttackRollDefenseSelectionSchema } from "@dnd/shared/game-facts";
 import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 import { Brand, Result, Schema } from "effect";
 import {
@@ -136,6 +137,7 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_ability_score_increase_choice",
   "class_feature_proficiency_choice",
   "class_feature_language_choice",
+  "chosen_prepared_spell_access",
   "origin_feat_proficiency_choice",
   "origin_feat_magic_initiate_cantrip_choice",
   "origin_feat_magic_initiate_level_one_spell_choice",
@@ -150,6 +152,7 @@ export const UNIT_CHOICE_KEYS = [
   "paladin_fighting_style",
   "ranger_fighting_style",
   "hunters_prey",
+  "attack_roll_defense_choice",
   "bard_multiclass_skill_proficiency",
   "bard_multiclass_musical_instrument_proficiency",
   "ranger_multiclass_skill_proficiency",
@@ -304,6 +307,7 @@ export type CreationHoleSource =
       readonly tag: "unitChoice";
       readonly unitId: UnitChoiceSourceUnitId;
       readonly choiceKey: UnitChoiceKey;
+      readonly grantLevel?: CharacterClassLevel;
     }
   | {
       readonly tag: "loadout";
@@ -376,7 +380,8 @@ export function loadoutEquipmentUnitId(
 }
 
 export type UnitChoiceSourceKeyText =
-  `u:${number}:${UnitChoiceSourceUnitId}:c:${UnitChoiceKey}`;
+  | `u:${number}:${UnitChoiceSourceUnitId}:c:${UnitChoiceKey}`
+  | `u:${number}:${UnitChoiceSourceUnitId}:c:${UnitChoiceKey}:g:${CharacterClassLevel}`;
 export type UnitChoiceSourceKey = UnitChoiceSourceKeyText &
   Brand.Brand<"UnitChoiceSourceKey">;
 const UnitChoiceSourceKey = Brand.nominal<UnitChoiceSourceKey>();
@@ -407,7 +412,7 @@ export function unitChoiceSourceKey(
 ): UnitChoiceSourceKey {
   // Template evidence is local to the source/key isomorphism.
   return UnitChoiceSourceKey(
-    `u:${source.unitId.length}:${source.unitId}:c:${source.choiceKey}` as UnitChoiceSourceKeyText,
+    `u:${source.unitId.length}:${source.unitId}:c:${source.choiceKey}${source.grantLevel === undefined ? "" : `:g:${source.grantLevel}`}` as UnitChoiceSourceKeyText,
   );
 }
 
@@ -466,7 +471,35 @@ export function parseUnitChoiceSourceKey(
     });
   }
 
-  const choiceKey = value.slice(unitIdEnd + choicePrefix.length);
+  return parseUnitChoiceOccurrence(
+    value,
+    value.slice(unitIdEnd + choicePrefix.length),
+    sourceUnitId.success,
+  );
+}
+
+function parseUnitChoiceOccurrence(
+  value: string,
+  choiceText: string,
+  sourceUnitId: UnitChoiceSource["unitId"],
+): Result.Result<UnitChoiceSource, UnitChoiceSourceKeyIssue> {
+  const occurrenceParts = choiceText.split(":g:");
+  const choiceKey = occurrenceParts[0];
+  const grantLevelText = occurrenceParts[1];
+  const grantLevelValue =
+    grantLevelText === undefined ? undefined : Number(grantLevelText);
+  if (
+    occurrenceParts.length > 2 ||
+    (grantLevelValue !== undefined &&
+      (!CHARACTER_CLASS_LEVELS.some((level) => level === grantLevelValue) ||
+        String(grantLevelValue) !== grantLevelText))
+  ) {
+    return Result.fail({
+      tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
+      value,
+      choiceKey: choiceText,
+    });
+  }
   if (!UNIT_CHOICE_KEYS.some((unitChoiceKey) => unitChoiceKey === choiceKey)) {
     return Result.fail({
       tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
@@ -477,9 +510,12 @@ export function parseUnitChoiceSourceKey(
 
   return Result.succeed({
     tag: "unitChoice",
-    unitId: sourceUnitId.success,
+    unitId: sourceUnitId,
     // UNIT_CHOICE_KEYS membership check above establishes the literal union.
     choiceKey: choiceKey as UnitChoiceKey,
+    ...(grantLevelValue === undefined
+      ? {}
+      : { grantLevel: characterClassLevel(grantLevelValue) }),
   });
 }
 
@@ -830,12 +866,23 @@ export type UnitRef = {
   readonly selectedOption?: UnitRefSelectedOption;
 };
 
-export type UnitRefSelectedOption = {
-  readonly kind: "huntersPrey";
-  readonly selection:
-    | "woundedTargetWeaponDamage"
-    | "nearbyDifferentTargetSameWeaponAttack";
-};
+export const HUNTERS_PREY_SELECTIONS = [
+  "woundedTargetWeaponDamage",
+  "nearbyDifferentTargetSameWeaponAttack",
+] as const;
+export const UnitRefSelectedOptionSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("huntersPrey"),
+    selection: Schema.Literals(HUNTERS_PREY_SELECTIONS),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackRollDefense"),
+    selection: AttackRollDefenseSelectionSchema,
+  }),
+]);
+export type UnitRefSelectedOption = Schema.Schema.Type<
+  typeof UnitRefSelectedOptionSchema
+>;
 
 export type AbilityScoreGenerationSelection = {
   readonly method: SupportedAbilityScoreMethod;
@@ -1347,7 +1394,12 @@ type CharacterBuildSelectedFeatureSource = {
 
 export type CharacterBuildFeature =
   | (CharacterBuildSelectedFeatureSource & {
+      readonly kind: "selectedPreparedSpellAccess";
+      readonly spellIds: readonly [UnitRecord["id"], UnitRecord["id"]];
+    })
+  | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedClassChoice";
+      readonly selectedFromGrantLevel?: CharacterClassLevel;
       readonly unitId: UnitRecord["id"];
       readonly selectedOption?: UnitRefSelectedOption;
     })

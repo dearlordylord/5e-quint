@@ -181,31 +181,31 @@ type FirstMulticlassLevelGain = {
 const SINGLE_CLASS_LEVEL_FRONTIERS = [
   {
     classUnitId: authoredUnitId("class_barbarian"),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(SRD_BARD_CLASS_UNIT_ID),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(SRD_CLERIC_CLASS_UNIT_ID),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(SRD_DRUID_CLASS_UNIT_ID),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
-    throughClassLevel: characterClassLevel(5),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(SRD_MONK_CLASS_UNIT_ID),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(SRD_PALADIN_CLASS_UNIT_ID),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(SRD_RANGER_CLASS_UNIT_ID),
@@ -217,15 +217,15 @@ const SINGLE_CLASS_LEVEL_FRONTIERS = [
   },
   {
     classUnitId: authoredUnitId(SRD_SORCERER_CLASS_UNIT_ID),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId("class_warlock"),
-    throughClassLevel: characterClassLevel(3),
+    throughClassLevel: characterClassLevel(8),
   },
   {
     classUnitId: authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
-    throughClassLevel: characterClassLevel(5),
+    throughClassLevel: characterClassLevel(8),
   },
 ] as const satisfies ReadonlyArray<SingleClassLevelFrontier>;
 
@@ -419,6 +419,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [RANGER_FIGHTING_STYLE_CHOICE_KEY]: [
       creationChoiceOptionId("fighting_style_feat"),
       creationChoiceOptionId("druidic_warrior"),
+    ],
+    attack_roll_defense_choice: [
+      creationChoiceOptionId("escape_the_horde"),
+      creationChoiceOptionId("multiattack_defense"),
     ],
     [HUNTERS_PREY_CHOICE_KEY]: [
       creationChoiceOptionId("colossus_slayer"),
@@ -646,6 +650,12 @@ function mappedUnitOptionIdsForSource(
     );
   }
 
+  if (
+    source.choiceKey === "chosen_prepared_spell_access" &&
+    hole.kind === "choice"
+  ) {
+    return hole.options.map((option) => option.optionId);
+  }
   if (source.choiceKey === CLASS_SKILL_PROFICIENCY_CHOICE_KEY) {
     const supportedOptionIds = supportedUnitOptionIds(
       source.choiceKey,
@@ -797,17 +807,20 @@ export function unitRefsForSupportedSelectedUnitChoice(
   source: UnitChoiceSource,
   options: readonly { readonly unitRef?: UnitRef }[],
 ): readonly UnitRecord["id"][] {
-  if (
-    source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY &&
-    source.choiceKey !== SPECIES_ORIGIN_FEAT_CHOICE_KEY &&
-    source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY &&
-    source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY &&
-    source.choiceKey !== HUNTERS_PREY_CHOICE_KEY
-  ) {
-    return [];
-  }
+  const selectedUnitRefKeys = [
+    CLASS_FEATURE_FEAT_CHOICE_KEY,
+    SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+    CLASS_SUBCLASS_CHOICE_KEY,
+    WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+    HUNTERS_PREY_CHOICE_KEY,
+    "attack_roll_defense_choice",
+  ] as const satisfies readonly UnitChoiceKey[];
+  if (!selectedUnitRefKeys.some((key) => key === source.choiceKey)) return [];
 
-  if (source.choiceKey === HUNTERS_PREY_CHOICE_KEY) {
+  if (
+    source.choiceKey === HUNTERS_PREY_CHOICE_KEY ||
+    source.choiceKey === "attack_roll_defense_choice"
+  ) {
     return [source.unitId];
   }
 

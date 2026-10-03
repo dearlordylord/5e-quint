@@ -576,6 +576,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         target.combatantId,
         null,
         input.target.relationshipFacts,
+        hit,
       ),
       input.actorId,
       target.combatantId,

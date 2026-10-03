@@ -454,7 +454,7 @@
     "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts": {
       "module/binding:chainedSpellFillSet": 43,
       "module/binding:chainedSpellStepIndexForFill": 9,
-      "module/binding:resolveChainedSpellAttackDamageAct": 63
+      "module/binding:resolveChainedSpellAttackDamageAct": 62
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts": {
       "module/binding:spellAttackSequencePartIndexForHole": 12,
@@ -686,7 +686,6 @@
     "packages/character-creation-runtime/src/character-build-advancement.ts": {
       "module/binding:applyListPreparedSpellcastingLevelGain": 9,
       "module/binding:updateSorcererMetamagicOptions": 9,
-      "module/binding:updateSpellcastingForClassLevelGain": 10,
       "module/binding:updateWeaponMasterySelectedFeatures": 16,
       "module/binding:warlockPactMagicCanRemainUnchanged": 11
     },
@@ -695,9 +694,7 @@
     },
     "packages/character-creation-runtime/src/discovery.ts": {
       "module/binding:choiceOptionIdsFitHole": 9,
-      "module/binding:classFeatureGrantChoiceHoles": 17,
-      "module/binding:passiveGrantChoiceHoles": 14,
-      "module/binding:sameCreationHoleSource": 9
+      "module/binding:passiveGrantChoiceHoles": 14
     },
     "packages/character-creation-runtime/src/draft.ts": {
       "module/binding:parseDraftSelections": 32
@@ -725,7 +722,7 @@
     },
     "packages/character-creation-runtime/src/types.ts": {
       "module/binding:parseLoadoutSourceKey": 10,
-      "module/binding:parseUnitChoiceSourceKey": 10
+      "module/binding:parseUnitChoiceSourceKey": 9
     },
     "packages/character-sheet-runtime/src/ability-checks.ts": {
       "module/binding:characterSheetAbilityCheckAbility": 9
@@ -843,7 +840,6 @@
       "module/binding:parseStoredClassFeatureLanguages": 24,
       "module/binding:parseStoredCreatedSpellSlots": 11,
       "module/binding:parseStoredEquipment": 9,
-      "module/binding:parseStoredFeatures": 15,
       "module/binding:parseStoredHitPoints": 9,
       "module/binding:parseStoredLoadout": 9,
       "module/binding:parseStoredPactSlots": 10,
@@ -942,7 +938,6 @@
       "module/binding:describeWeaponProperty": 11
     },
     "packages/surface/src/interpreter/tracer-feature-mechanics.ts": {
-      "module/binding:traceClassFeatureMechanics": 46,
       "module/binding:tracePassiveMechanics": 10
     },
     "packages/surface/src/interpreter/tracer-public.ts": {

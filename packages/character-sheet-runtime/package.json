@@ -20,7 +20,9 @@
     "test:mbt:weapon-mastery-class-level-reselection": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/weapon-mastery-class-level-reselection.mbt.test.ts",
     "test:mbt:spell-access-free-cast": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/spell-access-free-cast.mbt.test.ts",
     "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:mbt:prepared-spell-rest-replacement": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/prepared-spell-rest-replacement.mbt.test.ts",
+    "test:mbt:use-count-resource-recovery": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/use-count-resource-recovery.mbt.test.ts"
   },
   "dependencies": {
     "@dnd/character-creation-runtime": "workspace:*",

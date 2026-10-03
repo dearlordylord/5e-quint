@@ -1,3 +1,9 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.FEATURE.PROFICIENCY_CHOICE
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-proficiency-choice
+import {
+  eligibleChosenPreparedSpellIds,
+  CHOSEN_PREPARED_SPELL_ACCESS_CHOICE_KEY,
+} from "./chosen-prepared-spell-access.ts";
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
@@ -89,6 +95,7 @@ import {
   backgroundAbilityScoreIncreaseOptionId,
   backgroundAbilityScoreIncreaseOptions,
   choiceHole,
+  holeIdForSource,
   draftSource,
   hasDraftSelection,
   isSupported,
@@ -102,6 +109,7 @@ import {
 import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import {
   creationChoiceOptionId,
+  characterClassLevel,
   creationHoleId,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
@@ -629,24 +637,35 @@ function discoverSubclassHoles(
     readonly supportProfile: CharacterCreationSupportProfile;
   },
 ): readonly CreationHole[] {
-  return facts.subclassChoices
-    .filter((choice) => choice.level <= classLevel)
-    .flatMap((choice) =>
-      unselectedUnitChoiceHole(
-        input.draft,
-        choiceHole({
-          source: unitSource(classUnitId, CLASS_SUBCLASS_CHOICE_KEY),
-          cardinality: EXACTLY_ONE_CHOICE,
-          options: choice.options.flatMap((unitId) => {
-            const unit = input.unitLibrary.getUnit(unitId);
-            /* v8 ignore start -- @preserve -- Supported subclass choice facts reference installed subclass Units in this catalog. */
-            return Option.isSome(unit) ? [unitOption(unit.value)] : [];
-            /* v8 ignore stop -- @preserve */
-          }),
+  return subclassChoiceHolesAtLevel({
+    classUnitId,
+    classLevel,
+    facts,
+    unitLibrary: input.unitLibrary,
+  }).flatMap((hole) =>
+    unselectedUnitChoiceHole(input.draft, hole, input.supportProfile),
+  );
+}
+
+export function subclassChoiceHolesAtLevel(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly classLevel: number;
+  readonly facts: ReadableClassCreationFacts;
+  readonly unitLibrary: UnitCatalog;
+}): readonly ChoiceCreationHole[] {
+  return input.facts.subclassChoices
+    .filter((choice) => choice.level <= input.classLevel)
+    .flatMap((choice) => {
+      const hole = choiceHole({
+        source: unitSource(input.classUnitId, CLASS_SUBCLASS_CHOICE_KEY),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: choice.options.flatMap((id) => {
+          const unit = input.unitLibrary.getUnit(id);
+          return Option.isSome(unit) ? [unitOption(unit.value)] : [];
         }),
-        input.supportProfile,
-      ),
-    );
+      });
+      return hole === undefined || hole.kind !== "choice" ? [] : [hole];
+    });
 }
 
 function discoverSelectedSubclassFeatureGrantHoles(
@@ -696,7 +715,7 @@ function discoverSelectedSubclassFeatureGrantHoles(
             classLevel,
             input.draft,
             input.unitLibrary,
-            { supportProfile: input.supportProfile },
+            { supportProfile: input.supportProfile, grantLevel: grant.level },
           )
         : [],
     );
@@ -767,6 +786,7 @@ function discoverClassFeatureGrantHolesInLevelOrder(
         draft,
         unitLibrary,
         {
+          grantLevel: grant.level,
           deferOwnedSkillExpertiseChoices: deferLaterOwnedSkillExpertiseChoices,
           supportProfile,
         },
@@ -1035,6 +1055,7 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
           source: unitSource(
             selection.source.unitId,
             CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+            selection.source.grantLevel,
           ),
           cardinality: EXACTLY_ONE_CHOICE,
           options,
@@ -1925,21 +1946,28 @@ export function sameCreationHoleSource(
   left: CreationHoleSource,
   right: CreationHoleSource,
 ): boolean {
-  if (left.tag === "draft" && right.tag === "draft") {
-    return left.path === right.path;
-  }
-
-  if (left.tag === "unitChoice" && right.tag === "unitChoice") {
-    return left.unitId === right.unitId && left.choiceKey === right.choiceKey;
-  }
-
-  if (left.tag === "loadout" && right.tag === "loadout") {
-    return (
-      left.equipmentUnitId === right.equipmentUnitId && left.slot === right.slot
-    );
-  }
-
-  return false;
+  return Match.value(left).pipe(
+    Match.when(
+      { tag: "draft" },
+      (source) => right.tag === "draft" && source.path === right.path,
+    ),
+    Match.when(
+      { tag: "unitChoice" },
+      (source) =>
+        right.tag === "unitChoice" &&
+        source.unitId === right.unitId &&
+        source.choiceKey === right.choiceKey &&
+        source.grantLevel === right.grantLevel,
+    ),
+    Match.when(
+      { tag: "loadout" },
+      (source) =>
+        right.tag === "loadout" &&
+        source.equipmentUnitId === right.equipmentUnitId &&
+        source.slot === right.slot,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function sameChoiceSelectionMultiset(
@@ -2029,11 +2057,13 @@ export function discoverClassFeatureGrantHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly deferOwnedSkillExpertiseChoices?: boolean;
+    readonly grantLevel?: number;
     readonly supportProfile: CharacterCreationSupportProfile;
   },
 ): readonly CreationHole[] {
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
     classLevel,
+    ...(input.grantLevel === undefined ? {} : { grantLevel: input.grantLevel }),
     deferOwnedSkillExpertiseChoices:
       input.deferOwnedSkillExpertiseChoices ?? false,
     ownedSkillExpertise: draftOwnedSkillExpertise(
@@ -2060,6 +2090,43 @@ export function classFeatureGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly grantLevel?: number;
+    readonly deferOwnedSkillExpertiseChoices?: boolean;
+    readonly ownedSkillExpertise?: readonly Skill[];
+    readonly ownedSkillProficiencies?: readonly Skill[];
+    readonly ownedToolProficiencies?: readonly ToolProficiencyId[];
+    readonly knownLanguages?: readonly Language[];
+  } = {},
+): readonly ChoiceCreationHole[] {
+  const feature = projectClassFeatureFacts(unitLibrary, featureUnitId);
+  const holes = classFeatureGrantBaseChoiceHoles(
+    featureUnitId,
+    unitLibrary,
+    input,
+  );
+  if (
+    feature === undefined ||
+    input.grantLevel === undefined ||
+    input.grantLevel === feature.acquiredAtLevel
+  )
+    return holes;
+  const grantLevel = characterClassLevel(input.grantLevel);
+  return holes.map((hole) =>
+    hole.source.tag === "unitChoice"
+      ? {
+          ...hole,
+          source: { ...hole.source, grantLevel },
+          holeId: holeIdForSource({ ...hole.source, grantLevel }),
+        }
+      : hole,
+  );
+}
+
+function classFeatureGrantBaseChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+  input: {
+    readonly classLevel?: number;
     readonly deferOwnedSkillExpertiseChoices?: boolean;
     readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
@@ -2073,84 +2140,26 @@ export function classFeatureGrantChoiceHoles(
     return [];
   }
   /* v8 ignore stop -- @preserve */
-  const mechanics = feature.mechanics;
-
-  if (mechanics.family === "passive") {
-    const knownLanguages = uniqueLanguages([
-      ...(input.knownLanguages ?? []),
-      ...fixedPassiveGrantLanguages(mechanics.grants),
-    ]);
-    const passiveGrantHoles = mechanics.grants.flatMap((grant) =>
-      passiveGrantChoiceHoles(featureUnitId, grant, unitLibrary, {
-        ...input,
-        knownLanguages,
-        excludedMagicInitiateSpellLists: [],
-      }),
-    );
-    if (passiveGrantHoles.length > 0) {
-      return passiveGrantHoles;
-    }
-  }
-
-  if (mechanics.family === "class_feature_acquisition_choice") {
-    const choiceKey = unitChoiceKey(mechanics.choiceKey);
-    /* v8 ignore start -- @preserve -- Supported acquisition-choice mechanics carry a canonical nonempty choice key and produce a choice hole. */
-    if (Result.isFailure(choiceKey)) {
-      return [];
-    }
-
-    const hole = requireChoiceCreationHole(
-      choiceHole({
-        source: unitSource(featureUnitId, choiceKey.success),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: mechanics.options.map((option) => ({
-          optionId: creationChoiceOptionId(option.id),
-          label: option.displayName,
-        })),
-      }),
-    );
-    return hole === undefined ? [] : [hole];
-    /* v8 ignore stop -- @preserve */
-  }
-
-  if (mechanics.family === "feature_choice") {
-    return eldritchInvocationChoiceHoles(featureUnitId, mechanics, input);
-  }
-
-  if (mechanics.family === "metamagic_options") {
-    return sorcererMetamagicChoiceHoles(featureUnitId, mechanics, input);
-  }
-
-  if (mechanics.family === "hunters_prey") {
-    const choiceKey = unitChoiceKey(HUNTERS_PREY_CHOICE_KEY);
-    /* v8 ignore start -- @preserve -- The canonical Hunter's Prey key is a fixed valid UnitChoiceKey and its mechanics produce a choice hole. */
-    if (Result.isFailure(choiceKey)) {
-      return [];
-    }
-    const hole = requireChoiceCreationHole(
-      choiceHole({
-        source: unitSource(featureUnitId, choiceKey.success),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: mechanics.options.map((option) => ({
-          optionId: creationChoiceOptionId(option.id),
-          label: option.id,
-        })),
-      }),
-    );
-    return hole === undefined ? [] : [hole];
-    /* v8 ignore stop -- @preserve */
-  }
-
-  if (mechanics.family === "wizard_spellbook_learning") {
-    return wizardSpellbookLearningChoiceHoles(
+  const spellChoices = classFeatureSpellChoiceHoles(
+    featureUnitId,
+    feature,
+    unitLibrary,
+    input,
+  );
+  if (spellChoices !== undefined) return spellChoices;
+  const optionChoices = classFeatureOptionChoiceHoles(
+    featureUnitId,
+    feature.mechanics,
+    input,
+  );
+  if (optionChoices !== undefined) return optionChoices;
+  if (feature.mechanics.family === "passive")
+    return passiveClassFeatureGrantChoiceHoles(
       featureUnitId,
-      feature.acquiredAtLevel,
-      mechanics,
+      feature.mechanics,
       unitLibrary,
       input,
     );
-  }
-
   if (feature.mechanics.family === "weapon_mastery_choice") {
     const hole = weaponMasteryFeatureHoleSource(
       featureUnitId,
@@ -2161,8 +2170,169 @@ export function classFeatureGrantChoiceHoles(
     return hole === undefined ? [] : [hole];
     /* v8 ignore stop -- @preserve */
   }
-
   return [];
+}
+
+type ClassFeatureGrantChoiceInput = NonNullable<
+  Parameters<typeof classFeatureGrantBaseChoiceHoles>[2]
+>;
+
+function classFeatureSpellChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  feature: CharacterCreationClassFeatureFacts,
+  unitLibrary: UnitCatalog,
+  input: ClassFeatureGrantChoiceInput,
+): readonly ChoiceCreationHole[] | undefined {
+  const mechanics = feature.mechanics;
+  if (mechanics.family === "chosen_prepared_spell_access")
+    return chosenPreparedSpellAccessChoiceHoles(
+      featureUnitId,
+      feature.acquiredAtLevel,
+      mechanics,
+      unitLibrary,
+      input.classLevel,
+    );
+  if (mechanics.family === "wizard_spellbook_learning")
+    return wizardSpellbookLearningChoiceHoles(
+      featureUnitId,
+      feature.acquiredAtLevel,
+      mechanics,
+      unitLibrary,
+      input,
+    );
+  return undefined;
+}
+
+function classFeatureOptionChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  mechanics: CharacterCreationClassFeatureFacts["mechanics"],
+  input: ClassFeatureGrantChoiceInput,
+): readonly ChoiceCreationHole[] | undefined {
+  if (mechanics.family === "class_feature_acquisition_choice")
+    return classFeatureAcquisitionChoiceHoles(featureUnitId, mechanics);
+  if (mechanics.family === "feature_choice")
+    return eldritchInvocationChoiceHoles(featureUnitId, mechanics, input);
+  if (mechanics.family === "metamagic_options")
+    return sorcererMetamagicChoiceHoles(featureUnitId, mechanics, input);
+  if (
+    mechanics.family === "hunters_prey" ||
+    mechanics.family === "attack_roll_defense_choice"
+  )
+    return hunterFeatureChoiceHoles(featureUnitId, mechanics);
+  return undefined;
+}
+
+function passiveClassFeatureGrantChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  mechanics: Extract<
+    CharacterCreationClassFeatureFacts["mechanics"],
+    { readonly family: "passive" }
+  >,
+  unitLibrary: UnitCatalog,
+  input: ClassFeatureGrantChoiceInput,
+): readonly ChoiceCreationHole[] {
+  const knownLanguages = uniqueLanguages([
+    ...(input.knownLanguages ?? []),
+    ...fixedPassiveGrantLanguages(mechanics.grants),
+  ]);
+  const passiveGrantHoles = mechanics.grants.flatMap((grant) =>
+    passiveGrantChoiceHoles(featureUnitId, grant, unitLibrary, {
+      ...input,
+      knownLanguages,
+      excludedMagicInitiateSpellLists: [],
+    }),
+  );
+  return passiveGrantHoles;
+}
+
+function classFeatureAcquisitionChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  mechanics: Extract<
+    CharacterCreationClassFeatureFacts["mechanics"],
+    { readonly family: "class_feature_acquisition_choice" }
+  >,
+): readonly ChoiceCreationHole[] {
+  const choiceKey = unitChoiceKey(mechanics.choiceKey);
+  /* v8 ignore start -- @preserve -- Supported acquisition-choice mechanics carry a canonical nonempty choice key and produce a choice hole. */
+  if (Result.isFailure(choiceKey)) {
+    return [];
+  }
+
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(featureUnitId, choiceKey.success),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: mechanics.options.map((option) => ({
+        optionId: creationChoiceOptionId(option.id),
+        label: option.displayName,
+      })),
+    }),
+  );
+  return hole === undefined ? [] : [hole];
+  /* v8 ignore stop -- @preserve */
+}
+
+function hunterFeatureChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  mechanics: Extract<
+    CharacterCreationClassFeatureFacts["mechanics"],
+    { readonly family: "hunters_prey" | "attack_roll_defense_choice" }
+  >,
+): readonly ChoiceCreationHole[] {
+  const choiceKey = unitChoiceKey(
+    mechanics.family === "hunters_prey"
+      ? HUNTERS_PREY_CHOICE_KEY
+      : "attack_roll_defense_choice",
+  );
+  /* v8 ignore start -- @preserve -- The canonical Hunter's Prey key is a fixed valid UnitChoiceKey and its mechanics produce a choice hole. */
+  if (Result.isFailure(choiceKey)) {
+    return [];
+  }
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(featureUnitId, choiceKey.success),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: mechanics.options.map((option) => ({
+        optionId: creationChoiceOptionId(option.id),
+        label: option.id,
+      })),
+    }),
+  );
+  return hole === undefined ? [] : [hole];
+  /* v8 ignore stop -- @preserve */
+}
+
+function chosenPreparedSpellAccessChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  acquiredAtLevel: number,
+  mechanics: Extract<
+    CharacterCreationClassFeatureFacts["mechanics"],
+    { readonly family: "chosen_prepared_spell_access" }
+  >,
+  unitLibrary: UnitCatalog,
+  classLevel: number | undefined,
+): readonly ChoiceCreationHole[] {
+  const unit = unitLibrary.getUnit(featureUnitId);
+  if (Option.isNone(unit) || unit.value.kind !== "class_feature") return [];
+  const options = eligibleChosenPreparedSpellIds({
+    feature: unit.value,
+    classLevel: classLevel ?? acquiredAtLevel,
+    unitLibrary,
+  }).flatMap((id) => {
+    const spell = unitLibrary.getUnit(id);
+    return Option.isSome(spell) ? [unitOption(spell.value)] : [];
+  });
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(
+        featureUnitId,
+        CHOSEN_PREPARED_SPELL_ACCESS_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(mechanics.choiceCount),
+      options,
+    }),
+  );
+  return hole === undefined ? [] : [hole];
 }
 
 export function originFeatGrantChoiceHoles(

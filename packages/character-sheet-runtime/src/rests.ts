@@ -1,3 +1,4 @@
+import { characterSheetWithPreparedSpellRestReplacement } from "./prepared-spell-rest-replacement.ts";
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
@@ -100,6 +101,7 @@ import {
   type CharacterSheetShortRestCompletion,
   type CharacterSheetShortRestCompletionInput,
   type CharacterSheetShortRestInput,
+  type CharacterSheetAttackRollDefenseReplacement,
   type CharacterSheetShortRestInterruptionInput,
   type CharacterSheetShortRestInterruptionOutcome,
   type CharacterSheetShortRestStart,
@@ -186,14 +188,35 @@ export function completeShortRest(
     sorcerousRestoration: input.sorcerousRestoration,
   });
   if (Result.isFailure(sheet)) return Result.fail(sheet.failure);
+  return completeShortRestSelectionBenefits(sheet.success, input);
+}
+
+function completeShortRestSelectionBenefits(
+  sheet: CharacterSheet,
+  input: CharacterSheetShortRestInput,
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const fiendishResilience = fiendishResilienceAfterShortRest({ input });
   if (Result.isFailure(fiendishResilience)) {
     return Result.fail(fiendishResilience.failure);
   }
+  const reselectedSheet = characterSheetWithAttackRollDefenseReplacement({
+    sheet: sheet,
+    unitLibrary: input.unitLibrary,
+    replacement: input.attackRollDefenseReplacement,
+  });
+  if (Result.isFailure(reselectedSheet))
+    return Result.fail(reselectedSheet.failure);
+  const preparedSheet = characterSheetWithPreparedSpellRestReplacement({
+    sheet: reselectedSheet.success,
+    unitLibrary: input.unitLibrary,
+    replacement: input.preparedSpellReplacement,
+  });
+  if (Result.isFailure(preparedSheet))
+    return Result.fail(preparedSheet.failure);
   return Result.succeed({
-    ...sheet.success,
+    ...preparedSheet.success,
     exhaustionLevel: shortRestExhaustionLevelAfterTireless({
-      sheet: sheet.success,
+      sheet: sheet,
       unitLibrary: input.unitLibrary,
     }),
     ...(fiendishResilience.success === undefined
@@ -218,10 +241,18 @@ export function completeShortRestArcaneRecoveryWithRoute(
     sorcerousRestoration: input.sorcerousRestoration,
   });
   if (result.tag === "accepted") {
+    const completed = completeShortRestSelectionBenefits(result.sheet, input);
+    if (Result.isFailure(completed))
+      return {
+        tag: "rejected",
+        route: "none",
+        issue: completed.failure,
+        qRoute: [],
+      };
     return {
       tag: "accepted",
       route: "arcaneRecovery",
-      sheet: result.sheet,
+      sheet: completed.success,
       qRoute: [completeArcaneRecoverySpellSlotRestRouteEvent()],
     };
   }
@@ -898,14 +929,21 @@ function characterSheetLongRestBuild<TBuild extends CharacterBuild>(
   input: CharacterSheetLongRestInput,
   build: TBuild,
 ): Result.Result<TBuild, CharacterSheetIssue> {
-  if (input.weaponMasteryReselections === undefined) {
-    return Result.succeed(build);
-  }
-  return characterBuildWithWeaponMasteryReselections({
-    build,
-    unitLibrary: input.unitLibrary,
-    reselections: input.weaponMasteryReselections,
-  });
+  const masteredBuild =
+    input.weaponMasteryReselections === undefined
+      ? Result.succeed(build)
+      : characterBuildWithWeaponMasteryReselections({
+          build,
+          unitLibrary: input.unitLibrary,
+          reselections: input.weaponMasteryReselections,
+        });
+  return Result.flatMap(masteredBuild, (build) =>
+    characterBuildWithAttackRollDefenseReplacement({
+      build,
+      unitLibrary: input.unitLibrary,
+      replacement: input.attackRollDefenseReplacement,
+    }),
+  );
 }
 
 function characterBuildWithWeaponMasteryReselections<
@@ -1111,4 +1149,67 @@ function characterBuildFeaturesWithWeaponMasteryReselections(
   /* v8 ignore stop -- @preserve */
 
   return nextFeatures;
+}
+
+// RAW: .references/srd-5.2.1/classes.md:6825-6832. Only completed-rest routes call this owner.
+function characterBuildWithAttackRollDefenseReplacement<
+  TBuild extends CharacterBuild,
+>(input: {
+  readonly build: TBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly replacement: CharacterSheetAttackRollDefenseReplacement | undefined;
+}): Result.Result<TBuild, CharacterSheetIssue> {
+  const replacement = input.replacement;
+  if (replacement === undefined) return Result.succeed(input.build);
+  const owned = input.build.features.filter(
+    (feature) =>
+      feature.kind === "selectedClassChoice" &&
+      feature.unitId === replacement.featureUnitId &&
+      feature.selectedOption?.kind === "attackRollDefense",
+  );
+  if (owned.length !== 1)
+    return characterSheetIssue(
+      "Attack Roll Defense replacement requires exactly one owned selected option.",
+    );
+  const unitOption = input.unitLibrary.getUnit(replacement.featureUnitId);
+  const unit = Option.getOrUndefined(unitOption);
+  if (
+    unit?.kind !== "class_feature" ||
+    unit.mechanics.family !== "attack_roll_defense_choice"
+  )
+    return characterSheetIssue(
+      "Attack Roll Defense replacement requires admitted rest-replaceable choice mechanics.",
+    );
+  return Result.succeed({
+    ...input.build,
+    features: input.build.features.map((feature) =>
+      feature.kind === "selectedClassChoice" &&
+      feature.unitId === replacement.featureUnitId
+        ? { ...feature, selectedOption: replacement.selectedOption }
+        : feature,
+    ),
+  });
+}
+
+function characterSheetWithAttackRollDefenseReplacement(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly replacement: CharacterSheetAttackRollDefenseReplacement | undefined;
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
+  const sheet = input.sheet;
+  return isCharacterSheetWithSpellSlots(sheet)
+    ? Result.map(
+        characterBuildWithAttackRollDefenseReplacement({
+          ...input,
+          build: sheet.build,
+        }),
+        (build) => ({ ...sheet, build }),
+      )
+    : Result.map(
+        characterBuildWithAttackRollDefenseReplacement({
+          ...input,
+          build: sheet.build,
+        }),
+        (build) => ({ ...sheet, build }),
+      );
 }

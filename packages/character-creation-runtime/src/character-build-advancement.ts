@@ -1,3 +1,27 @@
+import type { AbilityScoreIncreaseDeltaWithCap } from "./choice-option-codecs.ts";
+import {
+  resolveFeatSelectionScoreSequence,
+  type FeatScoreSelection,
+} from "./feat-selection-score-sequence.ts";
+// KERNEL-COVERAGE: runtime-owner CREATION.FEATURE.PROFICIENCY_CHOICE
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-proficiency-choice
+// KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.chosen-prepared-spell-access
+// KERNEL-COVERAGE: runtime-owner CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.feat-grant-occurrences
+import {
+  isWizardSpellcastingGainChoiceKey,
+  updateWizardSpellcastingForClassLevelGain,
+} from "./wizard-spellcasting-advancement.ts";
+import {
+  eligibleChosenPreparedSpellIds,
+  selectedPreparedSpellAccess,
+} from "./chosen-prepared-spell-access.ts";
+import {
+  characterBuildFeatureUnitIds,
+  characterBuildProficiencies,
+  finalizedClassChoiceFeaturesForSupportedChoices,
+} from "./finalization.ts";
 // KERNEL-COVERAGE: runtime-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighter-fighting-style-advancement-replacement
@@ -5,7 +29,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-level-gain
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.bard-magical-secrets-spell-access
 import { Brand, Result, Match, Option } from "effect";
-import type { ClassName } from "@dnd/shared/game-facts";
+import {
+  characterClassLevel,
+  type CharacterClassLevel,
+  type ClassName,
+} from "@dnd/shared/game-facts";
+import {
+  decodeProficiencyGrantSubjectOptionId,
+  decodeAbilityScoreIncreaseOptionId,
+} from "./choice-option-codecs.ts";
 import { projectClassDefinitionFacts } from "./character-definition-projection.ts";
 import {
   projectCharacterCreationFeature,
@@ -29,11 +61,14 @@ import type {
 
 import {
   classFeatureGrantChoiceHoles,
+  subclassChoiceHolesAtLevel,
+  selectedFeatAbilityScoreIncreaseOptions,
   choiceOptionIdsFitHole,
 } from "./discovery.ts";
 import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import {
   CLASS_FEATURE_FEAT_CHOICE_KEY,
+  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
@@ -50,10 +85,14 @@ import {
   type CharacterBuild,
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
+  type CharacterChoiceSelection,
+  type CharacterBuildProficiencyChoiceSubject,
+  type UnitChoiceKey,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingSource,
   type ChoiceCreationHole,
+  type CreationChoiceOptionId,
   type EldritchInvocationId,
   type SorcererMetamagicOptionId,
   type UnitCatalog,
@@ -242,14 +281,42 @@ export type CharacterBuildWarlockEldritchInvocationSelectionInput =
       readonly repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice;
     };
 
-export type CharacterBuildClassLevelGain =
+export type CharacterBuildClassLevelGain = (
   | CharacterBuildPlainClassLevelGain
   | CharacterBuildListPreparedSpellcastingOnlyLevelGain
   | CharacterBuildFighterFightingStyleReplacementLevelGain
   | CharacterBuildFightingStyleCantripReplacementLevelGain
   | CharacterBuildWeaponMasteryLevelGain
   | CharacterBuildSorcererMetamagicLevelGain
-  | CharacterBuildWarlockLevelGain;
+  | CharacterBuildWarlockLevelGain
+) & {
+  readonly gainedChoices?: readonly [
+    CharacterBuildChoiceGain,
+    ...CharacterBuildChoiceGain[],
+  ];
+};
+
+export type CharacterBuildChoiceGain =
+  | CharacterBuildFeatChoiceGain
+  | {
+      readonly kind: "unitChoice";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly choiceKey: UnitChoiceKey;
+      readonly optionIds: readonly CreationChoiceOptionId[];
+    }
+  | {
+      readonly kind: "preparedSpellAccess";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly spellIds: readonly UnitRecord["id"][];
+    };
+
+export type CharacterBuildFeatChoiceGain = {
+  readonly kind: "feat";
+  readonly featureUnitId: UnitRecord["id"];
+  readonly grantLevel: CharacterClassLevel;
+  readonly selectedFeatUnitId: UnitRecord["id"];
+  readonly abilityScoreIncreaseOptionId?: CreationChoiceOptionId;
+};
 
 export const CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS = [
   "classLevelGain",
@@ -270,6 +337,16 @@ void (true satisfies [MissingClassLevelGainTags] extends [never]
   : false);
 
 export type CharacterBuildAdvancementIssue =
+  | { readonly code: "invalidFeatChoiceGains"; readonly message: string }
+  | {
+      readonly code: "invalidWizardSpellcastingGains";
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidPreparedSpellAccessGain";
+      readonly message: string;
+    }
+  | { readonly code: "invalidClassLevelChoices"; readonly message: string }
   | {
       readonly code: "unknownUnitId";
       readonly unitId: UnitRecord["id"];
@@ -1276,10 +1353,26 @@ export function advanceCharacterBuildClassLevel(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Result.succeed({
-    ...buildForFeatureUpdate,
-    progression: progression.success,
-    features: features.success,
+  const choiceGains = applyNewClassLevelChoices({
+    build: { ...buildForFeatureUpdate, features: features.success },
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.success,
+    levelGain: input.levelGain,
+  });
+  if (Result.isFailure(choiceGains)) return Result.fail(choiceGains.failure);
+  const featGains = applyClassLevelFeatChoiceGains({
+    build: choiceGains.success,
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.success,
+    levelGain: input.levelGain,
+  });
+  if (Result.isFailure(featGains)) return Result.fail(featGains.failure);
+  return applyPreparedSpellAccessLevelGain({
+    build: { ...featGains.success, progression: progression.success },
+    previousBuild: input.build,
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.success,
+    levelGain: input.levelGain,
   });
 }
 
@@ -1510,6 +1603,23 @@ function updateSpellcastingForClassLevelGain(input: {
     return Result.succeed(input.build.spellcasting);
   }
 
+  return updateClassSpellcastingForClassLevelGain({
+    ...input,
+    levelGain: input.levelGain,
+  });
+}
+
+function updateClassSpellcastingForClassLevelGain(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: Extract<
+    CharacterBuildClassLevelGain,
+    { readonly tag: "classLevelGain" }
+  >;
+}): Result.Result<
+  CharacterBuild["spellcasting"],
+  CharacterBuildAdvancementIssue
+> {
   const classUnit = classUnitRecord({
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
@@ -1519,10 +1629,50 @@ function updateSpellcastingForClassLevelGain(input: {
   /* v8 ignore stop -- @preserve */
 
   const facts = projectClassDefinitionFacts(classUnit.success);
+  if (
+    "spellcasting" in facts &&
+    facts.spellcasting.kind === "wizard_spellcasting_creation"
+  )
+    return updateWizardSpellcastingForClassLevelGain({
+      ...input,
+      classUnit: classUnit.success,
+      spellcastingFacts: facts.spellcasting,
+    });
+  if (
+    "spellcasting" in facts &&
+    isListPreparedSpellcastingCreation(facts.spellcasting)
+  ) {
+    return updateListPreparedSpellcasting({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      levelGain: {
+        tag: "classLevelGainWithListPreparedSpellcasting",
+        classUnitId: input.levelGain.classUnitId,
+        hitPointRule: input.levelGain.hitPointRule,
+        preparedSpellcasting: { gainedPreparedSpells: [] },
+      },
+    });
+  }
   if (facts.className !== WARLOCK_CLASS_NAME) {
     return Result.succeed(input.build.spellcasting);
   }
 
+  return unchangedWarlockSpellcastingForClassLevelGain(input, facts);
+}
+
+function unchangedWarlockSpellcastingForClassLevelGain(
+  input: {
+    readonly build: CharacterBuild;
+    readonly levelGain: Extract<
+      CharacterBuildClassLevelGain,
+      { readonly tag: "classLevelGain" }
+    >;
+  },
+  facts: ReturnType<typeof projectClassDefinitionFacts>,
+): Result.Result<
+  CharacterBuild["spellcasting"],
+  CharacterBuildAdvancementIssue
+> {
   const currentWarlockLevel = classLevelForUnit(
     input.build.progression,
     input.levelGain.classUnitId,
@@ -4623,4 +4773,614 @@ function isSelectedFromFeature(
     feature.kind === "selectedClassChoice" &&
     feature.selectedFromUnitId === sourceUnitId
   );
+}
+
+function applyClassLevelFeatChoiceGains(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly levelGain: CharacterBuildClassLevelGain;
+}): Result.Result<CharacterBuild, CharacterBuildAdvancementIssue> {
+  const nextLevel = characterClassLevel(
+    classLevelForUnit(input.build.progression, input.levelGain.classUnitId) + 1,
+  );
+  const subclassGrants = input.build.features.flatMap((feature) => {
+    if (
+      feature.kind !== "selectedClassChoice" ||
+      feature.selectedFromUnitId !== input.classUnit.id
+    )
+      return [];
+    const unit = input.unitLibrary.getUnit(feature.unitId);
+    return Option.isSome(unit) && unit.value.kind === "subclass"
+      ? unit.value.featureGrants
+      : [];
+  });
+  const holes = [...input.classUnit.featureGrants, ...subclassGrants]
+    .filter((grant) => grant.level === nextLevel)
+    .flatMap((grant) =>
+      classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
+        classLevel: nextLevel,
+        grantLevel: grant.level,
+      }),
+    )
+    .filter(
+      (hole) =>
+        hole.source.tag === "unitChoice" &&
+        hole.source.choiceKey === CLASS_FEATURE_FEAT_CHOICE_KEY,
+    );
+  const gains = classLevelFeatGains(input.levelGain);
+  const invalid = (
+    message: string,
+  ): Result.Result<never, CharacterBuildAdvancementIssue> =>
+    Result.fail({ code: "invalidFeatChoiceGains", message });
+  if (gains.length !== holes.length)
+    return invalid(
+      "Class level gain must provide exactly the newly earned feat choices.",
+    );
+  const origins = new Set<string>();
+  const addedFeatures: CharacterBuildFeature[] = [];
+  const scoreSelections: FeatScoreSelection[] = [];
+  for (const gain of gains) {
+    const granted = resolveAdvancedFeatGrantHole(
+      gain,
+      nextLevel,
+      origins,
+      holes,
+    );
+    if (Result.isFailure(granted)) return Result.fail(granted.failure);
+    const hole = granted.success;
+    const featSelection = resolveAdvancedFeatScoreSelection(
+      input.unitLibrary,
+      gain,
+    );
+    if (Result.isFailure(featSelection))
+      return Result.fail(featSelection.failure);
+    scoreSelections.push({
+      facts: featSelection.success.facts,
+      acquisitionProgression: {
+        ...input.build.progression,
+        advancements: [
+          ...input.build.progression.advancements,
+          {
+            classUnitId: input.levelGain.classUnitId,
+            hitPointRule: input.levelGain.hitPointRule,
+          },
+        ],
+      },
+      scoreIncreases: featSelection.success.scoreIncreases,
+    });
+    addedFeatures.push(advancedFeatFeature(gain, hole));
+  }
+  const features = [...input.build.features, ...addedFeatures];
+  const repeatability = validateAdvancedFeatRepeatability(
+    features,
+    input.unitLibrary,
+  );
+  if (Result.isFailure(repeatability))
+    return Result.fail(repeatability.failure);
+  const scores = resolveFeatSelectionScoreSequence(
+    input.build.abilityScores,
+    scoreSelections,
+  );
+  if (Result.isFailure(scores))
+    return invalid(
+      Match.value(scores.failure.kind).pipe(
+        Match.when(
+          "prerequisiteNotMet",
+          () => "Selected feat prerequisites are not met.",
+        ),
+        Match.when(
+          "abilityScoreCapExceeded",
+          () => "Ability score increase exceeds the feat's maximum score.",
+        ),
+        Match.exhaustive,
+      ),
+    );
+  return Result.succeed({
+    ...input.build,
+    features,
+    abilityScores: scores.success,
+  });
+}
+
+function applyPreparedSpellAccessLevelGain(input: {
+  readonly build: CharacterBuild;
+  readonly previousBuild: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly levelGain: CharacterBuildClassLevelGain;
+}): Result.Result<CharacterBuild, CharacterBuildAdvancementIssue> {
+  const invalid = (
+    message: string,
+  ): Result.Result<never, CharacterBuildAdvancementIssue> =>
+    Result.fail({ code: "invalidPreparedSpellAccessGain", message });
+  const context = preparedSpellAccessGainContext(input);
+  if (Result.isFailure(context)) return Result.fail(context.failure);
+  if (context.success.tag === "unchanged") return Result.succeed(input.build);
+  const { feature, gain, previous } = context.success;
+  const selected = selectedPreparedSpellAccess({
+    featureUnitId: feature.id,
+    spellIds: gain.spellIds,
+  });
+  if (Result.isFailure(selected)) return invalid(selected.failure);
+  const eligible = new Set(
+    eligibleChosenPreparedSpellIds({
+      feature,
+      classLevel: classLevelForUnit(
+        input.build.progression,
+        input.classUnit.id,
+      ),
+      unitLibrary: input.unitLibrary,
+    }),
+  );
+  if (selected.success.spellIds.some((id) => !eligible.has(id)))
+    return invalid(
+      "Chosen spells must be eligible for this feature and the owning class's Spell Slots.",
+    );
+  if (
+    previous !== undefined &&
+    previous.kind === "selectedPreparedSpellAccess" &&
+    previous.spellIds.filter((id) => !selected.success.spellIds.includes(id))
+      .length > 1
+  )
+    return invalid("A class level gain may replace at most one chosen spell.");
+  return Result.succeed({
+    ...input.build,
+    features: [
+      ...input.build.features.filter(
+        (selection) =>
+          !(
+            selection.kind === "selectedPreparedSpellAccess" &&
+            selection.selectedFromUnitId === feature.id
+          ),
+      ),
+      selected.success,
+    ],
+  });
+}
+
+function applyNewClassLevelChoices(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly levelGain: CharacterBuildClassLevelGain;
+}): Result.Result<CharacterBuild, CharacterBuildAdvancementIssue> {
+  const invalid = (
+    message: string,
+  ): Result.Result<never, CharacterBuildAdvancementIssue> =>
+    Result.fail({ code: "invalidClassLevelChoices", message });
+  const nextLevel =
+    classLevelForUnit(input.build.progression, input.classUnit.id) + 1;
+  const gains = classLevelUnitChoiceGains(input.levelGain, input.classUnit);
+  const facts = projectClassDefinitionFacts(input.classUnit);
+  const subclassHoles = subclassChoiceHolesAtLevel({
+    classUnitId: input.classUnit.id,
+    classLevel: nextLevel,
+    facts: {
+      ...facts,
+      subclassChoices: facts.subclassChoices.filter(
+        (choice) => choice.level === nextLevel,
+      ),
+    },
+    unitLibrary: input.unitLibrary,
+  });
+  const choices: Extract<
+    CharacterChoiceSelection,
+    { readonly kind: "unitChoice" }
+  >[] = [];
+  const selected = new Set<string>();
+  const applyHole = (
+    hole: ChoiceCreationHole,
+  ): Result.Result<void, CharacterBuildAdvancementIssue> => {
+    if (hole.source.tag !== "unitChoice")
+      return invalid("A gained choice must have a source-scoped unit owner.");
+    const source = hole.source;
+    const matching = gains.filter(
+      (gain) =>
+        gain.featureUnitId === source.unitId &&
+        gain.choiceKey === source.choiceKey,
+    );
+    const gain = matching[0];
+    if (
+      gain === undefined ||
+      matching.length !== 1 ||
+      !choiceOptionIdsFitHole(hole, gain.optionIds)
+    )
+      return invalid(
+        "Newly earned choices require exactly their legal distinct selections.",
+      );
+    const origin = `${source.unitId}:${source.choiceKey}`;
+    if (selected.has(origin))
+      return invalid("A gained choice source cannot be selected twice.");
+    selected.add(origin);
+    choices.push({
+      kind: "unitChoice",
+      source,
+      options: gain.optionIds.flatMap((optionId) => {
+        const option = hole.options.find(
+          (candidate) => candidate.optionId === optionId,
+        );
+        return option === undefined
+          ? []
+          : [
+              {
+                optionId,
+                ...(option.unitRef === undefined
+                  ? {}
+                  : { unitRef: option.unitRef }),
+              },
+            ];
+      }),
+    });
+    return Result.succeed(undefined);
+  };
+  for (const hole of subclassHoles) {
+    const applied = applyHole(hole);
+    if (Result.isFailure(applied)) return Result.fail(applied.failure);
+  }
+  const selectedFeatures =
+    finalizedClassChoiceFeaturesForSupportedChoices(choices);
+  const subclassGrants = [...input.build.features, ...selectedFeatures].flatMap(
+    (feature) => {
+      if (
+        feature.kind !== "selectedClassChoice" ||
+        feature.selectedFromUnitId !== input.classUnit.id
+      )
+        return [];
+      const unit = input.unitLibrary.getUnit(feature.unitId);
+      return Option.isSome(unit) && unit.value.kind === "subclass"
+        ? unit.value.featureGrants
+        : [];
+    },
+  );
+  const proficiencies = characterBuildProficiencies(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Result.isFailure(proficiencies))
+    return invalid("Owning build proficiencies could not be projected.");
+  const holes = [...input.classUnit.featureGrants, ...subclassGrants]
+    .filter((grant) => grant.level === nextLevel)
+    .flatMap((grant) =>
+      classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
+        classLevel: nextLevel,
+        grantLevel: grant.level,
+        ownedSkillProficiencies: proficiencies.success.skills,
+        ownedSkillExpertise: proficiencies.success.expertise,
+        ownedToolProficiencies: proficiencies.success.tools,
+      }),
+    )
+    .filter(
+      (hole) =>
+        hole.source.tag === "unitChoice" &&
+        (hole.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY ||
+          hole.source.choiceKey === "attack_roll_defense_choice" ||
+          hole.source.choiceKey === "hunters_prey"),
+    );
+  for (const hole of holes) {
+    const applied = applyHole(hole);
+    if (Result.isFailure(applied)) return Result.fail(applied.failure);
+  }
+  if (selected.size !== gains.length)
+    return invalid(
+      "Gained choices must originate from a newly earned class or subclass grant.",
+    );
+  const gainedProficiencies = gainedClassProficiencySubjects(choices);
+  if (Result.isFailure(gainedProficiencies))
+    return Result.fail(gainedProficiencies.failure);
+  return Result.succeed({
+    ...input.build,
+    features: [
+      ...input.build.features,
+      ...finalizedClassChoiceFeaturesForSupportedChoices(choices),
+    ],
+    proficiencyChoices: [
+      ...input.build.proficiencyChoices,
+      ...gainedProficiencies.success,
+    ],
+  });
+}
+
+type ClassLevelFeatGain = Extract<
+  NonNullable<CharacterBuildClassLevelGain["gainedChoices"]>[number],
+  { readonly kind: "feat" }
+>;
+function invalidFeatGain(
+  message: string,
+): Result.Result<never, CharacterBuildAdvancementIssue> {
+  return Result.fail({ code: "invalidFeatChoiceGains", message });
+}
+function resolveAdvancedFeatScoreSelection(
+  unitLibrary: UnitCatalog,
+  gain: ClassLevelFeatGain,
+): Result.Result<
+  {
+    readonly facts: FeatScoreSelection["facts"];
+    readonly scoreIncreases: readonly AbilityScoreIncreaseDeltaWithCap[];
+  },
+  CharacterBuildAdvancementIssue
+> {
+  const feat = unitLibrary.getUnit(gain.selectedFeatUnitId);
+  if (Option.isNone(feat) || feat.value.kind !== "feat")
+    return invalidFeatGain("Selected feat must reference an installed feat.");
+  const projectedFeat = projectCharacterCreationFeature(feat.value);
+  if (projectedFeat.tag !== "readable" || projectedFeat.value.kind !== "feat")
+    return invalidFeatGain("Selected feat cannot be projected.");
+  const increases = resolveAdvancedFeatScoreIncreases(feat.value, gain);
+  if (Result.isFailure(increases)) return Result.fail(increases.failure);
+  return Result.succeed({
+    facts: projectedFeat.value.facts,
+    scoreIncreases: increases.success,
+  });
+}
+
+function validateAdvancedFeatRepeatability(
+  features: readonly CharacterBuildFeature[],
+  unitLibrary: UnitCatalog,
+): Result.Result<void, CharacterBuildAdvancementIssue> {
+  const selectedFeats = features.flatMap((feature) => {
+    if (feature.kind !== "selectedClassChoice") return [];
+    const unit = unitLibrary.getUnit(feature.unitId);
+    return Option.isSome(unit) && unit.value.kind === "feat"
+      ? [unit.value]
+      : [];
+  });
+  const selectedIds = new Set<UnitRecord["id"]>();
+  for (const feat of selectedFeats) {
+    const projection = projectCharacterCreationFeature(feat);
+    if (projection.tag !== "readable" || projection.value.kind !== "feat")
+      return invalidFeatGain("Selected feat cannot be projected.");
+    if (
+      selectedIds.has(feat.id) &&
+      projection.value.facts.repeatability === "once"
+    )
+      return invalidFeatGain("A nonrepeatable feat cannot be selected twice.");
+    selectedIds.add(feat.id);
+  }
+  return Result.succeed(undefined);
+}
+
+function resolveAdvancedFeatScoreIncreases(
+  feat: Extract<UnitRecord, { readonly kind: "feat" }>,
+  gain: ClassLevelFeatGain,
+): Result.Result<
+  readonly AbilityScoreIncreaseDeltaWithCap[],
+  CharacterBuildAdvancementIssue
+> {
+  const scoreIncreases: AbilityScoreIncreaseDeltaWithCap[] = [];
+  const scoreOptions = selectedFeatAbilityScoreIncreaseOptions(feat);
+  if (scoreOptions.length === 0) {
+    if (gain.abilityScoreIncreaseOptionId !== undefined)
+      return invalidFeatGain(
+        "This feat does not grant an ability score increase choice.",
+      );
+  } else {
+    if (
+      gain.abilityScoreIncreaseOptionId === undefined ||
+      !scoreOptions.some(
+        (option) => option.optionId === gain.abilityScoreIncreaseOptionId,
+      )
+    )
+      return invalidFeatGain(
+        "Selected feat requires its legal ability score increase choice.",
+      );
+    const decoded = decodeAbilityScoreIncreaseOptionId(
+      gain.abilityScoreIncreaseOptionId,
+    );
+    if (Result.isFailure(decoded))
+      return invalidFeatGain(
+        "Ability score increase choice could not be decoded.",
+      );
+    scoreIncreases.push(...decoded.success);
+  }
+  return Result.succeed(scoreIncreases);
+}
+
+function resolveAdvancedFeatGrantHole(
+  gain: ClassLevelFeatGain,
+  nextLevel: CharacterClassLevel,
+  origins: Set<string>,
+  holes: readonly ChoiceCreationHole[],
+): Result.Result<ChoiceCreationHole, CharacterBuildAdvancementIssue> {
+  const origin = `${gain.featureUnitId}:${gain.grantLevel}`;
+  if (origins.has(origin) || gain.grantLevel !== nextLevel)
+    return invalidFeatGain(
+      "Feat gains must have distinct newly earned grant origins.",
+    );
+  origins.add(origin);
+  const hole = holes.find(
+    (candidate) =>
+      candidate.source.tag === "unitChoice" &&
+      candidate.source.unitId === gain.featureUnitId,
+  );
+  if (
+    hole === undefined ||
+    !hole.options.some(
+      (option) => option.unitRef?.unitId === gain.selectedFeatUnitId,
+    )
+  )
+    return invalidFeatGain(
+      "Selected feat is not a qualifying option of its earned grant.",
+    );
+  return Result.succeed(hole);
+}
+
+function classLevelFeatGains(
+  levelGain: CharacterBuildClassLevelGain,
+): readonly ClassLevelFeatGain[] {
+  return levelGain.gainedChoices?.filter((gain) => gain.kind === "feat") ?? [];
+}
+
+function advancedFeatFeature(
+  gain: ClassLevelFeatGain,
+  hole: ChoiceCreationHole,
+): CharacterBuildFeature {
+  return {
+    kind: "selectedClassChoice",
+    unitId: gain.selectedFeatUnitId,
+    selectedFromUnitId: gain.featureUnitId,
+    ...(hole.source.tag === "unitChoice" && hole.source.grantLevel !== undefined
+      ? { selectedFromGrantLevel: hole.source.grantLevel }
+      : {}),
+  };
+}
+
+type PreparedSpellAccessLevelGainInput = {
+  readonly build: CharacterBuild;
+  readonly previousBuild: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly levelGain: CharacterBuildClassLevelGain;
+};
+type PreparedSpellAccessGain = Extract<
+  NonNullable<CharacterBuildClassLevelGain["gainedChoices"]>[number],
+  { readonly kind: "preparedSpellAccess" }
+>;
+function preparedSpellAccessGains(
+  levelGain: CharacterBuildClassLevelGain,
+): readonly PreparedSpellAccessGain[] {
+  return (
+    levelGain.gainedChoices?.filter(
+      (gain) => gain.kind === "preparedSpellAccess",
+    ) ?? []
+  );
+}
+type PreparedSpellAccessGainResolution =
+  | { readonly tag: "unchanged" }
+  | {
+      readonly tag: "selection";
+      readonly feature: Extract<UnitRecord, { readonly kind: "class_feature" }>;
+      readonly gain: PreparedSpellAccessGain;
+      readonly previous: CharacterBuildFeature | undefined;
+    };
+
+function preparedSpellAccessGainContext(
+  input: PreparedSpellAccessLevelGainInput,
+): Result.Result<
+  PreparedSpellAccessGainResolution,
+  CharacterBuildAdvancementIssue
+> {
+  const invalid = (
+    message: string,
+  ): Result.Result<never, CharacterBuildAdvancementIssue> =>
+    Result.fail({ code: "invalidPreparedSpellAccessGain", message });
+  const earned = characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  ).flatMap((id) => {
+    const unit = input.unitLibrary.getUnit(id);
+    return Option.isSome(unit) &&
+      unit.value.kind === "class_feature" &&
+      unit.value.className === input.classUnit.className &&
+      unit.value.mechanics.family === "chosen_prepared_spell_access"
+      ? [unit.value]
+      : [];
+  });
+  const gains = preparedSpellAccessGains(input.levelGain);
+  if (gains.length > 1)
+    return invalid(
+      "One class level gain permits one source-scoped Prepared Spell Access operation.",
+    );
+  const gain = gains[0];
+  if (earned.length === 0)
+    return gain === undefined
+      ? Result.succeed({ tag: "unchanged" } as const)
+      : invalid(
+          "Prepared Spell Access must originate from an earned feature of the gained class.",
+        );
+  // The admitted Surface family grants one pair and at most one replacement.
+  const [feature, ...otherFeatures] = earned;
+  if (feature === undefined || otherFeatures.length > 0)
+    return invalid(
+      "Prepared Spell Access requires one source-scoped selection owner.",
+    );
+  return resolvePreparedSpellAccessSelection(
+    input.previousBuild,
+    feature,
+    gain,
+  );
+}
+
+type ClassLevelUnitChoiceGain = Extract<
+  NonNullable<CharacterBuildClassLevelGain["gainedChoices"]>[number],
+  { readonly kind: "unitChoice" }
+>;
+function classLevelUnitChoiceGains(
+  levelGain: CharacterBuildClassLevelGain,
+  classUnit: ClassRecord,
+): readonly ClassLevelUnitChoiceGain[] {
+  const gains =
+    levelGain.gainedChoices
+      ?.filter((gain) => gain.kind === "unitChoice")
+      .filter(
+        (gain) =>
+          !(
+            isWizardSpellcastingGainChoiceKey(gain.choiceKey) &&
+            "spellcasting" in classUnit &&
+            classUnit.spellcasting?.kind === "wizard_spellcasting_creation"
+          ),
+      ) ?? [];
+  return gains;
+}
+
+function gainedClassProficiencySubjects(
+  choices: readonly Extract<
+    CharacterChoiceSelection,
+    { readonly kind: "unitChoice" }
+  >[],
+): Result.Result<
+  readonly CharacterBuildProficiencyChoiceSubject[],
+  CharacterBuildAdvancementIssue
+> {
+  const invalid = (
+    message: string,
+  ): Result.Result<never, CharacterBuildAdvancementIssue> =>
+    Result.fail({ code: "invalidClassLevelChoices", message });
+  const proficiencyChoices: CharacterBuildProficiencyChoiceSubject[] = [];
+  for (const choice of choices) {
+    if (choice.source.choiceKey !== CLASS_FEATURE_PROFICIENCY_CHOICE_KEY)
+      continue;
+    for (const option of choice.options) {
+      const decoded = decodeProficiencyGrantSubjectOptionId(option.optionId);
+      if (Result.isFailure(decoded))
+        return invalid("Gained proficiency choice could not be decoded.");
+      proficiencyChoices.push(decoded.success);
+    }
+  }
+  const skills = proficiencyChoices.flatMap((subject) =>
+    subject.kind === "skill" ? [subject.skill] : [],
+  );
+  if (new Set(skills).size !== skills.length)
+    return invalid(
+      "Gained skill proficiencies must be distinct across grants.",
+    );
+  return Result.succeed(proficiencyChoices);
+}
+
+function resolvePreparedSpellAccessSelection(
+  previousBuild: CharacterBuild,
+  feature: Extract<UnitRecord, { readonly kind: "class_feature" }>,
+  gain: PreparedSpellAccessGain | undefined,
+): Result.Result<
+  PreparedSpellAccessGainResolution,
+  CharacterBuildAdvancementIssue
+> {
+  const invalid = (
+    message: string,
+  ): Result.Result<never, CharacterBuildAdvancementIssue> =>
+    Result.fail({ code: "invalidPreparedSpellAccessGain", message });
+  const previous = previousBuild.features.find(
+    (selection) =>
+      selection.kind === "selectedPreparedSpellAccess" &&
+      selection.selectedFromUnitId === feature.id,
+  );
+  if (gain === undefined)
+    return previous === undefined
+      ? invalid(
+          "Newly earned Prepared Spell Access requires its spell selection.",
+        )
+      : Result.succeed({ tag: "unchanged" } as const);
+  if (gain.featureUnitId !== feature.id)
+    return invalid("Prepared Spell Access names an unearned feature source.");
+  return Result.succeed({ tag: "selection", feature, gain, previous });
 }

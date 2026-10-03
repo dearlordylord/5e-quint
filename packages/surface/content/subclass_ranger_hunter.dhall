@@ -2,7 +2,10 @@ let hunter =
       { className = "ranger"
 
       , featureGrants =
-          [ { level = 3, unitId = "ranger_hunters_prey" } ]
+          [ { level = 3, unitId = "ranger_hunters_prey" }
+          , { level = 3, unitId = "ranger_hunters_lore" }
+          , { level = 7, unitId = "ranger_defensive_tactics" }
+          ]
       , id = "subclass_ranger_hunter"
       , kind = "subclass"
       , name = "Hunter"

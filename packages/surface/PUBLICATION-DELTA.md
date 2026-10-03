@@ -188,3 +188,27 @@ The regular `pnpm check:surface-content-publication` gate regenerates the
 aggregate and schema deterministically from the canonical Dhall/JSON sources,
 requires byte equality with the checked-in artifacts, and then invokes the same
 delta verifier.
+
+## Class feature selection and recovery increments
+
+The class feature increment certificate authenticates source-owned repeated feat
+grant occurrences, the College of Lore skill and spell selections, the Champion
+additional Fighting Style, Hunter knowledge and attack defenses, and Wizard
+Short Rest preparation replacement. Class and subclass changes retain canonical
+cross-record grants; repeated Ability Score Improvement occurrences reference
+the existing authored feature instead of copying its rule record. The Ability
+Score Improvement feat retains its RAW repeatability fact. Catalog installation
+remains separate from each runtime profile's supported behavior.
+
+The `classFeatureIncrementMechanics` graph class removes only the five reviewed
+mechanic branches at reachable class feature mechanics unions. Each exact branch
+shape and its owning pointer require before/after node hash authorization. The
+`featRepeatability` class reverses only the optional true-only repeatability field
+on a strict feat record. Near matches, additional properties, changed values,
+and lookalike pointers fail the finite classification and remaining whole-graph
+comparison. The immutable baseline and comparison authorities are unchanged.
+
+The independent portable dependency contract includes the recovery feature's
+resource reference. Its separately validated cases retain strict schema,
+dependency-contract, and input fingerprints and check both the complete catalog
+and rejection of a dangling resource reference.

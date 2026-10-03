@@ -45,7 +45,17 @@ export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
 }): readonly CharacterSheetClassFeaturePreparedSpellAccess[] {
-  const accesses: CharacterSheetClassFeaturePreparedSpellAccess[] = [];
+  const accesses: CharacterSheetClassFeaturePreparedSpellAccess[] =
+    input.build.features.flatMap((feature) =>
+      feature.kind === "selectedPreparedSpellAccess"
+        ? [
+            {
+              sourceUnitId: feature.selectedFromUnitId,
+              spellIds: feature.spellIds,
+            },
+          ]
+        : [],
+    );
   for (const unitId of characterBuildFeatureUnitIds(
     input.build,
     input.unitLibrary,

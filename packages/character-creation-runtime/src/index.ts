@@ -330,6 +330,8 @@ export {
   warlockLevelGain,
   type CharacterBuildAdvancementIssue,
   type CharacterBuildClassLevelGain,
+  type CharacterBuildFeatChoiceGain,
+  type CharacterBuildChoiceGain,
   type CharacterBuildFighterFightingStyleReplacementLevelGain,
   type CharacterBuildFightingStyleReplacementRoute,
   type CharacterBuildFightingStyleReplacementRouteEvent,

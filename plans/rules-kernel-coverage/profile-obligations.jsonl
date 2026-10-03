@@ -201,3 +201,11 @@
 {"profileId":"unit-feature.brutal-strike","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.weapon-mastery-push","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.weapon-mastery-slow","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"character-creation.feat-grant-occurrences","obligationIds":["CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"]}
+{"profileId":"character-sheet.use-count-resource-recovery","obligationIds":["SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"]}
+{"profileId":"table-caller.marked-creature-defenses","obligationIds":["BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"]}
+{"profileId":"unit-feature.attack-roll-defense","obligationIds":["BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"]}
+{"profileId":"character-sheet.prepared-spell-rest-replacement","obligationIds":["SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"]}
+{"profileId":"character-creation.chosen-prepared-spell-access","obligationIds":["CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"]}
+{"profileId":"character-creation.class-feature-proficiency-choice","obligationIds":["CREATION.FEATURE.PROFICIENCY_CHOICE"]}
+{"profileId":"character-creation.wizard-spellcasting-advancement","obligationIds":["CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"]}

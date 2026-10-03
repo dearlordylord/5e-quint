@@ -96,6 +96,22 @@ an Acts frontier may be empty. Snapshot/presentation projections do not add
 terminal state. Surface holes describe authored shapes; this API exposes only
 Battle-owned holes and fills.
 
+### Selected attack defenses and marked creature knowledge
+
+A selected attack-roll defense is admitted from its retained feature option.
+Opportunity Attack disadvantage uses the existing Reaction roll request. A
+repeat-attacker defense records the finalized hit with its source procedure,
+defender, and attacker for that turn; turn reset clears the effect. Short and
+Long Rest option replacement belongs to Character Sheet completion.
+
+`discloseMarkedCreatureDefenses({ session, actorId, targetId })` resolves the
+feature's source-authored spell reference at the SDK knowledge boundary, then
+checks the actor's current own mark. It returns canonical Stat Block defenses
+combined with current unconditional Resistance and condition Immunity effects,
+an explicit unavailable result for character defenses, or an ineligible result.
+Empty defense collections mean a known absence of defenses. It stores no prey
+defenses in feature or mark state.
+
 ### Core terms
 
 - `BattleState`: durable battle id, Initiative order, combatants, and turn facts.

@@ -7,11 +7,13 @@ import {
   type CreationHoleIdText,
   type LoadoutSlot,
   type UnitChoiceKey,
+  type UnitChoiceSource,
 } from "@dnd/character-creation-runtime";
 
 export function unitHoleId(
   unitId: string,
   choiceKey: UnitChoiceKey,
+  grantLevel?: UnitChoiceSource["grantLevel"],
 ): CreationHoleIdText {
   const sourceUnitId = unitChoiceSourceUnitId(unitId);
   if (Result.isFailure(sourceUnitId)) {
@@ -22,6 +24,7 @@ export function unitHoleId(
     tag: "unitChoice",
     unitId: sourceUnitId.success,
     choiceKey,
+    ...(grantLevel === undefined ? {} : { grantLevel }),
   });
 }
 

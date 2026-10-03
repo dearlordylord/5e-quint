@@ -1963,6 +1963,122 @@ describe("Surface publication delta verifier", () => {
       },
     },
     {
+      name: "use_count_resource_recovery mechanics with an extra property",
+      mutate: (schema: Record<string, unknown>): void => {
+        const branch = fixtureSingleMatch(
+          Object.values(fixtureObjectField(schema, "$defs")),
+          "use_count_resource_recovery mechanics",
+          (candidate) => {
+            const properties = candidate.properties;
+            return (
+              isFixtureObject(properties) &&
+              isFixtureObject(properties.family) &&
+              Array.isArray(properties.family.enum) &&
+              properties.family.enum[0] === "use_count_resource_recovery"
+            );
+          },
+        );
+        fixtureObjectField(branch, "properties").unauthorizedField = {
+          type: "boolean",
+        };
+      },
+    },
+    {
+      name: "chosen_prepared_spell_access mechanics with an extra property",
+      mutate: (schema: Record<string, unknown>): void => {
+        const branch = fixtureSingleMatch(
+          Object.values(fixtureObjectField(schema, "$defs")),
+          "chosen_prepared_spell_access mechanics",
+          (candidate) => {
+            const properties = candidate.properties;
+            return (
+              isFixtureObject(properties) &&
+              isFixtureObject(properties.family) &&
+              Array.isArray(properties.family.enum) &&
+              properties.family.enum[0] === "chosen_prepared_spell_access"
+            );
+          },
+        );
+        fixtureObjectField(branch, "properties").unauthorizedField = {
+          type: "boolean",
+        };
+      },
+    },
+    {
+      name: "marked_creature_defenses_disclosure mechanics with an extra property",
+      mutate: (schema: Record<string, unknown>): void => {
+        const branch = fixtureSingleMatch(
+          Object.values(fixtureObjectField(schema, "$defs")),
+          "marked_creature_defenses_disclosure mechanics",
+          (candidate) => {
+            const properties = candidate.properties;
+            return (
+              isFixtureObject(properties) &&
+              isFixtureObject(properties.family) &&
+              Array.isArray(properties.family.enum) &&
+              properties.family.enum[0] ===
+                "marked_creature_defenses_disclosure"
+            );
+          },
+        );
+        fixtureObjectField(branch, "properties").unauthorizedField = {
+          type: "boolean",
+        };
+      },
+    },
+    {
+      name: "attack_roll_defense_choice mechanics with an extra property",
+      mutate: (schema: Record<string, unknown>): void => {
+        const branch = fixtureSingleMatch(
+          Object.values(fixtureObjectField(schema, "$defs")),
+          "attack_roll_defense_choice mechanics",
+          (candidate) => {
+            const properties = candidate.properties;
+            return (
+              isFixtureObject(properties) &&
+              isFixtureObject(properties.family) &&
+              Array.isArray(properties.family.enum) &&
+              properties.family.enum[0] === "attack_roll_defense_choice"
+            );
+          },
+        );
+        fixtureObjectField(branch, "properties").unauthorizedField = {
+          type: "boolean",
+        };
+      },
+    },
+    {
+      name: "prepared_spell_rest_replacement mechanics with an extra property",
+      mutate: (schema: Record<string, unknown>): void => {
+        const branch = fixtureSingleMatch(
+          Object.values(fixtureObjectField(schema, "$defs")),
+          "prepared_spell_rest_replacement mechanics",
+          (candidate) => {
+            const properties = candidate.properties;
+            return (
+              isFixtureObject(properties) &&
+              isFixtureObject(properties.family) &&
+              Array.isArray(properties.family.enum) &&
+              properties.family.enum[0] === "prepared_spell_rest_replacement"
+            );
+          },
+        );
+        fixtureObjectField(branch, "properties").unauthorizedField = {
+          type: "boolean",
+        };
+      },
+    },
+    {
+      name: "feat repeatability broadened to false",
+      mutate: (schema: Record<string, unknown>): void => {
+        const feat = fixtureDefinitionByDiscriminant(schema, "feat");
+        fixtureObjectField(
+          fixtureObjectField(feat, "properties"),
+          "repeatable",
+        ).enum = [true, false];
+      },
+    },
+    {
       name: "Tactical Shift resource identifier without nonempty constraint",
       mutate: (schema: Record<string, unknown>): void => {
         const definition = fixtureTacticalShiftMechanicsBranch(schema);
@@ -2100,6 +2216,30 @@ describe("Surface publication delta verifier", () => {
       expect(issueKinds(result)).toContain("schema-delta-unclassified");
     },
     180_000,
+  );
+
+  test.each(["classFeatureIncrementMechanics", "featRepeatability"])(
+    "rejects tampering with %s classification pointer",
+    (classification) => {
+      const result = withFixture(
+        ({ certificatePath: fixturePath }) => {
+          const certificate = fixtureObject(
+            JSON.parse(readFileSync(fixturePath, "utf8")),
+            "certificate",
+          );
+          const changes = fixtureArrayField(
+            fixtureClassifiedChanges(certificate),
+            classification,
+          );
+          const change = fixtureObject(changes[0], "classification");
+          change.pointer = "/$defs/unauthorizedOwner/properties/mechanics";
+          writeFileSync(fixturePath, JSON.stringify(certificate));
+        },
+        { reviewMutatedCertificate: true },
+      );
+      expect(result.tag).toBe("invalid");
+      expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    },
   );
 
   test("rejects tampering with the Life Bond range classification pointer", () => {

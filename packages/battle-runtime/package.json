@@ -91,7 +91,9 @@
     "test:mbt:reducer-route-connectors": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/reducer-route-connectors.mbt.test.ts",
     "test:mbt:scalar-buff-active-effects": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/scalar-buff-active-effects.mbt.test.ts",
     "typecheck": "tsc --noEmit",
-    "test:mbt:tactical-shift-selected-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/tactical-shift-selected-identity.mbt.test.ts"
+    "test:mbt:tactical-shift-selected-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/tactical-shift-selected-identity.mbt.test.ts",
+    "test:mbt:attack-roll-defense": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/attack-roll-defense.mbt.test.ts",
+    "test:mbt:marked-creature-defenses": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/marked-creature-defenses.mbt.test.ts"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",

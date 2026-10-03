@@ -2672,6 +2672,7 @@ function resolveSpellActInternal(
           target.combatantId,
           null,
           fillSet.targetRelationshipFacts,
+          hit,
         ),
         subject.actorId,
         target.combatantId,

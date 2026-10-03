@@ -80,6 +80,9 @@ export function applyCompleteShortRestOperation(
     completion: completion.success,
     unitLibrary: root.unitLibrary,
     ...restRecoveryFromTool(input.operation),
+    ...(input.operation.preparedSpellReplacement === undefined
+      ? {}
+      : { preparedSpellReplacement: input.operation.preparedSpellReplacement }),
     ...(input.operation.fiendishResilienceDamageType === undefined
       ? {}
       : {

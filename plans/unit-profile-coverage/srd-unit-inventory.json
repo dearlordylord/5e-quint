@@ -355,8 +355,8 @@
       "numerator": 610,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 447,
-        "accepted-no-battle-effect": 163
+        "accepted": 448,
+        "accepted-no-battle-effect": 162
       }
     },
     "levelOneFourBattleReadiness": {
@@ -364,8 +364,8 @@
       "numerator": 635,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 448,
-        "accepted-no-battle-effect": 187
+        "accepted": 461,
+        "accepted-no-battle-effect": 174
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -373,8 +373,8 @@
       "numerator": 51,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 37,
-        "accepted-no-battle-effect": 14
+        "accepted": 38,
+        "accepted-no-battle-effect": 13
       }
     },
     "levelFourClassBattleReadiness": {
@@ -382,8 +382,8 @@
       "numerator": 25,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted-no-battle-effect": 24,
-        "accepted": 1
+        "accepted": 13,
+        "accepted-no-battle-effect": 12
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -431,9 +431,9 @@
       "non-runtime": 12
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 37,
+      "catalog-installed-owner-evidence-present": 38,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 2
+      "catalog-only/dead-for-now": 1
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 4,
@@ -443,8 +443,7 @@
       "spell access/list pressure": 5
     },
     "levelFourClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 12,
-      "catalog-installed-owner-evidence-present": 1,
+      "catalog-installed-owner-evidence-present": 13,
       "non-runtime": 12
     },
     "levelFourClassRowsByCategory": {
@@ -452,23 +451,22 @@
       "character-creation or progression mechanic": 12
     },
     "levelFiveClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 11,
-      "catalog-only/dead-for-now": 5,
+      "catalog-installed-owner-evidence-present": 13,
+      "catalog-only/dead-for-now": 3,
       "non-runtime": 12
     },
     "levelSixClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 11,
-      "catalog-installed-owner-evidence-present": 2,
+      "catalog-installed-owner-evidence-present": 4,
+      "catalog-only/dead-for-now": 9,
       "non-runtime": 12
     },
     "levelSevenClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 10,
-      "catalog-installed-owner-evidence-present": 2,
+      "catalog-only/dead-for-now": 8,
+      "catalog-installed-owner-evidence-present": 4,
       "non-runtime": 12
     },
     "levelEightClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 11,
-      "catalog-installed-owner-evidence-present": 1,
+      "catalog-installed-owner-evidence-present": 12,
       "non-runtime": 12
     },
     "levelNineClassRowsByDisposition": {
@@ -525,10 +523,10 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 631,
+      "catalog-installed-owner-evidence-present": 661,
       "non-runtime": 240,
       "class-progression-follow-up-required": 87,
-      "catalog-only/dead-for-now": 384,
+      "catalog-only/dead-for-now": 354,
       "missing-authored-runtime-closed": 23,
       "missing-authored-record": 82,
       "catalog-authored-review-required": 64
@@ -26551,20 +26549,31 @@
         "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "bard_bonus_proficiencies"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-battle-runtime",
-        "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
-        "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile."
+        "owner": "character-creation.class-feature-proficiency-choice",
+        "reason": "College of Lore level 3 creation and actual advancement grant exactly three distinct previously unowned skill proficiencies."
       },
-      "ownerEvidence": [],
-      "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_bonus_proficiencies is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-567 at packages/character-battle-runtime/src/bard-feature-sdk.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-3:subclass-feature-grant:bard_cutting_words",
@@ -26937,14 +26946,34 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "ranger_hunters_lore",
+        "sourceRecordPath": "packages/surface/content/ranger_hunters_lore.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_hunters_lore"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "table-caller.marked-creature-defenses",
+        "reason": "An SDK query discloses Damage Resistances, Immunities, and Vulnerabilities from canonical Stat Block facts while the character owns the current Hunter mark on that creature; unavailable character facts remain explicit."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_hunters_lore is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/stat-block knowledge owner",
+          "evidence": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -28132,13 +28161,13 @@
         "state": "installed",
         "unitId": "barbarian_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28147,13 +28176,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:bard_ability_score_improvement",
@@ -28181,13 +28210,13 @@
         "state": "installed",
         "unitId": "bard_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28196,13 +28225,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:cleric_ability_score_improvement",
@@ -28230,13 +28259,13 @@
         "state": "installed",
         "unitId": "cleric_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28245,13 +28274,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:druid_ability_score_improvement",
@@ -28279,13 +28308,13 @@
         "state": "installed",
         "unitId": "druid_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28294,13 +28323,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:fighter_ability_score_improvement",
@@ -28328,13 +28357,13 @@
         "state": "installed",
         "unitId": "fighter_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28343,13 +28372,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:monk_ability_score_improvement",
@@ -28377,13 +28406,13 @@
         "state": "installed",
         "unitId": "monk_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28392,13 +28421,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:monk_slow_fall",
@@ -28469,13 +28498,13 @@
         "state": "installed",
         "unitId": "paladin_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28484,13 +28513,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:ranger_ability_score_improvement",
@@ -28518,13 +28547,13 @@
         "state": "installed",
         "unitId": "ranger_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28533,13 +28562,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:rogue_ability_score_improvement",
@@ -28567,13 +28596,13 @@
         "state": "installed",
         "unitId": "rogue_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28582,13 +28611,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:sorcerer_ability_score_improvement",
@@ -28616,13 +28645,13 @@
         "state": "installed",
         "unitId": "sorcerer_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28631,13 +28660,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:warlock_ability_score_improvement",
@@ -28665,13 +28694,13 @@
         "state": "installed",
         "unitId": "warlock_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28680,13 +28709,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-feature-grant:wizard_ability_score_improvement",
@@ -28714,13 +28743,13 @@
         "state": "installed",
         "unitId": "wizard_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
       "ownerEvidence": [
         {
@@ -28729,13 +28758,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-4:class-table-summary:barbarian_level_4_feature_table_row",
@@ -29285,23 +29314,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "bard_font_of_inspiration",
+        "sourceRecordPath": "packages/surface/content/bard_font_of_inspiration.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "bard_font_of_inspiration"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "character-fact-and-runtime-detached-split",
-        "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
-        "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state."
+        "owner": "character-sheet.use-count-resource-recovery",
+        "reason": "The existing Bardic Inspiration pool regains expended uses after a Short Rest or Long Rest. An atomic no-action exchange spends one available Spell Slot to regain one expended use."
       },
-      "ownerEvidence": [],
-      "nextAction": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_font_of_inspiration is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-558 at packages/character-battle-runtime/src/bard-feature-sdk.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-5:class-feature-grant:cleric_sear_undead",
@@ -29816,23 +29858,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "wizard_memorize_spell",
+        "sourceRecordPath": "packages/surface/content/wizard_memorize_spell.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "wizard_memorize_spell"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "character-fact-and-runtime-detached-split",
-        "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
-        "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles."
+        "owner": "character-sheet.prepared-spell-rest-replacement",
+        "reason": "Completed Short Rest optionally replaces exactly one prepared level 1+ spell by another level 1+ spell in the owned canonical spellbook while preserving spellbook and Spell Slot state."
       },
-      "ownerEvidence": [],
-      "nextAction": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_memorize_spell is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-562 at packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-5:class-table-summary:barbarian_level_5_feature_table_row",
@@ -30291,7 +30346,7 @@
       "category": "class feature",
       "concept": "Fighter Ability Score Improvement",
       "detail": "Level 6 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "fighter_ability_score_improvement_l6",
+      "candidateUnitId": "fighter_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -30306,23 +30361,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "fighter_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/fighter_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "fighter_ability_score_improvement_l6"
+        "state": "installed",
+        "unitId": "fighter_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-6:class-feature-grant:monk_empowered_strikes",
@@ -30992,23 +31060,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "bard_magical_discoveries",
+        "sourceRecordPath": "packages/surface/content/bard_magical_discoveries.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "bard_magical_discoveries"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "character-fact-and-runtime-detached-split",
-        "owner": "future-owner-before-SDK character-creation and character-sheet Magical Discoveries spell-access selection owner plus selected Spell Definition invocation profiles",
-        "reason": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles."
+        "owner": "character-creation.chosen-prepared-spell-access",
+        "reason": "The source retains two chosen always-prepared spells eligible from Cleric, Druid, or Wizard lists and Bard Spell Slots; at most one is replaced on a later Bard level gain."
       },
-      "ownerEvidence": [],
-      "nextAction": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_magical_discoveries is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-571 at packages/character-battle-runtime/src/bard-feature-sdk.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-6:subclass-feature-grant:cleric_blessed_healer",
@@ -32105,23 +32186,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "fighter_additional_fighting_style",
+        "sourceRecordPath": "packages/surface/content/fighter_additional_fighting_style.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fighter_additional_fighting_style"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated Fighting Style grant owner plus selected Fighting Style feat Unit profiles",
-        "reason": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container."
+        "owner": "character-creation.feat-grant-occurrences",
+        "reason": "A second independently sourced Fighting Style choice is gained at Champion level 7; replacing the primary style preserves the additional selected feat."
       },
-      "ownerEvidence": [],
-      "nextAction": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_additional_fighting_style is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-566 at packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-7:subclass-feature-grant:paladin_aura_of_devotion",
@@ -32179,23 +32273,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "ranger_defensive_tactics",
+        "sourceRecordPath": "packages/surface/content/ranger_defensive_tactics.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_defensive_tactics"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners",
-        "reason": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity."
-      },
-      "ownerEvidence": [],
-      "nextAction": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_defensive_tactics is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-585 at packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:barbarian_ability_score_improvement",
@@ -32210,7 +32311,7 @@
       "category": "class feature",
       "concept": "Barbarian Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "barbarian_ability_score_improvement_l8",
+      "candidateUnitId": "barbarian_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32225,23 +32326,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "barbarian_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "barbarian_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "barbarian_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:bard_ability_score_improvement",
@@ -32256,7 +32370,7 @@
       "category": "class feature",
       "concept": "Bard Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "bard_ability_score_improvement_l8",
+      "candidateUnitId": "bard_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32271,23 +32385,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "bard_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "bard_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "bard_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:cleric_ability_score_improvement",
@@ -32302,7 +32429,7 @@
       "category": "class feature",
       "concept": "Cleric Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "cleric_ability_score_improvement_l8",
+      "candidateUnitId": "cleric_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32317,23 +32444,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "cleric_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/cleric_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "cleric_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "cleric_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:druid_ability_score_improvement",
@@ -32348,7 +32488,7 @@
       "category": "class feature",
       "concept": "Druid Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "druid_ability_score_improvement_l8",
+      "candidateUnitId": "druid_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32363,23 +32503,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "druid_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/druid_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "druid_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "druid_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit druid_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:fighter_ability_score_improvement",
@@ -32394,7 +32547,7 @@
       "category": "class feature",
       "concept": "Fighter Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "fighter_ability_score_improvement_l8",
+      "candidateUnitId": "fighter_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32409,23 +32562,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "fighter_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/fighter_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "fighter_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "fighter_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:monk_ability_score_improvement",
@@ -32440,7 +32606,7 @@
       "category": "class feature",
       "concept": "Monk Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "monk_ability_score_improvement_l8",
+      "candidateUnitId": "monk_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32455,23 +32621,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/monk_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "monk_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "monk_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:paladin_ability_score_improvement",
@@ -32486,7 +32665,7 @@
       "category": "class feature",
       "concept": "Paladin Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "paladin_ability_score_improvement_l8",
+      "candidateUnitId": "paladin_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32501,23 +32680,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "paladin_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/paladin_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "paladin_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "paladin_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:ranger_ability_score_improvement",
@@ -32591,7 +32783,7 @@
       "category": "class feature",
       "concept": "Rogue Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "rogue_ability_score_improvement_l8",
+      "candidateUnitId": "rogue_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32606,23 +32798,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "rogue_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "rogue_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:sorcerer_ability_score_improvement",
@@ -32637,7 +32842,7 @@
       "category": "class feature",
       "concept": "Sorcerer Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "sorcerer_ability_score_improvement_l8",
+      "candidateUnitId": "sorcerer_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32652,23 +32857,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sorcerer_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/sorcerer_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "sorcerer_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "sorcerer_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:warlock_ability_score_improvement",
@@ -32683,7 +32901,7 @@
       "category": "class feature",
       "concept": "Warlock Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "warlock_ability_score_improvement_l8",
+      "candidateUnitId": "warlock_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32698,23 +32916,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "warlock_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/warlock_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "warlock_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "warlock_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit warlock_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-feature-grant:wizard_ability_score_improvement",
@@ -32729,7 +32960,7 @@
       "category": "class feature",
       "concept": "Wizard Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
-      "candidateUnitId": "wizard_ability_score_improvement_l8",
+      "candidateUnitId": "wizard_ability_score_improvement_l4",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32744,23 +32975,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "wizard_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "wizard_ability_score_improvement_l8"
+        "state": "installed",
+        "unitId": "wizard_ability_score_improvement_l4"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-        "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners."
+        "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+        "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
       },
-      "ownerEvidence": [],
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; FEATURE-563 at packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-8:class-table-summary:barbarian_level_8_feature_table_row",

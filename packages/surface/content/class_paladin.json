@@ -39,6 +39,10 @@
       "unitId": "paladin_extra_attack"
     },
     {
+      "level": 8,
+      "unitId": "paladin_ability_score_improvement_l4"
+    },
+    {
       "level": 9,
       "unitId": "paladin_abjure_foes"
     },

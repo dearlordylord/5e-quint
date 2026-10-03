@@ -30,6 +30,7 @@ let rogue =
         , { level = 4, unitId = "rogue_ability_score_improvement_l4" }
         , { level = 5, unitId = "rogue_cunning_strike" }
         , { level = 5, unitId = "rogue_uncanny_dodge" }
+        , { level = 8, unitId = "rogue_ability_score_improvement_l4" }
         , { level = 9, unitId = "rogue_supreme_sneak" }
         , { level = 10, unitId = "rogue_ability_score_improvement_l10" }
         ]

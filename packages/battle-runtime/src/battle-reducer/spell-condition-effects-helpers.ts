@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE
+// UNIT-PROFILE-COVERAGE: runtime-owner table-caller.marked-creature-defenses
 // Spell-condition effect helpers shared between M (damage_apply) and
 // P (spells_holes_fills). Cycle #19 in REFACTOR_MAP.md — both clusters need
 // these small helpers; hoisting them here keeps M↔P unidirectional. Mechanical
@@ -200,14 +202,19 @@ export function conditionApplicationPreventedByCreatureTypeProtection(
   );
 }
 
+export function combatantActiveConditionImmunities(
+  target: BattleCreatureState,
+): readonly Condition[] {
+  return target.activeEffects.flatMap((effect) =>
+    effect.kind === "conditionImmunity" ? [effect.condition] : [],
+  );
+}
+
 export function conditionApplicationPreventedByConditionImmunity(
   target: BattleCreatureState,
   condition: Condition,
 ): boolean {
-  return target.activeEffects.some(
-    (effect) =>
-      effect.kind === "conditionImmunity" && effect.condition === condition,
-  );
+  return combatantActiveConditionImmunities(target).includes(condition);
 }
 
 export function resolveBattlePossessionAttempt({

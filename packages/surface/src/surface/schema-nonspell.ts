@@ -2069,6 +2069,41 @@ export const HuntersPreyMechanicsSchema: HuntersPreyMechanicsCodec =
   strictStruct(huntersPreyMechanicsFields);
 /* v8 ignore stop -- @preserve */
 
+const markedCreatureDefensesDisclosureMechanicsFields = codecFields({
+  family: Schema.Literal("marked_creature_defenses_disclosure"),
+  spellId: surfaceDependency(NonEmptyStringSchema, "spell-reference"),
+});
+export const MarkedCreatureDefensesDisclosureMechanicsSchema = strictStruct(
+  markedCreatureDefensesDisclosureMechanicsFields,
+);
+
+const attackRollDefenseChoiceMechanicsFields = codecFields({
+  family: Schema.Literal("attack_roll_defense_choice"),
+  choice: strictStruct({
+    kind: Schema.Literal("choose_one"),
+    replaceOn: Schema.Literal("short_or_long_rest"),
+  }),
+  options: Schema.Tuple([
+    strictStruct({
+      id: surfaceIdentity(Schema.String, "id"),
+      trigger: strictStruct({ kind: Schema.Literal("opportunity_attack") }),
+      attackRoll: strictStruct({ mode: Schema.Literal("disadvantage") }),
+    }),
+    strictStruct({
+      id: surfaceIdentity(Schema.String, "id"),
+      trigger: strictStruct({ kind: Schema.Literal("hit_by_attack_roll") }),
+      attackRoll: strictStruct({
+        mode: Schema.Literal("disadvantage"),
+        appliesTo: Schema.Literal("same_attacker_against_self"),
+        until: Schema.Literal("end_of_current_turn"),
+      }),
+    }),
+  ]),
+});
+export const AttackRollDefenseChoiceMechanicsSchema = strictStruct(
+  attackRollDefenseChoiceMechanicsFields,
+);
+
 const steadyAimMechanicsFields = codecFields({
   family: Schema.Literal("steady_aim"),
   activationCost: strictStruct({
@@ -2153,6 +2188,67 @@ export const PassiveMechanicsSchema: PassiveMechanicsCodec = Schema.Struct(
   passiveMechanicsFields,
 );
 
+const useCountResourceRecoveryMechanicsFields = codecFields({
+  family: Schema.Literal("use_count_resource_recovery"),
+  resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
+  restRecovery: strictStruct({
+    resetCadence: strictStruct({ kind: Schema.Literal("short_or_long_rest") }),
+    amount: Schema.Literal("all_expended"),
+  }),
+  spellSlotExchange: strictStruct({
+    actionCost: Schema.Literal("none"),
+    spellSlotCount: Schema.Literal(1),
+    restoredUses: Schema.Literal(1),
+    requiresExpendedUse: Schema.Literal(true),
+  }),
+});
+type UseCountResourceRecoveryMechanicsCodec = Schema.Struct<
+  typeof useCountResourceRecoveryMechanicsFields
+>;
+export type UseCountResourceRecoveryMechanics =
+  Schema.Schema.Type<UseCountResourceRecoveryMechanicsCodec>;
+export const UseCountResourceRecoveryMechanicsSchema: UseCountResourceRecoveryMechanicsCodec =
+  strictStruct(useCountResourceRecoveryMechanicsFields);
+
+const preparedSpellRestReplacementMechanicsFields = codecFields({
+  family: Schema.Literal("prepared_spell_rest_replacement"),
+  trigger: Schema.Literal("short_rest_completion"),
+  replacementCount: Schema.Literal(1),
+  preparedSpellSource: Schema.Literal("class_spellcasting"),
+  replacementSource: Schema.Literal("own_spellbook"),
+  minimumSpellLevel: Schema.Literal(1),
+});
+type PreparedSpellRestReplacementMechanicsCodec = Schema.Struct<
+  typeof preparedSpellRestReplacementMechanicsFields
+>;
+export type PreparedSpellRestReplacementMechanics =
+  Schema.Schema.Type<PreparedSpellRestReplacementMechanicsCodec>;
+export const PreparedSpellRestReplacementMechanicsSchema: PreparedSpellRestReplacementMechanicsCodec =
+  strictStruct(preparedSpellRestReplacementMechanicsFields);
+
+const chosenPreparedSpellAccessMechanicsFields = codecFields({
+  family: Schema.Literal("chosen_prepared_spell_access"),
+  eligibleSpellLists: Schema.Tuple([
+    Schema.Literal("cleric"),
+    Schema.Literal("druid"),
+    Schema.Literal("wizard"),
+  ]),
+  choiceCount: Schema.Literal(2),
+  eligibleSpellLevel: Schema.Literal("cantrip_or_class_spell_slot"),
+  preparation: Schema.Literal("always_prepared"),
+  replacement: strictStruct({
+    trigger: Schema.Literal("class_level_gain"),
+    maximumCount: Schema.Literal(1),
+  }),
+});
+type ChosenPreparedSpellAccessMechanicsCodec = Schema.Struct<
+  typeof chosenPreparedSpellAccessMechanicsFields
+>;
+export type ChosenPreparedSpellAccessMechanics =
+  Schema.Schema.Type<ChosenPreparedSpellAccessMechanicsCodec>;
+export const ChosenPreparedSpellAccessMechanicsSchema: ChosenPreparedSpellAccessMechanicsCodec =
+  strictStruct(chosenPreparedSpellAccessMechanicsFields);
+
 const preparedSpellListExpansionMechanicsFields = codecFields({
   family: Schema.Literal("prepared_spell_list_expansion"),
   baseSpellList: Schema.Literal("bard"),
@@ -2233,9 +2329,14 @@ const classFeatureMechanicsMembers = codecMembers(
   SupremeSneakMechanicsSchema,
   SacredWeaponMechanicsSchema,
   HuntersPreyMechanicsSchema,
+  MarkedCreatureDefensesDisclosureMechanicsSchema,
+  AttackRollDefenseChoiceMechanicsSchema,
   SteadyAimMechanicsSchema,
   PotentCantripMechanicsSchema,
   PreparedSpellListExpansionMechanicsSchema,
+  UseCountResourceRecoveryMechanicsSchema,
+  ChosenPreparedSpellAccessMechanicsSchema,
+  PreparedSpellRestReplacementMechanicsSchema,
   SpellDamageRollAbilityModifierMechanicsSchema,
   CombatTurnStartHeroicInspirationMechanicsSchema,
 );
@@ -2267,6 +2368,8 @@ export const ClassGeneralFeatureMechanicsSchema: ClassGeneralFeatureMechanicsCod
 const bardClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   PreparedSpellListExpansionMechanicsSchema,
+  UseCountResourceRecoveryMechanicsSchema,
+  ChosenPreparedSpellAccessMechanicsSchema,
 );
 type BardClassFeatureMechanicsCodec = Schema.Union<
   typeof bardClassFeatureMechanicsMembers
@@ -2303,6 +2406,7 @@ export const DruidClassFeatureMechanicsSchema: DruidClassFeatureMechanicsCodec =
   Schema.Union(druidClassFeatureMechanicsMembers);
 
 const wizardClassFeatureMechanicsMembers = codecMembers(
+  PreparedSpellRestReplacementMechanicsSchema,
   ClassGeneralFeatureMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
@@ -2378,6 +2482,8 @@ export const PaladinClassFeatureMechanicsSchema: PaladinClassFeatureMechanicsCod
 const rangerClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   HuntersPreyMechanicsSchema,
+  MarkedCreatureDefensesDisclosureMechanicsSchema,
+  AttackRollDefenseChoiceMechanicsSchema,
 );
 type RangerClassFeatureMechanicsCodec = Schema.Union<
   typeof rangerClassFeatureMechanicsMembers
@@ -4402,6 +4508,7 @@ const featRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("feat"),
   category: FeatCategorySchema,
+  repeatable: exactOptional(Schema.Literal(true)),
   abilityScoreIncreaseChoice: exactOptional(
     FeatAbilityScoreIncreaseChoiceSchema,
   ),

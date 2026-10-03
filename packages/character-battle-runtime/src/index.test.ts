@@ -13179,7 +13179,6 @@ function dragonbornFighterBuild(
           },
         }),
     originLanguages: ["Common", "Draconic", "Dwarvish"],
-    features: [],
     equipment: {
       startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],

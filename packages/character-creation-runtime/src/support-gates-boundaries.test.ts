@@ -45,18 +45,18 @@ import {
 
 describe("character creation support-profile boundaries", () => {
   test.each([
-    ["class_barbarian", 3],
-    ["class_bard", 3],
-    ["class_cleric", 3],
-    ["class_druid", 3],
-    ["class_fighter", 5],
-    ["class_monk", 3],
-    ["class_paladin", 3],
+    ["class_barbarian", 8],
+    ["class_bard", 8],
+    ["class_cleric", 8],
+    ["class_druid", 8],
+    ["class_fighter", 8],
+    ["class_monk", 8],
+    ["class_paladin", 8],
     ["class_ranger", 9],
     ["class_rogue", 10],
-    ["class_sorcerer", 3],
-    ["class_warlock", 3],
-    ["class_wizard", 5],
+    ["class_sorcerer", 8],
+    ["class_warlock", 8],
+    ["class_wizard", 8],
   ] as const)(
     "derives every %s progression through its level-%i capability frontier",
     (classUnitId, throughClassLevel) => {

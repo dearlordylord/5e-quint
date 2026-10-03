@@ -6,6 +6,7 @@
   [ { level = 1, unitId = "cleric_divine_order" }
   , { level = 2, unitId = "cleric_channel_divinity" }
   , { level = 4, unitId = "cleric_ability_score_improvement_l4" }
+  , { level = 8, unitId = "cleric_ability_score_improvement_l4" }
   , { level = 10, unitId = "cleric_divine_intervention" }
   ]
 , hitPointDie = 8

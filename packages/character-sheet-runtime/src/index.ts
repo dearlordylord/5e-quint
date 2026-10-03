@@ -265,6 +265,7 @@ export type {
   CharacterSheetShortRestCompletion,
   CharacterSheetShortRestCompletionInput,
   CharacterSheetShortRestInput,
+  CharacterSheetPreparedSpellRestReplacement,
   CharacterSheetShortRestInterruption,
   CharacterSheetShortRestInterruptionInput,
   CharacterSheetShortRestInterruptionOutcome,
@@ -303,3 +304,5 @@ export type {
   FreshCharacterSheetProjection,
   FreshSpellcastingCharacterSheet,
 } from "./fresh-character-sheet.ts";
+
+export { restoreUseCountResourceWithSpellSlot } from "./use-count-resource-recovery.ts";

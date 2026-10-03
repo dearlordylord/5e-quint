@@ -101,6 +101,8 @@ export const ARMOR_TRAINING_CATEGORY_VALUES = [
 // supported Character Sheet resource profiles and focused owner evidence.
 // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
 export const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
+  // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
+  authoredUnitId("bard_bardic_inspiration"),
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
@@ -1037,8 +1039,28 @@ export type CharacterSheetShortRestCompletionInput = {
   readonly restedTicks: ElapsedTimeTicks;
 };
 
+export type CharacterSheetAttackRollDefenseReplacement = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly selectedOption: Extract<
+    NonNullable<
+      Extract<
+        CharacterBuild["features"][number],
+        { readonly kind: "selectedClassChoice" }
+      >["selectedOption"]
+    >,
+    { readonly kind: "attackRollDefense" }
+  >;
+};
+
+export type CharacterSheetPreparedSpellRestReplacement = {
+  readonly spellcastingSourceUnitId: UnitRecord["id"];
+  readonly removedSpellUnitId: UnitRecord["id"];
+  readonly addedSpellUnitId: UnitRecord["id"];
+};
+
 export type CharacterSheetShortRestInput = {
   readonly completion: CharacterSheetShortRestCompletion;
+  readonly preparedSpellReplacement?: CharacterSheetPreparedSpellRestReplacement;
   readonly unitLibrary: UnitCatalog;
   readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
   readonly arcaneRecovery?: {
@@ -1048,6 +1070,7 @@ export type CharacterSheetShortRestInput = {
     readonly recoverSorceryPoints: ResourceCount;
   };
   readonly fiendishResilienceDamageType?: DamageType;
+  readonly attackRollDefenseReplacement?: CharacterSheetAttackRollDefenseReplacement;
 };
 
 export type CharacterSheetShortRestInterruptionInput = {
@@ -1145,6 +1168,7 @@ export type CharacterSheetLongRestInput = {
   readonly druidWildShapeKnownFormReplacement?: CharacterSheetDruidWildShapeKnownFormReplacement;
   readonly druidCircleLandChoice?: DruidCircleLandChoice;
   readonly fiendishResilienceDamageType?: DamageType;
+  readonly attackRollDefenseReplacement?: CharacterSheetAttackRollDefenseReplacement;
   readonly statBlockCatalog?: StatBlockCatalog;
 };
 

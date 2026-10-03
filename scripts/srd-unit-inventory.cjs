@@ -1539,6 +1539,40 @@ function findAuthored(root) {
   );
 }
 
+function rowWithCanonicalFeatGrantOccurrence(row, authored) {
+  if (
+    row.rowKind !== "class-feature-grant" ||
+    authored.has(row.candidateUnitId)
+  ) {
+    return row;
+  }
+  const classUnit = authored.get(`class_${slug(row.className)}`)?.rawRecord;
+  const level = Number(row.levelBand.replace(/^level-/, ""));
+  if (
+    classUnit?.kind !== "class" ||
+    classUnit.className !== slug(row.className) ||
+    !Number.isInteger(level)
+  )
+    return row;
+  const matching = classUnit.featureGrants
+    .filter((grant) => grant.level === level)
+    .flatMap((grant) => {
+      const feature = authored.get(grant.unitId)?.rawRecord;
+      // This report joins a source-mined identity to its authored acquisition
+      // grant. Runtime dispatch remains owned by the selected feat's mechanics.
+      return feature?.kind === "class_feature" &&
+        feature.className === classUnit.className &&
+        feature.mechanics?.family === "passive" &&
+        feature.mechanics.grants.some(
+          (effect) => effect.kind === "grant_feat",
+        ) &&
+        row.concept === `${row.className} ${feature.name}`
+        ? [feature.id]
+        : [];
+    });
+  return matching.length === 1 ? { ...row, candidateUnitId: matching[0] } : row;
+}
+
 function authoredUnitForRow(row, authored) {
   if (!row.candidateUnitId) return undefined;
   if (row.rowKind === "subclass-selection") {
@@ -5609,7 +5643,7 @@ function buildSrdUnitInventory({
         className,
         completeness.crossChapterPressure,
         completeness.supplementalSpellSources,
-      ),
+      ).map((row) => rowWithCanonicalFeatGrantOccurrence(row, authored)),
     ),
     authored,
     installedIds,
@@ -6557,61 +6591,58 @@ function validateSrdUnitInventory(report) {
       scopeLabel: "Level-11 subclass feature inventory",
     }),
   );
-  const classProgressionFeatureCandidateIds = new Map(
+  const repeatedFeatGrantRows = new Map(
     report.rows
-      .filter(
-        (row) =>
-          classProgressionFrontierLevelBands.has(row.levelBand) &&
-          row.rowKind === "class-feature-grant",
-      )
-      .map((row) => [`${row.levelBand}:${row.candidateUnitId}`, row]),
+      .filter((row) => row.rowKind === "class-feature-grant")
+      .map((row) => [`${row.className}:${row.levelBand}:${row.concept}`, row]),
   );
-  for (const [levelBand, candidateUnitId] of [
-    ["level-6", "fighter_ability_score_improvement_l6"],
-    ["level-6", "rogue_expertise"],
-    ["level-8", "barbarian_ability_score_improvement_l8"],
-    ["level-8", "bard_ability_score_improvement_l8"],
-    ["level-8", "cleric_ability_score_improvement_l8"],
-    ["level-8", "druid_ability_score_improvement_l8"],
-    ["level-8", "fighter_ability_score_improvement_l8"],
-    ["level-8", "monk_ability_score_improvement_l8"],
-    ["level-8", "paladin_ability_score_improvement_l8"],
-    ["level-8", "rogue_ability_score_improvement_l8"],
-    ["level-8", "sorcerer_ability_score_improvement_l8"],
-    ["level-8", "warlock_ability_score_improvement_l8"],
-    ["level-8", "wizard_ability_score_improvement_l8"],
-  ]) {
-    const repeatedFeatureKey = `${levelBand}:${candidateUnitId}`;
-    const row = classProgressionFeatureCandidateIds.get(repeatedFeatureKey);
+  const repeatedAbilityScoreGrants = [
+    ["Fighter", "level-6"],
+    ...classOrder
+      .filter((className) => className !== "Ranger")
+      .map((className) => [className, "level-8"]),
+  ];
+  for (const [className, levelBand] of repeatedAbilityScoreGrants) {
+    const row = repeatedFeatGrantRows.get(
+      `${className}:${levelBand}:${className} Ability Score Improvement`,
+    );
     if (row === undefined) {
       issues.push(
-        `${levelBand} table-derived repeated class-feature inventory lacks candidate Unit ${candidateUnitId}.`,
+        `${levelBand} table-derived repeated feat-grant inventory lacks ${className} Ability Score Improvement.`,
       );
       continue;
     }
     if (
-      levelBand === "level-8" &&
       !row.relatedSources?.some(
         (source) => source.kind === "dedicated-rule-text",
       )
     ) {
       issues.push(
-        `${levelBand} table-derived repeated class-feature inventory row ${candidateUnitId} lacks a dedicated rule-text related source.`,
+        `${row.id} repeated feat grant lacks its dedicated rule-text source.`,
       );
     }
-    if (candidateUnitId.includes("_ability_score_improvement_")) {
-      if (
-        row.finalDisposition !== "catalog-only/dead-for-now" ||
-        row.battleReadinessClosure?.kind !==
-          battleReadinessClosureKind.selectionGrantContainer ||
-        row.battleReadinessClosure.owner !==
-          "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles"
-      ) {
-        issues.push(
-          `${levelBand} repeated Ability Score Improvement row ${candidateUnitId} must close as a repeated ASI selection-grant container.`,
-        );
-      }
+    if (
+      row.authoredContent.state !== "authored-record-present" ||
+      row.catalogAdmission.state !== "installed" ||
+      row.unitProfileDisposition !== "supported-profile" ||
+      row.finalDisposition !== "catalog-installed-owner-evidence-present"
+    ) {
+      issues.push(
+        `${row.id} repeated feat grant must resolve its installed canonical selection owner and executable occurrence evidence.`,
+      );
     }
+  }
+  if (
+    !report.rows.some(
+      (row) =>
+        row.levelBand === "level-6" &&
+        row.rowKind === "class-feature-grant" &&
+        row.candidateUnitId === "rogue_expertise",
+    )
+  ) {
+    issues.push(
+      "Level-6 table-derived repeated class-feature inventory lacks Rogue Expertise.",
+    );
   }
   for (const row of report.rows.filter((candidate) =>
     classProgressionFrontierLevelBands.has(candidate.levelBand),

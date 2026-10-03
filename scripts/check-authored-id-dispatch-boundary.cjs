@@ -1122,7 +1122,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "resolveChosenDamageResistance",
     "resolveLinkedDefenseResistanceDamageShare",
     "suppressLinkedDefenseResistanceDamageShareDamageShare",
-    "targetHasRuntimeDamageResistance",
+    "combatantHasDamageResistance",
   ].flatMap((identifier) =>
     exactCollision(
       "resistance",
@@ -2678,9 +2678,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "6a9aa5c74fa28c80c54983f5ebbc5ebb7ac2bf63fddddebe1cb17f32f1b86b9f",
-  siteCount: 1660,
-  violationCount: 1774,
+  sha256: "0ddad5a6d43e72b2472f35f3670e4be88e3e7c68605356064d8e6a1f6adbbe22",
+  siteCount: 1661,
+  violationCount: 1775,
 };
 
 function escapeForRegExp(text) {

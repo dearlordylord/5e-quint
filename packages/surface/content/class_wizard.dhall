@@ -6,6 +6,8 @@
   , { level = 1, unitId = "wizard_arcane_recovery" }
   , { level = 2, unitId = "wizard_scholar" }
   , { level = 4, unitId = "wizard_ability_score_improvement_l4" }
+  , { level = 5, unitId = "wizard_memorize_spell" }
+  , { level = 8, unitId = "wizard_ability_score_improvement_l4" }
   ]
 , hitPointDie = 6
 , id = "class_wizard"

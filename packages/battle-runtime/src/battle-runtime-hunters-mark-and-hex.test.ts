@@ -3,6 +3,7 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
+import { discloseMarkedCreatureDefenses } from "./marked-creature-defenses.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
@@ -58,6 +59,8 @@ import {
   testCharacterD20Statistics,
   tickDurationEffects,
   wizardSpellcasting,
+  unitLibrary,
+  supportedBattleUnitRef,
 } from "./battle-runtime.test-support.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./index.ts";
 
@@ -68,6 +71,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       combatants: [
         characterSeed({
           initiative: 20,
+          characterUnitRefs: [
+            supportedBattleUnitRef(
+              unitLibrary.requireUnit("ranger_hunters_lore"),
+            ),
+          ],
           classLevels: [
             { className: "barbarian", level: 1 },
             { className: "fighter", level: 1 },
@@ -459,6 +467,28 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         fills: [targetFill(transferTarget, skeletonId)],
       }),
     );
+
+    const disclosureSession = battleRuntimeSessionForTest({
+      state: transferred.state,
+      context: session.context,
+    });
+    expect(
+      discloseMarkedCreatureDefenses({
+        session: disclosureSession,
+        actorId: fighterId,
+        targetId: goblinId,
+      }),
+    ).toEqual({ kind: "ineligible", reason: "targetNotMarked" });
+    expect(
+      discloseMarkedCreatureDefenses({
+        session: disclosureSession,
+        actorId: fighterId,
+        targetId: skeletonId,
+      }),
+    ).toMatchObject({
+      kind: "disclosed",
+      defenses: { vulnerabilities: ["bludgeoning"] },
+    });
 
     expect(transferred.state.combatants.get(fighterId)?.concentration).toEqual({
       sourceProcedureRef: battleActSpellPresentation(markAct)?.procedureRef,

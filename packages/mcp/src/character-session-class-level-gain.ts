@@ -1,6 +1,8 @@
 import {
   classLevelGainWithFightingStyleCantripReplacement,
   classUnitIdFromUnitId,
+  characterClassLevel,
+  creationChoiceOptionId,
   fighterLevelGainWithFightingStyleReplacement,
   sorcererLevelGain,
   weaponMasteryLevelGain,
@@ -10,7 +12,7 @@ import {
   type ClassUnitNameIssue,
 } from "@dnd/character-creation-runtime";
 import type { UnitId } from "@dnd/shared/game-facts";
-import { Result, Match } from "effect";
+import { Array as EffectArray, Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -24,7 +26,7 @@ export function characterBuildClassLevelGainFromTool(
     >["levelGain"];
   },
 ): Result.Result<CharacterBuildClassLevelGain, string> {
-  return Match.value(input.levelGain).pipe(
+  const parsed = Match.value(input.levelGain).pipe(
     Match.when({ tag: "classLevelGain" }, (levelGain) =>
       parsedClassLevelGain(root, levelGain),
     ),
@@ -153,6 +155,41 @@ export function characterBuildClassLevelGainFromTool(
     }),
     Match.exhaustive,
   );
+  return Result.map(parsed, (gain) => ({
+    ...gain,
+    ...(input.levelGain.gainedChoices === undefined
+      ? {}
+      : {
+          gainedChoices: EffectArray.map(
+            input.levelGain.gainedChoices,
+            (choice) =>
+              Match.value(choice).pipe(
+                Match.when({ kind: "feat" }, (feat) => ({
+                  kind: feat.kind,
+                  featureUnitId: feat.featureUnitId,
+                  selectedFeatUnitId: feat.selectedFeatUnitId,
+                  grantLevel: characterClassLevel(feat.grantLevel),
+                  ...(feat.abilityScoreIncreaseOptionId === undefined
+                    ? {}
+                    : {
+                        abilityScoreIncreaseOptionId: creationChoiceOptionId(
+                          feat.abilityScoreIncreaseOptionId,
+                        ),
+                      }),
+                })),
+                Match.when({ kind: "unitChoice" }, (selection) => ({
+                  ...selection,
+                  optionIds: selection.optionIds.map(creationChoiceOptionId),
+                })),
+                Match.when(
+                  { kind: "preparedSpellAccess" },
+                  (selection) => selection,
+                ),
+                Match.exhaustive,
+              ),
+          ),
+        }),
+  }));
 }
 
 export function runtimeIssueMessage(issue: {

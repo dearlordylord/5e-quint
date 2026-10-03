@@ -1215,6 +1215,14 @@ export function eligibleAttackRollMissToHitReplacements(
   );
 }
 
+/** Finalize the hit outcome once after the admitted miss-to-hit choice. */
+export function attackRollHitAfterMissToHitReplacement(
+  ordinaryHit: boolean,
+  replacement: AttackRollMissToHitReplacement | null,
+): boolean {
+  return ordinaryHit || replacement !== null;
+}
+
 export function selectedAttackRollMissToHitReplacement(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;

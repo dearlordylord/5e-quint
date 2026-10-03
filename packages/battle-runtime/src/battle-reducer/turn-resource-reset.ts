@@ -19,6 +19,7 @@ export function resetBattleTurnResources(
     brutalStrike: { kind: "available" },
     attackDamageRidersUsedThisTurn: [],
     stunningStrikesUsedThisTurn: [],
+    attackRollDefensesTriggeredThisTurn: [],
     huntersPreyHordeBreakerUsedThisTurn: [],
     recklessAttackWhileRagingUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],

@@ -636,6 +636,7 @@ describe("stored Character Build parser", () => {
 
   test("parses each supported stored feature shape", () => {
     const features = [
+      ...fighterBuild.features,
       {
         kind: "selectedClassChoice",
         selectedFromUnitId: "fighter_weapon_mastery",

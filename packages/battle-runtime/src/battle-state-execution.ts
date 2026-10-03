@@ -4032,6 +4032,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
+  readonly attackRollDefensesTriggeredThisTurn: readonly import("./battle-reducer/attack-roll-defense.ts").AttackRollDefenseTurnEffect[];
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
@@ -7836,6 +7837,7 @@ export type BattleTurnSnapshot = {
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
+  readonly attackRollDefensesTriggeredThisTurn: readonly import("./battle-reducer/attack-roll-defense.ts").AttackRollDefenseTurnEffect[];
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly lightWeaponAttackMade?: {

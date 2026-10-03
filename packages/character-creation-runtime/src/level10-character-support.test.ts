@@ -1,7 +1,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.bard-magical-secrets-spell-access character-creation.class-feature-feat-choice
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110C-02-MAGICAL-SECRETS-SPELL-ACCESS bard_magical_secrets
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110B-03-SUBCLASS-GRANTS-AND-REPEATED-FEATURES rogue_ability_score_improvement_l10
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  characterClassLevel,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   buildUnitCatalog,
@@ -16,6 +19,8 @@ import {
   creationChoiceOptionId,
   finalizeCharacterDraft,
   copperPieceAmount,
+  parseUnitChoiceSourceKey,
+  unitChoiceSourceKey,
   type CharacterBuild,
 } from "./index.ts";
 import {
@@ -136,14 +141,28 @@ describe("Level 10 character support", () => {
           authoredUnitId("rogue_ability_score_improvement_l4"),
           CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         )]: [creationChoiceOptionId("ability_score:str:+2:max20")],
-        [testUnitChoiceSourceKey(
-          authoredUnitId("rogue_ability_score_improvement_l8"),
-          CLASS_FEATURE_FEAT_CHOICE_KEY,
-        )]: [creationChoiceOptionId("feat_ability_score_improvement")],
-        [testUnitChoiceSourceKey(
-          authoredUnitId("rogue_ability_score_improvement_l8"),
-          CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
-        )]: [creationChoiceOptionId("ability_score:dex:+2:max20")],
+        [unitChoiceSourceKey({
+          ...expectRight(
+            parseUnitChoiceSourceKey(
+              testUnitChoiceSourceKey(
+                authoredUnitId("rogue_ability_score_improvement_l4"),
+                CLASS_FEATURE_FEAT_CHOICE_KEY,
+              ),
+            ),
+          ),
+          grantLevel: characterClassLevel(8),
+        })]: [creationChoiceOptionId("feat_ability_score_improvement")],
+        [unitChoiceSourceKey({
+          ...expectRight(
+            parseUnitChoiceSourceKey(
+              testUnitChoiceSourceKey(
+                authoredUnitId("rogue_ability_score_improvement_l4"),
+                CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+              ),
+            ),
+          ),
+          grantLevel: characterClassLevel(8),
+        })]: [creationChoiceOptionId("ability_score:dex:+2:max20")],
         [testUnitChoiceSourceKey(
           authoredUnitId("rogue_ability_score_improvement_l10"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
@@ -156,6 +175,7 @@ describe("Level 10 character support", () => {
     });
 
     const result = finalizeCharacterDraft({ draft, unitLibrary });
+    if (result.tag !== "ready") throw new Error(JSON.stringify(result));
 
     expect(result).toMatchObject({
       tag: "ready",
@@ -201,6 +221,11 @@ function bardLevelNineBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [
+      {
+        kind: "selectedPreparedSpellAccess",
+        selectedFromUnitId: authoredUnitId("bard_magical_discoveries"),
+        spellIds: [authoredUnitId("bless"), authoredUnitId("web")],
+      },
       {
         kind: "selectedClassChoice",
         selectedFromUnitId: authoredUnitId("class_bard"),

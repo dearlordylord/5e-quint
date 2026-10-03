@@ -2534,7 +2534,7 @@ export async function verifyLevelTenFighterChampionSheetScenario(
     str: 19,
     dex: 14,
     con: 14,
-    int: 8,
+    int: 12,
     wis: 10,
     cha: 12,
   });
@@ -3766,6 +3766,30 @@ function fighterTenPreferredOptionIds(
     [unitHoleId("fighter_fighting_style", "class_feature_feat_choice")]: [
       "defense",
     ],
+    [unitHoleId(
+      "fighter_additional_fighting_style",
+      "class_feature_feat_choice",
+    )]: ["feat_archery"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+      characterClassLevel(6),
+    )]: ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+      characterClassLevel(8),
+    )]: ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_ability_score_increase_choice",
+      characterClassLevel(6),
+    )]: ["ability_score:int:+2:max20"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_ability_score_increase_choice",
+      characterClassLevel(8),
+    )]: ["ability_score:int:+2:max20"],
     [unitHoleId("fighter_weapon_mastery", "weapon_mastery_options")]:
       levelTenFighterWeaponMasteries,
     [unitHoleId("class_fighter", "class_subclass_choice")]: [
@@ -4567,6 +4591,23 @@ function assertLevelTenFighterChampionBuild(payload: JsonObject, path: string) {
         feature.unitId === "feat_ability_score_improvement",
     ),
     "Fighter 10 build must retain the selected Ability Score Improvement feat",
+  );
+  assert.deepEqual(
+    features
+      .filter(
+        (feature) =>
+          feature.selectedFromUnitId === "fighter_ability_score_improvement_l4",
+      )
+      .map((feature) => feature.selectedFromGrantLevel ?? 4)
+      .sort(),
+    [4, 6, 8],
+  );
+  assert.ok(
+    features.some(
+      (feature) =>
+        feature.selectedFromUnitId === "fighter_additional_fighting_style" &&
+        feature.unitId === "feat_archery",
+    ),
   );
   const weaponMasteryChoices = jsonObjectArrayAt(
     payload,

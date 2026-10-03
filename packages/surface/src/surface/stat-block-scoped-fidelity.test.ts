@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../../../scripts/shared-host-test-policy.mjs";
 import { Match } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -4785,38 +4786,42 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     expect(result.occurrences).toHaveLength(330);
   });
 
-  test("reconciles actual corpus discovery independently of source-file order", () => {
-    const expected = evaluateSrdStatBlockScopedFidelity(corpusInput);
-    fc.assert(
-      fc.property(
-        fc.shuffledSubarray([...sourceFiles], {
-          minLength: sourceFiles.length,
-          maxLength: sourceFiles.length,
-        }),
-        (permutation) => {
-          const parity = deriveSrdStatBlockParity({
-            sourceFiles: permutation,
-            installedStatBlocks: srdStatBlockCollection.statBlocks,
-            sourceReadIssues: [],
-            peerObservations: [],
-          });
-          expect(
-            evaluateSrdStatBlockScopedFidelity({
-              ...corpusInput,
-              parity,
-              sourceByPath: new Map(
-                permutation.map(({ sourcePath, contents }) => [
-                  sourcePath,
-                  contents,
-                ]),
-              ),
-            }),
-          ).toEqual(expected);
-        },
-      ),
-      { numRuns: 12 },
-    );
-  }, 15_000);
+  test(
+    "reconciles actual corpus discovery independently of source-file order",
+    () => {
+      const expected = evaluateSrdStatBlockScopedFidelity(corpusInput);
+      fc.assert(
+        fc.property(
+          fc.shuffledSubarray([...sourceFiles], {
+            minLength: sourceFiles.length,
+            maxLength: sourceFiles.length,
+          }),
+          (permutation) => {
+            const parity = deriveSrdStatBlockParity({
+              sourceFiles: permutation,
+              installedStatBlocks: srdStatBlockCollection.statBlocks,
+              sourceReadIssues: [],
+              peerObservations: [],
+            });
+            expect(
+              evaluateSrdStatBlockScopedFidelity({
+                ...corpusInput,
+                parity,
+                sourceByPath: new Map(
+                  permutation.map(({ sourcePath, contents }) => [
+                    sourcePath,
+                    contents,
+                  ]),
+                ),
+              }),
+            ).toEqual(expected);
+          },
+        ),
+        { numRuns: 12 },
+      );
+    },
+    SHARED_HOST_TEST_TIMEOUT_MILLISECONDS,
+  );
 
   test("gives repeated anchors independent raw evidence and one authored failure", () => {
     const fixture = cachedCorpusProjections;

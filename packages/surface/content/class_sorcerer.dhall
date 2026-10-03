@@ -7,6 +7,7 @@
   , { level = 2, unitId = "sorcerer_metamagic" }
   , { level = 4, unitId = "sorcerer_ability_score_improvement_l4" }
   , { level = 5, unitId = "sorcerer_sorcerous_restoration" }
+  , { level = 8, unitId = "sorcerer_ability_score_improvement_l4" }
   ]
 , hitPointDie = 6
 , id = "class_sorcerer"

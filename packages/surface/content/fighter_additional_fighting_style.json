@@ -1,0 +1,20 @@
+{
+  "acquiredAtLevel": 7,
+  "className": "fighter",
+  "id": "fighter_additional_fighting_style",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "category": "fighting_style",
+        "kind": "grant_feat"
+      }
+    ]
+  },
+  "name": "Additional Fighting Style",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:4876-4878"
+  }
+}

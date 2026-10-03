@@ -2,6 +2,13 @@
 
 ## 0.2.0 — unreleased
 
+- Extend character creation and level gains with source-scoped repeated feat
+  choices, College of Lore skill and spell choices, and additional Fighting Style
+  selection. Retain the original grant when replacing a Fighting Style.
+- Add Bardic Inspiration recovery through Short Rests and Spell Slots, Wizard
+  prepared-spell replacement after Short Rests, and Hunter mark knowledge and
+  selected attack defenses through the existing sheet and battle APIs.
+
 - Publish the breaking Battle frontier contract: ordinary hole results expose
   the `replaySubject` that must be replayed and a required `pendingProcedure`.
   Turn-boundary procedures identify their ending actor, source turn, and

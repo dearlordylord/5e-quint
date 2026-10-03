@@ -33,14 +33,14 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | --- | --- | ---: | ---: |
 | level-1 | pass | 4/4 | 47 |
 | level-1-2 | pass | 4/4 | 50 |
-| level-1-3 | pass | 4/4 | 74 |
-| level-1-4 | pass | 4/4 | 74 |
-| level-1-5 | pass | 4/4 | 78 |
-| level-1-6 | pass | 4/4 | 78 |
-| level-1-7 | pass | 4/4 | 78 |
-| level-1-8 | pass | 4/4 | 78 |
-| level-1-9 | pass | 4/4 | 78 |
-| level-1-10 | pass | 4/4 | 78 |
+| level-1-3 | pass | 4/4 | 76 |
+| level-1-4 | pass | 4/4 | 77 |
+| level-1-5 | pass | 4/4 | 83 |
+| level-1-6 | pass | 4/4 | 84 |
+| level-1-7 | pass | 4/4 | 85 |
+| level-1-8 | pass | 4/4 | 85 |
+| level-1-9 | pass | 4/4 | 85 |
+| level-1-10 | pass | 4/4 | 85 |
 
 ## Layer Results
 
@@ -159,14 +159,14 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | --- | ---: | ---: | ---: |
 | level-1 | 83 | 83/83 | 0 |
 | level-1-2 | 99 | 99/99 | 0 |
-| level-1-3 | 147 | 147/147 | 0 |
-| level-1-4 | 148 | 148/148 | 0 |
-| level-1-5 | 172 | 172/172 | 0 |
-| level-1-6 | 173 | 173/173 | 0 |
-| level-1-7 | 175 | 175/175 | 0 |
-| level-1-8 | 176 | 176/176 | 0 |
-| level-1-9 | 183 | 183/183 | 0 |
-| level-1-10 | 188 | 188/188 | 0 |
+| level-1-3 | 148 | 148/148 | 0 |
+| level-1-4 | 149 | 149/149 | 0 |
+| level-1-5 | 173 | 173/173 | 0 |
+| level-1-6 | 174 | 174/174 | 0 |
+| level-1-7 | 177 | 177/177 | 0 |
+| level-1-8 | 178 | 178/178 | 0 |
+| level-1-9 | 185 | 185/185 | 0 |
+| level-1-10 | 190 | 190/190 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

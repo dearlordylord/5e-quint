@@ -226,6 +226,13 @@ const StableRecoveryFillArgsSchema = Schema.Struct({
 
 const CompleteShortRestOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("completeShortRest"),
+  preparedSpellReplacement: Schema.optionalKey(
+    Schema.Struct({
+      spellcastingSourceUnitId: UnitId,
+      removedSpellUnitId: UnitId,
+      addedSpellUnitId: UnitId,
+    }),
+  ),
   restedTicks: NonNegativeIntegerSchema,
   fiendishResilienceDamageType: Schema.optionalKey(
     Schema.Literals(DAMAGE_TYPES),

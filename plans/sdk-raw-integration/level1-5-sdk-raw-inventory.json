@@ -6,12 +6,8 @@
     "arcane_lock",
     "arcanists_magic_aura",
     "augury",
-    "barbarian_ability_score_improvement_l4",
-    "bard_ability_score_improvement_l4",
-    "bard_bonus_proficiencies",
     "calm_emotions",
     "charm_person",
-    "cleric_ability_score_improvement_l4",
     "comprehend_languages",
     "continual_flame",
     "darkness",
@@ -21,7 +17,6 @@
     "detect_poison_and_disease",
     "detect_thoughts",
     "disguise_self",
-    "druid_ability_score_improvement_l4",
     "druid_druidic",
     "druid_wild_companion",
     "druid_wild_shape",
@@ -29,7 +24,6 @@
     "elementalism",
     "enlarge_reduce",
     "enthrall",
-    "fighter_ability_score_improvement_l4",
     "find_steed",
     "find_traps",
     "gentle_repose",
@@ -45,31 +39,24 @@
     "message",
     "mind_spike",
     "minor_illusion",
-    "monk_ability_score_improvement_l4",
     "monk_monks_focus",
     "moonbeam",
-    "paladin_ability_score_improvement_l4",
     "pass_without_trace",
     "phantasmal_force",
     "prayer_of_healing",
     "prestidigitation",
-    "ranger_ability_score_improvement_l4",
     "ranger_favored_enemy",
-    "rogue_ability_score_improvement_l4",
     "rogue_fast_hands",
     "rogue_thieves_cant",
     "rope_trick",
     "silence",
     "silent_image",
-    "sorcerer_ability_score_improvement_l4",
     "sorcerer_font_of_magic",
     "sorcerer_metamagic",
     "speak_with_animals",
     "spike_growth",
     "suggestion",
     "thaumaturgy",
-    "warlock_ability_score_improvement_l4",
-    "wizard_ability_score_improvement_l4",
     "wizard_evocation_savant",
     "zone_of_truth"
   ],
@@ -208,24 +195,32 @@
       "category": "class feature",
       "className": "Bard",
       "concept": "Bard Font of Inspiration",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
-      "nextAction": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
-          "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": ["character-sheet.use-count-resource-recovery"],
+        "profileOwnerBoundaries": ["character-sheet"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet.use-count-resource-recovery",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-battle-runtime"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes:level-5:class-feature-grant:bard_font_of_inspiration",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 913,
         "lineStart": 908,
@@ -233,26 +228,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bard_font_of_inspiration.json",
+          "state": "authored-record-present",
+          "unitId": "bard_font_of_inspiration"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
-          "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
+          "owner": "character-sheet.use-count-resource-recovery",
+          "reason": "The existing Bardic Inspiration pool regains expended uses after a Short Rest or Long Rest. An atomic no-action exchange spends one available Spell Slot to regain one expended use.",
           "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bard_font_of_inspiration"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -1007,24 +1004,32 @@
       "category": "class feature",
       "className": "Wizard",
       "concept": "Wizard Memorize Spell",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
-      "nextAction": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
-          "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": ["character-sheet.prepared-spell-rest-replacement"],
+        "profileOwnerBoundaries": ["character-sheet"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet.prepared-spell-rest-replacement",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-sheet"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes:level-5:class-feature-grant:wizard_memorize_spell",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 10272,
         "lineStart": 10269,
@@ -1032,26 +1037,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/wizard_memorize_spell.json",
+          "state": "authored-record-present",
+          "unitId": "wizard_memorize_spell"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
-          "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+          "owner": "character-sheet.prepared-spell-rest-replacement",
+          "reason": "Completed Short Rest optionally replaces exactly one prepared level 1+ spell by another level 1+ spell in the owned canonical spellbook while preserving spellbook and Spell Slot state.",
           "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "wizard_memorize_spell"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -7663,6 +7670,76 @@
   ],
   "level5ScenarioGroups": [
     {
+      "candidateUnitIds": ["bard_font_of_inspiration"],
+      "categories": ["class feature"],
+      "classNames": ["Bard"],
+      "groupId": "l15-sdk-raw-07:character-sheet-sdk:bard-font-of-inspiration",
+      "lane": "character-sheet-sdk",
+      "levelBands": ["level-5"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-sheet"],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"character-sheet-sdk\",\"bard_font_of_inspiration\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:908"],
+      "rowCount": 1,
+      "rowKinds": ["class-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "bard_font_of_inspiration",
+          "className": "Bard",
+          "concept": "Bard Font of Inspiration",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes:level-5:class-feature-grant:bard_font_of_inspiration",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 913,
+            "lineStart": 908,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Bard Font of Inspiration"],
+      "sdkInventoryDispositions": ["sdk-scenario-needed"],
+      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": ["wizard_memorize_spell"],
+      "categories": ["class feature"],
+      "classNames": ["Wizard"],
+      "groupId": "l15-sdk-raw-07:character-sheet-sdk:wizard-memorize-spell",
+      "lane": "character-sheet-sdk",
+      "levelBands": ["level-5"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-sheet"],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"character-sheet-sdk\",\"wizard_memorize_spell\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:10269"],
+      "rowCount": 1,
+      "rowKinds": ["class-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "wizard_memorize_spell",
+          "className": "Wizard",
+          "concept": "Wizard Memorize Spell",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes:level-5:class-feature-grant:wizard_memorize_spell",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 10272,
+            "lineStart": 10269,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Wizard Memorize Spell"],
+      "sdkInventoryDispositions": ["sdk-scenario-needed"],
+      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
       "candidateUnitIds": ["class_barbarian"],
       "categories": ["character-creation or progression mechanic"],
       "classNames": ["Barbarian"],
@@ -8134,41 +8211,6 @@
         "Cleric spell list Animate Dead",
         "Wizard spell list Animate Dead"
       ],
-      "sdkInventoryDispositions": ["future-owner-before-sdk"],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": ["bard_font_of_inspiration"],
-      "categories": ["class feature"],
-      "classNames": ["Bard"],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:bard-font-of-inspiration",
-      "lane": "future-owner-before-sdk",
-      "levelBands": ["level-5"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"bard_font_of_inspiration\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:908"],
-      "rowCount": 1,
-      "rowKinds": ["class-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "bard_font_of_inspiration",
-          "className": "Bard",
-          "concept": "Bard Font of Inspiration",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:level-5:class-feature-grant:bard_font_of_inspiration",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 913,
-            "lineStart": 908,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Bard Font of Inspiration"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -9748,41 +9790,6 @@
         }
       ],
       "sampleConcepts": ["Druid spell list Wind Wall"],
-      "sdkInventoryDispositions": ["future-owner-before-sdk"],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": ["wizard_memorize_spell"],
-      "categories": ["class feature"],
-      "classNames": ["Wizard"],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:wizard-memorize-spell",
-      "lane": "future-owner-before-sdk",
-      "levelBands": ["level-5"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"wizard_memorize_spell\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:10269"],
-      "rowCount": 1,
-      "rowKinds": ["class-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "wizard_memorize_spell",
-          "className": "Wizard",
-          "concept": "Wizard Memorize Spell",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:level-5:class-feature-grant:wizard_memorize_spell",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 10272,
-            "lineStart": 10269,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Wizard Memorize Spell"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -21566,14 +21573,14 @@
       "category": "subclass feature",
       "className": "Bard",
       "concept": "Bard Bonus Proficiencies",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-3",
-      "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "character-sheet-or-build-closure",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes:level-3:subclass-feature-grant:bard_bonus_proficiencies",
       "rowKind": "subclass-feature-grant",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 1732,
         "lineStart": 1729,
@@ -21587,22 +21594,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
-          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
+          "owner": "character-creation.class-feature-proficiency-choice",
+          "reason": "College of Lore level 3 creation and actual advancement grant exactly three distinct previously unowned skill proficiencies.",
           "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bard_bonus_proficiencies"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -21972,22 +21979,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/ranger_hunters_lore.json",
+          "state": "authored-record-present",
+          "unitId": "ranger_hunters_lore"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "table-caller.marked-creature-defenses",
+          "reason": "An SDK query discloses Damage Resistances, Immunities, and Vulnerabilities from canonical Stat Block facts while the character owns the current Hunter mark on that creature; unavailable character facts remain explicit.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "ranger_hunters_lore"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -23057,18 +23071,29 @@
       "category": "class feature",
       "className": "Barbarian",
       "concept": "Barbarian Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23088,12 +23113,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23101,9 +23126,9 @@
           "state": "installed",
           "unitId": "barbarian_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23114,18 +23139,29 @@
       "category": "class feature",
       "className": "Bard",
       "concept": "Bard Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23145,12 +23181,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23158,9 +23194,9 @@
           "state": "installed",
           "unitId": "bard_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23171,18 +23207,29 @@
       "category": "class feature",
       "className": "Cleric",
       "concept": "Cleric Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23202,12 +23249,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23215,9 +23262,9 @@
           "state": "installed",
           "unitId": "cleric_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23228,18 +23275,29 @@
       "category": "class feature",
       "className": "Druid",
       "concept": "Druid Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23259,12 +23317,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23272,9 +23330,9 @@
           "state": "installed",
           "unitId": "druid_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23285,18 +23343,29 @@
       "category": "class feature",
       "className": "Fighter",
       "concept": "Fighter Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23316,12 +23385,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23329,9 +23398,9 @@
           "state": "installed",
           "unitId": "fighter_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23342,18 +23411,29 @@
       "category": "class feature",
       "className": "Monk",
       "concept": "Monk Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23373,12 +23453,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23386,9 +23466,9 @@
           "state": "installed",
           "unitId": "monk_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23459,18 +23539,29 @@
       "category": "class feature",
       "className": "Paladin",
       "concept": "Paladin Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23490,12 +23581,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23503,9 +23594,9 @@
           "state": "installed",
           "unitId": "paladin_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23516,18 +23607,29 @@
       "category": "class feature",
       "className": "Ranger",
       "concept": "Ranger Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23547,12 +23649,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23560,9 +23662,9 @@
           "state": "installed",
           "unitId": "ranger_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23573,18 +23675,29 @@
       "category": "class feature",
       "className": "Rogue",
       "concept": "Rogue Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23604,12 +23717,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23617,9 +23730,9 @@
           "state": "installed",
           "unitId": "rogue_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23630,18 +23743,29 @@
       "category": "class feature",
       "className": "Sorcerer",
       "concept": "Sorcerer Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23661,12 +23785,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23674,9 +23798,9 @@
           "state": "installed",
           "unitId": "sorcerer_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23687,18 +23811,29 @@
       "category": "class feature",
       "className": "Warlock",
       "concept": "Warlock Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23718,12 +23853,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23731,9 +23866,9 @@
           "state": "installed",
           "unitId": "warlock_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23744,18 +23879,29 @@
       "category": "class feature",
       "className": "Wizard",
       "concept": "Wizard Ability Score Improvement",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-4",
-      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "profileOwnerBoundaries": ["character-creation"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-creation"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "character-creation",
@@ -23775,12 +23921,12 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution.",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -23788,9 +23934,9 @@
           "state": "installed",
           "unitId": "wizard_ability_score_improvement_l4"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -24445,24 +24591,32 @@
       "category": "class feature",
       "className": "Bard",
       "concept": "Bard Font of Inspiration",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
-      "nextAction": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
-          "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": ["character-sheet.use-count-resource-recovery"],
+        "profileOwnerBoundaries": ["character-sheet"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet.use-count-resource-recovery",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-battle-runtime"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes:level-5:class-feature-grant:bard_font_of_inspiration",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 913,
         "lineStart": 908,
@@ -24470,26 +24624,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bard_font_of_inspiration.json",
+          "state": "authored-record-present",
+          "unitId": "bard_font_of_inspiration"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
-          "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
+          "owner": "character-sheet.use-count-resource-recovery",
+          "reason": "The existing Bardic Inspiration pool regains expended uses after a Short Rest or Long Rest. An atomic no-action exchange spends one available Spell Slot to regain one expended use.",
           "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bard_font_of_inspiration"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -25244,24 +25400,32 @@
       "category": "class feature",
       "className": "Wizard",
       "concept": "Wizard Memorize Spell",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
-      "nextAction": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
-          "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
-          "source": "unit-claim",
-          "state": "recorded"
+        "claimTag": "supported-profile",
+        "evidenceTags": ["deterministic-admission-projection"],
+        "profileIds": ["character-sheet.prepared-spell-rest-replacement"],
+        "profileOwnerBoundaries": ["character-sheet"],
+        "rowEvidenceOwnerBoundaries": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet.prepared-spell-rest-replacement",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
         },
-        "source": "battle-readiness-closure"
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-sheet"],
+        "unitEvidenceOwnerPaths": [
+          "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes:level-5:class-feature-grant:wizard_memorize_spell",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 10272,
         "lineStart": 10269,
@@ -25269,26 +25433,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/wizard_memorize_spell.json",
+          "state": "authored-record-present",
+          "unitId": "wizard_memorize_spell"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
-          "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+          "owner": "character-sheet.prepared-spell-rest-replacement",
+          "reason": "Completed Short Rest optionally replaces exactly one prepared level 1+ spell by another level 1+ spell in the owned canonical spellbook while preserving spellbook and Spell Slot state.",
           "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "wizard_memorize_spell"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -53098,32 +53264,6 @@
           "unitId": "augury"
         },
         {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
-              "category": "subclass feature",
-              "concept": "Bard Bonus Proficiencies",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-3:subclass-feature-grant:bard_bonus_proficiencies",
-              "levelBand": "level-3",
-              "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-              "rowKind": "subclass-feature-grant",
-              "source": {
-                "lineEnd": 1732,
-                "lineStart": 1729,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-outside-battle-runtime-boundary",
-          "unitId": "bard_bonus_proficiencies"
-        },
-        {
           "claimTag": "profile-subset-supported",
           "kind": "spell",
           "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model.",
@@ -56029,38 +56169,38 @@
         "numerator": 610,
         "percent": "100%",
         "rowsByStatus": {
-          "accepted": 447,
-          "accepted-no-battle-effect": 163
+          "accepted": 448,
+          "accepted-no-battle-effect": 162
         }
       },
       "sourcePath": "plans/unit-profile-coverage/level1-3-full-support.json",
       "strictRuntimeProfileSupport": {
-        "denominator": 205,
-        "numerator": 146,
-        "percent": "71.2%"
+        "denominator": 206,
+        "numerator": 148,
+        "percent": "71.8%"
       },
       "strictTargetClosure": {
-        "denominator": 205,
-        "numerator": 205,
+        "denominator": 206,
+        "numerator": 206,
         "percent": "100%"
       },
       "summary": {
         "candidateUnitIdsBeforeExclusions": 225,
         "groupsByClaimTag": {
           "profile-subset-supported": 22,
-          "supported-profile": 146,
-          "unsupported-profile": 37
+          "supported-profile": 148,
+          "unsupported-profile": 36
         },
         "groupsByStatus": {
           "closed-character-fact-and-runtime-detached-split": 4,
           "closed-companion-control-boundary": 2,
           "closed-later-level-only": 2,
-          "closed-outside-battle-runtime-boundary": 9,
+          "closed-outside-battle-runtime-boundary": 8,
           "closed-runtime-detached-table-adjudication": 42,
-          "supported-profile": 146
+          "supported-profile": 148
         },
-        "nonSupportedFrontier": 59,
-        "strictDenominator": 205
+        "nonSupportedFrontier": 58,
+        "strictDenominator": 206
       },
       "title": "Character Levels 1-3"
     },
@@ -56282,84 +56422,6 @@
           "unitId": "augury"
         },
         {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Barbarian Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:barbarian_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 289,
-                "lineStart": 286,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "barbarian_ability_score_improvement_l4"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Bard Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:bard_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 907,
-                "lineStart": 904,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "bard_ability_score_improvement_l4"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
-              "category": "subclass feature",
-              "concept": "Bard Bonus Proficiencies",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-3:subclass-feature-grant:bard_bonus_proficiencies",
-              "levelBand": "level-3",
-              "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-              "rowKind": "subclass-feature-grant",
-              "source": {
-                "lineEnd": 1732,
-                "lineStart": 1729,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-outside-battle-runtime-boundary",
-          "unitId": "bard_bonus_proficiencies"
-        },
-        {
           "claimTag": "profile-subset-supported",
           "kind": "spell",
           "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model.",
@@ -56495,32 +56557,6 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "charm_person"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Cleric Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:cleric_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 2234,
-                "lineStart": 2231,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "cleric_ability_score_improvement_l4"
         },
         {
           "claimTag": "unsupported-profile",
@@ -57184,32 +57220,6 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Druid Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:druid_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 3599,
-                "lineStart": 3596,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "druid_ability_score_improvement_l4"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
           "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
           "sourceRows": [
             {
@@ -57490,32 +57500,6 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "enthrall"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Fighter Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:fighter_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 4825,
-                "lineStart": 4822,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "fighter_ability_score_improvement_l4"
         },
         {
           "claimTag": "unsupported-profile",
@@ -58469,32 +58453,6 @@
           "unitId": "minor_illusion"
         },
         {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Monk Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:monk_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 5189,
-                "lineStart": 5186,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "monk_ability_score_improvement_l4"
-        },
-        {
           "claimTag": "profile-subset-supported",
           "kind": "class_feature",
           "reason": "The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
@@ -58545,32 +58503,6 @@
           ],
           "status": "closed-outside-battle-runtime-boundary",
           "unitId": "moonbeam"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Paladin Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:paladin_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 5685,
-                "lineStart": 5682,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "paladin_ability_score_improvement_l4"
         },
         {
           "claimTag": "profile-subset-supported",
@@ -58796,32 +58728,6 @@
           "unitId": "prestidigitation"
         },
         {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Ranger Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:ranger_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 6448,
-                "lineStart": 6445,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "ranger_ability_score_improvement_l4"
-        },
-        {
           "claimTag": "profile-subset-supported",
           "kind": "class_feature",
           "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim.",
@@ -58846,32 +58752,6 @@
           ],
           "status": "closed-later-level-only",
           "unitId": "ranger_favored_enemy"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Rogue Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:rogue_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 7070,
-                "lineStart": 7067,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "rogue_ability_score_improvement_l4"
         },
         {
           "claimTag": "profile-subset-supported",
@@ -59070,32 +58950,6 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "silent_image"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Sorcerer Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:sorcerer_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 7703,
-                "lineStart": 7700,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "sorcerer_ability_score_improvement_l4"
         },
         {
           "claimTag": "profile-subset-supported",
@@ -59373,58 +59227,6 @@
           "unitId": "thaumaturgy"
         },
         {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Warlock Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:warlock_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 9009,
-                "lineStart": 9006,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "warlock_ability_score_improvement_l4"
-        },
-        {
-          "claimTag": "unsupported-profile",
-          "kind": "class_feature",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-          "sourceRows": [
-            {
-              "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "installed",
-              "category": "class feature",
-              "concept": "Wizard Ability Score Improvement",
-              "finalDisposition": "catalog-only/dead-for-now",
-              "id": "srd521:classes:level-4:class-feature-grant:wizard_ability_score_improvement",
-              "levelBand": "level-4",
-              "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
-              "rowKind": "class-feature-grant",
-              "source": {
-                "lineEnd": 10268,
-                "lineStart": 10265,
-                "path": ".references/srd-5.2.1/classes.md"
-              },
-              "unitProfileDisposition": "unsupported-profile"
-            }
-          ],
-          "status": "closed-selection-grant-container",
-          "unitId": "wizard_ability_score_improvement_l4"
-        },
-        {
           "claimTag": "profile-subset-supported",
           "kind": "class_feature",
           "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5.",
@@ -59526,39 +59328,38 @@
         "numerator": 635,
         "percent": "100%",
         "rowsByStatus": {
-          "accepted": 448,
-          "accepted-no-battle-effect": 187
+          "accepted": 461,
+          "accepted-no-battle-effect": 174
         }
       },
       "sourcePath": "plans/unit-profile-coverage/level1-4-full-support.json",
       "strictRuntimeProfileSupport": {
-        "denominator": 218,
-        "numerator": 147,
-        "percent": "67.4%"
+        "denominator": 219,
+        "numerator": 161,
+        "percent": "73.5%"
       },
       "strictTargetClosure": {
-        "denominator": 218,
-        "numerator": 218,
+        "denominator": 219,
+        "numerator": 219,
         "percent": "100%"
       },
       "summary": {
         "candidateUnitIdsBeforeExclusions": 238,
         "groupsByClaimTag": {
           "profile-subset-supported": 22,
-          "supported-profile": 147,
-          "unsupported-profile": 49
+          "supported-profile": 161,
+          "unsupported-profile": 36
         },
         "groupsByStatus": {
           "closed-character-fact-and-runtime-detached-split": 4,
           "closed-companion-control-boundary": 2,
           "closed-later-level-only": 2,
-          "closed-outside-battle-runtime-boundary": 9,
+          "closed-outside-battle-runtime-boundary": 8,
           "closed-runtime-detached-table-adjudication": 42,
-          "closed-selection-grant-container": 12,
-          "supported-profile": 147
+          "supported-profile": 161
         },
-        "nonSupportedFrontier": 71,
-        "strictDenominator": 218
+        "nonSupportedFrontier": 58,
+        "strictDenominator": 219
       },
       "title": "Character Levels 1-4"
     }
@@ -59602,43 +59403,43 @@
         }
       },
       "level1-3": {
-        "nonSupportedFrontier": 59,
+        "nonSupportedFrontier": 58,
         "productReadiness": {
           "denominator": 610,
           "numerator": 610,
           "percent": "100%",
           "rowsByStatus": {
-            "accepted": 447,
-            "accepted-no-battle-effect": 163
+            "accepted": 448,
+            "accepted-no-battle-effect": 162
           }
         },
-        "strictDenominator": 205,
+        "strictDenominator": 206,
         "strictTargetClosure": {
-          "denominator": 205,
-          "numerator": 205,
+          "denominator": 206,
+          "numerator": 206,
           "percent": "100%"
         }
       },
       "level1-4": {
-        "nonSupportedFrontier": 71,
+        "nonSupportedFrontier": 58,
         "productReadiness": {
           "denominator": 635,
           "numerator": 635,
           "percent": "100%",
           "rowsByStatus": {
-            "accepted": 448,
-            "accepted-no-battle-effect": 187
+            "accepted": 461,
+            "accepted-no-battle-effect": 174
           }
         },
-        "strictDenominator": 218,
+        "strictDenominator": 219,
         "strictTargetClosure": {
-          "denominator": 218,
-          "numerator": 218,
+          "denominator": 219,
+          "numerator": 219,
           "percent": "100%"
         }
       }
     },
-    "level4CumulativeFrontierUnitCount": 71,
+    "level4CumulativeFrontierUnitCount": 58,
     "level5CompletionRows": 138,
     "level5CompletionRowsByLevelBand": {
       "level-5": 28,
@@ -59647,8 +59448,8 @@
     "level5CompletionRowsByOwnerBoundary": {
       "build-progression": 12,
       "character-battle-to-battle": 47,
-      "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 63,
+      "character-sheet": 3,
+      "future-runtime-owner-before-sdk": 61,
       "table-only-closure": 15
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
@@ -59656,14 +59457,16 @@
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 63,
+      "future-owner-before-sdk": 61,
+      "sdk-scenario-needed": 2,
       "seed-scenario-present": 48,
       "table-only-closure-needed": 15
     },
     "level5ScenarioGroups": 95,
     "level5ScenarioGroupsByLane": {
+      "character-sheet-sdk": 2,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 31,
+      "future-owner-before-sdk": 29,
       "seed-present": 48,
       "table-only-closure": 4
     },
@@ -59682,21 +59485,21 @@
     },
     "levelOneFiveRowsByOwnerBoundary": {
       "build-progression": 60,
-      "character-battle-to-battle": 327,
+      "character-battle-to-battle": 328,
       "character-build-to-battle": 17,
       "character-build-to-sheet": 112,
       "character-creation": 28,
-      "character-sheet": 8,
-      "character-sheet-or-build-closure": 2,
+      "character-sheet": 10,
+      "character-sheet-or-build-closure": 1,
       "character-sheet-spell-access": 12,
-      "future-runtime-owner-before-sdk": 67,
+      "future-runtime-owner-before-sdk": 65,
       "multi-owner-sdk-split": 8,
       "spell-effect-owner-review": 106,
       "table-only-closure": 26
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 665,
-      "unresolved-review": 108
+      "resolved": 666,
+      "unresolved-review": 107
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -59713,28 +59516,28 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 108,
+      "closure-review-needed": 107,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 67,
-      "sdk-scenario-needed": 400,
+      "future-owner-before-sdk": 65,
+      "sdk-scenario-needed": 403,
       "seed-scenario-present": 112,
       "table-only-closure-needed": 26
     },
     "levelOneFourRows": 635,
     "scenarioGroups": 435,
     "scenarioGroupsByLane": {
-      "battle-feature-sdk": 25,
+      "battle-feature-sdk": 26,
       "battle-spell-sdk": 71,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 28,
-      "character-sheet-sdk": 7,
+      "character-sheet-sdk": 9,
       "explicit-closure": 60,
-      "future-owner-before-sdk": 33,
+      "future-owner-before-sdk": 31,
       "multi-owner-feature-sdk": 7,
       "seed-present": 112,
-      "sheet-build-closure": 2,
+      "sheet-build-closure": 1,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 34,
       "table-only-closure": 8
@@ -70789,6 +70592,41 @@
       "taskId": "L15-SDK-RAW-05"
     },
     {
+      "candidateUnitIds": ["bard_bonus_proficiencies"],
+      "categories": ["subclass feature"],
+      "classNames": ["Bard"],
+      "groupId": "l15-sdk-raw-05:battle-feature-sdk:bard-bonus-proficiencies",
+      "lane": "battle-feature-sdk",
+      "levelBands": ["level-3"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-battle-to-battle"],
+      "rawGroupKey": "[\"L15-SDK-RAW-05\",\"battle-feature-sdk\",\"bard_bonus_proficiencies\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:1729"],
+      "rowCount": 1,
+      "rowKinds": ["subclass-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "bard_bonus_proficiencies",
+          "className": "Bard",
+          "concept": "Bard Bonus Proficiencies",
+          "levelBand": "level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes:level-3:subclass-feature-grant:bard_bonus_proficiencies",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 1732,
+            "lineStart": 1729,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Bard Bonus Proficiencies"],
+      "sdkInventoryDispositions": ["sdk-scenario-needed"],
+      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
+      "taskId": "L15-SDK-RAW-05"
+    },
+    {
       "candidateUnitIds": ["bard_cutting_words"],
       "categories": ["subclass feature"],
       "classNames": ["Bard"],
@@ -75094,41 +74932,6 @@
       "taskId": "L15-SDK-RAW-05"
     },
     {
-      "candidateUnitIds": ["bard_bonus_proficiencies"],
-      "categories": ["subclass feature"],
-      "classNames": ["Bard"],
-      "groupId": "l15-sdk-raw-05:sheet-build-closure:bard-bonus-proficiencies",
-      "lane": "sheet-build-closure",
-      "levelBands": ["level-3"],
-      "ownerBoundaryStatuses": ["unresolved-review"],
-      "proposedOwnerBoundaries": ["character-sheet-or-build-closure"],
-      "rawGroupKey": "[\"L15-SDK-RAW-05\",\"sheet-build-closure\",\"bard_bonus_proficiencies\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:1729"],
-      "rowCount": 1,
-      "rowKinds": ["subclass-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "bard_bonus_proficiencies",
-          "className": "Bard",
-          "concept": "Bard Bonus Proficiencies",
-          "levelBand": "level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "character-sheet-or-build-closure",
-          "rowId": "srd521:classes:level-3:subclass-feature-grant:bard_bonus_proficiencies",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 1732,
-            "lineStart": 1729,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Bard Bonus Proficiencies"],
-      "sdkInventoryDispositions": ["closure-review-needed"],
-      "suggestedScenario": "Review lower-owner evidence and either add a build/sheet SDK assertion for user-reachable state or retain an explicit closure with the local RAW anchor.",
-      "taskId": "L15-SDK-RAW-05"
-    },
-    {
       "candidateUnitIds": ["ranger_hunters_lore"],
       "categories": ["subclass feature"],
       "classNames": ["Ranger"],
@@ -77336,6 +77139,76 @@
       "taskId": "L15-SDK-RAW-06"
     },
     {
+      "candidateUnitIds": ["bard_font_of_inspiration"],
+      "categories": ["class feature"],
+      "classNames": ["Bard"],
+      "groupId": "l15-sdk-raw-07:character-sheet-sdk:bard-font-of-inspiration",
+      "lane": "character-sheet-sdk",
+      "levelBands": ["level-5"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-sheet"],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"character-sheet-sdk\",\"bard_font_of_inspiration\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:908"],
+      "rowCount": 1,
+      "rowKinds": ["class-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "bard_font_of_inspiration",
+          "className": "Bard",
+          "concept": "Bard Font of Inspiration",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes:level-5:class-feature-grant:bard_font_of_inspiration",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 913,
+            "lineStart": 908,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Bard Font of Inspiration"],
+      "sdkInventoryDispositions": ["sdk-scenario-needed"],
+      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": ["wizard_memorize_spell"],
+      "categories": ["class feature"],
+      "classNames": ["Wizard"],
+      "groupId": "l15-sdk-raw-07:character-sheet-sdk:wizard-memorize-spell",
+      "lane": "character-sheet-sdk",
+      "levelBands": ["level-5"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-sheet"],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"character-sheet-sdk\",\"wizard_memorize_spell\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:10269"],
+      "rowCount": 1,
+      "rowKinds": ["class-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "wizard_memorize_spell",
+          "className": "Wizard",
+          "concept": "Wizard Memorize Spell",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes:level-5:class-feature-grant:wizard_memorize_spell",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 10272,
+            "lineStart": 10269,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Wizard Memorize Spell"],
+      "sdkInventoryDispositions": ["sdk-scenario-needed"],
+      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
       "candidateUnitIds": ["class_barbarian"],
       "categories": ["character-creation or progression mechanic"],
       "classNames": ["Barbarian"],
@@ -77807,41 +77680,6 @@
         "Cleric spell list Animate Dead",
         "Wizard spell list Animate Dead"
       ],
-      "sdkInventoryDispositions": ["future-owner-before-sdk"],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": ["bard_font_of_inspiration"],
-      "categories": ["class feature"],
-      "classNames": ["Bard"],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:bard-font-of-inspiration",
-      "lane": "future-owner-before-sdk",
-      "levelBands": ["level-5"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"bard_font_of_inspiration\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:908"],
-      "rowCount": 1,
-      "rowKinds": ["class-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "bard_font_of_inspiration",
-          "className": "Bard",
-          "concept": "Bard Font of Inspiration",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:level-5:class-feature-grant:bard_font_of_inspiration",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 913,
-            "lineStart": 908,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Bard Font of Inspiration"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -79421,41 +79259,6 @@
         }
       ],
       "sampleConcepts": ["Druid spell list Wind Wall"],
-      "sdkInventoryDispositions": ["future-owner-before-sdk"],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": ["wizard_memorize_spell"],
-      "categories": ["class feature"],
-      "classNames": ["Wizard"],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:wizard-memorize-spell",
-      "lane": "future-owner-before-sdk",
-      "levelBands": ["level-5"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"wizard_memorize_spell\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:10269"],
-      "rowCount": 1,
-      "rowKinds": ["class-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "wizard_memorize_spell",
-          "className": "Wizard",
-          "concept": "Wizard Memorize Spell",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:level-5:class-feature-grant:wizard_memorize_spell",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 10272,
-            "lineStart": 10269,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Wizard Memorize Spell"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"

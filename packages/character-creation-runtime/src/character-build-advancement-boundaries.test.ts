@@ -1,4 +1,7 @@
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  characterClassLevel,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import { abilityScore } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -17,6 +20,7 @@ import {
   fighterClassUnitId,
   fighterLevelGainWithFightingStyleReplacement,
   copperPieceAmount,
+  creationChoiceOptionId,
   fightingStyleFeatUnitId,
   sorcererClassUnitId,
   sorcererMetamagicOptionId,
@@ -625,13 +629,34 @@ describe("Character Build advancement typed boundaries", () => {
         },
       },
       unitLibrary,
-      levelGain: levelGain.success,
+      levelGain: {
+        ...levelGain.success,
+        gainedChoices: [
+          {
+            kind: "feat",
+            featureUnitId: authoredUnitId(
+              "fighter_ability_score_improvement_l4",
+            ),
+            grantLevel: characterClassLevel(4),
+            selectedFeatUnitId: authoredUnitId(
+              "feat_ability_score_improvement",
+            ),
+            abilityScoreIncreaseOptionId: creationChoiceOptionId(
+              "ability_score:con:+2:max20",
+            ),
+          },
+        ],
+      },
     });
     expect(Result.isSuccess(fighterAdvancement)).toBe(true);
     if (Result.isSuccess(fighterAdvancement)) {
-      expect(fighterAdvancement.success.features).toEqual(
-        fighterWeaponMasteryFeatures(selectedWeaponUnitIds),
-      );
+      expect(
+        fighterAdvancement.success.features.filter(
+          (feature) =>
+            feature.kind === "selectedClassChoice" &&
+            feature.selectedFromUnitId === fighterWeaponMasterySourceUnitId,
+        ),
+      ).toEqual(fighterWeaponMasteryFeatures(selectedWeaponUnitIds));
       expect(fighterAdvancement.success.progression.advancements).toHaveLength(
         3,
       );
@@ -1115,20 +1140,30 @@ describe("Character Build advancement typed boundaries", () => {
     });
   });
 
-  test("rejects plain Sorcerer and Warlock gains from inconsistent retained choices", () => {
-    const sorcererWithExtraOption = buildForClass(sorcererUnitId, [
-      {
-        kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: parsedSorcererMetamagicOption("sorcerer_empowered_spell"),
-      },
-    ]);
+  test("rejects Sorcerer and plain Warlock gains from inconsistent retained choices", () => {
+    const sorcererWithExtraOption = spellcastingBuild({
+      classUnitId: sorcererUnitId,
+      classLevel: 1,
+      features: [
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+          optionId: parsedSorcererMetamagicOption("sorcerer_empowered_spell"),
+        },
+      ],
+    });
     expect(
       advanceCharacterBuildClassLevel({
         build: sorcererWithExtraOption,
         unitLibrary,
         levelGain: {
-          tag: "classLevelGain",
+          tag: "classLevelGainWithListPreparedSpellcasting",
+          preparedSpellcasting: {
+            gainedPreparedSpells: [
+              authoredUnitId("shield"),
+              authoredUnitId("magic_missile"),
+            ],
+          },
           classUnitId: sorcererUnitId,
           hitPointRule: fixedHitPoints,
         },
@@ -1144,10 +1179,19 @@ describe("Character Build advancement typed boundaries", () => {
 
     expect(
       advanceCharacterBuildClassLevel({
-        build: buildForClass(sorcererUnitId),
+        build: spellcastingBuild({
+          classUnitId: sorcererUnitId,
+          classLevel: 1,
+        }),
         unitLibrary,
         levelGain: {
-          tag: "classLevelGain",
+          tag: "classLevelGainWithListPreparedSpellcasting",
+          preparedSpellcasting: {
+            gainedPreparedSpells: [
+              authoredUnitId("shield"),
+              authoredUnitId("magic_missile"),
+            ],
+          },
           classUnitId: sorcererUnitId,
           hitPointRule: fixedHitPoints,
         },
@@ -1214,6 +1258,16 @@ describe("Character Build advancement typed boundaries", () => {
         tag: "classLevelGainWithListPreparedSpellcasting",
         classUnitId: paladinUnitId,
         hitPointRule: fixedHitPoints,
+        gainedChoices: [
+          {
+            kind: "unitChoice",
+            featureUnitId: paladinUnitId,
+            choiceKey: "class_subclass_choice",
+            optionIds: [
+              creationChoiceOptionId("subclass_paladin_oath_of_devotion"),
+            ],
+          },
+        ],
         preparedSpellcasting: {
           gainedPreparedSpells: [authoredUnitId("command")],
         },
@@ -1554,18 +1608,22 @@ describe("Character Build advancement typed boundaries", () => {
   });
 
   test("keeps Sorcerer choices on a level without a new option and reports a Warlock cantrip gain", () => {
-    const sorcererAtLevelTwo = buildForClass(sorcererUnitId, [
-      {
-        kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: parsedSorcererMetamagicOption("sorcerer_empowered_spell"),
-      },
-      {
-        kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: parsedSorcererMetamagicOption("sorcerer_subtle_spell"),
-      },
-    ]);
+    const sorcererAtLevelTwo = spellcastingBuild({
+      classUnitId: sorcererUnitId,
+      classLevel: 2,
+      features: [
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+          optionId: parsedSorcererMetamagicOption("sorcerer_empowered_spell"),
+        },
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+          optionId: parsedSorcererMetamagicOption("sorcerer_subtle_spell"),
+        },
+      ],
+    });
 
     const sorcererAdvancement = advanceCharacterBuildClassLevel({
       build: {
@@ -1577,16 +1635,34 @@ describe("Character Build advancement typed boundaries", () => {
       },
       unitLibrary,
       levelGain: {
-        tag: "classLevelGain",
+        tag: "classLevelGainWithListPreparedSpellcasting",
+        preparedSpellcasting: {
+          gainedPreparedSpells: [
+            authoredUnitId("shield"),
+            authoredUnitId("magic_missile"),
+          ],
+        },
+        gainedChoices: [
+          {
+            kind: "unitChoice",
+            featureUnitId: sorcererUnitId,
+            choiceKey: "class_subclass_choice",
+            optionIds: [
+              creationChoiceOptionId("subclass_sorcerer_draconic_sorcery"),
+            ],
+          },
+        ],
         classUnitId: sorcererUnitId,
         hitPointRule: fixedHitPoints,
       },
     });
     expect(Result.isSuccess(sorcererAdvancement)).toBe(true);
     if (Result.isSuccess(sorcererAdvancement)) {
-      expect(sorcererAdvancement.success.features).toEqual(
-        sorcererAtLevelTwo.features,
-      );
+      expect(
+        sorcererAdvancement.success.features.filter(
+          (feature) => feature.kind === "selectedSorcererMetamagicOption",
+        ),
+      ).toEqual(sorcererAtLevelTwo.features);
     }
 
     expect(
@@ -1600,6 +1676,21 @@ describe("Character Build advancement typed boundaries", () => {
           tag: "classLevelGain",
           classUnitId: warlockUnitId,
           hitPointRule: fixedHitPoints,
+          gainedChoices: [
+            {
+              kind: "feat",
+              featureUnitId: authoredUnitId(
+                "warlock_ability_score_improvement_l4",
+              ),
+              grantLevel: characterClassLevel(4),
+              selectedFeatUnitId: authoredUnitId(
+                "feat_ability_score_improvement",
+              ),
+              abilityScoreIncreaseOptionId: creationChoiceOptionId(
+                "ability_score:con:+2:max20",
+              ),
+            },
+          ],
         },
       }),
     ).toMatchObject({

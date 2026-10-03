@@ -119,6 +119,7 @@ import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
+  attackRollHitAfterMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
 import {
@@ -613,6 +614,10 @@ export function resolveChainedSpellAttackDamageAct(input: {
           target.combatantId,
           null,
           [...(step.target.relationshipFacts ?? [])],
+          attackRollHitAfterMissToHitReplacement(
+            ordinaryHit,
+            missToHitReplacement,
+          ),
         ),
         input.actorId,
         target.combatantId,
@@ -626,7 +631,10 @@ export function resolveChainedSpellAttackDamageAct(input: {
       },
     );
     replayState = attackRolledState;
-    const hit = ordinaryHit || missToHitReplacement !== null;
+    const hit = attackRollHitAfterMissToHitReplacement(
+      ordinaryHit,
+      missToHitReplacement,
+    );
     const critical = attackRollIsCriticalHit(effectiveAttackRoll);
     if (!hit) {
       const remarkableAthleteMovement =

@@ -561,3 +561,19 @@
 {"taskId":"SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST","claimKind":"runtime-evidence","profileIds":["stat-block.spellcasting.procedure"],"note":"Exact source-free runtime projection and identity-independence evidence; restricted deltas remain non-executable."}
 {"taskId":"FACTORY-549","claimKind":"qnt-proof","profileIds":["unit-feature.bonus-action-healing-movement-rider"],"note":"Second Wind Tactical Shift QNT core and example cover optional movement, half-current-Speed cap, no Opportunity Attacks, unchanged ordinary Movement, and atomic failure."}
 {"taskId":"FACTORY-549","claimKind":"completed-runtime-parity","profileIds":["unit-feature.bonus-action-healing-movement-rider"],"note":"Focused direct Fighter 5 creation and advancement, durable sheet battle handoff, and battle resolution tests cover shared Second Wind use and Bonus Action, choice/decline, movement cap, no Opportunity Attacks, ordinary movement independence, and unqualified rejection."}
+{"taskId":"CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE","claimKind":"qnt-proof","profileIds":["character-creation.feat-grant-occurrences"]}
+{"taskId":"CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE","claimKind":"runtime-evidence","profileIds":["character-creation.feat-grant-occurrences"]}
+{"taskId":"SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY","claimKind":"qnt-proof","profileIds":["character-sheet.use-count-resource-recovery"]}
+{"taskId":"SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY","claimKind":"runtime-evidence","profileIds":["character-sheet.use-count-resource-recovery"]}
+{"taskId":"BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE","claimKind":"qnt-proof","profileIds":["table-caller.marked-creature-defenses"]}
+{"taskId":"BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE","claimKind":"runtime-evidence","profileIds":["table-caller.marked-creature-defenses"]}
+{"taskId":"BATTLE.FEATURE.ATTACK_ROLL_DEFENSE","claimKind":"qnt-proof","profileIds":["unit-feature.attack-roll-defense"]}
+{"taskId":"BATTLE.FEATURE.ATTACK_ROLL_DEFENSE","claimKind":"runtime-evidence","profileIds":["unit-feature.attack-roll-defense"]}
+{"taskId":"SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT","claimKind":"qnt-proof","profileIds":["character-sheet.prepared-spell-rest-replacement"]}
+{"taskId":"SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT","claimKind":"runtime-evidence","profileIds":["character-sheet.prepared-spell-rest-replacement"]}
+{"taskId":"CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR","claimKind":"qnt-proof","profileIds":["character-creation.chosen-prepared-spell-access"]}
+{"taskId":"CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR","claimKind":"runtime-evidence","profileIds":["character-creation.chosen-prepared-spell-access"]}
+{"taskId":"CREATION.FEATURE.PROFICIENCY_CHOICE","claimKind":"qnt-proof","profileIds":["character-creation.class-feature-proficiency-choice"]}
+{"taskId":"CREATION.FEATURE.PROFICIENCY_CHOICE","claimKind":"runtime-evidence","profileIds":["character-creation.class-feature-proficiency-choice"]}
+{"taskId":"CREATION.SPELL_ACCESS.WIZARD_PROGRESSION","claimKind":"qnt-proof","profileIds":["character-creation.wizard-spellcasting-advancement"]}
+{"taskId":"CREATION.SPELL_ACCESS.WIZARD_PROGRESSION","claimKind":"runtime-evidence","profileIds":["character-creation.wizard-spellcasting-advancement"]}

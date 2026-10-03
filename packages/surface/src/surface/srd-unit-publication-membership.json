@@ -51,6 +51,7 @@
     "fighter_heroic_warrior",
     "fighter_improved_critical",
     "fighter_remarkable_athlete",
+    "fighter_additional_fighting_style",
     "barbarian_ability_score_improvement_l4",
     "barbarian_frenzy",
     "barbarian_rage",
@@ -64,6 +65,9 @@
     "barbarian_retaliation",
     "barbarian_weapon_mastery",
     "bard_bardic_inspiration",
+    "bard_bonus_proficiencies",
+    "bard_font_of_inspiration",
+    "bard_magical_discoveries",
     "bard_cutting_words",
     "bard_expertise",
     "bard_jack_of_all_trades",
@@ -167,6 +171,8 @@
     "paladin_weapon_mastery",
     "ranger_extra_attack",
     "ranger_hunters_prey",
+    "ranger_hunters_lore",
+    "ranger_defensive_tactics",
     "ranger_roving",
     "ranger_weapon_mastery",
     "rogue_weapon_mastery",
@@ -439,6 +445,7 @@
     "weapon_flail",
     "weapon_shortbow",
     "weapon_shortsword",
-    "weapon_quarterstaff"
+    "weapon_quarterstaff",
+    "wizard_memorize_spell"
   ]
 }

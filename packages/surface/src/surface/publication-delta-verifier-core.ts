@@ -172,6 +172,10 @@ const SchemaCertificateSchema = Schema.Struct({
         bonusActionHealingMovementRider: Schema.Array(
           SchemaNodeClassificationSchema,
         ),
+        classFeatureIncrementMechanics: Schema.Array(
+          SchemaNodeClassificationSchema,
+        ),
+        featRepeatability: Schema.Array(SchemaNodeClassificationSchema),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
       comparisonNormalizedRootSha256: HashSchema,
@@ -771,6 +775,8 @@ type CandidateSchemaClassifications = {
   readonly ongoingMechanicsEnvelope: readonly SchemaNodeClassification[];
   readonly canonicalMasteryVariants: readonly SchemaNodeClassification[];
   readonly bonusActionHealingMovementRider: readonly SchemaNodeClassification[];
+  readonly classFeatureIncrementMechanics: readonly SchemaNodeClassification[];
+  readonly featRepeatability: readonly SchemaNodeClassification[];
 };
 
 type ClassifiedSchemaTransform = {
@@ -1705,6 +1711,8 @@ function classifyCandidateSchema(
     ongoingMechanicsEnvelope: SchemaNodeClassification[];
     canonicalMasteryVariants: SchemaNodeClassification[];
     bonusActionHealingMovementRider: SchemaNodeClassification[];
+    classFeatureIncrementMechanics: SchemaNodeClassification[];
+    featRepeatability: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
@@ -1720,6 +1728,8 @@ function classifyCandidateSchema(
     ongoingMechanicsEnvelope: [],
     canonicalMasteryVariants: [],
     bonusActionHealingMovementRider: [],
+    classFeatureIncrementMechanics: [],
+    featRepeatability: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
   const authorize = (
@@ -1839,6 +1849,91 @@ function classifyCandidateSchema(
     if (retained.length !== 1) return transformed;
     const proposed = { ...transformed, anyOf: retained };
     return authorize("canonicalMasteryVariants", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  // Finite reviewed authored mechanics shapes. Changing any nested field changes
+  // this digest and requires a separately reviewed classification and certificate.
+  const classFeatureIncrementBranchHashes: ReadonlySet<string> = new Set([
+    "3b1215d02eedd9272f1317f9b7ff20f4b06bf507660be5874a55883d56e76b3b",
+    "607744bd49566c6c57ff42203b377c0c98a745943f1106d336a44cf79086a8cc",
+    "fbacc05fa4d00a7e48a96763a5b1028194059f869199a648c12988cadbfc2d63",
+    "16cc37268ed0d78af5458f7c4cbcacc7845bdbdd28db9afbce385dbe656610cc",
+    "a88f2f62f00251fdf98c703ba7552561ce2be3758fb3625ff54085b283da00df",
+  ] as const);
+  const classifyClassFeatureIncrementMechanics: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      !pointer.endsWith("/properties/mechanics") ||
+      !Array.isArray(transformed.anyOf)
+    )
+      return transformed;
+    const matching = transformed.anyOf.filter((member) =>
+      classFeatureIncrementBranchHashes.has(
+        canonicalNodeSha256(resolvePureLocalReference(schema, member)),
+      ),
+    );
+    if (
+      matching.length === 0 ||
+      matching.length > 2 ||
+      matching.length === transformed.anyOf.length
+    )
+      return transformed;
+    const proposed = {
+      ...transformed,
+      anyOf: transformed.anyOf.filter((member) => !matching.includes(member)),
+    };
+    return authorize("classFeatureIncrementMechanics", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  const hasOptionalRepeatabilityProperties = (value: JsonObject): boolean => {
+    const properties = objectAt(value, "properties");
+    return (
+      properties !== undefined &&
+      Array.isArray(value.required) &&
+      !value.required.includes("repeatable")
+    );
+  };
+  const isTrueOnlyRepeatableFeat = (properties: JsonObject): boolean => {
+    const kind = objectAt(properties, "kind");
+    const repeatable = objectAt(properties, "repeatable");
+    return (
+      kind?.type === "string" &&
+      Array.isArray(kind.enum) &&
+      kind.enum.length === 1 &&
+      kind.enum[0] === "feat" &&
+      repeatable !== undefined &&
+      canonicalJson(repeatable) ===
+        canonicalJson({ type: "boolean", enum: [true] })
+    );
+  };
+  const classifyFeatRepeatability: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      transformed.type !== "object" ||
+      transformed.additionalProperties !== false
+    )
+      return transformed;
+    const properties = objectAt(transformed, "properties");
+    if (
+      !hasOptionalRepeatabilityProperties(transformed) ||
+      properties === undefined ||
+      !isTrueOnlyRepeatableFeat(properties)
+    )
+      return transformed;
+    const { repeatable: omitted, ...retained } = properties;
+    void omitted;
+    const proposed = { ...transformed, properties: retained };
+    return authorize("featRepeatability", pointer, value, proposed)
       ? proposed
       : transformed;
   };
@@ -2087,6 +2182,8 @@ function classifyCandidateSchema(
     classifyOngoingMechanicsEnvelope,
     classifyCanonicalMasteryVariants,
     classifyBonusActionHealingMovementRider,
+    classifyClassFeatureIncrementMechanics,
+    classifyFeatRepeatability,
   ] as const;
   const classify: SchemaObjectClassifier = (value, pointer, transformed) =>
     classifiers.reduce(
@@ -3268,6 +3365,9 @@ function classifySchemaGraphDelta(
       expected.classifiedChanges.canonicalMasteryVariants,
     bonusActionHealingMovementRider:
       expected.classifiedChanges.bonusActionHealingMovementRider,
+    classFeatureIncrementMechanics:
+      expected.classifiedChanges.classFeatureIncrementMechanics,
+    featRepeatability: expected.classifiedChanges.featRepeatability,
     targetSelectionVisibility:
       expected.classifiedChanges.targetSelectionVisibility,
     authoredConditionalMechanics:

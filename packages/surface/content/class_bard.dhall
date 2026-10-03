@@ -6,6 +6,8 @@
   , { level = 2, unitId = "bard_expertise" }
   , { level = 2, unitId = "bard_jack_of_all_trades" }
   , { level = 4, unitId = "bard_ability_score_improvement_l4" }
+  , { level = 5, unitId = "bard_font_of_inspiration" }
+  , { level = 8, unitId = "bard_ability_score_improvement_l4" }
   , { level = 9, unitId = "bard_expertise" }
   , { level = 10, unitId = "bard_magical_secrets" }
   ]

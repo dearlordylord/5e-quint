@@ -293,49 +293,6 @@
       "unitId": "augury"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json",
-      "sourceRows": [
-        {
-          "battleReadinessStatus": "accepted-no-battle-effect",
-          "catalogAdmissionState": "not-installed",
-          "category": "subclass feature",
-          "concept": "Bard Bonus Proficiencies",
-          "finalDisposition": "catalog-only/dead-for-now",
-          "id": "srd521:classes:level-3:subclass-feature-grant:bard_bonus_proficiencies",
-          "levelBand": "level-3",
-          "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-          "rowKind": "subclass-feature-grant",
-          "source": {
-            "lineEnd": 1732,
-            "lineStart": 1729,
-            "path": ".references/srd-5.2.1/classes.md"
-          },
-          "unitProfileDisposition": "unsupported-profile"
-        }
-      ],
-      "status": "closed-outside-battle-runtime-boundary",
-      "strictTargetClosed": true,
-      "unitId": "bard_bonus_proficiencies"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
@@ -3889,7 +3846,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 146,
+      "count": 148,
       "description": "An executable Unit profile exists for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3907,6 +3864,7 @@
         "barbarian_unarmored_defense",
         "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
+        "bard_bonus_proficiencies",
         "bard_cutting_words",
         "bard_expertise",
         "bard_jack_of_all_trades",
@@ -3994,6 +3952,7 @@
         "protection_from_poison",
         "ranger_deft_explorer",
         "ranger_fighting_style",
+        "ranger_hunters_lore",
         "ranger_hunters_prey",
         "ranger_weapon_mastery",
         "ray_of_enfeeblement",
@@ -4091,11 +4050,10 @@
       ]
     },
     {
-      "count": 9,
+      "count": 8,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
-        "bard_bonus_proficiencies",
         "continual_flame",
         "enlarge_reduce",
         "levitate",
@@ -4142,24 +4100,24 @@
       "numerator": 610,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 447,
-        "accepted-no-battle-effect": 163
+        "accepted": 448,
+        "accepted-no-battle-effect": 162
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 110,
-      "numerator": 98,
-      "percent": "89.1%"
+      "denominator": 112,
+      "numerator": 100,
+      "percent": "89.3%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 110,
-      "numerator": 110,
+      "denominator": 112,
+      "numerator": 112,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 145,
-      "numerator": 120,
-      "percent": "82.8%"
+      "denominator": 147,
+      "numerator": 122,
+      "percent": "83%"
     },
     "strictFinalSupport": {
       "denominator": 212,
@@ -4167,13 +4125,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 205,
-      "numerator": 146,
-      "percent": "71.2%"
+      "denominator": 206,
+      "numerator": 148,
+      "percent": "71.8%"
     },
     "strictTargetClosure": {
-      "denominator": 205,
-      "numerator": 205,
+      "denominator": 206,
+      "numerator": 206,
       "percent": "100%"
     }
   },
@@ -4579,44 +4537,6 @@
           }
         ],
         "unitId": "purify_food_and_drink"
-      },
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Ranger Hunter's Lore",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "level-3",
-            "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
-            "rowId": "srd521:classes:level-3:subclass-feature-grant:ranger_hunters_lore",
-            "rowKind": "subclass-feature-grant",
-            "unitProfileDisposition": "not-recorded"
-          }
-        ],
-        "reason": "The SRD row has level-3 SRD pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "subclass feature",
-            "concept": "Ranger Hunter's Lore",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes:level-3:subclass-feature-grant:ranger_hunters_lore",
-            "levelBand": "level-3",
-            "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
-            "rowKind": "subclass-feature-grant",
-            "source": {
-              "lineEnd": 6816,
-              "lineStart": 6813,
-              "path": ".references/srd-5.2.1/classes.md"
-            }
-          }
-        ],
-        "unitId": "ranger_hunters_lore"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
@@ -7677,9 +7597,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 145,
-        "numerator": 120,
-        "percent": "82.8%"
+        "denominator": 147,
+        "numerator": 122,
+        "percent": "83%"
       }
     },
     "units": [
@@ -8078,6 +7998,28 @@
           }
         ],
         "unitId": "bard_bardic_inspiration"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.FEATURE.PROFICIENCY_CHOICE",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation grants exactly the selected eligible distinct skill proficiencies"
+              }
+            ],
+            "profileId": "character-creation.class-feature-proficiency-choice",
+            "profileKind": "character-creation",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+            ]
+          }
+        ],
+        "unitId": "bard_bonus_proficiencies"
       },
       {
         "joinStatus": "covered",
@@ -10682,6 +10624,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Table query discloses canonical defenses of the character's currently marked creature"
+              }
+            ],
+            "profileId": "table-caller.marked-creature-defenses",
+            "profileKind": "table-caller",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "ranger_hunters_lore"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
@@ -11981,18 +11945,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 168,
-      "numerator": 168,
+      "denominator": 170,
+      "numerator": 170,
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 5,
-      "witness-present": 163
+      "not-applicable": 6,
+      "witness-present": 164
     },
     "rowsByStatus": {
-      "not-applicable": 5,
-      "not-required": 37,
-      "witness-present": 163
+      "not-applicable": 6,
+      "not-required": 36,
+      "witness-present": 164
     }
   },
   "sourceArtifacts": {
@@ -13036,18 +13000,18 @@
     "candidateUnitIdsBeforeExclusions": 225,
     "groupsByClaimTag": {
       "profile-subset-supported": 22,
-      "supported-profile": 146,
-      "unsupported-profile": 37
+      "supported-profile": 148,
+      "unsupported-profile": 36
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 2,
-      "closed-outside-battle-runtime-boundary": 9,
+      "closed-outside-battle-runtime-boundary": 8,
       "closed-runtime-detached-table-adjudication": 42,
-      "supported-profile": 146
+      "supported-profile": 148
     },
-    "nonSupportedFrontier": 59,
-    "strictDenominator": 205
+    "nonSupportedFrontier": 58,
+    "strictDenominator": 206
   }
 }

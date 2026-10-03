@@ -1,0 +1,26 @@
+{
+  "acquiredAtLevel": 6,
+  "className": "bard",
+  "id": "bard_magical_discoveries",
+  "kind": "class_feature",
+  "mechanics": {
+    "choiceCount": 2,
+    "eligibleSpellLevel": "cantrip_or_class_spell_slot",
+    "eligibleSpellLists": [
+      "cleric",
+      "druid",
+      "wizard"
+    ],
+    "family": "chosen_prepared_spell_access",
+    "preparation": "always_prepared",
+    "replacement": {
+      "maximumCount": 1,
+      "trigger": "class_level_gain"
+    }
+  },
+  "name": "Magical Discoveries",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:1737-1742"
+  }
+}

@@ -73,6 +73,13 @@
     },
     {
       "sourceKind": "unit",
+      "path": "mechanics.resourceUnitId",
+      "fieldName": "resourceUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
       "path": "mechanics.sourceUnitId",
       "fieldName": "sourceUnitId",
       "targetKind": "unit",

@@ -13,7 +13,7 @@ import { battleUnitRefWithSupportProfiles } from "./unit-feature-support.ts";
  * Admission census (issue #528, Step 1): enumerates the closed-world set of
  * SRD Units that battle admission rejects as "detected-but-unparseable under
  * a maximally provided context" — every class at level 20, the full
- * sourceFacts shape, and the retained Hunter's Prey selection where the
+ * sourceFacts shape, and retained feature selections where the
  * per-ref seam requires one. Failures that manifest only with absent
  * sourceFacts or missing selections are out of scope here; the
  * creation-to-battle reachability join (Step 2) owns those. Per-unit
@@ -103,28 +103,26 @@ describe("unit support admission census", () => {
 function admitUnitWithMaximallyProvidedContext(
   unit: (typeof units)[number],
 ): ReturnType<typeof battleUnitRefWithSupportProfiles> {
-  const admission = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: unit.id },
+  const selectedOption =
+    unit.kind !== "class_feature"
+      ? undefined
+      : unit.mechanics.family === "hunters_prey"
+        ? RETAINED_HUNTERS_PREY_SELECTION
+        : unit.mechanics.family === "attack_roll_defense_choice"
+          ? ({
+              kind: "attackRollDefense",
+              selection: "opportunityAttackDisadvantage",
+            } as const)
+          : undefined;
+  return battleUnitRefWithSupportProfiles({
+    unitRef: {
+      unitId: unit.id,
+      ...(selectedOption === undefined ? {} : { selectedOption }),
+    },
     unit,
     classLevels,
     sourceFacts,
   });
-  if (
-    Result.isFailure(admission) &&
-    admission.failure.message ===
-      `Battle Unit ref ${unit.id} requires a retained Hunter's Prey selection before battle initialization.`
-  ) {
-    return battleUnitRefWithSupportProfiles({
-      unitRef: {
-        unitId: unit.id,
-        selectedOption: RETAINED_HUNTERS_PREY_SELECTION,
-      },
-      unit,
-      classLevels,
-      sourceFacts,
-    });
-  }
-  return admission;
 }
 
 function compareAdmissionFailures(

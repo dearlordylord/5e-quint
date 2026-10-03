@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "52b2bc3fa1d4b9ea0708b6f1be0b4408a8dee6a3",
+    "registryCommit": "09beb163423e57989b8f6a5821f7c2515dc26645",
     "generator": {
       "path": "scripts/spell-lifecycle-owner-manifest.cjs",
       "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "e2bf85d852b1a7f141bcbf08177353c1eddd42a673c26be12071081ed4bd0146"
+        "sha256": "50c5671bce8f1e65ce79d388e9599e471c54f079c41100bbd29a661090a9e3af"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "089dd841a712be395b3658d9277e3efb0efbc096cdf6e067fc16e236c6848adf"
+        "sha256": "5f6ed431a1ba2fdd676bd3c02740d807e450d6f26d59c087ad86cc207a3c9732"
       }
     ]
   },

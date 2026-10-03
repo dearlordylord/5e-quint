@@ -1,0 +1,27 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "bard",
+  "id": "bard_font_of_inspiration",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "use_count_resource_recovery",
+    "resourceUnitId": "bard_bardic_inspiration",
+    "restRecovery": {
+      "amount": "all_expended",
+      "resetCadence": {
+        "kind": "short_or_long_rest"
+      }
+    },
+    "spellSlotExchange": {
+      "actionCost": "none",
+      "requiresExpendedUse": true,
+      "restoredUses": 1,
+      "spellSlotCount": 1
+    }
+  },
+  "name": "Font of Inspiration",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:908-912"
+  }
+}

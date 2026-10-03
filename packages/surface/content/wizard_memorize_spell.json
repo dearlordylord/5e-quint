@@ -1,0 +1,19 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "wizard",
+  "id": "wizard_memorize_spell",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "prepared_spell_rest_replacement",
+    "minimumSpellLevel": 1,
+    "preparedSpellSource": "class_spellcasting",
+    "replacementCount": 1,
+    "replacementSource": "own_spellbook",
+    "trigger": "short_rest_completion"
+  },
+  "name": "Memorize Spell",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:10269-10272"
+  }
+}

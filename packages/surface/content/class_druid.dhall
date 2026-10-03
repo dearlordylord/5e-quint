@@ -7,6 +7,7 @@
   , { level = 2, unitId = "druid_wild_shape" }
   , { level = 2, unitId = "druid_wild_companion" }
   , { level = 4, unitId = "druid_ability_score_improvement_l4" }
+  , { level = 8, unitId = "druid_ability_score_improvement_l4" }
   ]
 , hitPointDie = 8
 , id = "class_druid"

@@ -27,6 +27,10 @@
     {
       "level": 4,
       "unitId": "druid_ability_score_improvement_l4"
+    },
+    {
+      "level": 8,
+      "unitId": "druid_ability_score_improvement_l4"
     }
   ],
   "hitPointDie": 8,

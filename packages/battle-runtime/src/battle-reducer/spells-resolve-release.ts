@@ -108,6 +108,7 @@ import {
   clearPendingAttackRollMissToHitReplacementSelection,
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
+  attackRollHitAfterMissToHitReplacement,
 } from "./statblock-attacks.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
@@ -1275,6 +1276,10 @@ function prepareTargetedSpellAttackRoll(
         input.target.combatantId,
         null,
         input.fillSet.targetRelationshipFacts,
+        attackRollHitAfterMissToHitReplacement(
+          ordinaryHit,
+          missToHitReplacement,
+        ),
       ),
       input.input.subject.actorId,
       input.target.combatantId,
@@ -1336,7 +1341,10 @@ function resolveTargetedSpellAttackAfterRoll(
     missToHitReplacement,
     releaseAttackRolledState,
   } = rollPreparation;
-  const hit = ordinaryHit || missToHitReplacement !== null;
+  const hit = attackRollHitAfterMissToHitReplacement(
+    ordinaryHit,
+    missToHitReplacement,
+  );
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const spellMarkedDamageRiders = hit
     ? activeMarkedDamageRiders(

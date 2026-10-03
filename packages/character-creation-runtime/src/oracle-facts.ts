@@ -1,3 +1,4 @@
+import { CharacterClassLevelSchema } from "@dnd/shared/game-facts";
 import { Result, Match, Schema } from "effect";
 
 import { MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS } from "@dnd/surface/surface/character-creation-readers";
@@ -25,6 +26,7 @@ import {
   LOADOUT_SLOTS,
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
+  UnitRefSelectedOptionSchema,
   CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
   isCharacterBuildToolProficiencyId,
   parseCreationHoleId,
@@ -131,6 +133,7 @@ const ChoiceHoleSourceSchema = Schema.Union([
     tag: Schema.Literal("unitChoice"),
     unitId: UnitIdSchema.pipe(Schema.brand("UnitChoiceSourceUnitId")),
     choiceKey: Schema.Literals(UNIT_CHOICE_KEYS),
+    grantLevel: Schema.optionalKey(CharacterClassLevelSchema),
   }),
   Schema.Struct({
     tag: Schema.Literal("loadout"),
@@ -140,15 +143,7 @@ const ChoiceHoleSourceSchema = Schema.Union([
 ]);
 const UnitRefSchema = Schema.Struct({
   unitId: UnitIdSchema,
-  selectedOption: Schema.optionalKey(
-    Schema.Struct({
-      kind: Schema.Literal("huntersPrey"),
-      selection: Schema.Literals([
-        "woundedTargetWeaponDamage",
-        "nearbyDifferentTargetSameWeaponAttack",
-      ]),
-    }),
-  ),
+  selectedOption: Schema.optionalKey(UnitRefSelectedOptionSchema),
 });
 const CreationChoiceOptionFactSchema = Schema.Struct({
   optionId: CreationChoiceOptionIdSchema,
@@ -303,18 +298,16 @@ const EldritchInvocationIdSchema = Schema.String.pipe(
 );
 const FeatureSchema = Schema.Union([
   Schema.Struct({
+    kind: Schema.Literal("selectedPreparedSpellAccess"),
+    selectedFromUnitId: UnitIdSchema,
+    spellIds: Schema.Tuple([UnitIdSchema, UnitIdSchema]),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("selectedClassChoice"),
+    selectedFromGrantLevel: Schema.optionalKey(CharacterClassLevelSchema),
     selectedFromUnitId: UnitIdSchema,
     unitId: UnitIdSchema,
-    selectedOption: Schema.optionalKey(
-      Schema.Struct({
-        kind: Schema.Literal("huntersPrey"),
-        selection: Schema.Literals([
-          "woundedTargetWeaponDamage",
-          "nearbyDifferentTargetSameWeaponAttack",
-        ]),
-      }),
-    ),
+    selectedOption: Schema.optionalKey(UnitRefSelectedOptionSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("selectedEldritchInvocation"),
@@ -931,9 +924,14 @@ function choiceHoleSourceFact(
     }),
     Match.when(
       { tag: "unitChoice" },
-      ({ tag, unitId, choiceKey, ...unprojected }) => {
+      ({ tag, unitId, choiceKey, grantLevel, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, unitId, choiceKey };
+        return {
+          tag,
+          unitId,
+          choiceKey,
+          ...(grantLevel === undefined ? {} : { grantLevel }),
+        };
       },
     ),
     Match.when(
@@ -974,7 +972,7 @@ function choiceOptionFact(option: ChoiceOption): ChoiceOptionFact {
 
   const { kind, selection, ...unprojectedSelectedOption } = selectedOption;
   noUnprojectedFields(unprojectedSelectedOption);
-  return { optionId, unitRef: { unitId, selectedOption: { kind, selection } } };
+  return { optionId, unitRef: { unitId, selectedOption } };
 }
 
 function abilityScoreAssignmentFact(
@@ -1201,13 +1199,21 @@ function featureFact(
       ({
         kind,
         selectedFromUnitId,
+        selectedFromGrantLevel,
         unitId,
         selectedOption,
         ...unprojected
       }) => {
         noUnprojectedFields(unprojected);
         if (selectedOption === undefined) {
-          return { kind, selectedFromUnitId, unitId };
+          return {
+            kind,
+            selectedFromUnitId,
+            unitId,
+            ...(selectedFromGrantLevel === undefined
+              ? {}
+              : { selectedFromGrantLevel }),
+          };
         }
         const {
           kind: selectedOptionKind,
@@ -1218,8 +1224,11 @@ function featureFact(
         return {
           kind,
           selectedFromUnitId,
+          ...(selectedFromGrantLevel === undefined
+            ? {}
+            : { selectedFromGrantLevel }),
           unitId,
-          selectedOption: { kind: selectedOptionKind, selection },
+          selectedOption,
         };
       },
     ),
@@ -1232,6 +1241,13 @@ function featureFact(
           selectedFromUnitId,
           selection: eldritchInvocationSelectionFact(selection),
         };
+      },
+    ),
+    Match.when(
+      { kind: "selectedPreparedSpellAccess" },
+      ({ kind, selectedFromUnitId, spellIds, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { kind, selectedFromUnitId, spellIds };
       },
     ),
     Match.when(

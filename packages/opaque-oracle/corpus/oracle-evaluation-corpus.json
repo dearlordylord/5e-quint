@@ -2233,6 +2233,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -2246,6 +2276,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -2269,6 +2329,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -2282,6 +2372,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -2312,6 +2432,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -2401,6 +2539,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -2414,6 +2582,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -2551,6 +2749,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -2564,6 +2792,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -2594,6 +2852,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -8048,6 +8324,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -8061,6 +8367,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -8084,6 +8420,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -8097,6 +8463,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -8127,6 +8523,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -8216,6 +8630,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -8229,6 +8673,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -8366,6 +8840,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -8379,6 +8883,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -8409,6 +8943,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -8664,6 +9216,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -8677,6 +9259,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -8700,6 +9312,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -8713,6 +9355,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -8743,6 +9415,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -8832,6 +9522,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -8845,6 +9565,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -8982,6 +9732,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -8995,6 +9775,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -9025,6 +9835,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -14479,6 +15307,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -14492,6 +15350,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -14515,6 +15403,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -14528,6 +15446,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -14558,6 +15506,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -14647,6 +15613,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -14660,6 +15656,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -14797,6 +15823,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -14810,6 +15866,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -14840,6 +15926,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -20324,6 +21428,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -20337,6 +21471,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -20360,6 +21524,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -20373,6 +21567,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -20403,6 +21627,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -20492,6 +21734,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -20505,6 +21777,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -20642,6 +21944,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -20655,6 +21987,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -20685,6 +22047,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -26014,6 +27394,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -26027,6 +27437,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -26050,6 +27490,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -26063,6 +27533,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -26093,6 +27593,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -26182,6 +27700,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -26195,6 +27743,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -26332,6 +27910,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -26345,6 +27953,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -26375,6 +28013,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -31925,6 +33581,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -31938,6 +33624,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -31961,6 +33677,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -31974,6 +33720,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -32004,6 +33780,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -32093,6 +33887,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -32106,6 +33930,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -32243,6 +34097,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -32256,6 +34140,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -32286,6 +34200,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -37838,6 +39770,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -37851,6 +39813,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -37874,6 +39866,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -37887,6 +39909,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -37917,6 +39969,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -38006,6 +40076,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -38019,6 +40119,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -38156,6 +40286,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -38169,6 +40329,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -38199,6 +40389,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -43813,6 +46021,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -43826,6 +46064,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -43849,6 +46117,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -43862,6 +46160,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -43892,6 +46220,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -43981,6 +46327,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -43994,6 +46370,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -44131,6 +46537,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -44144,6 +46580,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -44174,6 +46640,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -49868,6 +52352,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -49881,6 +52395,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -49904,6 +52448,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -49917,6 +52491,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -49947,6 +52551,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -50036,6 +52658,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -50049,6 +52701,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -50186,6 +52868,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -50199,6 +52911,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -50229,6 +52971,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -55551,6 +58311,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -55564,6 +58354,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -55587,6 +58407,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -55600,6 +58450,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -55630,6 +58510,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -55719,6 +58617,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -55732,6 +58660,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -55869,6 +58827,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -55882,6 +58870,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -55912,6 +58930,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }
@@ -56175,6 +59211,36 @@
                   }
                 },
                 {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
+                  "optionId": "15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian|15:class_barbarian:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_barbarian"
+                  }
+                },
+                {
                   "optionId": "10:class_bard:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_bard"
@@ -56188,6 +59254,36 @@
                 },
                 {
                   "optionId": "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_bard"
+                  }
+                },
+                {
+                  "optionId": "10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard|10:class_bard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_bard"
                   }
@@ -56211,6 +59307,36 @@
                   }
                 },
                 {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
+                  "optionId": "12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric|12:class_cleric:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_cleric"
+                  }
+                },
+                {
                   "optionId": "11:class_druid:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_druid"
@@ -56224,6 +59350,36 @@
                 },
                 {
                   "optionId": "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_druid"
+                  }
+                },
+                {
+                  "optionId": "11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid|11:class_druid:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_druid"
                   }
@@ -56254,6 +59410,24 @@
                 },
                 {
                   "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_fighter"
+                  }
+                },
+                {
+                  "optionId": "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_fighter"
                   }
@@ -56343,6 +59517,36 @@
                   }
                 },
                 {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
+                  "optionId": "10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk|10:class_monk:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_monk"
+                  }
+                },
+                {
                   "optionId": "13:class_paladin:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_paladin"
@@ -56356,6 +59560,36 @@
                 },
                 {
                   "optionId": "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_paladin"
+                  }
+                },
+                {
+                  "optionId": "13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin|13:class_paladin:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_paladin"
                   }
@@ -56493,6 +59727,36 @@
                   }
                 },
                 {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
+                  "optionId": "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_8:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_sorcerer"
+                  }
+                },
+                {
                   "optionId": "13:class_warlock:level_1:maximum_hit_die",
                   "unitRef": {
                     "unitId": "class_warlock"
@@ -56506,6 +59770,36 @@
                 },
                 {
                   "optionId": "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_4:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_warlock"
+                  }
+                },
+                {
+                  "optionId": "13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock|13:class_warlock:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_warlock"
                   }
@@ -56536,6 +59830,24 @@
                 },
                 {
                   "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_6:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_7:fixed_hp_gain",
+                  "unitRef": {
+                    "unitId": "class_wizard"
+                  }
+                },
+                {
+                  "optionId": "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_8:fixed_hp_gain",
                   "unitRef": {
                     "unitId": "class_wizard"
                   }

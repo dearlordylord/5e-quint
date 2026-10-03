@@ -544,6 +544,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         target.combatantId,
         null,
         input.fillSet.targetRelationshipFacts,
+        hit,
       ),
       input.actorId,
       target.combatantId,

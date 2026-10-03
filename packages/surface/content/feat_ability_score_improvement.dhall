@@ -32,6 +32,7 @@ let abilityScoreImprovement =
               ] : List AbilityScoreIncreaseMethod
           }
       , category = "general"
+      , repeatable = True
 
       , id = "feat_ability_score_improvement"
       , kind = "feat"

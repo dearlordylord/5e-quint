@@ -11246,6 +11246,8 @@ function createFinalizedWizardWithSpawnedCompanion(
   const build = {
     ...fighter,
     progression: wizardProgression(root),
+    // Wizard 1 has no earned feat choice; Fighter selections do not survive this fixture role change.
+    features: [],
     ...(input.spellcastingSafeLoadout === true
       ? {
           equipment: {

@@ -54,6 +54,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   recklessAttackWhileRagingUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],
   weaponMasteryCleaveAttackersUsedThisTurn: [],
+  attackRollDefensesTriggeredThisTurn: [],
   huntersPreyHordeBreakerUsedThisTurn: [],
   grapplerPunchAndGrabUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),

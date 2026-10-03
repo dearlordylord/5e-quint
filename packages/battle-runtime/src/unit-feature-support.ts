@@ -1,3 +1,4 @@
+import type { AttackRollDefenseSelection as SharedAttackRollDefenseSelection } from "@dnd/shared/game-facts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.acrobatic-movement unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.retaliation-reaction-attack unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement
@@ -237,6 +238,8 @@ type BardicInspirationDieSize =
   | typeof BARDIC_INSPIRATION_BASE_DIE_SIZE
   | (typeof BARDIC_INSPIRATION_DIE_TIERS)[number]["dieSize"];
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
+  "markedCreatureDefensesDisclosure",
+  "attackRollDefense",
   "alternateActionCost",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -943,10 +946,20 @@ export type BattleHuntersPreySupportProfile = {
   readonly kind: typeof HUNTERS_PREY_SUPPORT_PROFILE;
   readonly huntersPrey: HuntersPreyProfile;
 };
-export type BattleUnitSupportProfileSelectedOption = {
-  readonly kind: "huntersPrey";
-  readonly selection: HuntersPreyProfile["kind"];
+export type AttackRollDefenseSelection = SharedAttackRollDefenseSelection;
+export type BattleAttackRollDefenseSupportProfile = {
+  readonly kind: "attackRollDefense";
+  readonly selection: AttackRollDefenseSelection;
 };
+export type BattleUnitSupportProfileSelectedOption =
+  | {
+      readonly kind: "attackRollDefense";
+      readonly selection: AttackRollDefenseSelection;
+    }
+  | {
+      readonly kind: "huntersPrey";
+      readonly selection: HuntersPreyProfile["kind"];
+    };
 type HuntersPreyAdmittedMechanicsProfile = {
   readonly woundedTargetWeaponDamage: HuntersPreyWoundedTargetWeaponDamageProfile;
   readonly nearbyDifferentTargetSameWeaponAttack: HuntersPreyNearbyDifferentTargetSameWeaponAttackProfile;
@@ -1080,6 +1093,7 @@ export type BattleUnitSupportProfile =
   | BattleCunningStrikeOptionGrantSupportProfile
   | BattlePaladinSacredWeaponSupportProfile
   | BattleHuntersPreySupportProfile
+  | BattleAttackRollDefenseSupportProfile
   | BattleRogueSteadyAimSupportProfile
   | BattlePotentCantripSupportProfile
   | BattleGrapplerSupportProfile
@@ -1123,6 +1137,7 @@ export type BattleUnitSupportProfile =
       | "cunningStrikeOptionGrant"
       | "paladinSacredWeapon"
       | "huntersPrey"
+      | "attackRollDefense"
       | "rogueSteadyAim"
       | "potentCantrip"
       | "brutalStrike"
@@ -1219,6 +1234,15 @@ function bonusActionHealingMovementRiderProfilesForUnit(
   ];
 }
 
+function markedCreatureDisclosureSupportProfiles(
+  unit: BattleUnitSupportSource,
+): BattleUnitSupportProfile[] {
+  return unit.kind === "class_feature" &&
+    unit.mechanics.family === "marked_creature_defenses_disclosure"
+    ? ["markedCreatureDefensesDisclosure"]
+    : [];
+}
+
 function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   inputWithHuntersPreyAdmission: BattleUnitSupportProfilesInputWithHuntersPreyAdmission,
 ): Result.Result<
@@ -1231,7 +1255,7 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     ...supportInput,
     unit: huntersPreyAdmission.unit,
   };
-  const supportProfiles: BattleUnitSupportProfile[] = [];
+  const supportProfiles = markedCreatureDisclosureSupportProfiles(input.unit);
 
   const bonusActionStandardActionSupport =
     battleBonusActionStandardActionSupportForUnit(input.unit);
@@ -1905,6 +1929,44 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   return Result.succeed({ supportProfiles, huntersPreyAdmission });
 }
 
+function battleAttackRollDefenseRefSupport(
+  input: Parameters<typeof battleUnitRefWithSupportProfiles>[0],
+): Result.Result<BattleUnitRef, BattleUnitSupportProfileIssue> | null {
+  if (
+    input.unit.kind === "class_feature" &&
+    input.unit.mechanics.family === "attack_roll_defense_choice"
+  ) {
+    if (input.unitRef.selectedOption?.kind !== "attackRollDefense") {
+      return battleUnitSupportProfileIssue(
+        "Attack Roll Defense requires exactly one retained selection.",
+      );
+    }
+    return Result.succeed({
+      unit: input.unit,
+      supportProfiles: [
+        {
+          kind: "attackRollDefense",
+          selection: input.unitRef.selectedOption.selection,
+        },
+      ],
+    });
+  }
+  if (input.unitRef.selectedOption?.kind === "attackRollDefense") {
+    return battleUnitSupportProfileIssue(
+      "Attack Roll Defense selection requires its admitted choice mechanics.",
+    );
+  }
+  return null;
+}
+
+function parsedBattleUnitSupportClassLevelsProperty(
+  classLevels: readonly CharacterBattleClassLevelInit[] | undefined,
+): Pick<BattleUnitSupportProfilesInput, "classLevels"> {
+  return classLevels === undefined
+    ? {}
+    : { classLevels: parseBattleUnitSupportClassLevels(classLevels) };
+}
+
 export function battleUnitRefWithSupportProfiles(input: {
   readonly unitRef: {
     readonly unitId: AuthoredUnitSource["id"];
@@ -1919,15 +1981,13 @@ export function battleUnitRefWithSupportProfiles(input: {
       `Battle Unit ref ${input.unitRef.unitId} does not match Unit ${input.unit.id}.`,
     );
   }
+  const defenseSupport = battleAttackRollDefenseRefSupport(input);
+  if (defenseSupport !== null) return defenseSupport;
   const huntersPreyAdmission = huntersPreyAdmissionForUnit(input.unit);
   const admittedSupportProfiles =
     battleUnitSupportProfilesForInputWithHuntersPreyAdmission({
       huntersPreyAdmission,
-      ...(input.classLevels === undefined
-        ? {}
-        : {
-            classLevels: parseBattleUnitSupportClassLevels(input.classLevels),
-          }),
+      ...parsedBattleUnitSupportClassLevelsProperty(input.classLevels),
       ...optionalProperty("sourceFacts", input.sourceFacts),
     });
   if (Result.isFailure(admittedSupportProfiles)) {
@@ -2565,6 +2625,7 @@ export type BattlePaladinSacredWeaponSupport =
   BattlePaladinSacredWeaponSupportProfile | null;
 export type BattleHuntersPreySupport =
   | BattleHuntersPreySupportProfile
+  | BattleAttackRollDefenseSupportProfile
   | "unsupported"
   | null;
 export type BattleRogueSteadyAimSupport =
@@ -3530,14 +3591,17 @@ function battleHuntersPreySupportForSupportedAdmission(
   selectedOption?: BattleUnitSupportProfileSelectedOption,
 ): BattleHuntersPreySupportProfile | null {
   if (admission.tag === "notHuntersPrey") return null;
-  return selectedOption === undefined
+  return selectedOption?.kind !== "huntersPrey"
     ? null
     : selectedHuntersPreySupportProfile(admission.profile, selectedOption);
 }
 
 function selectedHuntersPreySupportProfile(
   admitted: HuntersPreyAdmittedMechanicsProfile,
-  selectedOption: BattleUnitSupportProfileSelectedOption,
+  selectedOption: Extract<
+    BattleUnitSupportProfileSelectedOption,
+    { readonly kind: "huntersPrey" }
+  >,
 ): BattleHuntersPreySupportProfile {
   return {
     kind: HUNTERS_PREY_SUPPORT_PROFILE,

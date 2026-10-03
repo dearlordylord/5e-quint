@@ -6173,6 +6173,13 @@ const BattleTurnSnapshotInferredSchema = Schema.Struct({
     BattleTurnUnitExcludedUsageSchema,
   ),
   weaponMasteryCleaveAttackersUsedThisTurn: Schema.Array(CombatantId),
+  attackRollDefensesTriggeredThisTurn: Schema.Array(
+    Schema.Struct({
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      defenderId: CombatantId,
+      attackerId: CombatantId,
+    }),
+  ),
   huntersPreyHordeBreakerUsedThisTurn: Schema.Array(
     BattleTurnUnitExcludedUsageSchema,
   ),

@@ -815,8 +815,8 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 168,
-              "numerator": 168,
+              "denominator": 170,
+              "numerator": 170,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
@@ -830,8 +830,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 205,
-              "numerator": 205,
+              "denominator": 206,
+              "numerator": 206,
               "percent": "100%"
             }
           },
@@ -842,12 +842,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 65,
+              "numerator": 65
             },
             "qntCoveredObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -859,14 +859,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 14,
               "focused-mbt": 79,
-              "runtime-test": 28
+              "runtime-test": 32
             }
           },
           "id": "mbt-parity-evidence",
@@ -966,6 +966,7 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -1022,6 +1023,7 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -1059,8 +1061,8 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 169,
-              "numerator": 169,
+              "denominator": 183,
+              "numerator": 183,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
@@ -1074,8 +1076,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 218,
-              "numerator": 218,
+              "denominator": 219,
+              "numerator": 219,
               "percent": "100%"
             }
           },
@@ -1086,12 +1088,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -1103,14 +1105,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 15,
               "focused-mbt": 79,
-              "runtime-test": 28
+              "runtime-test": 34
             }
           },
           "id": "mbt-parity-evidence",
@@ -1210,6 +1212,7 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -1266,6 +1269,8 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -1303,13 +1308,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 192,
-              "numerator": 192,
+              "denominator": 208,
+              "numerator": 208,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 118,
-              "numerator": 118,
+              "denominator": 120,
+              "numerator": 120,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1318,8 +1323,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 271,
-              "numerator": 271,
+              "denominator": 274,
+              "numerator": 274,
               "percent": "100%"
             }
           },
@@ -1330,12 +1335,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 72,
+              "numerator": 72
             },
             "qntCoveredObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 83,
+              "numerator": 83
             }
           },
           "generatorBlockingRows": [],
@@ -1347,14 +1352,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 83,
+              "numerator": 83
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 17,
               "focused-mbt": 82,
-              "runtime-test": 31
+              "runtime-test": 40
             }
           },
           "id": "mbt-parity-evidence",
@@ -1454,6 +1459,7 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -1514,6 +1520,8 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -1522,9 +1530,11 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
         "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
         "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
@@ -1551,23 +1561,23 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 193,
-              "numerator": 193,
+              "denominator": 210,
+              "numerator": 210,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 119,
-              "numerator": 119,
+              "denominator": 122,
+              "numerator": 122,
               "percent": "100%"
             },
             "strictFinalSupport": {
-              "denominator": 295,
-              "numerator": 295,
+              "denominator": 294,
+              "numerator": 294,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 272,
-              "numerator": 272,
+              "denominator": 276,
+              "numerator": 276,
               "percent": "100%"
             }
           },
@@ -1578,12 +1588,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 73,
+              "numerator": 73
             },
             "qntCoveredObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 84,
+              "numerator": 84
             }
           },
           "generatorBlockingRows": [],
@@ -1595,14 +1605,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 84,
+              "numerator": 84
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 18,
               "focused-mbt": 82,
-              "runtime-test": 31
+              "runtime-test": 42
             }
           },
           "id": "mbt-parity-evidence",
@@ -1702,6 +1712,7 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -1762,7 +1773,10 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
         "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
@@ -1770,9 +1784,11 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
         "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
         "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
@@ -1799,23 +1815,23 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 195,
-              "numerator": 195,
+              "denominator": 214,
+              "numerator": 214,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 119,
-              "numerator": 119,
+              "denominator": 122,
+              "numerator": 122,
               "percent": "100%"
             },
             "strictFinalSupport": {
-              "denominator": 341,
-              "numerator": 341,
+              "denominator": 340,
+              "numerator": 340,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 297,
-              "numerator": 297,
+              "denominator": 303,
+              "numerator": 303,
               "percent": "100%"
             }
           },
@@ -1826,12 +1842,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 74,
+              "numerator": 74
             },
             "qntCoveredObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             }
           },
           "generatorBlockingRows": [],
@@ -1843,14 +1859,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
-              "runtime-test": 31
+              "runtime-test": 44
             }
           },
           "id": "mbt-parity-evidence",
@@ -1950,6 +1966,8 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -2010,7 +2028,10 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
         "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
@@ -2018,9 +2039,11 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
         "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
         "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
@@ -2047,23 +2070,23 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 196,
-              "numerator": 196,
+              "denominator": 215,
+              "numerator": 215,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 120,
-              "numerator": 120,
+              "denominator": 134,
+              "numerator": 134,
               "percent": "100%"
             },
             "strictFinalSupport": {
-              "denominator": 353,
-              "numerator": 353,
+              "denominator": 341,
+              "numerator": 341,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 298,
-              "numerator": 298,
+              "denominator": 304,
+              "numerator": 304,
               "percent": "100%"
             }
           },
@@ -2074,12 +2097,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 74,
+              "numerator": 74
             },
             "qntCoveredObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             }
           },
           "generatorBlockingRows": [],
@@ -2091,14 +2114,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
-              "runtime-test": 31
+              "runtime-test": 44
             }
           },
           "id": "mbt-parity-evidence",
@@ -2198,6 +2221,8 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -2258,7 +2283,10 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
         "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
@@ -2266,9 +2294,11 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
         "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
         "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
@@ -2295,23 +2325,23 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 242,
-              "numerator": 242,
+              "denominator": 261,
+              "numerator": 261,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 129,
-              "numerator": 129,
+              "denominator": 143,
+              "numerator": 143,
               "percent": "100%"
             },
             "strictFinalSupport": {
-              "denominator": 399,
-              "numerator": 399,
+              "denominator": 387,
+              "numerator": 387,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 344,
-              "numerator": 344,
+              "denominator": 350,
+              "numerator": 350,
               "percent": "100%"
             }
           },
@@ -2322,12 +2352,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 74,
+              "numerator": 74
             },
             "qntCoveredObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             }
           },
           "generatorBlockingRows": [],
@@ -2339,14 +2369,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
-              "runtime-test": 31
+              "runtime-test": 44
             }
           },
           "id": "mbt-parity-evidence",
@@ -2434,6 +2464,8 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -2494,7 +2526,10 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
         "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
@@ -2502,9 +2537,11 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
         "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
         "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
@@ -2531,23 +2568,23 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 254,
-              "numerator": 254,
+              "denominator": 273,
+              "numerator": 273,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 136,
-              "numerator": 136,
+              "denominator": 150,
+              "numerator": 150,
               "percent": "100%"
             },
             "strictFinalSupport": {
-              "denominator": 411,
-              "numerator": 411,
+              "denominator": 399,
+              "numerator": 399,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 356,
-              "numerator": 356,
+              "denominator": 362,
+              "numerator": 362,
               "percent": "100%"
             }
           },
@@ -2558,12 +2595,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 74,
+              "numerator": 74
             },
             "qntCoveredObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             }
           },
           "generatorBlockingRows": [],
@@ -2575,14 +2612,14 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 78,
-              "numerator": 78
+              "denominator": 85,
+              "numerator": 85
             },
             "witnessKinds": {
               "contract-test": 7,
-              "deterministic-qnt-replay": 12,
+              "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
-              "runtime-test": 31
+              "runtime-test": 44
             }
           },
           "id": "mbt-parity-evidence",
@@ -2670,6 +2707,8 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -2730,7 +2769,10 @@
         "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
         "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.FEATURE.PROFICIENCY_CHOICE",
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
         "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
@@ -2738,9 +2780,11 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
         "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
         "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
@@ -2799,15 +2843,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 147,
-            "numerator": 147
+            "denominator": 148,
+            "numerator": 148
           },
           "joinedEvidenceRows": {
-            "denominator": 147,
-            "numerator": 147
+            "denominator": 148,
+            "numerator": 148
           },
           "missingJoinRows": {
-            "denominator": 147,
+            "denominator": 148,
             "numerator": 0
           }
         },
@@ -2818,15 +2862,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 148,
-            "numerator": 148
+            "denominator": 149,
+            "numerator": 149
           },
           "joinedEvidenceRows": {
-            "denominator": 148,
-            "numerator": 148
+            "denominator": 149,
+            "numerator": 149
           },
           "missingJoinRows": {
-            "denominator": 148,
+            "denominator": 149,
             "numerator": 0
           }
         },
@@ -2837,15 +2881,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 172,
-            "numerator": 172
+            "denominator": 173,
+            "numerator": 173
           },
           "joinedEvidenceRows": {
-            "denominator": 172,
-            "numerator": 172
+            "denominator": 173,
+            "numerator": 173
           },
           "missingJoinRows": {
-            "denominator": 172,
+            "denominator": 173,
             "numerator": 0
           }
         },
@@ -2856,15 +2900,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 173,
-            "numerator": 173
+            "denominator": 174,
+            "numerator": 174
           },
           "joinedEvidenceRows": {
-            "denominator": 173,
-            "numerator": 173
+            "denominator": 174,
+            "numerator": 174
           },
           "missingJoinRows": {
-            "denominator": 173,
+            "denominator": 174,
             "numerator": 0
           }
         },
@@ -2875,15 +2919,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 175,
-            "numerator": 175
+            "denominator": 177,
+            "numerator": 177
           },
           "joinedEvidenceRows": {
-            "denominator": 175,
-            "numerator": 175
+            "denominator": 177,
+            "numerator": 177
           },
           "missingJoinRows": {
-            "denominator": 175,
+            "denominator": 177,
             "numerator": 0
           }
         },
@@ -2894,15 +2938,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 176,
-            "numerator": 176
+            "denominator": 178,
+            "numerator": 178
           },
           "joinedEvidenceRows": {
-            "denominator": 176,
-            "numerator": 176
+            "denominator": 178,
+            "numerator": 178
           },
           "missingJoinRows": {
-            "denominator": 176,
+            "denominator": 178,
             "numerator": 0
           }
         },
@@ -2913,15 +2957,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 183,
-            "numerator": 183
+            "denominator": 185,
+            "numerator": 185
           },
           "joinedEvidenceRows": {
-            "denominator": 183,
-            "numerator": 183
+            "denominator": 185,
+            "numerator": 185
           },
           "missingJoinRows": {
-            "denominator": 183,
+            "denominator": 185,
             "numerator": 0
           }
         },
@@ -2932,15 +2976,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 188,
-            "numerator": 188
+            "denominator": 190,
+            "numerator": 190
           },
           "joinedEvidenceRows": {
-            "denominator": 188,
-            "numerator": 188
+            "denominator": 190,
+            "numerator": 190
           },
           "missingJoinRows": {
-            "denominator": 188,
+            "denominator": 190,
             "numerator": 0
           }
         },

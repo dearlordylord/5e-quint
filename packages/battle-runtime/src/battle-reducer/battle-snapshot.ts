@@ -144,6 +144,8 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
       resources.weaponDamageDiceRollChoicesUsedThisTurn,
     weaponMasteryCleaveAttackersUsedThisTurn:
       resources.weaponMasteryCleaveAttackersUsedThisTurn,
+    attackRollDefensesTriggeredThisTurn:
+      resources.attackRollDefensesTriggeredThisTurn,
     huntersPreyHordeBreakerUsedThisTurn:
       resources.huntersPreyHordeBreakerUsedThisTurn,
     grapplerPunchAndGrabUsedThisTurn:

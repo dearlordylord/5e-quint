@@ -41,6 +41,10 @@
       "unitId": "monk_stunning_strike"
     },
     {
+      "level": 8,
+      "unitId": "monk_ability_score_improvement_l4"
+    },
+    {
       "level": 9,
       "unitId": "monk_acrobatic_movement"
     },

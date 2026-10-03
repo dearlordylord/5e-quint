@@ -20,7 +20,11 @@
     "test:qnt-proofs": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run test:qnt-proofs:body",
     "test:qnt-proofs:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_PROOFS=1 vitest run src/character-creation-runtime-qnt-proofs.test.ts",
     "test:mbt:weapon-mastery-level-gain": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/weapon-mastery-level-gain.mbt.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:mbt:chosen-prepared-spell-access": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/chosen-prepared-spell-access.mbt.test.ts",
+    "test:mbt:feat-grant-occurrences": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/feat-grant-occurrences.mbt.test.ts",
+    "test:mbt:granted-proficiency-choice": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/granted-proficiency-choice.mbt.test.ts",
+    "test:mbt:wizard-spellcasting-gains": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/wizard-spellcasting-gains.mbt.test.ts"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",

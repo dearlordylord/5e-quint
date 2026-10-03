@@ -1,0 +1,15 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "ranger",
+  "id": "ranger_hunters_lore",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "marked_creature_defenses_disclosure",
+    "spellId": "hunters_mark"
+  },
+  "name": "Hunter's Lore",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:6813-6816"
+  }
+}

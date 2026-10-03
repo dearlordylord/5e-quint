@@ -117,3 +117,14 @@ export {
   eldritchInvocationRepeatableChoiceSatisfiesRule,
 } from "./eldritch-invocations.ts";
 export { languageFromSurfaceLanguageId } from "./language-codecs.ts";
+
+export { validateChosenPreparedSpellAccessBuild } from "./chosen-prepared-spell-access.ts";
+
+export { classFeatureGrantChoiceHoles } from "./discovery.ts";
+
+export { UnitRefSelectedOptionSchema } from "./types.ts";
+
+export {
+  availableSpellSlotLevels,
+  classSpellcastingCreationAtLevel,
+} from "./class-spellcasting.ts";

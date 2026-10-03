@@ -82,6 +82,7 @@ const EXPECTED_OBSERVED_ROOT_IDS = [
   "paladin_extra_attack",
   "paladin_sacred_weapon",
   "ranger_extra_attack",
+  "ranger_hunters_lore",
   "ranger_roving",
   "rogue_cunning_action",
   "rogue_cunning_strike",
@@ -115,6 +116,7 @@ const EXPECTED_CONTEXTUAL_OR_SUPPORT_ONLY_ROOT_IDS = [
   "mastery_slow",
   "mastery_topple",
   "monk_monks_focus",
+  "ranger_hunters_lore",
   "rogue_cunning_action",
   "species_dragonborn_damage_resistance",
 ] as const;
@@ -153,7 +155,7 @@ function minimumOwningClassContext(unit: AuthoredUnitSource) {
 }
 
 describe("Battle feature and mastery support observations", () => {
-  test("reproduces the exact 69 observed roots without double-counting source-fact variants", () => {
+  test("reproduces the exact 70 observed roots without double-counting source-fact variants", () => {
     const baseObserved = new Set<string>();
     const sourceFactObserved = new Set<string>();
 
@@ -179,7 +181,7 @@ describe("Battle feature and mastery support observations", () => {
     }
 
     const observed = new Set([...baseObserved, ...sourceFactObserved]);
-    expect(baseObserved.size).toBe(67);
+    expect(baseObserved.size).toBe(68);
     expect(
       [...sourceFactObserved].filter((id) => !baseObserved.has(id)).sort(),
     ).toEqual([
@@ -187,7 +189,7 @@ describe("Battle feature and mastery support observations", () => {
       "species_dragonborn_damage_resistance",
     ]);
     expect([...observed].sort()).toEqual([...EXPECTED_OBSERVED_ROOT_IDS]);
-    expect(observed.size).toBe(69);
+    expect(observed.size).toBe(70);
   });
 
   test("keeps contextual and support-only overlap separate from admission evidence", () => {

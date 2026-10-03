@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 535,
-      "numerator": 389,
-      "percent": "72.7%"
+      "denominator": 541,
+      "numerator": 396,
+      "percent": "73.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 623,
-      "numerator": 439,
-      "percent": "70.5%"
+      "denominator": 629,
+      "numerator": 446,
+      "percent": "70.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 440
+      "value": 447
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 221,
-      "numerator": 213,
-      "percent": "96.4%"
+      "denominator": 240,
+      "numerator": 232,
+      "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 440,
-      "numerator": 440,
+      "denominator": 447,
+      "numerator": 447,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 167,
-      "numerator": 159,
+      "denominator": 168,
+      "numerator": 160,
       "percent": "95.2%"
     },
     "qntProofCoverage": {
-      "denominator": 167,
-      "numerator": 156,
-      "percent": "93.4%"
+      "denominator": 168,
+      "numerator": 157,
+      "percent": "93.5%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 205,
-      "numerator": 177,
-      "percent": "86.3%"
+      "denominator": 213,
+      "numerator": 185,
+      "percent": "86.9%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 205,
-      "numerator": 203,
-      "percent": "99%"
+      "denominator": 213,
+      "numerator": 211,
+      "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 207,
-      "numerator": 177,
-      "percent": "85.5%"
+      "denominator": 226,
+      "numerator": 184,
+      "percent": "81.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 167,
-      "numerator": 159,
+      "denominator": 168,
+      "numerator": 160,
       "percent": "95.2%"
     },
     "runtimeParityCoverage": {
-      "denominator": 167,
-      "numerator": 159,
+      "denominator": 168,
+      "numerator": 160,
       "percent": "95.2%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 201,
-      "numerator": 197,
+      "denominator": 203,
+      "numerator": 199,
       "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 390,
-      "numerator": 221,
-      "percent": "56.7%"
+      "denominator": 397,
+      "numerator": 240,
+      "percent": "60.5%"
     }
   },
   "metricSemantics": [
@@ -7827,20 +7827,287 @@
       ],
       "title": "Stat Block standard action-option delegation",
       "verificationOwners": []
+    },
+    {
+      "id": "character-creation.feat-grant-occurrences",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+      "taskRefs": [
+        "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+      ],
+      "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.use-count-resource-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/use-count-resource-recovery.ts",
+        "packages/character-sheet-runtime/src/resources.ts"
+      ],
+      "sourceBoundary": "Typed Surface facts alter recovery of the existing Bardic Inspiration pool. Atomic no-action recovery spends an existing Spell Slot and reduces expended uses without storing a second pool.",
+      "taskRefs": [
+        "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"
+      ],
+      "title": "Character Sheet recovers an existing use-count resource from rest or Spell Slot",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/use-count-resource-recovery.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-sheet-runtime/src/use-count-resource-recovery.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "table-caller.marked-creature-defenses",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/marked-creature-defenses.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts"
+      ],
+      "sourceBoundary": "The admission boundary resolves the authored spell cross-reference to a procedure. Query legality uses that typed procedure and the current own mark. Known Stat Block defenses, known empty defenses, and unavailable character defenses remain distinct; no copied knowledge state. Effective defenses derive from the same active-state predicates used by damage and condition application; expiry removes temporary facts.",
+      "taskRefs": [
+        "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"
+      ],
+      "title": "Table query discloses canonical defenses of the character's currently marked creature",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-roll-defense",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-roll-defense.ts"
+      ],
+      "sourceBoundary": "Exactly one canonical selected option supplies typed defense facts. Finalized attack hits retain source, attacker, and defender for the current turn; turn reset clears the transient record. Rest replacement updates the selected option.",
+      "taskRefs": [
+        "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"
+      ],
+      "title": "Source-owned selected defense controls Opportunity Attack and same-turn repeat attack Disadvantage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-defense.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-defense.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.prepared-spell-rest-replacement",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.ts"
+      ],
+      "sourceBoundary": "Typed feature facts and completed Short Rest admit replacement of one prepared level 1+ spell by another level 1+ spell in the canonical source spellbook. The same prepared selection is rewritten; spellbook and Spell Slots are retained.",
+      "taskRefs": [
+        "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"
+      ],
+      "title": "Character Sheet replaces one prepared spell from the owned spellbook after a Short Rest",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.chosen-prepared-spell-access",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/chosen-prepared-spell-access.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "sourceBoundary": "Canonical feature source retains exactly two distinct eligible spell identities. Cross-list eligibility is derived from canonical class spell lists and owned Spell Slots; one chosen spell may be replaced on a later class level gain independently of ordinary prepared spell replacement. Sheet and Battle derive always-prepared access from that selected source.",
+      "taskRefs": [
+        "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"
+      ],
+      "title": "Character Creation retains an eligible source-scoped pair of always-prepared spells and one replacement per class level gain",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/character-creation-runtime/chosen-prepared-spell-access-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/bard-feature-increments.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/chosen-prepared-spell-access.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.class-feature-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "sourceBoundary": "Surface grant_proficiencies facts own exact cardinality and eligible skill choices. Discovery excludes already-owned proficiency; finalization and actual class level gain reuse the same canonical selection algorithm and durable proficiency projection.",
+      "taskRefs": [
+        "CREATION.FEATURE.PROFICIENCY_CHOICE"
+      ],
+      "title": "Character Creation grants exactly the selected eligible distinct skill proficiencies",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/character-creation-runtime/granted-choice-selection-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/bard-feature-increments.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/granted-proficiency-choice.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.wizard-spellcasting-advancement",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/wizard-spellcasting-advancement.ts"
+      ],
+      "sourceBoundary": "Adjacent canonical Spellcasting table rows derive exact new spellbook, preparation, cantrip, and Spell Slot facts. Owned typed school-learning grants optionally add an eligible spell at new Spell Slot access. The operation updates the existing owned source and rejects missing, duplicate, ineligible, and forged additions.",
+      "taskRefs": [
+        "CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"
+      ],
+      "title": "Wizard Spellbook Spellcasting class level gain retains exact source-owned spell choices",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/wizard-memorize-spell-sdk.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/wizard-spellcasting-gains.mbt.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 205,
-        "numerator": 177,
-        "percent": "86.3%"
+        "denominator": 213,
+        "numerator": 185,
+        "percent": "86.9%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 205,
-        "numerator": 203,
-        "percent": "99%"
+        "denominator": 213,
+        "numerator": 211,
+        "percent": "99.1%"
       }
     },
     "profileKinds": [
@@ -11373,6 +11640,134 @@
         "profileId": "stat-block.standard-action-option",
         "profileKind": "stat-block-control",
         "qntOwners": []
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+          }
+        ],
+        "profileId": "character-creation.feat-grant-occurrences",
+        "profileKind": "character-creation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet recovers an existing use-count resource from rest or Spell Slot"
+          }
+        ],
+        "profileId": "character-sheet.use-count-resource-recovery",
+        "profileKind": "character-sheet",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Table query discloses canonical defenses of the character's currently marked creature"
+          }
+        ],
+        "profileId": "table-caller.marked-creature-defenses",
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Source-owned selected defense controls Opportunity Attack and same-turn repeat attack Disadvantage"
+          }
+        ],
+        "profileId": "unit-feature.attack-roll-defense",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet replaces one prepared spell from the owned spellbook after a Short Rest"
+          }
+        ],
+        "profileId": "character-sheet.prepared-spell-rest-replacement",
+        "profileKind": "character-sheet",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation retains an eligible source-scoped pair of always-prepared spells and one replacement per class level gain"
+          }
+        ],
+        "profileId": "character-creation.chosen-prepared-spell-access",
+        "profileKind": "character-creation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.FEATURE.PROFICIENCY_CHOICE",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation grants exactly the selected eligible distinct skill proficiencies"
+          }
+        ],
+        "profileId": "character-creation.class-feature-proficiency-choice",
+        "profileKind": "character-creation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.SPELL_ACCESS.WIZARD_PROGRESSION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Wizard Spellbook Spellcasting class level gain retains exact source-owned spell choices"
+          }
+        ],
+        "profileId": "character-creation.wizard-spellcasting-advancement",
+        "profileKind": "character-creation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -11383,9 +11778,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 207,
-          "numerator": 177,
-          "percent": "85.5%"
+          "denominator": 226,
+          "numerator": 184,
+          "percent": "81.4%"
         }
       },
       "units": [
@@ -11587,6 +11982,42 @@
             }
           ],
           "unitId": "bane"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "barbarian_ability_score_improvement_l4"
         },
         {
           "joinStatus": "covered",
@@ -11858,6 +12289,42 @@
           "unitId": "barbarian_weapon_mastery"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "bard_ability_score_improvement_l4"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -11894,6 +12361,28 @@
             }
           ],
           "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEATURE.PROFICIENCY_CHOICE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation grants exactly the selected eligible distinct skill proficiencies"
+                }
+              ],
+              "profileId": "character-creation.class-feature-proficiency-choice",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+              ]
+            }
+          ],
+          "unitId": "bard_bonus_proficiencies"
         },
         {
           "joinStatus": "covered",
@@ -11952,6 +12441,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet recovers an existing use-count resource from rest or Spell Slot"
+                }
+              ],
+              "profileId": "character-sheet.use-count-resource-recovery",
+              "profileKind": "character-sheet",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt"
+              ]
+            }
+          ],
+          "unitId": "bard_font_of_inspiration"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -11964,6 +12475,28 @@
             }
           ],
           "unitId": "bard_jack_of_all_trades"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains an eligible source-scoped pair of always-prepared spells and one replacement per class level gain"
+                }
+              ],
+              "profileId": "character-creation.chosen-prepared-spell-access",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt"
+              ]
+            }
+          ],
+          "unitId": "bard_magical_discoveries"
         },
         {
           "joinStatus": "covered",
@@ -12229,6 +12762,42 @@
             }
           ],
           "unitId": "chromatic_orb"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "cleric_ability_score_improvement_l4"
         },
         {
           "joinStatus": "mapped-open",
@@ -12699,6 +13268,42 @@
             }
           ],
           "unitId": "dragons_breath"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "druid_ability_score_improvement_l4"
         },
         {
           "joinStatus": "mapped-open",
@@ -13213,6 +13818,42 @@
           "unitId": "feather_fall"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "fighter_ability_score_improvement_l4"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -13233,6 +13874,28 @@
             }
           ],
           "unitId": "fighter_action_surge"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "fighter_additional_fighting_style"
         },
         {
           "joinStatus": "covered",
@@ -14662,6 +15325,42 @@
           "unitId": "misty_step"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "monk_ability_score_improvement_l4"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -15016,6 +15715,42 @@
             }
           ],
           "unitId": "orc_relentless_endurance"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "paladin_ability_score_improvement_l4"
         },
         {
           "joinStatus": "covered",
@@ -15432,9 +16167,67 @@
               "profileId": "character-creation.class-feature-feat-choice",
               "profileKind": "character-creation",
               "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "ranger_ability_score_improvement_l4"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "ranger_ability_score_improvement_l8"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Source-owned selected defense controls Opportunity Attack and same-turn repeat attack Disadvantage"
+                }
+              ],
+              "profileId": "unit-feature.attack-roll-defense",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "ranger_defensive_tactics"
         },
         {
           "joinStatus": "mapped-open",
@@ -15531,6 +16324,28 @@
             }
           ],
           "unitId": "ranger_fighting_style"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Table query discloses canonical defenses of the character's currently marked creature"
+                }
+              ],
+              "profileId": "table-caller.marked-creature-defenses",
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "ranger_hunters_lore"
         },
         {
           "joinStatus": "covered",
@@ -15821,6 +16636,42 @@
             }
           ],
           "unitId": "rogue_ability_score_improvement_l10"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "rogue_ability_score_improvement_l4"
         },
         {
           "joinStatus": "covered",
@@ -16447,6 +17298,42 @@
           "unitId": "slow"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "sorcerer_ability_score_improvement_l4"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -16879,6 +17766,42 @@
               "joinStatus": "mapped-open",
               "obligations": [
                 {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "warlock_ability_score_improvement_l4"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -17031,6 +17954,42 @@
           "unitId": "web"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement"
+                }
+              ],
+              "profileId": "character-creation.feat-grant-occurrences",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+              ]
+            }
+          ],
+          "unitId": "wizard_ability_score_improvement_l4"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -17049,6 +18008,28 @@
             }
           ],
           "unitId": "wizard_arcane_recovery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet replaces one prepared spell from the owned spellbook after a Short Rest"
+                }
+              ],
+              "profileId": "character-sheet.prepared-spell-rest-replacement",
+              "profileKind": "character-sheet",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt"
+              ]
+            }
+          ],
+          "unitId": "wizard_memorize_spell"
         },
         {
           "joinStatus": "covered",
@@ -21781,6 +22762,118 @@
         "unit-feature.bonus-action-healing-movement-rider"
       ],
       "taskId": "FACTORY-549"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "character-creation.feat-grant-occurrences"
+      ],
+      "taskId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "character-creation.feat-grant-occurrences"
+      ],
+      "taskId": "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "character-sheet.use-count-resource-recovery"
+      ],
+      "taskId": "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "character-sheet.use-count-resource-recovery"
+      ],
+      "taskId": "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "table-caller.marked-creature-defenses"
+      ],
+      "taskId": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "table-caller.marked-creature-defenses"
+      ],
+      "taskId": "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "unit-feature.attack-roll-defense"
+      ],
+      "taskId": "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "unit-feature.attack-roll-defense"
+      ],
+      "taskId": "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "character-sheet.prepared-spell-rest-replacement"
+      ],
+      "taskId": "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "character-sheet.prepared-spell-rest-replacement"
+      ],
+      "taskId": "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "character-creation.chosen-prepared-spell-access"
+      ],
+      "taskId": "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "character-creation.chosen-prepared-spell-access"
+      ],
+      "taskId": "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "character-creation.class-feature-proficiency-choice"
+      ],
+      "taskId": "CREATION.FEATURE.PROFICIENCY_CHOICE"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "character-creation.class-feature-proficiency-choice"
+      ],
+      "taskId": "CREATION.FEATURE.PROFICIENCY_CHOICE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "profileIds": [
+        "character-creation.wizard-spellcasting-advancement"
+      ],
+      "taskId": "CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "profileIds": [
+        "character-creation.wizard-spellcasting-advancement"
+      ],
+      "taskId": "CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -21849,18 +22942,18 @@
         "unsupportedOrOtherUnits": 75
       },
       {
-        "executableUnitDenominator": 119,
-        "installedUnitDenominator": 119,
+        "executableUnitDenominator": 126,
+        "installedUnitDenominator": 126,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 147,
+        "profileFactDenominator": 178,
         "profileSubsetSupportedUnits": 10,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 87,
+        "selectedIdentityReplayDenominator": 89,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 87,
-        "supportedProfileUnits": 95,
-        "unsupportedOrOtherUnits": 14
+        "selectedIdentityReplayWitnessUnits": 89,
+        "supportedProfileUnits": 114,
+        "unsupportedOrOtherUnits": 2
       }
     ]
   },
@@ -23284,17 +24377,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fighter_ability_score_improvement_l4.json",
       "unitId": "fighter_ability_score_improvement_l4"
     },
@@ -23525,17 +24691,164 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "character-creation.feat-grant-occurrences",
+          "reason": "A second independently sourced Fighting Style choice is gained at Champion level 7; replacing the primary style preserves the additional selected feat."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation.feat-grant-occurrences",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "A second independently sourced Fighting Style choice is gained at Champion level 7; replacing the primary style preserves the additional selected feat."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-566"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fighter_additional_fighting_style.json",
+      "unitId": "fighter_additional_fighting_style"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
+        },
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json",
       "unitId": "barbarian_ability_score_improvement_l4"
     },
@@ -24445,6 +25758,229 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-creation.class-feature-proficiency-choice",
+          "reason": "College of Lore level 3 creation and actual advancement grant exactly three distinct previously unowned skill proficiencies."
+        },
+        "profileIds": [
+          "character-creation.class-feature-proficiency-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation.class-feature-proficiency-choice",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "College of Lore level 3 creation and actual advancement grant exactly three distinct previously unowned skill proficiencies."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-567"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "Surface grant_proficiencies facts own exact cardinality and eligible skill choices. Discovery excludes already-owned proficiency; finalization and actual class level gain reuse the same canonical selection algorithm and durable proficiency projection.",
+          "taskRefs": [
+            "CREATION.FEATURE.PROFICIENCY_CHOICE"
+          ],
+          "title": "Character Creation grants exactly the selected eligible distinct skill proficiencies",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/character-creation-runtime/granted-choice-selection-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/bard-feature-increments.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/granted-proficiency-choice.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json",
+      "unitId": "bard_bonus_proficiencies"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet.use-count-resource-recovery",
+          "reason": "The existing Bardic Inspiration pool regains expended uses after a Short Rest or Long Rest. An atomic no-action exchange spends one available Spell Slot to regain one expended use."
+        },
+        "profileIds": [
+          "character-sheet.use-count-resource-recovery"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet.use-count-resource-recovery",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "The existing Bardic Inspiration pool regains expended uses after a Short Rest or Long Rest. An atomic no-action exchange spends one available Spell Slot to regain one expended use."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-558"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.use-count-resource-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/use-count-resource-recovery.ts",
+            "packages/character-sheet-runtime/src/resources.ts"
+          ],
+          "sourceBoundary": "Typed Surface facts alter recovery of the existing Bardic Inspiration pool. Atomic no-action recovery spends an existing Spell Slot and reduces expended uses without storing a second pool.",
+          "taskRefs": [
+            "SHEET.FEATURE_RESOURCES.USE_COUNT_RECOVERY"
+          ],
+          "title": "Character Sheet recovers an existing use-count resource from rest or Spell Slot",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/use-count-resource-recovery.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-sheet-runtime/src/use-count-resource-recovery.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bard_font_of_inspiration.json",
+      "unitId": "bard_font_of_inspiration"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation.chosen-prepared-spell-access",
+          "reason": "The source retains two chosen always-prepared spells eligible from Cleric, Druid, or Wizard lists and Bard Spell Slots; at most one is replaced on a later Bard level gain."
+        },
+        "profileIds": [
+          "character-creation.chosen-prepared-spell-access"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation.chosen-prepared-spell-access",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "The source retains two chosen always-prepared spells eligible from Cleric, Druid, or Wizard lists and Bard Spell Slots; at most one is replaced on a later Bard level gain."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-571"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.chosen-prepared-spell-access",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/chosen-prepared-spell-access.ts",
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "Canonical feature source retains exactly two distinct eligible spell identities. Cross-list eligibility is derived from canonical class spell lists and owned Spell Slots; one chosen spell may be replaced on a later class level gain independently of ordinary prepared spell replacement. Sheet and Battle derive always-prepared access from that selected source.",
+          "taskRefs": [
+            "CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"
+          ],
+          "title": "Character Creation retains an eligible source-scoped pair of always-prepared spells and one replacement per class level gain",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/character-creation-runtime/chosen-prepared-spell-access-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/bard-feature-increments.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/bard-feature-sdk.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/chosen-prepared-spell-access.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bard_magical_discoveries.json",
+      "unitId": "bard_magical_discoveries"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
         ],
@@ -24660,17 +26196,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json",
       "unitId": "bard_ability_score_improvement_l4"
     },
@@ -24748,17 +26357,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/cleric_ability_score_improvement_l4.json",
       "unitId": "cleric_ability_score_improvement_l4"
     },
@@ -25161,17 +26843,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/druid_ability_score_improvement_l4.json",
       "unitId": "druid_ability_score_improvement_l4"
     },
@@ -26539,17 +28294,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/monk_ability_score_improvement_l4.json",
       "unitId": "monk_ability_score_improvement_l4"
     },
@@ -26970,17 +28798,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l4.json",
       "unitId": "ranger_ability_score_improvement_l4"
     },
@@ -27450,17 +29351,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
       "unitId": "rogue_ability_score_improvement_l4"
     },
@@ -29245,17 +31219,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/sorcerer_ability_score_improvement_l4.json",
       "unitId": "sorcerer_ability_score_improvement_l4"
     },
@@ -29767,17 +31814,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/warlock_ability_score_improvement_l4.json",
       "unitId": "warlock_ability_score_improvement_l4"
     },
@@ -30124,17 +32244,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
       "unitId": "wizard_ability_score_improvement_l4"
     },
@@ -31847,17 +34040,90 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+          "owner": "Character Creation feat grant occurrences plus selected feat Unit profiles",
+          "reason": "The canonical feature owns selection at each authored class grant level. Each selected feat owns execution."
         },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.feat-grant-occurrences"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "Character Creation feat grant occurrences",
+          "reason": "The ASI record is a selection container. Finite occurrence parity and public advancement tests cover retained origin; selected feat Units own executable identity replay.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Canonical class feature grants retain distinct acquisition occurrences when the class grants this feature again",
+          "Each occurrence requires exactly one eligible selected feat; repeatability, prerequisites, and Ability Score caps are checked against the character facts for that occurrence",
+          "Creation and class level gain retain the selected feat origin without copying the authored ASI record"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-563"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.feat-grant-occurrences",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Canonical class feature grants supply occurrence levels. Selection retains each selected feat and its origin; feat mechanics own execution. Ability Score Improvements and feat prerequisites consume occurrence-ordered character facts.",
+          "taskRefs": [
+            "CREATION.FEAT_GRANT_OCCURRENCE.CHOICE_LIFECYCLE"
+          ],
+          "title": "Character Creation retains repeated feat grant occurrences and source-scoped replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/feat-grant-occurrences-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/repeated-feat-grants.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/repeated-feat-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/feat-grant-occurrences.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/paladin_ability_score_improvement_l4.json",
       "unitId": "paladin_ability_score_improvement_l4"
     },
@@ -32177,6 +34443,149 @@
       ],
       "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
       "unitId": "ranger_hunters_prey"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "table-caller.marked-creature-defenses",
+          "reason": "An SDK query discloses Damage Resistances, Immunities, and Vulnerabilities from canonical Stat Block facts while the character owns the current Hunter mark on that creature; unavailable character facts remain explicit."
+        },
+        "profileIds": [
+          "table-caller.marked-creature-defenses"
+        ],
+        "supportedMechanics": [
+          "An SDK query discloses Damage Resistances, Immunities, and Vulnerabilities from canonical Stat Block facts while the character owns the current Hunter mark on that creature; unavailable character facts remain explicit."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-568"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.mbt.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "FEATURE-568"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "table-caller.marked-creature-defenses",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/marked-creature-disclosure-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/marked-creature-defenses.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts"
+          ],
+          "sourceBoundary": "The admission boundary resolves the authored spell cross-reference to a procedure. Query legality uses that typed procedure and the current own mark. Known Stat Block defenses, known empty defenses, and unavailable character defenses remain distinct; no copied knowledge state. Effective defenses derive from the same active-state predicates used by damage and condition application; expiry removes temporary facts.",
+          "taskRefs": [
+            "BATTLE.FEATURE.MARKED_CREATURE_DISCLOSURE"
+          ],
+          "title": "Table query discloses canonical defenses of the character's currently marked creature",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/marked-creature-defenses.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ranger_hunters_lore.json",
+      "unitId": "ranger_hunters_lore"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-roll-defense"
+        ],
+        "supportedMechanics": [
+          "Exactly one selected defense option grants Disadvantage on Opportunity Attacks or on subsequent attack rolls from the same creature after a finalized hit in that turn. Short Rest or Long Rest replacement retains a single option."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-585"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/attack-roll-defense.mbt.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "FEATURE-585"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-roll-defense",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/attack-roll-defense.ts"
+          ],
+          "sourceBoundary": "Exactly one canonical selected option supplies typed defense facts. Finalized attack hits retain source, attacker, and defender for the current turn; turn reset clears the transient record. Rest replacement updates the selected option.",
+          "taskRefs": [
+            "BATTLE.FEATURE.ATTACK_ROLL_DEFENSE"
+          ],
+          "title": "Source-owned selected defense controls Opportunity Attack and same-turn repeat attack Disadvantage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-attack-roll-defense-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/attack-roll-defense.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/ranger-hunter-sdk.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/attack-roll-defense.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ranger_defensive_tactics.json",
+      "unitId": "ranger_defensive_tactics"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -50560,6 +52969,75 @@
       "unitId": "weapon_quarterstaff"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet.prepared-spell-rest-replacement",
+          "reason": "Completed Short Rest optionally replaces exactly one prepared level 1+ spell by another level 1+ spell in the owned canonical spellbook while preserving spellbook and Spell Slot state."
+        },
+        "profileIds": [
+          "character-sheet.prepared-spell-rest-replacement"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet.prepared-spell-rest-replacement",
+          "reason": "This record owns durable selection, resource recovery, or a table knowledge query. Its finite source-scoped runtime/QNT witnesses cover that boundary; any selected spell or feat owns its separate invocation behavior.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Completed Short Rest optionally replaces exactly one prepared level 1+ spell by another level 1+ spell in the owned canonical spellbook while preserving spellbook and Spell Slot state."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FEATURE-562"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.prepared-spell-rest-replacement",
+          "profileKind": "character-sheet",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.ts"
+          ],
+          "sourceBoundary": "Typed feature facts and completed Short Rest admit replacement of one prepared level 1+ spell by another level 1+ spell in the canonical source spellbook. The same prepared selection is rewritten; spellbook and Spell Slots are retained.",
+          "taskRefs": [
+            "SHEET.SPELL_ACCESS.SHORT_REST_PREPARED_REPLACEMENT"
+          ],
+          "title": "Character Sheet replaces one prepared spell from the owned spellbook after a Short Rest",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/prepared-spell-rest-replacement-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-sheet-runtime/src/prepared-spell-rest-replacement.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/wizard_memorize_spell.json",
+      "unitId": "wizard_memorize_spell"
+    },
+    {
       "catalogAdmission": {
         "collectionId": "classic-2024-non-srd-mechanics",
         "status": "installed"
@@ -50990,34 +53468,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/barbarian_primal_champion.json",
       "unitId": "barbarian_primal_champion"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
-          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile."
-        },
-        "reason": "College of Lore Bonus Proficiencies is a level-3 subclass skill-proficiency choice; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json",
-      "unitId": "bard_bonus_proficiencies"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

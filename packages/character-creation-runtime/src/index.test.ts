@@ -1,3 +1,4 @@
+import { advanceWithRequiredClassChoices } from "./class-level-gain-required-choices.test-support.ts";
 // KERNEL-COVERAGE: parity-witness CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: parity-witness CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
 import {
@@ -59,7 +60,6 @@ import {
   LOADOUT_SLOTS,
   SRD_ELDRITCH_INVOCATION_OPTIONS,
   UNIT_CHOICE_KEYS,
-  advanceCharacterBuildClassLevel,
   advanceCharacterBuildFightingStyleReplacementWithRoute,
   applyCharacterBuildWarlockLevelGainWithRoute,
   isListPreparedSpellcastingCreation,
@@ -561,7 +561,7 @@ function warlockPactMagicLevelGain(
 function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
   const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
   const levelTwo = expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: finalizedWarlockBuild("draft:warlock-level-five-source"),
       unitLibrary,
       levelGain: expectRight(
@@ -581,7 +581,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
     }),
   );
   const levelThree = expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelTwo,
       unitLibrary,
       levelGain: expectRight(
@@ -598,7 +598,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
     }),
   );
   const levelFour = expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelThree,
       unitLibrary,
       levelGain: expectRight(
@@ -617,7 +617,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
   );
 
   return expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelFour,
       unitLibrary,
       levelGain: expectRight(
@@ -642,7 +642,7 @@ function warlockLevelNineBuild(): CharacterBuild {
   const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
   const levelFive = warlockLevelFiveBuildWithThirstingBlade();
   const levelSix = expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelFive,
       unitLibrary,
       levelGain: expectRight(
@@ -659,7 +659,7 @@ function warlockLevelNineBuild(): CharacterBuild {
     }),
   );
   const levelSeven = expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelSix,
       unitLibrary,
       levelGain: expectRight(
@@ -678,7 +678,7 @@ function warlockLevelNineBuild(): CharacterBuild {
     }),
   );
   const levelEight = expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelSeven,
       unitLibrary,
       levelGain: expectRight(
@@ -696,7 +696,7 @@ function warlockLevelNineBuild(): CharacterBuild {
   );
 
   return expectRight(
-    advanceCharacterBuildClassLevel({
+    advanceWithRequiredClassChoices({
       build: levelEight,
       unitLibrary,
       levelGain: expectRight(
@@ -1048,23 +1048,23 @@ describe("character creation hole discovery", () => {
         [
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_barbarian"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_bard"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_cleric"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_druid"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_fighter"),
-            characterClassLevel(5),
+            characterClassLevel(8),
           ),
           ...[
             "class_barbarian",
@@ -1086,11 +1086,11 @@ describe("character creation hole discovery", () => {
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_monk"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_paladin"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_ranger"),
@@ -1102,15 +1102,15 @@ describe("character creation hole discovery", () => {
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_sorcerer"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_warlock"),
-            characterClassLevel(3),
+            characterClassLevel(8),
           ),
           ...expectedSameClassProgressionOptionIds(
             authoredUnitId("class_wizard"),
-            characterClassLevel(5),
+            characterClassLevel(8),
           ),
           expectedFirstMulticlassLevelGainOptionId(
             authoredUnitId("class_wizard"),
@@ -4697,7 +4697,10 @@ describe("character creation finalization", () => {
       const result = finalizeCharacterDraft({
         draft: completeSupportedProgressionDraft({
           unitLibrary,
-          fixtureOptionIds: manifestFixtureOptionIds,
+          fixtureOptionIds: (source) =>
+            source.unitId === "fighter_additional_fighting_style"
+              ? [creationChoiceOptionId("defense")]
+              : manifestFixtureOptionIds(source),
           draftId: `draft:single-class-${progression.startingClass}-${totalLevel}`,
           progression,
           standardArrayAssignment: {
@@ -4843,6 +4846,39 @@ describe("character creation finalization", () => {
             tag: "unsupportedClassFeatureLanguage",
             featureUnitId: "druid_druidic",
             languageId: "secret_tree_talk",
+          },
+        },
+      ],
+    });
+  });
+
+  test("rejects a fixed class language already known from the character origin", () => {
+    const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
+      draftId: "draft:druid-duplicate-language-grant",
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_druid"),
+        1,
+      ),
+    });
+    const result = finalizeCharacterDraft({
+      draft,
+      unitLibrary: unitCatalogWithUnsupportedLanguageGrant({
+        unitId: authoredUnitId("druid_druidic"),
+        languageId: "common",
+      }),
+    });
+    expect(result).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "duplicateClassFeatureLanguage",
+            featureUnitId: "druid_druidic",
+            language: "Common",
           },
         },
       ],
@@ -6389,7 +6425,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -6446,7 +6482,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: missingKnownOption,
@@ -6469,7 +6505,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: duplicateKnownOption,
@@ -6480,7 +6516,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("rejects a plain Sorcerer gain when current Metamagic ownership is incomplete", () => {
+  test("rejects a Sorcerer gain when current Metamagic ownership is incomplete", () => {
     const build = finalizedSorcererMetamagicBuild(
       "draft:sorcerer-incomplete-metamagic",
     );
@@ -6494,14 +6530,17 @@ describe("character creation finalization", () => {
     };
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: incompleteBuild,
         unitLibrary,
-        levelGain: {
-          tag: "classLevelGain",
-          classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
-          hitPointRule: { tag: "fixedHigherLevelGain" },
-        },
+        levelGain: expectRight(
+          sorcererLevelGain({
+            unitLibrary,
+            classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedOptions: [],
+          }),
+        ),
       }),
     ).toMatchObject({
       _tag: "Failure",
@@ -6524,7 +6563,7 @@ describe("character creation finalization", () => {
     };
 
     const levelTen = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelNineBuild,
         unitLibrary,
         levelGain: expectRight(
@@ -6567,7 +6606,7 @@ describe("character creation finalization", () => {
       ),
     };
     const levelSeventeen = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelSixteenBuild,
         unitLibrary,
         levelGain: expectRight(
@@ -6625,7 +6664,7 @@ describe("character creation finalization", () => {
     );
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelNineBuild,
         unitLibrary,
         levelGain,
@@ -6661,7 +6700,7 @@ describe("character creation finalization", () => {
     );
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: expectRight(
@@ -6696,7 +6735,7 @@ describe("character creation finalization", () => {
       (feature) => feature.kind !== "selectedSorcererMetamagicOption",
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: {
           ...build,
           features: [
@@ -6717,7 +6756,7 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: expectRight(
@@ -6742,14 +6781,17 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
-        levelGain: {
-          tag: "classLevelGain",
-          classUnitId,
-          hitPointRule: { tag: "fixedHigherLevelGain" },
-        },
+        levelGain: expectRight(
+          sorcererLevelGain({
+            unitLibrary,
+            classUnitId: classUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedOptions: [],
+          }),
+        ),
       }),
     ).toMatchObject({
       _tag: "Failure",
@@ -6829,7 +6871,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -6919,7 +6961,7 @@ describe("character creation finalization", () => {
     } as const satisfies CharacterBuildClassLevelGain;
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -6948,21 +6990,21 @@ describe("character creation finalization", () => {
       hitPointRule: { tag: "fixedHigherLevelGain" },
     } as const satisfies CharacterBuildClassLevelGain;
     const levelTwo = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: finalizedCompleteManifestBuild(),
         unitLibrary,
         levelGain,
       }),
     );
     const levelThree = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelTwo,
         unitLibrary,
         levelGain,
       }),
     );
 
-    const staleLevelFour = advanceCharacterBuildClassLevel({
+    const staleLevelFour = advanceWithRequiredClassChoices({
       build: levelThree,
       unitLibrary,
       levelGain,
@@ -6992,7 +7034,7 @@ describe("character creation finalization", () => {
       }),
     );
     const levelFour = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelThree,
         unitLibrary,
         levelGain: weaponMasteryGain,
@@ -7015,7 +7057,7 @@ describe("character creation finalization", () => {
       "fighter_tactical_shift",
     );
     const levelFive = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelFour,
         unitLibrary,
         levelGain,
@@ -7046,7 +7088,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: mismatchedFeatureGain,
@@ -7080,7 +7122,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: missingCurrentSelectionBuild,
         unitLibrary,
         levelGain: validLevelGain,
@@ -7114,7 +7156,7 @@ describe("character creation finalization", () => {
       },
     ] as const satisfies ReadonlyArray<CharacterBuildClassLevelGain>) {
       expect(
-        advanceCharacterBuildClassLevel({
+        advanceWithRequiredClassChoices({
           build: duplicateCurrentSelectionBuild,
           unitLibrary,
           levelGain,
@@ -7139,7 +7181,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: tooFewSelectionsGain,
@@ -7168,7 +7210,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: duplicateSelectionGain,
@@ -7195,7 +7237,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: replacementSelectionGain,
@@ -7222,14 +7264,14 @@ describe("character creation finalization", () => {
       hitPointRule: { tag: "fixedHigherLevelGain" },
     } as const satisfies CharacterBuildClassLevelGain;
     const levelTwo = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: finalizedCompleteManifestBuild(),
         unitLibrary,
         levelGain: plainLevelGain,
       }),
     );
     const levelThree = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelTwo,
         unitLibrary,
         levelGain: plainLevelGain,
@@ -7257,7 +7299,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelThree,
         unitLibrary,
         levelGain: levelFourGain,
@@ -7359,7 +7401,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: finalized.build,
         unitLibrary,
         levelGain: weaponMasteryGain,
@@ -7391,7 +7433,7 @@ describe("character creation finalization", () => {
         selectedFeatUnitId: authoredUnitId("defense"),
       }),
     );
-    const result = advanceCharacterBuildClassLevel({
+    const result = advanceWithRequiredClassChoices({
       build,
       unitLibrary,
       levelGain,
@@ -7464,7 +7506,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -7533,7 +7575,7 @@ describe("character creation finalization", () => {
     };
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: buildWithCantrips([authoredUnitId("guidance")]),
         unitLibrary,
         levelGain: levelGain(
@@ -7551,7 +7593,7 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: buildWithCantrips([
           authoredUnitId("guidance"),
           authoredUnitId("fire_bolt"),
@@ -7571,7 +7613,7 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: levelGain(
@@ -7588,7 +7630,7 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: levelGain(
@@ -7605,7 +7647,7 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: levelGain(
@@ -7657,7 +7699,7 @@ describe("character creation finalization", () => {
       preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain,
       gainingClassUnitId = classUnitId,
     ) =>
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: candidateBuild,
         unitLibrary,
         levelGain: {
@@ -7847,7 +7889,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: finalized.build,
         unitLibrary,
         levelGain,
@@ -7954,7 +7996,7 @@ describe("character creation finalization", () => {
       }),
     );
 
-    const result = advanceCharacterBuildClassLevel({
+    const result = advanceWithRequiredClassChoices({
       build: finalized.build,
       unitLibrary,
       levelGain,
@@ -8007,7 +8049,7 @@ describe("character creation finalization", () => {
       }),
     );
 
-    const result = advanceCharacterBuildClassLevel({
+    const result = advanceWithRequiredClassChoices({
       build: finalized.build,
       unitLibrary,
       levelGain,
@@ -8578,7 +8620,9 @@ describe("character creation finalization", () => {
     const widenedFighter = {
       ...fighter,
       featureGrants: [
-        ...("featureGrants" in fighter ? fighter.featureGrants : []),
+        ...("featureGrants" in fighter
+          ? fighter.featureGrants.filter((grant) => grant.level !== 6)
+          : []),
         { level: 4, unitId: "fighter_ability_score_improvement_l4" },
         { level: 6, unitId: "fighter_ability_score_improvement_l6" },
       ],
@@ -8900,7 +8944,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -8954,7 +8998,7 @@ describe("character creation finalization", () => {
     ];
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: {
           ...build,
           features: build.features.filter(
@@ -8973,7 +9017,7 @@ describe("character creation finalization", () => {
       },
     });
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: levelGain([]),
@@ -9003,7 +9047,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: missingReplacement,
@@ -9193,7 +9237,7 @@ describe("character creation finalization", () => {
     const gainedPreparedSpell = [authoredUnitId("hex")] as const;
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: buildWithPactMagicState({
           cantrips: [authoredUnitId("chill_touch")],
         }),
@@ -9214,7 +9258,7 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: levelGain(
@@ -9288,7 +9332,7 @@ describe("character creation finalization", () => {
       },
     ] as const) {
       expect(
-        advanceCharacterBuildClassLevel({
+        advanceWithRequiredClassChoices({
           build,
           unitLibrary,
           levelGain: levelGain(cantripCase.pactMagic),
@@ -9300,7 +9344,7 @@ describe("character creation finalization", () => {
     }
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: buildWithPactMagicState({
           preparedSpells: [authoredUnitId("charm_person")],
         }),
@@ -9367,7 +9411,7 @@ describe("character creation finalization", () => {
       },
     ] as const) {
       expect(
-        advanceCharacterBuildClassLevel({
+        advanceWithRequiredClassChoices({
           build,
           unitLibrary,
           levelGain: levelGain(preparedSpellCase.pactMagic),
@@ -9379,7 +9423,7 @@ describe("character creation finalization", () => {
     }
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: buildWithPactMagicState({
           pactMagicSlotPool: {
             kind: "pactMagic",
@@ -9410,7 +9454,7 @@ describe("character creation finalization", () => {
   test("uses Warlock class-list levels for Pact Magic prepared-spell advancement without requiring spell Unit admission", () => {
     const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
     const levelTwo = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: finalizedWarlockBuild("draft:warlock-class-list-level-2"),
         unitLibrary,
         levelGain: expectRight(
@@ -9431,7 +9475,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelTwo,
         unitLibrary,
         levelGain: expectRight(
@@ -9463,7 +9507,7 @@ describe("character creation finalization", () => {
   test("advances Warlock level 10 Pact Magic without spell-level-6 access", () => {
     const levelNine = warlockLevelNineBuild();
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelNine,
         unitLibrary,
         levelGain: expectRight(
@@ -9590,7 +9634,7 @@ describe("character creation finalization", () => {
       hitPointRule: { tag: "fixedHigherLevelGain" },
     } as const satisfies CharacterBuildClassLevelGain;
 
-    const result = advanceCharacterBuildClassLevel({
+    const result = advanceWithRequiredClassChoices({
       build,
       unitLibrary,
       levelGain,
@@ -9621,7 +9665,7 @@ describe("character creation finalization", () => {
       }),
     );
 
-    const result = advanceCharacterBuildClassLevel({
+    const result = advanceWithRequiredClassChoices({
       build,
       unitLibrary,
       levelGain,
@@ -9656,7 +9700,7 @@ describe("character creation finalization", () => {
       }),
     );
 
-    const result = advanceCharacterBuildClassLevel({
+    const result = advanceWithRequiredClassChoices({
       build: levelFiveBuild,
       unitLibrary,
       levelGain,
@@ -9700,7 +9744,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: duplicateArmorLevelGain,
@@ -9728,7 +9772,7 @@ describe("character creation finalization", () => {
       }),
     );
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: duplicateRepeatableLevelGain,
@@ -9756,7 +9800,7 @@ describe("character creation finalization", () => {
       }),
     );
     const repeatableResult = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: repeatableLevelGain,
@@ -9794,7 +9838,7 @@ describe("character creation finalization", () => {
       cantripId: authoredUnitId("poison_spray"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
     const levelTwo = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain: expectRight(
@@ -9821,7 +9865,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelTwo,
         unitLibrary,
         levelGain: expectRight(
@@ -9885,7 +9929,7 @@ describe("character creation finalization", () => {
     );
 
     expect(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -9924,7 +9968,7 @@ describe("character creation finalization", () => {
     );
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build,
         unitLibrary,
         levelGain,
@@ -9952,7 +9996,7 @@ describe("character creation finalization", () => {
   test("checks invocation cantrip prerequisites against Pact Magic facts after a Warlock cantrip gain", () => {
     const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
     const levelTwo = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: finalizedWarlockBuild("draft:warlock-fresh-cantrip-level-2"),
         unitLibrary,
         levelGain: expectRight(
@@ -9976,7 +10020,7 @@ describe("character creation finalization", () => {
       }),
     );
     const levelThree = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelTwo,
         unitLibrary,
         levelGain: expectRight(
@@ -9998,7 +10042,7 @@ describe("character creation finalization", () => {
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 
     const result = expectRight(
-      advanceCharacterBuildClassLevel({
+      advanceWithRequiredClassChoices({
         build: levelThree,
         unitLibrary,
         levelGain: expectRight(
@@ -10915,7 +10959,7 @@ describe("character creation finalization", () => {
         progression: testProgression(
           unitLibrary,
           authoredUnitId("class_fighter"),
-          6,
+          9,
         ),
         choices: [
           ...complete.selections.choices,
@@ -10984,9 +11028,9 @@ describe("character creation finalization", () => {
         choices: [
           ...complete.selections.choices,
           selectedChoice(
-            "fighter_fighting_style",
-            "class_feature_feat_choice",
-            "weapon_longsword",
+            "fighter_second_wind",
+            "class_feature_language_choice",
+            "Draconic",
           ),
         ],
       },
@@ -10998,9 +11042,9 @@ describe("character creation finalization", () => {
         choices: [
           ...complete.selections.choices,
           selectedChoice(
-            "fighter_fighting_style",
-            "class_feature_feat_choice",
-            "defense",
+            "class_fighter",
+            "class_skill_proficiency_choice",
+            "perception",
           ),
         ],
       },
@@ -11067,6 +11111,7 @@ describe("character creation finalization", () => {
     const bonusProficiencies = {
       ...secondWind,
       id: authoredUnitId("fighter_bonus_proficiencies"),
+      acquiredAtLevel: 2,
       name: "Bonus Proficiencies",
       mechanics: {
         family: "passive",
@@ -11367,6 +11412,7 @@ describe("character creation finalization", () => {
     const mixedProficiencies = {
       ...secondWind,
       id: authoredUnitId("fighter_mixed_proficiencies"),
+      acquiredAtLevel: 2,
       name: "Mixed Proficiencies",
       mechanics: {
         family: "passive",

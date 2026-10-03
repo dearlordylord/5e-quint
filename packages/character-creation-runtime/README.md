@@ -182,6 +182,24 @@ When widening support:
    fail at a typed admission boundary with an explicit reason.
 4. Connect changed reducer semantics to the parity evidence below.
 
+## Class feature gains
+
+Class advancement accepts one optional `gainedChoices` operation. Omit it when
+there are no selections; a supplied list must be nonempty. Each choice retains
+its canonical grant source and uses the existing choice owner for validation.
+Feat occurrences additionally retain their grant level. Subclass choices and
+granted skill selections use the same discovery and finalization contracts as
+creation, including exact counts and exclusion of already owned proficiencies.
+
+Installed Bard support includes the three granted skill choices and the chosen
+pair of cross-list spells. The pair is stored once as
+`selectedPreparedSpellAccess`, remains always prepared through sheet projection,
+and permits at most one replacement on each later owning class level. Eligibility
+uses that class's slots. Installed Wizard gains require canonical spellbook and
+prepared selections, with school learning grants validated by their source.
+These capabilities describe the installed subset; they do not imply complete
+class support.
+
 ## Parity
 
 [The deterministic Quint slice](character-creation-runtime-slice.qnt) models

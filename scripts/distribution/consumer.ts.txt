@@ -46,7 +46,14 @@ const build = {
   alignment: { order: "lawful", morality: "good" },
   abilityScores: { str: 13, dex: 14, con: 13, int: 8, wis: 16, cha: 10 },
   proficiencyChoices: [],
-  features: [],
+  features: [
+    {
+      kind: "selectedClassChoice",
+      unitId: "feat_archery",
+      selectedFromUnitId: "fighter_fighting_style",
+      selectedFromGrantLevel: 1,
+    },
+  ],
   magicInitiateSpellAccesses: [],
   equipment: {
     startingEquipmentCurrencyRemainderCp: 0,

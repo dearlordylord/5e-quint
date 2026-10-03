@@ -21,6 +21,7 @@ let monk =
         , { level = 4, unitId = "monk_slow_fall" }
         , { level = 5, unitId = "monk_extra_attack" }
         , { level = 5, unitId = "monk_stunning_strike" }
+        , { level = 8, unitId = "monk_ability_score_improvement_l4" }
         , { level = 9, unitId = "monk_acrobatic_movement" }
         , { level = 10, unitId = "monk_heightened_focus" }
         , { level = 10, unitId = "monk_self_restoration" }
