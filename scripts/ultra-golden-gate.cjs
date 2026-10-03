@@ -875,32 +875,32 @@ function buildKernelIndexes(rulesKernelMatrix) {
 function buildSupportCompletenessLayer(levelReport) {
   const blockers = [
     {
-      count: levelReport.claimGate.strictTargetOpenCount,
+      count: levelReport.dispositionGate.strictTargetOpenCount,
       kind: "strict-target-open",
     },
     {
-      count: levelReport.claimGate.selectedIdentityBlockerCount,
+      count: levelReport.dispositionGate.selectedIdentityBlockerCount,
       kind: "selected-identity-blocker",
     },
     {
-      count: levelReport.claimGate.authoredReadinessBlockerCount,
+      count: levelReport.dispositionGate.authoredReadinessBlockerCount,
       kind: "srd-authored-readiness-blocker",
     },
     {
-      count: levelReport.claimGate.strictFinalSupportBlockerCount ?? 0,
+      count: levelReport.dispositionGate.strictFinalSupportBlockerCount ?? 0,
       kind: "strict-level-9-final-support-blocker",
     },
   ].filter((blocker) => blocker.count > 0);
   return stable({
     id: layerId.supportCompleteness,
-    status: levelReport.claimGate.status,
+    status: levelReport.dispositionGate.status,
     blockingCount: blockers.reduce(
       (total, blocker) => total + blocker.count,
       0,
     ),
     blockers,
     evidence: {
-      claimGate: levelReport.claimGate,
+      dispositionGate: levelReport.dispositionGate,
       strictTargetClosure: levelReport.metrics.strictTargetClosure,
       strictFinalSupport: levelReport.metrics.strictFinalSupport,
       selectedIdentityReadiness: levelReport.selectedIdentityReadiness.metrics,
@@ -1728,17 +1728,17 @@ function renderLevel12UltraGoldenSummary({
       ].join("; "),
     }),
     "",
-    "## Support Claim",
+    "## Unit-Profile Disposition",
     "",
-    `Full-support claim gate: **${level12FullSupport.claimGate.status}**.`,
+    `Unit-profile disposition gate: **${level12FullSupport.dispositionGate.status}**.`,
     "",
     "| Gate | Result | Blocking rows |",
     "| --- | ---: | ---: |",
-    `| Strict target closure | ${renderCoverageMetric(level12FullSupport.metrics.strictTargetClosure)} | ${level12FullSupport.claimGate.strictTargetOpenCount} |`,
-    `| Selected identity readiness | ${renderCoverageMetric(level12FullSupport.selectedIdentityReadiness.metrics)} | ${level12FullSupport.claimGate.selectedIdentityBlockerCount} |`,
-    `| SRD authored product readiness | ${renderCoverageMetric(level12FullSupport.srdAuthoredProductReadiness.metrics)} | ${level12FullSupport.claimGate.authoredReadinessBlockerCount} |`,
+    `| Strict target closure | ${renderCoverageMetric(level12FullSupport.metrics.strictTargetClosure)} | ${level12FullSupport.dispositionGate.strictTargetOpenCount} |`,
+    `| Selected identity readiness | ${renderCoverageMetric(level12FullSupport.selectedIdentityReadiness.metrics)} | ${level12FullSupport.dispositionGate.selectedIdentityBlockerCount} |`,
+    `| SRD authored product readiness | ${renderCoverageMetric(level12FullSupport.srdAuthoredProductReadiness.metrics)} | ${level12FullSupport.dispositionGate.authoredReadinessBlockerCount} |`,
     "",
-    "Diagnostic product readiness remains a separate lower-layer accounting view, not a substitute for the support claim gate. It can be below 100% while support completeness passes when the strict, selected-identity, and SRD-authored blocker counts are all zero.",
+    "Diagnostic product readiness remains a separate lower-layer accounting view. It can be below 100% while the Unit-profile disposition gate passes when the strict, selected-identity, and SRD-authored blocker counts are all zero. This pass does not claim complete default-SDK execution.",
     "",
     "| Diagnostic product-readiness status | Rows |",
     "| --- | ---: |",

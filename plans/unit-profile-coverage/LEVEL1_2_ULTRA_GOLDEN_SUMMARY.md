@@ -17,9 +17,9 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 | MBT/parity evidence | pass | parity-witnessed obligations 50/50; witness kinds contract-test: 7, deterministic-qnt-replay: 8, focused-mbt: 57, runtime-test: 19 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
 
-## Support Claim
+## Unit-Profile Disposition
 
-Full-support claim gate: **pass**.
+Unit-profile disposition gate: **pass**.
 
 | Gate | Result | Blocking rows |
 | --- | ---: | ---: |
@@ -27,7 +27,7 @@ Full-support claim gate: **pass**.
 | Selected identity readiness | 104/104 (100%) | 0 |
 | SRD authored product readiness | 91/91 (100%) | 0 |
 
-Diagnostic product readiness remains a separate lower-layer accounting view, not a substitute for the support claim gate. It can be below 100% while support completeness passes when the strict, selected-identity, and SRD-authored blocker counts are all zero.
+Diagnostic product readiness remains a separate lower-layer accounting view. It can be below 100% while the Unit-profile disposition gate passes when the strict, selected-identity, and SRD-authored blocker counts are all zero. This pass does not claim complete default-SDK execution.
 
 | Diagnostic product-readiness status | Rows |
 | --- | ---: |

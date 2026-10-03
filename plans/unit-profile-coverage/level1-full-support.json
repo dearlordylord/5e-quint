@@ -1,5 +1,5 @@
 {
-  "claimGate": {
+  "dispositionGate": {
     "authoredReadinessBlockerCount": 0,
     "selectedIdentityBlockerCount": 0,
     "status": "pass",
@@ -1590,7 +1590,7 @@
   "groups": [
     {
       "count": 80,
-      "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
+      "description": "An executable Unit profile exists for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",

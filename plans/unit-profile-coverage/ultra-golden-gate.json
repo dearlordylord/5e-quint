@@ -44,7 +44,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -424,7 +424,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -807,7 +807,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -1051,7 +1051,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -1295,7 +1295,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -1543,7 +1543,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -1791,7 +1791,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -2039,7 +2039,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -2287,7 +2287,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",
@@ -2523,7 +2523,7 @@
           "blockers": [],
           "blockingCount": 0,
           "evidence": {
-            "claimGate": {
+            "dispositionGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 0,
               "status": "pass",

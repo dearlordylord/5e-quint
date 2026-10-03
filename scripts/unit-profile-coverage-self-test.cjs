@@ -671,18 +671,18 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
     }
   }
   if (
-    report.claimGate.status !== "blocked" ||
-    report.claimGate.strictFinalSupportBlockerCount !== 2
+    report.dispositionGate.status !== "blocked" ||
+    report.dispositionGate.strictFinalSupportBlockerCount !== 2
   ) {
     fail(
-      `Self-test failed: expected strict final-support blockers to block level-1-9 claim, got ${JSON.stringify(report.claimGate)}`,
+      `Self-test failed: expected strict final-support blockers to block level-1-9 claim, got ${JSON.stringify(report.dispositionGate)}`,
     );
   }
 }
 
 function assertLevelEightSpellLevelFourCarryForwardValidation() {
   const level17FullSupport = {
-    claimGate: { status: "pass" },
+    dispositionGate: { status: "pass" },
     frontierRows: [
       {
         unitId: "fixture_level_four_spell",
@@ -697,7 +697,7 @@ function assertLevelEightSpellLevelFourCarryForwardValidation() {
     ],
   };
   const level18FullSupport = {
-    claimGate: { status: "pass" },
+    dispositionGate: { status: "pass" },
     frontierRows: [
       {
         unitId: "fixture_level_four_spell",
@@ -727,7 +727,7 @@ function assertLevelEightSpellLevelFourCarryForwardValidation() {
   const failingIssues = validateLevelEightSpellLevelFourCarryForward({
     level17FullSupport,
     level18FullSupport: {
-      claimGate: { status: "blocked" },
+      dispositionGate: { status: "blocked" },
       frontierRows: [
         {
           unitId: "fixture_level_four_spell",
@@ -744,7 +744,9 @@ function assertLevelEightSpellLevelFourCarryForwardValidation() {
   });
   if (
     failingIssues.length !== 2 ||
-    !failingIssues.some((issue) => issue.includes("claim gate must pass")) ||
+    !failingIssues.some((issue) =>
+      issue.includes("disposition gate must pass"),
+    ) ||
     !failingIssues.some((issue) => issue.includes("must carry forward"))
   ) {
     fail(
@@ -958,7 +960,7 @@ function assertAuthoredReadinessBlocked(readiness, expected) {
 }
 
 function fullSupportReportFixture({
-  claimGate,
+  dispositionGate,
   rulesKernelSupportedUnitJoin,
   scopeTitle,
 }) {
@@ -966,23 +968,23 @@ function fullSupportReportFixture({
     scope: { title: scopeTitle },
     metrics: {
       strictTargetClosure:
-        claimGate.strictTargetOpenCount === 0
+        dispositionGate.strictTargetOpenCount === 0
           ? { denominator: 1, numerator: 1, percent: "100%" }
           : { denominator: 1, numerator: 0, percent: "0%" },
     },
     selectedIdentityReadiness: {
       metrics:
-        claimGate.selectedIdentityBlockerCount === 0
+        dispositionGate.selectedIdentityBlockerCount === 0
           ? { denominator: 1, numerator: 1, percent: "100%" }
           : { denominator: 1, numerator: 0, percent: "0%" },
     },
     srdAuthoredProductReadiness: {
       metrics:
-        claimGate.authoredReadinessBlockerCount === 0
+        dispositionGate.authoredReadinessBlockerCount === 0
           ? { denominator: 1, numerator: 1, percent: "100%" }
           : { denominator: 1, numerator: 0, percent: "0%" },
     },
-    claimGate,
+    dispositionGate,
     groups: [],
     rulesKernelSupportedUnitJoin,
   };
@@ -1596,6 +1598,38 @@ function assertNoMatrixRowsPreserveInventoryAccounting(root) {
     );
   }
   const rendered = renderLevel16FullSupport(report);
+  const passingDispositionWithLimitedRuntime = renderLevel16FullSupport({
+    ...report,
+    metrics: {
+      ...report.metrics,
+      strictRuntimeProfileSupport: {
+        numerator: 0,
+        denominator: 1,
+        percent: "0%",
+      },
+    },
+    dispositionGate: { ...report.dispositionGate, status: "pass" },
+  });
+  if (
+    !rendered.includes("Unit-profile disposition gate:") ||
+    !rendered.includes(
+      "A passing disposition gate does not assert that every row executes through the default SDK",
+    ) ||
+    !rendered.includes(
+      "../../packages/character-creation-runtime/src/support-gates.ts",
+    ) ||
+    !passingDispositionWithLimitedRuntime.includes(
+      "Unit-profile disposition gate: **pass**.",
+    ) ||
+    !passingDispositionWithLimitedRuntime.includes(
+      "| Strict runtime/profile support | 0/1 (0%) |",
+    ) ||
+    passingDispositionWithLimitedRuntime.includes("Full-support claim:")
+  ) {
+    fail(
+      "Self-test failed: a closed but unimplemented source row must not become an executable SDK support claim.",
+    );
+  }
   for (const expectedText of [
     "catalog-only/dead-for-now",
     `${fixtureClosure.kind}: ${fixtureClosure.owner}`,
@@ -2290,7 +2324,7 @@ function runSelfTest(root) {
     }
     const incompleteLevelReport = fullSupportReportFixture({
       scopeTitle: "Fixture incomplete level",
-      claimGate: {
+      dispositionGate: {
         status: "blocked",
         strictTargetOpenCount: 1,
         selectedIdentityBlockerCount: 1,
@@ -2317,7 +2351,7 @@ function runSelfTest(root) {
     });
     const completeLevelReport = fullSupportReportFixture({
       scopeTitle: "Fixture complete level",
-      claimGate: {
+      dispositionGate: {
         status: "pass",
         strictTargetOpenCount: 0,
         selectedIdentityBlockerCount: 0,
@@ -2590,7 +2624,7 @@ function runSelfTest(root) {
     const completeLevel13McpTaskId = "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED";
     const completeLevel13Report = fullSupportReportFixture({
       scopeTitle: "Fixture complete level 1-3",
-      claimGate: {
+      dispositionGate: {
         status: "pass",
         strictTargetOpenCount: 0,
         selectedIdentityBlockerCount: 0,

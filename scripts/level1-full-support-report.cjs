@@ -59,81 +59,81 @@ const srdAuthoredCharacterCreationOptionGroups = [
 ];
 const level1Scope = {
   title: "Character Level 1",
-  outputTitle: "Character Level 1 Full Support",
+  outputTitle: "Character Level 1 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1, cantrip, and spell-level-1 pressure separately from the broader product readiness closure metric. Character level and spell level are separate axes.",
+    "This strict view tracks SRD character-level-1, cantrip, and spell-level-1 pressure separately from the broader product readiness closure metric. Character level and spell level are separate axes.",
   levelBands: strictLevelBands,
   maxCharacterLevel: 1,
 };
 const level12Scope = {
   title: "Character Levels 1-2",
-  outputTitle: "Character Levels 1-2 Full Support",
+  outputTitle: "Character Levels 1-2 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 plus character-level-2 pressure, cantrips, and spell-level-1 pressure separately from the broader product readiness closure metric. It deliberately excludes spell-level-2 pressure, which first enters the character-level-3 frontier for full casters.",
+    "This strict view tracks SRD character-level-1 plus character-level-2 pressure, cantrips, and spell-level-1 pressure separately from the broader product readiness closure metric. It deliberately excludes spell-level-2 pressure, which first enters the character-level-3 frontier for full casters.",
   levelBands: strictLevel12Bands,
   maxCharacterLevel: 2,
 };
 const level13Scope = {
   title: "Character Levels 1-3",
-  outputTitle: "Character Levels 1-3 Full Support",
+  outputTitle: "Character Levels 1-3 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-3 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It deliberately excludes spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
+    "This strict view tracks SRD character-level-1 through character-level-3 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It deliberately excludes spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
   levelBands: strictLevel13Bands,
   maxCharacterLevel: 3,
 };
 const level14Scope = {
   title: "Character Levels 1-4",
-  outputTitle: "Character Levels 1-4 Full Support",
+  outputTitle: "Character Levels 1-4 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-4 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It adds level-4 class-feature pressure while deliberately excluding spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
+    "This strict view tracks SRD character-level-1 through character-level-4 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It adds level-4 class-feature pressure while deliberately excluding spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
   levelBands: strictLevel14Bands,
   maxCharacterLevel: 4,
 };
 const level15Scope = {
   title: "Character Levels 1-5",
-  outputTitle: "Character Levels 1-5 Full Support",
+  outputTitle: "Character Levels 1-5 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-5 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-3 pressure enters at character level 5 for full casters and Warlock Pact Magic.",
+    "This strict view tracks SRD character-level-1 through character-level-5 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-3 pressure enters at character level 5 for full casters and Warlock Pact Magic.",
   levelBands: strictLevel15Bands,
   maxCharacterLevel: 5,
 };
 const level16Scope = {
   title: "Character Levels 1-6",
-  outputTitle: "Character Levels 1-6 Full Support",
+  outputTitle: "Character Levels 1-6 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-6 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure first enters the character-level-7 frontier for full casters and Warlock Pact Magic.",
+    "This strict view tracks SRD character-level-1 through character-level-6 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure first enters the character-level-7 frontier for full casters and Warlock Pact Magic.",
   levelBands: strictLevel16Bands,
   maxCharacterLevel: 6,
 };
 const level17Scope = {
   title: "Character Levels 1-7",
-  outputTitle: "Character Levels 1-7 Full Support",
+  outputTitle: "Character Levels 1-7 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-7 pressure, cantrips, and spell-level-1 through spell-level-4 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure enters at character level 7 for full casters and Warlock Pact Magic.",
+    "This strict view tracks SRD character-level-1 through character-level-7 pressure, cantrips, and spell-level-1 through spell-level-4 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure enters at character level 7 for full casters and Warlock Pact Magic.",
   levelBands: strictLevel17Bands,
   maxCharacterLevel: 7,
 };
 const level18Scope = {
   title: "Character Levels 1-8",
-  outputTitle: "Character Levels 1-8 Full Support",
+  outputTitle: "Character Levels 1-8 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-8 pressure, cantrips, and spell-level-1 through spell-level-4 pressure separately from the broader product readiness closure metric. Spell-level-5 pressure first enters the character-level-9 frontier for full casters and Warlock Pact Magic.",
+    "This strict view tracks SRD character-level-1 through character-level-8 pressure, cantrips, and spell-level-1 through spell-level-4 pressure separately from the broader product readiness closure metric. Spell-level-5 pressure first enters the character-level-9 frontier for full casters and Warlock Pact Magic.",
   levelBands: strictLevel18Bands,
   maxCharacterLevel: 8,
 };
 const level19Scope = {
   title: "Character Levels 1-9",
-  outputTitle: "Character Levels 1-9 Full Support",
+  outputTitle: "Character Levels 1-9 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-9 pressure, cantrips, spell-level-1 through spell-level-5 pressure, and Paladin/Ranger spell-level-3 reachability separately from the broader product readiness closure metric. Spell-level-5 pressure enters at character level 9 for full casters and Warlock Pact Magic.",
+    "This strict view tracks SRD character-level-1 through character-level-9 pressure, cantrips, spell-level-1 through spell-level-5 pressure, and Paladin/Ranger spell-level-3 reachability separately from the broader product readiness closure metric. Spell-level-5 pressure enters at character level 9 for full casters and Warlock Pact Magic.",
   levelBands: strictLevel19Bands,
   maxCharacterLevel: 9,
 };
 const level110Scope = {
   title: "Character Levels 1-10",
-  outputTitle: "Character Levels 1-10 Full Support",
+  outputTitle: "Character Levels 1-10 Unit Profile Disposition",
   description:
-    "This strict view tracks executable SRD character-level-1 through character-level-10 pressure, cantrips, spell-level-1 through spell-level-5 pressure, and Paladin/Ranger spell-level-3 reachability separately from the broader product readiness closure metric. Character level 10 carries spell-level-5 pressure forward and deliberately excludes spell-level-6 pressure, which first enters the character-level-11 frontier.",
+    "This strict view tracks SRD character-level-1 through character-level-10 pressure, cantrips, spell-level-1 through spell-level-5 pressure, and Paladin/Ranger spell-level-3 reachability separately from the broader product readiness closure metric. Character level 10 carries spell-level-5 pressure forward and deliberately excludes spell-level-6 pressure, which first enters the character-level-11 frontier.",
   levelBands: strictLevel110Bands,
   maxCharacterLevel: 10,
 };
@@ -150,7 +150,7 @@ const strictStatusDefinitions = [
     status: "supported-profile",
     strictTargetClosed: true,
     description:
-      "Full support exists at the Unit profile boundary for this strict accounting scope.",
+      "An executable Unit profile exists for this strict accounting scope.",
   },
   {
     status: "closed-runtime-detached-table-adjudication",
@@ -1515,7 +1515,7 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
     scope,
   );
   const strictFinalSupportBlockerCount = strictFinalSupportBlockers.length;
-  const claimGateStatus =
+  const dispositionGateStatus =
     strictTargetOpenCount === 0 &&
     selectedIdentityBlockerCount === 0 &&
     authoredReadinessBlockerCount === 0 &&
@@ -1562,8 +1562,8 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
     },
     selectedIdentityReadiness,
     srdAuthoredProductReadiness,
-    claimGate: {
-      status: claimGateStatus,
+    dispositionGate: {
+      status: dispositionGateStatus,
       strictTargetOpenCount,
       selectedIdentityBlockerCount,
       authoredReadinessBlockerCount,
@@ -1708,9 +1708,9 @@ function validateLevelEightSpellLevelFourCarryForward({
   level18FullSupport,
 }) {
   const issues = [];
-  if (level18FullSupport.claimGate.status !== "pass") {
+  if (level18FullSupport.dispositionGate.status !== "pass") {
     issues.push(
-      "level-1-8 full-support claim gate must pass after carrying forward spell-level-4 closure.",
+      "level-1-8 unit-profile disposition gate must pass after carrying forward spell-level-4 closure.",
     );
   }
   const level17SpellFourSignatures =
@@ -1892,7 +1892,7 @@ function renderFullSupportGateRows(report) {
   const authoredReadinessBlockerCount =
     report.srdAuthoredProductReadiness.openBlockerCount;
   const strictFinalSupportBlockerCount =
-    report.claimGate.strictFinalSupportBlockerCount ?? 0;
+    report.dispositionGate.strictFinalSupportBlockerCount ?? 0;
 
   return [
     `| Strict runtime/profile closure | ${gateStatus(report.metrics.strictTargetClosure)} | ${renderMetric(report.metrics.strictTargetClosure)} | ${blockingIssue(strictTargetOpenCount, "strict denominator row(s) still open")} |`,
@@ -1911,8 +1911,8 @@ function renderSelectedIdentityBlockerRows(rows) {
       );
 }
 
-function renderClaimDiagnosticSeparation(report) {
-  return `The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report ${renderMetric(report.metrics.productReadiness)} while the claim gate reports **${report.claimGate.status}** only when ${strictFinalSupportDescription(report.scope)} have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.`;
+function renderDispositionDiagnosticSeparation(report) {
+  return `The unit-profile disposition gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report ${renderMetric(report.metrics.productReadiness)} while the disposition gate reports **${report.dispositionGate.status}** only when ${strictFinalSupportDescription(report.scope)} have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.`;
 }
 
 function renderStrictFinalSupportBlockerRows(rows) {
@@ -1938,14 +1938,14 @@ function renderStrictFullSupport(report, scope) {
     "",
     scope.description,
     "",
-    "## Claim Summary",
+    "## Disposition Summary",
     "",
-    `Full-support claim: **${report.claimGate.status}**.`,
+    `Unit-profile disposition gate: **${report.dispositionGate.status}**.`,
     "",
-    `Blockers: strict=${report.claimGate.strictTargetOpenCount}, selected-identity=${report.claimGate.selectedIdentityBlockerCount}, SRD-authored-readiness=${report.claimGate.authoredReadinessBlockerCount}.`,
-    report.claimGate.strictFinalSupportBlockerCount === undefined
+    `Blockers: strict=${report.dispositionGate.strictTargetOpenCount}, selected-identity=${report.dispositionGate.selectedIdentityBlockerCount}, SRD-authored-readiness=${report.dispositionGate.authoredReadinessBlockerCount}.`,
+    report.dispositionGate.strictFinalSupportBlockerCount === undefined
       ? ""
-      : `${strictFinalSupportLabel(scope)} blockers: ${report.claimGate.strictFinalSupportBlockerCount}.`,
+      : `${strictFinalSupportLabel(scope)} blockers: ${report.dispositionGate.strictFinalSupportBlockerCount}.`,
     "",
     "## Metrics",
     "",
@@ -1961,13 +1961,13 @@ function renderStrictFullSupport(report, scope) {
     `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
     `| Supported Unit rules-kernel chain | ${renderMetric(report.metrics.rulesKernelSupportedUnitCoverage)} |`,
     "",
-    "These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.",
+    "This report records source and Unit-profile dispositions. A passing disposition gate does not assert that every row executes through the default SDK; use the runtime/profile metric and direct SDK witnesses for that claim. Default Character Creation level limits are defined by [the production support gates](../../packages/character-creation-runtime/src/support-gates.ts).",
     "",
-    renderClaimDiagnosticSeparation(report),
+    renderDispositionDiagnosticSeparation(report),
     "",
     "### Diagnostic Product Readiness Accounting",
     "",
-    "Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.",
+    "Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the unit-profile disposition gate unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.",
     "",
     "| Status | Rows |",
     "| --- | ---: |",
@@ -1991,13 +1991,13 @@ function renderStrictFullSupport(report, scope) {
       report.selectedIdentityReadiness.blockingRows,
     ),
     "",
-    "## Full-Support Claim Gate",
+    "## Unit-Profile Disposition Gate",
     "",
     "| Gate | Status | Result | Blocking issue |",
     "| --- | --- | ---: | --- |",
     ...renderFullSupportGateRows(report),
     "",
-    "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.",
+    "These gate rows govern the Unit-profile disposition only. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent unless they enter the SRD-authored blocker set.",
     "",
     `### ${strictFinalSupportLabel(scope)} Blockers`,
     "",
