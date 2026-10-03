@@ -18,7 +18,12 @@ spells; spell-level-3 spells belong to the later character-level-5 frontier.
 The generated reports currently include `LEVEL1_FULL_SUPPORT.md`,
 `LEVEL1_2_FULL_SUPPORT.md`, `LEVEL1_2_QNT_MBT_JOIN.md`,
 `LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`, `LEVEL1_3_FULL_SUPPORT.md`, and
-`ULTRA_GOLDEN_GATE.md`.
+`ULTRA_GOLDEN_GATE.md`. The level-1–10 source and disposition audit is in
+`level1-10-mining-audit.json`; `level1-10-full-support.json` joins those rows to
+Unit claims. A closed inventory row is a planning disposition, not a claim that
+its behavior executes through the SDK. The [level-1–10 audit issue](https://github.com/dearlordylord/5e-quint/issues/554)
+indexes the bounded follow-up owners without turning them into a prerequisite
+for unrelated rule work.
 
 This lane is the authored-content breadth layer. It does not by itself prove
 that reducer-owned semantics are fully connected to the rules kernel. For any
