@@ -50,13 +50,33 @@ module unitFeaturePoolCostCore {
     movementFillPresent: bool,
     speedFeet: int,
     movementCostFeet: int,
+    travelDistanceFeet: int,
     provokesOpportunityAttacks: bool,
   }
 
   type SecondWindWithTacticalShiftResult = {
     admitted: bool,
     secondWind: SecondWindResult,
-    tacticalShiftMovementFeet: int,
+    tacticalShiftMovementCostFeet: int,
+    tacticalShiftTravelDistanceFeet: int,
+    ordinaryMovementSpentFeet: int,
+    opportunityAttackWindow: bool,
+  }
+
+  type TacticalShiftEffectOrder = HealFirst | MoveFirst
+
+  type TacticalShiftSpikeGrowthTraversal = {
+    distanceFeet: int,
+    damage: int,
+  }
+
+  type TacticalShiftSpikeGrowthResult = {
+    admitted: bool,
+    vitals: CreatureVitals,
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    tacticalShiftMovementCostFeet: int,
+    tacticalShiftTravelDistanceFeet: int,
     ordinaryMovementSpentFeet: int,
     opportunityAttackWindow: bool,
   }
@@ -211,6 +231,7 @@ module unitFeaturePoolCostCore {
         not(facts.chooseMove),
         not(facts.movementFillPresent),
         facts.movementCostFeet == 0,
+        facts.travelDistanceFeet == 0,
         not(facts.provokesOpportunityAttacks),
       }
     } else if (facts.chooseMove) {
@@ -219,11 +240,14 @@ module unitFeaturePoolCostCore {
         facts.movementFillPresent,
         facts.movementCostFeet > 0,
         facts.movementCostFeet <= facts.speedFeet / 2,
+        facts.travelDistanceFeet > 0,
+        facts.travelDistanceFeet <= facts.movementCostFeet,
         not(facts.provokesOpportunityAttacks),
       }
     } else {
       all {
         facts.movementCostFeet == 0,
+        facts.travelDistanceFeet == 0,
         not(facts.movementFillPresent),
         not(facts.provokesOpportunityAttacks),
       }
@@ -267,10 +291,75 @@ module unitFeaturePoolCostCore {
     {
       admitted: activationSucceeded,
       secondWind: resolved,
-      tacticalShiftMovementFeet:
+      tacticalShiftMovementCostFeet:
         if (activationSucceeded and movement.chooseMove) movement.movementCostFeet else 0,
+      tacticalShiftTravelDistanceFeet:
+        if (activationSucceeded and movement.chooseMove) movement.travelDistanceFeet else 0,
       ordinaryMovementSpentFeet: ordinaryMovementSpentFeet,
       opportunityAttackWindow: false,
+    }
+  }
+
+  // SRD 5.2.1 classes.md:4794-4800,4830-4832; spells.md:5145;
+  // rules-glossary.md:1295-1297. The turn owner orders simultaneous healing
+  // and the damage caused by movement through the hazardous area.
+  pure def legalTacticalShiftSpikeGrowthTraversal(
+    movement: TacticalShiftMovementFacts,
+    traversal: TacticalShiftSpikeGrowthTraversal
+  ): bool = {
+    val fiveFootSegments = traversal.distanceFeet / 5
+    if (movement.chooseMove) all {
+      traversal.distanceFeet >= 0,
+      traversal.distanceFeet <= movement.travelDistanceFeet,
+      traversal.damage >= fiveFootSegments * 2,
+      traversal.damage <= fiveFootSegments * 8,
+    } else all {
+      traversal.distanceFeet == 0,
+      traversal.damage == 0,
+    }
+  }
+
+  pure def resolveSecondWindWithTacticalShiftSpikeGrowth(
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    vitals: CreatureVitals,
+    deathSavingThrows: DeathSavingThrowLifecycle,
+    positiveHitPointUnconsciousRecovery: PositiveHitPointUnconsciousRecovery,
+    healing: SecondWindFacts,
+    movement: TacticalShiftMovementFacts,
+    ordinaryMovementSpentFeet: int,
+    traversal: TacticalShiftSpikeGrowthTraversal,
+    order: TacticalShiftEffectOrder
+  ): TacticalShiftSpikeGrowthResult = {
+    val traversalAdmitted = legalTacticalShiftSpikeGrowthTraversal(movement, traversal)
+    val vitalsBeforeHealing =
+      if (traversalAdmitted and order == MoveFirst) {
+        applyResolvedDamageToPositiveHitPoints(vitals, traversal.damage).vitals
+      } else vitals
+    val resolved = resolveSecondWindWithTacticalShift(
+      turn, pool, vitalsBeforeHealing, deathSavingThrows,
+      positiveHitPointUnconsciousRecovery, healing, movement,
+      ordinaryMovementSpentFeet
+    )
+    val vitalsAfterMovement =
+      if (resolved.admitted and traversalAdmitted and order == HealFirst) {
+        applyResolvedDamageToPositiveHitPoints(
+          resolved.secondWind.recovery.vitals, traversal.damage
+        ).vitals
+      } else if (resolved.admitted and traversalAdmitted) {
+        resolved.secondWind.recovery.vitals
+      } else vitals
+    {
+      admitted: resolved.admitted and traversalAdmitted,
+      vitals: vitalsAfterMovement,
+      turn: if (traversalAdmitted) resolved.secondWind.turn else turn,
+      pool: if (traversalAdmitted) resolved.secondWind.pool else pool,
+      tacticalShiftMovementCostFeet:
+        if (traversalAdmitted) resolved.tacticalShiftMovementCostFeet else 0,
+      tacticalShiftTravelDistanceFeet:
+        if (traversalAdmitted) resolved.tacticalShiftTravelDistanceFeet else 0,
+      ordinaryMovementSpentFeet: resolved.ordinaryMovementSpentFeet,
+      opportunityAttackWindow: resolved.opportunityAttackWindow,
     }
   }
 

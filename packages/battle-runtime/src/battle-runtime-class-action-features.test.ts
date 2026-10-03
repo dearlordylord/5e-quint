@@ -597,6 +597,16 @@ describe("battle runtime: class action features", () => {
     );
     expect(decline.state.combatants.get(fighterId)?.hp).toBe(12);
     const use = unitFeatureDecisionFill(decision, "use");
+    const orderHole = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [healingRoll, use],
+      }),
+      "unitFeatureDecision",
+    );
+    expect(orderHole.choices).toEqual(["healFirst", "moveFirst"]);
+    const order = unitFeatureDecisionFill(orderHole, "healFirst");
     const grappledState = {
       ...session.state,
       grapples: [
@@ -614,7 +624,7 @@ describe("battle runtime: class action features", () => {
       resolveBattleSubject({
         state: grappledState,
         subject: act.subject,
-        fills: [healingRoll, use],
+        fills: [healingRoll, use, order],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -625,7 +635,7 @@ describe("battle runtime: class action features", () => {
       resolveBattleSubject({
         state: session.state,
         subject: act.subject,
-        fills: [healingRoll, use],
+        fills: [healingRoll, use, order],
       }),
       "movement",
     );
@@ -659,6 +669,7 @@ describe("battle runtime: class action features", () => {
         fills: [
           healingRoll,
           use,
+          order,
           movementFill(movement, {
             speedKind: "fly",
             movementCostFeet: 5,
@@ -683,6 +694,7 @@ describe("battle runtime: class action features", () => {
         fills: [
           healingRoll,
           use,
+          order,
           movementFill(movement, {
             movementCostFeet: 20,
             provokedOpportunityAttacks: [],
@@ -697,6 +709,7 @@ describe("battle runtime: class action features", () => {
         fills: [
           healingRoll,
           use,
+          order,
           movementFill(movement, {
             movementCostFeet: 5,
             provokedOpportunityAttacks: [
@@ -719,6 +732,7 @@ describe("battle runtime: class action features", () => {
         fills: [
           healingRoll,
           use,
+          order,
           movementFill(movement, {
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],

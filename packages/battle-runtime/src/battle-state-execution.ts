@@ -6267,6 +6267,13 @@ export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 >;
+export const BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES = [
+  "healFirst",
+  "moveFirst",
+] as const;
+export type BonusActionHealingMovementOrder =
+  (typeof BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES)[number];
+
 export type BattleUnitFeatureDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6275,6 +6282,7 @@ export type BattleUnitFeatureDecisionHole = {
   readonly choices:
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]
+    | typeof BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES
     | typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES
     | typeof BRUTAL_STRIKE_EFFECT_DECISION_CHOICES
     | typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES;
@@ -6936,6 +6944,7 @@ export type BattleFill =
       readonly value:
         | "use"
         | "attempt"
+        | BonusActionHealingMovementOrder
         | OpenHandTechniqueDecisionChoice
         | BrutalStrikeEffectDecisionChoice
         | TacticalMasterReplacementDecision;

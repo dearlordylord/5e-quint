@@ -80,6 +80,7 @@ module unitFeaturePoolCostCoreExamples {
       movementFillPresent: true,
       speedFeet: 30,
       movementCostFeet: 10,
+      travelDistanceFeet: 10,
       provokesOpportunityAttacks: false,
     }
     val moved = resolveSecondWindWithTacticalShift(
@@ -90,12 +91,12 @@ module unitFeaturePoolCostCoreExamples {
     val declined = resolveSecondWindWithTacticalShift(
       initialTurnProcedureState, pool, vitals,
       resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
-      healing, { ...chosen, chooseMove: false, movementFillPresent: false, movementCostFeet: 0 }, 5
+      healing, { ...chosen, chooseMove: false, movementFillPresent: false, movementCostFeet: 0, travelDistanceFeet: 0 }, 5
     )
     val declineWithZeroDistanceFill = resolveSecondWindWithTacticalShift(
       initialTurnProcedureState, pool, vitals,
       resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
-      healing, { ...chosen, chooseMove: false, movementCostFeet: 0 }, 5
+      healing, { ...chosen, chooseMove: false, movementCostFeet: 0, travelDistanceFeet: 0 }, 5
     )
     val declineWithMovement = resolveSecondWindWithTacticalShift(
       initialTurnProcedureState, pool, vitals,
@@ -122,11 +123,13 @@ module unitFeaturePoolCostCoreExamples {
       assert(moved.secondWind.recovery.vitals.hitPoints == 12),
       assert(moved.secondWind.pool.usesRemaining == 2),
       assert(not(moved.secondWind.turn.bonusActionAvailable)),
-      assert(moved.tacticalShiftMovementFeet == 10),
+      assert(moved.tacticalShiftMovementCostFeet == 10),
+      assert(moved.tacticalShiftTravelDistanceFeet == 10),
       assert(moved.ordinaryMovementSpentFeet == 5),
       assert(not(moved.opportunityAttackWindow)),
       assert(declined.admitted),
-      assert(declined.tacticalShiftMovementFeet == 0),
+      assert(declined.tacticalShiftMovementCostFeet == 0),
+      assert(declined.tacticalShiftTravelDistanceFeet == 0),
       assert(declined.secondWind.pool.usesRemaining == 2),
       assert(not(declineWithMovement.admitted)),
       assert(not(declineWithZeroDistanceFill.admitted)),
@@ -136,6 +139,121 @@ module unitFeaturePoolCostCoreExamples {
       assert(overCap.secondWind.recovery.vitals.hitPoints == 4),
       assert(not(provoking.admitted)),
       assert(not(unqualified.admitted)),
+    }
+  }
+
+  run test_tactical_shift_spike_growth_order_changes_hit_points = {
+    val vitals = {
+      kind: PlayerCharacter,
+      hitPoints: 4,
+      hitPointMaximum: 30,
+      temporaryHitPoints: 0,
+      dead: false,
+      unconscious: false,
+    }
+    val movement = {
+      featureAvailable: true,
+      chooseMove: true,
+      movementFillPresent: true,
+      speedFeet: 30,
+      movementCostFeet: 15,
+      travelDistanceFeet: 10,
+      provokesOpportunityAttacks: false,
+    }
+    val healedBeforeMoving = resolveSecondWindWithTacticalShiftSpikeGrowth(
+      initialTurnProcedureState, { usesRemaining: 3, maximumUses: 3 },
+      vitals, resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 3, fighterLevel: 5 }, movement, 0,
+      { distanceFeet: 5, damage: 6 }, HealFirst
+    )
+    val movedBeforeHealing = resolveSecondWindWithTacticalShiftSpikeGrowth(
+      initialTurnProcedureState, { usesRemaining: 3, maximumUses: 3 },
+      vitals, resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 3, fighterLevel: 5 }, movement, 0,
+      { distanceFeet: 5, damage: 6 }, MoveFirst
+    )
+    all {
+      assert(healedBeforeMoving.admitted),
+      assert(movedBeforeHealing.admitted),
+      assert(healedBeforeMoving.vitals.hitPoints == 6),
+      assert(movedBeforeHealing.vitals.hitPoints == 8),
+      assert(healedBeforeMoving.pool.usesRemaining == 2),
+      assert(movedBeforeHealing.pool.usesRemaining == 2),
+      assert(not(healedBeforeMoving.turn.bonusActionAvailable)),
+      assert(not(movedBeforeHealing.turn.bonusActionAvailable)),
+      assert(healedBeforeMoving.ordinaryMovementSpentFeet == 0),
+      assert(movedBeforeHealing.ordinaryMovementSpentFeet == 0),
+      assert(healedBeforeMoving.tacticalShiftMovementCostFeet == 15),
+      assert(healedBeforeMoving.tacticalShiftTravelDistanceFeet == 10),
+      assert(movedBeforeHealing.tacticalShiftMovementCostFeet == 15),
+      assert(movedBeforeHealing.tacticalShiftTravelDistanceFeet == 10),
+      assert(not(healedBeforeMoving.opportunityAttackWindow)),
+      assert(not(movedBeforeHealing.opportunityAttackWindow)),
+    }
+  }
+
+  run test_tactical_shift_spike_growth_requires_movement_and_valid_damage = {
+    val vitals = {
+      kind: PlayerCharacter,
+      hitPoints: 4,
+      hitPointMaximum: 30,
+      temporaryHitPoints: 0,
+      dead: false,
+      unconscious: false,
+    }
+    val declinedMovement = {
+      featureAvailable: true,
+      chooseMove: false,
+      movementFillPresent: false,
+      speedFeet: 30,
+      movementCostFeet: 0,
+      travelDistanceFeet: 0,
+      provokesOpportunityAttacks: false,
+    }
+    val noTraversal = resolveSecondWindWithTacticalShiftSpikeGrowth(
+      initialTurnProcedureState, { usesRemaining: 3, maximumUses: 3 },
+      vitals, resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 3, fighterLevel: 5 }, declinedMovement, 0,
+      { distanceFeet: 0, damage: 0 }, HealFirst
+    )
+    val contradictoryDamage = resolveSecondWindWithTacticalShiftSpikeGrowth(
+      initialTurnProcedureState, { usesRemaining: 3, maximumUses: 3 },
+      vitals, resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 3, fighterLevel: 5 }, declinedMovement, 0,
+      { distanceFeet: 5, damage: 6 }, MoveFirst
+    )
+    val impossibleFiveFootDamage = resolveSecondWindWithTacticalShiftSpikeGrowth(
+      initialTurnProcedureState, { usesRemaining: 3, maximumUses: 3 },
+      vitals, resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 3, fighterLevel: 5 },
+      { ...declinedMovement, chooseMove: true, movementFillPresent: true, movementCostFeet: 5, travelDistanceFeet: 5 },
+      0, { distanceFeet: 5, damage: 0 }, HealFirst
+    )
+    val impossibleOneFootDamage = resolveSecondWindWithTacticalShiftSpikeGrowth(
+      initialTurnProcedureState, { usesRemaining: 3, maximumUses: 3 },
+      vitals, resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 3, fighterLevel: 5 },
+      { ...declinedMovement, chooseMove: true, movementFillPresent: true, movementCostFeet: 1, travelDistanceFeet: 1 },
+      0, { distanceFeet: 1, damage: 100 }, HealFirst
+    )
+    all {
+      assert(noTraversal.admitted),
+      assert(noTraversal.vitals.hitPoints == 12),
+      assert(noTraversal.pool.usesRemaining == 2),
+      assert(noTraversal.tacticalShiftMovementCostFeet == 0),
+      assert(noTraversal.tacticalShiftTravelDistanceFeet == 0),
+      assert(not(contradictoryDamage.admitted)),
+      assert(not(impossibleFiveFootDamage.admitted)),
+      assert(not(impossibleOneFootDamage.admitted)),
+      assert(contradictoryDamage.vitals.hitPoints == 4),
+      assert(contradictoryDamage.pool.usesRemaining == 3),
+      assert(contradictoryDamage.turn.bonusActionAvailable),
     }
   }
 

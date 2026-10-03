@@ -37,6 +37,7 @@ import {
 } from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
 import * as Result from "effect/Result";
+import * as Match from "effect/Match";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   resourceHasUsesRemaining,
@@ -172,10 +173,7 @@ import {
   selfBonusActionHealingRollHoleId,
   wildShapeEquipmentDispositionHole,
 } from "./unit-feature-discovery.ts";
-import {
-  isBonusActionHealingMovementFill,
-  resolveBonusActionHealingMovement,
-} from "./bonus-action-healing-movement.ts";
+import { resolveBonusActionHealingMovement } from "./bonus-action-healing-movement.ts";
 import type {
   AttackActionAreaSaveDamageReplacementProfile,
   MagicActionAreaSaveDamageHealingProfile,
@@ -3428,7 +3426,9 @@ export function resolveSelfBonusActionHealingUnitFeature(
   }
 
   const healingRoll = selfBonusActionHealingRollFill(
-    input.fills.filter((fill) => !isBonusActionHealingMovementFill(fill)),
+    input.fills.filter(
+      (fill) => fill.holeId === selfBonusActionHealingRollHoleId(),
+    ),
     unitFeature,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -3438,19 +3438,60 @@ export function resolveSelfBonusActionHealingUnitFeature(
   }
   /* v8 ignore stop -- @preserve */
   if (healingRoll.value === undefined) {
+    if (input.fills.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Second Wind healing roll fill does not match its hole.",
+      );
+    }
     return needsHolesResult(input.state, input.subject, [
       selfBonusActionHealingRollHole(unitFeature),
     ]);
   }
 
+  const healingAmount = selfBonusActionHealingAmount(
+    unitFeature,
+    healingRoll.value,
+  );
+  const healedState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.subject.actorId,
+      applyHpHealing(actor, healingAmount),
+    ),
+  };
+
   const movement = resolveBonusActionHealingMovement({
     state: input.state,
+    healedState,
     subject: input.subject,
     actor,
     resourcePoolRef: resource.resourcePoolRef,
-    fills: input.fills,
+    fills: input.fills.filter(
+      (fill) => fill.holeId !== selfBonusActionHealingRollHoleId(),
+    ),
   });
   if (movement.tag === "result") return movement.result;
+  return finishSelfBonusActionHealingUnitFeature(
+    input,
+    resource,
+    movement,
+    healingAmount,
+    spent.success,
+  );
+}
+
+function finishSelfBonusActionHealingUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  resource: CharacterBattleResourceState,
+  movement: Exclude<
+    ReturnType<typeof resolveBonusActionHealingMovement>,
+    { readonly tag: "result" }
+  >,
+  healingAmount: number,
+  currentTurnResources: BattleState["currentTurnResources"],
+): BattleResolutionResult {
   const movedActor = movement.state.combatants.get(input.subject.actorId);
   if (movedActor?.origin.kind !== "character") {
     return invalidResult(
@@ -3460,33 +3501,41 @@ export function resolveSelfBonusActionHealingUnitFeature(
     );
   }
 
-  const nextActor = applyHpHealing(
-    {
-      ...movedActor,
-      origin: {
-        ...movedActor.origin,
-        resources: movedActor.origin.resources.map((candidate) =>
-          candidate.resourcePoolRef === resource.resourcePoolRef &&
-          resourceHasUsesRemaining(candidate)
-            ? spendCharacterResourceUse(candidate)
-            : candidate,
-        ),
-      },
+  const resourcedActor = {
+    ...movedActor,
+    origin: {
+      ...movedActor.origin,
+      resources: movedActor.origin.resources.map((candidate) =>
+        candidate.resourcePoolRef === resource.resourcePoolRef &&
+        resourceHasUsesRemaining(candidate)
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
     },
-    selfBonusActionHealingAmount(unitFeature, healingRoll.value),
-  );
+  };
+  const nextActor =
+    movement.tag === "moved"
+      ? Match.value(movement.order).pipe(
+          Match.when("healFirst", () => resourcedActor),
+          Match.when("moveFirst", () =>
+            applyHpHealing(resourcedActor, healingAmount),
+          ),
+          Match.exhaustive,
+        )
+      : applyHpHealing(resourcedActor, healingAmount);
   const nextState = {
     ...movement.state,
     combatants: new Map(movement.state.combatants).set(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: spent.success,
+    currentTurnResources,
   };
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+    ...(movement.tag === "moved" ? { movements: [movement.movement] } : {}),
   };
 }
 

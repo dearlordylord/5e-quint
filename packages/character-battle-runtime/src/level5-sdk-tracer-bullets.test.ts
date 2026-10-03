@@ -497,11 +497,20 @@ describe("level 5 SDK tracer bullets", () => {
       }),
       "unitFeatureDecision",
     );
+    const use = unitFeatureDecisionFill(decision, "use");
+    const order = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [roll, use],
+      }),
+      "unitFeatureDecision",
+    );
     const movement = requireHole(
       resolveBattleSubject({
         state: session.state,
         subject: act.subject,
-        fills: [roll, unitFeatureDecisionFill(decision, "use")],
+        fills: [roll, use, unitFeatureDecisionFill(order, "healFirst")],
       }),
       "movement",
     );

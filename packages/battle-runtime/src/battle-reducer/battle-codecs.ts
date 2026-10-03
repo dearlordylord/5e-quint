@@ -196,6 +196,7 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
+import { BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES } from "../battle-state-execution.ts";
 import type {
   BattleCreatureOriginSnapshot,
   BattleCreatureSnapshot,
@@ -3173,6 +3174,10 @@ const BattleHolePayloadMembers = [
       Schema.Tuple([Schema.Literal("use"), Schema.Literal("decline")]),
       Schema.Tuple([Schema.Literal("attempt"), Schema.Literal("decline")]),
       Schema.Tuple([
+        Schema.Literal(BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES[0]),
+        Schema.Literal(BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES[1]),
+      ]),
+      Schema.Tuple([
         Schema.Literal(BRUTAL_STRIKE_EFFECT_DECISION_CHOICES[0]),
         Schema.Literal(BRUTAL_STRIKE_EFFECT_DECISION_CHOICES[1]),
         Schema.Literal(BRUTAL_STRIKE_EFFECT_DECISION_CHOICES[2]),
@@ -4576,6 +4581,7 @@ type BattleFillEncoded =
       readonly value:
         | "use"
         | "attempt"
+        | (typeof BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES)[number]
         | (typeof BRUTAL_STRIKE_EFFECT_DECISION_CHOICES)[number]
         | (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number]
         | (typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES)[number];
@@ -5722,6 +5728,7 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Literals([
         "use",
         "attempt",
+        ...BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
         ...BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
         ...OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
         ...TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,

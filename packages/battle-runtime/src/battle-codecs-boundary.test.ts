@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   AbilityScore,
@@ -23,6 +24,7 @@ import {
   battleId,
   characterAttackSubjectForTest,
   characterSeed,
+  damageRollFill,
   combatantId,
   criticalRange19UnitRefs,
   discoverBattleActCandidates,
@@ -32,6 +34,7 @@ import {
   fighterId,
   fighterVsGoblinBattle,
   findAct,
+  findHole,
   goblinId,
   interruptDecisionFill,
   movementFeet,
@@ -59,6 +62,10 @@ import {
   wizardId,
   wizardSpellcasting,
   spellRecord,
+  resource,
+  supportedBattleUnitRef,
+  unitFeatureDecisionFill,
+  unitLibrary,
   isNonSpellExecutableProcedureEntryOfKind,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -1553,6 +1560,67 @@ function damageProtocolHoleWithEffectRef(
   }
   throw new Error("Expected an occurrence-bound damage protocol hole.");
 }
+
+describe("Tactical Shift order codec boundaries", () => {
+  test("round-trips the runtime order hole and both order fills", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-tactical-shift-order"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 5,
+          currentHp: 4,
+          maxHp: 30,
+          resources: [resource()],
+          characterUnitRefs: [
+            supportedBattleUnitRef(
+              unitLibrary.requireUnit("fighter_tactical_shift"),
+            ),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(candidate)?.unitId === "fighter_second_wind",
+    );
+    if (act === undefined) throw new Error("Expected Second Wind act.");
+    const healingRoll = damageRollFill(
+      findHole(act.initialHoles, "rolledDice"),
+      3,
+    );
+    const decision = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [healingRoll],
+      }),
+      "unitFeatureDecision",
+    );
+    const orderHole = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [healingRoll, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "unitFeatureDecision",
+    );
+    const encodedHole = Schema.encodeSync(BattleHoleSchema)(orderHole);
+    expect(Schema.decodeUnknownSync(BattleHoleSchema)(encodedHole)).toEqual(
+      orderHole,
+    );
+    expect(orderHole.choices).toEqual(["healFirst", "moveFirst"]);
+    for (const order of ["healFirst", "moveFirst"] as const) {
+      const fill = unitFeatureDecisionFill(orderHole, order);
+      const encodedFill = Schema.encodeSync(BattleFillSchema)(fill);
+      expect(Schema.decodeUnknownSync(BattleFillSchema)(encodedFill)).toEqual(
+        fill,
+      );
+    }
+  });
+});
 
 describe("battle act presentation codec boundaries", () => {
   test("round-trips nonempty Stat Block procedure join issues", () => {

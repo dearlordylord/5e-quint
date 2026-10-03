@@ -2,7 +2,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spike-growth-movement-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
@@ -32,6 +35,7 @@ import {
   combatantId,
   DieRollResult,
   discoverBattleActCandidates,
+  discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -65,6 +69,9 @@ import {
   battleAreaId,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  resource,
+  supportedBattleUnitRef,
+  unitFeatureDecisionFill,
   concentrationSavingThrowFill,
   persistentAreaTraitAreaFill,
   requireCharacterSpellProcedureRefForTest,
@@ -618,6 +625,158 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
   });
 
+  test("bonus-action healing movement orders healing and area damage with the turn owner's choice", () => {
+    const tacticalShift = supportedBattleUnitRef(
+      unitLibrary.requireUnit("fighter_tactical_shift"),
+    );
+    const session = spellBattle({
+      preparedSpells: [spellRecord(spikeGrowthUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetClassLevels: [{ className: "fighter", level: 5 }],
+      targetResources: [resource()],
+      targetUnitRefs: [
+        supportedBattleUnitRef(unitLibrary.requireUnit("fighter_second_wind")),
+        tacticalShift,
+      ],
+      targetHp: 4,
+      targetMaxHp: 30,
+    });
+    const castAct = spellAct({
+      session,
+      spellId: spikeGrowthUnitId,
+      slotLevel: 2,
+    });
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [
+        spikeGrowthAreaFill(
+          requireHole(castAct.initialHoles, "spellAreaChoice"),
+        ),
+      ],
+    });
+    if (cast.tag !== "resolved") throw new Error("Expected hazard cast.");
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") throw new Error("Expected target turn.");
+    const state = targetTurn.state;
+    const healingAct = discoverBattleActs(
+      battleRuntimeSessionForTest({ ...session, state }),
+    ).find(
+      (act) =>
+        act.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
+    );
+    if (healingAct === undefined) throw new Error("Expected healing act.");
+    const healingRoll = damageRollFillWithGroups(
+      requireHole(healingAct.initialHoles, "rolledDice"),
+      [[3]],
+    );
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [healingRoll],
+      }),
+      "unitFeatureDecision",
+    );
+    const use = unitFeatureDecisionFill(decision, "use");
+    const orderHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [healingRoll, use],
+      }),
+      "unitFeatureDecision",
+    );
+    const healFirst = unitFeatureDecisionFill(orderHole, "healFirst");
+    const moveFirst = unitFeatureDecisionFill(orderHole, "moveFirst");
+    const movementHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [healingRoll, use, healFirst],
+      }),
+      "movement",
+    );
+    const hazard = requireSpikeGrowthHazard(state);
+    const movement = movementFill(movementHole, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [],
+      areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
+        hazard,
+        {
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+          damageDistanceFeet: 5,
+        },
+      ),
+    });
+    const fills = [healingRoll, use, healFirst, movement];
+    const pendingDamage = resolveBattleSubject({
+      state,
+      subject: healingAct.subject,
+      fills,
+    });
+    expect(pendingDamage).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { turn: { bonusActionQuotaAvailable: true } },
+    });
+    if (pendingDamage.tag !== "needsHoles") {
+      throw new Error("Expected movement damage roll hole.");
+    }
+    expect(requireCombatant(pendingDamage.state, spellTargetId).hp).toBe(Hp(4));
+    const damageHole = requireResultHole(pendingDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damageHole, [[3, 3]]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [...fills, damageFill, damageFill],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [...fills, damageFill, { ...damageFill }],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    const resolved = resolveBattleSubject({
+      state,
+      subject: healingAct.subject,
+      fills: [...fills, damageFill],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      movements: [
+        expect.objectContaining({
+          moverId: spellTargetId,
+          movementCostFeet: movementFeet(15),
+          spendsTurnMovement: false,
+        }),
+      ],
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
+    });
+    if (resolved.tag !== "resolved")
+      throw new Error("Expected healing movement.");
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(6));
+    expect(
+      requireCombatant(resolved.state, spellTargetId).movementSpentFeet,
+    ).toBe(movementFeet(0));
+    const movementFirstResult = resolveBattleSubject({
+      state,
+      subject: healingAct.subject,
+      fills: [healingRoll, use, moveFirst, movement, damageFill],
+    });
+    expect(movementFirstResult).toMatchObject({ tag: "resolved" });
+    if (movementFirstResult.tag !== "resolved") {
+      throw new Error("Expected movement before healing to resolve.");
+    }
+    expect(requireCombatant(movementFirstResult.state, spellTargetId).hp).toBe(
+      Hp(8),
+    );
+  });
+
   test("movement damage requests and consumes the mover's Concentration save", () => {
     const spikeGrowth = spellRecord(spikeGrowthUnitId);
     const fogCloud = spellRecord("fog_cloud");
@@ -754,6 +913,193 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         ]),
       },
     });
+  });
+
+  test("Tactical Shift waits for a Concentration save before spending or moving", () => {
+    const fogCloud = spellRecord("fog_cloud");
+    const session = spellBattle({
+      preparedSpells: [spellRecord(spikeGrowthUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetClassLevels: [
+        { className: "fighter", level: 5 },
+        { className: "wizard", level: 1 },
+      ],
+      targetResources: [resource()],
+      targetUnitRefs: [
+        supportedBattleUnitRef(unitLibrary.requireUnit("fighter_second_wind")),
+        supportedBattleUnitRef(
+          unitLibrary.requireUnit("fighter_tactical_shift"),
+        ),
+      ],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [fogCloud],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      targetHp: 4,
+      targetMaxHp: 30,
+    });
+    const spikeGrowthAct = spellAct({
+      session,
+      spellId: spikeGrowthUnitId,
+      slotLevel: 2,
+    });
+    const spikeGrowthCast = resolveBattleSubject({
+      state: session.state,
+      subject: spikeGrowthAct.subject,
+      fills: [
+        spikeGrowthAreaFill(
+          requireHole(spikeGrowthAct.initialHoles, "spellAreaChoice"),
+        ),
+      ],
+    });
+    if (spikeGrowthCast.tag !== "resolved")
+      throw new Error("Expected hazard cast.");
+    const fogCloudTurn = endTurn({
+      state: spikeGrowthCast.state,
+      actorId: spellCasterId,
+    });
+    if (fogCloudTurn.tag !== "resolved")
+      throw new Error("Expected target turn.");
+    const fogCloudAct = spellAct({
+      session: battleRuntimeSessionForTest({
+        state: fogCloudTurn.state,
+        context: session.context,
+      }),
+      spellId: "fog_cloud",
+      slotLevel: 1,
+    });
+    const fogCloudCast = resolveBattleSubject({
+      state: fogCloudTurn.state,
+      subject: fogCloudAct.subject,
+      fills: [
+        persistentAreaTraitAreaFill(
+          requireHole(fogCloudAct.initialHoles, "spellAreaChoice"),
+          battleAreaId("tactical-shift-mover-fog-cloud"),
+        ),
+      ],
+    });
+    if (fogCloudCast.tag !== "resolved")
+      throw new Error("Expected Fog Cloud cast.");
+    const casterTurn = endTurn({
+      state: fogCloudCast.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") throw new Error("Expected caster turn.");
+    const stateTurn = endTurn({
+      state: casterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (stateTurn.tag !== "resolved") throw new Error("Expected target turn.");
+    const state = stateTurn.state;
+    const healingAct = discoverBattleActs(
+      battleRuntimeSessionForTest({ ...session, state }),
+    ).find(
+      (act) =>
+        act.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
+    );
+    if (healingAct === undefined) throw new Error("Expected Second Wind act.");
+    const healingRoll = damageRollFillWithGroups(
+      requireHole(healingAct.initialHoles, "rolledDice"),
+      [[3]],
+    );
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [healingRoll],
+      }),
+      "unitFeatureDecision",
+    );
+    const use = unitFeatureDecisionFill(decision, "use");
+    const order = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [healingRoll, use],
+      }),
+      "unitFeatureDecision",
+    );
+    const healFirst = unitFeatureDecisionFill(order, "healFirst");
+    const movementHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [healingRoll, use, healFirst],
+      }),
+      "movement",
+    );
+    const movement = movementFill(movementHole, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [],
+      areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
+        requireSpikeGrowthHazard(state),
+        {
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+          damageDistanceFeet: 5,
+        },
+      ),
+    });
+    const fills = [healingRoll, use, healFirst, movement];
+    const damage = requireResultHole(
+      resolveBattleSubject({ state, subject: healingAct.subject, fills }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[1, 1]]);
+    const pending = resolveBattleSubject({
+      state,
+      subject: healingAct.subject,
+      fills: [...fills, damageFill],
+    });
+    const concentration = requireResultHole(
+      pending,
+      "concentrationSavingThrow",
+    );
+    expect(pending).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { turn: { bonusActionQuotaAvailable: true } },
+    });
+    if (pending.tag !== "needsHoles") throw new Error("Expected pending save.");
+    expect(requireCombatant(pending.state, spellTargetId).hp).toBe(Hp(4));
+    expect(
+      requireCombatant(pending.state, spellTargetId).movementSpentFeet,
+    ).toBe(movementFeet(0));
+    for (const maintained of [true, false]) {
+      const resolved = resolveBattleSubject({
+        state,
+        subject: healingAct.subject,
+        fills: [
+          ...fills,
+          damageFill,
+          concentrationSavingThrowFill(concentration, maintained),
+        ],
+      });
+      expect(resolved).toMatchObject({
+        tag: "resolved",
+        snapshot: {
+          turn: { bonusActionQuotaAvailable: false },
+          combatants: expect.arrayContaining([
+            expect.objectContaining({
+              combatantId: spellTargetId,
+              concentrating: maintained,
+            }),
+          ]),
+        },
+        movements: [
+          expect.objectContaining({
+            moverId: spellTargetId,
+            spendsTurnMovement: false,
+          }),
+        ],
+      });
+      if (resolved.tag !== "resolved")
+        throw new Error("Expected resolved shift.");
+      expect(requireCombatant(resolved.state, spellTargetId)).toMatchObject({
+        hp: Hp(10),
+        movementSpentFeet: movementFeet(0),
+      });
+    }
   });
 
   test("positive movement damage opens and resolves a damage-triggered condition repeat save", () => {
