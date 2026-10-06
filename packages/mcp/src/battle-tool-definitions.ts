@@ -36,8 +36,8 @@ const BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS = {
   maxDepth: MODEL_OUTPUT_SCHEMA_MAX_DEPTH,
 } as const;
 
-export const battleToolDefinitions = [
-  {
+export const battleToolDefinitionsByName = {
+  [battleToolNames.selectStatBlock]: {
     name: battleToolNames.selectStatBlock,
     title: "Select Stat Block",
     description:
@@ -46,7 +46,7 @@ export const battleToolDefinitions = [
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(SelectStatBlockOutputSchema),
   },
-  {
+  [battleToolNames.startBattle]: {
     name: battleToolNames.startBattle,
     title: "Start Battle",
     description:
@@ -58,7 +58,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.battleLifecycle]: {
     name: battleToolNames.battleLifecycle,
     title: "Update Battle Lifecycle",
     description:
@@ -70,7 +70,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.readBattleState]: {
     name: battleToolNames.readBattleState,
     title: "Read Battle State",
     description:
@@ -82,7 +82,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.discoverBattleActs]: {
     name: battleToolNames.discoverBattleActs,
     title: "Discover Battle Acts",
     description:
@@ -94,7 +94,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.fillBattleHole]: {
     name: battleToolNames.fillBattleHole,
     title: "Fill Battle Hole",
     description:
@@ -106,7 +106,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.resolveBattleAct]: {
     name: battleToolNames.resolveBattleAct,
     title: "Resolve Battle Act",
     description:
@@ -118,7 +118,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.endTurn]: {
     name: battleToolNames.endTurn,
     title: "End Turn",
     description:
@@ -130,7 +130,7 @@ export const battleToolDefinitions = [
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
   },
-  {
+  [battleToolNames.endBattle]: {
     name: battleToolNames.endBattle,
     title: "End Battle",
     description:
@@ -139,7 +139,8 @@ export const battleToolDefinitions = [
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(EndBattleOutputSchema),
   },
-] as const satisfies readonly ProtocolToolDefinition[];
+} as const satisfies Readonly<Record<string, ProtocolToolDefinition>>;
+export const battleToolDefinitions = Object.values(battleToolDefinitionsByName);
 
 export function isBattleToolName(name: string): name is BattleToolName {
   return BATTLE_TOOL_NAMES.some((toolName) => toolName === name);

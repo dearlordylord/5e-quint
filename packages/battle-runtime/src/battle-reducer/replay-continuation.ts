@@ -1,10 +1,6 @@
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
-import {
-  battleSubjectForReplay,
-  sameBattleSubject,
-  type BattleSubject,
-} from "../battle-subjects.ts";
+import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleFill,
@@ -100,16 +96,13 @@ export function projectReplayChildResult(
         result.frontier.holes,
         result.checkpointBoundary,
       );
-      return projected.tag !== "needsHoles"
-        ? projected
-        : {
-            ...projected,
-            frontier: {
-              ...projected.frontier,
-              replaySubject: battleSubjectForReplay(parent.subject),
-              pendingProcedure: result.frontier.pendingProcedure,
-            },
-          };
+      return {
+        ...projected,
+        frontier: {
+          ...projected.frontier,
+          pendingProcedure: result.frontier.pendingProcedure,
+        },
+      };
     }),
     Match.when({ tag: "invalid" }, (result) =>
       invalidResult(parent.state, result.reason, result.message),

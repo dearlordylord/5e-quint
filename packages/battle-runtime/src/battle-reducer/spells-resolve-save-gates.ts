@@ -158,6 +158,10 @@ import {
 import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 
+type SaveMetamagicSelectionHole =
+  | ReturnType<typeof carefulSpellProtectedTargetsHole>
+  | ReturnType<typeof heightenedSpellTargetChoiceHole>;
+
 type SaveMetamagicSelectionState =
   | {
       readonly tag: "ok";
@@ -166,7 +170,7 @@ type SaveMetamagicSelectionState =
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+      readonly holes: ReadonlyNonEmptyArray<SaveMetamagicSelectionHole>;
     }
   | {
       readonly tag: "invalid";
@@ -321,7 +325,7 @@ export function saveMetamagicSelectionState(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const holes: BattleOrdinaryHole[] = [];
+  const holes: SaveMetamagicSelectionHole[] = [];
   const carefulSpellProtectedTargetIds =
     includesCareful && targeting.kind === "singleCombatant"
       ? input.targetId === undefined

@@ -7,6 +7,8 @@ description: Explore and use this project's redistributable 5.5e SRD catalog thr
 
 Establish the user's immediate goal. Use the relevant discovery or read operation before making a stateful choice unless the current MCP result already supplies the required facts.
 
+Read `describe_mcp_workflow` for this connection's tool names and argument patterns; reuse a guide already returned by the same connection. Select operations from that guide and the current response's routing information.
+
 Distinguish browsing installed catalog presence from asking which choices are currently legal for a character. Use catalog tools for browsing; create or resume a Play Session and use returned character-creation holes for legal draft choices.
 
 Create a Play Session for a new journey. Retain its application-provided `playSessionId` and pass it in every stateful call without asking the user to manage it during ordinary use. Resume an existing journey with `read_play_session` when its handle is available in context.
@@ -24,10 +26,17 @@ For a character-creation continuation, use `read_play_session` first. If its sum
 Treat returned catalog records, character-creation holes and options, battle acts, runtime holes, projections, and operation results as authoritative. Copy their identifiers and typed inputs exactly. Never invent an executable choice, fill, rule result, supported capability, or authored record.
 
 For Battle setup, follow the returned `battleState` variant. If the result is
-`initialInitiativeSetup`, use `battle_lifecycle` for the returned setup
+`initialInitiativeSetup`, use the exposed Initiative-swap and setup-finalization
 operations before asking for or presenting active Battle Acts. For an active
-Battle, use `battle_lifecycle` for supported roster changes and keep the
-returned occupancy and settlement projections authoritative.
+Battle, use the exposed add/remove-combatant operations for supported roster
+changes and keep the returned occupancy and settlement projections authoritative.
+
+For Battle Acts, use `chatGptBattleOperations` when the response supplies it to
+select the named operation for the current subject or Reaction. Copy the current
+subject into its named Act tool, without a fill, to select it and open any holes.
+Answer ordinary holes through `answer_battle_hole` with a fill and no subject.
+Select each Reaction through its named operation with an `interruptDecision`
+fill, no subject, and `choice.fills: []`. The pending transaction owns the parent.
 
 `roll_dice` is an optional independent raw-face request. It has no Battle Hole
 or modifier context and does not fill anything automatically. Copy its ordered
@@ -36,7 +45,7 @@ that shape; otherwise ask for the missing user/table fact.
 
 Present relevant returned rules facts faithfully. Ask only for unresolved user decisions or requested rolls. When the current result contains multiple independent meaningful choices, present them together and let the user answer them in one reply; do not serialize independent current holes into one question per turn. Keep dependent choices for a later batch when their options have actually been returned. Apply forced single-option choices automatically and report them. Synthetic names, situations, and narration may frame play, but must not create mechanics or reproduce non-SRD official content.
 
-After every operation, report the envelope's typed operation result, relevant projection, unresolved inputs, next operations, and restoration status. Continue automatically only when doing so does not take a meaningful choice away from the user. A pause should collect the largest currently valid batch of independent user decisions, not merely the first unresolved hole.
+After every operation, report the returned result and relevant state. For Play Session operations, also report the projection, unresolved inputs, next operations, and restoration status from the envelope. Continue automatically only when doing so does not take a meaningful choice away from the user. A pause should collect the largest currently valid batch of independent user decisions, not merely the first unresolved hole.
 
 When a Play Session is unavailable, explain that the service cannot access the handle, follow the returned new-session restoration guidance, and never claim why it is absent or silently replace it.
 

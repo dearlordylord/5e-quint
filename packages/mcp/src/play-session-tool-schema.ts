@@ -1,3 +1,8 @@
+import { ChatGptBattleGuidanceSchema } from "./chatgpt/battle-guidance-schema.ts";
+import { CHATGPT_TOOL_NAMES } from "./chatgpt/protocol-operation.ts";
+import type { ChatGptToolName } from "./chatgpt/tool-catalog.ts";
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
+import { type PlaySessionExecutionOperationName } from "./chatgpt/protocol-operation.ts";
 import { createHash } from "node:crypto";
 
 import { Schema } from "effect";
@@ -24,8 +29,8 @@ import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 import {
   PLAY_SESSION_NEXT_OPERATION_NAMES,
   playSessionToolNames,
-  type PlaySessionOperationName,
   type PlaySessionToolName,
+  type PlaySessionNextOperationName,
 } from "./play-session-tool-names.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
@@ -48,8 +53,8 @@ const sessionProjectionJsonSchema = modelFacingSessionProjectionSchema(
   mcpModelOutputJsonSchema(McpSessionSummarySchema),
 );
 const routedOutputSchemas = new Map<
-  PlaySessionOperationName,
-  WeakMap<object, McpOutputSchema>
+  McpToolSurface,
+  Map<PlaySessionExecutionOperationName, WeakMap<object, McpOutputSchema>>
 >();
 const embeddedBattleEnvelope = embeddedSchema(
   mcpModelOutputJsonSchema(BattlePresentationEnvelopeSchema),
@@ -92,6 +97,7 @@ export function playSessionRoutedInputSchema(
 export function playSessionLifecycleOutputSchema(
   operationName: PlaySessionToolName,
   resultTag: "playSessionCreated" | "playSessionResumed",
+  toolSurface: McpToolSurface = "regular",
 ): McpOutputSchema {
   const resumedBattleEnvelope =
     operationName === playSessionToolNames.read
@@ -125,6 +131,7 @@ export function playSessionLifecycleOutputSchema(
           playSessionId: playSessionIdJsonSchema,
         })
       : lifecycleResult,
+    toolSurface,
   );
 }
 
@@ -140,11 +147,23 @@ export function savedPlaySessionSummarySchema(): McpOutputSchema {
   };
 }
 
+const embeddedChatGptGuidance = embeddedSchema(
+  shareRepeatedSchemas(mcpOutputJsonSchema(ChatGptBattleGuidanceSchema)),
+  "ChatGptGuidance",
+);
+
 export function playSessionOperationOutputSchema(
-  operationName: PlaySessionOperationName,
+  operationName: PlaySessionExecutionOperationName,
   operationResultSchema: McpOutputSchema,
+  toolSurface: McpToolSurface = "regular",
 ): McpOutputSchema {
-  const operationCache = routedOutputSchemas.get(operationName);
+  const surfaceCache =
+    routedOutputSchemas.get(toolSurface) ??
+    new Map<
+      PlaySessionExecutionOperationName,
+      WeakMap<object, McpOutputSchema>
+    >();
+  const operationCache = surfaceCache.get(operationName);
   const cached = operationCache?.get(operationResultSchema);
   if (cached !== undefined) return cached;
   const embeddedPlaySessionId = embeddedSchema(
@@ -181,9 +200,15 @@ export function playSessionOperationOutputSchema(
       ...embeddedSessionProjection.definitions,
       ...embeddedOperationResult.definitions,
       ...embeddedBattleEnvelope.definitions,
+      ...(toolSurface === "chatgpt" ? embeddedChatGptGuidance.definitions : {}),
     },
     anyOf: [
       availableResultSchema({
+        toolSurface,
+        nextOperationNames:
+          toolSurface === "chatgpt"
+            ? CHATGPT_TOOL_NAMES
+            : PLAY_SESSION_NEXT_OPERATION_NAMES,
         operationName,
         playSessionId: embeddedPlaySessionId.schema,
         operationResult: {
@@ -214,7 +239,8 @@ export function playSessionOperationOutputSchema(
   } satisfies McpOutputSchema;
   const cache = operationCache ?? new WeakMap<object, McpOutputSchema>();
   cache.set(operationResultSchema, identified);
-  routedOutputSchemas.set(operationName, cache);
+  surfaceCache.set(operationName, cache);
+  routedOutputSchemas.set(toolSurface, surfaceCache);
   return identified;
 }
 
@@ -235,7 +261,12 @@ function recoverableOperationResultSchema(input: {
 }
 
 function availableResultSchema(input: {
-  readonly operationName: PlaySessionOperationName;
+  readonly toolSurface: McpToolSurface;
+  readonly nextOperationNames: readonly (
+    | PlaySessionNextOperationName
+    | ChatGptToolName
+  )[];
+  readonly operationName: PlaySessionExecutionOperationName;
   readonly playSessionId: McpOutputSchema;
   readonly operationResult: McpOutputSchema;
   readonly projection: McpOutputSchema;
@@ -244,6 +275,11 @@ function availableResultSchema(input: {
     type: "object",
     properties: {
       tag: { const: "playSessionAvailable" },
+      ...(input.toolSurface === "chatgpt"
+        ? {
+            chatGptBattleOperations: embeddedChatGptGuidance.schema,
+          }
+        : {}),
       playSessionId: input.playSessionId,
       operation: operationSchema(input.operationName, input.operationResult),
       projection: input.projection,
@@ -251,7 +287,7 @@ function availableResultSchema(input: {
       unresolvedInputs: modelFacingUnresolvedInputsSchema(),
       nextOperations: {
         type: "array",
-        items: { enum: PLAY_SESSION_NEXT_OPERATION_NAMES },
+        items: { enum: input.nextOperationNames },
       },
       restoration: {
         type: "object",
@@ -260,13 +296,16 @@ function availableResultSchema(input: {
         additionalProperties: false,
       },
     },
-    required: envelopeRequiredFields(),
+    required: [
+      ...envelopeRequiredFields(),
+      ...(input.toolSurface === "chatgpt" ? ["chatGptBattleOperations"] : []),
+    ],
     additionalProperties: false,
   };
 }
 
 function unavailableEnvelopeSchema(input: {
-  readonly operationName: PlaySessionOperationName;
+  readonly operationName: PlaySessionExecutionOperationName;
   readonly playSessionId: McpOutputSchema;
   readonly operationResult: McpOutputSchema;
 }): McpOutputSchema {
@@ -336,7 +375,7 @@ function savedPlaySessionTenureSchema(): McpOutputSchema {
 }
 
 function operationSchema(
-  operationName: PlaySessionOperationName,
+  operationName: PlaySessionExecutionOperationName,
   resultSchema: McpOutputSchema,
 ): McpOutputSchema {
   return {

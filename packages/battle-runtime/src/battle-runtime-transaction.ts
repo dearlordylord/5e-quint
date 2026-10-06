@@ -464,6 +464,21 @@ export function battlePendingTransactionViewForSession(
     : { tag: "transactionSessionMismatch" };
 }
 
+/** Resolve operation ownership from the current layer's original replay state. */
+export function battlePendingTransactionReplaySessionForSession(
+  transaction: BattlePendingTransaction,
+  session: BattleRuntimeSession,
+):
+  | { readonly tag: "valid"; readonly replaySession: BattleRuntimeSession }
+  | { readonly tag: "foreignTransaction" }
+  | { readonly tag: "transactionSessionMismatch" } {
+  const data = lookupBattleRuntimeTransaction(transaction);
+  if (Option.isNone(data)) return { tag: "foreignTransaction" };
+  return data.value.currentSession === session
+    ? { tag: "valid", replaySession: data.value.baseSession }
+    : { tag: "transactionSessionMismatch" };
+}
+
 /**
  * Project the current transaction layer through the runtime-owned checkpoint
  * envelope.  Ordinary holes are retained by the opaque token rather than

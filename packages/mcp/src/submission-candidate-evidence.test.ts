@@ -1,3 +1,4 @@
+import { submissionBattleRepresentativeResults } from "../test-support/cross-boundary-battle.ts";
 import { readFileSync } from "node:fs";
 
 import { describe, expect, test } from "vitest";
@@ -25,6 +26,28 @@ const skillSource = {
 };
 
 describe("submission candidate evidence", () => {
+  test("collects candidate Battle evidence through named attacks and Reaction decisions", async () => {
+    const cases = await submissionBattleRepresentativeResults("chatgpt");
+    expect(cases.map((entry) => entry.tool)).toEqual([
+      "discover_battle_acts",
+      "attack",
+      "answer_battle_hole",
+      "answer_battle_hole",
+      "answer_battle_hole",
+      "decline_reaction",
+      "answer_battle_hole",
+    ]);
+    expect(cases).toHaveLength(7);
+    const regular = await submissionBattleRepresentativeResults();
+    expect(regular.map((entry) => entry.tool)).toEqual([
+      "discover_battle_acts",
+      "fill_battle_hole",
+      "fill_battle_hole",
+      "fill_battle_hole",
+      "fill_battle_hole",
+    ]);
+  });
+
   test("binds local candidate facts without promoting historical installed evidence", async () => {
     const first = await buildSubmissionCandidateEvidence({
       release: "a".repeat(40),

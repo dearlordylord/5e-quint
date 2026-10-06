@@ -1747,7 +1747,9 @@ export type MonkFocusFlurryOfBlowsStrikeSubject = Extract<
   { readonly tag: "monkFocusFlurryOfBlowsStrike" }
 >;
 
-export function battleSubjectForReplay(subject: BattleSubject): BattleSubject {
+export function battleSubjectForReplay<const Subject extends BattleSubject>(
+  subject: Subject,
+): Subject {
   return subject;
 }
 

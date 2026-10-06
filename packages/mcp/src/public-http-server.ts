@@ -1,3 +1,4 @@
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { createServer } from "node:http";
 
 import { Result, Match } from "effect";
@@ -56,6 +57,7 @@ type PublicHttpRequestAttempt =
     };
 
 export function createDndMcpHttpServer(input: {
+  readonly toolSurface?: McpToolSurface;
   readonly playSessionRepository: PlaySessionRepository;
   readonly applicationServices?: McpApplicationServices;
   readonly hostname?: string;
@@ -95,6 +97,7 @@ export function createDndMcpHttpServer(input: {
       hostname,
       applicationServices,
       playSessionRepository: input.playSessionRepository,
+      toolSurface: input.toolSurface ?? "regular",
       ...(input.oauth === undefined ? {} : { oauth: input.oauth }),
       operations,
     }).catch(() => {

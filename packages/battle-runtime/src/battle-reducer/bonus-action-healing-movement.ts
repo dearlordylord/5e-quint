@@ -15,12 +15,12 @@ import type {
   BattleResolutionResult,
   BattleResolvedMovement,
   BattleState,
+  UnitFeatureBattleResolutionInput,
   BattleUnitFeatureDecisionHole,
   CharacterBattleCreatureState,
   BonusActionHealingMovementOrder,
 } from "../battle-state-execution.ts";
 import { BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES } from "../battle-state-execution.ts";
-import type { BattleSubject } from "../battle-subjects.ts";
 import { halfCurrentSpeedMovementBudget } from "./movement-speed.ts";
 import {
   parseBattleMovement,
@@ -56,7 +56,7 @@ function riderForResource(
 type HealingMovementInput = {
   readonly state: BattleState;
   readonly healedState: BattleState;
-  readonly subject: BattleSubject;
+  readonly subject: UnitFeatureBattleResolutionInput["subject"];
   readonly actor: CharacterBattleCreatureState;
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   readonly fills: readonly BattleFill[];

@@ -11,8 +11,8 @@ import {
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
-export const diceToolDefinitions = [
-  {
+export const diceToolDefinitionsByName = {
+  [diceToolNames.rollDice]: {
     name: diceToolNames.rollDice,
     title: "Roll Dice",
     description:
@@ -21,7 +21,8 @@ export const diceToolDefinitions = [
     annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(RollDiceOutputSchema),
   },
-] as const satisfies readonly ProtocolToolDefinition[];
+} as const satisfies Readonly<Record<string, ProtocolToolDefinition>>;
+export const diceToolDefinitions = Object.values(diceToolDefinitionsByName);
 
 export { DICE_TOOL_NAMES };
 export type { DiceToolName };

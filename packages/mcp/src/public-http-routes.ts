@@ -1,3 +1,4 @@
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { type IncomingMessage, type ServerResponse } from "node:http";
 
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -31,6 +32,7 @@ import {
 export const PUBLIC_MCP_MAX_REQUEST_BYTES = 1_048_576;
 
 export type PublicHttpRequestInput = {
+  readonly toolSurface?: McpToolSurface;
   readonly incoming: IncomingMessage;
   readonly outgoing: ServerResponse;
   readonly hostname: string;
@@ -296,6 +298,7 @@ async function handleMcpRoute(
     undefined,
     {
       playSessionRepository: input.playSessionRepository,
+      toolSurface: input.toolSurface ?? "regular",
       requestIdentity: identity.success,
     },
   );

@@ -266,7 +266,7 @@ function isImpossibleJsonSchema(value: unknown): boolean {
   return Object.keys(value.not).length === 0;
 }
 
-function omitUnreferencedDefinitions(
+export function omitUnreferencedDefinitions(
   schema: McpObjectInputSchema,
 ): McpObjectInputSchema {
   if (!isJsonObject(schema.$defs)) return schema;

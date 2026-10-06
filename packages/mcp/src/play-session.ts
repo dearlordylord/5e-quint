@@ -1,3 +1,4 @@
+import type { ChatGptStateOperationName } from "./chatgpt/protocol-operation.ts";
 import { randomUUID } from "node:crypto";
 
 import { Result, Schema } from "effect";
@@ -124,12 +125,19 @@ export type SavedPlaySessionSummary = {
 
 export type PlaySessionCommand =
   | {
+      readonly toolSurface?: never;
       readonly name: CharacterToolName | BattleToolName;
       readonly args: Readonly<Record<string, unknown>>;
     }
   | {
+      readonly toolSurface?: never;
       readonly name: DiceToolName;
       readonly args: RollDiceRequest;
+    }
+  | {
+      readonly toolSurface: "chatgpt";
+      readonly name: ChatGptStateOperationName;
+      readonly args: Readonly<Record<string, unknown>>;
     };
 
 export type PlaySessionCommandRetention<A> = {

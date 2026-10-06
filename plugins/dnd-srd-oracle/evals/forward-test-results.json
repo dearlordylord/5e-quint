@@ -1,59 +1,69 @@
 {
   "kind": "independentStaticForwardTest",
-  "evaluator": "gpt-5.6-luna",
+  "evaluator": "Codex independent subagent",
+  "evaluatorTask": "/root/skill_forward_evaluation",
   "installedChatGptEvidence": false,
   "status": "passed",
-  "skillSourceDigest": "2b2a80be434dbf201d18635202074b89b1f2c3da9dea6cb62bddd6e0aa6bc97f",
+  "skillSourceDigest": "04436b5f220d270219db3c673d97733e70f4397bedcb5bbdf9fce0a880cc1110",
   "skillActivationInventoryDigest": "f42848a7cc0d0b7ab9dca058f06c49a49b95becda49463536fd516b19ad3d219",
+  "evaluationScope": "Source-only forward evaluation of the five inventory requests against an immutable Skill/UI metadata snapshot and the actual 126-tool names/descriptions. Expected activations and previous evaluation results were withheld from the evaluator. No MCP execution or installed-ChatGPT observation was performed.",
   "cases": [
     {
       "id": "skill-direct",
       "activation": "activate",
-      "outcome": "metExpectation",
-      "toolIntents": ["list_catalog_units"],
-      "result": "safeWithCatalogPresenceDistinction"
+      "toolIntents": ["describe_mcp_workflow", "list_catalog_units"],
+      "result": "I’ll use 5.5e SRD Oracle to retrieve the installed character options and present them by kind. The installed catalog shows what is present; your character’s creation choices determine what is currently legal for that build.",
+      "outcome": "metExpectation"
     },
     {
       "id": "skill-natural",
       "activation": "activate",
-      "outcome": "metExpectation",
       "toolIntents": [
-        "list_catalog_units",
+        "describe_mcp_workflow",
         "create_play_session",
         "create_character_draft"
       ],
-      "result": "clarifyBrowsingVersusLegalDraftChoices"
+      "result": "I’ll use 5.5e SRD Oracle to start your character and retrieve its supported choices. I’ll present the available independent decisions together so you can answer them in one reply.",
+      "outcome": "metExpectation"
     },
     {
       "id": "skill-continuation",
       "activation": "activate",
-      "outcome": "metExpectation",
       "toolIntents": ["read_play_session", "discover_creation_holes"],
-      "result": "safeWithExactRetainedHandleAndUnavailableGuidance"
+      "result": "I’ll resume the same character in 5.5e SRD Oracle and check what remains to choose. Then I’ll show the currently available decisions together.",
+      "outcome": "metExpectation"
     },
     {
       "id": "skill-unrelated-dnd",
       "activation": "doNotActivate",
-      "outcome": "metExpectation",
       "toolIntents": [],
-      "result": "generalDiscussionOutsideSkill"
+      "result": "D&D emerged from tabletop miniature wargaming in the 1970s. Players took the roles of individual adventurers, while a referee described the world and resolved their actions. Exploration, negotiation, and improvised solutions became central parts of play alongside combat.\n\nThe hobby spread through home groups, clubs, conventions, and published adventures. Successive editions changed its rules and brought in new generations of players. Online play and streamed games later widened its audience. Its enduring appeal is creating a shared story through player decisions and dice.",
+      "outcome": "metExpectation"
     },
     {
       "id": "skill-authoring-boundary",
       "activation": "activate",
-      "outcome": "metExpectation",
-      "toolIntents": ["describe_mcp_workflow"],
-      "result": "reportInstalledCatalogBoundaryWithoutInventingAdmission"
+      "toolIntents": [],
+      "result": "No—this MCP uses only its installed redistributable SRD catalogs. It does not offer an import path for your custom executable monster to use in battle.",
+      "outcome": "metExpectation"
     }
   ],
-  "findingsApplied": [
-    "Constrain what-can-happen-next activation to an existing 5.5e SRD Oracle journey.",
-    "Distinguish installed catalog browsing from legal character-creation holes.",
-    "Read the Play Session before discovering detailed remaining character choices.",
-    "State the installed-catalog boundary for user-authored executable records."
+  "observations": [
+    "Installed catalog browsing is distinct from legal character-creation choices. Direct requests use catalog discovery; character-making requests start a Play Session and draft.",
+    "Tool intentions are sequential plans, not executed operations. The snapshot contains no tool responses, argument schemas, catalog contents, session handles, or creation options. Proposed responses describe the immediate continuation without claiming completion.",
+    "Catalog inspection is conditional on returned ids needing authored detail; only ids returned by discovery would be inspected.",
+    "Character draft creation depends on successful Play Session creation and its returned handle. The workflow guide supplies argument patterns. OAuth challenges initiate account linking without requesting credentials in conversation.",
+    "Continuation begins with read_play_session using the retained handle. No actual handle was supplied in the static snapshot; detailed creation-hole discovery is conditional on the session summary and retained draft identity.",
+    "Creation results supply independent meaningful choices to present together. Forced single-option choices are applied automatically and reported. Options and fills cannot be fabricated.",
+    "Reporting now covers returned results and state after every operation, with envelope-specific reporting for Play Session operations. Discovery results do not require a Play Session envelope.",
+    "The authored-content response establishes this MCP admission boundary, not every possible interface to an underlying engine.",
+    "No contradictions affecting these requests were observed. Actual runtime correctness, OAuth, persistence, and returned routing cannot be evaluated from these source files alone."
   ],
   "externalEvidenceStillRequired": {
     "issue": 328,
     "scope": "Installed ChatGPT developer-mode activation, connection, and complete workflow evidence."
-  }
+  },
+  "findingsApplied": [
+    "Restrict envelope-specific reporting to Play Session operations; report ordinary returned results for discovery tools."
+  ]
 }

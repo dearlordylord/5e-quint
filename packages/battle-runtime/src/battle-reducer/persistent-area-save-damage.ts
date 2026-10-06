@@ -23,6 +23,7 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleOrdinaryHole,
+  BattleOrdinaryNeedsHolesResult,
   BattleHandledInterruptOccurrence,
   BattleHoleId,
   BattleStationaryPersistentAreaSaveDamageRollHole,
@@ -1306,12 +1307,15 @@ function persistentAreaStepResult(
   };
 }
 
-function persistentAreaNeedsHolesResult(
+function persistentAreaNeedsHolesResult<
+  const Subject extends BattleSubject,
+  const Holes extends ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+>(
   context: PersistentAreaResolutionContext,
   state: BattleState,
-  subject: BattleSubject,
-  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  subject: Subject,
+  holes: Holes,
+): BattleOrdinaryNeedsHolesResult<Holes, Subject> {
   if (context.kind === "standalone") {
     return needsHolesResult(state, subject, holes);
   }

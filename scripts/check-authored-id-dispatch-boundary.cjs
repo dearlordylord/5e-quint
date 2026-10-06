@@ -2678,9 +2678,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "0ddad5a6d43e72b2472f35f3670e4be88e3e7c68605356064d8e6a1f6adbbe22",
-  siteCount: 1661,
-  violationCount: 1775,
+  sha256: "ba7a0bc86a4addecbc3a350a5d3cc969a2a4c422a74c1c4e6aa37bea4a1f11ca",
+  siteCount: 1662,
+  violationCount: 1776,
 };
 
 function escapeForRegExp(text) {

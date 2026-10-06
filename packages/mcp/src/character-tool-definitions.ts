@@ -27,8 +27,8 @@ import {
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
-export const characterToolDefinitions = [
-  {
+export const characterToolDefinitionsByName = {
+  [characterToolNames.createCharacterDraft]: {
     name: characterToolNames.createCharacterDraft,
     title: "Create Character Draft",
     description:
@@ -37,7 +37,7 @@ export const characterToolDefinitions = [
     annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
-  {
+  [characterToolNames.discoverCreationHoles]: {
     name: characterToolNames.discoverCreationHoles,
     title: "Discover Creation Holes",
     description:
@@ -46,7 +46,7 @@ export const characterToolDefinitions = [
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
-  {
+  [characterToolNames.fillCreationHoles]: {
     name: characterToolNames.fillCreationHoles,
     title: "Fill Creation Holes",
     description:
@@ -55,7 +55,7 @@ export const characterToolDefinitions = [
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),
   },
-  {
+  [characterToolNames.finalizeCharacter]: {
     name: characterToolNames.finalizeCharacter,
     title: "Finalize Character",
     description:
@@ -64,7 +64,7 @@ export const characterToolDefinitions = [
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
   },
-  {
+  [characterToolNames.applyCharacterSessionOperation]: {
     name: characterToolNames.applyCharacterSessionOperation,
     title: "Apply Character Operation",
     description:
@@ -73,7 +73,7 @@ export const characterToolDefinitions = [
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
   },
-  {
+  [characterToolNames.listCharacters]: {
     name: characterToolNames.listCharacters,
     title: "List Characters",
     description:
@@ -82,7 +82,7 @@ export const characterToolDefinitions = [
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(ListCharactersOutputSchema),
   },
-  {
+  [characterToolNames.inspectCharacterSession]: {
     name: characterToolNames.inspectCharacterSession,
     title: "Inspect Character Session",
     description:
@@ -91,7 +91,7 @@ export const characterToolDefinitions = [
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CharacterSessionDetailOutputSchema),
   },
-  {
+  [characterToolNames.queryCharacterSession]: {
     name: characterToolNames.queryCharacterSession,
     title: "Query Character Session",
     description:
@@ -100,4 +100,7 @@ export const characterToolDefinitions = [
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CharacterSessionQueryOutputSchema),
   },
-] as const satisfies readonly ProtocolToolDefinition[];
+} as const satisfies Readonly<Record<string, ProtocolToolDefinition>>;
+export const characterToolDefinitions = Object.values(
+  characterToolDefinitionsByName,
+);

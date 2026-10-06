@@ -25,7 +25,10 @@ export function errorContent(message: string, details?: unknown) {
 }
 
 export function jsonContentPayload(content: {
-  readonly content: readonly [{ readonly text: string }];
+  readonly content: readonly [
+    { readonly text: string },
+    ...{ readonly text: string }[],
+  ];
 }): unknown {
   const text = content.content[0].text;
   try {

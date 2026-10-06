@@ -525,7 +525,7 @@ function battleSubjectInterruptRouteProjection(
 function battleSubjectActorAdmissionResult(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
-): BattleResolutionResult | null {
+): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
   const actorId = battleSubjectActorId(input.subject);
   if (battleSubjectHasWrongActor(input, options, actorId)) {
     return invalidResult(
@@ -576,7 +576,7 @@ function battleSubjectHasWrongActor(
 function battleSubjectObligationAdmissionResult(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
-): BattleResolutionResult | null {
+): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
   const compelledBehaviorObligationIssue =
     pendingCompelledBehaviorObligationIssue(input.state, input.subject);
   /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */

@@ -20,7 +20,6 @@ import type {
   BattleCunningStrikeOptionSelection,
   BattleCunningStrikeSelectedOption,
   BattleFill,
-  BattleOrdinaryHole,
   BattleCunningStrikeEndTurnCoverFactsHole,
   BattleMovementHole,
   BattleState,
@@ -98,7 +97,12 @@ export type CunningStrikeAfterDamageResult =
   | { readonly tag: "ok"; readonly state: BattleState }
   | {
       readonly tag: "needsHoles";
-      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+      readonly holes: ReadonlyNonEmptyArray<
+        | ReturnType<typeof cunningStrikeSavingThrowHole>
+        | ReturnType<typeof cunningStrikeToolPossessionHole>
+        | ReturnType<typeof cunningStrikeMovementHole>
+        | ReturnType<typeof cunningStrikeEndTurnCoverHole>
+      >;
     }
   | { readonly tag: "invalid"; readonly message: string };
 

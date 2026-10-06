@@ -14,6 +14,7 @@ import {
   battlePendingTransactionEnvelopeForSession,
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
+  battlePendingTransactionReplaySessionForSession,
   settleCreatureFallsRuntimeTransaction,
   settleBattleRuntimeTransaction,
   type BattlePendingTransaction,
@@ -274,6 +275,31 @@ function readyDodgeSession(): BattleRuntimeSession {
 }
 
 describe("battle runtime transaction completion unwind", () => {
+  test("projects the original replay session only for the owned current session", () => {
+    const original = readyMovementSession();
+    const subject = moveSubjectFor(original, goblinId);
+    const pending = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: original,
+        transaction: null,
+        operation: { kind: "ordinarySubject", subject, fills: [] },
+      }),
+      "movement owner",
+    );
+    expect(
+      battlePendingTransactionReplaySessionForSession(
+        pending.transaction,
+        pending.resolution.session,
+      ),
+    ).toEqual({ tag: "valid", replaySession: original });
+    expect(
+      battlePendingTransactionReplaySessionForSession(
+        pending.transaction,
+        battleRuntimeSessionWithState(original, { ...original.state }),
+      ),
+    ).toEqual({ tag: "transactionSessionMismatch" });
+  });
+
   test("settles a resolved runtime command without a pending transaction", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-transaction-resolved-command"),
@@ -315,6 +341,9 @@ describe("battle runtime transaction completion unwind", () => {
     );
 
     const session = readyMovementSession();
+    expect(
+      battlePendingTransactionReplaySessionForSession(foreignToken, session),
+    ).toEqual({ tag: "foreignTransaction" });
     expect(
       battlePendingTransactionViewForSession(foreignToken, session),
     ).toEqual({ tag: "foreignTransaction" });

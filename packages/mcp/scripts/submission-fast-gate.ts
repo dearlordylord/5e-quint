@@ -1,3 +1,4 @@
+import { chatGptExecutionToolDefinitions } from "../src/chatgpt/tool-surface.ts";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -44,10 +45,15 @@ if (Result.isFailure(decodedPolicy)) {
       repositoryRoot,
       privacyHtml: await privacyResponse.text(),
     });
-    const definitions = buildAdvertisedToolDefinitions(undefined, "hosted");
-    const canonicalDefinitions = buildCanonicalCodecToolDefinitions(
-      undefined,
+    const definitions = buildAdvertisedToolDefinitions(
+      chatGptExecutionToolDefinitions,
       "hosted",
+      "chatgpt",
+    );
+    const canonicalDefinitions = buildCanonicalCodecToolDefinitions(
+      chatGptExecutionToolDefinitions,
+      "hosted",
+      "chatgpt",
     );
     const surfaceIssues = scanPublicToolSurface(
       definitions,

@@ -1,6 +1,12 @@
-import type { BattleToolName } from "./battle-tool-input.ts";
-import type { CharacterToolName } from "./character-tool-input.ts";
-import type { DiceToolName } from "./dice-tool-input.ts";
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
+import { playSessionLifecycleOutputSchema as lifecycleSchemaForSurface } from "./play-session-tool-schema.ts";
+import type { ChatGptStatefulToolName } from "./chatgpt/protocol-operation.ts";
+import { BATTLE_TOOL_NAMES, type BattleToolName } from "./battle-tool-input.ts";
+import {
+  CHARACTER_TOOL_NAMES,
+  type CharacterToolName,
+} from "./character-tool-input.ts";
+import { DICE_TOOL_NAMES, type DiceToolName } from "./dice-tool-input.ts";
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 import {
   deleteSavedPlaySessionInputSchema,
@@ -37,8 +43,8 @@ export {
 } from "./play-session-tool-names.ts";
 export const PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET = 700_000;
 
-export const playSessionToolDefinitions = [
-  {
+export const playSessionToolDefinitionsByName = {
+  [playSessionToolNames.create]: {
     name: playSessionToolNames.create,
     title: "Create Play Session",
     description:
@@ -50,7 +56,7 @@ export const playSessionToolDefinitions = [
       "playSessionCreated",
     ),
   },
-  {
+  [playSessionToolNames.read]: {
     name: playSessionToolNames.read,
     title: "Read Play Session",
     description:
@@ -62,7 +68,7 @@ export const playSessionToolDefinitions = [
       "playSessionResumed",
     ),
   },
-  {
+  [playSessionToolNames.listSaved]: {
     name: playSessionToolNames.listSaved,
     title: "List Saved Play Sessions",
     description:
@@ -80,7 +86,7 @@ export const playSessionToolDefinitions = [
       additionalProperties: false,
     },
   },
-  {
+  [playSessionToolNames.deleteSaved]: {
     name: playSessionToolNames.deleteSaved,
     title: "Delete Saved Play Session",
     description:
@@ -90,7 +96,10 @@ export const playSessionToolDefinitions = [
     securitySchemes: SAVED_PLAY_SESSION_SECURITY_SCHEMES,
     outputSchema: deleteSavedPlaySessionOutputSchema,
   },
-] as const satisfies readonly ProtocolToolDefinition[];
+} as const satisfies Readonly<Record<string, ProtocolToolDefinition>>;
+export const playSessionToolDefinitions = Object.values(
+  playSessionToolDefinitionsByName,
+);
 
 export function statefulPlaySessionToolDefinition<
   Definition extends {
@@ -103,7 +112,12 @@ export function statefulPlaySessionToolDefinition<
   },
 >(
   definition: Definition,
-  operationName: CharacterToolName | BattleToolName | DiceToolName,
+  operationName:
+    | CharacterToolName
+    | BattleToolName
+    | DiceToolName
+    | ChatGptStatefulToolName,
+  toolSurface: McpToolSurface = "regular",
 ) {
   return {
     ...definition,
@@ -114,6 +128,7 @@ export function statefulPlaySessionToolDefinition<
           outputSchema: playSessionOperationOutputSchema(
             operationName,
             definition.outputSchema,
+            toolSurface,
           ),
         }),
   };
@@ -123,4 +138,40 @@ export function isPlaySessionToolName(
   name: string,
 ): name is PlaySessionToolName {
   return PLAY_SESSION_TOOL_NAMES.some((toolName) => toolName === name);
+}
+
+export function playSessionToolDefinitionForSurface(
+  definition: ProtocolToolDefinition & { readonly name: PlaySessionToolName },
+  toolSurface: McpToolSurface,
+): ProtocolToolDefinition {
+  if (toolSurface === "regular") return definition;
+  if (definition.name === playSessionToolNames.create)
+    return {
+      ...definition,
+      outputSchema: lifecycleSchemaForSurface(
+        definition.name,
+        "playSessionCreated",
+        toolSurface,
+      ),
+    };
+  if (definition.name === playSessionToolNames.read)
+    return {
+      ...definition,
+      outputSchema: lifecycleSchemaForSurface(
+        definition.name,
+        "playSessionResumed",
+        toolSurface,
+      ),
+    };
+  return definition;
+}
+
+export function isStatefulPlaySessionToolName(
+  name: string,
+): name is CharacterToolName | BattleToolName | DiceToolName {
+  return [
+    ...CHARACTER_TOOL_NAMES,
+    ...BATTLE_TOOL_NAMES,
+    ...DICE_TOOL_NAMES,
+  ].some((operation) => operation === name);
 }

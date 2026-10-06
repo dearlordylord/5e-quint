@@ -1,3 +1,4 @@
+import { CHATGPT_STATE_OPERATION_NAMES } from "./chatgpt/protocol-operation.ts";
 import { Result, Schema } from "effect";
 
 import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
@@ -28,10 +29,17 @@ const RecoverableStateOperationNameSchema = Schema.Literals([
 const RecoverablePlaySessionOperationsSchema = Schema.Array(
   Schema.Union([
     Schema.Struct({
+      toolSurface: Schema.Literal("chatgpt"),
+      name: Schema.Literals(CHATGPT_STATE_OPERATION_NAMES),
+      args: Schema.JsonObject,
+    }),
+    Schema.Struct({
+      toolSurface: Schema.optionalKey(Schema.Never),
       name: RecoverableStateOperationNameSchema,
       args: Schema.JsonObject,
     }),
     Schema.Struct({
+      toolSurface: Schema.optionalKey(Schema.Never),
       name: Schema.Literal(diceToolNames.rollDice),
       args: RollDiceArgsSchema,
     }),

@@ -1,3 +1,4 @@
+import { CHATGPT_EXECUTION_TOOLS } from "./chatgpt/tool-surface.ts";
 import { Result } from "effect";
 
 import {
@@ -46,7 +47,10 @@ export function rootFromRecord(
     record.diceReplay.seed,
   );
   for (const operation of record.operations) {
-    const replayed = handleToolCall(root, operation.name, operation.args);
+    const replayed =
+      operation.toolSurface === "chatgpt"
+        ? CHATGPT_EXECUTION_TOOLS[operation.name].handle(root, operation.args)
+        : handleToolCall(root, operation.name, operation.args);
     if ("isError" in replayed && replayed.isError === true) {
       return Result.fail({
         tag: "playSessionRepositoryIssue",

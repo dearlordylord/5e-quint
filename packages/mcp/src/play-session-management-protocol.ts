@@ -1,3 +1,4 @@
+import { type PlaySessionExecutionOperationName } from "./chatgpt/protocol-operation.ts";
 import { Result } from "effect";
 
 import {
@@ -5,10 +6,7 @@ import {
   type PlaySessionAccessFailure,
   type PlaySessionRegistry,
 } from "./play-session.ts";
-import {
-  playSessionToolNames,
-  type PlaySessionOperationName,
-} from "./play-session-tool-contract.ts";
+import { playSessionToolNames } from "./play-session-tool-contract.ts";
 import type {
   PlaySessionProtocolResult,
   PlaySessionRequestIdentity,
@@ -109,7 +107,7 @@ export function playSessionAccessFailureContent(
 }
 
 function invalidArguments(
-  operationName: PlaySessionOperationName,
+  operationName: PlaySessionExecutionOperationName,
 ): ReturnType<typeof errorContent> {
   return errorContent(`${operationName} expects valid arguments.`, {
     code: "INVALID_ARGUMENTS",

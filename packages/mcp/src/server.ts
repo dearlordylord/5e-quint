@@ -1,3 +1,4 @@
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import {
   battleToolDefinitions,
   handleBattleToolCall,
@@ -144,12 +145,13 @@ export function handleApplicationToolCall(
   services: McpApplicationServices,
   name: string,
   args: unknown,
+  toolSurface: McpToolSurface = "regular",
 ) {
   if (isContentToolName(name)) {
     const decoded = decodeContentToolCall({ name, args });
     return Result.isFailure(decoded)
       ? decoded.failure
-      : handleContentToolCall(services, decoded.success);
+      : handleContentToolCall(services, decoded.success, toolSurface);
   }
 
   return errorContent(`Unknown MCP application tool: ${name}`);

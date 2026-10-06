@@ -1,3 +1,4 @@
+import { CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES } from "../test-support/tool-catalog-budget.ts";
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { Result, Option, Schema } from "effect";
@@ -136,8 +137,6 @@ function mcpD20TestRoll(naturalD20: number, rollMode?: string) {
   }
   return { tag: "single" as const, naturalD20 };
 }
-
-const CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES = 2_000_000;
 
 const MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID =
   "synthetic_weapon_finesse_needle" as const;

@@ -100,7 +100,9 @@
         "targetCombatantId",
         "toolId",
         "unarmedStrikeProcedureRef",
-        "weaponObjectId"
+        "weaponObjectId",
+        "endingActorId",
+        "defenderId"
       ],
       "directions": ["output"],
       "classification": "workflowCorrelationIdentifier",
@@ -108,7 +110,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "f6790ffb709b2438176f54bea29985fd046f6e71b00ac5b4942f98e7e5847ec2"
+      "scopeDigest": "10485fd84b697b3d11ac99904918543560c5fbf544234e5383bce64ff0e76fa7"
     },
     {
       "schemaOwners": [
@@ -139,19 +141,69 @@
         "reactorId",
         "sourceProcedureRef",
         "fallingCreatureId",
-        "actorId"
+        "actorId",
+        "procedureRef",
+        "componentRef",
+        "objectId",
+        "damagedId",
+        "damageSourceId",
+        "attackerId",
+        "firstTargetId",
+        "secondTargetId",
+        "targetId",
+        "destinationId",
+        "casterId",
+        "enemyId",
+        "ownerId",
+        "familiarId",
+        "carrierId",
+        "carriedCreatureId",
+        "forcePositionId",
+        "sourceCombatantId",
+        "previousTargetId",
+        "areaId",
+        "targetIds",
+        "helperId",
+        "targetEnemyId",
+        "bardId",
+        "beneficiaryId",
+        "effectRef",
+        "grapplerId",
+        "shoverId",
+        "allyId",
+        "originalTargetId",
+        "questionId",
+        "lightId",
+        "directionId",
+        "occupantId",
+        "holderCombatantId",
+        "missToHitReplacementProcedureRef",
+        "nonOriginCombatantIds",
+        "occurrenceIds",
+        "originAnchorId",
+        "affectedTargetIds",
+        "affectedObjectIds",
+        "objectIds",
+        "choiceKey",
+        "focusProcedureRef",
+        "responderId",
+        "sourceEffectRef",
+        "effectOwnerId",
+        "readiedMovementActorId",
+        "readiedActorId",
+        "formExecutionRef",
+        "weaponItemId"
       ],
       "directions": ["input"],
       "classification": "workflowCorrelationIdentifier",
-      "userGoal": "Select an exact fictional workflow entity previously returned by the service.",
+      "userGoal": "Identify fictional combatants, positions, objects, procedures, and requested facts within the current service workflow.",
       "recipients": ["service runtime"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "11f8fca896337bdf12bde32fc3324f1181c3d004ba4a9f4c15f3b72f9f35aca3"
+      "scopeDigest": "33e23d1e4108e8209ff7c79a6db92d35a3f05837cf77a80dbe31d3bdc979b44b"
     },
     {
       "schemaOwners": [
-        "readiedSpellCasterId",
         "unitId",
         "equipmentUnitId",
         "spellId",
@@ -176,7 +228,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "93bdbd9c6d0f4b0336578d45eb73f73a16b25069e84283d0d4a7b61a7877df0a"
+      "scopeDigest": "db176f348df43ee84ec6907d95542c1edafa4ddbf94d2c613a0744581b70e4d5"
     },
     {
       "schemaOwners": [
@@ -194,7 +246,13 @@
         "selectedOptionId",
         "featUnitId",
         "sourceUnitId",
-        "activeFeatureUnitIds"
+        "activeFeatureUnitIds",
+        "optionId",
+        "abilityScoreIncreaseOptionId",
+        "spellIds",
+        "spellcastingSourceUnitId",
+        "removedSpellUnitId",
+        "addedSpellUnitId"
       ],
       "directions": ["input"],
       "classification": "authoredContentIdentifier",
@@ -202,7 +260,7 @@
       "recipients": ["service runtime"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "4cb40035196cadf4591110c561f7724b2a2c5b2bd054cbf79bae155eea90085a"
+      "scopeDigest": "3c598f0b7fd6f4845a2d5a791df5aa4e621fbe7619423e50ec9d88b5e59cc3d0"
     },
     {
       "schemaOwners": ["error", "message"],
@@ -212,7 +270,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "not retained as a separate record",
       "privacyAnchor": "request-observations",
-      "scopeDigest": "f5518b51af05d974247d5cde45888a18255437c729110d97c339702f6d9c28db"
+      "scopeDigest": "9402d2fe6e21d89870148ac7fbe2398096c1fa083424f72ffa9272d063ce2759"
     },
     {
       "schemaOwners": ["expiresAt"],
@@ -222,7 +280,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "0ef77ea96fc8214e7bbe17eab01f6006b9b5e299decab8013720eea117dc9a11"
+      "scopeDigest": "25d2015d4e82e9a9398220c9f8992d42188b49f1bb554e59b8a0d1763c3fca24"
     },
     {
       "schemaOwners": [
@@ -255,7 +313,40 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "456fb161d54f849141ae9365406b0ea3794b80761f976295ce8496665d64da2d"
+      "scopeDigest": "611d67c62f4d4ad0c203c66e378c1ef6366f201a08d57cc037b24c29ba914ae6"
+    },
+    {
+      "schemaOwners": [
+        "activatedOngoingFeatureProcedureRef",
+        "readiedSpellCasterId"
+      ],
+      "directions": ["input"],
+      "classification": "authoredContentIdentifier",
+      "userGoal": "Identify the runtime procedure or fictional spell caster offered by the current Battle frontier; these fields carry runtime references despite the name-based scanner classification.",
+      "recipients": ["service runtime"],
+      "retentionOwner": "Play Session state",
+      "privacyAnchor": "play-session-data",
+      "scopeDigest": "01a96fcdf972c15dc9a6715bb807af15f9b194a610a61ca9f9268080774e9d69"
+    },
+    {
+      "schemaOwners": ["text"],
+      "directions": ["output"],
+      "classification": "unconstrainedText",
+      "userGoal": "Explain a rejected Battle routing operation in the service-generated diagnostic text returned to the caller.",
+      "recipients": ["OpenAI model", "connected user"],
+      "retentionOwner": "not retained as a separate record",
+      "privacyAnchor": "request-observations",
+      "scopeDigest": "4f00e96b55477c1fae27121950fcc97d22e6c6e735b432806107d2e25b694b2e"
+    },
+    {
+      "schemaOwners": ["readiedSpellCasterId"],
+      "directions": ["output"],
+      "classification": "authoredContentIdentifier",
+      "userGoal": "Identify the fictional caster owning a readied spell in the current Battle; this field carries a combatant reference despite the name-based scanner classification.",
+      "recipients": ["OpenAI model", "connected user"],
+      "retentionOwner": "Play Session state",
+      "privacyAnchor": "play-session-data",
+      "scopeDigest": "25c411c504d87b1931eb3cddb39a01ffb355b3965d3b41edb6a7b97ccd7a22ae"
     }
   ],
   "opaqueNodeDecisions": [
@@ -263,21 +354,8 @@
       "schemaOwners": [
         "protocol",
         "hitPoints",
-        "emission",
-        "expiresAt",
-        "area",
-        "attackDamageRidersUsedThisTurn",
-        "stunningStrikesUsedThisTurn",
-        "recklessAttackWhileRagingUsedThisTurn",
-        "weaponDamageDiceRollChoicesUsedThisTurn",
-        "huntersPreyHordeBreakerUsedThisTurn",
-        "heightenedStepOfTheWindCarriedCreatures",
-        "spells",
-        "actionsOrMovements",
         "movement",
         "origin",
-        "statBlockDamageSelection",
-        "relationshipFactRequest",
         "spellTargetSpatialFactRequest",
         "spellLeapTargetSpatialFactRequest",
         "attack",
@@ -317,32 +395,20 @@
         "sourceTurn",
         "choice",
         "attacks",
-        "options",
-        "source",
-        "combatants",
         "companion",
-        "hitDice",
-        "spellSlots",
-        "state",
-        "optionalSubstitutions",
-        "feet",
-        "abilityModifiers",
-        "spell",
-        "mechanics",
-        "spellSlotCost",
-        "components"
+        "state"
       ],
       "directions": ["output"],
       "evidence": "representativeResult",
       "owner": "packages/mcp/src/submission-candidate-evidence.ts",
-      "scopeDigest": "f3b9d4ad7e22285f04cda23a8f49310a5ae83d6bb9855616aeeaf6795d494bbe"
+      "scopeDigest": "748f63874af9f1eccc30c667c9db3c94b975d4c1f97cdb47d97ecce896c4eea3"
     },
     {
-      "schemaOwners": ["subject", "fill"],
-      "directions": ["input"],
-      "evidence": "representativeResult",
-      "owner": "packages/mcp/src/submission-candidate-evidence.ts",
-      "scopeDigest": "1328c4d261fb641efdc4d8262c9527c0dc29cb6df7125d80f1c98eae967ad67f"
+      "schemaOwners": ["$root", "occurrence"],
+      "directions": ["output"],
+      "evidence": "canonicalCodec",
+      "owner": "packages/mcp/src/play-session-tool-schema.ts",
+      "scopeDigest": "2285329460d918396b3c251869629cad8e5e56a12911ccd8ef79a65e8fde0e7c"
     }
   ],
   "dataHandlingDisclosures": [
@@ -422,7 +488,7 @@
       "implementationEvidence": {
         "tag": "scopedHumanReview",
         "scope": "Play Session rate-limit repository, SQLite actions, and window policy",
-        "sourceDigest": "1b5e2d184579e68e8c9ee5333b55b866ab121598a33cdc9ea27b2de06980cbb5"
+        "sourceDigest": "ef271798d17bd923e0b71bf0677eb236c869919668b5bc3fec8daec5b2539645"
       },
       "privacyAnchor": "rate-limit-capacity",
       "privacyEvidence": {

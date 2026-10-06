@@ -1,4 +1,9 @@
-import { Result } from "effect";
+import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
+import { chatGptBattleGuidance } from "./chatgpt/battle-guidance.ts";
+import type { ChatGptStatefulToolName } from "./chatgpt/protocol-operation.ts";
+import { type PlaySessionExecutionOperationName } from "./chatgpt/protocol-operation.ts";
+import { Result, Schema } from "effect";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import { type PlaySessionCaller } from "./play-session-access.ts";
@@ -19,10 +24,7 @@ import {
   type PlaySessionRegistry,
 } from "./play-session.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
-import {
-  playSessionToolNames,
-  type PlaySessionOperationName,
-} from "./play-session-tool-contract.ts";
+import { playSessionToolNames } from "./play-session-tool-contract.ts";
 import {
   authenticationRequired,
   playSessionAccessFailureContent,
@@ -61,6 +63,7 @@ export function handleCreatePlaySession(
   registry: PlaySessionRegistry<PlaySessionAccessFailure>,
   args: unknown,
   identity: PlaySessionRequestIdentity,
+  toolSurface: McpToolSurface = "regular",
 ): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   if (identity.tag === "hostedAnonymous") {
     return authenticationRequired(identity);
@@ -83,6 +86,9 @@ export function handleCreatePlaySession(
   return availablePlaySessionEnvelope({
     playSessionId: created.success.playSessionId,
     operationName: playSessionToolNames.create,
+    ...(toolSurface === "chatgpt"
+      ? { chatGptNavigation: { kind: "noBattle" as const } }
+      : {}),
     operationResult: {
       tag: "playSessionCreated",
       playSessionId: created.success.playSessionId,
@@ -96,6 +102,7 @@ export async function handleReadPlaySession(
   registry: PlaySessionRegistry<PlaySessionAccessFailure>,
   args: unknown,
   identity: PlaySessionRequestIdentity,
+  toolSurface: McpToolSurface = "regular",
 ): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
   const routed = decodePlaySessionRoutedArgs(
     args,
@@ -114,6 +121,10 @@ export async function handleReadPlaySession(
     routed.success.caller,
     (root) => {
       const battleEnvelope = readBattleEnvelopeForRoot(root);
+      const navigation =
+        toolSurface === "chatgpt"
+          ? { kind: "chatgpt" as const, battle: chatGptBattleGuidance(root) }
+          : { kind: "regular" as const };
       if (Result.isFailure(battleEnvelope)) {
         const operationContent = battlePresentationIssueContent(
           battleEnvelope.failure,
@@ -122,6 +133,7 @@ export async function handleReadPlaySession(
           operationResult: jsonContentPayload(operationContent),
           isError: true as const,
           projection: root.sessionStore.snapshot(),
+          navigation,
           hasAvailableCharacterSession: Array.from(
             root.sessionStore.characters.entries(),
           ).some(([, session]) => session.tag !== "inBattle"),
@@ -135,6 +147,7 @@ export async function handleReadPlaySession(
         },
         isError: false as const,
         projection: root.sessionStore.snapshot(),
+        navigation,
         hasAvailableCharacterSession: Array.from(
           root.sessionStore.characters.entries(),
         ).some(([, session]) => session.tag !== "inBattle"),
@@ -152,6 +165,9 @@ export async function handleReadPlaySession(
   return availablePlaySessionEnvelope({
     playSessionId: routed.success.playSessionId,
     operationName: playSessionToolNames.read,
+    ...(result.success.value.navigation.kind === "chatgpt"
+      ? { chatGptNavigation: result.success.value.navigation.battle }
+      : {}),
     operationResult: result.success.value.operationResult,
     projection: result.success.value.projection,
     hasAvailableCharacterSession:
@@ -161,25 +177,38 @@ export async function handleReadPlaySession(
   });
 }
 
-export async function handlePlaySessionOperation(input: {
-  readonly registry: PlaySessionRegistry<PlaySessionAccessFailure>;
-  readonly operationName: CharacterToolName | BattleToolName | DiceToolName;
-  readonly recordOperation: boolean;
-  readonly args: unknown;
-  readonly identity: PlaySessionRequestIdentity;
-  readonly handle: (
-    root: McpPlaySessionRoot,
-    args: unknown,
-  ) =>
+export async function handlePlaySessionOperation(
+  input: {
+    readonly registry: PlaySessionRegistry<PlaySessionAccessFailure>;
+    readonly recordOperation: boolean;
+    readonly args: unknown;
+    readonly identity: PlaySessionRequestIdentity;
+    readonly handle: (
+      root: McpPlaySessionRoot,
+      args: unknown,
+    ) =>
+      | {
+          readonly content: unknown;
+          readonly commandRetention: "retain" | "skip";
+        }
+      | Promise<{
+          readonly content: unknown;
+          readonly commandRetention: "retain" | "skip";
+        }>;
+  } & (
     | {
-        readonly content: unknown;
-        readonly commandRetention: "retain" | "skip";
+        readonly toolSurface?: never;
+        readonly operationName:
+          | CharacterToolName
+          | BattleToolName
+          | DiceToolName;
       }
-    | Promise<{
-        readonly content: unknown;
-        readonly commandRetention: "retain" | "skip";
-      }>;
-}): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
+    | {
+        readonly toolSurface: "chatgpt";
+        readonly operationName: ChatGptStatefulToolName;
+      }
+  ),
+): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
   const routed = decodePlaySessionRoutedArgs(
     input.args,
     input.operationName,
@@ -207,6 +236,10 @@ export async function handlePlaySessionOperation(input: {
           isToolContent(operationContent) && operationContent.isError === true,
         ),
         projection: root.sessionStore.snapshot(),
+        navigation:
+          input.toolSurface === "chatgpt"
+            ? { kind: "chatgpt" as const, battle: chatGptBattleGuidance(root) }
+            : { kind: "regular" as const },
         hasAvailableCharacterSession: Array.from(
           root.sessionStore.characters.entries(),
         ).some(([, session]) => session.tag !== "inBattle"),
@@ -215,7 +248,7 @@ export async function handlePlaySessionOperation(input: {
     {
       commandFor: (operation) =>
         retainedPlaySessionCommand(
-          input.operationName,
+          input,
           routed.success.operationArgs,
           operation.operationContent,
         ),
@@ -248,6 +281,9 @@ export async function handlePlaySessionOperation(input: {
   return availablePlaySessionEnvelope({
     playSessionId: routed.success.playSessionId,
     operationName: input.operationName,
+    ...(result.success.value.navigation.kind === "chatgpt"
+      ? { chatGptNavigation: result.success.value.navigation.battle }
+      : {}),
     operationResult: result.success.value.operationResult,
     projection: result.success.value.projection,
     hasAvailableCharacterSession:
@@ -262,29 +298,45 @@ function readBattleEnvelopeForRoot(root: McpPlaySessionRoot) {
   if (battleState.tag !== "activeBattle") return Result.succeed(null);
   return Result.map(
     battleSessionPayload(root, battleState.session),
-    (payload) => payload.envelope,
+    (payload) =>
+      payload.envelope === null
+        ? null
+        : Schema.encodeSync(BattlePresentationEnvelopeSchema)(payload.envelope),
   );
 }
 
 function retainedPlaySessionCommand(
-  operationName: CharacterToolName | BattleToolName | DiceToolName,
+  input:
+    | {
+        readonly toolSurface?: never;
+        readonly operationName:
+          | CharacterToolName
+          | BattleToolName
+          | DiceToolName;
+      }
+    | {
+        readonly toolSurface: "chatgpt";
+        readonly operationName: ChatGptStatefulToolName;
+      },
   args: Readonly<Record<string, unknown>>,
   operationContent: unknown,
 ): PlaySessionCommand {
-  if (operationName === characterToolNames.createCharacterDraft) {
+  if (input.operationName === characterToolNames.createCharacterDraft) {
     const draftId = createdCharacterDraftId(operationContent);
-    return { name: operationName, args: { ...args, draftId } };
+    return { name: input.operationName, args: { ...args, draftId } };
   }
-  if (operationName === diceToolNames.rollDice) {
-    const decoded = decodeDiceToolCall({ name: operationName, args });
+  if (input.operationName === diceToolNames.rollDice) {
+    const decoded = decodeDiceToolCall({ name: input.operationName, args });
     if (Result.isFailure(decoded)) {
       throw new Error(
         "A retained successful dice operation no longer decodes as its command.",
       );
     }
-    return { name: operationName, args: decoded.success.args };
+    return { name: input.operationName, args: decoded.success.args };
   }
-  return { name: operationName, args };
+  return input.toolSurface === "chatgpt"
+    ? { toolSurface: "chatgpt", name: input.operationName, args }
+    : { name: input.operationName, args };
 }
 
 type RoutedArgs = {
@@ -295,7 +347,7 @@ type RoutedArgs = {
 
 function noArgumentsError(
   args: unknown,
-  operationName: PlaySessionOperationName,
+  operationName: PlaySessionExecutionOperationName,
   acceptUndefined = false,
 ): ReturnType<typeof errorContent> | null {
   if (
@@ -312,7 +364,7 @@ function noArgumentsError(
 
 function decodePlaySessionRoutedArgs(
   args: unknown,
-  operationName: PlaySessionOperationName,
+  operationName: PlaySessionExecutionOperationName,
   identity: PlaySessionRequestIdentity,
 ): Result.Result<
   RoutedArgs,

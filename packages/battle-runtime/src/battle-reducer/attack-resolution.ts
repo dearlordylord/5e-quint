@@ -199,6 +199,8 @@ import type {
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleTerminalResolutionResult,
+  BattleOrdinaryNeedsHolesResult,
   BattleRolledDiceFill,
   BattleShovePushOutcome,
   BattleState,
@@ -353,7 +355,7 @@ export function resolveDash(
   input: BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "action"; readonly action: "dash" }>
   >,
-): BattleResolutionResult {
+): BattleTerminalResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -403,7 +405,7 @@ export function resolveDash(
 
 export function resolveDisengage(
   input: BattleResolutionInput,
-): BattleResolutionResult {
+): BattleTerminalResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -539,7 +541,7 @@ function resolveBonusActionDashTemporaryHitPoints(
 
 export function resolveBonusActionDisengage(
   input: BonusActionStandardActionDisengageResolverInput,
-): BattleResolutionResult {
+): BattleTerminalResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -572,7 +574,7 @@ export function resolveBonusActionDisengage(
 
 export function resolveDodge(
   input: BattleResolutionInput,
-): BattleResolutionResult {
+): BattleTerminalResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -615,11 +617,18 @@ export function resolveDodge(
   };
 }
 
+type ReadyActionResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "action"; readonly action: "ready" }>
+>;
+
 export function resolveReady(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "action"; readonly action: "ready" }>
-  >,
-): BattleResolutionResult {
+  input: ReadyActionResolutionInput,
+):
+  | BattleTerminalResolutionResult
+  | BattleOrdinaryNeedsHolesResult<
+      readonly [ReturnType<typeof readyDeclarationHole>],
+      ReadyActionResolutionInput["subject"]
+    > {
   const responseChoices = readyResponseChoices(
     input.state,
     input.subject.actorId,
@@ -676,14 +685,22 @@ export function resolveReady(
   };
 }
 
+type HelpAttackResolutionInput = BattleResolutionInputForSubject<
+  Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "helpAttack" }
+  >
+>;
+
 export function resolveHelpAttack(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      { readonly tag: "action"; readonly action: "helpAttack" }
-    >
-  >,
-): BattleResolutionResult {
+  input: HelpAttackResolutionInput,
+):
+  | BattleTerminalResolutionResult
+  | BattleOrdinaryNeedsHolesResult<
+      | readonly [ReturnType<typeof helpAttackAllyHole>]
+      | readonly [ReturnType<typeof helpAttackTargetHole>],
+      HelpAttackResolutionInput["subject"]
+    > {
   const [allyFill, targetFillValue] = input.fills;
   if (allyFill === undefined) {
     return needsHolesResult(input.state, input.subject, [
@@ -1234,7 +1251,7 @@ export function resolveStatBlockBonusActionDisengage(
   input: StatBlockBonusActionOptionBattleResolutionInput,
   actor: StatBlockBattleCreatureState,
   procedureRef: import("../identity.ts").BattleStatBlockProcedureExecutionRef,
-): BattleResolutionResult {
+): BattleTerminalResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -1845,7 +1862,7 @@ export function resolveReleaseGrappleCommand(
       { readonly tag: "runtimeCommand"; readonly command: "releaseGrapple" }
     >
   >,
-): BattleResolutionResult {
+): BattleTerminalResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -2519,7 +2536,7 @@ export function spendAttackAction(
   actorId: CombatantId,
   attack: BoundSupportedAttackActionOption,
   timing: { readonly kind: "acceptedAttack" | "attackPreventedBeforeRoll" },
-): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+): BattleTerminalResolutionResult {
   const statBlockAttackSection =
     attack.kind === "statBlockAttack"
       ? statBlockAttackProcedureSection(state, actorId, attack.procedureRef)

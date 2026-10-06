@@ -14,6 +14,7 @@ services:
       DND_MCP_BUDGET_MONITORING: ${DND_MCP_BUDGET_MONITORING:?set enabled or disabled}
       DND_MCP_BUDGET_ALERT_RECIPIENT: ${DND_MCP_BUDGET_ALERT_RECIPIENT:-notApplicable}
       DND_MCP_PUBLIC_ORIGIN: https://${DND_MCP_DOMAIN:?set the public domain}
+      DND_MCP_TOOL_SURFACE: ${DND_MCP_TOOL_SURFACE:-regular}
       DND_MCP_HOST: 0.0.0.0
       PORT: 8787
       DND_PLAY_SESSION_DATABASE_PATH: /var/lib/dnd-oracle/play-sessions.sqlite

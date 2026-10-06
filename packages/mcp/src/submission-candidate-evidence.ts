@@ -1,3 +1,5 @@
+import { CHATGPT_TOOL_NAMES } from "./chatgpt/protocol-operation.ts";
+import { chatGptExecutionToolDefinitions } from "./chatgpt/tool-surface.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Result, Schema } from "effect";
@@ -8,7 +10,6 @@ import { decodeDiceSeed } from "./dice-sampling-service.ts";
 import { decodePlaySessionId } from "./play-session.ts";
 import { decodePrincipalId } from "./play-session-access.ts";
 import {
-  buildAdvertisedToolDefinitions,
   buildCanonicalToolDefinitions,
   createDndMcpProtocolServer,
 } from "./protocol-server.ts";
@@ -120,23 +121,17 @@ async function observeLocalCandidate(): Promise<{
     "00000003",
     "00000004",
   ]);
-  const principalId = decodePrincipalId("submission-candidate-principal");
-  if (
-    Result.isFailure(playSessionId) ||
-    Result.isFailure(diceSeed) ||
-    Result.isFailure(principalId)
-  ) {
+  const requestIdentity = candidateRequestIdentity();
+  if (Result.isFailure(playSessionId) || Result.isFailure(diceSeed)) {
     throw new Error("Submission candidate fixtures are invalid.");
   }
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
   const { server } = createDndMcpProtocolServer(undefined, undefined, {
+    toolSurface: "chatgpt",
     playSessionIdFactory: () => playSessionId.success,
     playSessionDiceSeedFactory: () => diceSeed.success,
-    requestIdentity: {
-      tag: "authenticated",
-      principalId: principalId.success,
-    },
+    requestIdentity,
   });
   const client = new Client({
     name: "submission-candidate-observer",
@@ -146,6 +141,15 @@ async function observeLocalCandidate(): Promise<{
     await server.connect(serverTransport);
     await client.connect(clientTransport);
     const tools = await client.listTools();
+    const toolNames = new Set(tools.tools.map((tool) => tool.name));
+    if (
+      toolNames.size !== CHATGPT_TOOL_NAMES.length ||
+      tools.tools.length !== CHATGPT_TOOL_NAMES.length ||
+      !CHATGPT_TOOL_NAMES.every((name) => toolNames.has(name))
+    )
+      throw new Error(
+        "The submission candidate must expose exactly the named ChatGPT tool contract.",
+      );
     const catalog = await client.callTool({
       name: "list_catalog_units",
       arguments: {},
@@ -186,15 +190,19 @@ async function observeLocalCandidate(): Promise<{
       arguments: { playSessionId: playSessionId.success },
     });
     const authorizationRejected = await observeHostedAnonymousDenial();
-    const battleResults = await submissionBattleRepresentativeResults();
+    const battleResults =
+      await submissionBattleRepresentativeResults("chatgpt");
     const policy = decodeSubmissionReviewPolicy(reviewPolicyJson);
     if (Result.isFailure(policy)) {
       throw new Error(`Invalid submission review policy: ${policy.failure}`);
     }
     const reviewScope = submissionResultReviewScope(
-      buildCanonicalToolDefinitions(undefined, "hosted"),
+      buildCanonicalToolDefinitions(
+        chatGptExecutionToolDefinitions,
+        "hosted",
+        "chatgpt",
+      ),
       policy.success,
-      buildAdvertisedToolDefinitions(undefined, "hosted"),
     );
     const resultIssues = [
       ["list_catalog_units", catalog],
@@ -250,6 +258,7 @@ async function observeHostedAnonymousDenial(): Promise<unknown> {
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
   const { server } = createDndMcpProtocolServer(undefined, undefined, {
+    toolSurface: "chatgpt",
     requestIdentity: {
       tag: "hostedAnonymous",
       authentication: {
@@ -297,4 +306,11 @@ function validateLocalSkillEvaluation(): void {
     skillActivationInventory: evaluationInventory.skillActivation,
     skillSource,
   });
+}
+
+function candidateRequestIdentity() {
+  const principalId = decodePrincipalId("submission-candidate-principal");
+  if (Result.isFailure(principalId))
+    throw new Error("Submission candidate principal fixture is invalid.");
+  return { tag: "authenticated", principalId: principalId.success } as const;
 }

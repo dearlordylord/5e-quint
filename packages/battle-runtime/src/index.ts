@@ -1,3 +1,4 @@
+export { characterSpellProcedure } from "./character-execution-queries.ts";
 export * from "./consumer-protocol.ts";
 
 export {
@@ -728,6 +729,7 @@ export {
   admitBattleRuntimeTransactionOperation,
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
+  battlePendingTransactionReplaySessionForSession,
   battlePendingTransactionEnvelopeForSession,
   type BattlePendingTransaction,
   type BattlePendingTransactionEnvelopeSessionView,

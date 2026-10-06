@@ -64,13 +64,13 @@ function querySchemaFor<
   });
 }
 
-export const CharacterSessionQuerySchema = Schema.Union([
-  querySchemaFor("abilityCheckAbility", {
+export const CHARACTER_SESSION_QUERY_SCHEMAS = {
+  abilityCheckAbility: querySchemaFor("abilityCheckAbility", {
     skill: SurfaceSkillSchema,
     defaultAbility: AbilitySchema,
     activeFeatureUnitIds: UnitIdArraySchema,
   }),
-  querySchemaFor("abilityCheckProficiencyBonus", {
+  abilityCheckProficiencyBonus: querySchemaFor("abilityCheckProficiencyBonus", {
     skill: SurfaceSkillSchema,
     otherProficiencyBonus: Schema.Union([
       Schema.Struct({
@@ -81,29 +81,32 @@ export const CharacterSessionQuerySchema = Schema.Union([
       }),
     ]),
   }),
-  querySchemaFor("jumpDistanceAbility", {
+  jumpDistanceAbility: querySchemaFor("jumpDistanceAbility", {
     defaultAbility: AbilitySchema,
   }),
-  querySchemaFor("linkedSpeedGrants", {}),
-  querySchemaFor("armorClass", {
+  linkedSpeedGrants: querySchemaFor("linkedSpeedGrants", {}),
+  armorClass: querySchemaFor("armorClass", {
     baseChoice: Schema.optionalKey(ArmorClassBaseChoiceSchema),
   }),
-  querySchemaFor("spellAccess", {}),
-  querySchemaFor("knownForms", {}),
-  querySchemaFor("weaponMasterySelections", {
+  spellAccess: querySchemaFor("spellAccess", {}),
+  knownForms: querySchemaFor("knownForms", {}),
+  weaponMasterySelections: querySchemaFor("weaponMasterySelections", {
     featureUnitId: UnitId,
   }),
-  querySchemaFor("spellbookRitualAccesses", {}),
-  querySchemaFor("spellbookRitualAccess", {
+  spellbookRitualAccesses: querySchemaFor("spellbookRitualAccesses", {}),
+  spellbookRitualAccess: querySchemaFor("spellbookRitualAccess", {
     spellId: UnitId,
   }),
-  querySchemaFor("spellInvocation", {
+  spellInvocation: querySchemaFor("spellInvocation", {
     spellId: UnitId,
     invocation: Schema.Struct({
       kind: Schema.Literal("ritual"),
     }),
   }),
-]);
+} as const;
+export const CharacterSessionQuerySchema = Schema.Union(
+  Object.values(CHARACTER_SESSION_QUERY_SCHEMAS),
+);
 
 export const QueryCharacterSessionArgsSchema = Schema.Struct({
   characterId: Schema.String.annotate({

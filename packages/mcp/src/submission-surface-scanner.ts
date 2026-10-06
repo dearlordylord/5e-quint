@@ -1,4 +1,5 @@
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
+import { visitSchemaChildren } from "./json-schema-sharing.ts";
 import type { SubmissionReviewPolicy } from "./submission-gate-policy.ts";
 import {
   observationDigest,
@@ -347,27 +348,33 @@ function canonicalResolvedOwnerPaths(
   const cached = canonicalResolvedOwnerPathsCache.get(schema);
   if (cached !== undefined) return cached;
   const paths = new Set<string>();
-  collectResolvedOwnerPaths(schema, "", paths);
+  const referencedOwners = new Set<string>();
+  const collect = (
+    value: Readonly<Record<string, unknown>>,
+    prefix: readonly string[],
+  ): void => {
+    visitSchemaChildren(value, (node, segments) => {
+      const path = `/${[...prefix, ...segments].map(escapePointer).join("/")}`;
+      const owner = schemaOwnerPathAt(path);
+      if (isResolvedCanonicalOwner(node)) paths.add(owner);
+      if (typeof node.$ref !== "string" || !node.$ref.startsWith("#/")) return;
+      const referenceOwner = `${node.$ref}:${owner}`;
+      if (referencedOwners.has(referenceOwner)) return;
+      referencedOwners.add(referenceOwner);
+      const target = node.$ref
+        .slice(2)
+        .split("/")
+        .reduce<unknown>(
+          (value, key) =>
+            isJsonObject(value) ? value[unescapePointer(key)] : undefined,
+          schema,
+        );
+      if (isJsonObject(target)) collect(target, [...prefix, ...segments]);
+    });
+  };
+  collect(schema, []);
   canonicalResolvedOwnerPathsCache.set(schema, paths);
   return paths;
-}
-
-function collectResolvedOwnerPaths(
-  value: unknown,
-  path: string,
-  paths: Set<string>,
-): void {
-  if (Array.isArray(value)) {
-    value.forEach((entry, index) =>
-      collectResolvedOwnerPaths(entry, `${path}/${index}`, paths),
-    );
-    return;
-  }
-  if (!isJsonObject(value)) return;
-  if (isResolvedCanonicalOwner(value)) paths.add(schemaOwnerPathAt(path));
-  for (const [key, entry] of Object.entries(value)) {
-    collectResolvedOwnerPaths(entry, `${path}/${escapePointer(key)}`, paths);
-  }
 }
 
 function schemaOwnerPathAt(path: string): string {

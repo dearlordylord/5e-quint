@@ -7585,10 +7585,14 @@ export type BattleOrdinaryHole = Exclude<
   { readonly kind: "interruptDecision" }
 >;
 
-export type BattleOrdinaryHoleFrontier = {
+export type BattleOrdinaryHoleFrontier<
+  Holes extends ReadonlyNonEmptyArray<BattleOrdinaryHole> =
+    ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  Subject extends BattleSubject = BattleSubject,
+> = {
   readonly kind: "holes";
-  readonly replaySubject: BattleSubject;
-  readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+  readonly replaySubject: Subject;
+  readonly holes: Holes;
   readonly pendingProcedure: BattlePendingProcedure;
 };
 
@@ -7626,12 +7630,22 @@ export type BattleResolutionResult =
       readonly routeEvents?: BattleReducerRouteEvents;
     };
 
-export type BattleOrdinaryNeedsHolesResult = Extract<
+export type BattleOrdinaryNeedsHolesResult<
+  Holes extends ReadonlyNonEmptyArray<BattleOrdinaryHole> =
+    ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  Subject extends BattleSubject = BattleSubject,
+> = Omit<
+  Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  "frontier"
+> & {
+  readonly frontier: BattleOrdinaryHoleFrontier<Holes, Subject>;
+};
+
+/** A procedure outcome that cannot request additional execution input. */
+export type BattleTerminalResolutionResult = Exclude<
   BattleResolutionResult,
   { readonly tag: "needsHoles" }
-> & {
-  readonly frontier: BattleOrdinaryHoleFrontier;
-};
+>;
 
 export type BattleFallingCreatureMitigationLandingResult =
   | {

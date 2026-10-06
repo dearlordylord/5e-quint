@@ -166,6 +166,55 @@ and incident procedures live in the
 
 ## Tool workflows
 
+### ChatGPT plugin surface
+
+Set `DND_MCP_TOOL_SURFACE=chatgpt` on the HTTP host to expose the 126 named
+ChatGPT tools. The default is `regular`; stdio continues to expose the regular
+MCP contract. Choose the surface for the host, rather than per model request.
+The two surfaces use the same catalogs, Play Session ownership, reducers,
+transactions, and storage.
+
+The ChatGPT surface replaces the five generic execution/query entry points with
+named character mutations, queries, roster/setup operations, Battle actions,
+spell operations, feature procedures, event reports, and Reaction decisions.
+Each registration owns a description, input schema, and all four annotations.
+Tools remain advertised when an operation is unavailable in the current state;
+canonical discovery and engine admission determine whether it can run now.
+
+Advertised ChatGPT schemas share repeated constraints, factor common object-union
+fields, and [inline definitions](src/json-schema-definition-inlining.ts) when
+references cost more bytes than the constraints themselves. Inlining preserves
+closed objects, required fields, literal data, and tuple constraints. Definitions
+with reference siblings, suffix references, recursion, or unproved URI/resource
+scopes remain intact. These transformations run only at schema advertisement.
+They also [simplify singleton literals](src/json-schema-literals.ts) to `const`
+and remove primitive types already implied by that literal. Contradictory type
+constraints, instance data, descriptions, and reference scopes remain intact.
+
+Battle results and `read_play_session` include the typed
+`chatGptBattleOperations` field in structured content and its matching JSON text. Its acts, ordinary continuation, and Reaction
+choices carry `routing`: an available named-tool list or an explicit unavailable
+issue. Select an Act with its named tool and canonical subject, without `fill`;
+the tool opens any initial holes as a pending transaction. Supply ordinary
+facts through `answer_battle_hole`, with `fill` and no subject. The runtime-owned
+transaction supplies the subject and rejects stale or foreign-session facts.
+Select each Reaction through its own named operation, including
+`decline_reaction`, with an `interruptDecision` fill, no subject, and an empty
+`choice.fills` array. The transaction owns the parent; subsequent ordinary holes
+also use `answer_battle_hole`. That tool cannot select an Act or Reaction.
+Regular MCP retains its existing fill-first and inline Reaction answer contracts.
+Initial `report_creature_fall` calls require `reactionSpellTargetFacts`, including
+an explicit `[]` when the table confirms no qualifying target facts. That field
+is absent on other operations.
+
+Saved ChatGPT commands retain `toolSurface: "chatgpt"`, their named operation,
+and canonical inputs. Reconstruction uses that surface, preserving overlapping
+names such as `end_turn` when a saved session is accessed through either host.
+The regular MCP keeps its existing argument shapes and command history.
+
+The following workflow tables describe the regular surface. On the ChatGPT host,
+`describe_mcp_workflow` describes the named-operation workflow.
+
 `describe_mcp_workflow` returns lifecycle guidance, fill examples, result paths,
 and limits. The contextual result envelope derives the current projection,
 unresolved inputs, next operations, and restoration status from canonical state;
@@ -320,3 +369,121 @@ The stdio entrypoint is packaged as `@dearlordylord/dnd-mcp` in the same
 repository. See [consumer setup](../../distribution/mcp/README.md) and the
 [distribution workflow](../../scripts/distribution/README.md) for build,
 packed-protocol verification, and release instructions.
+
+## Operation accounting
+
+Run `pnpm --filter @dnd/mcp check:operation-accounting`. The script derives
+finite operation domains from the types consumed by execution, checks exhaustive
+[decisions](scripts/operation-accounting-decisions.ts), resolves implemented
+function owners, verifies canonical spell profile callbacks, and compares public
+entry points with the actual hosted/local tool builder. It also runs before
+`check:submission-fast`. A new member requires an explicit decision; there is no
+fallback bucket or snapshot regeneration step.
+
+Generate a complete report when needed:
+
+```sh
+pnpm --filter @dnd/mcp exec tsx scripts/operation-accounting.ts --report /tmp/dnd-operation-accounting.md
+```
+
+`--json PATH` provides the same accounting as machine-readable output. Generated
+reports are not committed sources of truth. The
+[execution contract](src/chatgpt/execution-domains.ts) names the audited
+families and their canonical types. It preserves compound subject discriminants
+and spell operations behind references, including persistent-effect follow-ups.
+Each member is classified as a caller operation, reference dispatch,
+continuation, internal composition, or unavailable binding, with source evidence.
+Reports also derive each implemented owner's finite return tags from its TypeScript
+signature. The gate rejects compiler errors in the loaded production source graph
+before accepting these type-derived facts. Unclassified return shapes are reported
+explicitly. An owner's absence
+of `needsHoles` describes that function alone: interrupt dispatch, replay, and
+caller composition must also be accounted for before narrowing a tool's continuation
+schema.
+
+[Owner frontier analysis](scripts/execution-owner-frontiers.ts) projects ordinary
+hole kinds and replay-subject carriers from each implemented owner's declared
+result type, retaining their association within each frontier branch. Terminal owners
+report an empty set; unresolved signatures, tags, and frontier shapes report an
+explicit unclassified result. Narrow Ready and Help result contracts retain their
+constructor-derived hole types and their initiating subject types. These are owner declarations, not a transitive
+proof across dispatch, callbacks, interrupts, or replay, and do not alone narrow
+a tool's continuation schema.
+
+The report also projects instantiated return types at calls to named generic
+ordinary-frontier producers. This preserves subject and hole associations through
+forwarding helpers, including spatial procedures and spell selection. The scope
+includes direct needs-holes branches and the `result` of a resolution wrapper;
+each row records its result path. Indirect calls and other result shapes remain
+outside this evidence. These call-site facts do not establish transitive
+operation reachability.
+
+The report records symbol-resolved calls to the canonical ordinary-hole result
+helpers, whose return types preserve the supplied hole tuple and subject. Each call reports
+its inferred hole kinds and the subject carriers supplied at that call; broad
+inputs remain broad and unclassified carriers remain explicit. Accounting checks
+the structural carrier projection against the complete canonical subject-key
+domain before accepting the report. It also reports shortest
+named-caller ancestor distances in a symbol-resolved graph, deduplicating cycles
+by declaration identity. Anonymous callbacks are attributed to their enclosing
+named declaration, and indirect calls remain unresolved. These requests are evidence
+for a continuation analysis, and require the same caller/interrupt/replay proof
+before they can narrow a named tool schema.
+
+The report also inventories typed hole-shaped object constructions in the loaded
+runtime graph, with source owners, symbol-resolved direct calls to named owners,
+and explicit unclassified discriminants. Empty caller lists do not establish
+unreachability; indirect calls and transitive operation reachability remain outside
+this construction evidence.
+
+Families overlap; their counts are not unique action or required tool totals.
+This checks completeness of the named typed execution domains, not reachability
+or arbitrary semantic changes within an unchanged discriminant. Adding an
+entirely new execution pathway requires extending the audited families during
+architecture review. Existing RAW, runtime, and formal checks still apply.
+The accounting verifies the implemented ChatGPT tool split against the typed
+execution domains and actual advertised registrations. It does not establish
+review approval. Content record
+identities and state-dependent act availability do not create additional tools.
+Internal admin and HTTP/OAuth methods are outside the model-callable surface.
+
+The [ChatGPT tool plan](src/chatgpt/operation-tool-plan.ts) is a strongly typed
+consumer of that execution contract. Each execution member has a concrete tool
+route, a refinement into a named family or specific operation subset, a bound
+continuation, internal composition, or an unavailable decision. Common Battle
+and Unit procedure decisions are referenced by their overlapping families.
+The accounting generator checks every mapping key against its live execution
+analysis, validates referenced operations and tool names, rejects refinement
+cycles and hidden caller operations, and verifies the implemented tool count.
+The generated report lists every named tool and its execution selections.
+
+`ChatGptToolSelection<Name>` and `ChatGptToolInvocation` preserve the correlation
+between a tool name and its concrete execution selectors.
+`chatGptToolAcceptsSelection` supplies a guard for typed selection consumers;
+reference gateways must first resolve to a concrete procedure or retained action.
+Ordinary continuation inputs route to `answer_battle_hole`, which derives the
+selected subject from the pending transaction. Nested Reaction choices use the
+explicit tool that owns that operation. Engine admission,
+ownership, timing and resource checks remain necessary. The selection contract is
+routing metadata, not a replacement for canonical parsed engine inputs.
+
+Reaction navigation entries contain `selection` and routing information. The
+selection schema derives from every canonical Reaction-choice branch with its
+`initialHoles` field removed; the complete choices and their holes remain in the
+Battle frontier at `choices[].choice`. Navigation does not copy those execution
+facts or change the declared operation inputs.
+
+The [ChatGPT registrations](src/chatgpt/tool-surface.ts) exhaustively implement
+the plan's tool names. The generator compares their actual hosted definitions
+with its execution analysis and checks descriptions, closed root inputs, and
+annotations. The HTTP host selects them explicitly; regular MCP registration
+remains the default. Generated reports are evidence, not a second configuration
+source.
+
+The submission fast gate scans the hosted ChatGPT definitions and their canonical
+codec owners. Candidate evidence fingerprints the same 126-tool host and exercises
+named Battle attacks and Reaction decisions. Canonical output review derives from
+execution/replay grammar owners even where an advertised output schema is omitted;
+it does not add those review schemas to tool discovery. The shared pending-procedure
+codec also owns recovery-envelope continuations returned by non-Battle operations;
+the scanner follows local references while retaining their property ownership.

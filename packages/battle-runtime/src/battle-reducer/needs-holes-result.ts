@@ -8,7 +8,6 @@ import type {
   BattleOrdinaryNeedsHolesResult,
   BattleResolutionCheckpointBoundary,
   BattleState,
-  BattleResolutionResult,
 } from "../battle-state-execution.ts";
 import type { BattlePendingProcedure } from "../battle-pending-procedure.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
@@ -19,12 +18,15 @@ const SUBJECT_RESOLUTION_PENDING_PROCEDURE = {
   kind: "subjectResolution",
 } as const satisfies BattlePendingProcedure;
 
-export function needsHolesResult(
+export function needsHolesResult<
+  const Holes extends ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  const Subject extends BattleSubject,
+>(
   state: BattleState,
-  subject: BattleSubject,
-  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  subject: Subject,
+  holes: Holes,
   checkpointBoundary?: BattleResolutionCheckpointBoundary,
-): BattleOrdinaryNeedsHolesResult {
+): BattleOrdinaryNeedsHolesResult<Holes, Subject> {
   return needsHolesResultWithProcedure(
     state,
     subject,
@@ -34,13 +36,16 @@ export function needsHolesResult(
   );
 }
 
-export function needsHolesResultWithProcedure(
+export function needsHolesResultWithProcedure<
+  const Holes extends ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  const Subject extends BattleSubject,
+>(
   state: BattleState,
-  subject: BattleSubject,
-  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  subject: Subject,
+  holes: Holes,
   pendingProcedure: BattlePendingProcedure,
   checkpointBoundary?: BattleResolutionCheckpointBoundary,
-): BattleOrdinaryNeedsHolesResult {
+): BattleOrdinaryNeedsHolesResult<Holes, Subject> {
   return {
     tag: "needsHoles",
     state,
@@ -55,21 +60,30 @@ export function needsHolesResultWithProcedure(
   };
 }
 
-type SpellSelection =
+type SpellSelection<Hole extends BattleOrdinaryHole> =
   | { readonly tag: "ok" }
-  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
+  | { readonly tag: "needsHoles"; readonly hole: Hole }
   | { readonly tag: "invalid"; readonly message: string };
 
-export function spellSelectionResolution<S extends SpellSelection>(
+export function spellSelectionResolution<
+  const Hole extends BattleOrdinaryHole,
+  S extends SpellSelection<Hole>,
+  const Subject extends BattleSubject,
+>(
   state: BattleState,
-  subject: BattleSubject,
-  selection: S,
+  subject: Subject,
+  selection: S & SpellSelection<Hole>,
 ):
   | {
       readonly tag: "ok";
       readonly selection: Extract<S, { readonly tag: "ok" }>;
     }
-  | { readonly tag: "resolution"; readonly result: BattleResolutionResult } {
+  | {
+      readonly tag: "resolution";
+      readonly result:
+        | ReturnType<typeof invalidResult>
+        | BattleOrdinaryNeedsHolesResult<readonly [Hole], Subject>;
+    } {
   if (selection.tag === "needsHoles") {
     return {
       tag: "resolution",
@@ -84,6 +98,7 @@ export function spellSelectionResolution<S extends SpellSelection>(
   }
   return {
     tag: "ok",
+    // Both other tags were handled above; TypeScript does not narrow the generic S itself.
     selection: selection as Extract<S, { readonly tag: "ok" }>,
   };
 }

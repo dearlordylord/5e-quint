@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { visitSchemaChildren } from "./json-schema-sharing.ts";
 
 import type { SubmissionReviewPolicy } from "./submission-gate-policy.ts";
 import type { SubmissionSurfaceIssue } from "./submission-surface-scanner.ts";
@@ -54,14 +55,22 @@ export function walkSubmissionSchema(input: WalkSchemaInput): void {
   }
   if (!isJsonObject(input.value)) return;
 
-  const properties = isJsonObject(input.value.properties)
-    ? input.value.properties
-    : undefined;
-  inspectOpenNode(input, input.value, properties);
-  if (properties !== undefined) {
-    inspectProperties(input, input.value, properties);
-  }
-  walkSchemaCompositions(input, input.value);
+  visitSchemaChildren(input.value, (schema, segments) => {
+    const nodeInput = {
+      ...input,
+      value: schema,
+      path:
+        segments.length === 0
+          ? input.path
+          : `${input.path}/${segments.map(escapePointer).join("/")}`,
+    };
+    const properties = isJsonObject(schema.properties)
+      ? schema.properties
+      : undefined;
+    inspectOpenNode(nodeInput, schema, properties);
+    if (properties !== undefined)
+      inspectProperties(nodeInput, schema, properties);
+  });
 }
 
 function walkSchemaArray(input: WalkSchemaInput, value: readonly unknown[]) {
@@ -72,30 +81,6 @@ function walkSchemaArray(input: WalkSchemaInput, value: readonly unknown[]) {
       path: `${input.path}/${index}`,
     }),
   );
-}
-
-function walkSchemaCompositions(
-  input: WalkSchemaInput,
-  value: Readonly<Record<string, unknown>>,
-): void {
-  for (const keyword of ["anyOf", "oneOf", "allOf", "items"] as const) {
-    if (value[keyword] !== undefined) {
-      walkSubmissionSchema({
-        ...input,
-        value: value[keyword],
-        path: `${input.path}/${keyword}`,
-      });
-    }
-  }
-  if (isJsonObject(value.$defs)) {
-    for (const [definitionName, definition] of Object.entries(value.$defs)) {
-      walkSubmissionSchema({
-        ...input,
-        value: definition,
-        path: `${input.path}/$defs/${escapePointer(definitionName)}`,
-      });
-    }
-  }
 }
 
 function inspectOpenNode(
@@ -147,11 +132,6 @@ function inspectProperties(
       propertySchema,
       propertyPath,
     );
-    walkSubmissionSchema({
-      ...input,
-      value: propertySchema,
-      path: propertyPath,
-    });
   }
 }
 
@@ -206,15 +186,22 @@ function isAuthorizationSecretProperty(
 ): boolean {
   if (!AUTHORIZATION_SECRET.test(propertyName)) return false;
   if (propertyName !== "password") return true;
+  return !isFictionalLockSchema(containingSchema);
+}
+
+function isFictionalLockSchema(
+  containingSchema: Readonly<Record<string, unknown>>,
+): boolean {
   const properties = isJsonObject(containingSchema.properties)
     ? containingSchema.properties
     : undefined;
   const kind = properties?.kind;
-  return !(
+  return (
     isJsonObject(kind) &&
-    Array.isArray(kind.enum) &&
-    kind.enum.length === 1 &&
-    kind.enum[0] === "lock_object"
+    (kind.const === "lock_object" ||
+      (Array.isArray(kind.enum) &&
+        kind.enum.length === 1 &&
+        kind.enum[0] === "lock_object"))
   );
 }
 

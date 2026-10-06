@@ -79,6 +79,30 @@ describe("submission surface scanner", () => {
     expect(
       scanPublicToolSurface([definition], reviewedPolicy, [definition]),
     ).toContainEqual(expect.objectContaining({ code: "OPEN_SCHEMA_NODE" }));
+    const schemaShapedData = {
+      type: "object",
+      properties: { selected: { type: "string", enum: ["synthetic"] } },
+    };
+    for (const literalAnnotation of [
+      { const: schemaShapedData },
+      { examples: [schemaShapedData] },
+    ]) {
+      const canonicalWithLiteralData = toolWithInputProperty("choice", {
+        type: "object",
+        ...literalAnnotation,
+      });
+      expect(
+        scanPublicToolSurface([definition], reviewedPolicy, [
+          canonicalWithLiteralData,
+        ]),
+      ).toContainEqual(
+        expect.objectContaining({
+          code: "OPEN_SCHEMA_NODE",
+          message:
+            "The opaque advertised node has no corresponding canonical schema owner.",
+        }),
+      );
+    }
   });
 
   test("rejects authorization secrets nested behind a referenced definition", () => {
@@ -102,6 +126,63 @@ describe("submission surface scanner", () => {
       expect.objectContaining({
         code: "MODEL_VISIBLE_AUTHORIZATION_SECRET",
         path: "/$defs/Leak/properties/guestAccessGrant",
+      }),
+    );
+  });
+
+  test("retains canonical ownership through recursive local references", () => {
+    const advertised = toolWithInputProperty("request", {
+      type: "object",
+      properties: { occurrence: { type: "object" } },
+    });
+    const policy: SubmissionReviewPolicy = {
+      ...emptyPolicy,
+      opaqueNodeDecisions: [
+        {
+          schemaOwners: ["occurrence"],
+          directions: ["input"],
+          evidence: "canonicalCodec",
+          owner: "Synthetic occurrence codec",
+          scopeDigest: "0".repeat(64),
+        },
+      ],
+    };
+    const canonical: ProtocolToolDefinition = {
+      ...advertised,
+      inputSchema: {
+        type: "object",
+        properties: { request: { $ref: "#/$defs/Request" } },
+        $defs: {
+          Request: {
+            type: "object",
+            properties: {
+              occurrence: { $ref: "#/$defs/Occurrence" },
+              nested: { $ref: "#/$defs/Request" },
+            },
+          },
+          Occurrence: {
+            type: "object",
+            properties: { amount: { type: "integer" } },
+          },
+        },
+      },
+    };
+    expect(
+      scanPublicToolSurface([advertised], policy, [canonical]).filter(
+        (issue) => issue.code === "OPEN_SCHEMA_NODE",
+      ),
+    ).toEqual([]);
+    expect(
+      scanPublicToolSurface([advertised], policy, [
+        toolWithInputProperty("unrelated", {
+          type: "object",
+          properties: { occurrence: { type: "integer" } },
+        }),
+      ]),
+    ).toContainEqual(
+      expect.objectContaining({
+        code: "OPEN_SCHEMA_NODE",
+        path: "/properties/request/properties/occurrence",
       }),
     );
   });
@@ -155,22 +236,108 @@ describe("submission surface scanner", () => {
     );
   });
 
-  test("does not confuse a fictional lock phrase with an authorization password", () => {
-    const issues = scanPublicToolSurface(
-      [
-        toolWithInputProperty("effect", {
+  test.each([
+    { type: "string", enum: ["lock_object"] },
+    { const: "lock_object" },
+  ])(
+    "does not confuse a fictional lock phrase with an authorization password (%j)",
+    (kind) => {
+      const issues = scanPublicToolSurface(
+        [
+          toolWithInputProperty("effect", {
+            type: "object",
+            properties: {
+              kind,
+              password: { type: "string" },
+            },
+          }),
+        ],
+        emptyPolicy,
+      );
+      expect(issues).not.toContainEqual(
+        expect.objectContaining({ code: "MODEL_VISIBLE_AUTHORIZATION_SECRET" }),
+      );
+    },
+  );
+
+  test.each([
+    {
+      schema: {
+        type: "array",
+        prefixItems: [
+          { type: "object", properties: { accessToken: { type: "string" } } },
+        ],
+      },
+      path: "/prefixItems/0/properties/accessToken",
+    },
+    {
+      schema: {
+        type: "array",
+        items: [
+          { type: "object", properties: { accessToken: { type: "string" } } },
+        ],
+      },
+      path: "/items/0/properties/accessToken",
+    },
+    {
+      schema: {
+        then: {
           type: "object",
-          properties: {
-            kind: { type: "string", enum: ["lock_object"] },
-            password: { type: "string" },
+          properties: { accessToken: { type: "string" } },
+        },
+      },
+      path: "/then/properties/accessToken",
+    },
+    {
+      schema: {
+        dependentSchemas: {
+          "synthetic/flag": {
+            type: "object",
+            properties: { accessToken: { type: "string" } },
           },
-        }),
-      ],
-      emptyPolicy,
+        },
+      },
+      path: "/dependentSchemas/synthetic~1flag/properties/accessToken",
+    },
+    {
+      schema: {
+        additionalProperties: {
+          type: "object",
+          properties: { accessToken: { type: "string" } },
+        },
+      },
+      path: "/additionalProperties/properties/accessToken",
+    },
+  ])("rejects a secret inside schema position $path", ({ schema, path }) => {
+    expect(
+      scanPublicToolSurface(
+        [toolWithInputProperty("payload", schema)],
+        emptyPolicy,
+      ),
+    ).toContainEqual(
+      expect.objectContaining({
+        code: "MODEL_VISIBLE_AUTHORIZATION_SECRET",
+        path: `/properties/payload${path}`,
+      }),
     );
-    expect(issues).not.toContainEqual(
-      expect.objectContaining({ code: "MODEL_VISIBLE_AUTHORIZATION_SECRET" }),
-    );
+  });
+
+  test("does not traverse literal instance data as a schema", () => {
+    const schemaShapedData = {
+      type: "object",
+      properties: { accessToken: { type: "string" } },
+    };
+    expect(
+      scanPublicToolSurface(
+        [
+          toolWithInputProperty("payload", {
+            const: schemaShapedData,
+            examples: [schemaShapedData],
+          }),
+        ],
+        emptyPolicy,
+      ),
+    ).toEqual([]);
   });
 
   test("invalidates a decision when a same-named field appears on another tool", () => {

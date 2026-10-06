@@ -36,6 +36,7 @@ import type {
   BattlePersistentAreaSaveConditionSavingThrowOutcomeHole,
   BattleHole,
   BattleOrdinaryHole,
+  BattleOrdinaryNeedsHolesResult,
   BattleDirectedRepositionPersistentAreaSaveDamageRollHole,
   BattleDirectedRepositionPersistentAreaSaveDamageTrigger,
   BattleMovableZoneRepositionMovementHole,
@@ -3212,11 +3213,14 @@ function resolveMovablePersistentAreaRepositionCommand(
   };
 }
 
-function needsSpatialProcedureHole(input: {
+function needsSpatialProcedureHole<
+  const Subject extends BattleSubject,
+  const Hole extends BattleOrdinaryHole,
+>(input: {
   readonly state: BattleState;
-  readonly subject: BattleSubject;
-  readonly hole: BattleOrdinaryHole;
-}): BattleResolutionResult {
+  readonly subject: Subject;
+  readonly hole: Hole;
+}): BattleOrdinaryNeedsHolesResult<readonly [Hole], Subject> {
   return needsHolesResult(input.state, input.subject, [input.hole]);
 }
 

@@ -14,7 +14,7 @@
     "evidence:saved-session-registrations": "tsx src/saved-session-authorization/registration-evidence.ts",
     "serve:http": "tsx src/public-index.ts",
     "verify:staging": "tsx src/staging-http-smoke.ts",
-    "check:submission-fast": "tsx scripts/submission-fast-gate.ts",
+    "check:submission-fast": "pnpm check:operation-accounting && tsx scripts/submission-fast-gate.ts",
     "check:submission-candidate": "pnpm check:submission-fast && vitest run src/submission-result-inspector.test.ts src/submission-candidate-evidence.test.ts src/submission-live-gate.test.ts src/plugin-publication-package.test.ts src/public-http-boundary.test.ts src/public-play-session-boundary.test.ts --pool=threads --maxWorkers=1",
     "evidence:submission-candidate": "tsx scripts/submission-candidate-cli.ts",
     "check:submission-live": "tsx scripts/submission-live-cli.ts",
@@ -23,7 +23,8 @@
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts src/mcp-level-nine-scenario.test.ts src/mcp-level-ten-scenario.test.ts"
+    "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts src/mcp-level-nine-scenario.test.ts src/mcp-level-ten-scenario.test.ts",
+    "check:operation-accounting": "tsx --test scripts/operation-accounting.node-test.ts && tsx scripts/operation-accounting.ts"
   },
   "dependencies": {
     "@better-auth/cimd": "1.7.1",
@@ -44,13 +45,15 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-auth": "1.7.1",
     "effect": "4.0.0-rc.112",
-    "redis": "6.2.1",
     "jose": "^6.2.10",
+    "redis": "6.2.1",
     "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1",
     "fast-check": "3.23.2",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "^5.1.4",

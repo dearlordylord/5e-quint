@@ -1,9 +1,11 @@
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import {
   battleInitiativePosition,
   settleCreatureFallsRuntimeTransaction,
   settleBattleRuntimeTransaction,
   sameBattleSubject,
   type BattleSubject,
+  type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
 import { Result, Match } from "effect";
 
@@ -88,60 +90,9 @@ export function handleBattleToolCall(
     Match.when({ name: battleToolNames.fillBattleHole }, (matched) =>
       handleFillBattleHoleToolCall(root, matched.args),
     ),
-    Match.when({ name: battleToolNames.resolveBattleAct }, (matched) => {
-      const state = activeBattleWithoutPendingFills(
-        root,
-        "Cannot resolve another act with pending fills.",
-      );
-      if (Result.isFailure(state)) return state.failure;
-      if (
-        matched.args.subject.tag === "runtimeCommand" &&
-        matched.args.subject.command === "creatureFalls"
-      ) {
-        const result = settleCreatureFallsRuntimeTransaction({
-          session: state.success,
-          transaction: null,
-          fallingCreatureId: matched.args.subject.fallingCreatureId,
-          reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
-          statBlockCatalog: root.battleStatBlockExecutionCatalog,
-        });
-        return storedBattleTransactionContent(root, state.success, result);
-      }
-      const presentation = battlePresentationEnvelopeForSession(
-        root,
-        state.success,
-      );
-      if (Result.isFailure(presentation)) {
-        return battlePresentationIssueContent(presentation.failure);
-      }
-      const availableAct =
-        presentation.success.frontier.kind === "acts"
-          ? presentation.success.frontier.acts.find((act) =>
-              sameBattleSubject(act.subject, matched.args.subject),
-            )
-          : undefined;
-      if (availableAct === undefined) {
-        return errorContent("Battle act is not currently available.", {
-          code: "BATTLE_ACT_NOT_AVAILABLE",
-          subject: matched.args.subject,
-        });
-      }
-      if (availableAct.initialHoles.length > 0) {
-        return errorContent("Battle act requires hole fills.", {
-          code: "BATTLE_ACT_REQUIRES_HOLES",
-          subject: matched.args.subject,
-        });
-      }
-      const result = settleBattleRuntimeTransaction({
-        session: state.success,
-        transaction: null,
-        operation: battleRuntimeTransactionOperationForSubject(
-          matched.args.subject,
-        ),
-        statBlockCatalog: root.battleStatBlockExecutionCatalog,
-      });
-      return storedBattleTransactionContent(root, state.success, result);
-    }),
+    Match.when({ name: battleToolNames.resolveBattleAct }, (matched) =>
+      handleResolveBattleActToolCall(root, matched.args, "regular"),
+    ),
     Match.when({ name: battleToolNames.endTurn }, (matched) => {
       const state = activeBattleWithoutPendingFills(
         root,
@@ -215,4 +166,74 @@ function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
   return Result.isFailure(payload)
     ? battlePresentationIssueContent(payload.failure)
     : schemaJsonContent(BattleSessionOutputSchema, payload.success);
+}
+
+/** ChatGPT selects the procedure before answering its initial holes; regular MCP retains its fill-first contract. */
+export function handleResolveBattleActToolCall(
+  root: McpPlaySessionRoot,
+  input: Extract<
+    BattleToolCall,
+    { readonly name: typeof battleToolNames.resolveBattleAct }
+  >["args"],
+  surface: McpToolSurface,
+): BattleToolResult {
+  const state = activeBattleWithoutPendingFills(
+    root,
+    "Cannot resolve another act with pending fills.",
+  );
+  if (Result.isFailure(state)) return state.failure;
+  if (
+    input.subject.tag === "runtimeCommand" &&
+    input.subject.command === "creatureFalls"
+  ) {
+    const result = settleCreatureFallsRuntimeTransaction({
+      session: state.success,
+      transaction: null,
+      fallingCreatureId: input.subject.fallingCreatureId,
+      reactionSpellTargetFacts: input.reactionSpellTargetFacts,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
+    });
+    return storedBattleTransactionContent(root, state.success, result);
+  }
+  return resolveAvailableBattleAct(root, state.success, input, surface);
+}
+
+function resolveAvailableBattleAct(
+  root: McpPlaySessionRoot,
+  session: BattleRuntimeSession,
+  input: Extract<
+    BattleToolCall,
+    { readonly name: typeof battleToolNames.resolveBattleAct }
+  >["args"],
+  surface: McpToolSurface,
+): BattleToolResult {
+  const presentation = battlePresentationEnvelopeForSession(root, session);
+  if (Result.isFailure(presentation)) {
+    return battlePresentationIssueContent(presentation.failure);
+  }
+  const availableAct =
+    presentation.success.frontier.kind === "acts"
+      ? presentation.success.frontier.acts.find((act) =>
+          sameBattleSubject(act.subject, input.subject),
+        )
+      : undefined;
+  if (availableAct === undefined) {
+    return errorContent("Battle act is not currently available.", {
+      code: "BATTLE_ACT_NOT_AVAILABLE",
+      subject: input.subject,
+    });
+  }
+  if (surface === "regular" && availableAct.initialHoles.length > 0) {
+    return errorContent("Battle act requires hole fills.", {
+      code: "BATTLE_ACT_REQUIRES_HOLES",
+      subject: input.subject,
+    });
+  }
+  const result = settleBattleRuntimeTransaction({
+    session: session,
+    transaction: null,
+    operation: battleRuntimeTransactionOperationForSubject(input.subject),
+    statBlockCatalog: root.battleStatBlockExecutionCatalog,
+  });
+  return storedBattleTransactionContent(root, session, result);
 }

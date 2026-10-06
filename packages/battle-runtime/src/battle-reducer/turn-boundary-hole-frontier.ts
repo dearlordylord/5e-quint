@@ -51,9 +51,15 @@ export type BattleTurnBoundaryHoleRequest =
     });
 
 /** Project a canonical turn-boundary request to the existing Hole result. */
-export function turnBoundaryNeedsHolesResult(
-  request: BattleTurnBoundaryHoleRequest,
-): BattleOrdinaryNeedsHolesResult {
+export function turnBoundaryNeedsHolesResult<
+  const Subject extends BattleSubject,
+  const Holes extends ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+>(
+  request: BattleTurnBoundaryHoleRequest & {
+    readonly subject: Subject;
+    readonly holes: Holes;
+  },
+): BattleOrdinaryNeedsHolesResult<Holes, Subject> {
   const pendingProcedure = pendingProcedureForTurnBoundaryRequest(request);
   return needsHolesResultWithProcedure(
     request.state,

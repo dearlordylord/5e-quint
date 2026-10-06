@@ -6,7 +6,8 @@ import {
   type BattlePresentedCheckpointFrontierEnvelope,
   type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
+import type { McpToolSurface } from "../src/mcp-tool-surface.ts";
 
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import {
@@ -34,7 +35,17 @@ type PublishedBattleEnvelope = Schema.Schema.Type<
   typeof BattlePresentedCheckpointFrontierEnvelopeSchema
 >;
 
+export const BATTLE_CONSUMER_TOOL_NAMES = [
+  "discover_battle_acts",
+  "fill_battle_hole",
+  "attack",
+  "answer_battle_hole",
+  "decline_reaction",
+] as const;
+type BattleConsumerToolName = (typeof BATTLE_CONSUMER_TOOL_NAMES)[number];
+
 export type ProductionBattleConsumerSeamCase = {
+  readonly tool: BattleConsumerToolName;
   readonly kind:
     | "acts"
     | "holes"
@@ -60,15 +71,26 @@ export type ProductionBattleConsumerSeamCase = {
  * Consumers use the returned cases to verify that branch identity survives
  * the MCP projection and the React-facing model without rebuilding mechanics.
  */
-export async function productionBattleConsumerSeam(): Promise<
-  readonly ProductionBattleConsumerSeamCase[]
-> {
+export async function productionBattleConsumerSeam(
+  toolSurface: McpToolSurface = "regular",
+): Promise<readonly ProductionBattleConsumerSeamCase[]> {
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
   const identity = createLocalPlaySessionRequestIdentity();
   const host = createDndMcpProtocolServer(undefined, undefined, {
     requestIdentity: identity,
+    toolSurface,
   });
+  const ordinaryTool = Match.value(toolSurface).pipe(
+    Match.when("regular", () => "fill_battle_hole" as const),
+    Match.when("chatgpt", () => "answer_battle_hole" as const),
+    Match.exhaustive,
+  );
+  const reactionTool = Match.value(toolSurface).pipe(
+    Match.when("regular", () => "fill_battle_hole" as const),
+    Match.when("chatgpt", () => "decline_reaction" as const),
+    Match.exhaustive,
+  );
   const { server } = host;
   const client = new Client({
     name: "cross-boundary-battle-seam",
@@ -136,6 +158,7 @@ export async function productionBattleConsumerSeam(): Promise<
     const cases: ProductionBattleConsumerSeamCase[] = [
       seamCase(
         "acts",
+        "discover_battle_acts",
         discoveredResponse,
         discoveredOperationResult,
         discovered.envelope,
@@ -148,9 +171,40 @@ export async function productionBattleConsumerSeam(): Promise<
       "seam-goblin",
       "Scimitar",
     );
-    const targetResponse = await call(client, "fill_battle_hole", {
+    if (toolSurface === "chatgpt") {
+      const selectedResponse = await call(client, "attack", {
+        playSessionId,
+        subject: attackSubject,
+      });
+      const selectedOperationResult = operationResult(selectedResponse);
+      const selected = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
+        selectedOperationResult,
+      );
+      if (
+        selected.result.tag !== "needsHoles" ||
+        selected.envelope.frontier.kind !== "holes" ||
+        selected.session.battleState.tag !== "activeBattle"
+      )
+        throw new Error("Expected selected Attack to open its initial holes.");
+      cases.push(
+        seamCase(
+          "holes",
+          "attack",
+          selectedResponse,
+          selectedOperationResult,
+          selected.envelope,
+          selected.session,
+          await runtimeProjection(
+            host,
+            decodedPlaySessionId,
+            playSessionCaller,
+          ),
+        ),
+      );
+    }
+    const targetResponse = await call(client, ordinaryTool, {
       playSessionId,
-      subject: attackSubject,
+      ...(toolSurface === "regular" ? { subject: attackSubject } : {}),
       fill: attackTargetFill(attackSubject, "seam-wizard"),
     });
     const targetOperationResult = operationResult(targetResponse);
@@ -167,6 +221,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "holes",
+        ordinaryTool,
         targetResponse,
         targetOperationResult,
         target.envelope,
@@ -175,9 +230,9 @@ export async function productionBattleConsumerSeam(): Promise<
       ),
     );
 
-    const rejectedResponse = await call(client, "fill_battle_hole", {
+    const rejectedResponse = await call(client, ordinaryTool, {
       playSessionId,
-      subject: attackSubject,
+      ...(toolSurface === "regular" ? { subject: attackSubject } : {}),
       fill: {
         kind: "attackRoll",
         holeId: "battle:cross-boundary-seam:wrong-hole",
@@ -201,6 +256,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "rejected",
+        ordinaryTool,
         rejectedResponse,
         rejectedOperationResult,
         rejectedEnvelope,
@@ -209,9 +265,9 @@ export async function productionBattleConsumerSeam(): Promise<
       ),
     );
 
-    const attackResponse = await call(client, "fill_battle_hole", {
+    const attackResponse = await call(client, ordinaryTool, {
       playSessionId,
-      subject: attackSubject,
+      ...(toolSurface === "regular" ? { subject: attackSubject } : {}),
       fill: attackRollFill(20, 20),
     });
     const attackOperationResult = operationResult(attackResponse);
@@ -228,6 +284,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "interruptDecision",
+        ordinaryTool,
         attackResponse,
         attackOperationResult,
         attack.envelope,
@@ -236,9 +293,9 @@ export async function productionBattleConsumerSeam(): Promise<
       ),
     );
 
-    const interruptResponse = await call(client, "fill_battle_hole", {
+    const interruptResponse = await call(client, reactionTool, {
       playSessionId,
-      subject: attackSubject,
+      ...(toolSurface === "regular" ? { subject: attackSubject } : {}),
       fill: {
         kind: "interruptDecision",
         holeId: attack.envelope.frontier.decisionHole.holeId,
@@ -256,15 +313,31 @@ export async function productionBattleConsumerSeam(): Promise<
     ) {
       throw new Error("Expected a damage-hole frontier after the interrupt.");
     }
+    if (toolSurface === "chatgpt")
+      cases.push(
+        seamCase(
+          "holes",
+          reactionTool,
+          interruptResponse,
+          interruptOperationResult,
+          interrupt.envelope,
+          interrupt.session,
+          await runtimeProjection(
+            host,
+            decodedPlaySessionId,
+            playSessionCaller,
+          ),
+        ),
+      );
     const damageHole = interrupt.envelope.frontier.holes.find(
       (hole) => hole.kind === "rolledDice",
     );
     if (damageHole === undefined) {
       throw new Error("Expected a damage hole after declining the interrupt.");
     }
-    const resolutionResponse = await call(client, "fill_battle_hole", {
+    const resolutionResponse = await call(client, ordinaryTool, {
       playSessionId,
-      subject: attackSubject,
+      ...(toolSurface === "regular" ? { subject: attackSubject } : {}),
       fill: rolledDiceFill(damageHole.holeId, [[5, 5]]),
     });
     const resolutionOperationResult = operationResult(resolutionResponse);
@@ -281,6 +354,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "resolution",
+        ordinaryTool,
         resolutionResponse,
         resolutionOperationResult,
         resolved.envelope,
@@ -294,17 +368,18 @@ export async function productionBattleConsumerSeam(): Promise<
   }
 }
 
-export async function submissionBattleRepresentativeResults(): Promise<
+export async function submissionBattleRepresentativeResults(
+  toolSurface: McpToolSurface = "regular",
+): Promise<
   readonly {
-    readonly tool: "discover_battle_acts" | "fill_battle_hole";
+    readonly tool: BattleConsumerToolName;
     readonly result: unknown;
     readonly evidence: unknown;
   }[]
 > {
-  const cases = await productionBattleConsumerSeam();
+  const cases = await productionBattleConsumerSeam(toolSurface);
   return cases.map((battleCase) => ({
-    tool:
-      battleCase.kind === "acts" ? "discover_battle_acts" : "fill_battle_hole",
+    tool: battleCase.tool,
     result: battleCase.toolResult,
     evidence: {
       kind: battleCase.kind,
@@ -315,6 +390,7 @@ export async function submissionBattleRepresentativeResults(): Promise<
 
 function seamCase(
   kind: ProductionBattleConsumerSeamCase["kind"],
+  tool: BattleConsumerToolName,
   toolResult: unknown,
   operationResult: unknown,
   envelope: PublishedBattleEnvelope,
@@ -323,6 +399,7 @@ function seamCase(
 ): ProductionBattleConsumerSeamCase {
   return {
     kind,
+    tool,
     toolResult,
     operationResult,
     envelope,

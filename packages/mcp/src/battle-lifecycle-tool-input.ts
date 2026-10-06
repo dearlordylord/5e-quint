@@ -47,13 +47,15 @@ const RemoveCombatantOperationSchema = Schema.Struct({
   combatantId: CombatantIdTextSchema,
 });
 
-const BattleLifecycleOperationSchema = Schema.Union([
-  ApplyInitiativeSwapOperationSchema,
-  FinalizeInitialInitiativeSetupOperationSchema,
-  AddCombatantOperationSchema,
-  RemoveCombatantOperationSchema,
-]);
-
+export const BATTLE_LIFECYCLE_OPERATION_SCHEMAS = {
+  applyInitiativeSwap: ApplyInitiativeSwapOperationSchema,
+  finalizeInitialInitiativeSetup: FinalizeInitialInitiativeSetupOperationSchema,
+  addCombatant: AddCombatantOperationSchema,
+  removeCombatant: RemoveCombatantOperationSchema,
+} as const;
+const BattleLifecycleOperationSchema = Schema.Union(
+  Object.values(BATTLE_LIFECYCLE_OPERATION_SCHEMAS),
+);
 const BattleLifecycleArgsSchema = Schema.Struct({
   operation: BattleLifecycleOperationSchema,
 });
@@ -102,38 +104,38 @@ export function decodeBattleLifecycleArgs(
     );
   }
 
-  return Match.value(decoded.success.operation).pipe(
-    Match.when({ kind: "applyInitiativeSwap" }, (operation) =>
-      Result.succeed({
-        operation: {
-          kind: "applyInitiativeSwap" as const,
-          sourceId: combatantId(operation.sourceId),
-          candidateId: combatantId(operation.candidateId),
-          candidateWitness: operation.candidateWitness,
-        },
-      }),
-    ),
-    Match.when({ kind: "finalizeInitialInitiativeSetup" }, () =>
-      Result.succeed({
-        operation: { kind: "finalizeInitialInitiativeSetup" as const },
-      }),
-    ),
-    Match.when({ kind: "addCombatant" }, (operation) =>
-      Result.succeed({
-        operation: {
-          kind: "addCombatant" as const,
-          combatant: decodeBattleCombatant(operation.combatant),
-        },
-      }),
-    ),
-    Match.when({ kind: "removeCombatant" }, (operation) =>
-      Result.succeed({
-        operation: {
-          kind: "removeCombatant" as const,
-          combatantId: combatantId(operation.combatantId),
-        },
-      }),
-    ),
+  return Result.succeed(
+    battleLifecycleToolInputFromParsedOperation(decoded.success.operation),
+  );
+}
+
+export function battleLifecycleToolInputFromParsedOperation(
+  operation: Schema.Schema.Type<typeof BattleLifecycleOperationSchema>,
+): BattleLifecycleToolInput {
+  return Match.value(operation).pipe(
+    Match.when({ kind: "applyInitiativeSwap" }, (operation) => ({
+      operation: {
+        kind: "applyInitiativeSwap" as const,
+        sourceId: combatantId(operation.sourceId),
+        candidateId: combatantId(operation.candidateId),
+        candidateWitness: operation.candidateWitness,
+      },
+    })),
+    Match.when({ kind: "finalizeInitialInitiativeSetup" }, () => ({
+      operation: { kind: "finalizeInitialInitiativeSetup" as const },
+    })),
+    Match.when({ kind: "addCombatant" }, (operation) => ({
+      operation: {
+        kind: "addCombatant" as const,
+        combatant: decodeBattleCombatant(operation.combatant),
+      },
+    })),
+    Match.when({ kind: "removeCombatant" }, (operation) => ({
+      operation: {
+        kind: "removeCombatant" as const,
+        combatantId: combatantId(operation.combatantId),
+      },
+    })),
     Match.exhaustive,
   );
 }

@@ -1,3 +1,4 @@
+import { MCP_TOOL_SURFACES } from "./mcp-tool-surface.ts";
 import { Result, Effect, ManagedRuntime, Schema } from "effect";
 
 import { createDndMcpHttpServer } from "./public-http-server.ts";
@@ -18,6 +19,7 @@ import {
 } from "./public-service-operations.ts";
 
 const PublicMcpConfigurationSchema = Schema.Struct({
+  toolSurface: Schema.Literals(MCP_TOOL_SURFACES),
   authorizationDatabasePath: Schema.Trimmed.check(Schema.isNonEmpty()),
   authorizationSecret: Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
     Schema.check(Schema.isMinLength(32)),
@@ -35,6 +37,7 @@ const PublicMcpConfigurationSchema = Schema.Struct({
 });
 
 const configuration = Schema.decodeUnknownResult(PublicMcpConfigurationSchema)({
+  toolSurface: process.env.DND_MCP_TOOL_SURFACE ?? "regular",
   authorizationDatabasePath:
     process.env.DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH,
   authorizationSecret: process.env.DND_SAVED_SESSION_AUTHORIZATION_SECRET,
@@ -106,6 +109,7 @@ if (Result.isFailure(configuration) || Result.isFailure(operatorDataHandling)) {
       } else {
         const server = createDndMcpHttpServer({
           playSessionRepository: repository.success,
+          toolSurface: configuration.success.toolSurface,
           hostname: configuration.success.hostname,
           port: configuration.success.port,
           oauth: oauth.success,

@@ -1,3 +1,4 @@
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -75,6 +76,175 @@ afterEach(async () => {
 });
 
 describe("recoverable Play Session protocol", () => {
+  test(
+    "replays mixed regular and ChatGPT commands with overlapping tool names",
+    async () => {
+      const directory = await mkdtemp(join(tmpdir(), "dnd-chatgpt-replay-"));
+      temporaryDirectories.push(directory);
+      const databasePath = join(directory, "play-sessions.sqlite");
+      const repository = openRepository(databasePath);
+      const regular = await connectClient(repository);
+      const chatgpt = await connectClient(repository, "chatgpt");
+      const created = await callStructuredTool(regular.client, {
+        name: "create_play_session",
+        arguments: {},
+      });
+      const playSessionId = stringField(created, "playSessionId");
+      retainAcceptancePlaySessionAccess(chatgpt.client, { playSessionId });
+      try {
+        const character = await createBaselineCharacterSession(regular.client);
+        await callStructuredTool(chatgpt.client, {
+          name: "set_equipment_loadout",
+          arguments: {
+            playSessionId,
+            characterId: character.characterId,
+            operation: {
+              kind: "setEquipmentLoadout",
+              loadout: { shield: null },
+            },
+          },
+        });
+        await callStructuredTool(chatgpt.client, {
+          name: "start_battle",
+          arguments: {
+            playSessionId,
+            battleId: "synthetic-dialect-battle",
+            initiativeMode: "direct",
+            companionAdmissions: [],
+            initialCombatants: [
+              {
+                kind: "statBlock",
+                statBlockId: "stat_block_goblin_warrior",
+                combatantId: "synthetic-first",
+                initiative: 20,
+                ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+                admissionSource: { kind: "encounterParticipant" },
+              },
+              {
+                kind: "statBlock",
+                statBlockId: "stat_block_goblin_warrior",
+                combatantId: "synthetic-second",
+                initiative: 10,
+                ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+                admissionSource: { kind: "encounterParticipant" },
+              },
+            ],
+          },
+        });
+        await callStructuredTool(regular.client, {
+          name: "end_turn",
+          arguments: { playSessionId, actorId: "synthetic-first" },
+        });
+        await callStructuredTool(chatgpt.client, {
+          name: "end_turn",
+          arguments: {
+            playSessionId,
+            subject: {
+              tag: "runtimeCommand",
+              command: "endTurn",
+              actorId: "synthetic-second",
+            },
+          },
+        });
+        const discovered = await callStructuredTool(chatgpt.client, {
+          name: "discover_battle_acts",
+          arguments: { playSessionId },
+        });
+        const subject = attackSubjectFromActs(
+          operationResult(discovered),
+          "synthetic-first",
+          "Scimitar",
+        );
+        await callStructuredTool(chatgpt.client, {
+          name: "attack",
+          arguments: { playSessionId, subject },
+        });
+        await callStructuredTool(chatgpt.client, {
+          name: "answer_battle_hole",
+          arguments: {
+            playSessionId,
+            fill: attackTargetFill(subject, "synthetic-second"),
+          },
+        });
+      } finally {
+        await Promise.allSettled([regular.close(), chatgpt.close()]);
+        repository.close();
+      }
+      const recovered = openRepository(databasePath);
+      const http = createDndMcpHttpServer({
+        playSessionRepository: recovered,
+        toolSurface: "chatgpt",
+      });
+      const httpClient = await connectHttpClient(await listen(http));
+      const connection = {
+        client: httpClient,
+        close: async () => {
+          await httpClient.close();
+          await close(http);
+        },
+      };
+      try {
+        expect((await connection.client.listTools()).tools).toHaveLength(126);
+        const read = await callStructuredTool(connection.client, {
+          name: "read_play_session",
+          arguments: { playSessionId },
+        });
+        expect(read).toMatchObject({
+          restoration: { tag: "retained" },
+          projection: { battleState: { tag: "activeBattle" } },
+        });
+        expect(read).toMatchObject({
+          chatGptBattleOperations: {
+            kind: "ordinaryContinuation",
+            routing: { kind: "available", tools: ["answer_battle_hole"] },
+          },
+        });
+        const resumed = await callStructuredTool(connection.client, {
+          name: "answer_battle_hole",
+          arguments: { playSessionId, fill: attackRollFill(10, 5) },
+        });
+        expect(operationResult(resumed)).toMatchObject({
+          result: { tag: "resolved" },
+          envelope: { frontier: { kind: "acts" } },
+        });
+        const db = new DatabaseSync(databasePath);
+        try {
+          const row = db
+            .prepare(
+              "SELECT operations_json FROM play_sessions WHERE play_session_id = ?",
+            )
+            .get(playSessionId);
+          expect(row?.operations_json).toEqual(
+            expect.stringContaining(
+              '"toolSurface":"chatgpt","name":"set_equipment_loadout"',
+            ),
+          );
+          expect(row?.operations_json).toEqual(
+            expect.stringContaining(
+              '"name":"end_turn","args":{"actorId":"synthetic-first"}',
+            ),
+          );
+          expect(row?.operations_json).toEqual(
+            expect.stringContaining(
+              '"toolSurface":"chatgpt","name":"end_turn"',
+            ),
+          );
+          expect(row?.operations_json).toEqual(
+            expect.stringContaining(
+              '"toolSurface":"chatgpt","name":"answer_battle_hole"',
+            ),
+          );
+        } finally {
+          db.close();
+        }
+      } finally {
+        await connection.close();
+        recovered.close();
+      }
+    },
+    TEST_TIMEOUT,
+  );
+
   test("retains a runtime-assigned Character Draft identity across replay", async () => {
     const directory = await mkdtemp(join(tmpdir(), "dnd-generated-draft-"));
     temporaryDirectories.push(directory);
@@ -1400,11 +1570,13 @@ async function connectHttpClient(endpoint: URL): Promise<Client> {
 
 async function connectClient(
   playSessionRepository: ReturnType<typeof openRepository>,
+  toolSurface: McpToolSurface = "regular",
 ) {
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
   const host = createDndMcpProtocolServer(undefined, undefined, {
     playSessionRepository,
+    toolSurface,
     requestIdentity: {
       tag: "authenticated",
       principalId: testPrincipal,
@@ -1445,7 +1617,9 @@ async function callStructuredTool(
       input.arguments,
     ),
   });
-  expect(result.isError).not.toBe(true);
+  expect(result.isError, `${input.name}: ${JSON.stringify(result)}`).not.toBe(
+    true,
+  );
   if (!isJsonObject(result.structuredContent)) {
     throw new Error(`${input.name} did not return an object payload.`);
   }

@@ -317,24 +317,30 @@ const ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema =
     kind: Schema.Literal("convertFontOfMagicSorceryPointsToSpellSlot"),
     spellLevel: SpellSlotLevelSchema,
   });
-const CharacterSessionOperationArgsSchema = Schema.Union([
-  RetainOneAtATimeCompanionOperationArgsSchema,
-  LayOnHandsOperationArgsSchema,
-  SpellRestBenefitOperationArgsSchema,
-  AdvanceClassLevelOperationArgsSchema,
-  ReplaceDruidWildShapeKnownFormOperationArgsSchema,
-  SetEquipmentLoadoutOperationArgsSchema,
-  CompleteShortRestOperationArgsSchema,
-  InterruptShortRestOperationArgsSchema,
-  CompleteLongRestOperationArgsSchema,
-  InterruptLongRestOperationArgsSchema,
-  PassCalendarTimeOperationArgsSchema,
-  SpendSpellAccessFreeCastOperationArgsSchema,
-  UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema,
-  ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema,
-  ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema,
-]);
-
+export const CHARACTER_SESSION_OPERATION_SCHEMAS = {
+  retainOneAtATimeCompanion: RetainOneAtATimeCompanionOperationArgsSchema,
+  applyLayOnHands: LayOnHandsOperationArgsSchema,
+  applySpellRestBenefit: SpellRestBenefitOperationArgsSchema,
+  advanceClassLevel: AdvanceClassLevelOperationArgsSchema,
+  replaceDruidWildShapeKnownForm:
+    ReplaceDruidWildShapeKnownFormOperationArgsSchema,
+  setEquipmentLoadout: SetEquipmentLoadoutOperationArgsSchema,
+  completeShortRest: CompleteShortRestOperationArgsSchema,
+  interruptShortRest: InterruptShortRestOperationArgsSchema,
+  completeLongRest: CompleteLongRestOperationArgsSchema,
+  interruptLongRest: InterruptLongRestOperationArgsSchema,
+  passCalendarTime: PassCalendarTimeOperationArgsSchema,
+  spendSpellAccessFreeCast: SpendSpellAccessFreeCastOperationArgsSchema,
+  useMonkUncannyMetabolismWhenRollingInitiative:
+    UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema,
+  convertFontOfMagicSpellSlotToSorceryPoints:
+    ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema,
+  convertFontOfMagicSorceryPointsToSpellSlot:
+    ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema,
+} as const;
+const CharacterSessionOperationArgsSchema = Schema.Union(
+  Object.values(CHARACTER_SESSION_OPERATION_SCHEMAS),
+);
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
   characterId: CharacterSheetIdSchema.annotate({
     description:

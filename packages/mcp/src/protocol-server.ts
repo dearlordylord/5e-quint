@@ -1,3 +1,11 @@
+import { canonicalToolDefinitionForSurface } from "./chatgpt/canonical-output-schema.ts";
+import { handleChatGptStatefulToolRequest } from "./chatgpt/protocol-tool-handler.ts";
+import type { McpToolSurface } from "./mcp-tool-surface.ts";
+import {
+  chatGptExecutionToolDefinitions,
+  shareToolDefinitionsForSurface,
+} from "./chatgpt/tool-surface.ts";
+import { isChatGptStatefulToolName } from "./chatgpt/protocol-operation.ts";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
@@ -28,7 +36,9 @@ import {
 } from "./play-session-protocol.ts";
 import {
   isPlaySessionToolName,
+  isStatefulPlaySessionToolName,
   playSessionToolDefinitions,
+  playSessionToolDefinitionForSurface,
   playSessionToolNames,
   statefulPlaySessionToolDefinition,
   type PlaySessionToolName,
@@ -46,17 +56,11 @@ import {
   type PlaySessionRepository,
 } from "./recoverable-play-session.ts";
 import type { EpochMilliseconds } from "./play-session-access.ts";
-import { isBattleToolName } from "./battle-tools.ts";
-import { isCharacterToolName } from "./character-tools.ts";
-import { isDiceToolName } from "./dice-tool-input.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
-import {
-  canonicalMcpOutputSchema,
-  isMcpModelOutputSchema,
-} from "./schema-codec.ts";
+import { isMcpModelOutputSchema } from "./schema-codec.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 import {
   NO_AUTH_SECURITY_SCHEMES,
@@ -69,6 +73,7 @@ export type {
 } from "./tool-definition-contract.ts";
 
 type CommonMcpProtocolServerOptions = {
+  readonly toolSurface?: McpToolSurface;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
   readonly playSessionNow?: () => EpochMilliseconds;
   readonly requestIdentity?: PlaySessionRequestIdentity;
@@ -102,18 +107,11 @@ type McpProtocolServerHost<AccessFailure extends PlaySessionAccessFailure> = {
 export function buildAdvertisedToolDefinitions(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   playSessionTransport: "hosted" | "localProcess" = "hosted",
+  toolSurface: McpToolSurface = "regular",
 ): readonly ProtocolToolDefinition[] {
-  return applyTransportSecurity(
+  const advertised = applyTransportSecurity(
     [
-      ...playSessionToolDefinitions.filter((definition) => {
-        const protocolDefinition: ProtocolToolDefinition = definition;
-        return (
-          playSessionTransport === "hosted" ||
-          !protocolDefinition.securitySchemes?.some(
-            (scheme) => scheme.type === "oauth2",
-          )
-        );
-      }),
+      ...playSessionDefinitionsForTransport(playSessionTransport, toolSurface),
       ...definitions.map((definition) => {
         const advertisedDefinition =
           definition.outputSchema === undefined
@@ -127,47 +125,46 @@ export function buildAdvertisedToolDefinitions(
                   type: "object",
                 },
               };
-        return isStatefulToolName(advertisedDefinition.name)
-          ? statefulPlaySessionToolDefinition(
+        const name = advertisedDefinition.name;
+        const statefulName = statefulToolNameForSurface(name, toolSurface);
+        return statefulName === undefined
+          ? advertisedDefinition
+          : statefulPlaySessionToolDefinition(
               advertisedDefinition,
-              advertisedDefinition.name,
-            )
-          : advertisedDefinition;
+              statefulName,
+              toolSurface,
+            );
       }),
     ],
     playSessionTransport,
   );
+  return shareToolDefinitionsForSurface(advertised, toolSurface);
 }
 
 export function buildCanonicalToolDefinitions(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   playSessionTransport: "hosted" | "localProcess" = "hosted",
+  toolSurface: McpToolSurface = "regular",
 ): readonly ProtocolToolDefinition[] {
   return applyTransportSecurity(
     [
-      ...playSessionToolDefinitions.filter((definition) => {
-        const protocolDefinition: ProtocolToolDefinition = definition;
-        return (
-          playSessionTransport === "hosted" ||
-          !protocolDefinition.securitySchemes?.some(
-            (scheme) => scheme.type === "oauth2",
-          )
-        );
-      }),
+      ...playSessionDefinitionsForTransport(playSessionTransport, toolSurface),
       ...definitions.map((definition) => {
-        const canonicalDefinition =
-          definition.outputSchema === undefined
-            ? definition
-            : {
-                ...definition,
-                outputSchema: canonicalMcpOutputSchema(definition.outputSchema),
-              };
-        return isStatefulToolName(canonicalDefinition.name)
-          ? statefulPlaySessionToolDefinition(
+        const canonicalDefinition = canonicalToolDefinitionForSurface(
+          definition,
+          toolSurface,
+        );
+        const statefulName = statefulToolNameForSurface(
+          canonicalDefinition.name,
+          toolSurface,
+        );
+        return statefulName === undefined
+          ? canonicalDefinition
+          : statefulPlaySessionToolDefinition(
               canonicalDefinition,
-              canonicalDefinition.name,
-            )
-          : canonicalDefinition;
+              statefulName,
+              toolSurface,
+            );
       }),
     ],
     playSessionTransport,
@@ -177,29 +174,44 @@ export function buildCanonicalToolDefinitions(
 export function buildCanonicalCodecToolDefinitions(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   playSessionTransport: "hosted" | "localProcess" = "hosted",
+  toolSurface: McpToolSurface = "regular",
 ): readonly ProtocolToolDefinition[] {
   return applyTransportSecurity(
     [
-      ...playSessionToolDefinitions.filter((definition) => {
-        const protocolDefinition: ProtocolToolDefinition = definition;
-        return (
-          playSessionTransport === "hosted" ||
-          !protocolDefinition.securitySchemes?.some(
-            (scheme) => scheme.type === "oauth2",
-          )
-        );
-      }),
+      ...playSessionDefinitionsForTransport(
+        playSessionTransport,
+        toolSurface,
+      ).map((definition) =>
+        canonicalToolDefinitionForSurface(definition, toolSurface),
+      ),
       ...definitions.map((definition) =>
-        definition.outputSchema === undefined
-          ? definition
-          : {
-              ...definition,
-              outputSchema: canonicalMcpOutputSchema(definition.outputSchema),
-            },
+        canonicalToolDefinitionForSurface(definition, toolSurface),
       ),
     ],
     playSessionTransport,
   );
+}
+
+function statefulToolNameForSurface(name: string, surface: McpToolSurface) {
+  return isStatefulPlaySessionToolName(name)
+    ? name
+    : surface === "chatgpt" && isChatGptStatefulToolName(name)
+      ? name
+      : undefined;
+}
+function playSessionDefinitionsForTransport(
+  transport: "hosted" | "localProcess",
+  surface: McpToolSurface,
+): readonly ProtocolToolDefinition[] {
+  return playSessionToolDefinitions
+    .filter(
+      (definition: ProtocolToolDefinition) =>
+        transport === "hosted" ||
+        !definition.securitySchemes?.some((scheme) => scheme.type === "oauth2"),
+    )
+    .map((definition) =>
+      playSessionToolDefinitionForSurface(definition, surface),
+    );
 }
 
 function applyTransportSecurity(
@@ -210,7 +222,8 @@ function applyTransportSecurity(
     const source: ProtocolToolDefinition = definition;
     const securitySchemes =
       source.securitySchemes ??
-      (isPlaySessionToolName(source.name) || isStatefulToolName(source.name)
+      (isPlaySessionToolName(source.name) ||
+      isStatefulPlaySessionToolName(source.name)
         ? playSessionTransport === "hosted"
           ? SAVED_PLAY_SESSION_SECURITY_SCHEMES
           : NO_AUTH_SECURITY_SCHEMES
@@ -238,10 +251,13 @@ export function createDndMcpProtocolServer(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   options: McpProtocolServerOptions = {},
 ): McpProtocolServerHost<PlaySessionAccessFailure> {
-  const requestIdentity = requestIdentityFor(options);
+  const requestIdentity =
+    options.requestIdentity ?? createLocalPlaySessionRequestIdentity();
+  const toolSurface = options.toolSurface ?? "regular";
   const protocolDefinitions = buildAdvertisedToolDefinitions(
-    definitions,
+    toolSurface === "chatgpt" ? chatGptExecutionToolDefinitions : definitions,
     requestIdentity.tag === "localProcess" ? "localProcess" : "hosted",
+    toolSurface,
   );
   const advertisedToolNames = new Set(
     protocolDefinitions.map((definition) => definition.name),
@@ -271,19 +287,14 @@ export function createDndMcpProtocolServer(
       playSessions,
       requestIdentity,
       applicationServices,
+      toolSurface,
     }),
   );
-
   return { applicationServices, playSessions, server };
 }
 
-function requestIdentityFor(
-  options: McpProtocolServerOptions,
-): PlaySessionRequestIdentity {
-  return options.requestIdentity ?? createLocalPlaySessionRequestIdentity();
-}
-
 type HandleCallToolRequestInput = {
+  readonly toolSurface: McpToolSurface;
   readonly request: CallToolRequest;
   readonly advertisedToolNames: ReadonlySet<string>;
   readonly protocolDefinitionByName: ReadonlyMap<
@@ -304,13 +315,23 @@ async function handleCallToolRequest(input: HandleCallToolRequestInput) {
   if (isPlaySessionToolName(name)) {
     return handlePlaySessionToolRequest(input, name);
   }
-  if (isStatefulToolName(name)) {
+  if (input.toolSurface === "chatgpt" && isChatGptStatefulToolName(name)) {
+    return handleChatGptStatefulToolRequest({
+      name,
+      args: request.params.arguments,
+      protocolDefinitionByName: input.protocolDefinitionByName,
+      playSessions: input.playSessions,
+      requestIdentity: input.requestIdentity,
+    });
+  }
+  if (isStatefulPlaySessionToolName(name)) {
     return handleStatefulToolRequest(input, name);
   }
   return handleApplicationToolCall(
     input.applicationServices,
     name,
     request.params.arguments,
+    input.toolSurface,
   );
 }
 
@@ -321,10 +342,20 @@ function handlePlaySessionToolRequest(
   const args = input.request.params.arguments;
   return Match.value(name).pipe(
     Match.when(playSessionToolNames.create, () =>
-      handleCreatePlaySession(input.playSessions, args, input.requestIdentity),
+      handleCreatePlaySession(
+        input.playSessions,
+        args,
+        input.requestIdentity,
+        input.toolSurface,
+      ),
     ),
     Match.when(playSessionToolNames.read, () =>
-      handleReadPlaySession(input.playSessions, args, input.requestIdentity),
+      handleReadPlaySession(
+        input.playSessions,
+        args,
+        input.requestIdentity,
+        input.toolSurface,
+      ),
     ),
     Match.when(playSessionToolNames.listSaved, () =>
       handleListSavedPlaySessions(
@@ -398,12 +429,4 @@ function playSessionRegistry(
       ? {}
       : { now: options.playSessionNow }),
   });
-}
-
-function isStatefulToolName(
-  name: string,
-): name is BattleToolName | CharacterToolName | DiceToolName {
-  return (
-    isCharacterToolName(name) || isBattleToolName(name) || isDiceToolName(name)
-  );
 }

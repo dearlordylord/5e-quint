@@ -1,3 +1,7 @@
+import { chatGptNextOperations } from "./chatgpt/navigation.ts";
+import type { ChatGptBattleGuidance } from "./chatgpt/battle-guidance.ts";
+import { playSessionProjectionOperationName } from "./chatgpt/protocol-operation.ts";
+import { type PlaySessionExecutionOperationName } from "./chatgpt/protocol-operation.ts";
 import { Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -16,7 +20,6 @@ import {
 import {
   playSessionToolNames,
   type PlaySessionNextOperationName,
-  type PlaySessionOperationName,
 } from "./play-session-tool-contract.ts";
 import type { McpSessionSummary } from "./session-snapshot-output.ts";
 import {
@@ -28,7 +31,11 @@ import {
 import { nextOperationsFrom } from "./play-session-next-operations.ts";
 import { battleSessionPayload } from "./battle-tool-payloads.ts";
 
-export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
+export type PlaySessionProtocolResult = {
+  readonly content: readonly [
+    ReturnType<typeof jsonContent>["content"][number],
+    ...ReturnType<typeof jsonContent>["content"][number][],
+  ];
   readonly structuredContent: unknown;
   readonly isError?: true;
   readonly _meta?: Readonly<Record<string, unknown>>;
@@ -90,8 +97,9 @@ function hasBattleEnvelope(value: unknown): boolean {
 }
 
 export function availablePlaySessionEnvelope(input: {
+  readonly chatGptNavigation?: ChatGptBattleGuidance;
   readonly playSessionId: PlaySessionId;
-  readonly operationName: PlaySessionOperationName;
+  readonly operationName: PlaySessionExecutionOperationName;
   readonly operationResult: unknown;
   readonly projection: McpSessionSnapshot;
   readonly tenure: PlaySessionTenureProjection;
@@ -123,8 +131,16 @@ export function availablePlaySessionEnvelope(input: {
     projection,
     tenure: input.tenure,
     unresolvedInputs,
-    nextOperations,
+    nextOperations:
+      input.chatGptNavigation === undefined
+        ? nextOperations
+        : chatGptNextOperations(nextOperations, input.chatGptNavigation),
     restoration: { tag: "retained" },
+    ...(input.chatGptNavigation === undefined
+      ? {}
+      : {
+          chatGptBattleOperations: input.chatGptNavigation,
+        }),
   });
   return {
     ...jsonContent(payload),
@@ -135,7 +151,7 @@ export function availablePlaySessionEnvelope(input: {
 
 export function unavailablePlaySessionEnvelope(
   playSessionId: PlaySessionId,
-  operationName: PlaySessionOperationName,
+  operationName: PlaySessionExecutionOperationName,
 ): PlaySessionProtocolResult {
   const payload = jsonSerializablePayload({
     tag: PLAY_SESSION_UNAVAILABLE.tag,
@@ -158,7 +174,7 @@ export function unavailablePlaySessionEnvelope(
 }
 
 function unresolvedInputsForEnvelope(input: {
-  readonly operationName: PlaySessionOperationName;
+  readonly operationName: PlaySessionExecutionOperationName;
   readonly operationResult: unknown;
   readonly isError?: boolean;
 }): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
@@ -170,7 +186,10 @@ function unresolvedInputsForEnvelope(input: {
     );
   }
   if (input.isError === true) return Result.succeed([]);
-  return unresolvedInputsFrom(input.operationName, input.operationResult);
+  return unresolvedInputsFrom(
+    playSessionProjectionOperationName(input.operationName),
+    input.operationResult,
+  );
 }
 
 function embeddedBattleEnvelope(
@@ -192,14 +211,14 @@ function embeddedBattleEnvelope(
 
 function nextOperationsForEnvelope(
   input: {
-    readonly operationName: PlaySessionOperationName;
+    readonly operationName: PlaySessionExecutionOperationName;
     readonly hasAvailableCharacterSession?: boolean;
   },
   projection: McpSessionSummary,
   unresolvedInputs: readonly UnresolvedInputGroup[],
 ): readonly PlaySessionNextOperationName[] {
   return nextOperationsFrom(
-    input.operationName,
+    playSessionProjectionOperationName(input.operationName),
     projection,
     unresolvedInputs,
     input.hasAvailableCharacterSession === true,

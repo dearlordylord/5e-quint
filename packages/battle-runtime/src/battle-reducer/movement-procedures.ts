@@ -163,7 +163,14 @@ export function resolveMovementProcedure(
 }
 
 function resolveMoveCommand(
-  input: AdmittedBattleResolutionInput & {
+  input: Extract<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "general" }
+  > & {
+    readonly subject: Extract<
+      MovementProcedureSubject,
+      { readonly command: "move" }
+    >;
     readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
