@@ -26,7 +26,13 @@ export type SyntheticSpellcastingProcedureEntryOptions = {
  */
 export function syntheticSpellcastingProcedureEntry(
   input: SyntheticSpellcastingProcedureEntryOptions = {},
-): Extract<StatBlockProcedureEntry, { readonly kind: "executable" }> {
+): Extract<
+  StatBlockProcedureEntry,
+  {
+    readonly kind: "executable";
+    readonly procedure: { readonly kind: "spellcasting" };
+  }
+> {
   return {
     kind: "executable",
     procedureOrdinal: authoredOrdinal(99),

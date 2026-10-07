@@ -1,3 +1,6 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { admitStatBlockSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { PositiveInteger } from "@dnd/shared/types";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
@@ -163,46 +166,48 @@ describe("Stat Block invocation production admission", () => {
       ).toEqual(invocations);
     const changedMechanics = Schema.decodeUnknownResult(
       StatBlockExecutionSnapshotSchema,
-    )({
-      ...encoded,
-      procedureBindings: encoded.procedureBindings.map((binding) =>
-        binding.procedure.kind !== "spellcasting"
-          ? binding
-          : {
-              ...binding,
-              procedure: {
-                ...binding.procedure,
-                groups: binding.procedure.groups.map((group) => ({
-                  ...group,
-                  invocations: group.invocations.map((candidate) =>
-                    candidate.dispatch.kind !== "executable"
-                      ? candidate
-                      : {
-                          ...candidate,
-                          dispatch: {
-                            ...candidate.dispatch,
-                            executions: candidate.dispatch.executions.map(
-                              (execution) => ({
-                                ...execution,
-                                spellRuleFacts: {
-                                  ...execution.spellRuleFacts,
-                                  components: {
-                                    ...execution.spellRuleFacts.components,
-                                    verbal:
-                                      !execution.spellRuleFacts.components
-                                        .verbal,
+    )(
+      Schema.encodeSync(StatBlockExecutionSnapshotSchema)({
+        ...decoded.success,
+        procedureBindings: decoded.success.procedureBindings.map((binding) =>
+          binding.procedure.kind !== "spellcasting"
+            ? binding
+            : {
+                ...binding,
+                procedure: {
+                  ...binding.procedure,
+                  groups: binding.procedure.groups.map((group) => ({
+                    ...group,
+                    invocations: group.invocations.map((candidate) =>
+                      candidate.dispatch.kind !== "executable"
+                        ? candidate
+                        : {
+                            ...candidate,
+                            dispatch: {
+                              ...candidate.dispatch,
+                              executions: candidate.dispatch.executions.map(
+                                (execution) => ({
+                                  ...execution,
+                                  spellRuleFacts: {
+                                    ...execution.spellRuleFacts,
+                                    components: {
+                                      ...execution.spellRuleFacts.components,
+                                      verbal:
+                                        !execution.spellRuleFacts.components
+                                          .verbal,
+                                    },
                                   },
-                                },
-                              }),
-                            ),
+                                }),
+                              ),
+                            },
                           },
-                        },
-                  ),
-                })),
+                    ),
+                  })),
+                },
               },
-            },
-      ),
-    });
+        ),
+      }),
+    );
     expect(Result.isSuccess(changedMechanics)).toBe(true);
     if (Result.isFailure(changedMechanics))
       throw new Error("Expected structurally valid altered mechanics");
@@ -223,7 +228,7 @@ describe("Stat Block invocation production admission", () => {
       ...casterRecord(),
       statBlock: {
         ...casterRecord().statBlock,
-        actions: [missingDefinitionEntry],
+        actions: [missingDefinitionEntry] as const,
       },
     };
     expect(
