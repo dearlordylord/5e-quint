@@ -38,3 +38,4 @@
 {"evidenceId":"SB-SPELLCASTING-CONCENTRATION-2","coverageMetric":"runtime-parity","ownerPath":"packages/battle-runtime/src/stat-block-spell-concentration.mbt.test.ts","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001"]}
 {"evidenceId":"SB-SPELL-INVOCATION-UNRESTRICTED-8","coverageMetric":"runtime-test","ownerPath":"packages/battle-runtime/src/stat-block-persistent-area.test.ts","requirementIds":["RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"]}
 {"evidenceId":"SB-SPELL-INVOCATION-UNRESTRICTED-9","coverageMetric":"runtime-test","ownerPath":"packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts","requirementIds":["RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"]}
+{"evidenceId":"SB-SPELLCASTING-LONG-CASTING-TIME-4","coverageMetric":"runtime-test","ownerPath":"packages/battle-runtime/src/long-casting-lifecycle-rejection.test.ts","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001"]}

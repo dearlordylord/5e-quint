@@ -5664,6 +5664,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle-rejection.test.ts"
         }
       ],
       "profiles": ["stat-block.spell-invocation.unrestricted"],
@@ -5689,7 +5693,10 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
         "packages/battle-runtime/src/creature-spell-procedure.ts",
-        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts"
+        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-interruption-holes.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6184,6 +6191,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle-rejection.test.ts"
         }
       ],
       "profiles": ["stat-block.spell-invocation.unrestricted"],
@@ -6196,7 +6207,10 @@
         "packages/battle-runtime/src/battle-reducer/long-casting-progress.ts",
         "packages/battle-runtime/src/battle-reducer/long-casting-completion.ts",
         "packages/battle-runtime/src/battle-reducer/long-casting-readiness.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-interruption-holes.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

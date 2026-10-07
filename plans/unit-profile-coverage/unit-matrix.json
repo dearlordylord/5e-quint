@@ -7724,7 +7724,10 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
         "packages/battle-runtime/src/creature-spell-procedure.ts",
-        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts"
+        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-interruption-holes.ts"
       ],
       "sourceBoundary": "StatBlockRecord; original procedure isolated for admission evidence, whole-parent capability asserted separately",
       "taskRefs": [
@@ -7741,7 +7744,8 @@
         "SB-SPELLCASTING-CONCENTRATION-1",
         "SB-SPELLCASTING-CONCENTRATION-2",
         "SB-SPELL-INVOCATION-UNRESTRICTED-8",
-        "SB-SPELL-INVOCATION-UNRESTRICTED-9"
+        "SB-SPELL-INVOCATION-UNRESTRICTED-9",
+        "SB-SPELLCASTING-LONG-CASTING-TIME-4"
       ],
       "title": "Unrestricted Stat Block spell invocation",
       "verificationOwners": [
@@ -7800,6 +7804,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/stat-block-persistent-area.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle-rejection.test.ts"
         }
       ]
     },
@@ -23164,6 +23172,14 @@
         "stat-block.spell-invocation.unrestricted"
       ],
       "taskId": "SB-SPELL-INVOCATION-UNRESTRICTED-9"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "note": "Negative production long-casting witnesses reject missing, mismatched, and stale canonical invocation/checkpoint inputs without mutating state or spending invocation resources.",
+      "profileIds": [
+        "stat-block.spell-invocation.unrestricted"
+      ],
+      "taskId": "SB-SPELLCASTING-LONG-CASTING-TIME-4"
     }
   ],
   "unitGroupDenominatorAudit": {

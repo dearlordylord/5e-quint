@@ -3187,6 +3187,7 @@
 | SB-SPELLCASTING-CONCENTRATION-2 | runtime-parity | packages/battle-runtime/src/stat-block-spell-concentration.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001 |
 | SB-SPELL-INVOCATION-UNRESTRICTED-8 | runtime-test | packages/battle-runtime/src/stat-block-persistent-area.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
 | SB-SPELL-INVOCATION-UNRESTRICTED-9 | runtime-test | packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELLCASTING-LONG-CASTING-TIME-4 | runtime-test | packages/battle-runtime/src/long-casting-lifecycle-rejection.test.ts | RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 |
 
 ## Tracker Follow-up Claims
 
@@ -3278,7 +3279,7 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 | RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 | executable | no | no | no | no | no |  | GH-424 |
 | RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 | executable | no | no | no | no | no |  | GH-425 |
 | RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 | executable | no | no | no | no | no |  | GH-426 |
-| RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 | executable | yes | yes | yes | yes | yes | SB-SPELLCASTING-LONG-CASTING-TIME-1, SB-SPELLCASTING-LONG-CASTING-TIME-2, SB-SPELLCASTING-LONG-CASTING-TIME-3 |  |
+| RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 | executable | yes | yes | yes | yes | yes | SB-SPELLCASTING-LONG-CASTING-TIME-1, SB-SPELLCASTING-LONG-CASTING-TIME-2, SB-SPELLCASTING-LONG-CASTING-TIME-3, SB-SPELLCASTING-LONG-CASTING-TIME-4 |  |
 | RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001 | executable | yes | yes | yes | no | yes | SB-SPELLCASTING-CONCENTRATION-1, SB-SPELLCASTING-CONCENTRATION-2 |  |
 
 ## Out Of Promoted Scope

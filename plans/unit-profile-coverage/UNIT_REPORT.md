@@ -2362,6 +2362,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | SB-SPELLCASTING-CONCENTRATION-2 | runtime-parity | `stat-block.spell-invocation.unrestricted` |
 | SB-SPELL-INVOCATION-UNRESTRICTED-8 | runtime-evidence | `stat-block.spell-invocation.unrestricted` |
 | SB-SPELL-INVOCATION-UNRESTRICTED-9 | runtime-evidence | `stat-block.spell-invocation.unrestricted` |
+| SB-SPELLCASTING-LONG-CASTING-TIME-4 | runtime-evidence | `stat-block.spell-invocation.unrestricted` |
 
 ## Supported Profiles Lacking Runtime Parity
 
