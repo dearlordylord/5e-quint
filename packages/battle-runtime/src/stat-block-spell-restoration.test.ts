@@ -1,3 +1,6 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { Result, Schema } from "effect";
 import { expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
@@ -17,9 +20,12 @@ it("rejects a schema-valid higher cast level absent from the authored invocation
   const encoded = Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
     actor.origin.execution,
   );
+  const original = Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(
+    JSON.parse(JSON.stringify(encoded)),
+  );
   const altered = {
-    ...encoded,
-    procedureBindings: encoded.procedureBindings.map((binding) =>
+    ...original,
+    procedureBindings: original.procedureBindings.map((binding) =>
       binding.procedure.kind !== "spellcasting"
         ? binding
         : {
@@ -50,7 +56,11 @@ it("rejects a schema-valid higher cast level absent from the authored invocation
     ),
   };
   const decoded = Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(
-    JSON.parse(JSON.stringify(altered)),
+    JSON.parse(
+      JSON.stringify(
+        Schema.encodeUnknownSync(StatBlockExecutionSnapshotSchema)(altered),
+      ),
+    ),
   );
   expect(Result.isSuccess(decoded)).toBe(true);
   if (Result.isFailure(decoded))

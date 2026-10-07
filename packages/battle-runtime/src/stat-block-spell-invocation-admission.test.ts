@@ -167,7 +167,7 @@ describe("Stat Block invocation production admission", () => {
     const changedMechanics = Schema.decodeUnknownResult(
       StatBlockExecutionSnapshotSchema,
     )(
-      Schema.encodeSync(StatBlockExecutionSnapshotSchema)({
+      Schema.encodeUnknownSync(StatBlockExecutionSnapshotSchema)({
         ...decoded.success,
         procedureBindings: decoded.success.procedureBindings.map((binding) =>
           binding.procedure.kind !== "spellcasting"
