@@ -77,7 +77,6 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
     spellRuleFacts: Schema.Struct({
       ...CharacterSpellRuleFactsSchema.fields,
       level: LeveledDefinitionLevelSchema,
-      castingSource: AccessSpellCastingSourceSchema,
     }),
     access: CharacterPreparedAccessSchema,
     resource: SpellAccessFreeCastInvocationResourceSchema,
