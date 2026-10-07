@@ -16,6 +16,7 @@ import {
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
 import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
+import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
 
 type SpellCastReactionResolutionContext = {
   readonly input: {
@@ -43,6 +44,16 @@ export function maybeOpenSpellCastReactionWindow(
     | readonly CharacterBattleMetamagicOptionFact[]
     | undefined,
 ): BattleResolutionResult | null {
+  const initialStatBlockCast =
+    resolution.invocation.spellRuleFacts?.castingSource.tag === "statBlock" &&
+    (resolution.invocation.access?.tag === "statBlockCantrip" ||
+      resolution.invocation.access?.tag === "statBlockLeveled");
+  const effectiveCastingResource =
+    initialStatBlockCast && castingResource.kind !== "alreadySpent"
+      ? spellCastingTimeResourceForSpellCast({
+          invocation: resolution.invocation,
+        })
+      : castingResource;
   return maybeOpenInterruptWindow(
     resolution.input.state,
     spellCastInterruptFrame({
@@ -50,7 +61,7 @@ export function maybeOpenSpellCastReactionWindow(
       invocation: resolution.invocation,
       targetIds,
       reactionSpellTargetFacts: resolution.fillSet.reactionSpellTargetFacts,
-      castingResource,
+      castingResource: effectiveCastingResource,
       ...spellCastMetamagicApplicationsInput(metamagicApplications ?? []),
       continuation: spellReplayContinuation(resolution.input),
     }),

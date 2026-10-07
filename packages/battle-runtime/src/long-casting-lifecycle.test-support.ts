@@ -34,7 +34,7 @@ export const longCastingActorId = combatantId("synthetic-long-casting-actor");
 /** A synthetic record exercises a duration facet absent from profiled shipped spells. */
 export function longCastingBattle(
   input: {
-    readonly time?: LongCastingTime;
+    readonly time?: LongCastingTime | { readonly kind: "action" };
     readonly ownership?: "each" | "shared";
     readonly counterspell?: boolean;
     readonly baseSpellId?: string;
@@ -53,7 +53,8 @@ export function longCastingBattle(
   const base = spellRecord(baseSpellId);
   if (
     base.mechanics.family !== "activation" &&
-    base.mechanics.family !== "ongoing"
+    base.mechanics.family !== "ongoing" &&
+    base.mechanics.family !== "ongoing_effect"
   )
     throw new Error("Expected scalar activation fixture.");
   const definition: SpellRecord = {
