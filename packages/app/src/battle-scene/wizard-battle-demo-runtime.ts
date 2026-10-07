@@ -138,7 +138,9 @@ export function requireCounterspellProcedureRef(
         Match.value(candidate.invocation.resource).pipe(
           Match.discriminatorsExhaustive("tag")({
             spellSlot: ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel,
-            spellAccessFreeCast: ({ castLevel }) => Number(castLevel) === slotLevel
+            spellAccessFreeCast: ({ castLevel }) => Number(castLevel) === slotLevel,
+            statBlockAtWill: () => false,
+            statBlockLimited: () => false
           })
         )
     ) ?? []
