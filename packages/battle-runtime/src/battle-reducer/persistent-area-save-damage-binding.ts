@@ -37,26 +37,47 @@ type DirectedEffect = Extract<
   { readonly lifecycle: "directedReposition" }
 >;
 
+type RetainedPersistentAreaFacts = Extract<
+  ReturnType<typeof characterRetainedSpellProcedureExecution>,
+  { readonly procedure: "persistentAreaSaveDamage" }
+>;
+type StationaryFacts = Extract<
+  RetainedPersistentAreaFacts,
+  StationaryPersistentAreaSaveDamageSpellProcedureExecution
+>;
+type TranslatingFacts = Extract<
+  RetainedPersistentAreaFacts,
+  SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution
+>;
+type CollisionFacts = Extract<
+  RetainedPersistentAreaFacts,
+  CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution
+>;
+type DirectedFacts = Extract<
+  RetainedPersistentAreaFacts,
+  DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution
+>;
+
 export type BoundPersistentAreaSaveDamageEffect =
   | {
       readonly kind: "stationary";
       readonly effect: StationaryEffect;
-      readonly facts: StationaryPersistentAreaSaveDamageSpellProcedureExecution;
+      readonly facts: StationaryFacts;
     }
   | {
       readonly kind: "sourceTurnTranslation";
       readonly effect: TranslatingEffect;
-      readonly facts: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution;
+      readonly facts: TranslatingFacts;
     }
   | {
       readonly kind: "collisionReposition";
       readonly effect: CollisionEffect;
-      readonly facts: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution;
+      readonly facts: CollisionFacts;
     }
   | {
       readonly kind: "directedReposition";
       readonly effect: DirectedEffect;
-      readonly facts: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution;
+      readonly facts: DirectedFacts;
     };
 
 export function boundPersistentAreaSaveDamageEffectForArea(
@@ -130,29 +151,20 @@ export function boundPersistentAreaSaveDamageEffect(
 }
 
 function isStationaryFacts(
-  facts: Extract<
-    ReturnType<typeof characterRetainedSpellProcedureExecution>,
-    { readonly procedure: "persistentAreaSaveDamage" }
-  >,
-): facts is StationaryPersistentAreaSaveDamageSpellProcedureExecution {
+  facts: RetainedPersistentAreaFacts,
+): facts is StationaryFacts {
   return facts.lifecycle.kind === "stationary";
 }
 
 function isTranslatingFacts(
-  facts: Extract<
-    ReturnType<typeof characterRetainedSpellProcedureExecution>,
-    { readonly procedure: "persistentAreaSaveDamage" }
-  >,
-): facts is SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution {
+  facts: RetainedPersistentAreaFacts,
+): facts is TranslatingFacts {
   return facts.lifecycle.kind === "sourceTurnTranslation";
 }
 
 function isCollisionFacts(
-  facts: Extract<
-    ReturnType<typeof characterRetainedSpellProcedureExecution>,
-    { readonly procedure: "persistentAreaSaveDamage" }
-  >,
-): facts is CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution {
+  facts: RetainedPersistentAreaFacts,
+): facts is CollisionFacts {
   return (
     facts.lifecycle.kind === "casterActionReposition" &&
     persistentAreaSaveDamageRepositionKind(facts.lifecycle) ===
@@ -161,11 +173,8 @@ function isCollisionFacts(
 }
 
 function isDirectedFacts(
-  facts: Extract<
-    ReturnType<typeof characterRetainedSpellProcedureExecution>,
-    { readonly procedure: "persistentAreaSaveDamage" }
-  >,
-): facts is DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution {
+  facts: RetainedPersistentAreaFacts,
+): facts is DirectedFacts {
   return (
     facts.lifecycle.kind === "casterActionReposition" &&
     persistentAreaSaveDamageRepositionKind(facts.lifecycle) ===

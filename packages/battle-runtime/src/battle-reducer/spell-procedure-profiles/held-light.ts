@@ -881,10 +881,17 @@ function applyHeldLightEffect(
   const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: caster,
   });
+  const {
+    procedure: _procedure,
+    sourceProcedureRef: _sourceProcedureRef,
+    actionCost: _actionCost,
+    light: _light,
+    hurl: _hurl,
+    expiresAt: _expiresAt,
+    ...castingFacts
+  } = invocation;
   const hurlExecution = {
-    spellRuleFacts: invocation.spellRuleFacts,
-    access: invocation.access,
-    resource: invocation.resource,
+    ...castingFacts,
     procedure: "heldLightHurl",
     sourceEffectRef: allocation.effectRef,
     sourceHeldLightProcedureRef: invocation.sourceProcedureRef,
