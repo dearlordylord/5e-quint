@@ -758,6 +758,14 @@ export function spellInvocationRefsEqualForTest(
   }
   return Match.value(left).pipe(
     Match.discriminatorsExhaustive("tag")({
+      statBlock: (invocation) =>
+        right.tag === "statBlock" &&
+        invocation.invocationRef.procedureRef ===
+          right.invocationRef.procedureRef &&
+        invocation.invocationRef.groupOrdinal ===
+          right.invocationRef.groupOrdinal &&
+        invocation.invocationRef.invocationOrdinal ===
+          right.invocationRef.invocationOrdinal,
       cantrip: (invocation) =>
         right.tag === "cantrip" &&
         spellInvocationSourceRefsEqualForTest(invocation.source, right.source),

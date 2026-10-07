@@ -42,6 +42,8 @@ import {
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  StatBlockSpellInvocationRefSchema,
+  type StatBlockSpellInvocationRef,
   battleProcedureExecutionRefBelongsToCombatant,
   SpellId,
   spellId as makeSpellId,
@@ -341,6 +343,15 @@ export type SpellInvocationSourceRef =
 
 export const SpellInvocationRefSchema = Schema.Union([
   Schema.Struct({
+    tag: Schema.Literal("statBlock"),
+    spellId: SpellId,
+    invocationRef: StatBlockSpellInvocationRefSchema,
+    procedure: Schema.Literals([
+      ...CANTRIP_SPELL_PROCEDURES,
+      ...SPELL_SLOT_PROCEDURES,
+    ]),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("cantrip"),
     spellId: SpellId,
     source: SpellInvocationSourceRefSchema,
@@ -380,6 +391,19 @@ export const SpellInvocationRefSchema = Schema.Union([
 ]);
 export type SpellInvocationRef = typeof SpellInvocationRefSchema.Type;
 export type SpellInvocationRefEncoded = typeof SpellInvocationRefSchema.Encoded;
+
+export function statBlockSpellInvocationRef(
+  rawSpellId: string,
+  invocationRef: StatBlockSpellInvocationRef,
+  procedure: CantripSpellProcedure | SpellSlotProcedure,
+): Extract<SpellInvocationRef, { readonly tag: "statBlock" }> {
+  return {
+    tag: "statBlock",
+    spellId: makeSpellId(rawSpellId),
+    invocationRef,
+    procedure,
+  };
+}
 
 export function scopedCantripSpellInvocationRef(
   rawSpellId: string,
