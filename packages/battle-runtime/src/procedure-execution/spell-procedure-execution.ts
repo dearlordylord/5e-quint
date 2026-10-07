@@ -1450,10 +1450,10 @@ export type AreaMovementDistanceDamageSpellProcedureExecution =
     };
   };
 
-export type CreateSpatialMeleeSpellAttackProxySpellProcedureExecution =
+type CreateSpatialMeleeSpellAttackProxySpellProcedureExecutionShape =
   SpellRuleExecutionFactsOwner & {
     readonly access: LeveledSpellAccess;
-    readonly actionCost: "magicAction" | "bonusAction";
+    readonly actionCost: "bonusAction";
     readonly attackBonus: AttackBonus;
     readonly attackKind: "melee_spell_attack";
     readonly damage: {
@@ -1470,6 +1470,9 @@ export type CreateSpatialMeleeSpellAttackProxySpellProcedureExecution =
     readonly resource: LeveledSpellInvocationResource;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
+
+export type CreateSpatialMeleeSpellAttackProxySpellProcedureExecution =
+  CorrelatedSpellExecution<CreateSpatialMeleeSpellAttackProxySpellProcedureExecutionShape>;
 
 export type RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution = {
   readonly activeEffectRef: BattleEffectExecutionRef;
