@@ -16,6 +16,8 @@ supervision_helper_reaped=false
 supervision_helper_wait_status=0
 supervision_helper_start_time=""
 supervision_helper_directory=""
+supervision_compiler_pid=""
+supervision_compiler_start_time=""
 
 supervision_process_stat_fields() {
   local pid="$1" stat rest
@@ -120,17 +122,61 @@ supervision_helper_binary_path() {
   printf '%s/process-supervisor\n' "$supervision_helper_directory"
 }
 
+# Before the native subreaper exists, only the fixed trusted compiler runs.
+# Its isolated process group contains the compiler and its ordinary toolchain
+# children; no verification payload or plugin is launched in this boundary.
+supervision_compiler_group_is_live() {
+  local groups
+  groups="$(/usr/bin/ps -eo pgid=,stat=)" || return 2
+  /usr/bin/awk -v group="$supervision_compiler_pid" \
+    '$1 == group && $2 !~ /^[ZX]/ { live = 1 } END { exit !live }' <<<"$groups"
+}
+
+supervision_cleanup_compiler() {
+  [[ -n "$supervision_compiler_pid" ]] || return 0
+  local grace_deadline group_status wait_status=0 escalated=false
+  grace_deadline=$(( $(date +%s%3N) + 1000 ))
+  if supervision_process_identity_is_live "$supervision_compiler_pid" "$supervision_compiler_start_time"; then
+    kill -TERM "$supervision_compiler_pid" 2>/dev/null || true
+  fi
+  while true; do
+    supervision_compiler_group_is_live
+    group_status=$?
+    if (( group_status == 1 )) && ! supervision_process_identity_is_live "$supervision_compiler_pid" "$supervision_compiler_start_time"; then
+      break
+    fi
+    if (( group_status == 0 )); then
+      kill -TERM -- "-$supervision_compiler_pid" 2>/dev/null || true
+    fi
+    if (( $(date +%s%3N) >= grace_deadline )); then
+      escalated=true
+      kill -KILL "$supervision_compiler_pid" 2>/dev/null || true
+      if (( group_status == 0 )); then
+        kill -KILL -- "-$supervision_compiler_pid" 2>/dev/null || true
+      fi
+    fi
+    sleep 0.02
+  done
+  wait "$supervision_compiler_pid" || wait_status=$?
+  supervision_compiler_pid=""
+  supervision_compiler_start_time=""
+  [[ "$escalated" == false ]] && (( wait_status != 137 )) || return 137
+  return "$wait_status"
+}
+
 supervision_cleanup_helper() {
   [[ "$supervision_cleanup_in_progress" == false ]] || return 0
   supervision_cleanup_in_progress=true
   set +e
+  supervision_cleanup_compiler
+  local compiler_cleanup_status=$?
   supervision_terminate_helper
   local cleanup_status=$?
   supervision_reap_helper
   local reap_status=$?
   set -e
   supervision_remove_helper
-  (( cleanup_status == 137 || reap_status == 137 )) && return 137
+  (( compiler_cleanup_status == 137 || cleanup_status == 137 || reap_status == 137 )) && return 137
   return 0
 }
 
@@ -151,14 +197,42 @@ supervision_compile_helper() {
       "$supervision_event_name" >&2
     return 78
   }
-  local helper_binary_path
+  local helper_binary_path remaining_milliseconds timeout_seconds compiler_status
   helper_binary_path="$(supervision_helper_binary_path)"
-  if ! env -i PATH=/usr/bin:/bin LC_ALL=C LANG=C /usr/bin/cc \
+  remaining_milliseconds=$(( supervision_deadline_milliseconds - $(date +%s%3N) ))
+  if (( remaining_milliseconds <= 0 )); then
+    printf '[%s] native supervisor compiler exceeded its execution deadline\n' "$supervision_event_name" >&2
+    supervision_remove_helper
+    return 124
+  fi
+  printf -v timeout_seconds '%d.%03ds' "$(( remaining_milliseconds / 1000 ))" "$(( remaining_milliseconds % 1000 ))"
+  /usr/bin/setsid --wait /usr/bin/timeout --signal=TERM --kill-after=1s "$timeout_seconds" \
+    env -i PATH=/usr/bin:/bin LC_ALL=C LANG=C /usr/bin/cc \
     -std=c11 -O2 -Wall -Wextra -Werror \
     "$script_directory/raw-swarm/process-supervisor.c" \
-    -o "$helper_binary_path"; then
-    printf '[%s] could not compile the native process supervisor\n' \
-      "$supervision_event_name" >&2
+    -o "$helper_binary_path" &
+  supervision_compiler_pid=$!
+  supervision_compiler_start_time="$(supervision_process_start_time "$supervision_compiler_pid" 2>/dev/null || true)"
+  while supervision_process_identity_is_live "$supervision_compiler_pid" "$supervision_compiler_start_time"; do
+    if ! supervision_owner_is_alive; then
+      printf '[%s] canceled: original parent owner exited during compiler bootstrap\n' "$supervision_event_name" >&2
+      supervision_cleanup_compiler
+      compiler_status=$?
+      supervision_remove_helper
+      (( compiler_status == 137 )) && return 137
+      return 125
+    fi
+    sleep 0.1
+  done
+  supervision_cleanup_compiler
+  compiler_status=$?
+  if (( compiler_status != 0 )); then
+    if (( compiler_status == 124 || compiler_status == 137 )); then
+      printf '[%s] native supervisor compiler stopped with status %s; deadline or escalated cleanup prevents payload launch\n' "$supervision_event_name" "$compiler_status" >&2
+      supervision_remove_helper
+      return "$compiler_status"
+    fi
+    printf '[%s] could not compile the native process supervisor\n' "$supervision_event_name" >&2
     supervision_remove_helper
     return 78
   fi

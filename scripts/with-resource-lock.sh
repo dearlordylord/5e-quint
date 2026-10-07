@@ -13,6 +13,10 @@ lock_kind="$1"
 shift
 script_directory=$(cd -- "$(dirname -- "$0")" && pwd)
 source "$script_directory/process-supervision.sh"
+deadline_policy="$(node "$script_directory/verification-deadline-policy.mjs" --shell)" || exit $?
+mapfile -t deadline_budgets <<<"$deadline_policy"
+acquisition_budget_ms="${deadline_budgets[0]}"
+execution_budget_ms="${deadline_budgets[1]}"
 
 case "$lock_kind" in
   broad)
@@ -69,20 +73,34 @@ exec {retired_heavy_lock_fd}>"$git_common_dir/ralph-heavy-verification.lock"
 exec {retired_broad_lock_fd}>"$git_common_dir/ralph-broad-workspace-check.lock"
 exec {retired_mbt_lock_fd}>"$git_common_dir/ralph-mbt.lock"
 
+check_acquisition_deadline() {
+  local now_milliseconds
+  now_milliseconds="$(date +%s%3N)"
+  if (( now_milliseconds >= acquisition_deadline_ms )); then
+    echo "[$event_name] operation exceeded its acquisition deadline after ${acquisition_budget_ms}ms" >&2
+    exit 124
+  fi
+}
+
 acquire_lock() {
   local lock_fd="$1"
-  while ! flock --exclusive --nonblock "$lock_fd"; do
+  while true; do
     supervision_owner_is_alive || {
       echo "[$event_name] canceled: original parent $owner_pid exited" >&2
       exit 125
     }
     (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
+    check_acquisition_deadline
+    if flock --exclusive --nonblock "$lock_fd"; then
+      break
+    fi
     sleep 0.1
   done
   supervision_owner_is_alive || {
     echo "[$event_name] canceled: original parent $owner_pid exited" >&2
     exit 125
   }
+  check_acquisition_deadline
 }
 
 # The holder record is diagnostic only: exclusion remains the flock descriptors
@@ -114,6 +132,7 @@ release_holder() {
 }
 
 wait_started_at=$(date +%s%N)
+acquisition_deadline_ms=$(( wait_started_at / 1000000 + acquisition_budget_ms ))
 echo "[$event_name] waiting: ${1##*/} at $(date -u +%Y-%m-%dT%H:%M:%SZ) holder: $(current_holder)" >&2
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"
 acquire_lock "$shared_lock_fd"
@@ -129,7 +148,8 @@ export DND_RESOURCE_LOCK_KIND="$lock_kind"
 
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"
 set +e
-supervision_run_command "$event_name" none "$@"
+execution_deadline_ms=$(( $(date +%s%3N) + execution_budget_ms ))
+supervision_run_command "$event_name" "$execution_deadline_ms" "$@"
 status=$?
 set -e
 trap - HUP INT TERM

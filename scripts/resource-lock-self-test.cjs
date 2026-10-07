@@ -25,6 +25,7 @@ const wrapperNames = [
 const fixtureScriptNames = [
   ...wrapperNames,
   "process-supervision.sh",
+  "verification-deadline-policy.mjs",
   "raw-swarm/process-supervisor.c",
 ];
 const retiredLockNames = [
@@ -37,6 +38,9 @@ const resourceLockEnvironmentKeys = [
   "DND_RESOURCE_LOCK_KIND",
   "DND_RESOURCE_LOCK_OWNER_PID",
   "DND_RESOURCE_LOCK_OWNER_START_TIME",
+  "DND_VERIFICATION_LOCK_ACQUISITION_TIMEOUT_MS",
+  "DND_VERIFICATION_EXECUTION_TIMEOUT_MS",
+  "DND_VERIFICATION_STAGE_TIMEOUT_MS",
 ];
 const childDiagnostics = new WeakMap();
 
@@ -132,10 +136,15 @@ async function assertDetachedSupervision(
 }
 
 function waitForExit(child, description) {
-  if (child.exitCode !== null) return Promise.resolve(child.exitCode);
+  if (child.exitCode !== null || child.signalCode !== null)
+    return Promise.resolve(child.exitCode);
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
-      reject(new Error(`Timed out waiting for ${description} to exit.`));
+      reject(
+        new Error(
+          `Timed out waiting for ${description} to exit (pid=${child.pid}). ${childDiagnostics.get(child)?.join("") ?? ""}`,
+        ),
+      );
     }, waitTimeoutMs);
     child.once("exit", (code) => {
       clearTimeout(timeout);
@@ -302,7 +311,7 @@ async function runSelfTest() {
         'log="$2"',
         'printf "%s-start\\n" "$label" >>"$log"',
         'if [[ "$label" == holder ]]; then',
-        "  sleep 0.5",
+        '  sleep "${3:-0.5}"',
         '  printf "%s-end\\n" "$label" >>"$log"',
         "fi",
         "",
@@ -368,6 +377,316 @@ async function runSelfTest() {
       ),
     );
 
+    for (const variable of resourceLockEnvironmentKeys.filter((key) =>
+      key.startsWith("DND_VERIFICATION_"),
+    )) {
+      const invalidLog = path.join(temporaryRoot, `${variable}.log`);
+      const invalid = guardedCommandSpawn(
+        root,
+        "with-broad-workspace-lock.sh",
+        "scripts/lock-probe.sh",
+        ["contender", invalidLog],
+        { [variable]: "none" },
+      );
+      assert.equal(
+        await waitForExit(invalid, "an invalid deadline policy"),
+        64,
+      );
+      assert.deepEqual(
+        logLines(invalidLog),
+        [],
+        "invalid policy never launches a payload",
+      );
+      assert.ok(childDiagnostics.get(invalid).join("").includes(variable));
+    }
+    const executionExpired = guardedCommandSpawn(
+      root,
+      "with-broad-workspace-lock.sh",
+      "sleep",
+      ["30"],
+      { DND_VERIFICATION_EXECUTION_TIMEOUT_MS: "250" },
+    );
+    assert.equal(
+      await waitForExit(executionExpired, "the execution deadline"),
+      124,
+    );
+    assert.ok(
+      childDiagnostics
+        .get(executionExpired)
+        .join("")
+        .includes("execution deadline"),
+    );
+
+    const compilerProbePath = path.join(root, "scripts", "compiler-probe.cjs");
+    const compilerPidPath = path.join(temporaryRoot, "compiler.pid");
+    const compilerChildPidPath = path.join(temporaryRoot, "compiler-child.pid");
+    writeFileSync(
+      compilerProbePath,
+      `const {spawn} = require("node:child_process");
+const {writeFileSync} = require("node:fs");
+if (process.argv[2] === "child") {
+  writeFileSync(process.argv[3], String(process.pid));
+} else {
+  writeFileSync(process.argv[2], String(process.pid));
+  spawn(process.execPath, [__filename, "child", process.argv[3], process.argv[4]], {stdio:"ignore"});
+}
+if (process.argv[4] !== "cooperative") process.on("SIGTERM", () => {});
+setInterval(() => {}, 1000);
+`,
+    );
+    const supervisionPath = path.join(
+      root,
+      "scripts",
+      "process-supervision.sh",
+    );
+    const supervisionSource = readFileSync(supervisionPath, "utf8");
+    const compilerFixture = supervisionSource.replace(
+      "/usr/bin/cc",
+      `${process.execPath} "${compilerProbePath}" "${compilerPidPath}" "${compilerChildPidPath}"`,
+    );
+    assert.notEqual(
+      compilerFixture,
+      supervisionSource,
+      "the isolated fixture replaces only the trusted fixed compiler operation",
+    );
+    writeFileSync(supervisionPath, compilerFixture);
+    const compilerTimedCommand = guardedCommandSpawn(
+      root,
+      "with-broad-workspace-lock.sh",
+      "scripts/lock-probe.sh",
+      ["contender", path.join(temporaryRoot, "compiler-payload.log")],
+      { DND_VERIFICATION_EXECUTION_TIMEOUT_MS: "1000" },
+    );
+    const compilerIdentity = await waitForResult(
+      () =>
+        existsSync(compilerPidPath)
+          ? processIdentity(Number(readFileSync(compilerPidPath, "utf8")))
+          : undefined,
+      "the bootstrap compiler",
+    );
+    const compilerChildIdentity = await waitForResult(
+      () =>
+        existsSync(compilerChildPidPath)
+          ? processIdentity(Number(readFileSync(compilerChildPidPath, "utf8")))
+          : undefined,
+      "the compiler descendant",
+    );
+    assert.ok(compilerIdentity);
+    assert.ok(compilerChildIdentity);
+    console.log(
+      `Compiler fixture pid=${compilerIdentity.pid} startTime=${compilerIdentity.startTime} child=${compilerChildIdentity.pid} childStartTime=${compilerChildIdentity.startTime}.`,
+    );
+    try {
+      assert.equal(
+        await waitForExit(
+          compilerTimedCommand,
+          "the compiler bootstrap deadline",
+        ),
+        137,
+        "compiler bootstrap is bounded with escalation status preserved",
+      );
+      assert.equal(processIdentityIsLive(compilerIdentity), false);
+      assert.equal(processIdentityIsLive(compilerChildIdentity), false);
+      assert.deepEqual(
+        logLines(path.join(temporaryRoot, "compiler-payload.log")),
+        [],
+      );
+      const successor = guardedSpawn(linked, "with-mbt-lock.sh", [
+        "contender",
+        path.join(temporaryRoot, "compiler-successor.log"),
+      ]);
+      try {
+        assert.equal(
+          await waitForExit(successor, "the compiler cleanup successor"),
+          0,
+        );
+      } finally {
+        if (successor.exitCode === null && successor.signalCode === null) {
+          successor.kill("SIGTERM");
+          await waitForExit(successor, "the stopped compiler successor");
+        }
+      }
+      console.log(
+        `Compiler fixture cleanup status=137; pid=${compilerIdentity.pid} child=${compilerChildIdentity.pid} settled; successor=${successor.pid} status=0.`,
+      );
+    } finally {
+      signalProcessIdentity(compilerIdentity, "SIGKILL");
+      signalProcessIdentity(compilerChildIdentity, "SIGKILL");
+      if (compilerTimedCommand.exitCode === null) {
+        compilerTimedCommand.kill("SIGTERM");
+        await waitForExit(compilerTimedCommand, "the compiler fixture cleanup");
+      }
+      writeFileSync(supervisionPath, supervisionSource);
+    }
+
+    for (const scenario of [
+      { name: "deadline", action: "wait", status: 124 },
+      { name: "owner-death", action: "owner", status: 125 },
+      { name: "signal", action: "wrapper", status: 143 },
+    ]) {
+      const pidPath = path.join(temporaryRoot, `compiler-${scenario.name}.pid`);
+      const childPidPath = path.join(
+        temporaryRoot,
+        `compiler-${scenario.name}-child.pid`,
+      );
+      const statusPath = path.join(
+        temporaryRoot,
+        `compiler-${scenario.name}.status`,
+      );
+      const wrapperPath = path.join(root, "scripts", "with-resource-lock.sh");
+      const wrapperSource = readFileSync(wrapperPath, "utf8");
+      const caseCompiler = supervisionSource.replace(
+        "/usr/bin/cc",
+        `${process.execPath} "${compilerProbePath}" "${pidPath}" "${childPidPath}" "cooperative"`,
+      );
+      writeFileSync(supervisionPath, caseCompiler);
+      const recordedWrapper = wrapperSource.replace(
+        "trap release_holder EXIT",
+        `trap 'status=$?; release_holder; printf "%s\\n" "$status" >"${statusPath}"' EXIT`,
+      );
+      assert.notEqual(recordedWrapper, wrapperSource);
+      writeFileSync(wrapperPath, recordedWrapper);
+      const owned = guardedCommandSpawn(
+        root,
+        "with-broad-workspace-lock.sh",
+        "scripts/lock-probe.sh",
+        ["contender", path.join(temporaryRoot, `${scenario.name}-payload.log`)],
+        {
+          DND_VERIFICATION_EXECUTION_TIMEOUT_MS:
+            scenario.action === "wait" ? "1000" : "5000",
+        },
+      );
+      try {
+        const identities = await Promise.all(
+          [pidPath, childPidPath].map((file) =>
+            waitForResult(() => {
+              if (!existsSync(file)) {
+                assertFixtureChildRunning(
+                  owned,
+                  "the cooperative compiler fixture",
+                );
+                return undefined;
+              }
+              return processIdentity(Number(readFileSync(file, "utf8")));
+            }, `compiler ${scenario.name} readiness`),
+          ),
+        );
+        const compiler = identities[0];
+        const compilerChild = identities[1];
+        assert.ok(compiler);
+        assert.ok(compilerChild);
+        const children = readFileSync(
+          `/proc/${owned.pid}/task/${owned.pid}/children`,
+          "utf8",
+        )
+          .trim()
+          .split(/\s+/)
+          .map(Number);
+        assert.equal(
+          children.length,
+          1,
+          "the original owner has exactly its guarded wrapper after bootstrap readiness",
+        );
+        const wrapper = processIdentity(children[0]);
+        assert.ok(wrapper);
+        if (scenario.action === "owner") owned.kill("SIGTERM");
+        if (scenario.action === "wrapper")
+          signalProcessIdentity(wrapper, "SIGTERM");
+        const status = await waitForResult(
+          () =>
+            existsSync(statusPath)
+              ? Number(readFileSync(statusPath, "utf8").trim())
+              : undefined,
+          `compiler ${scenario.name} status`,
+        );
+        assert.equal(status, scenario.status);
+        await waitForExit(owned, `compiler ${scenario.name} original owner`);
+        assert.equal(processIdentityIsLive(compiler), false);
+        assert.equal(processIdentityIsLive(compilerChild), false);
+        assert.deepEqual(
+          logLines(path.join(temporaryRoot, `${scenario.name}-payload.log`)),
+          [],
+        );
+        const successor = guardedSpawn(linked, "with-mbt-lock.sh", [
+          "contender",
+          path.join(temporaryRoot, `${scenario.name}-successor.log`),
+        ]);
+        try {
+          assert.equal(
+            await waitForExit(successor, `compiler ${scenario.name} successor`),
+            0,
+          );
+          console.log(
+            `Compiler ${scenario.name} status=${status}; pid=${compiler.pid}/start=${compiler.startTime} child=${compilerChild.pid}/start=${compilerChild.startTime} settled before successor=${successor.pid} status=0.`,
+          );
+        } finally {
+          if (successor.exitCode === null && successor.signalCode === null) {
+            successor.kill("SIGTERM");
+            await waitForExit(
+              successor,
+              "the compiler scenario successor cleanup",
+            );
+          }
+        }
+      } finally {
+        for (const file of [pidPath, childPidPath]) {
+          const identity = existsSync(file)
+            ? processIdentity(Number(readFileSync(file, "utf8")))
+            : undefined;
+          if (identity !== undefined)
+            signalProcessIdentity(identity, "SIGKILL");
+        }
+        if (owned.exitCode === null && owned.signalCode === null) {
+          owned.kill("SIGTERM");
+          await waitForExit(owned, "the cooperative compiler fixture cleanup");
+        }
+        writeFileSync(wrapperPath, wrapperSource);
+        writeFileSync(supervisionPath, supervisionSource);
+      }
+    }
+
+    const deadlineLog = path.join(temporaryRoot, "acquisition-deadline.log");
+    const deadlineHolder = guardedSpawn(root, "with-broad-workspace-lock.sh", [
+      "holder",
+      deadlineLog,
+    ]);
+    await waitForProbeLine(
+      deadlineHolder,
+      deadlineLog,
+      "holder-start",
+      "the deadline holder",
+    );
+    const expiredContender = guardedCommandSpawn(
+      linked,
+      "with-mbt-lock.sh",
+      "scripts/lock-probe.sh",
+      ["contender", deadlineLog],
+      {
+        DND_VERIFICATION_LOCK_ACQUISITION_TIMEOUT_MS: "150",
+      },
+    );
+    try {
+      assert.equal(
+        await waitForExit(expiredContender, "the deadline contender"),
+        124,
+        "blocked acquisition expires instead of launching its command",
+      );
+      assert.ok(
+        childDiagnostics
+          .get(expiredContender)
+          .join("")
+          .includes("acquisition deadline"),
+      );
+      assert.equal(
+        await waitForExit(deadlineHolder, "the unaffected deadline holder"),
+        0,
+      );
+      assert.deepEqual(logLines(deadlineLog), ["holder-start", "holder-end"]);
+    } finally {
+      if (deadlineHolder.exitCode === null) deadlineHolder.kill("SIGTERM");
+      if (expiredContender.exitCode === null) expiredContender.kill("SIGTERM");
+    }
+
     const sharedLog = path.join(temporaryRoot, "shared.log");
     const sharedHolder = guardedSpawn(root, "with-broad-workspace-lock.sh", [
       "holder",
@@ -390,6 +709,70 @@ async function runSelfTest() {
       ["rev-parse", "--path-format=absolute", "--git-common-dir"],
       root,
     );
+    const cumulativePrimaryLog = path.join(
+      temporaryRoot,
+      "cumulative-primary.log",
+    );
+    const cumulativeAliasLog = path.join(temporaryRoot, "cumulative-alias.log");
+    const cumulativeContenderLog = path.join(
+      temporaryRoot,
+      "cumulative-contender.log",
+    );
+    const cumulativeHolders = [
+      ["dnd-heavy-verification.lock", cumulativePrimaryLog, "0.6"],
+      [retiredLockNames[0], cumulativeAliasLog, "1.2"],
+    ].map(([lockName, log, duration]) =>
+      spawn(
+        "flock",
+        [
+          "--exclusive",
+          path.join(commonDir, lockName),
+          probePath,
+          "holder",
+          log,
+          duration,
+        ],
+        { cwd: root, stdio: "ignore" },
+      ),
+    );
+    try {
+      await waitForProbeLine(
+        cumulativeHolders[0],
+        cumulativePrimaryLog,
+        "holder-start",
+        "the cumulative primary holder",
+      );
+      await waitForProbeLine(
+        cumulativeHolders[1],
+        cumulativeAliasLog,
+        "holder-start",
+        "the cumulative alias holder",
+      );
+      const cumulativeContender = guardedCommandSpawn(
+        linked,
+        "with-mbt-lock.sh",
+        "scripts/lock-probe.sh",
+        ["contender", cumulativeContenderLog],
+        { DND_VERIFICATION_LOCK_ACQUISITION_TIMEOUT_MS: "900" },
+      );
+      try {
+        assert.equal(
+          await waitForExit(cumulativeContender, "the cumulative contender"),
+          124,
+          "the acquisition budget must not restart at a later alias",
+        );
+        assert.deepEqual(logLines(cumulativeContenderLog), []);
+      } finally {
+        if (cumulativeContender.exitCode === null)
+          cumulativeContender.kill("SIGTERM");
+      }
+      for (const holder of cumulativeHolders)
+        assert.equal(await waitForExit(holder, "a cumulative holder"), 0);
+    } finally {
+      for (const holder of cumulativeHolders)
+        if (holder.exitCode === null) holder.kill("SIGTERM");
+    }
+
     for (const retiredLockName of retiredLockNames) {
       const logPath = path.join(temporaryRoot, `${retiredLockName}.log`);
       const holder = spawn(
@@ -414,6 +797,81 @@ async function runSelfTest() {
         logPath,
       ]);
       await assertSerialized(holder, contender, logPath);
+    }
+
+    const deadlineDetachedPidPath = path.join(
+      temporaryRoot,
+      "deadline-detached-child.pid",
+    );
+    const deadlineSupervised = guardedCommandSpawn(
+      root,
+      "with-broad-workspace-lock.sh",
+      process.execPath,
+      ["scripts/detached-probe.cjs"],
+      {
+        DETACHED_PID_PATH: deadlineDetachedPidPath,
+        DND_VERIFICATION_EXECUTION_TIMEOUT_MS: "5000",
+      },
+    );
+    const deadlineDetachedIdentity = await waitForResult(() => {
+      if (!existsSync(deadlineDetachedPidPath)) {
+        assertFixtureChildRunning(
+          deadlineSupervised,
+          "the escaped-child deadline wrapper",
+        );
+        return undefined;
+      }
+      return processIdentity(
+        Number(readFileSync(deadlineDetachedPidPath, "utf8").trim()),
+      );
+    }, "the deadline's escaped child");
+    assert.ok(deadlineDetachedIdentity);
+    console.log(
+      `Deadline fixture child pid=${deadlineDetachedIdentity.pid} startTime=${deadlineDetachedIdentity.startTime}; supervisor owner pid=${deadlineSupervised.pid}.`,
+    );
+    const cleanupContenderLog = path.join(
+      temporaryRoot,
+      "deadline-cleanup-contender.log",
+    );
+    const cleanupContender = guardedSpawn(linked, "with-mbt-lock.sh", [
+      "contender",
+      cleanupContenderLog,
+    ]);
+    try {
+      await waitForProbeLine(
+        cleanupContender,
+        cleanupContenderLog,
+        "contender-start",
+        "the post-cleanup contender",
+      );
+      assert.equal(
+        processIdentityIsLive(deadlineDetachedIdentity),
+        false,
+        "a successor acquires only after the escaped TERM-resistant descendant is settled",
+      );
+      assert.equal(
+        await waitForExit(deadlineSupervised, "the escalated deadline cleanup"),
+        137,
+        "deadline cleanup preserves the existing escalation status",
+      );
+      assert.ok(
+        childDiagnostics
+          .get(deadlineSupervised)
+          .join("")
+          .includes("execution deadline"),
+      );
+      assert.equal(
+        await waitForExit(cleanupContender, "the post-cleanup contender"),
+        0,
+      );
+      console.log(
+        `Deadline fixture cleanup status=137; child pid=${deadlineDetachedIdentity.pid} settled before successor pid=${cleanupContender.pid} acquired; successor status=0.`,
+      );
+    } finally {
+      if (deadlineSupervised.exitCode === null)
+        deadlineSupervised.kill("SIGTERM");
+      if (cleanupContender.exitCode === null) cleanupContender.kill("SIGTERM");
+      signalProcessIdentity(deadlineDetachedIdentity, "SIGKILL");
     }
 
     const detachedPidPath = path.join(temporaryRoot, "detached-child.pid");
