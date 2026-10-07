@@ -165,17 +165,25 @@ export function isSpellInvocationCastingFacts(
   return castingAccessMatchesSource(value);
 }
 
+function isInitialStatBlockCastingFacts(
+  value: SpellInvocationCastingFacts,
+): value is Extract<
+  SpellInvocationCastingFacts,
+  {
+    readonly access: { readonly tag: "statBlockCantrip" | "statBlockLeveled" };
+  }
+> {
+  return (
+    value.spellRuleFacts.castingSource.tag === "statBlock" &&
+    value.access.tag !== "spellEffect"
+  );
+}
+
 function castingAccessMatchesSource(
   value: SpellInvocationCastingFacts,
 ): boolean {
+  if (!isInitialStatBlockCastingFacts(value)) return true;
   const source = value.spellRuleFacts.castingSource;
-  if (source.tag !== "statBlock" || value.access.tag === "spellEffect")
-    return true;
-  if (
-    value.access.tag !== "statBlockCantrip" &&
-    value.access.tag !== "statBlockLeveled"
-  )
-    return false;
   const accessRef = value.access.invocationRef;
   const sourceRef = source.invocationRef;
   return (

@@ -18,6 +18,11 @@ import {
   battleTablePositionId,
 } from "./index.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { creatureSpellEffectProcedures } from "./creature-spell-procedure.ts";
+import {
+  battleEffectExecutionRef,
+  statBlockSpellInvocationProcedureRef,
+} from "./identity.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   statBlockCreatureInit,
@@ -157,6 +162,54 @@ it.each(["publishedBonus", "syntheticMagic"] as const)(
       (entry) => entry.kind === "spatialMeleeSpellAttackProxy",
     );
     expect(effect).toBeDefined();
+    if (effect?.kind !== "spatialMeleeSpellAttackProxy")
+      throw new Error("Expected the cast's live spatial effect.");
+    expect(
+      creatureSpellEffectProcedures({
+        ...caster,
+        activeEffects: [{ ...effect, sourceCombatantId: targetId }],
+      }),
+    ).toEqual([]);
+    const retained = creatureSpellEffectProcedures(caster)[0];
+    if (
+      retained === undefined ||
+      retained.spellRuleFacts.castingSource.tag !== "statBlock"
+    )
+      throw new Error("Expected retained Stat Block casting facts.");
+    expect(
+      creatureSpellEffectProcedures({
+        ...caster,
+        activeEffects: [
+          {
+            ...effect,
+            sourceProcedureRef: statBlockSpellInvocationProcedureRef(
+              retained.spellRuleFacts.castingSource.invocationRef,
+              "damageReduction",
+            ),
+          },
+        ],
+      }),
+    ).toEqual([]);
+    const target = castState.combatants.get(targetId);
+    if (target?.origin.kind !== "statBlock")
+      throw new Error("Expected the target's independent execution scope.");
+    expect(
+      creatureSpellEffectProcedures({
+        ...caster,
+        activeEffects: [
+          {
+            ...effect,
+            effectRef: battleEffectExecutionRef(
+              JSON.stringify({
+                kind: "effectOccurrence",
+                ownerScopeRef: target.origin.execution.scopeRef,
+                ordinal: 0,
+              }),
+            ),
+          },
+        ],
+      }),
+    ).toEqual([]);
     const poolsAfterInitial = caster.origin.execution.resourcePools;
     const changedPools = poolsAfterInitial.filter((pool) => {
       const initial = initialPools.find(

@@ -51,6 +51,13 @@ describe("Stat Block spell definition admission", () => {
     });
   });
 
+  it("keeps mode-owned casting time distinct from a top-level casting owner", () => {
+    const modal = spellRecord("plant_growth");
+    expect(joinStatBlockSpellDefinition({ spellId: modal.id }, modal)).toEqual({
+      kind: "missingCastingTimeOwner",
+    });
+  });
+
   it("retains typed restriction deltas without their authored expression", () => {
     const result = joinStatBlockSpellDefinition(
       {
