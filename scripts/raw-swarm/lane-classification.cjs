@@ -92,6 +92,7 @@ const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/sdk-player/attempt-source.test.ts",
   "scripts/raw-swarm/sdk-player/authored-source-admission.test.ts",
   "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+  "scripts/raw-swarm/sdk-player/declaration-cache.test.ts",
   "scripts/raw-swarm/sdk-player/consumer-protocol-boundaries.test.ts",
   "scripts/raw-swarm/sdk-player/effect-declaration-compiler-support.test.ts",
   "scripts/raw-swarm/sdk-player/player-turn-projection.test.ts",
@@ -119,6 +120,7 @@ const DETERMINISTIC_TRUSTED_BOUNDARY_TESTS = Object.freeze(
     "scripts/raw-swarm/run-sdk-player.test.ts",
     "scripts/raw-swarm/runner-boundaries.test.ts",
     "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+    "scripts/raw-swarm/sdk-player/declaration-cache.test.ts",
     "scripts/raw-swarm/sdk-player/supervisor-authored-source-admission.test.ts",
   ].sort(),
 );
