@@ -7311,11 +7311,13 @@ const CreatureStatBlockProjectionFields = {
   traits: optionalExact(nonEmpty(CreatureTraitSchema)),
 } as const;
 
-type CreatureStatBlockProjectionFields =
-  typeof CreatureStatBlockProjectionFields;
+// A named exact interface preserves declaration references without copying fields.
+export interface CreatureStatBlockProjectionFieldSchemas extends Readonly<
+  typeof CreatureStatBlockProjectionFields
+> {}
 
 /** Facts needed by spawned and parameterized creature/runtime consumers. */
-export const CreatureStatBlockProjectionSchema: Schema.Struct<CreatureStatBlockProjectionFields> =
+export const CreatureStatBlockProjectionSchema: Schema.Struct<CreatureStatBlockProjectionFieldSchemas> =
   Schema.Struct(CreatureStatBlockProjectionFields);
 
 /**

@@ -106,5 +106,15 @@ export default [
     plugins: { dnd: explicitCallResults },
     rules: { "dnd/explicit-call-results": "error" },
   },
+  {
+    files: ["packages/surface/src/surface/schema-spell.ts"],
+    rules: {
+      // This exact derived interface preserves references in emitted declarations.
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        { allowWithName: "^CreatureStatBlockProjectionFieldSchemas$" },
+      ],
+    },
+  },
   prettierConfig,
 ];
