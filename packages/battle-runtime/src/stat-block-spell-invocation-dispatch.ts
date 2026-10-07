@@ -35,9 +35,9 @@ export type StatBlockSpellCastProcedureExecution =
         readonly resource: StatBlockSpellInvocationResource<SpellSlotLevel>;
       });
 
-export function isStatBlockSpellCastProcedureExecution(
+function isInitialStatBlockSpellProcedure(
   execution: import("./procedure-execution/spell-procedure-execution.ts").SpellProcedureExecution,
-): execution is StatBlockSpellCastProcedureExecution {
+): execution is StatBlockSpellCastProcedure {
   if (
     !(
       execution.procedure !== "spawnedCompanionLifecycle" &&
@@ -53,6 +53,13 @@ export function isStatBlockSpellCastProcedureExecution(
     )
   )
     return false;
+  return true;
+}
+
+export function isStatBlockSpellCastProcedureExecution(
+  execution: import("./procedure-execution/spell-procedure-execution.ts").SpellProcedureExecution,
+): execution is StatBlockSpellCastProcedureExecution {
+  if (!isInitialStatBlockSpellProcedure(execution)) return false;
   if (execution.spellRuleFacts.castingSource.tag !== "statBlock") return false;
   if (
     execution.resource.tag !== "statBlockAtWill" &&

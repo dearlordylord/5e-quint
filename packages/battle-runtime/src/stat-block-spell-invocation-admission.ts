@@ -68,23 +68,11 @@ function unsupportedSpellInvocationAdmission(
   };
 }
 
-export function admitSelectedStatBlockSpellInvocation(input: {
-  readonly actor: StatBlockBattleCreatureState;
-  readonly state: BattleState;
-  readonly selection: SelectedStatBlockSpellInvocation;
-  readonly definitionJoin: StatBlockSpellDefinitionJoin;
-}): StatBlockSpellInvocationAdmission {
-  const joined = input.definitionJoin;
-  if (joined.kind !== "joined")
-    return unsupportedSpellInvocationAdmission(joined.kind);
-  if (
-    input.selection.invocation.kind === "restricted" ||
-    joined.value.continuation.kind === "restricted"
-  ) {
-    return unsupportedSpellInvocationAdmission("unsupportedRestriction");
-  }
+function selectedStatBlockCastingSourceFacts(
+  input: Parameters<typeof admitSelectedStatBlockSpellInvocation>[0],
+) {
   const { selection } = input;
-  const castingSourceFacts = {
+  return {
     tag: "statBlock" as const,
     invocationRef: selection.ref,
     abilityModifier: abilityModifier(
@@ -101,6 +89,25 @@ export function admitSelectedStatBlockSpellInvocation(input: {
         ? Option.none()
         : Option.some(attackBonus(selection.procedure.spellAttackBonus)),
   };
+}
+
+export function admitSelectedStatBlockSpellInvocation(input: {
+  readonly actor: StatBlockBattleCreatureState;
+  readonly state: BattleState;
+  readonly selection: SelectedStatBlockSpellInvocation;
+  readonly definitionJoin: StatBlockSpellDefinitionJoin;
+}): StatBlockSpellInvocationAdmission {
+  const joined = input.definitionJoin;
+  if (joined.kind !== "joined")
+    return unsupportedSpellInvocationAdmission(joined.kind);
+  if (
+    input.selection.invocation.kind === "restricted" ||
+    joined.value.continuation.kind === "restricted"
+  ) {
+    return unsupportedSpellInvocationAdmission("unsupportedRestriction");
+  }
+  const { selection } = input;
+  const castingSourceFacts = selectedStatBlockCastingSourceFacts(input);
   const castingSource = Match.value(joined.value.castingTime).pipe(
     Match.when({ kind: Match.is("minutes", "hours") }, (castingTime) => ({
       ...castingSourceFacts,

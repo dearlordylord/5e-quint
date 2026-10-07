@@ -1318,6 +1318,39 @@ function addEntryResourceReferences(
   }
 }
 
+function addSpellReferenceOccurrences(
+  add: AddOccurrence,
+  section: StatBlockActionProjectionSection,
+  procedureOrdinal: StatBlockProcedureOrdinal,
+  groupOrdinal: number,
+  group: StatBlockSpellcastingGroup,
+  boundGroup: StatBlockSpellcastingProcedure["groups"][number] | undefined,
+): void {
+  for (const [spellIndex, spell] of group.spells.entries()) {
+    add(
+      "spellReference",
+      {
+        kind: "spellReference",
+        section,
+        procedureOrdinal,
+        groupOrdinal,
+        spellOrdinal: spellIndex + 1,
+      },
+      spell,
+      boundGroup?.invocations[spellIndex]?.dispatch.kind === "executable"
+        ? {
+            kind: "executable",
+            owner: "battle-runtime Stat Block spell invocation",
+            runtimeShape: "spellInvocation",
+          }
+        : spellReferenceDisposition(
+            spell,
+            boundGroup?.invocations[spellIndex]?.dispatch,
+          ),
+    );
+  }
+}
+
 function addSpellcastingOccurrences(
   add: AddOccurrence,
   section: StatBlockActionProjectionSection,
@@ -1385,29 +1418,14 @@ function addSpellcastingOccurrences(
         );
       }
     }
-    for (const [spellIndex, spell] of group.spells.entries()) {
-      add(
-        "spellReference",
-        {
-          kind: "spellReference",
-          section,
-          procedureOrdinal,
-          groupOrdinal,
-          spellOrdinal: spellIndex + 1,
-        },
-        spell,
-        boundGroup?.invocations[spellIndex]?.dispatch.kind === "executable"
-          ? {
-              kind: "executable",
-              owner: "battle-runtime Stat Block spell invocation",
-              runtimeShape: "spellInvocation",
-            }
-          : spellReferenceDisposition(
-              spell,
-              boundGroup?.invocations[spellIndex]?.dispatch,
-            ),
-      );
-    }
+    addSpellReferenceOccurrences(
+      add,
+      section,
+      procedureOrdinal,
+      groupOrdinal,
+      group,
+      boundGroup,
+    );
   }
 }
 

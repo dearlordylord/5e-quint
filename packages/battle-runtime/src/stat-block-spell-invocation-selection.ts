@@ -162,6 +162,42 @@ export function statBlockSpellProcedure(
   );
 }
 
+function executionCastingHeaderMatches(
+  execution: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellCastProcedureExecution,
+  procedure: StatBlockSpellcastingProcedure,
+): boolean {
+  const source = execution.spellRuleFacts.castingSource;
+  if (
+    source.actionCost !==
+      statBlockSpellInvocationActionCost(procedure, source.castingTime) ||
+    Option.getOrUndefined(source.spellSaveDc) !== procedure.spellSaveDc ||
+    Option.getOrUndefined(source.spellAttackBonus) !==
+      procedure.spellAttackBonus
+  )
+    return false;
+  return true;
+}
+
+function executionResourceMatchesGroup(
+  execution: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellCastProcedureExecution,
+  group: StatBlockSpellcastingProcedure["groups"][number],
+  invocation: StatBlockSpellcastingInvocationOutcome,
+): boolean {
+  if (group.kind === "at_will")
+    return execution.resource.tag === "statBlockAtWill";
+  const poolRef =
+    group.resourceOwnership === "shared"
+      ? group.resourcePoolRef
+      : group.invocations.find(
+          (candidate) =>
+            candidate.invocationOrdinal === invocation.invocationOrdinal,
+        )?.resourcePoolRef;
+  return (
+    execution.resource.tag === "statBlockLimited" &&
+    execution.resource.resourcePoolRef === poolRef
+  );
+}
+
 /** Persisted child facts must retain their owning invocation and pool. */
 export function statBlockSpellDispatchBindingsAreValid(
   bindings: readonly import("./stat-block-execution-state.ts").StatBlockProcedureBindingSnapshot[],
@@ -194,33 +230,9 @@ export function statBlockSpellDispatchBindingsAreValid(
               !sameRef(execution.spellRuleFacts.castingSource.invocationRef)
             )
               return false;
-            const source = execution.spellRuleFacts.castingSource;
-            if (
-              source.actionCost !==
-                statBlockSpellInvocationActionCost(
-                  procedure,
-                  source.castingTime,
-                ) ||
-              Option.getOrUndefined(source.spellSaveDc) !==
-                procedure.spellSaveDc ||
-              Option.getOrUndefined(source.spellAttackBonus) !==
-                procedure.spellAttackBonus
-            )
+            if (!executionCastingHeaderMatches(execution, procedure))
               return false;
-            if (group.kind === "at_will")
-              return execution.resource.tag === "statBlockAtWill";
-            const poolRef =
-              group.resourceOwnership === "shared"
-                ? group.resourcePoolRef
-                : group.invocations.find(
-                    (candidate) =>
-                      candidate.invocationOrdinal ===
-                      invocation.invocationOrdinal,
-                  )?.resourcePoolRef;
-            return (
-              execution.resource.tag === "statBlockLimited" &&
-              execution.resource.resourcePoolRef === poolRef
-            );
+            return executionResourceMatchesGroup(execution, group, invocation);
           })
         );
       }),
