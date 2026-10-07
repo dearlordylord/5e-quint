@@ -46,6 +46,61 @@ const packageJson = JSON.parse(
 );
 const { QUALITY_MILESTONE_PLAN } = require("../quality-milestone-plan.cjs");
 
+function assertSharedSupervisionSignalOwnership(source) {
+  const compilerCleanup = source.match(
+    /^supervision_cleanup_compiler\(\) \{\n[\s\S]*?^\}/m,
+  );
+  assert.ok(
+    compilerCleanup,
+    "Trusted compiler cleanup must have one named owner.",
+  );
+  assert.doesNotMatch(
+    compilerCleanup[0],
+    /supervision_helper_pid/,
+    "Trusted compiler cleanup must not target the native supervisor.",
+  );
+  assert.doesNotMatch(
+    compilerCleanup[0],
+    /supervision_compiler_pid=(?!""\s*$)/m,
+    "Trusted compiler cleanup must not rebind its owned compiler PID.",
+  );
+  const compilerWithoutEscalation = compilerCleanup[0].replace(
+    /^ *kill -KILL (?:"\$supervision_compiler_pid"|-- "-\$supervision_compiler_pid") 2>\/dev\/null \|\| true$/gm,
+    "",
+  );
+  const supervisorSource = source.replace(
+    compilerCleanup[0],
+    () => compilerWithoutEscalation,
+  );
+  assert.doesNotMatch(
+    supervisorSource,
+    /supervision_signal_helper\s+["']?KILL|kill -["']?KILL/,
+    "The shell must not kill the native supervisor while its descendants may survive.",
+  );
+}
+
+function assertSupervisionSignalOwnershipFixtures(source) {
+  assertSharedSupervisionSignalOwnership(source);
+  const compilerKill = 'kill -KILL "$supervision_compiler_pid"';
+  assert.ok(
+    source.includes(compilerKill),
+    "The fixture must exercise compiler escalation.",
+  );
+  for (const mutation of [
+    source.replace(compilerKill, 'kill -KILL "$supervision_helper_pid"'),
+    `${source}\nkill -KILL "$supervision_helper_pid"\n`,
+    `${source}\n${compilerKill}\n`,
+    `${source}\nsupervision_signal_helper KILL\n`,
+    `${source}\nsupervision_signal_helper "KILL"\n`,
+    source.replace(
+      compilerKill,
+      'supervision_compiler_pid="$supervision_helper_pid"\n  ' + compilerKill,
+    ),
+  ]) {
+    assert.throws(() => assertSharedSupervisionSignalOwnership(mutation));
+  }
+}
+
 function filesBelow(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
@@ -1452,11 +1507,7 @@ function runLaneHygiene() {
     /DND_PROCESS_SUPERVISION_MARKER|\/proc\/\[0-9\]\*\/environ/,
     "Process ownership must not rely on an inherited environment marker.",
   );
-  assert.doesNotMatch(
-    sharedProcessSupervision,
-    /supervision_signal_helper KILL|kill -["']?KILL/,
-    "The shell must not kill the native supervisor while its descendants may survive.",
-  );
+  assertSupervisionSignalOwnershipFixtures(sharedProcessSupervision);
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
   const commonBlockerPath = join(blockerDirectory, "forbidden-command");
   assert.equal(
