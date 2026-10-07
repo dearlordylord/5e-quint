@@ -96,13 +96,21 @@ export function spellProcedureExecutionSchema<
   const F extends Schema.Struct.Fields,
 >(schema: Schema.Struct<F>) {
   const character = Schema.refine(
-    (value): value is Schema.Struct<F>["Type"] & CharacterInitialCastingFacts =>
+    (
+      value: Schema.Struct<F>["Type"],
+    ): value is Schema.Struct<F>["Type"] & CharacterInitialCastingFacts =>
       isSpellInvocationCastingFacts(value) &&
       value.spellRuleFacts.castingSource.tag !== "statBlock" &&
       value.access.tag !== "spellEffect",
   )(schema);
+  const statBlockSchema = Schema.Struct({
+    ...schema.fields,
+    actionCost: Schema.Literals(["magicAction", "bonusAction"]),
+  });
   const statBlock = Schema.refine(
-    (value): value is typeof value & StatBlockInitialCastingFacts => {
+    (
+      value: typeof statBlockSchema.Type,
+    ): value is typeof statBlockSchema.Type & StatBlockInitialCastingFacts => {
       const currentActionCost = value.actionCost;
       if (!isSpellInvocationCastingFacts(value)) return false;
       const source = value.spellRuleFacts.castingSource;
@@ -115,12 +123,7 @@ export function spellProcedureExecutionSchema<
           : source.actionCost;
       return currentActionCost === actionCost;
     },
-  )(
-    Schema.Struct({
-      ...schema.fields,
-      actionCost: Schema.Literals(["magicAction", "bonusAction"]),
-    }),
-  );
+  )(statBlockSchema);
   return Schema.Union([character, statBlock]);
 }
 
@@ -129,7 +132,7 @@ export function spellEffectProcedureExecutionSchema<
   S extends Schema.ConstraintCodec<unknown, unknown, never, never>,
 >(schema: S) {
   return Schema.refine(
-    (value): value is S["Type"] & SpellProcedureCastingFacts =>
+    (value: S["Type"]): value is S["Type"] & SpellProcedureCastingFacts =>
       isSpellProcedureCastingFacts(value),
   )(schema);
 }
