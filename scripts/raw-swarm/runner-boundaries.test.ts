@@ -4622,6 +4622,9 @@ esac
       "setInterval(() => {}, 1000);",
     ].join(" ");
     let contender: ReturnType<typeof spawn> | undefined;
+    // The campaign deadline includes native compiler bootstrap before child readiness.
+    const fixtureCampaignBudgetMs = 5_000;
+    const wrapperDiagnostics: string[] = [];
     const wrapper = spawn(
       modelLaneLock,
       ["campaign", process.execPath, "-e", commandSource],
@@ -4630,14 +4633,26 @@ esac
         env: {
           ...modelLaneTestEnvironment(
             commandRoot,
-            new Date(Date.now() + 1_200).toISOString(),
+            new Date(Date.now() + fixtureCampaignBudgetMs).toISOString(),
           ),
         },
-        stdio: "ignore",
+        stdio: ["ignore", "pipe", "pipe"],
       },
     );
+    wrapper.stdout.on("data", (chunk: Buffer) =>
+      wrapperDiagnostics.push(chunk.toString()),
+    );
+    wrapper.stderr.on("data", (chunk: Buffer) =>
+      wrapperDiagnostics.push(chunk.toString()),
+    );
     try {
-      await waitForFile(childPidPath);
+      try {
+        await waitForFile(childPidPath, fixtureCampaignBudgetMs);
+      } catch (error) {
+        throw new Error(
+          `${String(error)} Wrapper status=${wrapper.exitCode} signal=${wrapper.signalCode}: ${wrapperDiagnostics.join("")}`,
+        );
+      }
       const childPid = Number(readFileSync(childPidPath, "utf8").trim());
       expect(Number.isSafeInteger(childPid)).toBe(true);
       expect(processIsLive(childPid)).toBe(true);
@@ -4654,7 +4669,7 @@ esac
         { stdio: "ignore" },
       );
 
-      await waitForFile(termPath);
+      await waitForFile(termPath, fixtureCampaignBudgetMs);
       expect(processIsLive(childPid)).toBe(true);
       expect(existsSync(acquiredPath)).toBe(false);
 
