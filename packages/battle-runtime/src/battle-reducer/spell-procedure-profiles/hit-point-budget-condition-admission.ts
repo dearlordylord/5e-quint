@@ -1,5 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleep-target-admission
 //
 // The stagedSaveCondition Spell Procedure Profile: action-time Spell Slot
@@ -54,7 +54,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -966,11 +965,7 @@ function stagedSaveConditionSupportedInspection(
       facts,
       evidence: stagedSaveConditionMechanicsEvidence(mechanics, phase),
       admit: (executionSource: BattleSpellExecutionSource, ctx) =>
-        stagedSaveConditionInvocationsFromFacts(
-          executionSource,
-          facts,
-          ctx.spellCastOptions,
-        ),
+        stagedSaveConditionInvocationsFromFacts(executionSource, facts, ctx),
     },
   };
 }
@@ -1043,18 +1038,16 @@ function admitStagedSaveConditionMechanics(
 function stagedSaveConditionInvocationsFromFacts(
   spell: BattleSpellExecutionSource,
   facts: StagedSaveConditionMechanicsFacts,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  ctx: SpellAdmissionContext,
 ): readonly StagedSaveConditionSpellInvocation[] {
-  return castOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly StagedSaveConditionSpellInvocation[] =>
       Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
-              access: preparedSpellAccessForCastingSource(spell.castingSource),
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "stagedSaveCondition",
-              spell,
               ability: facts.ability,
               dc: facts.dc,
               targeting: facts.targeting,

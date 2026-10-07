@@ -1,5 +1,4 @@
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
 import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
@@ -1377,7 +1376,7 @@ function admitCreatureSizeChangeForProcedure<
 ): readonly (CreatureSizeChangeInvocation & {
   readonly procedure: Procedure;
 })[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (
       slot,
     ): readonly (CreatureSizeChangeInvocation & {
@@ -1387,9 +1386,7 @@ function admitCreatureSizeChangeForProcedure<
         ? []
         : [
             {
-              access: preparedSpellAccessForCastingSource(spell.castingSource),
-              resource: spellInvocationResourceForCastOption(slot),
-              spell,
+              ...slot.facts,
               actionCost: "magicAction",
               procedure,
               ability: facts.ability,

@@ -1,4 +1,4 @@
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -76,7 +76,6 @@ import {
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
   type SpellAdmissionContext,
@@ -738,15 +737,13 @@ function admit(
       }),
     }),
   );
-  return context.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, context).flatMap(
     (option): readonly CreatureTypeProtectionSpellInvocation[] => {
       if (Number(option.spellLevel) < facts.level) return [];
       return [
         {
-          access: preparedSpellAccessForCastingSource(spell.castingSource),
-          resource: spellInvocationResourceForCastOption(option),
+          ...option.facts,
           procedure: "creatureTypeProtection",
-          spell,
           actionCost: "magicAction",
           ...targetFacts,
           activeEffect: {
