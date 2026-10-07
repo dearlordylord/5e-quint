@@ -1041,7 +1041,7 @@ export const controlledVerticalSuspensionProfile: SpellProcedureDeclaration<
   executionSchema: ControlledVerticalSuspensionInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: admitSuspensionMechanics,
   discoverCastAct: discoverControlledVerticalSuspensionCastAct,

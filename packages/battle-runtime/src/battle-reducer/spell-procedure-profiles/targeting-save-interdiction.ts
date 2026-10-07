@@ -971,9 +971,10 @@ const TargetingSaveInterdictionInvocationSchema = spellProcedureExecutionSchema(
 export const targetingSaveInterdictionProfile = {
   procedure: "targetingSaveInterdiction",
   executionSchema: TargetingSaveInterdictionInvocationSchema,
-  casterRequirements: () => ({
+  casterRequirements: (facts) => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc:
+      facts.saveDc.kind === "caster_spell_save_dc" ? "required" : "unused",
   }),
   admitMechanics: admitTargetingSaveInterdictionMechanics,
   discoverCastAct: discoverTargetingSaveInterdictionCastAct,

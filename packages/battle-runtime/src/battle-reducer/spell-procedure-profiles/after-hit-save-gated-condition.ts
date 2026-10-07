@@ -735,7 +735,7 @@ export const afterHitSaveGatedConditionProfile = {
   executionSchema: AfterHitSaveGatedConditionInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: admitAfterHitSaveGatedConditionMechanics,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,

@@ -1158,7 +1158,7 @@ export const spellCastInterruptionReactionProfile = {
   executionSchema: SpellCastInterruptionInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: admitSpellCastInterruptionMechanics,
   discoverCastAct: discoverSpellCastInterruptionCastAct,

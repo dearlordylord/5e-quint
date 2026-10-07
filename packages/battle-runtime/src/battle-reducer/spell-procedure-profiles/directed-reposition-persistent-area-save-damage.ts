@@ -1040,7 +1040,7 @@ export const directedRepositionPersistentAreaSaveDamageProfile = {
   executionSchema: MovablePersistentAreaInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: movablePersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,

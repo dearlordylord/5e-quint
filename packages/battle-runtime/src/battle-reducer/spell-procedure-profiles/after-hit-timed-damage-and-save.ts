@@ -608,7 +608,7 @@ export const afterHitTimedDamageAndSaveProfile = {
   executionSchema: AfterHitTimedDamageAndSaveInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: admitAfterHitTimedDamageAndSaveMechanics,
   discoverCastAct: discoverAfterHitTimedDamageAndSaveCastAct,

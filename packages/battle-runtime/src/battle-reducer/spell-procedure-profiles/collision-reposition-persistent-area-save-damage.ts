@@ -858,7 +858,7 @@ export const collisionRepositionPersistentAreaSaveDamageProfile = {
   executionSchema: RamMovablePersistentAreaInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: ramMovablePersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,

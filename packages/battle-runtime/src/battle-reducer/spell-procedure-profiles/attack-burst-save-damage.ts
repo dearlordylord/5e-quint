@@ -844,9 +844,10 @@ export const attackBurstSaveDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "attackBurstSaveDamage",
   executionSchema: AttackBurstSaveDamageInvocationSchema,
-  casterRequirements: () => ({
+  casterRequirements: (facts) => ({
     spellAttackBonus: "required",
-    spellSaveDc: "unused",
+    spellSaveDc:
+      facts.burstDc.kind === "caster_spell_save_dc" ? "required" : "unused",
   }),
   admitMechanics: admitAttackBurstSaveDamageMechanics,
   discoverCastAct: discoverAttackBurstSaveDamageCastAct,

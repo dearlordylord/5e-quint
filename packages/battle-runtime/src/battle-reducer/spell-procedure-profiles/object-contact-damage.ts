@@ -1988,7 +1988,7 @@ export const objectContactDamageProfile: SpellProcedureDeclaration<
   executionSchema: ObjectContactDamageInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: admitObjectContactDamageMechanics,
   discoverCastAct: discoverObjectContactDamageCastAct,
@@ -2005,7 +2005,7 @@ export const objectContactDamageRepeatProfile: SpellProcedureDeclaration<
   executionSchema: ObjectContactDamageRepeatInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: admitObjectContactDamageRepeatMechanics,
   discoverCastAct: discoverObjectContactDamageRepeatCastAct,

@@ -849,7 +849,7 @@ export const persistentAreaSaveCompositeProfile = {
   executionSchema: PersistentAreaSaveCompositeInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: persistentAreaSaveCompositeMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,

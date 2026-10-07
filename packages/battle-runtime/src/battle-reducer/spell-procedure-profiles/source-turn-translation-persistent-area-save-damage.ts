@@ -1019,7 +1019,7 @@ export const sourceTurnTranslationPersistentAreaSaveDamageProfile = {
   executionSchema: TranslatingPersistentAreaAreaHazardInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: translatingPersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,

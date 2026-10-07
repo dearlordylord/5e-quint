@@ -903,7 +903,7 @@ export const stationaryPersistentAreaSaveDamageProfile = {
   executionSchema: StationaryPersistentAreaAreaHazardInvocationSchema,
   casterRequirements: () => ({
     spellAttackBonus: "unused",
-    spellSaveDc: "unused",
+    spellSaveDc: "required",
   }),
   admitMechanics: stationaryPersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
