@@ -122,9 +122,25 @@ forest of reusable rule-core slices and focused runtime/MBT owners; see
 Run public scripts directly. `pnpm typecheck`, `pnpm test`, and
 `pnpm quality:milestone` acquire the shared heavy-verification lock and cap
 workspace concurrency; do not wrap them in another lock, run raw Turbo, or call
-their internal `:body`/`:turbo` scripts. Use focused checks during implementation
-and reserve `pnpm quality:milestone` for a stable integration revision after
-reviewer convergence. For another broad command use:
+their internal `:body`/`:turbo` scripts.
+
+Use focused checks during implementation. Delegated workers run affected checks
+for their assigned changes and report the checked revision, commands, results,
+and verification limits. The existing parent/integrator owns the scope,
+assignment, and acceptance of task-wide qualification under the existing
+verification requirements. Reserve `pnpm quality:milestone` for a stable
+combined candidate after the task's changes are integrated and reviewer
+convergence is reached. The parent/integrator may delegate that run and remains
+responsible for evaluating its result for acceptance.
+
+"The full test suite once at the end" refers to this task-wide integration
+point, not each child assignment or commit. An independently delivered task,
+including a standalone worktree, has its own integration candidate; the
+delivering agent owns that qualification. Explicit requests for a full run,
+mandatory hooks and CI, scoped verification obligations, and all required
+acceptance gates still apply.
+
+For another broad command use:
 
 ```sh
 . scripts/resource-lock-owner.sh && \
