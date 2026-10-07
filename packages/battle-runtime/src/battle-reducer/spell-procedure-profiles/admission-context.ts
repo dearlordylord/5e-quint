@@ -10,7 +10,19 @@ import {
 
 function isSpellAdmissionActor(
   actor: BattleCreatureState,
-): actor is SpellAdmissionActor {
+): actor is SpellAdmissionActor & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  > & {
+    readonly spellcasting: NonNullable<
+      Extract<
+        BattleCreatureState["origin"],
+        { readonly kind: "character" }
+      >["spellcasting"]
+    > & { readonly canCastSpells: true };
+  };
+} {
   return (
     actor.origin.kind === "character" &&
     actor.origin.spellcasting !== undefined &&

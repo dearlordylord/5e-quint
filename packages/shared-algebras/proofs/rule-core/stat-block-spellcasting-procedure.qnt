@@ -207,6 +207,11 @@ module statBlockSpellcastingProcedure {
       (outcomes, group) =>
         outcomes.append(statBlockSpellcastingInvocationOutcomes(group))
     )
+  // monsters.md, Spellcasting: listed monster attack bonuses are authoritative.
+  pure def statBlockSpellAttackBonus(
+    facts: StatBlockSpellcastingAdmittedProcedureFacts
+  ): StatBlockSpellcastingOptionalAttackBonus = facts.spellAttackBonus
+
 
   type StatBlockSpellCastLevelOverride =
     | DefinitionSpellLevel

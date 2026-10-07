@@ -1,3 +1,7 @@
+import {
+  StatBlockLeveledSpellAccessSchema,
+  StatBlockLeveledSpellInvocationResourceSchema,
+} from "../procedure-execution/spell-invocation-codecs.ts";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
@@ -487,9 +491,10 @@ export const MechanicalSupportedAttackActionOptionSchema = Schema.Union([
 export type MechanicalSupportedAttackActionOption =
   typeof MechanicalSupportedAttackActionOptionSchema.Type;
 
-export const PreparedSpellAccessSchema = Schema.Struct({
-  tag: Schema.Literal("prepared"),
-});
+export const PreparedSpellAccessSchema = Schema.Union([
+  Schema.Struct({ tag: Schema.Literal("prepared") }),
+  StatBlockLeveledSpellAccessSchema,
+]);
 
 export {
   CantripSpellAccessSchema,
@@ -525,6 +530,7 @@ export const SpellAccessFreeCastExecutionResourceSchema = Schema.Struct({
 });
 
 export const LeveledSpellInvocationResourceSchema = Schema.Union([
+  StatBlockLeveledSpellInvocationResourceSchema,
   SpellSlotInvocationResourceSchema,
   SpellAccessFreeCastInvocationResourceSchema,
 ]);

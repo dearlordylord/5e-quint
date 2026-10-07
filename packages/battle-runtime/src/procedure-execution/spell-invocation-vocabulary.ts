@@ -1,24 +1,38 @@
 import type { MovementFeet, SpellSlotLevel } from "@dnd/shared/types";
-import type { Ability, DcSource } from "@dnd/surface/surface/types";
+import type { Ability, DcSource, SpellLevel } from "@dnd/surface/surface/types";
 import type {
   BattleResourcePoolExecutionRef,
+  StatBlockSpellInvocationRef,
   CombatantId,
 } from "../identity.ts";
 
 /** Authored-identity-free access facts retained for spell execution. */
-export type PreparedSpellAccess = { readonly tag: "prepared" };
+export type StatBlockCantripSpellAccess = {
+  readonly tag: "statBlockCantrip";
+  readonly invocationRef: StatBlockSpellInvocationRef;
+};
+export type StatBlockLeveledSpellAccess = {
+  readonly tag: "statBlockLeveled";
+  readonly invocationRef: StatBlockSpellInvocationRef;
+};
+export type PreparedSpellAccess =
+  | { readonly tag: "prepared" }
+  | StatBlockLeveledSpellAccess;
 
 export type ClassCantripSpellAccess = { readonly tag: "classCantrip" };
 export type SpellAccessCantripSpellAccess = {
   readonly tag: "spellAccessCantrip";
 };
 export type CantripSpellAccess =
+  | StatBlockCantripSpellAccess
   | ClassCantripSpellAccess
   | SpellAccessCantripSpellAccess;
 
-export function cantripSpellAccessForCastingSource(source: {
-  readonly tag: "classSpellcasting" | "spellAccess";
-}): CantripSpellAccess {
+export function cantripSpellAccessForCastingSource(
+  source: import("./spell-rule-facts.ts").SpellCastingSource,
+): CantripSpellAccess {
+  if (source.tag === "statBlock")
+    return { tag: "statBlockCantrip", invocationRef: source.invocationRef };
   return source.tag === "classSpellcasting"
     ? { tag: "classCantrip" }
     : { tag: "spellAccessCantrip" };
@@ -27,7 +41,11 @@ export function cantripSpellAccessForCastingSource(source: {
 export function isCantripSpellAccess(access: {
   readonly tag: string;
 }): access is CantripSpellAccess {
-  return access.tag === "classCantrip" || access.tag === "spellAccessCantrip";
+  return (
+    access.tag === "classCantrip" ||
+    access.tag === "spellAccessCantrip" ||
+    access.tag === "statBlockCantrip"
+  );
 }
 
 export type ArmorOfShadowsSpellAccess = {
@@ -37,7 +55,18 @@ export type SpellEffectSpellAccess = {
   readonly tag: "spellEffect";
   readonly sourceCombatantId: CombatantId;
 };
-export type NoSpellInvocationResource = { readonly tag: "none" };
+export type StatBlockSpellInvocationResource<
+  Level extends SpellSlotLevel | 0 = SpellSlotLevel | 0,
+> =
+  | { readonly tag: "statBlockAtWill"; readonly castLevel: Level }
+  | {
+      readonly tag: "statBlockLimited";
+      readonly castLevel: Level;
+      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+    };
+export type NoSpellInvocationResource =
+  | { readonly tag: "none" }
+  | StatBlockSpellInvocationResource<0>;
 /** Authored-identity-free spell-slot spend retained for spell execution. */
 export type SpellSlotInvocationResource = {
   readonly tag: "spellSlot";
@@ -49,6 +78,7 @@ export type SpellAccessFreeCastInvocationResource = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
 };
 export type LeveledSpellInvocationResource =
+  | StatBlockSpellInvocationResource<SpellSlotLevel>
   | SpellSlotInvocationResource
   | SpellAccessFreeCastInvocationResource;
 
@@ -125,3 +155,16 @@ export type SaveGatedConditionSpellTargeting =
 export type SaveGatedDamageSpellTargeting =
   | SpellTargetingByKind<"singleCombatant">
   | SaveGatedDamageAreaSpellTargeting;
+
+export function preparedSpellAccessForCastingSource(
+  source: import("./spell-rule-facts.ts").SpellCastingSource,
+): PreparedSpellAccess {
+  return source.tag === "statBlock"
+    ? { tag: "statBlockLeveled", invocationRef: source.invocationRef }
+    : { tag: "prepared" };
+}
+export function isLeveledSpellAccess(access: {
+  readonly tag: string;
+}): access is PreparedSpellAccess {
+  return access.tag === "prepared" || access.tag === "statBlockLeveled";
+}

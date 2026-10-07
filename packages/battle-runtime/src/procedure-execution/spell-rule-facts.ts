@@ -1,17 +1,27 @@
 import {
   ClassNameSchema,
+  CastingTimeSchema,
   DurationSchema,
   RangeSchema,
   SpellLevelSchema,
 } from "@dnd/surface/surface/schema";
-import { AbilityModifier } from "@dnd/shared/types";
+import {
+  AbilityModifier,
+  AttackBonus,
+  DifficultyClass,
+} from "@dnd/shared/types";
 import type { Duration, Range, SpellLevel } from "@dnd/surface/surface/types";
 import type { ClassName } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
-import { BattleSpellAccessExecutionRef } from "../identity.ts";
+import {
+  BattleSpellAccessExecutionRef,
+  StatBlockSpellInvocationRefSchema,
+  type StatBlockSpellInvocationRef,
+} from "../identity.ts";
 
 /** The dynamic caster/access fact joined to a static Spell Definition. */
 export type SpellCastingSource =
+  | StatBlockSpellCastingSource
   | {
       readonly tag: "classSpellcasting";
       readonly className: ClassName;
@@ -22,6 +32,19 @@ export type SpellCastingSource =
       readonly spellAccessRef: BattleSpellAccessExecutionRef;
       readonly abilityModifier: AbilityModifier;
     };
+
+export type StatBlockSpellCastingSource = {
+  readonly tag: "statBlock";
+  readonly castingTime: import("@dnd/surface/surface/types").CastingTime;
+  readonly invocationRef: StatBlockSpellInvocationRef;
+  readonly abilityModifier: AbilityModifier;
+  readonly spellSaveDc: import("effect").Option.Option<
+    import("@dnd/shared/types").DifficultyClass
+  >;
+  readonly spellAttackBonus: import("effect").Option.Option<
+    import("@dnd/shared/types").AttackBonus
+  >;
+};
 
 /** Spell Definition facts carried across the admission/execution boundary. */
 export type SpellDefinitionRuleFacts = {
@@ -54,6 +77,14 @@ export function spellRuleExecutionFactsWithCastingSource(
 }
 
 export const SpellCastingSourceSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("statBlock"),
+    castingTime: CastingTimeSchema,
+    invocationRef: StatBlockSpellInvocationRefSchema,
+    abilityModifier: AbilityModifier,
+    spellSaveDc: Schema.Option(DifficultyClass),
+    spellAttackBonus: Schema.Option(AttackBonus),
+  }),
   Schema.Struct({
     tag: Schema.Literal("classSpellcasting"),
     className: ClassNameSchema,
