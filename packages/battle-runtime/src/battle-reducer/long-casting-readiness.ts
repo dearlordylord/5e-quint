@@ -6,6 +6,7 @@ import { Option } from "effect";
 import type {
   BattleExecutableSpellInvocation,
   BattleState,
+  BattleConcentration,
 } from "../battle-state-execution.ts";
 import type { CombatantId, StatBlockSpellInvocationRef } from "../identity.ts";
 import type { LongCastingTime } from "./long-casting-progress.ts";
@@ -33,22 +34,38 @@ export function statBlockLongCastingTime(
     : Option.none();
 }
 
-export function longCastingCompletionResource(
+/** A pending cast belongs to one admitted child procedure, not just its listed spell. */
+export function longCastingConcentrationForInvocation(
   state: BattleState,
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
-): Option.Option<{ readonly kind: "alreadySpent" }> {
+):
+  | Extract<BattleConcentration, { readonly effectKind: "castingSpell" }>
+  | undefined {
   const source = invocation.spellRuleFacts.castingSource;
   const concentration = state.combatants.get(actorId)?.concentration;
   if (
     source.tag !== "statBlock" ||
     concentration?.effectKind !== "castingSpell"
   )
-    return Option.none();
-  const matchesInvocation =
-    concentration.sourceProcedureRef === invocation.sourceProcedureRef &&
-    sameInvocationRef(concentration.invocationRef, source.invocationRef);
-  return matchesInvocation &&
+    return undefined;
+  return concentration.sourceProcedureRef === invocation.sourceProcedureRef &&
+    sameInvocationRef(concentration.invocationRef, source.invocationRef)
+    ? concentration
+    : undefined;
+}
+
+export function longCastingCompletionResource(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): Option.Option<{ readonly kind: "alreadySpent" }> {
+  const concentration = longCastingConcentrationForInvocation(
+    state,
+    actorId,
+    invocation,
+  );
+  return concentration !== undefined &&
     isLongCastingReadyToComplete(concentration.progress, state.initiative.round)
     ? Option.some({ kind: "alreadySpent" as const })
     : Option.none();

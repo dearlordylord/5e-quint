@@ -38,6 +38,7 @@ import {
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 
+import { statBlockSpellInvocationProcedureRef } from "./identity.ts";
 describe("long spellcasting through catalog admission and public battle execution", () => {
   it("spends ten Magic actions before effects, then completes without another action", () => {
     let state = longCastingBattle().state;
@@ -93,6 +94,52 @@ describe("long spellcasting through catalog admission and public battle executio
     expect(castingAction(state).subject).toMatchObject({
       command: "startSpellCasting",
     });
+  });
+
+  it("rejects continuing a different child procedure with the same invocation coordinates", () => {
+    let state = advance(longCastingBattle({ ownership: "each" }).state);
+    state = resolved(endTurn({ state, actorId: longCastingActorId }));
+    const continuation = castingAction(state);
+    const actor = state.combatants.get(longCastingActorId);
+    if (
+      actor?.origin.kind !== "statBlock" ||
+      actor.concentration?.effectKind !== "castingSpell"
+    )
+      throw new Error("Expected an admitted pending Stat Block cast.");
+    const concentration = actor.concentration;
+    const otherChild = statBlockSpellInvocationProcedureRef(
+      concentration.invocationRef,
+      "damageReduction",
+    );
+    expect(otherChild).not.toBe(concentration.sourceProcedureRef);
+    const changed = {
+      ...state,
+      combatants: new Map(state.combatants).set(longCastingActorId, {
+        ...actor,
+        concentration: { ...concentration, sourceProcedureRef: otherChild },
+      }),
+    };
+    const before = snapshotBattle(changed);
+    expect(castingAction(changed).subject).toMatchObject({
+      command: "startSpellCasting",
+    });
+    const rejected = resolveBattleSubject({
+      state: changed,
+      subject: continuation.subject,
+      fills: [],
+    });
+    expect(rejected.tag).toBe("invalid");
+    expect(rejected.snapshot).toEqual(before);
+    expect(changed.combatants.get(longCastingActorId)?.concentration).toEqual({
+      ...concentration,
+      sourceProcedureRef: otherChild,
+    });
+    const unchangedActor = changed.combatants.get(longCastingActorId);
+    if (unchangedActor?.origin.kind !== "statBlock")
+      throw new Error("Expected Stat Block resource owner.");
+    expect(unchangedActor.origin.execution.resourcePools).toEqual(
+      actor.origin.execution.resourcePools,
+    );
   });
 
   it("loses pending progress through voluntary concentration ending", () => {

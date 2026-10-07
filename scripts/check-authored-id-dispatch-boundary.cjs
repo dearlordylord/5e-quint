@@ -2677,10 +2677,139 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
 ];
 
+// Parsed procedure, registration, and runtime-command vocabulary introduced by
+// generic creature spellcasting. Every collision remains site-certificate bound.
+for (const [spellId, relativePath, identifiers, reason] of [
+  [
+    "command",
+    "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+    ["resolveLongCastingCommand", "isLongCastingCommandSubject"],
+    "command names the typed runtime request protocol",
+  ],
+  [
+    "command",
+    "packages/battle-runtime/src/battle-reducer/long-casting-lifecycle.ts",
+    [
+      "resolveLongCastingCommand",
+      "matchesLongCastingCommand",
+      "admitLongCastingCommand",
+    ],
+    "command names the typed runtime request protocol",
+  ],
+  [
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/held-light.ts",
+    ["isCharacterHeldLightInvocation"],
+    "light names retained illumination mechanics",
+  ],
+  [
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+    [
+      "HeldLightRegistration",
+      "heldLightRegistration",
+      "HeldLightHurlRegistration",
+      "heldLightHurlRegistration",
+      "ObjectLightRegistration",
+      "objectLightRegistration",
+      "MovableLightManifestationRegistration",
+      "movableLightManifestationRegistration",
+    ],
+    "registrations join parsed illumination procedures to their owning callbacks",
+  ],
+  [
+    "resistance",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+    [
+      "LinkedDefenseResistanceDamageShareRegistration",
+      "linkedDefenseResistanceDamageShareRegistration",
+      "ChosenDamageResistanceRegistration",
+      "chosenDamageResistanceRegistration",
+    ],
+    "registrations join parsed damage-resistance procedures to their owning callbacks",
+  ],
+  [
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+    ["SelfTeleportRegistration", "selfTeleportRegistration"],
+    "registration joins a parsed self-teleport procedure to its owning callbacks",
+  ],
+  [
+    "darkness",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+    [
+      "MagicalDarknessPointOriginRegistration",
+      "magicalDarknessPointOriginRegistration",
+    ],
+    "registration joins parsed visibility mechanics to their owning callbacks",
+  ],
+  [
+    "resistance",
+    "packages/battle-runtime/src/battle-state-execution.ts",
+    [
+      "LinkedDefenseResistanceDamageShareSpellInvocationShape",
+      "ChosenDamageResistanceSpellInvocationShape",
+    ],
+    "invocation shapes retain parsed damage-resistance mechanics",
+  ],
+  [
+    "teleport",
+    "packages/battle-runtime/src/battle-state-execution.ts",
+    ["SelfTeleportSpellInvocationShape"],
+    "invocation shape retains parsed self-teleport mechanics",
+  ],
+  [
+    "light",
+    "packages/battle-runtime/src/battle-state-execution.ts",
+    [
+      "HeldLightSpellInvocationShape",
+      "ObjectLightSpellInvocationShape",
+      "HeldLightHurlSpellInvocationShape",
+      "MovableLightManifestationSpellInvocationShape",
+    ],
+    "invocation shapes retain parsed illumination mechanics",
+  ],
+  [
+    "light",
+    "packages/battle-runtime/src/procedure-execution/spell-procedure-execution.ts",
+    [
+      "RepositionMovableLightManifestationSpellProcedureExecutionShape",
+      "HeldLightHurlSpellProcedureExecutionShape",
+    ],
+    "procedure execution shapes retain parsed illumination mechanics",
+  ],
+]) {
+  EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
+    ...exactCollisionsAt(
+      spellId,
+      relativePath,
+      identifiers.map((identifier) => ({
+        identifier,
+        roles: ["declaration-identifier"],
+      })),
+      reason,
+    ),
+  );
+}
+EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/spell-procedure-execution-admission.ts",
+    [{ identifier: "light", roles: ["registry-key"] }],
+    "light is a projected illumination fact field",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/spell-procedure-execution-admission.ts",
+    [{ identifier: "selfTeleport", roles: ["registry-key"] }],
+    "selfTeleport is a parsed procedure discriminant",
+  ),
+);
+
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "ba7a0bc86a4addecbc3a350a5d3cc969a2a4c422a74c1c4e6aa37bea4a1f11ca",
-  siteCount: 1662,
-  violationCount: 1776,
+  sha256: "8d24f522ac52f21e292580f0927b1d86816c8c4411ec99cb051c68f5b4baae29",
+  siteCount: 1704,
+  violationCount: 1821,
 };
 
 function escapeForRegExp(text) {
@@ -3087,7 +3216,9 @@ function assertBattleReplayExecutionBoundary() {
       patterns: [
         /BattleEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
         /BattleSpellDamageDieExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
-        POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN,
+        // Invocation group coordinates are canonical admitted references; only
+        // damage-die coordinates are forbidden by this identity-owner check.
+        /BattleSpellDamageDieExecutionRef|dieOrdinal|selectedDieOrdinal/,
       ],
     },
     {
@@ -3576,6 +3707,52 @@ function battleReplayAstViolations(sourceText, relativePath) {
     "selectedDieOrdinal",
   ]);
 
+  // These coordinate owners are the typed admitted invocation graph. Do not
+  // infer this domain from an arbitrary object's property names.
+  function isAdmittedSpellcastingGroupCoordinate(node) {
+    if (node.text !== "groupOrdinal") return false;
+    const coordinateOwners = new Map([
+      [
+        "packages/battle-runtime/src/identity.ts",
+        new Set([
+          "StatBlockSpellInvocationRefSchema",
+          "statBlockSpellInvocationProcedureRef",
+          "statBlockSpellInvocationProcedureReferenceIsCanonical",
+          "hasCanonicalStatBlockInvocationFields",
+        ]),
+      ],
+      [
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        new Set([
+          "StatBlockSpellcastingGroupSchema",
+          "spellcastingInvocationCoordinatesAreCanonical",
+          "serializedStatBlockAuthoritativeExecutionReferences",
+        ]),
+      ],
+      [
+        "packages/battle-runtime/src/battle-reducer/long-casting-readiness.ts",
+        new Set(["sameInvocationRef"]),
+      ],
+    ]);
+    const owners = coordinateOwners.get(relativePath);
+    if (owners === undefined) return false;
+    for (
+      let ancestor = node.parent;
+      ancestor !== undefined;
+      ancestor = ancestor.parent
+    ) {
+      if (
+        (ts.isFunctionDeclaration(ancestor) ||
+          ts.isVariableDeclaration(ancestor)) &&
+        ancestor.name !== undefined &&
+        ts.isIdentifier(ancestor.name) &&
+        owners.has(ancestor.name.text)
+      )
+        return true;
+    }
+    return false;
+  }
+
   function collectValueDeclarations(node) {
     if (
       ts.isVariableDeclaration(node) &&
@@ -3887,7 +4064,11 @@ function battleReplayAstViolations(sourceText, relativePath) {
         `CharacterProcedureBinding execution retains authored id ${propertyNameText(node.name)}`,
       );
     }
-    if (ts.isIdentifier(node) && positionalIdentityNames.has(node.text)) {
+    if (
+      ts.isIdentifier(node) &&
+      positionalIdentityNames.has(node.text) &&
+      !isAdmittedSpellcastingGroupCoordinate(node)
+    ) {
       add(node, "damage-die replay identity is positional");
     }
     ts.forEachChild(node, visit);
@@ -4073,6 +4254,32 @@ function assertBattleReplayAstSelfTests() {
       violation.endsWith("authored spell id constructs a runtime key"),
     ).length >= 2,
     "Battle replay AST self-test missed aliased authored spell identity.",
+  );
+  assert.equal(
+    battleReplayAstViolations(
+      "const StatBlockSpellInvocationRefSchema = Schema.Struct({ groupOrdinal: StatBlockSpellcastingGroupOrdinal, invocationOrdinal: StatBlockSpellcastingInvocationOrdinal });",
+      "packages/battle-runtime/src/identity.ts",
+    ).length,
+    0,
+    "Canonical admitted invocation coordinates are not damage-die identity.",
+  );
+  assert.ok(
+    battleReplayAstViolations(
+      "type Die = { groupOrdinal: number }",
+      "packages/battle-runtime/src/identity.ts",
+    ).some((violation) =>
+      violation.endsWith("damage-die replay identity is positional"),
+    ),
+    "Unscoped positional damage groups remain forbidden.",
+  );
+  assert.ok(
+    battleReplayAstViolations(
+      "const damage = { groupOrdinal: 0, invocationOrdinal: 0 };",
+      "packages/battle-runtime/src/identity.ts",
+    ).some((violation) =>
+      violation.endsWith("damage-die replay identity is positional"),
+    ),
+    "An invocationOrdinal field alone must not disguise positional damage identity.",
   );
   const positionalFixture = `type Die = { dieOrdinal: number }`;
   assert.ok(

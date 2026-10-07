@@ -5,10 +5,8 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.at-will-group
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
-import {
-  discoverLongCastingSpellActs,
-  longCastingCompletionResource,
-} from "./long-casting-lifecycle.ts";
+import { discoverLongCastingSpellActs } from "./long-casting-discovery.ts";
+import { longCastingCompletionResource } from "./long-casting-readiness.ts";
 import { Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -275,6 +273,21 @@ function discoverRegisteredSpellProcedureCastAct(
   });
 }
 
+function naturalSpellActTurnResourceAvailable(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): boolean {
+  return (
+    Option.isSome(longCastingCompletionResource(state, actorId, invocation)) ||
+    spellActTurnResourceAvailable(
+      state.currentTurnResources,
+      actorId,
+      invocation,
+    )
+  );
+}
+
 export function discoverSupportedSpellInvocations(
   state: BattleState,
   actorId: CombatantId,
@@ -319,15 +332,11 @@ export function discoverSupportedSpellInvocations(
         invocation: executionInvocation,
       });
       if (longCastingActs !== undefined) return longCastingActs;
-      const naturalTurnResourceAvailable =
-        Option.isSome(
-          longCastingCompletionResource(state, actorId, executionInvocation),
-        ) ||
-        spellActTurnResourceAvailable(
-          state.currentTurnResources,
-          actorId,
-          executionInvocation,
-        );
+      const naturalTurnResourceAvailable = naturalSpellActTurnResourceAvailable(
+        state,
+        actorId,
+        executionInvocation,
+      );
       const quickenedTurnResourceAvailable =
         spellInvocationSupportsQuickenedActionRewrite(executionInvocation) &&
         actorCanOfferQuickenedSpellMetamagic({
@@ -405,17 +414,13 @@ function spellActWithQuickenedRewrite(input: {
   if (invocation === undefined) {
     return [input.act];
   }
-  const naturalActs =
-    Option.isSome(
-      longCastingCompletionResource(input.state, input.actorId, invocation),
-    ) ||
-    spellActTurnResourceAvailable(
-      input.state.currentTurnResources,
-      input.actorId,
-      invocation,
-    )
-      ? [input.act]
-      : [];
+  const naturalActs = naturalSpellActTurnResourceAvailable(
+    input.state,
+    input.actorId,
+    invocation,
+  )
+    ? [input.act]
+    : [];
   if (subject.mode.tag !== "cast" || subject.metamagic !== undefined) {
     return naturalActs;
   }
