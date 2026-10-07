@@ -12,17 +12,19 @@ export type LongCastingTime = Extract<
   { readonly kind: "minutes" | "hours" }
 >;
 
-export function longCastingTurns(time: LongCastingTime): number {
-  return Match.value(time).pipe(
-    Match.when(
-      { kind: "minutes" },
-      ({ amount }) => amount * ELAPSED_TIME_TICKS_PER_MINUTE,
+export function longCastingTurns(time: LongCastingTime): PositiveInteger {
+  return PositiveInteger(
+    Match.value(time).pipe(
+      Match.when(
+        { kind: "minutes" },
+        ({ amount }) => amount * ELAPSED_TIME_TICKS_PER_MINUTE,
+      ),
+      Match.when(
+        { kind: "hours" },
+        ({ amount }) => amount * ELAPSED_TIME_TICKS_PER_HOUR,
+      ),
+      Match.exhaustive,
     ),
-    Match.when(
-      { kind: "hours" },
-      ({ amount }) => amount * ELAPSED_TIME_TICKS_PER_HOUR,
-    ),
-    Match.exhaustive,
   );
 }
 

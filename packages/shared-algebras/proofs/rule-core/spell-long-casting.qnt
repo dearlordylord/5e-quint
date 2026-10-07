@@ -2,6 +2,8 @@
 // playing-the-game.md: Order of Combat (six seconds per round).
 module spellLongCasting {
   import actionTurnProcedures as turn from "./action-turn-procedures"
+  import statBlockSpellcastingGroup as group from "./stat-block-spellcasting-group"
+  import statBlockResourceLifecycle as resource from "./stat-block-resource-lifecycle"
 
   type LongCastingTime = CastingMinutes(int) | CastingHours(int)
   type LongCastingProgress =
@@ -69,4 +71,18 @@ module spellLongCasting {
       | NotCasting => false
       | Casting(_) => false
     }
+  // Final effect/target admission and elapsed casting readiness jointly guard
+  // the existing canonical selected-pool operation. Progress never pays uses.
+  pure def completeLongCastingLimitedInvocation(
+    progress: LongCastingProgress,
+    round: int,
+    pools: int -> resource::StatBlockLimitedUseResource,
+    selectedGroup: group::LimitedSpellcastingGroup,
+    invocation: int,
+    effectAdmitted: bool
+  ): group::LimitedSpellcastingSpend =
+    group::spendSelectedSpellcastingInvocation(
+      pools, selectedGroup, invocation,
+      longCastingCanComplete(progress, round) and effectAdmitted
+    )
 }

@@ -33,11 +33,23 @@ export const longCastingActorId = combatantId("synthetic-long-casting-actor");
 
 /** A synthetic record exercises a duration facet absent from profiled shipped spells. */
 export function longCastingBattle(
-  time: LongCastingTime = { kind: "minutes", amount: 1, ritual: false },
-  ownership?: "each" | "shared",
-  counterspell = false,
-  baseSpellId = "false_life",
+  input: {
+    readonly time?: LongCastingTime;
+    readonly ownership?: "each" | "shared";
+    readonly counterspell?: boolean;
+    readonly baseSpellId?: string;
+    readonly immediateConcentrationSibling?: boolean;
+    readonly bonusSection?: boolean;
+  } = {},
 ) {
+  const {
+    time = { kind: "minutes", amount: 1, ritual: false },
+    ownership,
+    counterspell = false,
+    baseSpellId = "false_life",
+    immediateConcentrationSibling = false,
+    bonusSection = false,
+  } = input;
   const base = spellRecord(baseSpellId);
   if (
     base.mechanics.family !== "activation" &&
@@ -56,7 +68,19 @@ export function longCastingBattle(
     id: unitId("synthetic_slow_vitality_sibling"),
     name: "Synthetic Slow Vitality Sibling",
   };
-  const definitions = [definition, sibling];
+  const concentrationBase = spellRecord("shield_of_faith");
+  if (concentrationBase.mechanics.family !== "ongoing")
+    throw new Error("Expected ongoing scalar fixture.");
+  const selectedSibling: SpellRecord = immediateConcentrationSibling
+    ? {
+        ...sibling,
+        mechanics: {
+          ...concentrationBase.mechanics,
+          castingTime: { kind: "action" },
+        },
+      }
+    : sibling;
+  const definitions = [definition, selectedSibling];
   const unitCatalog: UnitCatalog = {
     getUnit: (id) =>
       Option.orElse(
@@ -77,6 +101,45 @@ export function longCastingBattle(
   if (group?.kind !== "at_will")
     throw new Error("Expected synthetic at-will fixture.");
   const baseActor = statBlockRecord();
+  const spellcastingEntries: NonNullable<
+    StatBlockRecord["statBlock"]["actions"]
+  > = [
+    {
+      ...entry,
+      procedure: {
+        ...entry.procedure,
+        groups:
+          ownership === undefined
+            ? [{ ...group, spells: [{ spellId: definition.id }] }]
+            : [
+                {
+                  kind: "limited",
+                  resourceRefs: {
+                    kind: "some",
+                    ordinals: [
+                      Schema.decodeSync(
+                        StatBlockProcedureResourceOrdinalSchema,
+                      )(1),
+                    ],
+                  },
+                  spells: [{ spellId: definition.id }, { spellId: sibling.id }],
+                },
+                {
+                  kind: "limited",
+                  resourceRefs: {
+                    kind: "some",
+                    ordinals: [
+                      Schema.decodeSync(
+                        StatBlockProcedureResourceOrdinalSchema,
+                      )(2),
+                    ],
+                  },
+                  spells: [{ spellId: sibling.id }],
+                },
+              ],
+      },
+    },
+  ];
   const actor: StatBlockRecord = {
     ...baseActor,
     id: statBlockId("synthetic_long_casting_actor"),
@@ -107,46 +170,9 @@ export function longCastingBattle(
               },
             ] as const,
           }),
-      actions: [
-        {
-          ...entry,
-          procedure: {
-            ...entry.procedure,
-            groups:
-              ownership === undefined
-                ? [{ ...group, spells: [{ spellId: definition.id }] }]
-                : [
-                    {
-                      kind: "limited",
-                      resourceRefs: {
-                        kind: "some",
-                        ordinals: [
-                          Schema.decodeSync(
-                            StatBlockProcedureResourceOrdinalSchema,
-                          )(1),
-                        ],
-                      },
-                      spells: [
-                        { spellId: definition.id },
-                        { spellId: sibling.id },
-                      ],
-                    },
-                    {
-                      kind: "limited",
-                      resourceRefs: {
-                        kind: "some",
-                        ordinals: [
-                          Schema.decodeSync(
-                            StatBlockProcedureResourceOrdinalSchema,
-                          )(2),
-                        ],
-                      },
-                      spells: [{ spellId: sibling.id }],
-                    },
-                  ],
-          },
-        },
-      ],
+      ...(bonusSection
+        ? { bonusActions: spellcastingEntries }
+        : { actions: spellcastingEntries }),
     },
   };
   const initialized = startBattle({

@@ -26,7 +26,7 @@ import {
 import type { BattleState } from "./battle-state-execution.ts";
 
 function minuteReady() {
-  let state = longCastingBattle().state;
+  let state = longCastingBattle({ ownership: "each" }).state;
   for (let turn = 1; turn <= 10; turn += 1) {
     state = advance(state);
     if (turn < 10)
@@ -42,6 +42,11 @@ function projection(state: BattleState) {
       actor?.concentration?.effectKind === "castingSpell" &&
       actor.concentration.progress.kind === "readyToComplete",
     effect: Number(actor?.tempHp) > 0,
+    poolPaid:
+      actor?.origin.kind === "statBlock" &&
+      actor.origin.execution.resourcePools.some(
+        (pool) => pool.kind === "daily" && pool.usesRemaining === 1,
+      ),
   };
 }
 const driver = defineDriver(
@@ -54,19 +59,26 @@ const driver = defineDriver(
     step: {},
   } as const,
   () => {
-    let observed = { casting: false, ready: false, effect: false };
+    let observed = {
+      casting: false,
+      ready: false,
+      effect: false,
+      poolPaid: false,
+    };
     return {
       init: () => {
-        observed = projection(longCastingBattle().state);
+        observed = projection(longCastingBattle({ ownership: "each" }).state);
       },
       doStarted: () => {
-        observed = projection(advance(longCastingBattle().state));
+        observed = projection(
+          advance(longCastingBattle({ ownership: "each" }).state),
+        );
       },
       doMinuteReady: () => {
         observed = projection(minuteReady());
       },
       doSkipped: () => {
-        let state = advance(longCastingBattle().state);
+        let state = advance(longCastingBattle({ ownership: "each" }).state);
         state = resolved(endTurn({ state, actorId: longCastingActorId }));
         state = resolved(endTurn({ state, actorId: longCastingActorId }));
         observed = projection(state);
@@ -113,6 +125,7 @@ describe("long casting production parity", () => {
             casting: booleanField(state, "qCasting"),
             ready: booleanField(state, "qReady"),
             effect: booleanField(state, "qEffect"),
+            poolPaid: booleanField(state, "qPoolPaid"),
           };
         }, isDeepStrictEqual),
       });

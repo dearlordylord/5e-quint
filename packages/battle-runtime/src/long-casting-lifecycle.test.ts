@@ -138,7 +138,7 @@ describe("long spellcasting through catalog admission and public battle executio
   it.each(["each", "shared"] as const)(
     "pays one selected %s limited use only after successful completion",
     (ownership) => {
-      let state = longCastingBattle(undefined, ownership).state;
+      let state = longCastingBattle({ ownership }).state;
       const actor = state.combatants.get(longCastingActorId);
       if (actor?.origin.kind !== "statBlock")
         throw new Error("Expected stat-block actor.");
@@ -191,7 +191,10 @@ describe("long spellcasting through catalog admission and public battle executio
   it.each(["start", "continue"] as const)(
     "Counterspell cancels %s without paying a limited use",
     (step) => {
-      const session = longCastingBattle(undefined, "each", true);
+      const session = longCastingBattle({
+        ownership: "each",
+        counterspell: true,
+      });
       let state = session.state;
       const actor = state.combatants.get(longCastingActorId);
       if (actor?.origin.kind !== "statBlock")
@@ -301,12 +304,10 @@ describe("long spellcasting through catalog admission and public battle executio
   );
 
   it("retains casting concentration for a long concentration-duration spell and transitions on completion", () => {
-    let state = longCastingBattle(
-      undefined,
-      "each",
-      false,
-      "shield_of_faith",
-    ).state;
+    let state = longCastingBattle({
+      ownership: "each",
+      baseSpellId: "shield_of_faith",
+    }).state;
     for (let turn = 1; turn <= 10; turn += 1) {
       state = advance(state);
       expect(
@@ -349,7 +350,10 @@ describe("long spellcasting through catalog admission and public battle executio
   });
 
   it("opens the last Magic-action checkpoint once and suppresses a duplicate final-target checkpoint", () => {
-    const session = longCastingBattle(undefined, "each", true);
+    const session = longCastingBattle({
+      ownership: "each",
+      counterspell: true,
+    });
     let state = session.state;
     const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
       session,
@@ -429,11 +433,106 @@ describe("long spellcasting through catalog admission and public battle executio
     );
   });
 
+  it("replaces prior spell-effect concentration at the start of a fixed-duration long cast, before its reaction checkpoint", () => {
+    const session = longCastingBattle({
+      ownership: "each",
+      counterspell: true,
+      immediateConcentrationSibling: true,
+    });
+    let state = session.state;
+    const immediate = discoverBattleActCandidates(state).find(
+      (act) => act.subject.tag === "actionSpell",
+    );
+    if (immediate === undefined)
+      throw new Error("Expected synthetic immediate concentration sibling.");
+    const target = requireHole(immediate.initialHoles, "targetChoice");
+    state = resolved(
+      resolveBattleSubject({
+        state,
+        subject: immediate.subject,
+        fills: [
+          spellTargetFill(
+            target,
+            "synthetic_slow_vitality_sibling",
+            longCastingActorId,
+            longCastingActorId,
+          ),
+          {
+            kind: "targetSpatialFacts",
+            holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+            spatialFacts: [],
+          },
+        ],
+      }),
+    );
+    expect(
+      state.combatants.get(longCastingActorId)?.concentration,
+    ).toMatchObject({ effectKind: "spellEffect" });
+    state = resolved(endTurn({ state, actorId: longCastingActorId }));
+    state = resolved(endTurn({ state, actorId: longCastingReactorId }));
+    const prior = state.combatants.get(longCastingActorId);
+    if (prior?.origin.kind !== "statBlock")
+      throw new Error("Expected stat-block actor.");
+    const pools = prior.origin.execution.resourcePools;
+    const start = castingAction(state);
+    const interrupted = resolveBattleSubject({
+      state,
+      subject: start.subject,
+      fills: [
+        {
+          kind: "targetSpatialFacts",
+          holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+          spatialFacts: [
+            {
+              kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
+              reactorId: longCastingReactorId,
+              casterId: longCastingActorId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                longCastingReactorId,
+                spellSlotInvocationRef(
+                  "counterspell",
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        },
+      ],
+    });
+    if (interrupted.tag !== "needsHoles")
+      throw new Error("Expected long casting start checkpoint.");
+    const declaring = interrupted.state.combatants.get(longCastingActorId);
+    if (declaring?.origin.kind !== "statBlock")
+      throw new Error("Expected stat-block actor.");
+    expect(declaring.concentration).toMatchObject({
+      effectKind: "castingSpell",
+      progress: { remainingTurns: 9 },
+    });
+    expect(declaring.activeEffects).toEqual([]);
+    expect(declaring.origin.execution.resourcePools).toEqual(pools);
+    expect(declaring.tempHp).toBe(0);
+  });
+
+  it("uses Magic actions for long casting in the Bonus Actions Spellcasting section", () => {
+    let state = longCastingBattle({ bonusSection: true }).state;
+    for (let turn = 1; turn <= 10; turn += 1) {
+      state = advance(state);
+      expect(state.currentTurnResources.actionTakenThisTurn).toBe(true);
+      expect(state.currentTurnResources.currentHasBonusAction).toBe(true);
+      if (turn < 10)
+        state = resolved(endTurn({ state, actorId: longCastingActorId }));
+    }
+    expect(
+      state.combatants.get(longCastingActorId)?.concentration,
+    ).toMatchObject({ progress: { kind: "readyToComplete" } });
+  });
+
   it("retains hour metadata and requires all 600 actual battle turns", () => {
     let state = longCastingBattle({
-      kind: "hours",
-      amount: 1,
-      ritual: false,
+      time: { kind: "hours", amount: 1, ritual: false },
     }).state;
     for (let turn = 1; turn <= 600; turn += 1) {
       state = advance(state);
