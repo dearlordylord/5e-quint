@@ -1,6 +1,9 @@
 // RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spell-invocation.unrestricted
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+import { statBlockSpellInvocationAdmissionPlan } from "./stat-block-spell-invocation-admission-plan.ts";
+import { statBlockSpellcastingGroupOrdinal } from "./identity.ts";
+import { unitId } from "@dnd/shared/game-facts";
 import { admitStatBlockSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { PositiveInteger } from "@dnd/shared/types";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
@@ -359,3 +362,193 @@ describe("Stat Block invocation production admission", () => {
     expect(actor.origin.execution).toBe(execution);
   });
 });
+
+function mutateEncodedSnapshot(
+  encoded: unknown,
+  mutate: (node: object) => void,
+): unknown {
+  const snapshot: unknown = JSON.parse(JSON.stringify(encoded));
+  const visit = (value: unknown): void => {
+    if (typeof value !== "object" || value === null) return;
+    mutate(value);
+    for (const child of Object.values(value)) visit(child);
+  };
+  visit(snapshot);
+  return snapshot;
+}
+
+it.each(["actionCost", "spellSaveDc", "spellAttackBonus"] as const)(
+  "rejects a persisted child whose %s contradicts its owning procedure",
+  (field) => {
+    const casterId = combatantId("synthetic-header-corruption");
+    const started = startBattle({
+      battleId: battleId("header-corruption"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: casterId,
+          statBlock: casterRecord(),
+          initiative: 20,
+        }),
+      ],
+    });
+    if (Result.isFailure(started)) throw new Error("Expected admitted caster");
+    const actor = started.success.state.combatants.get(casterId);
+    if (actor?.origin.kind !== "statBlock")
+      throw new Error("Expected Stat Block actor");
+    let changed = 0;
+    const forged = mutateEncodedSnapshot(
+      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
+        actor.origin.execution,
+      ),
+      (node) => {
+        if (
+          field === "actionCost" &&
+          Reflect.get(node, field) === "magicAction" &&
+          (Reflect.get(node, "tag") === "statBlock" ||
+            Reflect.has(node, "spellRuleFacts"))
+        ) {
+          Reflect.set(node, field, "bonusAction");
+          changed += 1;
+        } else if (
+          field !== "actionCost" &&
+          Reflect.get(node, "tag") === "statBlock"
+        ) {
+          const value = Reflect.get(node, field);
+          if (typeof value === "number") {
+            Reflect.set(node, field, value + 1);
+            changed += 1;
+          }
+        }
+      },
+    );
+    expect(changed).toBe(field === "actionCost" ? 2 : 1);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(forged),
+      ),
+    ).toBe(true);
+  },
+);
+
+it("rejects a limited child transplanted onto a sibling invocation's pool", () => {
+  const record = casterRecord();
+  const entry = record.statBlock.actions[0];
+  const atWill = entry.procedure.groups[0];
+  const limited = entry.procedure.groups[1];
+  if (atWill?.kind !== "at_will" || limited?.kind !== "limited")
+    throw new Error("Expected canonical groups");
+  const casterId = combatantId("synthetic-pool-corruption");
+  const started = startBattle({
+    battleId: battleId("pool-corruption"),
+    combatants: [
+      statBlockCreatureInit({
+        combatantId: casterId,
+        statBlock: {
+          ...record,
+          statBlock: {
+            ...record.statBlock,
+            actions: [
+              {
+                ...entry,
+                procedure: {
+                  ...entry.procedure,
+                  groups: [
+                    atWill,
+                    {
+                      ...limited,
+                      spells: [
+                        { spellId: unitId("magic_missile") },
+                        { spellId: unitId("false_life") },
+                      ],
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        initiative: 20,
+      }),
+    ],
+  });
+  if (Result.isFailure(started)) throw new Error("Expected admitted caster");
+  const actor = started.success.state.combatants.get(casterId);
+  if (actor?.origin.kind !== "statBlock")
+    throw new Error("Expected Stat Block actor");
+  const resources = statBlockSpellProcedureInvocations(actor.origin.execution)
+    .map((invocation) => invocation.resource)
+    .filter((resource) => resource.tag === "statBlockLimited");
+  const first = resources[0],
+    sibling = resources[1];
+  if (first === undefined || sibling === undefined)
+    throw new Error("Expected two independently owned pools");
+  expect(first.resourcePoolRef).not.toBe(sibling.resourcePoolRef);
+  let changed = 0;
+  const forged = mutateEncodedSnapshot(
+    Schema.encodeSync(StatBlockExecutionSnapshotSchema)(actor.origin.execution),
+    (node) => {
+      if (
+        Reflect.get(node, "tag") === "statBlockLimited" &&
+        Reflect.get(node, "resourcePoolRef") === first.resourcePoolRef
+      ) {
+        Reflect.set(node, "resourcePoolRef", sibling.resourcePoolRef);
+        changed += 1;
+      }
+    },
+  );
+  expect(changed).toBe(1);
+  expect(
+    Result.isFailure(
+      Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(forged),
+    ),
+  ).toBe(true);
+});
+
+it.each(["coordinate", "continuation"] as const)(
+  "rejects a catalog plan with a mismatched %s atomically",
+  (mismatch) => {
+    const record = casterRecord();
+    const casterId = combatantId("synthetic-corrupted-plan");
+    const started = startBattle({
+      battleId: battleId("corrupted-plan"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: casterId,
+          statBlock: record,
+          initiative: 20,
+        }),
+      ],
+    });
+    if (Result.isFailure(started)) throw new Error("Expected admitted caster");
+    const actor = started.success.state.combatants.get(casterId);
+    if (actor?.origin.kind !== "statBlock")
+      throw new Error("Expected Stat Block actor");
+    const plan = statBlockSpellInvocationAdmissionPlan(record, unitLibrary);
+    const restricted = plan.find(
+      (candidate) =>
+        candidate.definitionJoin.kind === "joined" &&
+        candidate.definitionJoin.value.continuation.kind === "restricted",
+    );
+    if (restricted === undefined)
+      throw new Error("Expected restricted authored alternative");
+    const forged = plan.map((candidate, index) =>
+      index !== 0
+        ? candidate
+        : mismatch === "coordinate"
+          ? {
+              ...candidate,
+              groupOrdinal: statBlockSpellcastingGroupOrdinal(999),
+            }
+          : { ...candidate, definitionJoin: restricted.definitionJoin },
+    );
+    const before = actor.origin.execution;
+    expect(
+      admitStatBlockSpellInvocations(
+        { ...actor, origin: actor.origin },
+        started.success.state,
+        forged,
+      ),
+    ).toEqual(Result.fail("admissionPlanMismatch"));
+    expect(actor.origin.execution).toBe(before);
+  },
+);

@@ -120,6 +120,28 @@ describe("canonical Stat Block spell invocation selection", () => {
       }),
     ).toEqual({ kind: "missingInvocation" });
   });
+
+  it("distinguishes an absent parent from an admitted non-spell procedure", () => {
+    const { execution, ref } = selectionFixture("each");
+    const other = statBlockExecutionAdmissionCohort(
+      battleId("invocation-selection"),
+      combatantId("synthetic-non-caster"),
+      [admittedStatBlockSource(statBlockRecord())],
+      battleExecutionScopeOrdinal(0),
+    ).admissions[0];
+    if (other === undefined) throw new Error("Expected admitted fixture");
+    const nonSpell = other.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind !== "spellcasting",
+    );
+    if (nonSpell === undefined) throw new Error("Expected non-spell procedure");
+    const unrelatedRef = { ...ref, procedureRef: nonSpell.procedureRef };
+    expect(selectStatBlockSpellInvocation(execution, unrelatedRef)).toEqual({
+      kind: "missingProcedure",
+    });
+    expect(
+      selectStatBlockSpellInvocation(other.execution, unrelatedRef),
+    ).toEqual({ kind: "procedureIsNotSpellcasting" });
+  });
 });
 
 it("allocates distinct canonical child refs for each invocation and mechanical branch", () => {
