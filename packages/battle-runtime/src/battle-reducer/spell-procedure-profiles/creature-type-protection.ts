@@ -45,7 +45,7 @@ import { CombatantId } from "../../identity.ts";
 import {
   LeveledSpellInvocationResourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
 } from "../codec-building-blocks.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
@@ -875,7 +875,7 @@ function applyEffect(
 
 const InvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("creatureTypeProtection"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

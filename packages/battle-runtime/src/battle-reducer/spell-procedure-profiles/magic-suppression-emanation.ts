@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
@@ -84,7 +84,7 @@ import {
 } from "./profile.ts";
 import {
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1019,7 +1019,7 @@ function applyMagicSuppressionEmanationCastEffect(input: {
 
 const MagicSuppressionEmanationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("magicSuppressionEmanation"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

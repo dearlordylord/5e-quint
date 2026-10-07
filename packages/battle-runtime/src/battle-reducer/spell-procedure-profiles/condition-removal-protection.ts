@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-removal-protection
@@ -85,7 +85,7 @@ import {
 } from "./profile.ts";
 import {
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -926,7 +926,7 @@ function applyConditionRemovalProtectionEffect(
 const ConditionRemovalProtectionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("conditionRemovalProtection"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

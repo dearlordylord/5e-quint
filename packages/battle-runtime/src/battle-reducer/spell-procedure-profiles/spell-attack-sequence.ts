@@ -4,7 +4,7 @@ import {
 } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -47,8 +47,8 @@ import {
   CantripSpellAccessSchema,
   DamageTypeSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  CantripSpellInvocationResourceSchema,
+  LeveledSpellAccessSchema,
   PreparedSpellAttackSequenceTargetingSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -1346,7 +1346,7 @@ const SpellAttackSequenceInvocationSchema = Schema.Union([
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
+      resource: CantripSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackSequence"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: CantripSpellAttackSequenceTargetingSchema,
@@ -1361,7 +1361,7 @@ const SpellAttackSequenceInvocationSchema = Schema.Union([
   ),
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackSequence"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

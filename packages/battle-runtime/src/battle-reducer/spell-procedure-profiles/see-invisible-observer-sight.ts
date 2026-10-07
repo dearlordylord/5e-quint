@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
@@ -56,7 +56,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -612,7 +612,7 @@ function resolveSeeInvisibleObserverSight(
 
 const SeeInvisibleObserverSightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("seeInvisibleObserverSight"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

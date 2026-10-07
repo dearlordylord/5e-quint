@@ -3,7 +3,7 @@ import {
   admittedCantripCastingFacts,
 } from "./profile.ts";
 import type { AuthoredSpellInvocationCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { type BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
@@ -1364,7 +1364,7 @@ export function supportedPreparedSaveGateDamageProfile(
     }
     return supportedSaveGateDamageProfile({
       spell,
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      access: leveledSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
       slotLevel: slot.spellLevel,
     });
@@ -1389,7 +1389,7 @@ export function supportedPreparedSaveGateConditionProfile(
     }
     const castingFacts = {
       spell,
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      access: leveledSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
     };
     if (!admittedLeveledCastingFacts(castingFacts)) return [];
@@ -2506,7 +2506,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
     /* v8 ignore stop -- @preserve */
     const castingFacts = {
       spell,
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      access: leveledSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
     };
     if (!admittedLeveledCastingFacts(castingFacts)) return [];
@@ -2547,7 +2547,7 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
     }
     const castingFacts = {
       spell,
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      access: leveledSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
     };
     if (!admittedLeveledCastingFacts(castingFacts)) return [];
@@ -2591,7 +2591,7 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
     }
     const castingFacts = {
       spell,
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      access: leveledSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
     };
     if (!admittedLeveledCastingFacts(castingFacts)) return [];

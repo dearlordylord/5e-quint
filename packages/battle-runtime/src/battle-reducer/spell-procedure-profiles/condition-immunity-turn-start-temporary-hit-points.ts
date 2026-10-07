@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -80,7 +80,7 @@ import {
 } from "./profile.ts";
 import {
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1755,7 +1755,7 @@ export const TurnStartTemporaryHitPointsTemplateSchema = Schema.Struct({
 const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literals([
         "conditionImmunityAndTurnStartTemporaryHitPoints",

@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
@@ -90,7 +90,7 @@ import {
 import {
   DcSourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -954,7 +954,7 @@ function resolveTargetingSaveInterdiction(
 
 const TargetingSaveInterdictionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("targetingSaveInterdiction"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

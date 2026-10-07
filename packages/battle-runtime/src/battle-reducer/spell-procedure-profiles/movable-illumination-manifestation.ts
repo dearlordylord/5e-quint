@@ -80,7 +80,7 @@ import {
 } from "./profile.ts";
 import {
   CantripSpellAccessSchema,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellConsumedMaterialEvidencePaths,
@@ -957,7 +957,7 @@ export function movableLightResolutionSubjectMatchesOperation(input: {
 const MovableLightSeparateCastInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("movableLightManifestation"),
     operation: Schema.Literal("create"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -974,7 +974,7 @@ const MovableLightSeparateCastInvocationSchema = spellProcedureExecutionSchema(
 const MovableLightCombinedCastInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("movableLightManifestation"),
     operation: Schema.Literal("create"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -991,7 +991,7 @@ const MovableLightCombinedCastInvocationSchema = spellProcedureExecutionSchema(
 const MovableLightRepositionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("movableLightManifestation"),
     operation: Schema.Literal("reposition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

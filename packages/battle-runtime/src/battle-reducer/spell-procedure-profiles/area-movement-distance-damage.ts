@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -37,7 +37,7 @@ import {
 import {
   LeveledSpellInvocationResourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveAreaMovementDistanceDamageSpellAct } from "../spells-resolve-area-effects.ts";
@@ -1191,7 +1191,7 @@ function resolveAreaMovementDistanceDamage(
 const AreaMovementDistanceDamageInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("areaMovementDistanceDamage"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

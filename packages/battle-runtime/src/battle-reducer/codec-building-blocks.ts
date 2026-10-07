@@ -494,7 +494,7 @@ export type MechanicalSupportedAttackActionOption =
 export const CharacterPreparedSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("prepared"),
 });
-export const PreparedSpellAccessSchema = Schema.Union([
+export const LeveledSpellAccessSchema = Schema.Union([
   CharacterPreparedSpellAccessSchema,
   StatBlockLeveledSpellAccessSchema,
 ]);
@@ -518,7 +518,10 @@ export const SpellSlotInvocationResourceSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 });
 
-export { NoSpellInvocationResourceSchema } from "../procedure-execution/spell-invocation-codecs.ts";
+export {
+  CantripSpellInvocationResourceSchema,
+  NoSpellInvocationResourceSchema,
+} from "../procedure-execution/spell-invocation-codecs.ts";
 
 export const SpellAccessFreeCastInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("spellAccessFreeCast"),

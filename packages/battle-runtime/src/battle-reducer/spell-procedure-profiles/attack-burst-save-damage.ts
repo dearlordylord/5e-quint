@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -97,7 +97,7 @@ import {
   DamageTypeSchema,
   DcSourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -808,7 +808,7 @@ function resolveAttackBurstSaveDamage(
 
 const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("attackBurstSaveDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

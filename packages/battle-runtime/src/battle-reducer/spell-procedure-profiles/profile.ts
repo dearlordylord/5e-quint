@@ -40,14 +40,14 @@ import type {
   SpellInvocationResource,
   CantripSpellAccess,
   LeveledSpellInvocationResource,
-  PreparedSpellAccess,
+  LeveledSpellAccess,
   SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
   StatBlockSpellInvocationResource,
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import {
-  preparedSpellAccessForCastingSource,
+  leveledSpellAccessForCastingSource,
   cantripSpellAccessForCastingSource,
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
@@ -157,7 +157,7 @@ export function admittedCantripCastingFacts<
 >(candidate: {
   readonly spell: S;
   readonly access: CantripSpellAccess;
-  readonly resource: import("../../procedure-execution/spell-invocation-vocabulary.ts").NoSpellInvocationResource;
+  readonly resource: import("../../procedure-execution/spell-invocation-vocabulary.ts").CantripSpellInvocationResource;
 }): candidate is typeof candidate & AuthoredCantripCastingFacts<S> {
   return isSpellInvocationCastingFacts({
     spellRuleFacts: {
@@ -175,7 +175,7 @@ export function admittedLeveledCastingFacts<
   >,
 >(candidate: {
   readonly spell: S;
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
 }): candidate is typeof candidate & AuthoredLeveledCastingFacts<S> {
   return isSpellInvocationCastingFacts({
@@ -226,7 +226,7 @@ export function leveledSpellInvocationOptions<
       const resource = spellInvocationResourceForCastOption(option);
       const candidate = {
         spell: { ...spell, castingSource: ctx.castingSource },
-        access: preparedSpellAccessForCastingSource(ctx.castingSource),
+        access: leveledSpellAccessForCastingSource(ctx.castingSource),
         resource,
       };
       return admittedLeveledCastingFacts(candidate)
@@ -238,7 +238,7 @@ export function leveledSpellInvocationOptions<
 
 export function cantripSpellInvocationResource(
   ctx: SpellAdmissionContext,
-): import("../../procedure-execution/spell-invocation-vocabulary.ts").NoSpellInvocationResource {
+): import("../../procedure-execution/spell-invocation-vocabulary.ts").CantripSpellInvocationResource {
   if (ctx.kind === "character") return { tag: "none" };
   return ctx.payment.kind === "atWill"
     ? { tag: "statBlockAtWill", castLevel: 0 }

@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -34,7 +34,7 @@ import {
 import {
   LeveledSpellInvocationResourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveMagicalDarknessPointOriginSpellAct } from "../spells-resolve-area-effects.ts";
@@ -910,7 +910,7 @@ function resolveMagicalDarknessPointOrigin(
 const MagicalDarknessPointOriginInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("magicalDarknessPointOrigin"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

@@ -4,7 +4,7 @@ import {
   leveledSpellInvocationOptions,
 } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHolesOr,
@@ -57,8 +57,8 @@ import {
   AbilitySchema,
   CantripSpellAccessSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  CantripSpellInvocationResourceSchema,
+  LeveledSpellAccessSchema,
   SaveGatedDamageSpellTargetingSchema,
   SpellFailedSavePostDamageRiderSchema,
   SpellPostSaveAreaEffectSchema,
@@ -333,14 +333,14 @@ export const SaveGatedDamageInvocationSchema = Schema.Union([
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
+      resource: CantripSpellInvocationResourceSchema,
       castingTime: ActionSpellInvocationCastingTimeSchema,
       ...SaveGatedDamageCommonFields,
     }),
   ),
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       castingTime: Schema.Union([
         ActionSpellInvocationCastingTimeSchema,

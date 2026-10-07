@@ -2,7 +2,7 @@ import { Brand, Match } from "effect";
 import type { SpellProcedureExecution } from "./spell-procedure-execution.ts";
 import type { SpellRuleExecutionFacts } from "./spell-rule-facts.ts";
 import type {
-  PreparedSpellAccess,
+  LeveledSpellAccess,
   SpellSlotInvocationResource,
 } from "./spell-invocation-vocabulary.ts";
 
@@ -64,12 +64,12 @@ type PreparedSpellSlotExecution<Execution> =
         readonly access: infer Access;
         readonly resource: infer Resource;
       }
-      ? Extract<Access, PreparedSpellAccess> extends never
+      ? Extract<Access, LeveledSpellAccess> extends never
         ? never
         : Extract<Resource, SpellSlotInvocationResource> extends never
           ? never
           : Omit<Execution, "access" | "resource"> & {
-              readonly access: Extract<Access, PreparedSpellAccess>;
+              readonly access: Extract<Access, LeveledSpellAccess>;
               readonly resource: Extract<Resource, SpellSlotInvocationResource>;
             }
       : never

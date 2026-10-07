@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { unitId } from "@dnd/shared/game-facts";
@@ -63,7 +63,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1043,7 +1043,7 @@ function resolveTriggeredArmorDefense(
 
 const TriggeredArmorDefenseInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("triggeredArmorDefense"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

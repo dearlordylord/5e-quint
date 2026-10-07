@@ -79,7 +79,7 @@ import {
   AttackBonus,
   CantripSpellAccessSchema,
   DamageTypeSchema,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
@@ -1135,7 +1135,7 @@ export const SpellHostedWeaponAttackInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
+      resource: CantripSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellHostedWeaponAttack"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),

@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-damage-rider
@@ -81,7 +81,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
@@ -1182,7 +1182,7 @@ function resolveWeaponDamageRider(
 
 const WeaponDamageRiderInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("weaponDamageRider"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

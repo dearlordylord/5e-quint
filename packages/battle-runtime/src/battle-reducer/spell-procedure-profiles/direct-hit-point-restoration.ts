@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
@@ -115,7 +115,7 @@ import type { SpellMechanics } from "@dnd/surface/surface/types";
 import { PositiveInteger } from "@dnd/shared/types";
 import {
   MovementFeet as MovementFeetSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -1039,7 +1039,7 @@ function spellSlotHealingModifierAmount(
 
 const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("directHitPointRestoration"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

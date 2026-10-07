@@ -1,6 +1,6 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -51,7 +51,7 @@ import {
   DimIlluminationEmissionFactsSchema,
   DcSourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -120,7 +120,7 @@ function resolveSaveGatedAttackRollAdvantage(
 const SaveGatedAttackRollAdvantageInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedAttackRollAdvantage"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

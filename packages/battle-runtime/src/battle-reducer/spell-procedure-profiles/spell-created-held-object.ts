@@ -2,7 +2,7 @@ import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   maybeOpenConfiguredSpellCastReactionWindow,
   spendConfiguredSpellCastResources,
@@ -123,8 +123,9 @@ import {
 import {
   AttackBonus,
   MovementFeet,
+  CantripSpellInvocationResourceSchema,
   NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   SpellEffectSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -1318,7 +1319,7 @@ function spellCreatedHeldObjectHandStateError(
 
 const SpellCreatedHeldObjectInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("spellCreatedHeldObject"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

@@ -14,7 +14,7 @@ import {
   StatBlockLeveledSpellAccessSchema,
   StatBlockCantripSpellInvocationResourceSchema,
   StatBlockLeveledSpellInvocationResourceSchema,
-  CharacterNoSpellInvocationResourceSchema,
+  NoSpellInvocationResourceSchema,
 } from "./spell-invocation-codecs.ts";
 import {
   SpellCastingSourceSchema,
@@ -42,7 +42,7 @@ const StatBlockSpellRuleFactsSchema = Schema.Struct({
   ...SpellDefinitionRuleFactsSchema.fields,
   castingSource: StatBlockSpellCastingSourceSchema,
 });
-const CharacterNoResourceSchema = CharacterNoSpellInvocationResourceSchema;
+const NoResourceSchema = NoSpellInvocationResourceSchema;
 const CharacterPreparedAccessSchema = CharacterPreparedSpellAccessSchema;
 
 /** Initial casts carry source, access and resource as one admitted fact. */
@@ -54,7 +54,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
       castingSource: ClassSpellCastingSourceSchema,
     }),
     access: ClassCantripSpellAccessSchema,
-    resource: CharacterNoResourceSchema,
+    resource: NoResourceSchema,
   }),
   Schema.Struct({
     spellRuleFacts: Schema.Struct({
@@ -63,7 +63,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
       castingSource: AccessSpellCastingSourceSchema,
     }),
     access: SpellAccessCantripSpellAccessSchema,
-    resource: CharacterNoResourceSchema,
+    resource: NoResourceSchema,
   }),
   Schema.Struct({
     spellRuleFacts: Schema.Struct({
@@ -85,7 +85,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
   Schema.Struct({
     spellRuleFacts: CharacterSpellRuleFactsSchema,
     access: ArmorOfShadowsSpellAccessSchema,
-    resource: CharacterNoResourceSchema,
+    resource: NoResourceSchema,
   }),
   Schema.Struct({
     spellRuleFacts: Schema.Struct({
@@ -109,7 +109,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
       castingSource: SpellCastingSourceSchema,
     }),
     access: SpellEffectSpellAccessSchema,
-    resource: CharacterNoResourceSchema,
+    resource: NoResourceSchema,
   }),
 ]);
 export type SpellInvocationCastingFacts =

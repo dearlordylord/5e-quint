@@ -3,7 +3,7 @@ import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -92,7 +92,7 @@ import { Schema } from "effect";
 import {
   AttackBonus,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1735,7 +1735,7 @@ function resolveSpatialMeleeSpellAttackProxy(
 const SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("spatialMeleeSpellAttackProxy"),
       operation: Schema.Literal("createAndAttack"),

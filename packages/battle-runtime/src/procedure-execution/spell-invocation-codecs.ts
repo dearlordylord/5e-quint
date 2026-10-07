@@ -49,10 +49,10 @@ export const CantripSpellAccessSchema = Schema.Union([
   SpellAccessCantripSpellAccessSchema,
 ]);
 
-export const CharacterNoSpellInvocationResourceSchema = Schema.Struct({
+export const NoSpellInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("none"),
 });
-export const NoSpellInvocationResourceSchema = Schema.Union([
-  CharacterNoSpellInvocationResourceSchema,
+export const CantripSpellInvocationResourceSchema = Schema.Union([
+  NoSpellInvocationResourceSchema,
   StatBlockCantripSpellInvocationResourceSchema,
 ]);

@@ -1,6 +1,6 @@
 import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
@@ -53,7 +53,7 @@ import {
 } from "./profile.ts";
 import {
   DcSourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { spellTargetListHole } from "../spells-holes-fills.ts";
@@ -661,7 +661,7 @@ function saveGatedConditionWithRepeatInvocationsFromFacts(
         ? []
         : [
             {
-              access: preparedSpellAccessForCastingSource(spell.castingSource),
+              access: leveledSpellAccessForCastingSource(spell.castingSource),
               resource: spellInvocationResourceForCastOption(slot),
               procedure: "saveGatedConditionWithRepeat",
               spell,
@@ -1165,7 +1165,7 @@ function resolveSaveGatedConditionWithRepeat(
 const SaveGatedConditionWithRepeatInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedConditionWithRepeat"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

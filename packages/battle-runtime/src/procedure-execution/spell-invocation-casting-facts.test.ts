@@ -16,10 +16,13 @@ import {
 } from "../identity.ts";
 import {
   LeveledSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   SpellEffectSpellAccessSchema,
 } from "../battle-reducer/codec-building-blocks.ts";
-import { NoSpellInvocationResourceSchema } from "./spell-invocation-codecs.ts";
+import {
+  CantripSpellInvocationResourceSchema,
+  NoSpellInvocationResourceSchema,
+} from "./spell-invocation-codecs.ts";
 import {
   SpellRuleExecutionFactsSchema,
   StatBlockSpellCastingSourceSchema,
@@ -72,7 +75,7 @@ const initialSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     procedure: Schema.Literal("syntheticCast"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     actionCost: Schema.Literal("magicAction"),
   }),

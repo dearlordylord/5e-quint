@@ -1,6 +1,6 @@
 import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
@@ -53,7 +53,7 @@ import {
 import {
   DcSourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
@@ -87,7 +87,7 @@ function admitAbilityD20TestRollModeSaveGateMechanics(
         abilityD20TestRollModeSaveGateInvocationsFromFacts({
           spell,
           facts,
-          access: preparedSpellAccessForCastingSource(spell.castingSource),
+          access: leveledSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption(slot),
           slotLevel: slot.spellLevel,
           sourceCombatantId: ctx.actor.combatantId,
@@ -147,7 +147,7 @@ function resolveAbilityD20TestRollModeSaveGate(
 const AbilityD20TestRollModeSaveGateInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("abilityD20TestRollModeSaveGate"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

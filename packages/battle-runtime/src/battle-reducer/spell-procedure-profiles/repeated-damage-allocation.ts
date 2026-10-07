@@ -1,5 +1,5 @@
 import { spellAdmissionCastOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -64,7 +64,7 @@ import {
 } from "./profile.ts";
 import {
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { repeatedDamageAllocationAdmissionFacts } from "./repeated-damage-allocation-facts.ts";
@@ -779,7 +779,7 @@ function admitRepeatedDamageAllocation(
       });
       return [
         {
-          access: preparedSpellAccessForCastingSource(spell.castingSource),
+          access: leveledSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption({
             spellLevel: admissionFacts.selectedSlotLevel,
             payment: slot.payment,
@@ -828,7 +828,7 @@ function resolveRepeatedDamageAllocation(
 
 const RepeatedDamageAllocationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("repeatedDamageAllocation"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

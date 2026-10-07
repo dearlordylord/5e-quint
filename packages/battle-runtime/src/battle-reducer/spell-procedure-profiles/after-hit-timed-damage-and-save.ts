@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type {
@@ -90,7 +90,7 @@ import {
 } from "./profile.ts";
 import {
   DamageTypeSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -591,7 +591,7 @@ function resolveAfterHitTimedDamageAndSave(
 const AfterHitTimedDamageAndSaveInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("afterHitTimedDamageAndSave"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

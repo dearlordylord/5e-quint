@@ -96,8 +96,8 @@ import {
   BATTLE_SURFACE_SKILLS,
   CantripSpellAccessSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  CantripSpellInvocationResourceSchema,
+  LeveledSpellAccessSchema,
   RollModifierSpellSaveGateSchema,
   RollModifierSpellTargetingSchema,
   LeveledSpellInvocationResourceSchema,
@@ -2450,10 +2450,10 @@ function resolveRollModifier(
 }
 
 const RollModifierInvocationCommonFields = {
-  access: Schema.Union([PreparedSpellAccessSchema, CantripSpellAccessSchema]),
+  access: Schema.Union([LeveledSpellAccessSchema, CantripSpellAccessSchema]),
   resource: Schema.Union([
     LeveledSpellInvocationResourceSchema,
-    NoSpellInvocationResourceSchema,
+    CantripSpellInvocationResourceSchema,
   ]),
   procedure: Schema.Literal("rollModifier"),
   spellRuleFacts: SpellRuleExecutionFactsSchema,

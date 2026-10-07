@@ -1,6 +1,6 @@
 import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
@@ -70,7 +70,7 @@ import {
 import { invalidResult } from "../result-helpers.ts";
 import {
   DcSourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
@@ -1157,7 +1157,7 @@ function saveGatedTurnConstraintBundleInvocationsFromFacts(
         ? []
         : [
             {
-              access: preparedSpellAccessForCastingSource(spell.castingSource),
+              access: leveledSpellAccessForCastingSource(spell.castingSource),
               resource: spellInvocationResourceForCastOption(slot),
               procedure: "saveGatedTurnConstraintBundle",
               spell,
@@ -1473,7 +1473,7 @@ function validateTurnConstraintAreaWitness(
 const SaveGatedTurnConstraintBundleInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedTurnConstraintBundle"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

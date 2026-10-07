@@ -326,7 +326,7 @@ import type {
 import type {
   CantripSpellAccess,
   LeveledSpellInvocationResource,
-  PreparedSpellAccess,
+  LeveledSpellAccess,
   SaveGatedConditionSpellTargeting,
   SaveGatedDamageSpellTargeting,
   SpellTargeting,
@@ -358,7 +358,7 @@ export {
 } from "./active-effect/execution-vocabulary.ts";
 export type {
   LeveledSpellInvocationResource,
-  PreparedSpellAccess,
+  LeveledSpellAccess,
   SaveGatedConditionSpellTargeting,
   SaveGatedDamageSpellTargeting,
   SpellAccessFreeCastInvocationResource,
@@ -2267,16 +2267,18 @@ type SpellEffectSpellAccess = {
 };
 type NoSpellInvocationResource =
   import("./procedure-execution/spell-invocation-vocabulary.ts").NoSpellInvocationResource;
+type CantripSpellInvocationResource =
+  import("./procedure-execution/spell-invocation-vocabulary.ts").CantripSpellInvocationResource;
 type PreparedLeveledSpellSource = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
 };
 type CantripDamageSpellSource = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
 };
 export type PreparedDamageSpellSource = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
 };
 export type DamageSpellSource =
@@ -2445,7 +2447,7 @@ type CanonicalAuthoredSpellInvocation<Invocation> = Invocation extends {
   : Invocation;
 
 type LinkedDefenseResistanceDamageShareSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "linkedDefenseResistanceDamageShare";
   readonly spell: BattleSpellExecutionSource;
@@ -2502,7 +2504,7 @@ export type SelectedRollModifierSpellEffect = BattleSpellActiveEffectTemplate<
 >;
 type TemporaryAbilityCheckRollModeSpellInvocationShape = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly procedure: "temporaryAbilityCheckRollMode";
   readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction" | "bonusAction";
@@ -2556,7 +2558,7 @@ type RollModifierSpellInvocationShape = (
 export type RollModifierSpellInvocation =
   CanonicalAuthoredSpellInvocation<RollModifierSpellInvocationShape>;
 type CreatureTypeProtectionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureTypeProtection";
   readonly spell: BattleSpellExecutionSource;
@@ -2570,7 +2572,7 @@ type CreatureTypeProtectionSpellInvocationShape = {
 export type CreatureTypeProtectionSpellInvocation =
   CanonicalAuthoredSpellInvocation<CreatureTypeProtectionSpellInvocationShape>;
 type CreatureSizeChangeSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
   readonly spell: BattleSpellExecutionSource;
@@ -2586,7 +2588,7 @@ type CreatureSizeChangeSpellInvocationShape = {
 export type CreatureSizeChangeSpellInvocation =
   CanonicalAuthoredSpellInvocation<CreatureSizeChangeSpellInvocationShape>;
 type ControlledVerticalSuspensionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "controlledVerticalSuspension";
   readonly spell: BattleSpellExecutionSource;
@@ -2604,7 +2606,7 @@ type ControlledVerticalSuspensionSpellInvocationShape = {
 export type ControlledVerticalSuspensionSpellInvocation =
   CanonicalAuthoredSpellInvocation<ControlledVerticalSuspensionSpellInvocationShape>;
 type PerceptionGatedAttackRollDefenseSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "perceptionGatedAttackRollDefense";
   readonly spell: BattleSpellExecutionSource;
@@ -2619,7 +2621,7 @@ type PerceptionGatedAttackRollDefenseSpellInvocationShape = {
 export type PerceptionGatedAttackRollDefenseSpellInvocation =
   CanonicalAuthoredSpellInvocation<PerceptionGatedAttackRollDefenseSpellInvocationShape>;
 type SeeInvisibleObserverSightSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "seeInvisibleObserverSight";
   readonly spell: BattleSpellAdmissionSource;
@@ -2631,7 +2633,7 @@ type SeeInvisibleObserverSightSpellInvocationShape = {
 export type SeeInvisibleObserverSightSpellInvocation =
   CanonicalAuthoredSpellInvocation<SeeInvisibleObserverSightSpellInvocationShape>;
 type DuplicateHitInterceptionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "duplicateHitInterception";
   readonly spell: BattleSpellAdmissionSource;
@@ -2643,7 +2645,7 @@ type DuplicateHitInterceptionSpellInvocationShape = {
 export type DuplicateHitInterceptionSpellInvocation =
   CanonicalAuthoredSpellInvocation<DuplicateHitInterceptionSpellInvocationShape>;
 type ConditionRemovalProtectionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "conditionRemovalProtection";
   readonly spell: BattleSpellAdmissionSource;
@@ -2665,7 +2667,7 @@ type ConditionRemovalProtectionSpellInvocationShape = {
 export type ConditionRemovalProtectionSpellInvocation =
   CanonicalAuthoredSpellInvocation<ConditionRemovalProtectionSpellInvocationShape>;
 type ChosenDamageResistanceSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "chosenDamageResistance";
   readonly spell: BattleSpellAdmissionSource;
@@ -2683,7 +2685,7 @@ type ChosenDamageResistanceSpellInvocationShape = {
 export type ChosenDamageResistanceSpellInvocation =
   CanonicalAuthoredSpellInvocation<ChosenDamageResistanceSpellInvocationShape>;
 type DirectConditionRemovalSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "directConditionRemoval";
   readonly spell: BattleSpellAdmissionSource;
@@ -2696,7 +2698,7 @@ export type DirectConditionRemovalSpellInvocation =
   CanonicalAuthoredSpellInvocation<DirectConditionRemovalSpellInvocationShape>;
 type DamageReductionSpellInvocationShape = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly procedure: "damageReduction";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "magicAction" | "bonusAction";
@@ -2714,7 +2716,7 @@ type DamageReductionSpellInvocationShape = {
 export type DamageReductionSpellInvocation =
   CanonicalAuthoredSpellInvocation<DamageReductionSpellInvocationShape>;
 type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
   readonly spell: BattleSpellExecutionSource;
@@ -2736,7 +2738,7 @@ type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocationShape = {
 export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation =
   CanonicalAuthoredSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocationShape>;
 type SelfTransformationModeSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTransformationMode";
   readonly spell: BattleSpellExecutionSource;
@@ -2754,7 +2756,7 @@ type SelfTransformationModeSpellInvocationShape = {
 export type SelfTransformationModeSpellInvocation =
   CanonicalAuthoredSpellInvocation<SelfTransformationModeSpellInvocationShape>;
 type SaveGatedConditionImmunitySpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "saveGatedConditionImmunity";
   readonly spell: BattleSpellAdmissionSource;
@@ -2775,7 +2777,7 @@ type SaveGatedConditionImmunitySpellInvocationShape = {
 export type SaveGatedConditionImmunitySpellInvocation =
   CanonicalAuthoredSpellInvocation<SaveGatedConditionImmunitySpellInvocationShape>;
 type FixedCostMovementReplacementSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "fixedCostMovementReplacement";
   readonly spell: BattleSpellAdmissionSource;
@@ -2800,7 +2802,7 @@ type FixedCostMovementReplacementSpellInvocationShape = {
 export type FixedCostMovementReplacementSpellInvocation =
   CanonicalAuthoredSpellInvocation<FixedCostMovementReplacementSpellInvocationShape>;
 type GrantedAreaSaveDamageActionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "grantedAreaSaveDamageAction";
   readonly spell: BattleSpellAdmissionSource;
@@ -2826,7 +2828,7 @@ type GrantedAreaSaveDamageActionSpellInvocationShape = {
 export type GrantedAreaSaveDamageActionSpellInvocation =
   CanonicalAuthoredSpellInvocation<GrantedAreaSaveDamageActionSpellInvocationShape>;
 type CompositeTargetBuffWithAftermathSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "compositeTargetBuffWithAftermath";
   readonly spell: BattleSpellExecutionSource;
@@ -2860,7 +2862,7 @@ type CompositeTargetBuffWithAftermathSpellInvocationShape = {
 export type CompositeTargetBuffWithAftermathSpellInvocation =
   CanonicalAuthoredSpellInvocation<CompositeTargetBuffWithAftermathSpellInvocationShape>;
 type SelfTeleportSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTeleport";
   readonly spell: BattleSpellExecutionSource;
@@ -2870,7 +2872,7 @@ type SelfTeleportSpellInvocationShape = {
 export type SelfTeleportSpellInvocation =
   CanonicalAuthoredSpellInvocation<SelfTeleportSpellInvocationShape>;
 type TargetingSaveInterdictionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "targetingSaveInterdiction";
   readonly spell: BattleSpellExecutionSource;
@@ -2893,7 +2895,7 @@ type TargetingSaveInterdictionSpellInvocationShape = {
 export type TargetingSaveInterdictionSpellInvocation =
   CanonicalAuthoredSpellInvocation<TargetingSaveInterdictionSpellInvocationShape>;
 type DirectConditionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "directCondition";
   readonly spell: BattleSpellAdmissionSource;
@@ -2913,7 +2915,7 @@ type DirectConditionSpellInvocationShape = {
 export type DirectConditionSpellInvocation =
   CanonicalAuthoredSpellInvocation<DirectConditionSpellInvocationShape>;
 type WeaponDamageRiderSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "weaponDamageRider";
   readonly spell: BattleSpellAdmissionSource;
@@ -2925,7 +2927,7 @@ type WeaponDamageRiderSpellInvocationShape = {
 export type WeaponDamageRiderSpellInvocation =
   CanonicalAuthoredSpellInvocation<WeaponDamageRiderSpellInvocationShape>;
 type WeaponAttackDamageEnhancementSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "weaponAttackDamageEnhancement";
   readonly spell: BattleSpellExecutionSource;
@@ -2952,7 +2954,7 @@ type AfterHitDamageSpellInvocationShape = PreparedLeveledSpellSource & {
 export type AfterHitDamageSpellInvocation =
   CanonicalAuthoredSpellInvocation<AfterHitDamageSpellInvocationShape>;
 type AfterHitSaveGatedConditionSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "afterHitSaveGatedCondition";
   readonly spell: BattleSpellAdmissionSource;
@@ -2968,7 +2970,7 @@ type AfterHitSaveGatedConditionSpellInvocationShape = {
 export type AfterHitSaveGatedConditionSpellInvocation =
   CanonicalAuthoredSpellInvocation<AfterHitSaveGatedConditionSpellInvocationShape>;
 type AfterHitTimedDamageAndSaveSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "afterHitTimedDamageAndSave";
   readonly spell: BattleSpellAdmissionSource;
@@ -2987,7 +2989,7 @@ type AfterHitTimedDamageAndSaveSpellInvocationShape = {
 export type AfterHitTimedDamageAndSaveSpellInvocation =
   CanonicalAuthoredSpellInvocation<AfterHitTimedDamageAndSaveSpellInvocationShape>;
 type AfterHitDamageAndIlluminationSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "afterHitDamageAndIllumination";
   readonly spell: BattleSpellAdmissionSource;
@@ -3040,7 +3042,7 @@ export type MarkedDamageRiderSpellInvocation =
   CanonicalAuthoredSpellInvocation<MarkedDamageRiderSpellInvocationShape>;
 type HeldLightSpellInvocationShape = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly procedure: "heldLight";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "magicAction" | "bonusAction";
@@ -3055,7 +3057,7 @@ export type HeldLightSpellInvocation =
   CanonicalAuthoredSpellInvocation<HeldLightSpellInvocationShape>;
 type ObjectLightSpellCantripSource = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly targeting: {
     readonly kind: "singleObject";
     readonly object: {
@@ -3065,7 +3067,7 @@ type ObjectLightSpellCantripSource = {
   };
 };
 type ObjectLightSpellSlotSource = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly targeting: {
     readonly kind: "singleObject";
@@ -3092,7 +3094,7 @@ type ObjectLightSpellInvocationShape = ObjectLightSpellInvocationBase &
 export type ObjectLightSpellInvocation =
   CanonicalAuthoredSpellInvocation<ObjectLightSpellInvocationShape>;
 type OngoingSpellEndSpellInvocationShape = {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "ongoingSpellEnd";
   readonly spell: BattleSpellExecutionSource;
@@ -3104,7 +3106,7 @@ export type OngoingSpellEndSpellInvocation =
   CanonicalAuthoredSpellInvocation<OngoingSpellEndSpellInvocationShape>;
 type HeldLightHurlSpellInvocationShape = HeldLightHurlMechanicalFacts & {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly procedure: "heldLightHurl";
   readonly sourceEffectRef: BattleEffectExecutionRef;
   readonly sourceHeldLightProcedureRef: BattleProcedureExecutionRef;
@@ -3115,7 +3117,7 @@ export type HeldLightHurlSpellInvocation =
 type MovableLightManifestationSpellInvocationShape =
   | {
       readonly access: CantripSpellAccess;
-      readonly resource: NoSpellInvocationResource;
+      readonly resource: CantripSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "create";
       readonly spell: BattleSpellExecutionSource;
@@ -3132,7 +3134,7 @@ type MovableLightManifestationSpellInvocationShape =
     }
   | {
       readonly access: CantripSpellAccess;
-      readonly resource: NoSpellInvocationResource;
+      readonly resource: CantripSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "create";
       readonly spell: BattleSpellExecutionSource;
@@ -3149,7 +3151,7 @@ type MovableLightManifestationSpellInvocationShape =
     }
   | {
       readonly access: CantripSpellAccess;
-      readonly resource: NoSpellInvocationResource;
+      readonly resource: CantripSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "reposition";
       readonly spell: BattleSpellExecutionSource;
@@ -3164,7 +3166,7 @@ export type MovableLightManifestationSpellInvocation =
   CanonicalAuthoredSpellInvocation<MovableLightManifestationSpellInvocationShape>;
 type SpellCreatedHeldObjectSpellInvocationShape =
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObject";
       readonly spell: BattleSpellExecutionSource;
@@ -3202,7 +3204,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
   CanonicalAuthoredSpellInvocation<SpellCreatedHeldObjectSpellInvocationShape>;
 type ObjectContactDamageSpellInvocationShape =
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "objectContactDamage";
       readonly spell: BattleSpellAdmissionSource;
@@ -3255,7 +3257,7 @@ export type SpellAttackSequenceTargeting =
   | PreparedSpellAttackSequenceTargeting;
 export type SpellHostedWeaponAttackInvocation = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly procedure: "spellHostedWeaponAttack";
   readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction" | "bonusAction";
@@ -3270,7 +3272,7 @@ export type SpellHostedWeaponAttackInvocation = {
 };
 type WeaponAttackOverrideSpellInvocationShape = {
   readonly access: CantripSpellAccess;
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
   readonly procedure: "weaponAttackOverride";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "magicAction" | "bonusAction";
@@ -3286,7 +3288,7 @@ export type WeaponAttackOverrideSpellInvocation =
   CanonicalAuthoredSpellInvocation<WeaponAttackOverrideSpellInvocationShape>;
 type PersistentArmorSpellInvocationShape =
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentArmorEffect";
       readonly spell: BattleSpellAdmissionSource;
@@ -3343,7 +3345,7 @@ type SupportedSpellInvocationShape =
   | SpawnedCompanionLifecycleSpellInvocation
   | {
       readonly access: CantripSpellAccess;
-      readonly resource: NoSpellInvocationResource;
+      readonly resource: CantripSpellInvocationResource;
       readonly procedure: "makeStable";
       readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
@@ -3352,7 +3354,7 @@ type SupportedSpellInvocationShape =
   | FixedCostMovementReplacementSpellInvocation
   | SelfTeleportSpellInvocation
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "repeatedDamageAllocation";
       readonly spell: BattleSpellExecutionSource;
@@ -3474,7 +3476,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     })
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedCondition";
       readonly spell: BattleSpellAdmissionSource;
@@ -3487,7 +3489,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedAttackRollAdvantage";
       readonly spell: BattleSpellAdmissionSource;
@@ -3499,7 +3501,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "abilityD20TestRollModeSaveGate";
       readonly spell: BattleSpellAdmissionSource;
@@ -3531,7 +3533,7 @@ type SupportedSpellInvocationShape =
       >;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "stagedSaveCondition";
       readonly durationTicks: ElapsedTimeTicks;
@@ -3544,7 +3546,7 @@ type SupportedSpellInvocationShape =
       readonly escapeAction: StagedSaveConditionSpellProcedureExecution["escapeAction"];
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedConditionWithRepeat";
       readonly rangeFeet: MovementFeet;
@@ -3556,7 +3558,7 @@ type SupportedSpellInvocationShape =
       readonly targeting: SaveGatedConditionWithRepeatSpellProcedureExecution["targeting"];
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedAreaControl";
       readonly spell: BattleSpellAdmissionSource;
@@ -3571,7 +3573,7 @@ type SupportedSpellInvocationShape =
       readonly durationTicks: ElapsedTimeTicks;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedTurnConstraintBundle";
       readonly constraints: SaveGatedTurnConstraintFacts;
@@ -3588,7 +3590,7 @@ type SupportedSpellInvocationShape =
       readonly durationTicks: ElapsedTimeTicks;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveCondition";
       readonly spell: BattleSpellAdmissionSource;
@@ -3602,7 +3604,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveConditionEscape";
       readonly spell: BattleSpellAdmissionSource;
@@ -3616,7 +3618,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveComposite";
       readonly spell: BattleSpellAdmissionSource;
@@ -3630,7 +3632,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveDamage";
       readonly lifecycle: { readonly kind: "stationary" };
@@ -3649,7 +3651,7 @@ type SupportedSpellInvocationShape =
       };
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveDamage";
       readonly lifecycle: {
@@ -3674,7 +3676,7 @@ type SupportedSpellInvocationShape =
       };
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "directionalPersistentArea";
       readonly spell: BattleSpellExecutionSource;
@@ -3693,7 +3695,7 @@ type SupportedSpellInvocationShape =
       };
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaTrait";
       readonly spell: BattleSpellExecutionSource;
@@ -3705,7 +3707,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "magicalDarknessPointOrigin";
       readonly spell: BattleSpellExecutionSource;
@@ -3718,7 +3720,7 @@ type SupportedSpellInvocationShape =
       readonly dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "magicSuppressionEmanation";
       readonly spell: BattleSpellExecutionSource;
@@ -3731,7 +3733,7 @@ type SupportedSpellInvocationShape =
       readonly exceptSources: readonly ["artifact", "deity"];
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveDamage";
       readonly lifecycle: {
@@ -3756,7 +3758,7 @@ type SupportedSpellInvocationShape =
       };
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spatialMeleeSpellAttackProxy";
       readonly operation: "createAndAttack";
@@ -3779,7 +3781,7 @@ type SupportedSpellInvocationShape =
       readonly attackBonus: AttackBonus;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "areaMovementDistanceDamage";
       readonly spell: BattleSpellExecutionSource;
@@ -3796,7 +3798,7 @@ type SupportedSpellInvocationShape =
       readonly damagePerFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaSaveDamage";
       readonly lifecycle: {
@@ -3821,7 +3823,7 @@ type SupportedSpellInvocationShape =
       };
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "compelledNextTurnBehavior";
       readonly spell: BattleSpellExecutionSource;
@@ -3835,7 +3837,7 @@ type SupportedSpellInvocationShape =
       readonly visibility: "caster_can_see";
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "scalarBuff";
       readonly spell: BattleSpellAdmissionSource;
@@ -3863,7 +3865,7 @@ type SupportedSpellInvocationShape =
   | AfterHitDamageAndIlluminationSpellInvocation
   | MarkedDamageRiderSpellInvocation
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "grantedAlternateActionCost";
       readonly spell: BattleSpellAdmissionSource;
@@ -3873,7 +3875,7 @@ type SupportedSpellInvocationShape =
       >;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "fallingCreatureMitigationReaction";
       readonly spell: BattleSpellExecutionSource;
@@ -3893,7 +3895,7 @@ type SupportedSpellInvocationShape =
   | DirectConditionSpellInvocation
   | PersistentArmorSpellInvocation
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "triggeredArmorDefense";
       readonly spell: BattleSpellExecutionSource;
@@ -3901,7 +3903,7 @@ type SupportedSpellInvocationShape =
       readonly negatesRepeatedDamageAllocation: true;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spellCastInterruptionReaction";
       readonly spell: BattleSpellExecutionSource;
@@ -3915,7 +3917,7 @@ type SupportedSpellInvocationShape =
       readonly rangeFeet: MovementFeet;
     }
   | {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "directHitPointRestoration";
       readonly spell: BattleSpellAdmissionSource;

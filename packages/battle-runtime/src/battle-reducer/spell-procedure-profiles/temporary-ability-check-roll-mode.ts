@@ -94,7 +94,7 @@ import {
 import {
   CantripSpellAccessSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type TemporaryAbilityCheckRollModeInvocation = Extract<
@@ -682,7 +682,7 @@ const TemporaryAbilityCheckRollModeInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
+      resource: CantripSpellInvocationResourceSchema,
       procedure: Schema.Literal("temporaryAbilityCheckRollMode"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),

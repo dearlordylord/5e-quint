@@ -44,7 +44,7 @@ import {
   CantripSpellAccessSchema,
   DamageTypeSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
   SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -89,7 +89,7 @@ function resolveHeldLightHurl(
 const HeldLightHurlInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLightHurl"),
     sourceEffectRef: BattleEffectExecutionRef,
     sourceHeldLightProcedureRef: BattleProcedureExecutionRef,

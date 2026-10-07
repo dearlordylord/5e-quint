@@ -64,7 +64,7 @@ import {
 import {
   CantripSpellAccessSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   admitSpellTargetAttachment,
@@ -1167,7 +1167,7 @@ function resolveDamageReduction(
 export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("damageReduction"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

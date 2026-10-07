@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -65,8 +65,9 @@ import {
 import {
   ArmorOfShadowsSpellAccessSchema,
   MovementFeet,
+  CantripSpellInvocationResourceSchema,
   NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
@@ -874,7 +875,7 @@ type PersistentArmorSpellSource =
       Extract<
         PersistentArmorInvocation,
         {
-          readonly access: import("../../procedure-execution/spell-invocation-vocabulary.ts").PreparedSpellAccess;
+          readonly access: import("../../procedure-execution/spell-invocation-vocabulary.ts").LeveledSpellAccess;
         }
       >,
       "access" | "resource"
@@ -1096,7 +1097,7 @@ function resolvePersistentArmorEffect(
 const PersistentArmorEffectInvocationSchema = Schema.Union([
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

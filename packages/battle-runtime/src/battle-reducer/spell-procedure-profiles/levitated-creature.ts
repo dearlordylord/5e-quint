@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
 import { replaceTargetActiveEffectsEndingDisplacedConcentrations } from "../active-effect-replacement.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -84,7 +84,7 @@ import {
 } from "./profile.ts";
 import {
   DcSourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1002,7 +1002,7 @@ function applyControlledVerticalSuspensionSpellEffect(
 const ControlledVerticalSuspensionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("controlledVerticalSuspension"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

@@ -5,7 +5,7 @@ import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type { HeldWeaponLoadoutSlot } from "../character-creature-execution-facts.ts";
 import type {
   CantripSpellAccess,
-  NoSpellInvocationResource,
+  CantripSpellInvocationResource,
 } from "../procedure-execution/spell-invocation-vocabulary.ts";
 
 /** Authored-identity-free facts shared by admission and execution. */
@@ -29,5 +29,5 @@ export type WeaponAttackOverrideProcedureFacts = {
   readonly activeEffect: SpellWeaponAttackOverrideTemplate;
   readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;
   readonly procedure: "weaponAttackOverride";
-  readonly resource: NoSpellInvocationResource;
+  readonly resource: CantripSpellInvocationResource;
 };

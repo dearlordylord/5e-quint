@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -39,7 +39,7 @@ import {
   DcSourceSchema,
   LeveledSpellInvocationResourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
 } from "../codec-building-blocks.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import { resolveDirectionalPersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
@@ -1570,7 +1570,7 @@ function resolve(input: ResolveInput): BattleResolutionResult {
 
 const InvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("directionalPersistentArea"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

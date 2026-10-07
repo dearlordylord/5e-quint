@@ -1,7 +1,7 @@
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   LeveledSpellInvocationResource,
-  NoSpellInvocationResource,
+  CantripSpellInvocationResource,
 } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import { Match } from "effect";
 import {
@@ -32,8 +32,9 @@ export function spellInvocationEffectiveSpellLevel(
 export function spellInvocationCastLevel(
   invocation: RuntimeSpellProcedureExecution,
 ): BattleSpellEffectLevel {
-  const resource: NoSpellInvocationResource | LeveledSpellInvocationResource =
-    invocation.resource;
+  const resource:
+    | CantripSpellInvocationResource
+    | LeveledSpellInvocationResource = invocation.resource;
   return requireBattleSpellEffectLevel(
     Match.value(resource).pipe(
       Match.when({ tag: "spellSlot" }, ({ slotLevel }) => Number(slotLevel)),

@@ -2,7 +2,7 @@ import { spellAdmissionCastOptions } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -87,8 +87,8 @@ import {
 import {
   CantripSpellAccessSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  CantripSpellInvocationResourceSchema,
+  LeveledSpellAccessSchema,
   SizeSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -813,7 +813,7 @@ function admitPreparedObjectLight(
       ? []
       : [
           {
-            access: preparedSpellAccessForCastingSource(spell.castingSource),
+            access: leveledSpellAccessForCastingSource(spell.castingSource),
             resource: spellInvocationResourceForCastOption(slot),
             procedure: "objectLight",
             spell,
@@ -1041,7 +1041,7 @@ const ObjectLightInvocationSchema = Schema.Union([
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
+      resource: CantripSpellInvocationResourceSchema,
       procedure: Schema.Literal("objectLight"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -1062,7 +1062,7 @@ const ObjectLightInvocationSchema = Schema.Union([
   ),
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("objectLight"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

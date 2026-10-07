@@ -66,7 +66,7 @@ import {
 import { Schema } from "effect";
 import {
   CantripSpellAccessSchema,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -774,7 +774,7 @@ function resolveMakeStable(
 const MakeStableInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("makeStable"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

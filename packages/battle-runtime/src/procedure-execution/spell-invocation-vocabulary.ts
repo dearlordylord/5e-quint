@@ -15,7 +15,7 @@ export type StatBlockLeveledSpellAccess = {
   readonly tag: "statBlockLeveled";
   readonly invocationRef: StatBlockSpellInvocationRef;
 };
-export type PreparedSpellAccess =
+export type LeveledSpellAccess =
   | { readonly tag: "prepared" }
   | StatBlockLeveledSpellAccess;
 
@@ -64,8 +64,9 @@ export type StatBlockSpellInvocationResource<
       readonly castLevel: Level;
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
     };
-export type NoSpellInvocationResource =
-  | { readonly tag: "none" }
+export type NoSpellInvocationResource = { readonly tag: "none" };
+export type CantripSpellInvocationResource =
+  | NoSpellInvocationResource
   | StatBlockSpellInvocationResource<0>;
 /** Authored-identity-free spell-slot spend retained for spell execution. */
 export type SpellSlotInvocationResource = {
@@ -156,15 +157,15 @@ export type SaveGatedDamageSpellTargeting =
   | SpellTargetingByKind<"singleCombatant">
   | SaveGatedDamageAreaSpellTargeting;
 
-export function preparedSpellAccessForCastingSource(
+export function leveledSpellAccessForCastingSource(
   source: import("./spell-rule-facts.ts").SpellCastingSource,
-): PreparedSpellAccess {
+): LeveledSpellAccess {
   return source.tag === "statBlock"
     ? { tag: "statBlockLeveled", invocationRef: source.invocationRef }
     : { tag: "prepared" };
 }
 export function isLeveledSpellAccess(
   access: SpellAccess,
-): access is PreparedSpellAccess {
+): access is LeveledSpellAccess {
   return access.tag === "prepared" || access.tag === "statBlockLeveled";
 }

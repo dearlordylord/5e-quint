@@ -4,7 +4,7 @@ import {
 } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -67,8 +67,8 @@ import {
   AttackBonus,
   CantripSpellAccessSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
-  PreparedSpellAccessSchema,
+  CantripSpellInvocationResourceSchema,
+  LeveledSpellAccessSchema,
   SpellDamageSchema,
   SpellAttackMissDamageSchema,
   SpellAttackDamagePayloadSchema,
@@ -249,13 +249,13 @@ export const SpellAttackDamageInvocationSchema = Schema.Union([
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
       access: CantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
+      resource: CantripSpellInvocationResourceSchema,
     }),
   ),
   spellProcedureExecutionSchema(
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
     }),
   ),

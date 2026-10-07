@@ -83,7 +83,7 @@ import type {
 import { Schema } from "effect";
 import {
   DamageTypeSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1953,7 +1953,7 @@ function resolveObjectContactDamageRepeat(
 
 const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("objectContactDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

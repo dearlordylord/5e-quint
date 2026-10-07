@@ -1,6 +1,6 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHoles,
@@ -64,7 +64,7 @@ import {
 import {
   BattleConditionSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   SaveGatedConditionSpellTargetingSchema,
   SpellConditionCountedRepeatSaveSchema,
   SpellConditionEscapeSchema,
@@ -284,7 +284,7 @@ function resolveSaveGatedCondition(
 
 const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("saveGatedCondition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

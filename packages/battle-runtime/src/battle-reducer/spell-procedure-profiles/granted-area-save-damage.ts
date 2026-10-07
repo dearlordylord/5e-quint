@@ -1,6 +1,6 @@
 import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
@@ -78,7 +78,7 @@ import {
   DamageDieSizeSchema,
   DamageTypeSchema,
   DcSourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
@@ -453,7 +453,7 @@ function grantedAreaSaveDamageActionInvocationsFromFacts(
       );
       return [
         {
-          access: preparedSpellAccessForCastingSource(spell.castingSource),
+          access: leveledSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption(slot),
           procedure: "grantedAreaSaveDamageAction",
           spell,
@@ -1058,7 +1058,7 @@ function resolveGrantedAreaSaveDamageAction(
 export const GrantedAreaSaveDamageActionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("grantedAreaSaveDamageAction"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

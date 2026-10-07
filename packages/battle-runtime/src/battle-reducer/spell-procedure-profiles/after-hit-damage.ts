@@ -99,7 +99,7 @@ import {
 } from "./profile.ts";
 import {
   DamageTypeSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -570,7 +570,7 @@ function spendAfterHitDamageFreeCastResource(
 
 const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("afterHitDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

@@ -1,7 +1,7 @@
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
@@ -85,7 +85,7 @@ import {
 import { Schema } from "effect";
 import {
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1142,7 +1142,7 @@ function spellCastInterruptionReactionReactionInterruptFrame(
 
 const SpellCastInterruptionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("spellCastInterruptionReaction"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

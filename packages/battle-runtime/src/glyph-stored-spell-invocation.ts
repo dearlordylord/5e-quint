@@ -1,6 +1,6 @@
 import type {
   LeveledSpellInvocationResource,
-  PreparedSpellAccess,
+  LeveledSpellAccess,
   ReadiedSpellInvocation,
   SpellSlotInvocationResource,
   SpellTargeting,
@@ -52,11 +52,11 @@ type GlyphStoredNonConcentrationSpellExecutionSource =
   };
 
 type GlyphStoredPreparedSlotInvocation<Invocation> = Invocation extends {
-  readonly access: PreparedSpellAccess;
+  readonly access: LeveledSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
 }
   ? Omit<Invocation, "access" | "resource"> & {
-      readonly access: PreparedSpellAccess;
+      readonly access: LeveledSpellAccess;
       readonly resource: SpellSlotInvocationResource;
     }
   : never;
@@ -150,7 +150,7 @@ type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
       >
   >,
   {
-    readonly access: PreparedSpellAccess;
+    readonly access: LeveledSpellAccess;
     readonly resource: SpellSlotInvocationResource;
     readonly targeting: SpellTargeting;
   }
@@ -169,7 +169,7 @@ export type GlyphStoredSpellInvocation =
       | GlyphStoredAreaOngoingInvocation
       | GlyphStoredAreaControlInvocation,
       {
-        readonly access: PreparedSpellAccess;
+        readonly access: LeveledSpellAccess;
         readonly resource: SpellSlotInvocationResource;
         readonly targeting: SpellTargeting;
       }

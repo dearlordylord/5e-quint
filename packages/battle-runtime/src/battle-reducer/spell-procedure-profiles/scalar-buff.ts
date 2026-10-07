@@ -2,7 +2,7 @@ import {
   leveledSpellInvocationOptions,
   spellAdmissionActionCost,
 } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeSpellActiveEffectCast,
@@ -115,7 +115,7 @@ import {
 import {
   MovementDeltaFeet,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverSubtleSpellMetamagicSelections } from "../metamagic.ts";
@@ -2060,7 +2060,7 @@ function resolveScalarBuff(
 
 const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("scalarBuff"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

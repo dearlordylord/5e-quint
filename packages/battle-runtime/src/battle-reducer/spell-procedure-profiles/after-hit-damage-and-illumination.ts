@@ -87,7 +87,7 @@ import {
 import {
   DamageTypeSchema,
   BrightRadiusIlluminationEmissionFactsSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -599,7 +599,7 @@ function resolveAfterHitDamageAndIllumination(
 const AfterHitDamageAndIlluminationInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("afterHitDamageAndIllumination"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

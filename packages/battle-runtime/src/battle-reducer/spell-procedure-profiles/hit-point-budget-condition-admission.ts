@@ -61,7 +61,7 @@ import {
 } from "./profile.ts";
 import {
   DcSourceSchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
@@ -1106,7 +1106,7 @@ function resolveStagedSaveCondition(
 
 const StagedSaveConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: PreparedSpellAccessSchema,
+    access: LeveledSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("stagedSaveCondition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

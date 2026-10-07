@@ -3,7 +3,7 @@ import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type {
   BattleSpellAdmissionSource,
@@ -106,7 +106,7 @@ import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { Schema } from "effect";
 import {
   AbilitySchema,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
   MovementFeet as MovementFeetSchema,
 } from "../codec-building-blocks.ts";
@@ -1979,7 +1979,7 @@ function markedDamageRiderActiveAbilityCheckBehavior(
 const MarkedDamageRiderInvocationSchema = Schema.Union([
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
+      access: LeveledSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),

@@ -94,7 +94,7 @@ import {
 import {
   DcSourceSchema,
   MovementFeet,
-  PreparedSpellAccessSchema,
+  LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -1633,7 +1633,7 @@ function creatureSizeChangeConcentrationWithMetamagic(
 }
 
 const CreatureSizeChangeExecutionSchemaFields = {
-  access: PreparedSpellAccessSchema,
+  access: LeveledSpellAccessSchema,
   resource: LeveledSpellInvocationResourceSchema,
   spellRuleFacts: SpellRuleExecutionFactsSchema,
   actionCost: Schema.Literal("magicAction"),

@@ -63,7 +63,7 @@ import {
   CantripSpellAccessSchema,
   DamageTypeSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
+  CantripSpellInvocationResourceSchema,
   SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -957,7 +957,7 @@ function resolveHeldLight(
 const HeldLightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
+    resource: CantripSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLight"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
