@@ -1,3 +1,4 @@
+import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
@@ -1087,7 +1088,7 @@ function turnConstraintBundleSupportedInspection(
         saveGatedTurnConstraintBundleInvocationsFromFacts(
           executionSource,
           facts,
-          ctx.spellCastOptions,
+          spellAdmissionCastOptions(ctx),
         ),
     },
   };

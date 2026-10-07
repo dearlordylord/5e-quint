@@ -1,3 +1,4 @@
+import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -82,7 +83,7 @@ function admitAbilityD20TestRollModeSaveGateMechanics(
       spell: BattleSpellExecutionSource,
       ctx: SpellAdmissionContext,
     ) =>
-      ctx.spellCastOptions.flatMap((slot) =>
+      spellAdmissionCastOptions(ctx).flatMap((slot) =>
         abilityD20TestRollModeSaveGateInvocationsFromFacts({
           spell,
           facts,

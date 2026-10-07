@@ -20,6 +20,8 @@ import { Option } from "effect";
 import { attackBonus, type AttackBonus } from "@dnd/shared/types";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
+import { spellSlotLevel } from "@dnd/shared/types";
+import type { SpellLevel } from "@dnd/surface/surface/types";
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   BattleMagicSuppressionOngoingSpellEffectRef,
@@ -96,10 +98,10 @@ export type SpellAdmissionBattleProjection = {
 
 type SpellAdmissionBattleContext = {
   readonly battle: SpellAdmissionBattleProjection | undefined;
-  readonly spellCastOptions: readonly SpellAdmissionCastOption[];
 };
 export type CharacterSpellAdmissionContext = SpellAdmissionBattleContext & {
   readonly kind: "character";
+  readonly spellCastOptions: readonly CharacterSpellAdmissionCastOption[];
   readonly actor: CharacterSpellAdmissionActor;
   readonly castingSource: import("../../procedure-execution/spell-rule-facts.ts").CharacterSpellCastingSource;
 };
@@ -108,9 +110,10 @@ export type StatBlockSpellAdmissionContext = SpellAdmissionBattleContext & {
   readonly actor: StatBlockSpellAdmissionActor;
   readonly castingSource: import("../../procedure-execution/spell-rule-facts.ts").StatBlockSpellCastingSource;
   readonly payment:
-    | { readonly kind: "atWill" }
+    | { readonly kind: "atWill"; readonly castLevel: SpellLevel }
     | {
         readonly kind: "limited";
+        readonly castLevel: SpellLevel;
         readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       };
 };
@@ -213,23 +216,14 @@ export function leveledSpellInvocationOptions<
   readonly spellLevel: SpellSlotLevel;
   readonly facts: AuthoredLeveledCastingFacts<S>;
 }[] {
-  return ctx.spellCastOptions.flatMap(
+  return spellAdmissionCastOptions(ctx).flatMap(
     (
       option,
     ): readonly {
       readonly spellLevel: SpellSlotLevel;
       readonly facts: AuthoredLeveledCastingFacts<S>;
     }[] => {
-      const resource =
-        ctx.kind === "character"
-          ? spellInvocationResourceForCastOption(option)
-          : ctx.payment.kind === "atWill"
-            ? { tag: "statBlockAtWill" as const, castLevel: option.spellLevel }
-            : {
-                tag: "statBlockLimited" as const,
-                castLevel: option.spellLevel,
-                resourcePoolRef: ctx.payment.resourcePoolRef,
-              };
+      const resource = spellInvocationResourceForCastOption(option);
       const candidate = {
         spell: { ...spell, castingSource: ctx.castingSource },
         access: preparedSpellAccessForCastingSource(ctx.castingSource),
@@ -255,20 +249,44 @@ export function cantripSpellInvocationResource(
       };
 }
 
-export type SpellAdmissionCastOption = {
+export type CharacterSpellAdmissionCastOption = {
   readonly spellLevel: SpellSlotLevel;
   readonly payment:
     | { readonly tag: "slot" }
     | {
         readonly tag: "spellAccessFreeCast";
         readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-      }
-    | { readonly tag: "statBlockAtWill" }
-    | {
-        readonly tag: "statBlockLimited";
-        readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       };
 };
+export type SpellAdmissionCastOption =
+  | CharacterSpellAdmissionCastOption
+  | {
+      readonly spellLevel: SpellSlotLevel;
+      readonly payment:
+        | { readonly tag: "statBlockAtWill" }
+        | {
+            readonly tag: "statBlockLimited";
+            readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+          };
+    };
+export function spellAdmissionCastOptions(
+  ctx: SpellAdmissionContext,
+): readonly SpellAdmissionCastOption[] {
+  if (ctx.kind === "character") return ctx.spellCastOptions;
+  if (ctx.payment.castLevel === 0) return [];
+  return [
+    {
+      spellLevel: spellSlotLevel(ctx.payment.castLevel),
+      payment:
+        ctx.payment.kind === "atWill"
+          ? { tag: "statBlockAtWill" }
+          : {
+              tag: "statBlockLimited",
+              resourcePoolRef: ctx.payment.resourcePoolRef,
+            },
+    },
+  ];
+}
 
 export function cantripSpellAccessFor(
   castingSource: BattleSpellAdmissionSource["castingSource"],

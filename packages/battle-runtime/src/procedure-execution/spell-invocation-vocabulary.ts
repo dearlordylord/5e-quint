@@ -38,9 +38,9 @@ export function cantripSpellAccessForCastingSource(
     : { tag: "spellAccessCantrip" };
 }
 
-export function isCantripSpellAccess(access: {
-  readonly tag: string;
-}): access is CantripSpellAccess {
+export function isCantripSpellAccess(
+  access: SpellAccess,
+): access is CantripSpellAccess {
   return (
     access.tag === "classCantrip" ||
     access.tag === "spellAccessCantrip" ||
@@ -163,8 +163,8 @@ export function preparedSpellAccessForCastingSource(
     ? { tag: "statBlockLeveled", invocationRef: source.invocationRef }
     : { tag: "prepared" };
 }
-export function isLeveledSpellAccess(access: {
-  readonly tag: string;
-}): access is PreparedSpellAccess {
+export function isLeveledSpellAccess(
+  access: SpellAccess,
+): access is PreparedSpellAccess {
   return access.tag === "prepared" || access.tag === "statBlockLeveled";
 }

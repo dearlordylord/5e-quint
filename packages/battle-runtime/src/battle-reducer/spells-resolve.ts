@@ -3830,7 +3830,7 @@ export function resolveBonusActionSpellAct(
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
+  if (actor === undefined) {
     return invalidResult(
       input.state,
       "unsupportedActOption",

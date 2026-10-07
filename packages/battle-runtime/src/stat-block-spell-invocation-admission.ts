@@ -151,28 +151,14 @@ export function admitSelectedStatBlockSpellInvocation(input: {
     actor: input.actor,
     payment:
       selection.resource.kind === "atWill"
-        ? { kind: "atWill" }
+        ? { kind: "atWill", castLevel }
         : {
             kind: "limited",
+            castLevel,
             resourcePoolRef: selection.resource.resourcePoolRef,
           },
     castingSource,
     battle: spellAdmissionBattleProjection(input.state),
-    spellCastOptions:
-      castLevel === 0
-        ? []
-        : [
-            {
-              spellLevel: spellSlotLevel(castLevel),
-              payment:
-                selection.resource.kind === "atWill"
-                  ? { tag: "statBlockAtWill" }
-                  : {
-                      tag: "statBlockLimited",
-                      resourcePoolRef: selection.resource.resourcePoolRef,
-                    },
-            },
-          ],
   };
   const staticAdmission = admitRegisteredSpellProcedureMechanics({
     mechanics: source.mechanics,

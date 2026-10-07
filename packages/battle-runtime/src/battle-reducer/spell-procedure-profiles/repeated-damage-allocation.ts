@@ -1,3 +1,4 @@
+import { spellAdmissionCastOptions } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
@@ -760,7 +761,7 @@ function admitRepeatedDamageAllocation(
   ctx: SpellAdmissionContext,
   facts: RepeatedDamageAllocationMechanicsFacts,
 ): readonly RepeatedDamageAllocationInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return spellAdmissionCastOptions(ctx).flatMap(
     (slot): readonly RepeatedDamageAllocationInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) {
         return [];

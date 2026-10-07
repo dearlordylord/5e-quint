@@ -1,3 +1,4 @@
+import { spellAdmissionCastOptions } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
@@ -842,7 +843,11 @@ function admitObjectLight(
       admitCantripObjectLight(spell, ctx, cantripFacts),
     ),
     Match.when({ kind: "permanentTouchedObject" }, (permanentFacts) =>
-      admitPreparedObjectLight(spell, ctx.spellCastOptions, permanentFacts),
+      admitPreparedObjectLight(
+        spell,
+        spellAdmissionCastOptions(ctx),
+        permanentFacts,
+      ),
     ),
     Match.exhaustive,
   );

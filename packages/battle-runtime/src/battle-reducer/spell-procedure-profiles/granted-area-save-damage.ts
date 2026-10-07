@@ -1,3 +1,4 @@
+import { spellAdmissionCastOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
@@ -958,7 +959,7 @@ function admitGrantedAreaSaveDamageActionMechanics(
           executionSource,
           facts,
           ctx.actor.combatantId,
-          ctx.spellCastOptions,
+          spellAdmissionCastOptions(ctx),
         ),
     },
   };
