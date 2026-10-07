@@ -1,3 +1,4 @@
+import type { SpellInvocationCastingFacts } from "./spell-invocation-casting-facts.ts";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type {
@@ -1753,12 +1754,34 @@ export type SpellProcedureInput<
 > =
   | Extract<AnySpellProcedureExecution, { readonly procedure: P }>
   | { readonly procedure: P; readonly access: unknown };
+type CastingExecution<
+  Execution,
+  Facts extends SpellInvocationCastingFacts,
+> = Facts extends {
+  readonly access: { readonly tag: "statBlockCantrip" | "statBlockLeveled" };
+}
+  ? Omit<Execution, "access" | "resource" | "spellRuleFacts" | "actionCost"> &
+      Facts & { readonly actionCost: "magicAction" | "bonusAction" }
+  : Omit<Execution, "access" | "resource" | "spellRuleFacts"> & Facts;
+type CorrelatedSpellExecution<Execution> = Execution extends {
+  readonly access: infer Access;
+  readonly resource: infer Resource;
+  readonly spellRuleFacts: SpellRuleExecutionFacts;
+}
+  ? CastingExecution<
+      Execution,
+      Extract<
+        SpellInvocationCastingFacts,
+        { readonly access: Access; readonly resource: Resource }
+      >
+    >
+  : Execution;
 type SpellProcedureExecutionForInput<Input extends SpellProcedureInput> =
   SpellProcedureExecutionByProcedure[Input["procedure"]] extends infer Execution
     ? Execution extends { readonly access: infer ExecutionAccess }
       ? Input extends { readonly access: infer InputAccess }
         ? InputAccess extends ExecutionAccess
-          ? Execution
+          ? CorrelatedSpellExecution<Execution>
           : never
         : Execution
       : Execution

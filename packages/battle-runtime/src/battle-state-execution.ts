@@ -1,3 +1,4 @@
+import type { AuthoredSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type { AttackPresentationJoinIssue } from "./attack-presentation-contract.ts";
 import type {
@@ -3852,17 +3853,26 @@ export type SupportedSpellInvocation = {
           | BattleSpellExecutionSource;
       }
       ? Procedure extends Invocation["procedure"]
-        ? Omit<Invocation, "spell" | "procedure"> & {
-            readonly procedure: Procedure;
-            readonly spell: Pick<
-              Spell,
-              | "id"
-              | "name"
-              | "spellDefinitionRuleFacts"
-              | "castingSource"
-              | "spellAccessFreeCastResourcePoolRefs"
-            >;
-          }
+        ? Omit<Invocation, "spell" | "procedure"> &
+            (Invocation extends {
+              readonly access: infer Access;
+              readonly resource: infer Resource;
+            }
+              ? Extract<
+                  AuthoredSpellInvocationCastingFacts<Spell>,
+                  { readonly access: Access; readonly resource: Resource }
+                >
+              : unknown) & {
+              readonly procedure: Procedure;
+              readonly spell: Pick<
+                Spell,
+                | "id"
+                | "name"
+                | "spellDefinitionRuleFacts"
+                | "castingSource"
+                | "spellAccessFreeCastResourcePoolRefs"
+              >;
+            }
         : never
       : never
     : never;
