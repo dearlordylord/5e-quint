@@ -29,12 +29,12 @@ export function creatureSpellProcedure(
   );
 }
 
-/** Initial casting facts remain in the canonical execution owner after payment. */
-export function creatureSpatialMeleeSpellAttackProxySource(
+/** Retained initial facts remain available to effects after casting resources expire. */
+export function creatureRetainedSpellProcedureExecution(
   actor: BattleCreatureState,
   procedureRef: BattleProcedureExecutionRef,
-): CreateSpatialMeleeSpellAttackProxySpellProcedureExecution | undefined {
-  const source = Match.value(actor.origin).pipe(
+) {
+  return Match.value(actor.origin).pipe(
     Match.discriminatorsExhaustive("kind")({
       character: (origin) =>
         characterRetainedSpellProcedureExecution(
@@ -45,6 +45,14 @@ export function creatureSpatialMeleeSpellAttackProxySource(
         statBlockSpellProcedure(origin.execution, procedureRef),
     }),
   );
+}
+
+/** Initial casting facts remain in the canonical execution owner after payment. */
+export function creatureSpatialMeleeSpellAttackProxySource(
+  actor: BattleCreatureState,
+  procedureRef: BattleProcedureExecutionRef,
+): CreateSpatialMeleeSpellAttackProxySpellProcedureExecution | undefined {
+  const source = creatureRetainedSpellProcedureExecution(actor, procedureRef);
   return source?.procedure === "spatialMeleeSpellAttackProxy" &&
     source.operation === "createAndAttack"
     ? source

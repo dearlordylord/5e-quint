@@ -869,13 +869,22 @@ function discoverHeldLightCastAct(
   ];
 }
 
+function isCharacterHeldLightInvocation(
+  invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
+): invocation is Exclude<
+  BattleExecutableSpellInvocation<HeldLightInvocation>,
+  { readonly access: { readonly tag: "statBlockCantrip" } }
+> {
+  return invocation.access.tag !== "statBlockCantrip";
+}
+
 function applyHeldLightEffect(
   state: BattleState,
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
 ): BattleState {
   const caster = state.combatants.get(actorId);
-  if (invocation.access.tag === "statBlockCantrip") return state;
+  if (!isCharacterHeldLightInvocation(invocation)) return state;
   if (caster === undefined) {
     return state;
   }

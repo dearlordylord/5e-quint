@@ -1,3 +1,4 @@
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import { Result } from "effect";
 import { expect, it } from "vitest";
@@ -37,7 +38,7 @@ it("retains a Stat Block persistent area owner after a source-backed public cast
   if (group?.kind !== "at_will") throw new Error("Expected at-will fixture.");
   const actorId = combatantId("synthetic-persistent-area-caster");
   const targetId = combatantId("persistent-area-target");
-  const record = {
+  const record: StatBlockRecord = {
     ...base,
     id: statBlockId("synthetic_persistent_area_caster"),
     name: "Synthetic Persistent Area Caster",

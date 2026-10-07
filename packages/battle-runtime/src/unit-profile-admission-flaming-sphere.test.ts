@@ -1,3 +1,4 @@
+import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-FLAMING-SPHERE flaming_sphere
@@ -261,6 +262,66 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     expect(boundPersistentAreaSaveDamageEffect(caster, sphere)?.kind).toBe(
       "collisionReposition",
     );
+    if (caster.origin.kind !== "character")
+      throw new Error("Expected character caster.");
+    const refreshedCaster = {
+      ...caster,
+      origin: {
+        ...caster.origin,
+        execution: characterExecutionWithSpellInvocations(
+          caster.origin.execution,
+          [],
+        ),
+      },
+    };
+    expect(
+      refreshedCaster.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === sphere.sourceProcedureRef &&
+          binding.procedure.kind === "unavailableSpellInvocation",
+      ),
+    ).toBe(true);
+    const refreshedState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(
+        spellCasterId,
+        refreshedCaster,
+      ),
+    };
+    const retainedRam = flamingSphereRamAct(
+      battleRuntimeSessionForTest({ ...session, state: refreshedState }),
+    );
+    const retainedResolution = resolveBattleSubject({
+      state: refreshedState,
+      subject: retainedRam.subject,
+      fills: [
+        flamingSphereRamMovementFill(
+          requireHole(retainedRam.initialHoles, "movableZoneRamMovement"),
+        ),
+        singleTargetSavingThrowOutcomeFill(
+          requireHole(retainedRam.initialHoles, "savingThrowOutcome"),
+          spellTargetId,
+          true,
+        ),
+      ],
+    });
+    const retainedDamage = requireResultHole(retainedResolution, "rolledDice");
+    const completedRam = resolveBattleSubject({
+      state: refreshedState,
+      subject: retainedRam.subject,
+      fills: [
+        flamingSphereRamMovementFill(
+          requireHole(retainedRam.initialHoles, "movableZoneRamMovement"),
+        ),
+        singleTargetSavingThrowOutcomeFill(
+          requireHole(retainedRam.initialHoles, "savingThrowOutcome"),
+          spellTargetId,
+          true,
+        ),
+        damageRollFillWithGroups(retainedDamage, [[3, 3]]),
+      ],
+    });
+    expect(completedRam.tag).toBe("resolved");
     const mismatchedDirectedState = {
       kind: sphere.kind,
       lifecycle: "directedReposition",
