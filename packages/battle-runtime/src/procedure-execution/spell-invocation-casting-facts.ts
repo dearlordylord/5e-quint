@@ -116,6 +116,9 @@ type AuthoredCastingFacts<
   ? {
       readonly spell: Spell & {
         readonly castingSource: Facts["spellRuleFacts"]["castingSource"];
+        readonly spellDefinitionRuleFacts: {
+          readonly level: Facts["spellRuleFacts"]["level"];
+        };
       };
       readonly access: Facts["access"];
       readonly resource: Facts["resource"];
@@ -132,6 +135,17 @@ export function isSpellInvocationCastingFacts(
   value: unknown,
 ): value is SpellInvocationCastingFacts {
   if (!hasCastingFactsShape(value)) return false;
+  const resource = value.resource;
+  if (
+    resource.tag === "spellSlot" &&
+    resource.slotLevel < value.spellRuleFacts.level
+  )
+    return false;
+  if (
+    "castLevel" in resource &&
+    resource.castLevel < value.spellRuleFacts.level
+  )
+    return false;
   const source = value.spellRuleFacts.castingSource;
   if (source.tag !== "statBlock" || value.access.tag === "spellEffect")
     return true;
