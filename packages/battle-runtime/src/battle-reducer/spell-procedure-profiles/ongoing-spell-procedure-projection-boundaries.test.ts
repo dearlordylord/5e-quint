@@ -1,3 +1,12 @@
+import { spellProcedureExecution } from "../../spell-procedure-execution-admission.ts";
+import { battleSelectedSpellInvocationForProcedure } from "../../battle-act-composition.ts";
+import { battleRuntimeSessionForTest } from "../../battle-runtime-session.test-support.ts";
+import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
+import { resolveBattleSubject } from "../../index.ts";
+import {
+  bonusSpellAct,
+  spellAct,
+} from "../../unit-profile-admission-spell-fill.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import {
@@ -34,6 +43,51 @@ import {
 } from "./ongoing-spell-procedure-admission.test-support.js";
 
 describe("Ongoing spell procedure projection boundaries", () => {
+  test("projects a live held-object attack with its admitted spell-effect casting facts", () => {
+    const session = spellBattle({
+      preparedSpells: [spellRecord("flame_blade")],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const castAct = bonusSpellAct({
+      session,
+      spellId: "flame_blade",
+      slotLevel: 2,
+    });
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [],
+    });
+    if (cast.tag !== "resolved")
+      throw new Error("Expected admitted held-object cast.");
+    const activeSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    });
+    const attackAct = spellAct({
+      session: activeSession,
+      spellId: "flame_blade",
+    });
+    const selected = battleSelectedSpellInvocationForProcedure(
+      activeSession,
+      spellCasterId,
+      attackAct.subject.procedureRef,
+    );
+    const owner = cast.state.combatants.get(spellCasterId);
+    if (
+      selected?.procedure !== "spellCreatedHeldObjectAttack" ||
+      owner?.origin.kind !== "character"
+    )
+      throw new Error("Expected live source-backed held-object attack.");
+    expect(selected.access.tag).toBe("spellEffect");
+    expect(spellProcedureExecution(selected)).toEqual(
+      characterRetainedSpellProcedureExecution(
+        owner.origin.execution,
+        attackAct.subject.procedureRef,
+      ),
+    );
+  });
+
   test.each(ONGOING_PROCEDURE_PROFILES)(
     "supports $spellId with a complete, mechanics-free projection",
     ({ profile, spellId }) => {

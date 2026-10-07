@@ -1,10 +1,15 @@
+import { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
+import { characterRetainedSpellProcedureExecution } from "./character-execution-queries.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { discloseMarkedCreatureDefenses } from "./marked-creature-defenses.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleSelectedSpellInvocationForProcedure,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
 import { describe, expect, test } from "vitest";
@@ -385,6 +390,29 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     if (transferAct === undefined) {
       throw new Error("Expected Hunter's Mark transfer act.");
     }
+    if (transferAct.subject.tag !== "bonusActionSpell")
+      throw new Error("Expected transfer spell subject.");
+    const selectedTransfer = battleSelectedSpellInvocationForProcedure(
+      battleRuntimeSessionForTest({
+        state: nextFighterTurn,
+        context: session.context,
+      }),
+      fighterId,
+      transferAct.subject.procedureRef,
+    );
+    const transferOwner = nextFighterTurn.combatants.get(fighterId);
+    if (
+      selectedTransfer?.procedure !== "markedDamageRider" ||
+      selectedTransfer.action !== "transfer" ||
+      transferOwner?.origin.kind !== "character"
+    )
+      throw new Error("Expected source-backed marked rider continuation.");
+    expect(spellProcedureExecution(selectedTransfer)).toEqual(
+      characterRetainedSpellProcedureExecution(
+        transferOwner.origin.execution,
+        transferAct.subject.procedureRef,
+      ),
+    );
     const transferTarget = findHole(transferAct.initialHoles, "targetChoice");
     if (transferTarget.kind !== "targetChoice") {
       throw new Error("Expected Hunter's Mark target choice.");

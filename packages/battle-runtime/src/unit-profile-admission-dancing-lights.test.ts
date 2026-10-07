@@ -1,3 +1,5 @@
+import { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
+import { characterRetainedSpellProcedureExecution } from "./character-execution-queries.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -5,7 +7,10 @@ import {
   requireCharacterSpellProcedureRefForTest,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleSelectedSpellInvocationForProcedure,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
 import { describe, expect, test } from "vitest";
@@ -830,6 +835,28 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       }),
       spellId: dancingLightsUnitId,
     });
+    const selectedMove = battleSelectedSpellInvocationForProcedure(
+      battleRuntimeSessionForTest({
+        state: resolved.state,
+        context: session.context,
+      }),
+      spellCasterId,
+      moveAct.subject.procedureRef,
+    );
+    const moveOwner = requireCombatant(resolved.state, spellCasterId);
+    if (
+      selectedMove?.procedure !== "movableLightManifestation" ||
+      selectedMove.operation !== "reposition" ||
+      moveOwner.origin.kind !== "character"
+    )
+      throw new Error("Expected source-backed movable light continuation.");
+    expect(selectedMove.access.tag).toBe("classCantrip");
+    expect(spellProcedureExecution(selectedMove)).toEqual(
+      characterRetainedSpellProcedureExecution(
+        moveOwner.origin.execution,
+        moveAct.subject.procedureRef,
+      ),
+    );
     expect(battleActSpellPresentation(moveAct)?.invocation).toEqual(
       cantripSpellInvocationRef(
         dancingLightsUnitId,
