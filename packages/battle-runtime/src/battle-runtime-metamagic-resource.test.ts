@@ -1,3 +1,7 @@
+import {
+  spendSpellCastResources,
+  spendSpellCastMetamagicResources,
+} from "./battle-reducer/spells-resolve-resources.ts";
 import { Schema } from "effect";
 import { rollModifierProfile } from "./battle-reducer/spell-procedure-profiles/roll-modifier.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
@@ -135,6 +139,51 @@ import {
 } from "./index.ts";
 
 describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
+  test("full spell resource spend rejects an admitted Metamagic application after its points are depleted", () => {
+    const session = metamagicBattle({
+      sorceryPoints: 1,
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: ["magic_missile"],
+    });
+    const invocation = supportedInvocationFor(
+      session,
+      "magic_missile",
+      "repeatedDamageAllocation",
+    );
+    const admitted = admitSpellMetamagicApplications({
+      state: session.state,
+      actor: requireBattleCreature(session.state, wizardId),
+      actorId: wizardId,
+      invocation,
+      subject: {
+        tag: "actionSpell",
+        mode: { tag: "cast" },
+        metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+      },
+    });
+    if (admitted.tag !== "ok")
+      throw new Error("Expected admitted Subtle Spell.");
+    const paid = spendSpellCastMetamagicResources({
+      state: session.state,
+      actorId: wizardId,
+      applications: admitted.applications,
+    });
+    if (Result.isFailure(paid)) throw new Error(paid.failure);
+    expect(sorceryPointsRemaining(paid.success)).toBe(0);
+    const rejected = spendSpellCastResources({
+      state: paid.success,
+      actorId: wizardId,
+      invocation,
+      errorState: paid.success,
+      metamagicApplications: admitted.applications,
+    });
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      message: "Metamagic requires enough unexpended Sorcery Points.",
+    });
+    expect(rejected.snapshot).toEqual(snapshotBattle(paid.success));
+  });
+
   test("returns typed spend failures for non-owners and exhausted Sorcery Points", () => {
     const session = saveMetamagicBattle({
       knownOptions: [empoweredMetamagicOption()],

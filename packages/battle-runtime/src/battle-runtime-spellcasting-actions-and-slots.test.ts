@@ -1,3 +1,4 @@
+import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { isSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test battle.spell-access-magic-initiate-casting
@@ -64,6 +65,7 @@ import {
   endTurn,
   expendedLevelOneSlots,
   fighterId,
+  goblinId,
   fighterTurnWithReadiedRayAndHealer,
   findHole,
   holeId,
@@ -633,6 +635,25 @@ describe("battle runtime: spellcasting actions and slots", () => {
           )?.usesRemaining
         : undefined,
     ).toBe(Number(usesBefore) - 1);
+    const targetTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: fighterId }),
+    ).state;
+    const nextTurn = requireResolved(
+      endTurn({ state: targetTurn, actorId: goblinId }),
+    ).state;
+    const rejected = spendSpellCastResources({
+      state: nextTurn,
+      actorId: fighterId,
+      invocation,
+      errorState: nextTurn,
+    });
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Spell Access free cast is no longer available for the current actor.",
+    });
+    expect(rejected.snapshot).toEqual(snapshotBattle(nextTurn));
   });
 
   test("prepared Magic Missile asks for an active source damage penalty roll", () => {
