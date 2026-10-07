@@ -1443,7 +1443,14 @@ describe("Stat Block execution references", () => {
         group === limitedGroup
           ? {
               ...group,
-              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+              ...(group.kind === "limited" && group.resourceOwnership === "each"
+                ? {
+                    invocations: group.invocations.map((invocation) => ({
+                      ...invocation,
+                      resourcePoolRef: legendaryPool.resourcePoolRef,
+                    })),
+                  }
+                : { resourcePoolRef: legendaryPool.resourcePoolRef }),
             }
           : group,
       ),
@@ -1493,7 +1500,7 @@ describe("Stat Block execution references", () => {
           : group,
       ),
       spellcastingBinding.procedure.groups.map((group) =>
-        group === limitedGroup ? { ...group, resourcePoolRefs: [] } : group,
+        group === limitedGroup ? { ...group, invocations: [] } : group,
       ),
     ];
     for (const groups of schemaMalformedGroups) {

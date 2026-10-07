@@ -1,3 +1,6 @@
+import { Schema } from "effect";
+import { PositiveInteger } from "@dnd/shared/types";
+import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spellcasting.procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
@@ -132,7 +135,22 @@ function projectSpellcastingProcedure(
 function spellcastingRecord(
   section: SpellcastingSection,
 ): ReturnType<typeof statBlockRecord> {
-  const source = statBlockRecord();
+  const base = statBlockRecord();
+  const source = {
+    ...base,
+    statBlock: {
+      ...base.statBlock,
+      resources: [
+        {
+          ordinal: Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(
+            1,
+          ),
+          ownership: "each" as const,
+          limit: { kind: "daily" as const, uses: PositiveInteger(1) },
+        },
+      ] as const,
+    },
+  };
   const entry = syntheticSpellcastingProcedureEntry();
   if (section === "actions") {
     return {

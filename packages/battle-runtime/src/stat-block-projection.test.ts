@@ -600,13 +600,19 @@ describe("generic Stat Block projection", () => {
       groups: [
         {
           kind: "at_will",
+          groupOrdinal: 0,
           resourceRefs: [],
-          invocations: [{ kind: "unrestricted" }, { kind: "restricted" }],
+          invocations: [
+            { kind: "unrestricted", invocationOrdinal: 0 },
+            { kind: "restricted", invocationOrdinal: 1 },
+          ],
         },
         {
           kind: "limited",
+          groupOrdinal: 1,
+          resourceOwnership: "each",
           resourceRefs: [1],
-          invocations: [{ kind: "unrestricted" }],
+          invocations: [{ kind: "unrestricted", invocationOrdinal: 0 }],
         },
       ],
     });

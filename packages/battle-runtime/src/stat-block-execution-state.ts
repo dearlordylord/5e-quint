@@ -47,6 +47,8 @@ import type { SupportedStatBlockBonusActionStandardAction } from "./battle-reduc
 import { selectedStatBlockAttackRollOptions } from "./statblock-attack-damage-support.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import type {
+  StatBlockSpellcastingGroupOrdinal,
+  StatBlockSpellcastingInvocationOrdinal,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
@@ -84,6 +86,10 @@ export type StatBlockResourceGraphAdmissionFailure =
   | {
       readonly kind: "missingResourceDeclaration";
       readonly ordinal: StatBlockProcedureResourceOrdinal;
+    }
+  | {
+      readonly kind: "invalidSpellcastingResourceOwnership";
+      readonly ordinal: StatBlockProcedureResourceOrdinal;
     };
 
 /**
@@ -120,6 +126,7 @@ export function admitStatBlockResourceGraph<
   const declarations = analyzeStatBlockResourceDeclarations(resources);
   const issues = [
     ...declarations.duplicateIssues,
+    ...spellcastingResourceOwnershipIssues(source.procedures, resources),
     ...missingResourceDeclarationIssues(
       source.procedures,
       declarations.declaredOrdinals,
@@ -173,6 +180,32 @@ function missingResourceDeclarationIssues(
     }
   }
   return missingIssues;
+}
+
+function spellcastingResourceOwnershipIssues(
+  procedures: readonly BattleStatBlockRuntimeProcedure[],
+  resources: readonly BattleStatBlockRuntimeResource[],
+): readonly StatBlockResourceGraphAdmissionFailure[] {
+  return procedures.flatMap((procedure) =>
+    procedure.kind !== "spellcasting"
+      ? []
+      : procedure.groups.flatMap((group) => {
+          if (group.kind !== "limited") return [];
+          const [ordinal] = group.resourceRefs;
+          const resource = resources.find(
+            (resource) => resource.ordinal === ordinal,
+          );
+          return group.resourceRefs.length === 1 &&
+            resource?.ownership === group.resourceOwnership
+            ? []
+            : [
+                {
+                  kind: "invalidSpellcastingResourceOwnership" as const,
+                  ordinal,
+                },
+              ];
+        }),
+  );
 }
 
 function runtimeProcedureResourceRefs(
@@ -334,8 +367,14 @@ export type BattleStatBlockRuntimeMultiattackDispatch = {
  * creating a positional or authored-identity dispatch key.
  */
 export type StatBlockSpellcastingInvocationOutcome =
-  | { readonly kind: "unrestricted" }
-  | { readonly kind: "restricted" };
+  | {
+      readonly kind: "unrestricted";
+      readonly invocationOrdinal: StatBlockSpellcastingInvocationOrdinal;
+    }
+  | {
+      readonly kind: "restricted";
+      readonly invocationOrdinal: StatBlockSpellcastingInvocationOrdinal;
+    };
 
 /**
  * Group facts retain only the execution-relevant group kind, child outcome
@@ -346,11 +385,14 @@ export type StatBlockSpellcastingInvocationOutcome =
 export type BattleStatBlockRuntimeSpellcastingGroup =
   | {
       readonly kind: "at_will";
+      readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
       readonly resourceRefs: readonly [];
       readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
     }
   | {
       readonly kind: "limited";
+      readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
+      readonly resourceOwnership: "each" | "shared";
       readonly resourceRefs: ReadonlyNonEmptyArray<StatBlockProcedureResourceOrdinal>;
       readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
     };
@@ -513,14 +555,58 @@ export type StatBlockBonusActionOptionProcedure = {
 export type StatBlockSpellcastingGroup =
   | {
       readonly kind: "at_will";
+      readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
       readonly resourcePoolRefs: readonly [];
       readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
     }
   | {
       readonly kind: "limited";
-      readonly resourcePoolRefs: ReadonlyNonEmptyArray<BattleResourcePoolExecutionRef>;
+      readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
+      readonly resourceOwnership: "each";
+      readonly invocations: ReadonlyNonEmptyArray<
+        StatBlockSpellcastingInvocationOutcome & {
+          readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+        }
+      >;
+    }
+  | {
+      readonly kind: "limited";
+      readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
+      readonly resourceOwnership: "shared";
+      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
     };
+
+export function statBlockSpellcastingGroupPoolRefs(
+  group: StatBlockSpellcastingGroup,
+): readonly BattleResourcePoolExecutionRef[] {
+  return group.kind === "at_will"
+    ? []
+    : group.resourceOwnership === "shared"
+      ? [group.resourcePoolRef]
+      : group.invocations.map((invocation) => invocation.resourcePoolRef);
+}
+
+export function statBlockSpellcastingPoolAvailable(
+  execution: StatBlockExecutionState,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+): boolean {
+  return statBlockResourcePoolUsesAvailable(
+    execution,
+    new Map([[resourcePoolRef, 1]]),
+  );
+}
+
+export function spendStatBlockSpellcastingPool(
+  execution: StatBlockExecutionState,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+): Result.Result<StatBlockExecutionState, "resourceUnavailable"> {
+  return statBlockSpellcastingPoolAvailable(execution, resourcePoolRef)
+    ? Result.succeed(
+        spendStatBlockResourcePoolUses(execution, [resourcePoolRef]),
+      )
+    : Result.fail("resourceUnavailable");
+}
 
 export type StatBlockSpellcastingProcedure = {
   readonly kind: "spellcasting";

@@ -93,6 +93,11 @@ function statBlockResourceGraphIssueMessage(
       ({ ordinal }) =>
         `Battle runtime requires Stat Block procedure resource reference ${String(ordinal)} to match a declared resource.`,
     ),
+    Match.when(
+      { kind: "invalidSpellcastingResourceOwnership" },
+      ({ ordinal }) =>
+        `spellcasting resource ${String(ordinal)} has invalid ownership`,
+    ),
     Match.exhaustive,
   );
 }

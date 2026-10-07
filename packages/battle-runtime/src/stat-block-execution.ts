@@ -646,25 +646,44 @@ function runtimeSpellcastingGroupBinding(
   >,
   resourcePools: StatBlockResourcePoolState[],
 ): StatBlockSpellcastingGroup {
-  return Match.value(group).pipe(
-    Match.when({ kind: "at_will" }, ({ invocations }) => ({
-      kind: "at_will" as const,
-      resourcePoolRefs: [] as const,
-      invocations,
-    })),
-    Match.when({ kind: "limited" }, ({ invocations, resourceRefs }) => ({
-      kind: "limited" as const,
-      resourcePoolRefs: allocateProcedureResourcePools(
+  if (group.kind === "at_will")
+    return {
+      kind: "at_will",
+      groupOrdinal: group.groupOrdinal,
+      resourcePoolRefs: [],
+      invocations: group.invocations,
+    };
+  if (group.resourceOwnership === "shared") {
+    const [resourcePoolRef] = allocateProcedureResourcePools(
+      allocator,
+      resources,
+      group.resourceRefs,
+      sharedResourcePools,
+      resourcePools,
+    );
+    return {
+      kind: "limited",
+      groupOrdinal: group.groupOrdinal,
+      resourceOwnership: "shared",
+      resourcePoolRef,
+      invocations: group.invocations,
+    };
+  }
+  return {
+    kind: "limited",
+    groupOrdinal: group.groupOrdinal,
+    resourceOwnership: "each",
+    invocations: mapReadonlyNonEmptyArray(group.invocations, (invocation) => {
+      const [resourcePoolRef] = allocateProcedureResourcePools(
         allocator,
         resources,
-        resourceRefs,
+        group.resourceRefs,
         sharedResourcePools,
         resourcePools,
-      ),
-      invocations,
-    })),
-    Match.exhaustive,
-  );
+      );
+      return { ...invocation, resourcePoolRef };
+    }),
+  };
 }
 
 export type StatBlockPresentationAllocation = {

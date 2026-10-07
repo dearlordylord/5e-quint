@@ -7,6 +7,10 @@
 import * as Result from "effect/Result";
 import { Match } from "effect";
 
+import {
+  statBlockSpellcastingGroupOrdinal,
+  statBlockSpellcastingInvocationOrdinal,
+} from "../identity.ts";
 import { Integer, PositiveInteger } from "@dnd/shared/types";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
@@ -256,6 +260,7 @@ export function authoredStatBlockProcedureExecutionDecision(
           resourceRefs: { kind: "none" },
         };
       const runtime = runtimeSpellcastingBinding(
+        source,
         section,
         narrowedEntry,
         procedure,
@@ -457,6 +462,7 @@ function runtimeBonusActionBinding(
 }
 
 function runtimeSpellcastingBinding(
+  source: StandaloneStatBlock,
   section: StatBlockProcedureSection,
   entry: AuthoredExecutableProcedureEntryByKind<"spellcasting">,
   procedure: AuthoredExecutableProcedureEntryByKind<"spellcasting">["procedure"],
@@ -467,21 +473,41 @@ function runtimeSpellcastingBinding(
   if (section !== "actions" && section !== "bonusActions") {
     return Result.fail(procedureBindingIssue(section, entry.procedureOrdinal));
   }
-  const groups = mapReadonlyNonEmptyArray(procedure.groups, (group) =>
-    Match.value(group).pipe(
-      Match.when({ kind: "at_will" }, ({ spells }) => ({
-        kind: "at_will" as const,
-        resourceRefs: [] as const,
-        invocations: runtimeSpellcastingInvocations(spells),
-      })),
-      Match.when({ kind: "limited" }, ({ resourceRefs, spells }) => ({
-        kind: "limited" as const,
-        resourceRefs: resourceRefs.ordinals,
-        invocations: runtimeSpellcastingInvocations(spells),
-      })),
-      Match.exhaustive,
-    ),
+  const unsupportedGroup = procedure.groups.some(
+    (group) =>
+      group.kind === "limited" &&
+      (group.resourceRefs.ordinals.length !== 1 ||
+        source.resources?.find(
+          (resource) => resource.ordinal === group.resourceRefs.ordinals[0],
+        ) === undefined),
   );
+  if (unsupportedGroup)
+    return Result.fail(procedureBindingIssue(section, entry.procedureOrdinal));
+  const groups = mapReadonlyNonEmptyArray(procedure.groups, (group, index) => {
+    const groupOrdinal = statBlockSpellcastingGroupOrdinal(index);
+    const invocations = runtimeSpellcastingInvocations(group.spells);
+    if (group.kind === "at_will")
+      return {
+        kind: "at_will" as const,
+        groupOrdinal,
+        resourceRefs: [] as const,
+        invocations,
+      };
+    const declaration = source.resources?.find(
+      (resource) => resource.ordinal === group.resourceRefs.ordinals[0],
+    );
+    if (declaration === undefined)
+      throw new Error(
+        "Preceding limited group admission proved the declaration exists.",
+      );
+    return {
+      kind: "limited" as const,
+      groupOrdinal,
+      resourceOwnership: declaration.ownership,
+      resourceRefs: group.resourceRefs.ordinals,
+      invocations,
+    };
+  });
   return Result.succeed({
     kind: "spellcasting",
     section,
@@ -524,10 +550,16 @@ function runtimeSpellcastingInvocations(
     { readonly kind: "spellcasting" }
   >["groups"][number]["invocations"][number]
 > {
-  return mapReadonlyNonEmptyArray(spells, (spell) =>
+  return mapReadonlyNonEmptyArray(spells, (spell, index) =>
     spell.restriction === undefined
-      ? { kind: "unrestricted" as const }
-      : { kind: "restricted" as const },
+      ? {
+          kind: "unrestricted" as const,
+          invocationOrdinal: statBlockSpellcastingInvocationOrdinal(index),
+        }
+      : {
+          kind: "restricted" as const,
+          invocationOrdinal: statBlockSpellcastingInvocationOrdinal(index),
+        },
   );
 }
 

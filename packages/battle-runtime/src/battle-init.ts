@@ -479,6 +479,11 @@ export function wildShapeKnownFormsIssueMessage(
                   ({ ordinal }) =>
                     `resource reference ${String(ordinal)} is missing`,
                 ),
+                Match.when(
+                  { kind: "invalidSpellcastingResourceOwnership" },
+                  ({ ordinal }) =>
+                    `spellcasting resource ${String(ordinal)} has invalid ownership`,
+                ),
                 Match.exhaustive,
               ),
             )

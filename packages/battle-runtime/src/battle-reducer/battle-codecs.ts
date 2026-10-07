@@ -1,3 +1,8 @@
+import {
+  StatBlockSpellcastingGroupOrdinal,
+  StatBlockSpellcastingInvocationOrdinal,
+} from "../identity.ts";
+import { statBlockSpellcastingGroupPoolRefs } from "../stat-block-execution-state.ts";
 // Runtime codecs for battle reducer public payloads.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -6314,6 +6319,7 @@ const StatBlockUnarmedStrikeProcedureSchema: StatBlockUnarmedStrikeProcedureCode
   });
 
 const StatBlockSpellcastingInvocationOutcomeSchema = Schema.Struct({
+  invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
   kind: Schema.Literals(["unrestricted", "restricted"]),
 });
 
@@ -6330,6 +6336,7 @@ const StatBlockSpellcastingAttackBonusSchema = Schema.Number.pipe(
 const StatBlockSpellcastingGroupSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("at_will"),
+    groupOrdinal: StatBlockSpellcastingGroupOrdinal,
     resourcePoolRefs: Schema.Tuple([]),
     invocations: Schema.NonEmptyArray(
       StatBlockSpellcastingInvocationOutcomeSchema,
@@ -6337,9 +6344,23 @@ const StatBlockSpellcastingGroupSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("limited"),
-    resourcePoolRefs: Schema.NonEmptyArray(BattleResourcePoolExecutionRef),
+    groupOrdinal: StatBlockSpellcastingGroupOrdinal,
+    resourceOwnership: Schema.Literal("shared"),
+    resourcePoolRef: BattleResourcePoolExecutionRef,
     invocations: Schema.NonEmptyArray(
       StatBlockSpellcastingInvocationOutcomeSchema,
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("limited"),
+    groupOrdinal: StatBlockSpellcastingGroupOrdinal,
+    resourceOwnership: Schema.Literal("each"),
+    invocations: Schema.NonEmptyArray(
+      Schema.Struct({
+        kind: Schema.Literals(["unrestricted", "restricted"]),
+        invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
+        resourcePoolRef: BattleResourcePoolExecutionRef,
+      }),
     ),
   }),
 ]);
@@ -6645,7 +6666,24 @@ function statBlockProcedureBindingGraphIsValid(input: {
       input.actionAttackRefs,
       input.limitedUseActionAttackRefs,
     ) &&
-    bonusActionOptionBindingIsNonempty(input.binding)
+    bonusActionOptionBindingIsNonempty(input.binding) &&
+    spellcastingInvocationCoordinatesAreCanonical(input.binding)
+  );
+}
+
+function spellcastingInvocationCoordinatesAreCanonical(
+  binding: StatBlockProcedureBindingInvariantInput,
+): boolean {
+  return (
+    binding.procedure.kind !== "spellcasting" ||
+    binding.procedure.groups.every(
+      (group, groupIndex) =>
+        group.groupOrdinal === groupIndex &&
+        group.invocations.every(
+          (invocation, invocationIndex) =>
+            invocation.invocationOrdinal === invocationIndex,
+        ),
+    )
   );
 }
 
@@ -6688,9 +6726,7 @@ function statBlockProcedureResourcePoolRefs(
   return binding.procedure.kind === "spellcasting"
     ? [
         ...binding.resourcePoolRefs,
-        ...binding.procedure.groups.flatMap(
-          ({ resourcePoolRefs }) => resourcePoolRefs,
-        ),
+        ...binding.procedure.groups.flatMap(statBlockSpellcastingGroupPoolRefs),
       ]
     : binding.resourcePoolRefs;
 }
@@ -6705,7 +6741,8 @@ function statBlockProcedureResourceRefsAreUnique(
   }
   return binding.procedure.groups.every(
     (group) =>
-      new Set(group.resourcePoolRefs).size === group.resourcePoolRefs.length,
+      new Set(statBlockSpellcastingGroupPoolRefs(group)).size ===
+      statBlockSpellcastingGroupPoolRefs(group).length,
   );
 }
 
