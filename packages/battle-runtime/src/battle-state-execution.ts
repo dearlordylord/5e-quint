@@ -2434,14 +2434,20 @@ export type SpellSelectedFailedSaveConditionEffect =
 export type SpellFailedSaveAttackRollEffect = BattleSpellActiveEffectTemplate<
   Extract<BattleActiveEffect, { readonly kind: "saveGatedTargetProjection" }>
 >;
-type AuthoredInvocationWithCastingFacts<Invocation, Facts> = Facts extends {
+type StatBlockInitialAuthoredCastingFacts = {
   readonly access: { readonly tag: "statBlockCantrip" | "statBlockLeveled" };
-}
-  ? Omit<Invocation, "spell" | "access" | "resource" | "actionCost"> &
-      Facts & {
+};
+type AuthoredInvocationWithCastingFacts<Invocation, Facts> = Omit<
+  Invocation,
+  "spell" | "access" | "resource" | "actionCost"
+> &
+  (
+    | (Extract<Facts, StatBlockInitialAuthoredCastingFacts> & {
         readonly actionCost: "magicAction" | "bonusAction";
-      }
-  : Omit<Invocation, "spell" | "access" | "resource"> & Facts;
+      })
+    | (Exclude<Facts, StatBlockInitialAuthoredCastingFacts> &
+        Pick<Invocation, Extract<"actionCost", keyof Invocation>>)
+  );
 type CanonicalAuthoredSpellInvocation<Invocation> = Invocation extends {
   readonly spell: infer Spell;
   readonly access: infer Access;

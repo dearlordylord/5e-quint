@@ -1,5 +1,5 @@
 import type { MovementFeet, SpellSlotLevel } from "@dnd/shared/types";
-import type { Ability, DcSource, SpellLevel } from "@dnd/surface/surface/types";
+import type { Ability, DcSource } from "@dnd/surface/surface/types";
 import type {
   BattleResourcePoolExecutionRef,
   StatBlockSpellInvocationRef,
@@ -55,6 +55,12 @@ export type SpellEffectSpellAccess = {
   readonly tag: "spellEffect";
   readonly sourceCombatantId: CombatantId;
 };
+export type SpellAccess =
+  | CantripSpellAccess
+  | LeveledSpellAccess
+  | ArmorOfShadowsSpellAccess
+  | SpellEffectSpellAccess;
+
 export type StatBlockSpellInvocationResource<
   Level extends SpellSlotLevel | 0 = SpellSlotLevel | 0,
 > =
@@ -82,6 +88,10 @@ export type LeveledSpellInvocationResource =
   | StatBlockSpellInvocationResource<SpellSlotLevel>
   | SpellSlotInvocationResource
   | SpellAccessFreeCastInvocationResource;
+
+export type SpellInvocationResource =
+  | CantripSpellInvocationResource
+  | LeveledSpellInvocationResource;
 
 export type RollModifierSpellSaveGate = {
   readonly ability: Ability;
