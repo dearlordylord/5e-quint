@@ -1442,6 +1442,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1548,6 +1549,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1603,6 +1605,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1672,6 +1675,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1736,6 +1740,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -1774,6 +1779,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1830,6 +1836,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1882,6 +1889,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1922,6 +1930,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -1968,6 +1977,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -2025,6 +2035,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -2063,6 +2074,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -2133,6 +2145,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -2198,6 +2211,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -2250,6 +2264,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: goblinWarriorMultiattackStatBlock(root),
               initiative: initiativeScore(11),
             },
@@ -2306,6 +2321,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -3797,6 +3813,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -3885,6 +3902,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -3964,6 +3982,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -8380,6 +8399,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),
@@ -9602,6 +9622,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -9656,6 +9677,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -9720,6 +9742,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -9783,6 +9806,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -9934,6 +9958,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -10133,6 +10158,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -10482,6 +10508,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -10635,6 +10662,7 @@ describe("MCP server route", () => {
         {
           ...{
             combatantId: goblinId,
+            unitCatalog: root.unitLibrary,
             statBlock: assertStatBlockForTest(
               root.statBlockCatalog,
               statBlockId("stat_block_goblin_warrior"),
@@ -10926,6 +10954,7 @@ describe("MCP server route", () => {
           {
             ...{
               combatantId: goblinId,
+              unitCatalog: root.unitLibrary,
               statBlock: assertStatBlockForTest(
                 root.statBlockCatalog,
                 statBlockId("stat_block_goblin_warrior"),

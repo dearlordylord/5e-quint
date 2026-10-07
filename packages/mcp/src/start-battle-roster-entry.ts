@@ -184,6 +184,7 @@ export function rosterEntryForToolCombatant(input: {
                 input: {
                   combatantId: combatant.combatantId,
                   statBlock: statBlock.value,
+                  unitCatalog: input.root.unitLibrary,
                   initiative: combatant.initiative,
                   ammunitionStocks: combatant.ammunitionStocks,
                   conditions: [],

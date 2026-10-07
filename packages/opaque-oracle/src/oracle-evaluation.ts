@@ -532,6 +532,7 @@ function resolveBattleRoster(input: {
         input: {
           combatantId: entry.combatantId,
           statBlock: statBlock.value,
+          unitCatalog: input.unitLibrary,
           initiative: initiativeScore(entry.initiative),
           ammunitionStocks,
           conditions: entry.conditions,

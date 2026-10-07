@@ -500,6 +500,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
         characterInit,
         authoredStatBlockBattleInit({
           combatantId: lifecycleSkeletonCombatantId,
+          unitCatalog: unitLibrary,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
             statBlockId("stat_block_skeleton"),

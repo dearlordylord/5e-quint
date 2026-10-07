@@ -645,6 +645,7 @@ function startSheetDerivedSession(
 function battleCreatureInitFromRidingHorse() {
   return authoredStatBlockBattleInit({
     combatantId: targetCombatantId,
+    unitCatalog: unitLibrary,
     statBlock: assertStatBlockForTest(
       statBlockCatalog,
       statBlockId("stat_block_riding_horse"),

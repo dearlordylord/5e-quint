@@ -1163,6 +1163,7 @@ export function monsterBattleInput(
   return {
     combatantId: id,
     statBlock,
+    unitCatalog: unitLibrary,
     initiative: initiativeScore(initiative),
     ammunitionStocks: testAmmunitionStocksForStatBlock(statBlock),
     conditions: [],

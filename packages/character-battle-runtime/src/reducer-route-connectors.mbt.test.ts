@@ -1031,6 +1031,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
         characterInit,
         authoredStatBlockBattleInit({
           combatantId: targetCombatantId,
+          unitCatalog: unitLibrary,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
             authoredStatBlockId("stat_block_skeleton"),
@@ -1527,6 +1528,7 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
           kind: "available",
           input: {
             combatantId: combatantId("combatant:route-origin-feat-skeleton"),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),

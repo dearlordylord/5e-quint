@@ -474,6 +474,7 @@ describe("Character Sheet battle handoff", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("magic-initiate-target"),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -1292,6 +1293,7 @@ describe("Character Sheet battle handoff", () => {
             kind: "available",
             input: {
               combatantId: monsterCombatantId,
+              unitCatalog: unitLibrary,
               statBlock: assertStatBlockForTest(
                 statBlockCatalog,
                 authoredStatBlockId("stat_block_skeleton"),
@@ -1389,6 +1391,7 @@ describe("Character Sheet battle handoff", () => {
               kind: "available",
               input: {
                 combatantId: characterCombatantId,
+                unitCatalog: unitLibrary,
                 statBlock: assertStatBlockForTest(
                   statBlockCatalog,
                   authoredStatBlockId("stat_block_skeleton"),
@@ -1825,6 +1828,7 @@ describe("Character Sheet battle handoff", () => {
           kind: "available",
           input: {
             combatantId: sharedCombatantId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -1922,6 +1926,7 @@ describe("Character Sheet battle handoff", () => {
           kind: "available",
           input: {
             combatantId: projectionCombatantId,
+            unitCatalog: unitLibrary,
             statBlock: projectionFailureStatBlock,
             initiative: initiativeScore(12),
             ammunitionStocks: testAmmunitionStocksForStatBlock(
@@ -1937,6 +1942,7 @@ describe("Character Sheet battle handoff", () => {
           kind: "available",
           input: {
             combatantId: resourceCombatantId,
+            unitCatalog: unitLibrary,
             statBlock: duplicateResourceStatBlock,
             initiative: initiativeScore(11),
             ammunitionStocks: testAmmunitionStocksForStatBlock(
@@ -1952,6 +1958,7 @@ describe("Character Sheet battle handoff", () => {
           kind: "available",
           input: {
             combatantId: immunityCombatantId,
+            unitCatalog: unitLibrary,
             statBlock: initialConditionImmuneStatBlock,
             initiative: initiativeScore(10),
             ammunitionStocks: testAmmunitionStocksForStatBlock(
@@ -2520,6 +2527,7 @@ describe("Character Sheet battle handoff", () => {
           ),
           battleCreatureInitFromStatBlock({
             combatantId: statBlockCombatantId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -2980,6 +2988,7 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -3466,6 +3475,7 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: companionId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_cat"),
@@ -3514,6 +3524,7 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: companionId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_rat"),
@@ -4029,6 +4040,7 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -4147,6 +4159,7 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -4271,6 +4284,7 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -4479,6 +4493,7 @@ describe("Character Sheet battle handoff", () => {
           init,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:no-catalog-skeleton"),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -4545,6 +4560,7 @@ describe("Character Sheet battle handoff", () => {
           init,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:wild-shape-subset-skeleton"),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -5553,6 +5569,7 @@ describe("Character Sheet battle handoff", () => {
               kind: "available",
               input: {
                 combatantId: combatantId("stable-init-entry-skeleton"),
+                unitCatalog: unitLibrary,
                 statBlock: assertStatBlockForTest(
                   statBlockCatalog,
                   authoredStatBlockId("stat_block_skeleton"),
@@ -6770,6 +6787,7 @@ describe("Character Sheet battle handoff", () => {
             combatantId: combatantId(
               "combatant:sorcerer-font-battle-closed-skeleton",
             ),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -6873,6 +6891,7 @@ describe("Character Sheet battle handoff", () => {
           characterInit,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:skeleton-metamagic"),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -8289,6 +8308,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("invalid-build-boundary-stat-block"),
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -9749,6 +9769,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -9943,6 +9964,7 @@ describe("Character Build battle projection", () => {
               kind: "available",
               input: {
                 combatantId: combatantId("combatant:pact-tome-opponent"),
+                unitCatalog: unitLibrary,
                 statBlock: assertStatBlockForTest(
                   statBlockCatalog,
                   authoredStatBlockId("stat_block_skeleton"),
@@ -10444,6 +10466,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -10510,6 +10533,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -10779,6 +10803,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -10860,6 +10885,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -11239,6 +11265,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_goblin_warrior"),
@@ -11332,6 +11359,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_goblin_warrior"),
@@ -11820,6 +11848,7 @@ describe("Character Build battle projection", () => {
           }),
           battleCreatureInitFromStatBlock({
             combatantId: targetId,
+            unitCatalog: unitLibrary,
             statBlock: assertStatBlockForTest(
               statBlockCatalog,
               authoredStatBlockId("stat_block_skeleton"),
@@ -12926,6 +12955,7 @@ function startDruidWildShapeSheetBattle(
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("skeleton"),
+          unitCatalog: unitLibrary,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
             authoredStatBlockId("stat_block_skeleton"),
@@ -14448,6 +14478,7 @@ function handoffBranchSession(
       combatants: [
         battleCreatureInitFromStatBlock({
           combatantId: combatant.combatantId,
+          unitCatalog: unitLibrary,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
             authoredStatBlockId("stat_block_skeleton"),

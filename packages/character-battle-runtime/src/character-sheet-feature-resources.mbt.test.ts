@@ -741,6 +741,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
         characterInit,
         authoredStatBlockBattleInit({
           combatantId: combatantId("combatant:metamagic-skeleton"),
+          unitCatalog: unitLibrary,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
             authoredStatBlockId("stat_block_skeleton"),

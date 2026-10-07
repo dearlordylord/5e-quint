@@ -1697,6 +1697,7 @@ function statBlock(
         };
   return {
     combatantId: input.combatantId,
+    unitCatalog: root.unitLibrary,
     statBlock:
       input.displayName === undefined
         ? battleStatBlock

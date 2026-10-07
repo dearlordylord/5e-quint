@@ -439,6 +439,7 @@ describe("MCP character sessions", () => {
     );
     const combatant = {
       combatantId: combatantId("store-transition-goblin"),
+      unitCatalog: unitLibrary,
       statBlock: goblin,
       initiative: initiativeScore(10),
       currentHp: Hp(10),
@@ -567,6 +568,7 @@ describe("MCP character sessions", () => {
     );
     const initial = {
       combatantId: combatantId("store-plan-initial"),
+      unitCatalog: unitLibrary,
       statBlock: goblin,
       initiative: initiativeScore(10),
       currentHp: Hp(10),
@@ -576,6 +578,7 @@ describe("MCP character sessions", () => {
     };
     const staleCombatant = {
       combatantId: combatantId("store-plan-stale"),
+      unitCatalog: unitLibrary,
       statBlock: skeleton,
       initiative: initiativeScore(8),
       currentHp: Hp(10),
@@ -585,6 +588,7 @@ describe("MCP character sessions", () => {
     };
     const interveningCombatant = {
       combatantId: combatantId("store-plan-intervening"),
+      unitCatalog: unitLibrary,
       statBlock: wolf,
       initiative: initiativeScore(6),
       currentHp: Hp(10),
@@ -594,6 +598,7 @@ describe("MCP character sessions", () => {
     };
     const foreignCombatant = {
       combatantId: combatantId("store-plan-foreign"),
+      unitCatalog: unitLibrary,
       statBlock: skeleton,
       initiative: initiativeScore(4),
       currentHp: Hp(10),
@@ -686,6 +691,7 @@ describe("MCP character sessions", () => {
     );
     const goblin = {
       combatantId: combatantId("store-plan-character-goblin"),
+      unitCatalog: unitLibrary,
       statBlock: assertStatBlockForTest(
         root.statBlockCatalog,
         statBlockId("stat_block_goblin_warrior"),
@@ -749,6 +755,7 @@ describe("MCP character sessions", () => {
     });
     const goblin = {
       combatantId: combatantId("store-plan-fills-goblin"),
+      unitCatalog: unitLibrary,
       statBlock: assertStatBlockForTest(
         root.statBlockCatalog,
         statBlockId("stat_block_goblin_warrior"),
@@ -761,6 +768,7 @@ describe("MCP character sessions", () => {
     };
     const skeleton = {
       combatantId: combatantId("store-plan-fills-skeleton"),
+      unitCatalog: unitLibrary,
       statBlock: assertStatBlockForTest(
         root.statBlockCatalog,
         statBlockId("stat_block_skeleton"),

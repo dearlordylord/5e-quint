@@ -419,6 +419,7 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
   };
   const statBlockEntryInput = {
     combatantId: combatantId("combatant:origin-feat-skeleton"),
+    unitCatalog: unitLibrary,
     statBlock: assertStatBlockForTest(
       statBlockCatalog,
       authoredStatBlockId("stat_block_skeleton"),

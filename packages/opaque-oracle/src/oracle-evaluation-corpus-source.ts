@@ -487,6 +487,7 @@ export function startStatBlockBattle(
     initialized.push({
       combatantId: placement.combatantId,
       statBlock: statBlock.value,
+      unitCatalog: services.unitLibrary,
       initiative: placement.initiative,
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
       conditions: [],

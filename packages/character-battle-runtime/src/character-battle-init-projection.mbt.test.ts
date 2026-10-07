@@ -434,6 +434,7 @@ function projectCharacterBattle(input: {
         characterInit,
         authoredStatBlockBattleInit({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
+          unitCatalog: unitLibrary,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
             statBlockId("stat_block_skeleton"),
