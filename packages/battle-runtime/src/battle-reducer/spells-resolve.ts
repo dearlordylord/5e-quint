@@ -374,7 +374,7 @@ type ResolveSpellActInternalOptions =
       readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
     }
   | {
-      readonly kind: "bonusActionSpellAttackProxy";
+      readonly kind: "spatialMeleeSpellAttackProxy";
       readonly actionCostOverride?: never;
       readonly metamagicApplications?: never;
     };
@@ -1771,7 +1771,7 @@ function resolveSpellActInternal(
   const boundInvocation = creatureSpellProcedure(actor, subject.procedureRef);
   const invocationCandidate =
     selectedProcedureInvocation ??
-    (options.kind === "bonusActionSpellAttackProxy" &&
+    (options.kind === "spatialMeleeSpellAttackProxy" &&
     boundInvocation !== undefined &&
     invocationRefHasAntimagicSuppressedRepeatResolverGuard(
       boundInvocation.procedure,
@@ -1919,7 +1919,7 @@ function resolveSpellActInternal(
     "actionCost" in invocation &&
     invocation.actionCost === "bonusAction" &&
     lane.tag === "action" &&
-    options.kind !== "bonusActionSpellAttackProxy" &&
+    options.kind !== "spatialMeleeSpellAttackProxy" &&
     !(
       lane.tag === "action" &&
       lane.input.replayingInterruptedProcedure === true &&
@@ -3904,21 +3904,13 @@ export function resolveBonusActionSpellAct(
   );
 }
 
-export function resolveBonusActionSpellAttackProxyAct(
-  input: BonusActionSpellBattleResolutionInput,
+export function resolveSpatialMeleeSpellAttackProxyAct(
+  input: SpellActInternalInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  const result = resolveSpellActInternal(
-    {
-      ...input,
-      subject: {
-        ...input.subject,
-        tag: "actionSpell",
-      },
-    },
-    executionRegistry,
-    { kind: "bonusActionSpellAttackProxy" },
-  );
+  const result = resolveSpellActInternal(input, executionRegistry, {
+    kind: "spatialMeleeSpellAttackProxy",
+  });
   return result.tag === "needsHoles"
     ? {
         ...result,

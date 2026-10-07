@@ -32,6 +32,7 @@ export function spellHasAvailableSpend(
   const resource = invocation.resource;
   if (actor.origin.kind === "statBlock")
     return (
+      (invocation.access.tag === "spellEffect" && resource.tag === "none") ||
       resource.tag === "statBlockAtWill" ||
       (resource.tag === "statBlockLimited" &&
         statBlockSpellcastingPoolAvailable(
