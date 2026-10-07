@@ -51,6 +51,40 @@ export type AuthoredStatBlockProjection = {
   readonly presentation: BattleStatBlockPresentationSource;
 };
 
+export function resolveAuthoredStatBlockSize(
+  record: StatBlockRecord,
+  selectedSize: Size | undefined,
+): Result.Result<StatBlockRecord, BattleStatBlockProjectionFailure> {
+  if (selectedSize === undefined) return Result.succeed(record);
+
+  const authoredSize = record.statBlock.size;
+  if (typeof authoredSize === "string") {
+    return Result.fail({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "inapplicableSizeSelection",
+      statBlockId: record.id,
+      selectedSize,
+      authoredSize,
+    });
+  }
+  if (!authoredSize.options.includes(selectedSize)) {
+    return Result.fail({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "invalidSizeSelection",
+      statBlockId: record.id,
+      selectedSize,
+      availableSizes: authoredSize.options,
+    });
+  }
+  return Result.succeed({
+    ...record,
+    statBlock: {
+      ...record.statBlock,
+      size: selectedSize,
+    },
+  });
+}
+
 /**
  * The catalog admission boundary. The authored record is consumed once;
  * execution receives only literal mechanics and ordinal bindings while the

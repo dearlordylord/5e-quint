@@ -237,7 +237,6 @@ const sdkSpellCaster: Parameters<
   provenance: { kind: "synthetic-test", section: "packed SDK consumer" },
   statBlock: {
     ...priestFacts,
-    size: "medium",
     actions: [
       {
         kind: "executable",
@@ -258,6 +257,45 @@ const sdkSpellCaster: Parameters<
   },
 };
 const sdkSpellCasterId = battle.combatantId("synthetic-sdk-spellcaster");
+const sdkPriestSession = requireSuccess(
+  battle.startBattle({
+    battleId: battle.battleId("sdk-published-size-selection"),
+    combatants: [
+      {
+        combatantId: sdkSpellCasterId,
+        statBlock: priest,
+        unitCatalog,
+        size: "medium",
+        initiative: battle.initiativeScore(20),
+        ammunitionStocks: [],
+        conditions: [],
+      },
+    ],
+  }),
+  "SDK published Priest size selection",
+);
+const sdkPriestActor = sdkPriestSession.state.combatants.get(sdkSpellCasterId);
+if (sdkPriestActor?.origin.kind !== "statBlock")
+  throw new Error("Expected published Priest");
+const sdkPriestRestored = requireSuccess(
+  battle.restoreAuthoredStatBlockExecutionAdmission({
+    state: sdkPriestSession.state,
+    actorId: sdkSpellCasterId,
+    statBlock: priest,
+    unitCatalog,
+    snapshot: Schema.decodeUnknownSync(battle.StatBlockExecutionSnapshotSchema)(
+      JSON.parse(
+        JSON.stringify(
+          Schema.encodeSync(battle.StatBlockExecutionSnapshotSchema)(
+            sdkPriestActor.origin.execution,
+          ),
+        ),
+      ),
+    ),
+  }),
+  "SDK published Priest source-backed restore",
+);
+assert.deepEqual(sdkPriestRestored.execution, sdkPriestActor.origin.execution);
 const sdkSpellSession = requireSuccess(
   battle.startBattle({
     battleId: battle.battleId("synthetic-sdk-stat-block-spell"),
@@ -265,6 +303,7 @@ const sdkSpellSession = requireSuccess(
       {
         combatantId: sdkSpellCasterId,
         statBlock: sdkSpellCaster,
+        size: "medium",
         unitCatalog,
         initiative: battle.initiativeScore(20),
         ammunitionStocks: [],

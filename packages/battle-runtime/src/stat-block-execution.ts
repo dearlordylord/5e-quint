@@ -1,8 +1,17 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.limited-group
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { BattleState } from "./battle-state-execution.ts";
 import type { BattleStatBlockProjectionFailure } from "./stat-block-projection-failure.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  projectAuthoredStatBlock,
+  resolveAuthoredStatBlockSize,
+} from "./stat-block-authored-projection.ts";
 import { statBlockSpellInvocationAdmissionPlan } from "./stat-block-spell-invocation-admission-plan.ts";
 import { admitStatBlockSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { statBlockSpellDispatchBindingsAreValid } from "./stat-block-spell-invocation-selection.ts";
@@ -1092,7 +1101,13 @@ export function restoreAuthoredStatBlockExecutionAdmission(input: {
   const actor = input.state.combatants.get(input.actorId);
   if (actor?.origin.kind !== "statBlock")
     return Result.fail("missingStatBlockActor");
-  const projected = projectAuthoredStatBlock(input.statBlock);
+  const resolvedStatBlock = resolveAuthoredStatBlockSize(
+    input.statBlock,
+    typeof input.statBlock.statBlock.size === "string" ? undefined : actor.size,
+  );
+  if (Result.isFailure(resolvedStatBlock))
+    return Result.fail(resolvedStatBlock.failure);
+  const projected = projectAuthoredStatBlock(resolvedStatBlock.success);
   if (Result.isFailure(projected)) return Result.fail(projected.failure);
   const source = admitStatBlockResourceGraph(projected.success.runtime);
   if (Result.isFailure(source))
@@ -1111,7 +1126,10 @@ export function restoreAuthoredStatBlockExecutionAdmission(input: {
   const expected = admitStatBlockSpellInvocations(
     { ...actor, origin: { ...actor.origin, execution: allocated.execution } },
     input.state,
-    statBlockSpellInvocationAdmissionPlan(input.statBlock, input.unitCatalog),
+    statBlockSpellInvocationAdmissionPlan(
+      resolvedStatBlock.success,
+      input.unitCatalog,
+    ),
   );
   if (Result.isFailure(expected)) return Result.fail(expected.failure);
   const restoration = { statBlock: source.success, snapshot: input.snapshot };

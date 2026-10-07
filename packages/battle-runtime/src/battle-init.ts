@@ -48,6 +48,7 @@ import type {
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import {
   projectAuthoredStatBlock,
+  resolveAuthoredStatBlockSize,
   type AuthoredStatBlockProjection,
 } from "./stat-block-authored-projection.ts";
 import { battleStatBlockProjectionFailureMessage } from "./stat-block-projection-failure.ts";
@@ -716,40 +717,6 @@ export function projectAuthoredStatBlockBattleInit(
       resolvedStatBlock.success,
       input.unitCatalog,
     ),
-  });
-}
-
-function resolveAuthoredStatBlockSize(
-  record: StatBlockRecord,
-  selectedSize: Size | undefined,
-): Result.Result<StatBlockRecord, BattleStatBlockProjectionFailure> {
-  if (selectedSize === undefined) return Result.succeed(record);
-
-  const authoredSize = record.statBlock.size;
-  if (typeof authoredSize === "string") {
-    return Result.fail({
-      tag: "battleStatBlockProjectionFailure",
-      reason: "inapplicableSizeSelection",
-      statBlockId: record.id,
-      selectedSize,
-      authoredSize,
-    });
-  }
-  if (!authoredSize.options.includes(selectedSize)) {
-    return Result.fail({
-      tag: "battleStatBlockProjectionFailure",
-      reason: "invalidSizeSelection",
-      statBlockId: record.id,
-      selectedSize,
-      availableSizes: authoredSize.options,
-    });
-  }
-  return Result.succeed({
-    ...record,
-    statBlock: {
-      ...record.statBlock,
-      size: selectedSize,
-    },
   });
 }
 
