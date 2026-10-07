@@ -20,6 +20,16 @@ module statBlockSpellcastingGroup {
         if (invocation.in(data.invocations)) Set(data.pool) else Set()
     }
 
+  pure def canonicalSpellcastingPoolBindings(group: LimitedSpellcastingGroup, pools: int -> StatBlockLimitedUseResource): bool =
+    match group {
+      | EachInvocationPool(bindings) => all {
+          bindings.keys().size() > 0,
+          bindings.keys().forall(invocation => bindings.get(invocation).in(pools.keys())),
+          bindings.keys().forall(left => bindings.keys().forall(right => left == right or bindings.get(left) != bindings.get(right))),
+        }
+      | SharedGroupPool(data) => data.invocations.size() > 0 and data.pool.in(pools.keys())
+    }
+
   pure def spendSelectedSpellcastingInvocation(
     pools: int -> StatBlockLimitedUseResource,
     group: LimitedSpellcastingGroup,
@@ -28,7 +38,7 @@ module statBlockSpellcastingGroup {
   ): LimitedSpellcastingSpend = {
     val selected = selectedInvocationPool(group, invocation)
     val available = selected.filter(pool => pool.in(pools.keys()))
-    if (not(executionAdmitted) or available.size() != 1) {
+    if (not(executionAdmitted) or not(canonicalSpellcastingPoolBindings(group, pools)) or available.size() != 1) {
       pools: pools, admitted: false,
     } else {
       val pool = available.fold(0, (_, selectedPool) => selectedPool)
@@ -74,6 +84,17 @@ module statBlockSpellcastingGroup {
       assert(longRest == pools),
       assert(selectedInvocationPool(group, 0) == Set(1)),
       assert(selectedInvocationPool(group, 1) == Set(2)),
+    }
+  }
+
+  run test_rejectAliasedIndependentPools = {
+    val pools = Map(1 -> StatBlockDailyUse(initialStatBlockDailyUseResource))
+    val group = EachInvocationPool(Map(0 -> 1, 1 -> 1))
+    val result = spendSelectedSpellcastingInvocation(pools, group, 0, true)
+    all {
+      assert(not(canonicalSpellcastingPoolBindings(group, pools))),
+      assert(not(result.admitted)),
+      assert(result.pools == pools),
     }
   }
 

@@ -1,3 +1,4 @@
+import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spellcasting.limited-group
 import { describe, expect, test } from "vitest";
@@ -105,6 +106,40 @@ test("restoration preserves each ownership, depleted selected pool, and unselect
   expect(statBlockExecutionSnapshot(restored.success.execution)).toEqual(
     snapshot,
   );
+});
+
+test("snapshot boundary rejects aliased each invocation pools", () => {
+  const { admission, group } = executionFor("each");
+  if (group.kind !== "limited" || group.resourceOwnership !== "each")
+    throw new Error("Expected each ownership.");
+  const snapshot = statBlockExecutionSnapshot(admission.execution);
+  const malformed = {
+    ...snapshot,
+    procedureBindings: snapshot.procedureBindings.map((binding) =>
+      binding.procedure.kind !== "spellcasting"
+        ? binding
+        : {
+            ...binding,
+            procedure: {
+              ...binding.procedure,
+              groups: binding.procedure.groups.map((candidate) =>
+                candidate !== group
+                  ? candidate
+                  : {
+                      ...group,
+                      invocations: group.invocations.map((invocation) => ({
+                        ...invocation,
+                        resourcePoolRef: group.invocations[0].resourcePoolRef,
+                      })),
+                    },
+              ),
+            },
+          },
+    ),
+  };
+  expect(() =>
+    Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(malformed),
+  ).toThrow();
 });
 
 describe("limited spellcasting pool ownership", () => {

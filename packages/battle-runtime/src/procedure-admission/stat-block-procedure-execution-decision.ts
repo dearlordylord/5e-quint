@@ -504,7 +504,7 @@ function runtimeSpellcastingBinding(
       kind: "limited" as const,
       groupOrdinal,
       resourceOwnership: declaration.ownership,
-      resourceRefs: group.resourceRefs.ordinals,
+      resourceRefs: [group.resourceRefs.ordinals[0]] as const,
       invocations,
     };
   });

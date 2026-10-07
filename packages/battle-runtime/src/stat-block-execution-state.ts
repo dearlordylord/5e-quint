@@ -393,7 +393,7 @@ export type BattleStatBlockRuntimeSpellcastingGroup =
       readonly kind: "limited";
       readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
       readonly resourceOwnership: "each" | "shared";
-      readonly resourceRefs: ReadonlyNonEmptyArray<StatBlockProcedureResourceOrdinal>;
+      readonly resourceRefs: readonly [StatBlockProcedureResourceOrdinal];
       readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
     };
 
@@ -580,11 +580,16 @@ export type StatBlockSpellcastingGroup =
 export function statBlockSpellcastingGroupPoolRefs(
   group: StatBlockSpellcastingGroup,
 ): readonly BattleResourcePoolExecutionRef[] {
-  return group.kind === "at_will"
-    ? []
-    : group.resourceOwnership === "shared"
-      ? [group.resourcePoolRef]
-      : group.invocations.map((invocation) => invocation.resourcePoolRef);
+  return Match.value(group).pipe(
+    Match.when({ kind: "at_will" }, () => []),
+    Match.when({ kind: "limited", resourceOwnership: "shared" }, (group) => [
+      group.resourcePoolRef,
+    ]),
+    Match.when({ kind: "limited", resourceOwnership: "each" }, (group) =>
+      group.invocations.map((invocation) => invocation.resourcePoolRef),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function statBlockSpellcastingPoolAvailable(

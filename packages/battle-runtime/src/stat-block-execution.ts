@@ -646,44 +646,54 @@ function runtimeSpellcastingGroupBinding(
   >,
   resourcePools: StatBlockResourcePoolState[],
 ): StatBlockSpellcastingGroup {
-  if (group.kind === "at_will")
-    return {
-      kind: "at_will",
+  return Match.value(group).pipe(
+    Match.when({ kind: "at_will" }, (group) => ({
+      kind: "at_will" as const,
       groupOrdinal: group.groupOrdinal,
-      resourcePoolRefs: [],
+      resourcePoolRefs: [] as const,
       invocations: group.invocations,
-    };
-  if (group.resourceOwnership === "shared") {
-    const [resourcePoolRef] = allocateProcedureResourcePools(
-      allocator,
-      resources,
-      group.resourceRefs,
-      sharedResourcePools,
-      resourcePools,
-    );
-    return {
-      kind: "limited",
-      groupOrdinal: group.groupOrdinal,
-      resourceOwnership: "shared",
-      resourcePoolRef,
-      invocations: group.invocations,
-    };
-  }
-  return {
-    kind: "limited",
-    groupOrdinal: group.groupOrdinal,
-    resourceOwnership: "each",
-    invocations: mapReadonlyNonEmptyArray(group.invocations, (invocation) => {
-      const [resourcePoolRef] = allocateProcedureResourcePools(
-        allocator,
-        resources,
-        group.resourceRefs,
-        sharedResourcePools,
-        resourcePools,
-      );
-      return { ...invocation, resourcePoolRef };
-    }),
-  };
+    })),
+    Match.when({ kind: "limited" }, (group) =>
+      Match.value(group.resourceOwnership).pipe(
+        Match.when("shared", () => {
+          const [resourcePoolRef] = allocateProcedureResourcePools(
+            allocator,
+            resources,
+            group.resourceRefs,
+            sharedResourcePools,
+            resourcePools,
+          );
+          return {
+            kind: "limited" as const,
+            groupOrdinal: group.groupOrdinal,
+            resourceOwnership: "shared" as const,
+            resourcePoolRef,
+            invocations: group.invocations,
+          };
+        }),
+        Match.when("each", () => ({
+          kind: "limited" as const,
+          groupOrdinal: group.groupOrdinal,
+          resourceOwnership: "each" as const,
+          invocations: mapReadonlyNonEmptyArray(
+            group.invocations,
+            (invocation) => {
+              const [resourcePoolRef] = allocateProcedureResourcePools(
+                allocator,
+                resources,
+                group.resourceRefs,
+                sharedResourcePools,
+                resourcePools,
+              );
+              return { ...invocation, resourcePoolRef };
+            },
+          ),
+        })),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export type StatBlockPresentationAllocation = {
