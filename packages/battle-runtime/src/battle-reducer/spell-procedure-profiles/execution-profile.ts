@@ -95,7 +95,10 @@ type CharacterInitialCastingFacts = Exclude<
 export function spellProcedureExecutionSchema<
   const F extends Schema.Struct.Fields,
 >(schema: Schema.Struct<F>) {
-  const character = Schema.refine(
+  const character = Schema.refine<
+    typeof schema,
+    Schema.Struct<F>["Type"] & CharacterInitialCastingFacts
+  >(
     (
       value: Schema.Struct<F>["Type"],
     ): value is Schema.Struct<F>["Type"] & CharacterInitialCastingFacts =>
@@ -107,10 +110,19 @@ export function spellProcedureExecutionSchema<
     ...schema.fields,
     actionCost: Schema.Literals(["magicAction", "bonusAction"]),
   });
-  const statBlock = Schema.refine(
+  const statBlock = Schema.refine<
+    typeof statBlockSchema,
+    typeof statBlockSchema.Type & StatBlockInitialCastingFacts
+  >(
     (
       value: typeof statBlockSchema.Type,
     ): value is typeof statBlockSchema.Type & StatBlockInitialCastingFacts => {
+      if (
+        typeof value !== "object" ||
+        value === null ||
+        !("actionCost" in value)
+      )
+        return false;
       const currentActionCost = value.actionCost;
       if (!isSpellInvocationCastingFacts(value)) return false;
       const source = value.spellRuleFacts.castingSource;
@@ -131,7 +143,7 @@ export function spellProcedureExecutionSchema<
 export function spellEffectProcedureExecutionSchema<
   S extends Schema.ConstraintCodec<unknown, unknown, never, never>,
 >(schema: S) {
-  return Schema.refine(
+  return Schema.refine<S, S["Type"] & SpellProcedureCastingFacts>(
     (value: S["Type"]): value is S["Type"] & SpellProcedureCastingFacts =>
       isSpellProcedureCastingFacts(value),
   )(schema);
