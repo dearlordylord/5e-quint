@@ -1,5 +1,5 @@
+import { admittedSpellInvocationCastingFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -65,7 +65,6 @@ import {
 import {
   ArmorOfShadowsSpellAccessSchema,
   MovementFeet,
-  CantripSpellInvocationResourceSchema,
   NoSpellInvocationResourceSchema,
   LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
@@ -870,23 +869,10 @@ const PersistentArmorEffectSchema = Schema.Struct({
   ]),
   expiresAt: DurationBattleActiveEffectExpirationSchema,
 });
-type PersistentArmorSpellSource =
-  | Pick<
-      Extract<
-        PersistentArmorInvocation,
-        {
-          readonly access: import("../../procedure-execution/spell-invocation-vocabulary.ts").LeveledSpellAccess;
-        }
-      >,
-      "access" | "resource"
-    >
-  | Pick<
-      Extract<
-        PersistentArmorInvocation,
-        { readonly access: { readonly tag: "armorOfShadows" } }
-      >,
-      "access" | "resource"
-    >;
+type PersistentArmorSpellSource<Invocation = PersistentArmorInvocation> =
+  Invocation extends PersistentArmorInvocation
+    ? Pick<Invocation, "spell" | "access" | "resource">
+    : never;
 
 function persistentArmorEffectShape(
   actorId: CombatantId,
@@ -910,14 +896,12 @@ function persistentArmorEffectShape(
 
 function buildPersistentArmorEffectInvocation(
   actorId: CombatantId,
-  spell: BattleSpellExecutionSource,
   executionFacts: PersistentArmorEffectExecutionFacts,
   source: PersistentArmorSpellSource,
 ): PersistentArmorInvocation {
   return {
     ...source,
     procedure: "persistentArmorEffect",
-    spell,
     ...persistentArmorEffectShape(actorId, executionFacts),
   };
 }
@@ -933,7 +917,6 @@ function admitPersistentArmorEffect(
       : [
           buildPersistentArmorEffectInvocation(
             ctx.actor.combatantId,
-
             executionFacts,
             {
               ...option.facts,
@@ -950,15 +933,17 @@ export function admitPersistentArmorEffectInvocationSpellAccess(
     readonly executionFacts: PersistentArmorEffectExecutionFacts;
   },
 ): readonly PersistentArmorInvocation[] {
+  const castingFacts = {
+    spell: access.spell,
+    access: { tag: "armorOfShadows" as const },
+    resource: { tag: "none" as const },
+  };
+  if (!admittedSpellInvocationCastingFacts(castingFacts)) return [];
   return [
     buildPersistentArmorEffectInvocation(
       actorId,
-      access.spell,
       access.executionFacts,
-      {
-        access: { tag: "armorOfShadows" },
-        resource: { tag: "none" },
-      },
+      castingFacts,
     ),
   ];
 }
@@ -1132,4 +1117,3 @@ export const persistentArmorEffectProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverPersistentArmorEffectCastAct,
   resolve: resolvePersistentArmorEffect,
 };
-import { spellInvocationResourceForCastOption } from "./profile.ts";

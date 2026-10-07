@@ -253,14 +253,15 @@ function discoverRegisteredSpellProcedureCastAct(
       subject.mode.tag !== "cast"
     )
       return candidate;
+    const mode = subject.mode;
     return Match.value(subjectTag).pipe(
       Match.when("actionSpell", () => ({
         ...candidate,
-        subject: { ...subject, tag: "actionSpell" as const },
+        subject: { ...subject, mode, tag: "actionSpell" as const },
       })),
       Match.when("bonusActionSpell", () => ({
         ...candidate,
-        subject: { ...subject, tag: "bonusActionSpell" as const },
+        subject: { ...subject, mode, tag: "bonusActionSpell" as const },
       })),
       Match.exhaustive,
     );

@@ -1,5 +1,4 @@
-import { spellAdmissionCastOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -761,7 +760,7 @@ function admitRepeatedDamageAllocation(
   ctx: SpellAdmissionContext,
   facts: RepeatedDamageAllocationMechanicsFacts,
 ): readonly RepeatedDamageAllocationInvocation[] {
-  return spellAdmissionCastOptions(ctx).flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly RepeatedDamageAllocationInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) {
         return [];
@@ -779,13 +778,8 @@ function admitRepeatedDamageAllocation(
       });
       return [
         {
-          access: leveledSpellAccessForCastingSource(spell.castingSource),
-          resource: spellInvocationResourceForCastOption({
-            spellLevel: admissionFacts.selectedSlotLevel,
-            payment: slot.payment,
-          }),
+          ...slot.facts,
           procedure: "repeatedDamageAllocation",
-          spell,
           targeting: {
             kind: "repeatedEffectTargetAllocation",
             repeatedEffectCount: admissionFacts.repeatedEffectCount,
@@ -859,4 +853,3 @@ export const repeatedDamageAllocationProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverRepeatedDamageAllocationCastAct,
   resolve: resolveRepeatedDamageAllocation,
 };
-import { spellInvocationResourceForCastOption } from "./profile.ts";
