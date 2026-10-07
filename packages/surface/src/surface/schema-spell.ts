@@ -7311,10 +7311,12 @@ const CreatureStatBlockProjectionFields = {
   traits: optionalExact(nonEmpty(CreatureTraitSchema)),
 } as const;
 
+type CreatureStatBlockProjectionFields =
+  typeof CreatureStatBlockProjectionFields;
+
 /** Facts needed by spawned and parameterized creature/runtime consumers. */
-export const CreatureStatBlockProjectionSchema: Schema.Struct<
-  typeof CreatureStatBlockProjectionFields
-> = Schema.Struct(CreatureStatBlockProjectionFields);
+export const CreatureStatBlockProjectionSchema: Schema.Struct<CreatureStatBlockProjectionFields> =
+  Schema.Struct(CreatureStatBlockProjectionFields);
 
 /**
  * The existing creature shape is retained as the projection contract while
