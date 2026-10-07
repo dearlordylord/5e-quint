@@ -1,3 +1,5 @@
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spell-invocation.unrestricted
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { isDeepStrictEqual } from "node:util";
 import { Schema } from "effect";

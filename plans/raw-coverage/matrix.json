@@ -25515,14 +25515,14 @@
     "fluffSpans": 1236,
     "nonFluffSpans": 22730,
     "closedNonFluffSpans": 22730,
-    "requirements": 74,
-    "executableRequirements": 24,
-    "qntModeled": 16,
-    "qntProved": 16,
-    "runtimeMapped": 16,
-    "runtimeTested": 8,
-    "runtimeParityCovered": 12,
-    "outOfScopeSpans": 1731,
+    "requirements": 76,
+    "executableRequirements": 26,
+    "qntModeled": 21,
+    "qntProved": 21,
+    "runtimeMapped": 21,
+    "runtimeTested": 11,
+    "runtimeParityCovered": 17,
+    "outOfScopeSpans": 1725,
     "ambiguousSpans": 0,
     "rawReviewedSections": 2920
   },
@@ -51984,35 +51984,174 @@
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"
       ]
-    }
-  ],
-  "trackerClaims": [
+    },
     {
-      "trackerId": "GH-418",
-      "coverageMetric": "missing-runtime-owner",
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-1",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation-examples.qnt",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
       ]
     },
     {
-      "trackerId": "GH-420",
-      "coverageMetric": "missing-runtime-owner",
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-2",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spell-invocation.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-3",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-4",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-corpus.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-5",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spell-invocation-admission.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-6",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spell-restoration.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-7",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spell-invocation-identity.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-LIMITED-GROUP-1",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group-examples.qnt",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"
       ]
     },
     {
+      "evidenceId": "SB-SPELLCASTING-LIMITED-GROUP-2",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spellcasting-limited-group.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-LIMITED-GROUP-3",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-AT-WILL-GROUP-1",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group-examples.qnt",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-AT-WILL-GROUP-2",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-at-will-spellcasting-group.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-AT-WILL-GROUP-3",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-LONG-CASTING-TIME-1",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-long-casting-examples.qnt",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-LONG-CASTING-TIME-2",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/spell-long-casting.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-LONG-CASTING-TIME-3",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-CONCENTRATION-1",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-CONCENTRATION-2",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spell-concentration.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-8",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-persistent-area.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELL-INVOCATION-UNRESTRICTED-9",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
+      ]
+    }
+  ],
+  "trackerClaims": [
+    {
       "trackerId": "GH-421",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SAVE-PROCEDURE-001"
-      ]
-    },
-    {
-      "trackerId": "GH-422",
-      "coverageMetric": "missing-runtime-owner",
-      "requirementIds": [
-        "RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"
       ]
     },
     {
@@ -81223,15 +81362,23 @@
         "SRD521-MONSTERS-OVERVIEW-0233-008",
         "SRD521-MONSTERS-OVERVIEW-0233-009"
       ],
-      "qntModeled": false,
-      "qntProved": false,
-      "runtimeMapped": false,
-      "runtimeTested": false,
-      "runtimeParityCovered": false,
-      "evidenceClaims": [],
-      "trackerClaims": [
-        "GH-418"
-      ]
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeTested": true,
+      "runtimeParityCovered": true,
+      "evidenceClaims": [
+        "SB-SPELL-INVOCATION-UNRESTRICTED-1",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-2",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-3",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-4",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-5",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-6",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-7",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-8",
+        "SB-SPELL-INVOCATION-UNRESTRICTED-9"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001",
@@ -81286,15 +81433,17 @@
         "SRD521-MONSTERS-OVERVIEW-0257-010",
         "SRD521-MONSTERS-OVERVIEW-0257-011"
       ],
-      "qntModeled": false,
-      "qntProved": false,
-      "runtimeMapped": false,
-      "runtimeTested": false,
-      "runtimeParityCovered": false,
-      "evidenceClaims": [],
-      "trackerClaims": [
-        "GH-420"
-      ]
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeTested": true,
+      "runtimeParityCovered": true,
+      "evidenceClaims": [
+        "SB-SPELLCASTING-LIMITED-GROUP-1",
+        "SB-SPELLCASTING-LIMITED-GROUP-2",
+        "SB-SPELLCASTING-LIMITED-GROUP-3"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-SAVE-PROCEDURE-001",
@@ -81330,15 +81479,17 @@
         "SRD521-MONSTERS-OVERVIEW-0233-008",
         "SRD521-MONSTERS-OVERVIEW-0233-009"
       ],
-      "qntModeled": false,
-      "qntProved": false,
-      "runtimeMapped": false,
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
       "runtimeTested": false,
-      "runtimeParityCovered": false,
-      "evidenceClaims": [],
-      "trackerClaims": [
-        "GH-422"
-      ]
+      "runtimeParityCovered": true,
+      "evidenceClaims": [
+        "SB-SPELLCASTING-AT-WILL-GROUP-1",
+        "SB-SPELLCASTING-AT-WILL-GROUP-2",
+        "SB-SPELLCASTING-AT-WILL-GROUP-3"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-REACTION-LIFECYCLE-001",
@@ -81423,6 +81574,56 @@
       "trackerClaims": [
         "GH-426"
       ]
+    },
+    {
+      "id": "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001",
+      "title": "Stat Block source long casting time",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-SPELLS-GAINING-AND-CASTING-0102-001",
+        "SRD521-SPELLS-GAINING-AND-CASTING-0102-002",
+        "SRD521-SPELLS-GAINING-AND-CASTING-0102-003",
+        "SRD521-SPELLS-GAINING-AND-CASTING-0102-004",
+        "SRD521-SPELLS-GAINING-AND-CASTING-0102-005",
+        "SRD521-SPELLS-GAINING-AND-CASTING-0102-006"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeTested": true,
+      "runtimeParityCovered": true,
+      "evidenceClaims": [
+        "SB-SPELLCASTING-LONG-CASTING-TIME-1",
+        "SB-SPELLCASTING-LONG-CASTING-TIME-2",
+        "SB-SPELLCASTING-LONG-CASTING-TIME-3"
+      ],
+      "trackerClaims": []
+    },
+    {
+      "id": "RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001",
+      "title": "Stat Block source concentration",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-RULES-GLOSSARY-0239-002",
+        "SRD521-RULES-GLOSSARY-0239-003",
+        "SRD521-RULES-GLOSSARY-0239-004",
+        "SRD521-RULES-GLOSSARY-0239-005",
+        "SRD521-RULES-GLOSSARY-0239-006",
+        "SRD521-RULES-GLOSSARY-0239-007",
+        "SRD521-RULES-GLOSSARY-0239-008",
+        "SRD521-RULES-GLOSSARY-0239-009",
+        "SRD521-RULES-GLOSSARY-0239-010"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeTested": false,
+      "runtimeParityCovered": true,
+      "evidenceClaims": [
+        "SB-SPELLCASTING-CONCENTRATION-1",
+        "SB-SPELLCASTING-CONCENTRATION-2"
+      ],
+      "trackerClaims": []
     }
   ],
   "outOfScope": [
@@ -104312,108 +104513,6 @@
       "classification": "rule-procedure",
       "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
       "text": "A Climb Speed can be used in place of Speed to traverse a vertical surface without expending the extra movement normally associated with climbing."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-002",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1-reviewed/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 2,
-        "lineStart": 241,
-        "lineEnd": 241,
-        "textHash": "b5c1640548de1641"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "Some spells and other effects require Concentration to remain active, as specified in their descriptions."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-004",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1-reviewed/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 4,
-        "lineStart": 241,
-        "lineEnd": 241,
-        "textHash": "479a7baad382828d"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "If the effect has a maximum duration, the effect's description specifies how long the creator can concentrate on it: up to 1 minute, 1 hour, or some other duration."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-005",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1-reviewed/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 5,
-        "lineStart": 241,
-        "lineEnd": 241,
-        "textHash": "5ac6228b10c8ce62"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "The creator can end Concentration at any time (no action required)."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-006",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1-reviewed/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 6,
-        "lineStart": 241,
-        "lineEnd": 241,
-        "textHash": "0844a7a996ccc051"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "The following factors break Concentration."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-007",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1-reviewed/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 7,
-        "lineStart": 243,
-        "lineEnd": 243,
-        "textHash": "0e90decd55e70563"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "_** You lose Concentration on an effect the moment you start casting a spell that requires Concentration or activate another effect that requires Concentration."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-010",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1-reviewed/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 10,
-        "lineStart": 247,
-        "lineEnd": 247,
-        "textHash": "c0a9305ccd62be9c"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "_** Your Concentration ends if you have the Incapacitated condition or you die."
     },
     {
       "spanId": "SRD521-RULES-GLOSSARY-0249-002",

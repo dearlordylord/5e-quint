@@ -1,6 +1,7 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spellcasting.limited-group
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spellcasting.limited-group
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
 import { PositiveInteger } from "@dnd/shared/types";

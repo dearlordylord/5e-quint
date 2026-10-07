@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { SpellPresentationSource } from "./battle-runtime-context.ts";
 import { bindAuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";

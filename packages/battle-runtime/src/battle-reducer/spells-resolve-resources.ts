@@ -1,3 +1,9 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.at-will-group
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.limited-group
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
 import {
   completeLongCastingSpellState,
   longCastingCompletionResource,

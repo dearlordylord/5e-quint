@@ -1,3 +1,10 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 import type { RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution } from "./procedure-execution/spell-procedure-execution.ts";
 import { Match, Result } from "effect";
 import { spellEffectProcedureRef } from "./identity.ts";

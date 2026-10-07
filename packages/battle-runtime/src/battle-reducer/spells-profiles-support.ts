@@ -1,3 +1,7 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 

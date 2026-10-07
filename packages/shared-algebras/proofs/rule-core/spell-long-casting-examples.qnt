@@ -1,3 +1,5 @@
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof stat-block.spell-invocation.unrestricted
 module spellLongCastingExamples {
   import statBlockSpellcastingGroup as group from "./stat-block-spellcasting-group"
   import statBlockResourceLifecycle as resource from "./stat-block-resource-lifecycle"

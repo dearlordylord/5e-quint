@@ -1,3 +1,5 @@
+import { buildUnitCatalog } from "../packages/surface/src/surface/unit-catalog.ts";
+import { spellcastingPressureAdmissionEvidence } from "./stat-block-spell-admission-evidence.ts";
 import {
   existsSync,
   mkdirSync,
@@ -155,9 +157,27 @@ export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBl
   const sourceAuthority = procedurePressureSourceAuthority(
     sourceDiscovery.identities,
   );
+  const unitCatalog = buildUnitCatalog({ collections: [srdUnitCollection] });
+  const isolationChassis = srdStatBlockCollection.statBlocks.find(
+    (record) => record.id === "stat_block_goblin_warrior",
+  );
+  if (unitCatalog.tag !== "ok" || isolationChassis === undefined)
+    throw new Error("Pressure verification composition is incomplete.");
+  const admissionEvidence = spellcastingPressureAdmissionEvidence({
+    unitCatalog: unitCatalog.catalog,
+    isolationBase: {
+      ...isolationChassis,
+      name: "Synthetic Pressure Spellcasting Isolation",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Procedure-isolated admission evidence",
+      },
+    },
+  });
   const pressureReport = analyzeStatBlockProcedurePressure(
     srdStatBlockCollection.statBlocks,
     sourceAuthority,
+    admissionEvidence,
   );
   const baseline = readPreResolutionSpellReferenceBaseline();
   const source = statBlockSpellReferenceClassificationSource();

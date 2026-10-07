@@ -1,3 +1,4 @@
+import { STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS } from "./stat-block-spell-invocation-dispatch.ts";
 import { Brand, Match } from "effect";
 import * as Result from "effect/Result";
 
@@ -34,6 +35,7 @@ import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
 import {
   parseStatBlockRuntimeResource,
   type StatBlockRuntimeResourceParseFailure,
+  type StatBlockSpellcastingProcedure,
 } from "./stat-block-execution-state.ts";
 import {
   STAT_BLOCK_ACTION_PROJECTION_SECTIONS,
@@ -83,6 +85,9 @@ export const STAT_BLOCK_PROCEDURE_PRESSURE_EXECUTION_OWNERS = [
   "battle-runtime generic Stat Block Multiattack control",
   "battle-runtime generic Stat Block attack procedure",
   "battle-runtime generic Stat Block spellcasting procedure",
+  "battle-runtime Stat Block at-will spellcasting group",
+  "battle-runtime Stat Block limited spellcasting group",
+  "battle-runtime Stat Block spell invocation",
 ] as const;
 
 export type StatBlockProcedurePressureExecutionOwner =
@@ -102,6 +107,8 @@ export const STAT_BLOCK_PROCEDURE_PRESSURE_RUNTIME_SHAPES = [
   "recharge_after_rest",
   "resourceReference",
   "spellcasting",
+  "spellcastingGroup",
+  "spellInvocation",
 ] as const;
 
 export type StatBlockProcedurePressureRuntimeShape =
@@ -153,6 +160,7 @@ export const STAT_BLOCK_PROCEDURE_PRESSURE_OWN_FAILED_FACTS = [
   "missingStatBlockSpellcastingGroupOwner",
   "missingStatBlockSpellInvocationOwner",
   "referencedProcedureNotExecutable",
+  ...STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS,
 ] as const;
 
 export type StatBlockProcedurePressureFailedFact =
@@ -430,9 +438,24 @@ type StatBlockProcedurePressureEntry =
   | StatBlockProcedureEntry
   | NonNullable<StatBlockRecord["statBlock"]["reactions"]>[number];
 
+/** Evidence is supplied by verification composition; it is never a second runtime registry. */
+export type StatBlockSpellcastingPressureAdmissionEvidence =
+  | { readonly kind: "unavailable" }
+  | {
+      readonly kind: "available";
+      readonly admit: (input: {
+        readonly record: StatBlockRecord;
+        readonly section: "actions" | "bonusActions";
+        readonly entry: StatBlockProcedureEntry;
+      }) => Result.Result<StatBlockSpellcastingProcedure, string>;
+    };
+
 export function analyzeStatBlockProcedurePressure(
   records: readonly StatBlockRecord[],
   sourceAuthority: StatBlockProcedurePressureSourceAuthority,
+  admissionEvidence: StatBlockSpellcastingPressureAdmissionEvidence = {
+    kind: "unavailable",
+  },
 ): StatBlockProcedurePressureReport {
   const recordOccurrences = records.map((record, index) => ({
     record,
@@ -441,6 +464,7 @@ export function analyzeStatBlockProcedurePressure(
       record,
       index + 1,
       sourceAuthority,
+      admissionEvidence,
     ),
   }));
   const occurrences = recordOccurrences.flatMap(
@@ -474,6 +498,9 @@ export function statBlockProcedurePressureOccurrences(
   record: StatBlockRecord,
   recordOrdinal: number,
   sourceAuthority: StatBlockProcedurePressureSourceAuthority,
+  admissionEvidence: StatBlockSpellcastingPressureAdmissionEvidence = {
+    kind: "unavailable",
+  },
 ): readonly StatBlockProcedurePressureOccurrence[] {
   const occurrences: StatBlockProcedurePressureOccurrence[] = [];
   const add = occurrenceAppender(
@@ -482,7 +509,12 @@ export function statBlockProcedurePressureOccurrences(
   );
   const resourceContext = addResourceDeclarationOccurrences(record, add);
   addTraitOccurrences(record, add);
-  addAuthoredSectionOccurrences(record, add, resourceContext);
+  addAuthoredSectionOccurrences(
+    record,
+    add,
+    resourceContext,
+    admissionEvidence,
+  );
   return occurrences;
 }
 
@@ -797,6 +829,7 @@ function addAuthoredSectionOccurrences(
   record: StatBlockRecord,
   add: AddOccurrence,
   resourceContext: StatBlockProcedurePressureResourceContext,
+  admissionEvidence: StatBlockSpellcastingPressureAdmissionEvidence,
 ): void {
   for (const authoredSection of authoredProcedureSections(record)) {
     const { section, entries } = authoredSection;
@@ -846,6 +879,12 @@ function addAuthoredSectionOccurrences(
         entry,
         decisions,
         resourceContext,
+        admissionEvidence.kind === "available" &&
+          entry.kind === "executable" &&
+          entry.procedure.kind === "spellcasting" &&
+          (section === "actions" || section === "bonusActions")
+          ? admissionEvidence.admit({ record, section, entry })
+          : Result.fail("unavailable"),
       );
     }
   }
@@ -883,6 +922,7 @@ function addNestedProcedureOccurrences(
     AuthoredStatBlockProcedureExecutionDecision
   >,
   resourceContext: StatBlockProcedurePressureResourceContext,
+  admitted: Result.Result<StatBlockSpellcastingProcedure, string>,
 ): void {
   if (entry.kind !== "executable") return;
   Match.value(entry.procedure).pipe(
@@ -903,6 +943,7 @@ function addNestedProcedureOccurrences(
         procedure.groups,
         resourceContext.resources,
         resourceContext.dispositions,
+        admitted,
       ),
     ),
     Match.when({ kind: "attack_roll" }, () => undefined),
@@ -1290,9 +1331,14 @@ function addSpellcastingOccurrences(
     StatBlockProcedureResourceOrdinal,
     StatBlockProcedurePressureDisposition
   >,
+  admitted: Result.Result<StatBlockSpellcastingProcedure, string>,
 ): void {
   for (const [groupIndex, group] of groups.entries()) {
     const groupOrdinal = groupIndex + 1;
+    // Pressure ordinals are one-based; canonical runtime group coordinates are zero-based.
+    const boundGroup = Result.isSuccess(admitted)
+      ? admitted.success.groups[groupIndex]
+      : undefined;
     add(
       "spellcastingGroup",
       {
@@ -1302,14 +1348,23 @@ function addSpellcastingOccurrences(
         groupOrdinal,
       },
       group,
-      {
-        kind: "missingOwner",
-        surfaceShape: {
-          kind: "spellcastingGroup",
-          groupKind: group.kind,
-        },
-        failedFacts: ["missingStatBlockSpellcastingGroupOwner"],
-      },
+      boundGroup !== undefined
+        ? {
+            kind: "executable",
+            owner:
+              boundGroup.kind === "at_will"
+                ? "battle-runtime Stat Block at-will spellcasting group"
+                : "battle-runtime Stat Block limited spellcasting group",
+            runtimeShape: "spellcastingGroup",
+          }
+        : {
+            kind: "missingOwner",
+            surfaceShape: {
+              kind: "spellcastingGroup",
+              groupKind: group.kind,
+            },
+            failedFacts: ["missingStatBlockSpellcastingGroupOwner"],
+          },
     );
     if (group.resourceRefs.kind === "some") {
       for (const resourceOrdinal of group.resourceRefs.ordinals) {
@@ -1341,7 +1396,16 @@ function addSpellcastingOccurrences(
           spellOrdinal: spellIndex + 1,
         },
         spell,
-        spellReferenceDisposition(spell),
+        boundGroup?.invocations[spellIndex]?.dispatch.kind === "executable"
+          ? {
+              kind: "executable",
+              owner: "battle-runtime Stat Block spell invocation",
+              runtimeShape: "spellInvocation",
+            }
+          : spellReferenceDisposition(
+              spell,
+              boundGroup?.invocations[spellIndex]?.dispatch,
+            ),
       );
     }
   }
@@ -1394,6 +1458,7 @@ function procedureReferenceDisposition(
 
 function spellReferenceDisposition(
   spell: StatBlockSpellReference,
+  dispatch?: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationDispatch,
 ): StatBlockProcedurePressureDisposition {
   return {
     kind: "missingOwner",
@@ -1402,7 +1467,11 @@ function spellReferenceDisposition(
       restrictionPresence:
         spell.restriction === undefined ? "absent" : "present",
     },
-    failedFacts: ["missingStatBlockSpellInvocationOwner"],
+    failedFacts: [
+      dispatch?.kind === "unsupported"
+        ? dispatch.reason
+        : "missingStatBlockSpellInvocationOwner",
+    ],
   };
 }
 

@@ -1,3 +1,6 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import {
   isolatedSpellcastingAdmission,
   spellcastingIsolationBase,
@@ -132,6 +135,8 @@ describe("profiled Stat Block spell corpus production admission", () => {
       if (record === undefined)
         throw new Error("Expected shipped Stat Block record.");
       const location = occurrence.witness.location;
+      if (location.section !== "actions" && location.section !== "bonusActions")
+        throw new Error("Expected initial casting section.");
       const authoredEntry = record.statBlock[location.section]?.find(
         (candidate) => candidate.procedureOrdinal === location.procedureOrdinal,
       );
@@ -140,8 +145,6 @@ describe("profiled Stat Block spell corpus production admission", () => {
         authoredEntry.procedure.kind !== "spellcasting"
       )
         throw new Error("Expected canonical authored spellcasting procedure.");
-      if (location.section !== "actions" && location.section !== "bonusActions")
-        throw new Error("Expected initial casting section.");
       const admission = isolatedSpellcastingAdmission({
         isolationBase: spellcastingIsolationBase(),
         record,
@@ -173,9 +176,12 @@ describe("profiled Stat Block spell corpus production admission", () => {
         );
     }
     expect(unprofiledExecutable).toEqual([]);
+    expect(
+      failures.filter((failure) => !failure.includes("missingCaster")),
+    ).toEqual([]);
+    expect(failures).toHaveLength(3);
     expect(executableCount).toBe(101);
     expect(unprofiledUnsupportedCount).toBe(182);
-    expect(failures).toHaveLength(3);
     expect(
       failures.filter((failure) =>
         failure.endsWith("missingCasterAttackBonus"),

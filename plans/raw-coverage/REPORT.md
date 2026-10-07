@@ -208,13 +208,13 @@
 
 - SRD span classification: 23966 / 23966 = 100.00%
 - Non-fluff span closure: 22730 / 22730 = 100.00%
-- Executable requirements: 24
-- QNT modeled: 16 / 24 = 66.67%
-- QNT proved: 16 / 24 = 66.67%
-- Runtime mapped: 16 / 24 = 66.67%
-- Runtime tested: 8 / 24 = 33.33%
-- Runtime parity covered: 12 / 24 = 50.00%
-- Out of promoted scope spans: 1731
+- Executable requirements: 26
+- QNT modeled: 21 / 26 = 80.77%
+- QNT proved: 21 / 26 = 80.77%
+- Runtime mapped: 21 / 26 = 80.77%
+- Runtime tested: 11 / 26 = 42.31%
+- Runtime parity covered: 17 / 26 = 65.38%
+- Out of promoted scope spans: 1725
 - Ambiguous spans: 0
 - RAW-reviewed sections: 2920 / 2920 = 100.00%
 
@@ -3167,6 +3167,26 @@
 | SB-SPELLCASTING-PROCEDURE-QNT | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
 | SB-SPELLCASTING-PROCEDURE-MBT | runtime-parity | packages/battle-runtime/src/rule-core-stat-block-spellcasting-procedure.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
 | SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST | runtime-test | packages/battle-runtime/src/stat-block-projection.test.ts | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-1 | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation-examples.qnt | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-2 | runtime-parity | packages/battle-runtime/src/stat-block-spell-invocation.mbt.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-3 | runtime-parity | packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-4 | runtime-test | packages/battle-runtime/src/stat-block-profiled-spell-corpus.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-5 | runtime-test | packages/battle-runtime/src/stat-block-spell-invocation-admission.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-6 | runtime-test | packages/battle-runtime/src/stat-block-spell-restoration.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-7 | runtime-test | packages/battle-runtime/src/stat-block-spell-invocation-identity.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELLCASTING-LIMITED-GROUP-1 | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group-examples.qnt | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
+| SB-SPELLCASTING-LIMITED-GROUP-2 | runtime-test | packages/battle-runtime/src/stat-block-spellcasting-limited-group.test.ts | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
+| SB-SPELLCASTING-LIMITED-GROUP-3 | runtime-parity | packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
+| SB-SPELLCASTING-AT-WILL-GROUP-1 | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group-examples.qnt | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 |
+| SB-SPELLCASTING-AT-WILL-GROUP-2 | runtime-parity | packages/battle-runtime/src/stat-block-at-will-spellcasting-group.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 |
+| SB-SPELLCASTING-AT-WILL-GROUP-3 | runtime-parity | packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 |
+| SB-SPELLCASTING-LONG-CASTING-TIME-1 | qnt-proof | packages/shared-algebras/proofs/rule-core/spell-long-casting-examples.qnt | RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 |
+| SB-SPELLCASTING-LONG-CASTING-TIME-2 | runtime-parity | packages/battle-runtime/src/spell-long-casting.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 |
+| SB-SPELLCASTING-LONG-CASTING-TIME-3 | runtime-test | packages/battle-runtime/src/long-casting-lifecycle.test.ts | RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 |
+| SB-SPELLCASTING-CONCENTRATION-1 | qnt-proof | packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt | RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001 |
+| SB-SPELLCASTING-CONCENTRATION-2 | runtime-parity | packages/battle-runtime/src/stat-block-spell-concentration.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-8 | runtime-test | packages/battle-runtime/src/stat-block-persistent-area.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| SB-SPELL-INVOCATION-UNRESTRICTED-9 | runtime-test | packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
 
 ## Tracker Follow-up Claims
 
@@ -3174,10 +3194,7 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 
 | Tracker | Gap metric | Requirements |
 | --- | --- | --- |
-| GH-418 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
-| GH-420 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
 | GH-421 | missing-runtime-owner | RAW-STAT-BLOCK-SAVE-PROCEDURE-001 |
-| GH-422 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 |
 | GH-423 | missing-runtime-owner | RAW-STAT-BLOCK-REACTION-LIFECYCLE-001 |
 | GH-424 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 |
 | GH-425 | missing-runtime-owner | RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 |
@@ -3252,15 +3269,17 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 | RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 | executable | yes | yes | yes | yes | yes | SB-ACTIONS-RUNTIME-TEST, SB-ATTACK-RESOLUTION-INDUCTIVE, SB-ATTACK-RESOLUTION-MBT |  |
 | RAW-STAT-BLOCK-MULTIATTACK-001 | executable | yes | yes | yes | yes | yes | SB-MULTIATTACK-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST, SB-MULTIATTACK-MBT |  |
 | RAW-STAT-BLOCK-LIMITED-USAGE-001 | executable | yes | yes | yes | yes | no | SB-RESOURCE-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
-| RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | no | no | no | no | no |  | GH-418 |
+| RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | yes | yes | yes | yes | yes | SB-SPELL-INVOCATION-UNRESTRICTED-1, SB-SPELL-INVOCATION-UNRESTRICTED-2, SB-SPELL-INVOCATION-UNRESTRICTED-3, SB-SPELL-INVOCATION-UNRESTRICTED-4, SB-SPELL-INVOCATION-UNRESTRICTED-5, SB-SPELL-INVOCATION-UNRESTRICTED-6, SB-SPELL-INVOCATION-UNRESTRICTED-7, SB-SPELL-INVOCATION-UNRESTRICTED-8, SB-SPELL-INVOCATION-UNRESTRICTED-9 |  |
 | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 | executable | yes | yes | yes | yes | yes | SB-SPELLCASTING-PROCEDURE-QNT, SB-SPELLCASTING-PROCEDURE-MBT, SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST |  |
-| RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 | executable | no | no | no | no | no |  | GH-420 |
+| RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 | executable | yes | yes | yes | yes | yes | SB-SPELLCASTING-LIMITED-GROUP-1, SB-SPELLCASTING-LIMITED-GROUP-2, SB-SPELLCASTING-LIMITED-GROUP-3 |  |
 | RAW-STAT-BLOCK-SAVE-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-421 |
-| RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 | executable | no | no | no | no | no |  | GH-422 |
+| RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 | executable | yes | yes | yes | no | yes | SB-SPELLCASTING-AT-WILL-GROUP-1, SB-SPELLCASTING-AT-WILL-GROUP-2, SB-SPELLCASTING-AT-WILL-GROUP-3 |  |
 | RAW-STAT-BLOCK-REACTION-LIFECYCLE-001 | executable | no | no | no | no | no |  | GH-423 |
 | RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 | executable | no | no | no | no | no |  | GH-424 |
 | RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 | executable | no | no | no | no | no |  | GH-425 |
 | RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 | executable | no | no | no | no | no |  | GH-426 |
+| RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001 | executable | yes | yes | yes | yes | yes | SB-SPELLCASTING-LONG-CASTING-TIME-1, SB-SPELLCASTING-LONG-CASTING-TIME-2, SB-SPELLCASTING-LONG-CASTING-TIME-3 |  |
+| RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001 | executable | yes | yes | yes | no | yes | SB-SPELLCASTING-CONCENTRATION-1, SB-SPELLCASTING-CONCENTRATION-2 |  |
 
 ## Out Of Promoted Scope
 
@@ -3464,7 +3483,7 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 - SRD521-CHARACTER-CREATION-0360-003 (.references/srd-5.2.1-reviewed/Character-Creation.md > Tiers of Play > Tier 3 (Levels 11–16)): Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.
 - SRD521-CHARACTER-CREATION-0360-004 (.references/srd-5.2.1-reviewed/Character-Creation.md > Tiers of Play > Tier 3 (Levels 11–16)): Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.
 - SRD521-CHARACTER-CREATION-0360-005 (.references/srd-5.2.1-reviewed/Character-Creation.md > Tiers of Play > Tier 3 (Levels 11–16)): Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.
-- ... 1531 additional out-of-scope spans omitted from the Markdown report; see matrix.json.
+- ... 1525 additional out-of-scope spans omitted from the Markdown report; see matrix.json.
 
 ## Ambiguous
 

@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { statBlockSpellInvocationActionCost } from "./stat-block-execution-state.ts";
 import { Match, Option } from "effect";
 import { isStatBlockSpellCastProcedureExecution } from "./stat-block-spell-invocation-dispatch.ts";

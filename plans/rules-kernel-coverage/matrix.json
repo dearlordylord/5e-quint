@@ -1,19 +1,19 @@
 {
   "summary": {
-    "total": 170,
-    "covered": 156,
-    "open": 8,
+    "total": 172,
+    "covered": 161,
+    "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 130,
+      "battle": 132,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 156,
-      "needs-qnt-owner": 8,
+      "covered": 161,
+      "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 192,
+    "total": 193,
     "bySubject": {
       "battle-hole-family": 96,
       "battle-fill-kind": 57,
-      "battle-subject-kind": 39
+      "battle-subject-kind": 40
     },
     "byClassification": {
-      "semantic-frontier": 149,
+      "semantic-frontier": 150,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 43,
       "unsupported-dead-branch": 0
@@ -719,6 +719,10 @@
           "ownerPath": "packages/battle-runtime/src/spiritual-weapon.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts"
         }
       ],
       "profiles": ["spell.invocation-spiritual-weapon-attack-proxy"],
@@ -728,7 +732,8 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts",
+        "packages/battle-runtime/src/creature-spell-procedure.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [".references/srd-5.2.1/spells.md#Spiritual Weapon"],
@@ -1921,6 +1926,10 @@
           "ownerPath": "packages/battle-runtime/src/flaming-sphere-hazard-ram.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-persistent-area.test.ts"
         }
       ],
       "profiles": ["spell.invocation-flaming-sphere-hazard-ram"],
@@ -1943,7 +1952,9 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-subjects.ts"
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/creature-spell-procedure.ts",
+        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [".references/srd-5.2.1/spells.md#Flaming Sphere"],
@@ -5599,16 +5610,88 @@
       "title": "Battle Stat Block limited-use and recharge resource lifecycle"
     },
     {
-      "followUpTaskIds": ["GH-418"],
       "id": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
       "kind": "profile-procedure",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spell-invocation.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-spell-invocation.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-profiled-spell-execution.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-corpus.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spell-invocation-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spell-restoration.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spell-invocation-identity.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/spell-long-casting.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/spell-long-casting.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spell-concentration.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-spell-concentration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-persistent-area.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spatial-melee-proxy.test.ts"
+        }
+      ],
       "profiles": ["stat-block.spell-invocation.unrestricted"],
-      "qntOwners": [],
-      "reason": "GitHub #418 owns the bounded generic missing-owner family from #350.",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-long-casting.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
+      ],
+      "reason": "Canonical child-coordinate selection and transient caller-owned catalog admission retain source-free execution facts. All286 unrestricted references are audited:101 executable,182 unprofiled typed unsupported, and3 eligible profile references missing listed caster facts. Compound unowned aftermath remains unsupported. This capability does not make every parent actor or every child profile executable.",
       "runtime": "battle",
-      "runtimeOwners": [],
-      "status": "needs-qnt-owner",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-spell-invocation-selection.ts",
+        "packages/battle-runtime/src/procedure-admission/stat-block-spell-definition.ts",
+        "packages/battle-runtime/src/stat-block-spell-invocation-admission.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/spell-procedure-execution-admission.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-progress.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-completion.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-readiness.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/concentration-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/creature-spell-procedure.ts",
+        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts"
+      ],
+      "status": "covered",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
         ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
@@ -5650,16 +5733,32 @@
       "title": "Stat Block spellcasting procedure"
     },
     {
-      "followUpTaskIds": ["GH-420"],
       "id": "BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP",
       "kind": "profile-procedure",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spellcasting-limited-group.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-profiled-spell-execution.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": ["stat-block.spellcasting.limited-group"],
-      "qntOwners": [],
-      "reason": "GitHub #420 owns the bounded generic missing-owner family from #350.",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group.qnt"
+      ],
+      "reason": "All59 limited groups have canonical shared or injective each-invocation pool ownership, selected admission, single spending and recovery. Executable child admission remains independently bounded; owning a group never admits its unsupported children.",
       "runtime": "battle",
-      "runtimeOwners": [],
-      "status": "needs-qnt-owner",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts"
+      ],
+      "status": "covered",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
         ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
@@ -5684,16 +5783,34 @@
       "title": "Stat Block saving throw procedure"
     },
     {
-      "followUpTaskIds": ["GH-422"],
       "id": "BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP",
       "kind": "profile-procedure",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-at-will-spellcasting-group.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-at-will-spellcasting-group.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-profiled-spell-execution.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-profiled-spell-execution.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": ["stat-block.spellcasting.at-will-group"],
-      "qntOwners": [],
-      "reason": "GitHub #422 owns the bounded generic missing-owner family from #350.",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group.qnt"
+      ],
+      "reason": "All48 at-will groups retain no usage pools and mandatory source-section Action or Bonus Action cost. Canonical child execution uses the shared action owner and permits later-turn repetition; child admission remains independently bounded.",
       "runtime": "battle",
-      "runtimeOwners": [],
-      "status": "needs-qnt-owner",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spellcasting-action-cost.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
+      ],
+      "status": "covered",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
         ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
@@ -6053,6 +6170,70 @@
         ".references/srd-5.2.1/classes.md#Level 3: Evocation Savant"
       ],
       "title": "Wizard Spellbook Spellcasting class level gain retains exact source-owned spell choices"
+    },
+    {
+      "id": "BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/spell-long-casting.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/spell-long-casting.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/long-casting-lifecycle.test.ts"
+        }
+      ],
+      "profiles": ["stat-block.spell-invocation.unrestricted"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-long-casting.qnt"
+      ],
+      "reason": "Source-generic long casting spends Magic on each turn, tracks one canonical Concentration-owned pending cast, rejects premature completion, and commits the admitted child once on completion. Positive routed evidence uses visibly synthetic catalog-admitted minute/hour supported-shape spells. All36 real inventory long-casting references remain typed unsupported; this facet owns no additional pressure rows.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/long-casting-progress.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-completion.ts",
+        "packages/battle-runtime/src/battle-reducer/long-casting-readiness.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/spells.md#Longer-Casting-Times"
+      ],
+      "title": "Stat Block source long casting time"
+    },
+    {
+      "id": "BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-spell-concentration.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/stat-block-spell-concentration.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["stat-block.spell-invocation.unrestricted"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
+      ],
+      "reason": "Actual public-discovered Stat Block casts use existing source-generic Concentration replacement at start, voluntary end, damage-save failure, death, Incapacitated and maximum-duration cleanup; durable child source identity survives. The126 concentration references overlap other families (41 profiled,85 unprofiled), so this facet owns no additional pressure rows.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/concentration-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration"
+      ],
+      "title": "Stat Block source concentration"
     }
   ],
   "battleHoleFrontier": [
@@ -7922,6 +8103,18 @@
     },
     {
       "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
+        "BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeSpellCastingProgress",
+      "reason": "Start and continue casting commands share the long-casting progression frontier: each admitted Magic action starts or advances canonical casting Concentration without applying the spell or paying its final invocation resource. The subject vocabulary leaf and runtime projection retain the common procedure-family fold; timing, interruption, skipped-turn failure, and final payment belong to the long-casting obligation.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeSpellCastingProgress"
+    },
+    {
+      "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
       "followUpTaskIds": [],
       "id": "runtimeLinkRelease",
@@ -8667,7 +8860,11 @@
       "profileId": "stat-block.resource-lifecycle"
     },
     {
-      "obligationIds": ["BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED"],
+      "obligationIds": [
+        "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
+        "BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME",
+        "BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION"
+      ],
       "profileId": "stat-block.spell-invocation.unrestricted"
     },
     {
@@ -12711,6 +12908,72 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-marked-creature-defenses.mbt.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Canonical child-coordinate selection and transient caller-owned catalog admission retain source-free execution facts. All286 unrestricted references are audited:101 executable,182 unprofiled typed unsupported, and3 eligible profile references missing listed caster facts. Compound unowned aftermath remains unsupported. This capability does not make every parent actor or every child profile executable.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Canonical child-coordinate selection and transient caller-owned catalog admission retain source-free execution facts. All286 unrestricted references are audited:101 executable,182 unprofiled typed unsupported, and3 eligible profile references missing listed caster facts. Compound unowned aftermath remains unsupported. This capability does not make every parent actor or every child profile executable.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "All59 limited groups have canonical shared or injective each-invocation pool ownership, selected admission, single spending and recovery. Executable child admission remains independently bounded; owning a group never admits its unsupported children.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "All59 limited groups have canonical shared or injective each-invocation pool ownership, selected admission, single spending and recovery. Executable child admission remains independently bounded; owning a group never admits its unsupported children.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "All48 at-will groups retain no usage pools and mandatory source-section Action or Bonus Action cost. Canonical child execution uses the shared action owner and permits later-turn repetition; child admission remains independently bounded.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "All48 at-will groups retain no usage pools and mandatory source-section Action or Bonus Action cost. Canonical child execution uses the shared action owner and permits later-turn repetition; child admission remains independently bounded.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Source-generic long casting spends Magic on each turn, tracks one canonical Concentration-owned pending cast, rejects premature completion, and commits the admitted child once on completion. Positive routed evidence uses visibly synthetic catalog-admitted minute/hour supported-shape spells. All36 real inventory long-casting references remain typed unsupported; this facet owns no additional pressure rows.",
+      "obligationIds": [
+        "BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME",
+        "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-long-casting.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Source-generic long casting spends Magic on each turn, tracks one canonical Concentration-owned pending cast, rejects premature completion, and commits the admitted child once on completion. Positive routed evidence uses visibly synthetic catalog-admitted minute/hour supported-shape spells. All36 real inventory long-casting references remain typed unsupported; this facet owns no additional pressure rows.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-long-casting-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Actual public-discovered Stat Block casts use existing source-generic Concentration replacement at start, voluntary end, damage-save failure, death, Incapacitated and maximum-duration cleanup; durable child source identity survives. The126 concentration references overlap other families (41 profiled,85 unprofiled), so this facet owns no additional pressure rows.",
+      "obligationIds": [
+        "BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION",
+        "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Actual public-discovered Stat Block casts use existing source-generic Concentration replacement at start, voluntary end, damage-save failure, death, Incapacitated and maximum-duration cleanup; durable child source identity survives. The126 concentration references overlap other families (41 profiled,85 unprofiled), so this facet owns no additional pressure rows.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -14311,6 +14574,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
       "role": "semantic-core"
     },
@@ -14363,6 +14636,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-long-casting-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-long-casting.qnt",
       "role": "semantic-core"
     },
     {
@@ -14502,6 +14785,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-examples.qnt",
       "role": "proof-only"
     },
@@ -14578,6 +14871,26 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group.qnt",
       "role": "semantic-core"
     },
     {
@@ -19695,6 +20008,150 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "fold",
+        "list",
+        "map",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-long-casting-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spell-invocation.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-long-casting.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "fold",
+        "list",
+        "map",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "fold",
+        "list",
+        "map",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-at-will-spellcasting-group.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/spell-long-casting-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-long-casting.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     }

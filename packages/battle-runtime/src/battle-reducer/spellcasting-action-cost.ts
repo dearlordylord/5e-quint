@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.at-will-group
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
 import {
   spendActivationResource,
   type ActionEconomyState,

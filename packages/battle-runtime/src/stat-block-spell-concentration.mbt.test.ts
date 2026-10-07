@@ -1,3 +1,6 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spell-invocation.unrestricted
 import { Match } from "effect";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import {

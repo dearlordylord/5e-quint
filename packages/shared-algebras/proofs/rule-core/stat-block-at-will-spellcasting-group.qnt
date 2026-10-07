@@ -1,3 +1,6 @@
+// RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: qnt-owner stat-block.spellcasting.at-will-group
+// KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
 // RAW: monsters.md: Spellcasting; playing-the-game.md: Your Turn, Bonus Actions.
 module statBlockAtWillSpellcastingGroup {
   import statBlockSpellcastingProcedure.* from "./stat-block-spellcasting-procedure"

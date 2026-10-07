@@ -1,3 +1,10 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.at-will-group
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
 import {
   discoverLongCastingSpellActs,
   longCastingCompletionResource,

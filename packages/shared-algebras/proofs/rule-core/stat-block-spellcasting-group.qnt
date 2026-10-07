@@ -1,4 +1,5 @@
-// KERNEL-COVERAGE: semantic-owner BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
+// UNIT-PROFILE-COVERAGE: qnt-owner stat-block.spellcasting.limited-group
+// KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
 // RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
 // SRD 5.2.1 monsters.md:401-409,425-429. Uses recover through the existing lifecycle owner.
 module statBlockSpellcastingGroup {

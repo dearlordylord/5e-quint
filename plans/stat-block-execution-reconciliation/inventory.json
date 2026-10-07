@@ -7,8 +7,8 @@
     "occurrenceCount": 2601
   },
   "stateCounts": {
-    "executable": 1149,
-    "missingOwner": 495,
+    "executable": 1357,
+    "missingOwner": 287,
     "textOnly": 903,
     "tableOwned": 54,
     "malformed": 0
@@ -10428,6 +10428,13 @@
       "profileId": "stat-block.action-lifecycle",
       "obligationId": "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
       "occurrenceCount": 329,
+      "dispositionCounts": {
+        "executable": 329,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 329,
       "memberRowIds": [
         "stat-block-1:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -10769,6 +10776,13 @@
       "profileId": "stat-block.bonus-action-lifecycle",
       "obligationId": "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
       "occurrenceCount": 77,
+      "dispositionCounts": {
+        "executable": 77,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 71,
       "memberRowIds": [
         "stat-block-21:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
@@ -10858,6 +10872,13 @@
       "profileId": "stat-block.legendary-action-lifecycle",
       "obligationId": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
       "occurrenceCount": 6,
+      "dispositionCounts": {
+        "executable": 6,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 3,
       "memberRowIds": [
         "stat-block-286:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":\"legendaryActions\"}",
@@ -10879,6 +10900,13 @@
       "profileId": "stat-block.attack-procedure",
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
       "occurrenceCount": 260,
+      "dispositionCounts": {
+        "executable": 260,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 216,
       "memberRowIds": [
         "stat-block-1:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
@@ -11151,6 +11179,13 @@
       "profileId": "stat-block.multiattack",
       "obligationId": "BATTLE.STAT_BLOCK.MULTIATTACK",
       "occurrenceCount": 89,
+      "dispositionCounts": {
+        "executable": 89,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 44,
       "memberRowIds": [
         "stat-block-2:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
@@ -11252,6 +11287,13 @@
       "profileId": "stat-block.spellcasting.procedure",
       "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
       "occurrenceCount": 58,
+      "dispositionCounts": {
+        "executable": 58,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 51,
       "memberRowIds": [
         "stat-block-117:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
@@ -11322,6 +11364,13 @@
       "profileId": "stat-block.resource-lifecycle",
       "obligationId": "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
       "occurrenceCount": 330,
+      "dispositionCounts": {
+        "executable": 330,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 122,
       "memberRowIds": [
         "stat-block-3:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
@@ -11661,11 +11710,22 @@
       "id": "stat-block.spell-invocation.unrestricted",
       "title": "Unrestricted Stat Block spell invocation",
       "issueNumber": 418,
-      "rawRequirementIds": ["RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"],
+      "rawRequirementIds": [
+        "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001",
+        "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001",
+        "RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001"
+      ],
       "profileId": "stat-block.spell-invocation.unrestricted",
       "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
-      "state": "missingOwner",
+      "state": "partiallyExecutable",
       "occurrenceCount": 286,
+      "dispositionCounts": {
+        "executable": 101,
+        "missingOwner": 185,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 50,
       "memberRowIds": [
         "stat-block-117:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":1}",
@@ -11964,8 +12024,15 @@
       "rawRequirementIds": ["RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"],
       "profileId": "stat-block.spellcasting.limited-group",
       "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP",
-      "state": "missingOwner",
+      "state": "executable",
       "occurrenceCount": 59,
+      "dispositionCounts": {
+        "executable": 59,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 48,
       "memberRowIds": [
         "stat-block-117:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2}",
@@ -12030,68 +12097,6 @@
       ]
     },
     {
-      "rank": 3,
-      "id": "stat-block.save-procedure",
-      "title": "Stat Block save-gated procedure",
-      "issueNumber": 421,
-      "rawRequirementIds": ["RAW-STAT-BLOCK-SAVE-PROCEDURE-001"],
-      "profileId": "stat-block.save-procedure",
-      "obligationId": "BATTLE.STAT_BLOCK.SAVE_PROCEDURE",
-      "state": "missingOwner",
-      "occurrenceCount": 48,
-      "statBlockCount": 48,
-      "memberRowIds": [
-        "stat-block-101:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
-        "stat-block-113:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
-        "stat-block-115:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-116:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-117:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-118:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-121:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-122:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-123:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-124:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-126:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
-        "stat-block-127:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-128:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-129:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-130:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-131:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-132:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-133:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-139:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
-        "stat-block-146:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
-        "stat-block-147:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-148:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-149:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-187:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-188:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-189:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-190:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-193:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-194:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-195:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-196:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-206:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-219:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
-        "stat-block-233:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-234:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
-        "stat-block-263:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-264:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-265:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-266:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-279:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-280:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-281:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-282:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-318:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-319:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-320:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-321:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
-        "stat-block-324:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}"
-      ]
-    },
-    {
       "rank": 4,
       "id": "stat-block.spellcasting.at-will-group",
       "title": "At-will Stat Block spellcasting group",
@@ -12099,8 +12104,15 @@
       "rawRequirementIds": ["RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"],
       "profileId": "stat-block.spellcasting.at-will-group",
       "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP",
-      "state": "missingOwner",
+      "state": "executable",
       "occurrenceCount": 48,
+      "dispositionCounts": {
+        "executable": 48,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 47,
       "memberRowIds": [
         "stat-block-117:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1}",
@@ -12154,6 +12166,75 @@
       ]
     },
     {
+      "rank": 3,
+      "id": "stat-block.save-procedure",
+      "title": "Stat Block save-gated procedure",
+      "issueNumber": 421,
+      "rawRequirementIds": ["RAW-STAT-BLOCK-SAVE-PROCEDURE-001"],
+      "profileId": "stat-block.save-procedure",
+      "obligationId": "BATTLE.STAT_BLOCK.SAVE_PROCEDURE",
+      "state": "missingOwner",
+      "occurrenceCount": 48,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 48,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
+      "statBlockCount": 48,
+      "memberRowIds": [
+        "stat-block-101:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-113:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+        "stat-block-115:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-116:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-117:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-118:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-121:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-122:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-123:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-124:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-126:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-127:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-128:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-129:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-130:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-131:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-132:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-133:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-139:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
+        "stat-block-146:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-147:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-148:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-149:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-187:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-188:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-189:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-190:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-193:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-194:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-195:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-196:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-206:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-219:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+        "stat-block-233:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-234:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-263:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-264:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-265:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-266:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-279:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-280:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-281:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-282:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-318:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-319:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-320:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-321:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-324:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}"
+      ]
+    },
+    {
       "rank": 5,
       "id": "stat-block.reaction-lifecycle",
       "title": "Stat Block reaction trigger and resource lifecycle",
@@ -12163,6 +12244,13 @@
       "obligationId": "BATTLE.STAT_BLOCK.REACTION_LIFECYCLE",
       "state": "missingOwner",
       "occurrenceCount": 24,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 24,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 24,
       "memberRowIds": [
         "stat-block-40:{\"kind\":\"section\",\"section\":\"reactions\"}",
@@ -12201,6 +12289,13 @@
       "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_RESTRICTED",
       "state": "missingOwner",
       "occurrenceCount": 23,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 23,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 21,
       "memberRowIds": [
         "stat-block-128:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":5,\"groupOrdinal\":1,\"spellOrdinal\":4}",
@@ -12238,6 +12333,13 @@
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_ADDITIONAL_EFFECT",
       "state": "missingOwner",
       "occurrenceCount": 5,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 5,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 5,
       "memberRowIds": [
         "stat-block-49:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
@@ -12257,6 +12359,13 @@
       "obligationId": "BATTLE.STAT_BLOCK.STANDARD_ACTION_OPTION",
       "state": "missingOwner",
       "occurrenceCount": 2,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 2,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 2,
       "memberRowIds": [
         "stat-block-102:{\"kind\":\"procedure\",\"section\":\"bonusActions\",\"procedureOrdinal\":1}",
@@ -12268,6 +12377,13 @@
       "title": "Text-only Stat Block procedure presentation",
       "state": "textOnly",
       "occurrenceCount": 584,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 0,
+        "textOnly": 584,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 240,
       "memberRowIds": [
         "stat-block-1:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -12861,6 +12977,13 @@
       "title": "Text-only Stat Block trait presentation",
       "state": "textOnly",
       "occurrenceCount": 319,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 0,
+        "textOnly": 319,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 189,
       "memberRowIds": [
         "stat-block-4:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -13189,6 +13312,13 @@
       "title": "Table-owned lair presence for Legendary Action uses",
       "state": "tableOwned",
       "occurrenceCount": 27,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 27,
+        "malformed": 0
+      },
       "statBlockCount": 27,
       "memberRowIds": [
         "stat-block-96:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":\"legendaryActions\"}",
@@ -13225,6 +13355,13 @@
       "title": "Table-owned lair presence for the Legendary Action section",
       "state": "tableOwned",
       "occurrenceCount": 27,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 27,
+        "malformed": 0
+      },
       "statBlockCount": 27,
       "memberRowIds": [
         "stat-block-96:{\"kind\":\"section\",\"section\":\"legendaryActions\"}",
@@ -13261,6 +13398,13 @@
       "title": "Malformed Stat Block structural occurrence",
       "state": "malformed",
       "occurrenceCount": 0,
+      "dispositionCounts": {
+        "executable": 0,
+        "missingOwner": 0,
+        "textOnly": 0,
+        "tableOwned": 0,
+        "malformed": 0
+      },
       "statBlockCount": 0,
       "memberRowIds": []
     }

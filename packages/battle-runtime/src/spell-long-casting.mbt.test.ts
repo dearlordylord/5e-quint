@@ -1,3 +1,7 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spell-invocation.unrestricted
 import { isDeepStrictEqual } from "node:util";
 import { describe, it } from "vitest";
 import { endTurn, resolveBattleSubject } from "./index.ts";

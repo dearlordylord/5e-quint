@@ -61,6 +61,18 @@ const pressureDispositionKinds = new Set([
 ]);
 
 const semanticFamiliesByPressureOwner = new Map([
+  [
+    "battle-runtime Stat Block at-will spellcasting group",
+    "stat-block.spellcasting.at-will-group",
+  ],
+  [
+    "battle-runtime Stat Block limited spellcasting group",
+    "stat-block.spellcasting.limited-group",
+  ],
+  [
+    "battle-runtime Stat Block spell invocation",
+    "stat-block.spell-invocation.unrestricted",
+  ],
   ["battle-runtime Stat Block Action lifecycle", "stat-block.action-lifecycle"],
   [
     "battle-runtime Stat Block Bonus Action lifecycle",
@@ -179,7 +191,11 @@ const missingOwnerDefinitions = [
     id: "stat-block.spell-invocation.unrestricted",
     title: "Unrestricted Stat Block spell invocation",
     issueNumber: 418,
-    rawRequirementIds: ["RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"],
+    rawRequirementIds: [
+      "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001",
+      "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001",
+      "RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001",
+    ],
     profileId: "stat-block.spell-invocation.unrestricted",
     obligationId: "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
   },
@@ -247,6 +263,23 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.STANDARD_ACTION_OPTION",
   },
 ].map((definition) => ({ ...definition, state: "missingOwner" }));
+const admittedSpellcastingFamilyIds = new Set([
+  "stat-block.spellcasting.at-will-group",
+  "stat-block.spellcasting.limited-group",
+  "stat-block.spell-invocation.unrestricted",
+]);
+for (const definition of missingOwnerDefinitions.filter((entry) =>
+  admittedSpellcastingFamilyIds.has(entry.id),
+)) {
+  semanticFamilyDefinitions.push({
+    ...definition,
+    state:
+      definition.id === "stat-block.spell-invocation.unrestricted"
+        ? "partiallyExecutable"
+        : "executable",
+  });
+  formallyCoveredFamilyIds.add(definition.id);
+}
 
 const closedFamilyDefinitions = [
   {
@@ -278,7 +311,9 @@ const closedFamilyDefinitions = [
 
 const familyDefinitions = [
   ...semanticFamilyDefinitions,
-  ...missingOwnerDefinitions,
+  ...missingOwnerDefinitions.filter(
+    (definition) => !admittedSpellcastingFamilyIds.has(definition.id),
+  ),
   ...closedFamilyDefinitions,
 ];
 
@@ -358,14 +393,34 @@ function familyIdForOccurrence(occurrence, missingMemberships) {
     return familyId;
   }
   if (occurrence.disposition.kind === "missingOwner") {
-    const rank = missingMemberships.get(occurrence.rowId);
-    const family = missingOwnerDefinitions.find(
-      (definition) => definition.rank === rank,
-    );
-    if (family === undefined) {
+    if (!missingMemberships.has(occurrence.rowId))
       fail(`Missing-owner occurrence ${occurrence.rowId} has no proposal.`);
-    }
-    return family.id;
+    const shape = occurrence.disposition.surfaceShape;
+    const familyId =
+      shape.kind === "spellReference"
+        ? shape.restrictionPresence === "absent"
+          ? "stat-block.spell-invocation.unrestricted"
+          : "stat-block.spell-invocation.restricted"
+        : shape.kind === "spellcastingGroup"
+          ? shape.groupKind === "at_will"
+            ? "stat-block.spellcasting.at-will-group"
+            : "stat-block.spellcasting.limited-group"
+          : shape.kind === "procedure"
+            ? shape.procedureKind === "save"
+              ? "stat-block.save-procedure"
+              : shape.procedureKind === "attack_roll"
+                ? "stat-block.attack-additional-effect"
+                : shape.procedureKind === "action_option"
+                  ? "stat-block.standard-action-option"
+                  : undefined
+            : shape.kind === "reactionSection"
+              ? "stat-block.reaction-lifecycle"
+              : undefined;
+    if (familyId === undefined)
+      fail(
+        `Missing-owner row ${occurrence.rowId} has unclassified structural shape ${JSON.stringify(shape)}.`,
+      );
+    return familyId;
   }
   return closedFamilyId(occurrence);
 }
@@ -411,10 +466,51 @@ function buildReconciliation(pressure, requirePopulatedFamilies = true) {
     return {
       ...definition,
       occurrenceCount: memberRowIds.length,
+      dispositionCounts: Object.fromEntries(
+        [...pressureDispositionKinds].map((state) => [
+          state,
+          memberRowIds.filter(
+            (rowId) => occurrenceByRowId.get(rowId).disposition.kind === state,
+          ).length,
+        ]),
+      ),
       statBlockCount,
       memberRowIds,
     };
   });
+
+  for (const family of families) {
+    const allowed =
+      family.state === "partiallyExecutable"
+        ? new Set(["executable", "missingOwner"])
+        : new Set([family.state]);
+    for (const [state, count] of Object.entries(family.dispositionCounts)) {
+      if (count > 0 && !allowed.has(state))
+        fail(
+          `${family.id} state ${family.state} contradicts ${count} ${state} rows.`,
+        );
+    }
+  }
+  if (requirePopulatedFamilies) {
+    const invocation = families.find(
+      (family) => family.id === "stat-block.spell-invocation.unrestricted",
+    );
+    if (
+      invocation.dispositionCounts.executable !== 101 ||
+      invocation.dispositionCounts.missingOwner !== 185
+    )
+      fail(
+        "Unrestricted invocation partition must remain101 executable and185 typed unsupported.",
+      );
+    const limited = families.find(
+      (family) => family.id === "stat-block.spellcasting.limited-group",
+    );
+    const atWill = families.find(
+      (family) => family.id === "stat-block.spellcasting.at-will-group",
+    );
+    if (limited.occurrenceCount !== 59 || atWill.occurrenceCount !== 48)
+      fail("Canonical group partition must remain59 limited and48 at-will.");
+  }
 
   const emptyFamilies = families.filter(
     (family) => family.occurrenceCount === 0 && family.state !== "malformed",
@@ -436,9 +532,10 @@ function buildReconciliation(pressure, requirePopulatedFamilies = true) {
   const stateCounts = Object.fromEntries(
     [...pressureDispositionKinds].map((state) => [
       state,
-      families
-        .filter((family) => family.state === state)
-        .reduce((total, family) => total + family.occurrenceCount, 0),
+      families.reduce(
+        (total, family) => total + family.dispositionCounts[state],
+        0,
+      ),
     ]),
   );
   for (const [state, count] of Object.entries(stateCounts)) {
@@ -669,7 +766,10 @@ function validateCoverageJoin(
         fail(`${family.id} cross-layer owner join is not exact.`);
       }
     }
-    if (family.state === "executable") {
+    if (
+      family.state === "executable" ||
+      family.state === "partiallyExecutable"
+    ) {
       if (
         profile.runtimeOwners.length === 0 ||
         profile.verificationOwners.length === 0 ||
@@ -773,9 +873,17 @@ function validateCoverageJoin(
           (claim) =>
             claim.coverageMetric === metric &&
             claim.ownerPath === owner.ownerPath &&
-            family.rawRequirementIds.every((requirementId) =>
-              claim.requirementIds.includes(requirementId),
-            ),
+            familyRequirements
+              .filter((requirement) =>
+                requirement.verificationOwners.some(
+                  (declaredOwner) =>
+                    verificationOwnerKey(declaredOwner) ===
+                    verificationOwnerKey(owner),
+                ),
+              )
+              .every((requirement) =>
+                claim.requirementIds.includes(requirement.id),
+              ),
         );
       });
       if (
@@ -842,14 +950,14 @@ function renderReport(reconciliation) {
     "",
     "## Generic families",
     "",
-    "| Family | Runtime state | Formal evidence | Rows | Stat Blocks | Profile | Obligation | Follow-up |",
-    "| --- | --- | --- | ---: | ---: | --- | --- | ---: |",
+    "| Family | Runtime state | Formal evidence | Rows | Executable / unsupported | Stat Blocks | Profile | Obligation | Follow-up |",
+    "| --- | --- | --- | ---: | --- | ---: | --- | --- | ---: |",
     ...reconciliation.families.map(
       (family) =>
-        `| ${family.id} | ${family.state} | ${family.formalEvidenceState ?? (family.state === "executable" ? "covered" : "not-applicable")} | ${family.occurrenceCount} | ${family.statBlockCount} | ${family.profileId ?? "—"} | ${family.obligationId ?? "—"} | ${family.issueNumber === undefined ? (family.proofFollowUpIssueNumber === undefined ? "—" : `#${family.proofFollowUpIssueNumber}`) : `#${family.issueNumber}`} |`,
+        `| ${family.id} | ${family.state} | ${family.formalEvidenceState ?? (formallyCoveredFamilyIds.has(family.id) ? "covered" : "not-applicable")} | ${family.occurrenceCount} | ${family.dispositionCounts.executable} / ${family.dispositionCounts.missingOwner} | ${family.statBlockCount} | ${family.profileId ?? "—"} | ${family.obligationId ?? "—"} | ${family.issueNumber === undefined ? (family.proofFollowUpIssueNumber === undefined ? "—" : `#${family.proofFollowUpIssueNumber}`) : `#${family.issueNumber}`} |`,
     ),
     "",
-    "The JSON companion owns the complete row-to-family assignments and each family's complete member-row list. GitHub #114 owns the nine missing-owner child issues; #351 is their reconciliation blocker until this checked mapping is integrated.",
+    "The JSON companion owns the complete row-to-family assignments, disposition counts, and member-row lists. Partially executable invocation support retains explicit unsupported child rows; admitted procedure and group ownership do not imply whole-parent actor support.",
     "",
   ];
   return lines.join("\n");
@@ -895,7 +1003,10 @@ async function runSelfTest() {
     {
       rowId: "synthetic-missing",
       kind: "spellReference",
-      disposition: { kind: "missingOwner" },
+      disposition: {
+        kind: "missingOwner",
+        surfaceShape: { kind: "spellReference", restrictionPresence: "absent" },
+      },
       witness: { recordOrdinal: 2 },
     },
     {
@@ -946,6 +1057,17 @@ async function runSelfTest() {
 
   const realPressure = readJson(pressurePath);
   const realReconciliation = buildReconciliation(realPressure);
+  const reorderedProposals = structuredClone(realPressure);
+  reorderedProposals.capabilityProposals.reverse();
+  reorderedProposals.capabilityProposals.forEach((proposal, index) => {
+    proposal.rank = index + 100;
+  });
+  const structurallyReconciled = buildReconciliation(reorderedProposals);
+  if (
+    JSON.stringify(structurallyReconciled.assignments) !==
+    JSON.stringify(realReconciliation.assignments)
+  )
+    fail("Proposal rank changed semantic family assignments.");
   const realCoverage = readCoverageJoinInputs();
   validateRetiredExecutionIdentities(currentExecutionIdentityTexts());
   validateCoverageJoin(realReconciliation, realCoverage);
@@ -1155,13 +1277,13 @@ async function runSelfTest() {
 
   const brokenRuntimeTrackerCoverage = structuredClone(realCoverage);
   brokenRuntimeTrackerCoverage.rawTrackerClaims.find(
-    ({ trackerId }) => trackerId === "GH-418",
+    ({ trackerId }) => trackerId === "GH-421",
   ).requirementIds = [];
   assertThrowsWith(
     "broken missing-runtime tracker join",
     () =>
       validateCoverageJoin(realReconciliation, brokenRuntimeTrackerCoverage),
-    "does not join exactly to tracker task GH-418",
+    "does not join exactly to tracker task GH-421",
   );
 
   const missingAttackFormalOwnershipCoverage = structuredClone(realCoverage);

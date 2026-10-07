@@ -1,5 +1,5 @@
-// RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
-// KERNEL-COVERAGE: qnt-proof BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof stat-block.spellcasting.limited-group
 module statBlockSpellcastingGroupExamples {
   import statBlockSpellcastingGroup.* from "./stat-block-spellcasting-group"
   import statBlockResourceLifecycle.* from "./stat-block-resource-lifecycle"

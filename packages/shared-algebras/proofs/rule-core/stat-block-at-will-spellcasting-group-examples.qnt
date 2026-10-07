@@ -1,3 +1,5 @@
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof stat-block.spellcasting.at-will-group
 module statBlockAtWillSpellcastingGroupExamples {
   import statBlockAtWillSpellcastingGroup.* from "./stat-block-at-will-spellcasting-group"
   import statBlockSpellcastingProcedure.* from "./stat-block-spellcasting-procedure"

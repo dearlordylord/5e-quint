@@ -1,3 +1,7 @@
+// KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001
+// UNIT-PROFILE-COVERAGE: qnt-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME
 // RAW: spells.md: Longer Casting Times; rules-glossary.md: Magic, Concentration;
 // playing-the-game.md: Order of Combat (six seconds per round).
 module spellLongCasting {

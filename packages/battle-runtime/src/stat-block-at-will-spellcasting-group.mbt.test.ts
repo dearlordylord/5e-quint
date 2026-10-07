@@ -1,3 +1,6 @@
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spellcasting.at-will-group
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
 import { isDeepStrictEqual } from "node:util";
 import { Result } from "effect";
 import {
