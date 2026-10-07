@@ -491,8 +491,11 @@ export const MechanicalSupportedAttackActionOptionSchema = Schema.Union([
 export type MechanicalSupportedAttackActionOption =
   typeof MechanicalSupportedAttackActionOptionSchema.Type;
 
+export const CharacterPreparedSpellAccessSchema = Schema.Struct({
+  tag: Schema.Literal("prepared"),
+});
 export const PreparedSpellAccessSchema = Schema.Union([
-  Schema.Struct({ tag: Schema.Literal("prepared") }),
+  CharacterPreparedSpellAccessSchema,
   StatBlockLeveledSpellAccessSchema,
 ]);
 

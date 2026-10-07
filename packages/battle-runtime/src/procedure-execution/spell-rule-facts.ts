@@ -80,29 +80,32 @@ export function spellRuleExecutionFactsWithCastingSource(
   return { ...definition, castingSource };
 }
 
+export const StatBlockSpellCastingSourceSchema = Schema.Struct({
+  tag: Schema.Literal("statBlock"),
+  castingTime: CastingTimeSchema,
+  actionCost: Schema.Union([
+    Schema.Literal("magicAction"),
+    Schema.Literal("bonusAction"),
+  ]),
+  invocationRef: StatBlockSpellInvocationRefSchema,
+  abilityModifier: AbilityModifier,
+  spellSaveDc: Schema.Option(DifficultyClass),
+  spellAttackBonus: Schema.Option(AttackBonus),
+});
+export const ClassSpellCastingSourceSchema = Schema.Struct({
+  tag: Schema.Literal("classSpellcasting"),
+  className: ClassNameSchema,
+  abilityModifier: AbilityModifier,
+});
+export const AccessSpellCastingSourceSchema = Schema.Struct({
+  tag: Schema.Literal("spellAccess"),
+  spellAccessRef: BattleSpellAccessExecutionRef,
+  abilityModifier: AbilityModifier,
+});
 export const SpellCastingSourceSchema = Schema.Union([
-  Schema.Struct({
-    tag: Schema.Literal("statBlock"),
-    castingTime: CastingTimeSchema,
-    actionCost: Schema.Union([
-      Schema.Literal("magicAction"),
-      Schema.Literal("bonusAction"),
-    ]),
-    invocationRef: StatBlockSpellInvocationRefSchema,
-    abilityModifier: AbilityModifier,
-    spellSaveDc: Schema.Option(DifficultyClass),
-    spellAttackBonus: Schema.Option(AttackBonus),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("classSpellcasting"),
-    className: ClassNameSchema,
-    abilityModifier: AbilityModifier,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("spellAccess"),
-    spellAccessRef: BattleSpellAccessExecutionRef,
-    abilityModifier: AbilityModifier,
-  }),
+  StatBlockSpellCastingSourceSchema,
+  ClassSpellCastingSourceSchema,
+  AccessSpellCastingSourceSchema,
 ]);
 
 export const SpellDefinitionRuleFactsSchema = Schema.Struct({

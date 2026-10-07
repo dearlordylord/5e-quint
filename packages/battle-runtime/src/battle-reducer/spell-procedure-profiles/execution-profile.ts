@@ -1,5 +1,11 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { Schema } from "effect";
+import {
+  isSpellProcedureCastingFacts,
+  isSpellInvocationCastingFacts,
+  type SpellProcedureCastingFacts,
+  type SpellInvocationCastingFacts,
+} from "../../procedure-execution/spell-invocation-casting-facts.ts";
 import type {
   BattleActDiscoveryCandidate,
   BattleResolutionResult,
@@ -74,8 +80,56 @@ export type SpellProcedureExecutionDeclaration<
   ) => BattleResolutionResult;
 };
 
+type StatBlockInitialCastingFacts = Extract<
+  SpellInvocationCastingFacts,
+  {
+    readonly access: { readonly tag: "statBlockCantrip" | "statBlockLeveled" };
+  }
+>;
+type CharacterInitialCastingFacts = Exclude<
+  SpellInvocationCastingFacts,
+  | StatBlockInitialCastingFacts
+  | { readonly access: { readonly tag: "spellEffect" } }
+>;
+
 export function spellProcedureExecutionSchema<
+  const F extends Schema.Struct.Fields,
+>(schema: Schema.Struct<F>) {
+  const character = Schema.refine(
+    (value): value is Schema.Struct<F>["Type"] & CharacterInitialCastingFacts =>
+      isSpellInvocationCastingFacts(value) &&
+      value.spellRuleFacts.castingSource.tag !== "statBlock" &&
+      value.access.tag !== "spellEffect",
+  )(schema);
+  const statBlock = Schema.refine(
+    (value): value is typeof value & StatBlockInitialCastingFacts => {
+      const currentActionCost = value.actionCost;
+      if (!isSpellInvocationCastingFacts(value)) return false;
+      const source = value.spellRuleFacts.castingSource;
+      if (source.tag !== "statBlock" || value.access.tag === "spellEffect")
+        return false;
+      const actionCost =
+        source.castingTime.kind === "minutes" ||
+        source.castingTime.kind === "hours"
+          ? "magicAction"
+          : source.actionCost;
+      return currentActionCost === actionCost;
+    },
+  )(
+    Schema.Struct({
+      ...schema.fields,
+      actionCost: Schema.Literals(["magicAction", "bonusAction"]),
+    }),
+  );
+  return Schema.Union([character, statBlock]);
+}
+
+/** Effect procedures retain their declared action cost and do not cast again. */
+export function spellEffectProcedureExecutionSchema<
   S extends Schema.ConstraintCodec<unknown, unknown, never, never>,
->(schema: S & (0 extends 1 & S["Type"] ? never : unknown)): S {
-  return schema;
+>(schema: S) {
+  return Schema.refine(
+    (value): value is S["Type"] & SpellProcedureCastingFacts =>
+      isSpellProcedureCastingFacts(value),
+  )(schema);
 }
