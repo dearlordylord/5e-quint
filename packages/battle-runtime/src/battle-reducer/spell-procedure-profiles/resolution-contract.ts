@@ -144,7 +144,10 @@ type SpellProcedureResolutionOptions<P extends BattleSpellProcedureKey> =
 
 export type SpellProcedureResolutionInput<P extends BattleSpellProcedureKey> =
   P extends "persistentArmorEffect"
-    ? ActionSpellBattleResolutionInput & { readonly castingState: BattleState }
+    ? (
+        | ActionSpellBattleResolutionInput
+        | BonusActionSpellBattleResolutionInput
+      ) & { readonly castingState: BattleState }
     : P extends
           | "spellCastInterruptionReaction"
           | "triggeredArmorDefense"
