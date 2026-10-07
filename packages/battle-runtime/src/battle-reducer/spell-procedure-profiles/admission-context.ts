@@ -5,7 +5,6 @@ import type {
 import {
   spellAdmissionBattleProjection,
   type SpellAdmissionActor,
-  type SpellAdmissionContext,
   type CharacterSpellAdmissionContext,
 } from "./profile.ts";
 

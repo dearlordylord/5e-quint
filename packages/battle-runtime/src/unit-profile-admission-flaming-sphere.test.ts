@@ -1,3 +1,4 @@
+import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
@@ -264,7 +265,36 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     );
     if (caster.origin.kind !== "character")
       throw new Error("Expected character caster.");
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      expect.objectContaining({ spellLevel: 2, count: 1, expended: 1 }),
+    ]);
+    const characterContext = session.context.characters.get(spellCasterId);
+    if (characterContext === undefined)
+      throw new Error("Expected retained caster presentation source.");
+    const admittedAfterPayment = admittedSpellActs(
+      caster,
+      resolved.state,
+      characterContext.spellcastingPresentationSource,
+    );
+    if (admittedAfterPayment.tag === "rejected")
+      throw new Error("Expected paid-state spell admission.");
+    expect(
+      admittedAfterPayment.invocations.filter(
+        (invocation) => invocation.procedure === "persistentAreaSaveDamage",
+      ),
+    ).toHaveLength(1);
     const refreshedCaster = {
+      ...caster,
+      origin: {
+        ...caster.origin,
+        execution: characterExecutionWithSpellInvocations(
+          caster.origin.execution,
+          admittedAfterPayment.invocations,
+        ),
+      },
+    };
+    // A separate retained-source seam covers admission losing eligible access.
+    const unavailableCaster = {
       ...caster,
       origin: {
         ...caster.origin,
@@ -275,12 +305,15 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       },
     };
     expect(
-      refreshedCaster.origin.execution.procedureBindings.some(
+      unavailableCaster.origin.execution.procedureBindings.some(
         (binding) =>
           binding.procedureRef === sphere.sourceProcedureRef &&
           binding.procedure.kind === "unavailableSpellInvocation",
       ),
     ).toBe(true);
+    expect(
+      boundPersistentAreaSaveDamageEffect(unavailableCaster, sphere)?.kind,
+    ).toBe("collisionReposition");
     const refreshedState = {
       ...resolved.state,
       combatants: new Map(resolved.state.combatants).set(
