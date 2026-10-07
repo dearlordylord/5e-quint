@@ -1,3 +1,4 @@
+import { unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
@@ -36,7 +37,9 @@ describe("profiled Stat Block spell execution", () => {
             ...entry,
             procedure: {
               ...entry.procedure,
-              groups: [{ ...group, spells: [{ spellId: "false_life" }] }],
+              groups: [
+                { ...group, spells: [{ spellId: unitId("false_life") }] },
+              ],
             },
           },
         ],

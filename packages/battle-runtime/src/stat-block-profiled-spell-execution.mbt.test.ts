@@ -1,4 +1,5 @@
-import type { StatBlockSpellcastingExecutableProcedureEntry } from "@dnd/surface/surface/stat-block-types";
+import { unitId } from "@dnd/shared/game-facts";
+import type { StatBlockProcedureEntry } from "@dnd/surface/surface/stat-block-types";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spellcasting.at-will-group
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
@@ -49,11 +50,14 @@ function execute(bonus: boolean, repeat: boolean) {
     throw new Error("Expected authored spellcasting fixture.");
   const group = entry.procedure.groups[0];
   if (group?.kind !== "at_will") throw new Error("Expected at-will group.");
-  const selected: StatBlockSpellcastingExecutableProcedureEntry = {
+  const selected: Extract<
+    StatBlockProcedureEntry,
+    { readonly procedure: { readonly kind: "spellcasting" } }
+  > = {
     ...entry,
     procedure: {
       ...entry.procedure,
-      groups: [{ ...group, spells: [{ spellId: "false_life" }] }],
+      groups: [{ ...group, spells: [{ spellId: unitId("false_life") }] }],
     },
   };
   const {

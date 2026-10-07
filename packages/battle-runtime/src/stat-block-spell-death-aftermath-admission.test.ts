@@ -1,4 +1,4 @@
-import type { StatBlockSpellcastingExecutableProcedureEntry } from "@dnd/surface/surface/stat-block-types";
+import type { StatBlockProcedureEntry } from "@dnd/surface/surface/stat-block-types";
 import { unitId } from "@dnd/shared/game-facts";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -54,7 +54,10 @@ it("admits owned damage and rejects the same damage with an unowned death afterm
       throw new Error("Expected Spellcasting fixture.");
     const group = entry.procedure.groups[0];
     if (group?.kind !== "at_will") throw new Error("Expected at-will fixture.");
-    const selected: StatBlockSpellcastingExecutableProcedureEntry = {
+    const selected: Extract<
+      StatBlockProcedureEntry,
+      { readonly procedure: { readonly kind: "spellcasting" } }
+    > = {
       ...entry,
       procedure: {
         ...entry.procedure,
