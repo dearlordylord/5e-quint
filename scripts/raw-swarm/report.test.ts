@@ -117,7 +117,7 @@ function report(
 ): string {
   return execFileSync(
     "mise",
-    ["exec", "--", "node", "--experimental-strip-types", reportScript, ...args],
+    ["exec", "--", "pnpm", "exec", "tsx", reportScript, ...args],
     {
       cwd: repoRoot,
       encoding: "utf8",
@@ -1107,27 +1107,29 @@ try {
     };
     const run = (): Promise<void> =>
       new Promise((resolveRun, rejectRun) => {
+        const diagnostics: string[] = [];
         const child = spawn(
           "mise",
-          [
-            "exec",
-            "--",
-            "node",
-            "--experimental-strip-types",
-            reportScript,
-            ...args,
-          ],
+          ["exec", "--", "pnpm", "exec", "tsx", reportScript, ...args],
           {
             cwd: repoRoot,
             env: { ...process.env, ...environment },
-            stdio: "ignore",
+            stdio: ["ignore", "pipe", "pipe"],
           },
         );
+        child.stdout.on("data", (chunk: Buffer) =>
+          diagnostics.push(chunk.toString()),
+        );
+        child.stderr.on("data", (chunk: Buffer) =>
+          diagnostics.push(chunk.toString()),
+        );
         child.on("error", rejectRun);
-        child.on("exit", (status) =>
+        child.on("close", (status) =>
           status === 0
             ? resolveRun()
-            : rejectRun(new Error(`link exited ${status}`)),
+            : rejectRun(
+                new Error(`link exited ${status}: ${diagnostics.join("")}`),
+              ),
         );
       });
     await Promise.all([run(), run()]);

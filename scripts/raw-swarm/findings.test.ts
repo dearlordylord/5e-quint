@@ -746,7 +746,7 @@ function findingIdentity(finding: {
 function reportCommand(args: readonly string[]): string {
   return execFileSync(
     "mise",
-    ["exec", "--", "node", "--experimental-strip-types", reportScript, ...args],
+    ["exec", "--", "pnpm", "exec", "tsx", reportScript, ...args],
     { cwd: repoRoot, encoding: "utf8" },
   );
 }

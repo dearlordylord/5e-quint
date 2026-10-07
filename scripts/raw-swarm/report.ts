@@ -2149,7 +2149,7 @@ function linkGithubIssueCommand(args: readonly string[]): void {
       "--exclusive",
       `${resolvedDbPath}.github-link.lock`,
       process.execPath,
-      "--experimental-strip-types",
+      "--experimental-transform-types",
       fileURLToPath(import.meta.url),
       "link-github-issue",
       ...args,

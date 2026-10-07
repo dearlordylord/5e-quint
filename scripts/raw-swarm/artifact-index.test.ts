@@ -789,8 +789,9 @@ describe("Raw Swarm artifact index", () => {
         [
           "exec",
           "--",
-          "node",
-          "--experimental-strip-types",
+          "pnpm",
+          "exec",
+          "tsx",
           resolve(repoRoot, "scripts/raw-swarm/report.ts"),
           "drilldown",
           relative(repoRoot, tamperedRecordsPath),
@@ -808,8 +809,9 @@ describe("Raw Swarm artifact index", () => {
       [
         "exec",
         "--",
-        "node",
-        "--experimental-strip-types",
+        "pnpm",
+        "exec",
+        "tsx",
         resolve(repoRoot, "scripts/raw-swarm/report.ts"),
         "drilldown",
         relative(repoRoot, recordsPath),
@@ -1088,7 +1090,7 @@ describe("Raw Swarm artifact index", () => {
     const child = spawn(
       process.execPath,
       [
-        "--experimental-strip-types",
+        "--experimental-transform-types",
         "--input-type=module",
         "--eval",
         `import { openArtifactIndexReadOnly } from ${JSON.stringify(artifactIndexModule)};
@@ -1155,7 +1157,7 @@ setInterval(() => {}, 1000);`,
     const child = spawnSync(
       process.execPath,
       [
-        "--experimental-strip-types",
+        "--experimental-transform-types",
         "--input-type=module",
         "--eval",
         `import { openArtifactIndex } from ${JSON.stringify(artifactIndexModule)};
@@ -1180,7 +1182,7 @@ try {
       const readerChild = spawnSync(
         process.execPath,
         [
-          "--experimental-strip-types",
+          "--experimental-transform-types",
           "--input-type=module",
           "--eval",
           `import { openArtifactIndexReadOnly } from ${JSON.stringify(artifactIndexModule)};
@@ -1303,7 +1305,7 @@ process.stdout.write("opened");`,
       const child = spawnSync(
         process.execPath,
         [
-          "--experimental-strip-types",
+          "--experimental-transform-types",
           "--input-type=module",
           "--eval",
           `import { openArtifactIndex } from ${JSON.stringify(artifactIndexModule)};
