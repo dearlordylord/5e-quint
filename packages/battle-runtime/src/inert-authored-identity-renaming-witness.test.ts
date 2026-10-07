@@ -33,6 +33,7 @@ import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-kn
 import type { StatBlockExecutionAdmission } from "./stat-block-execution-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { admittedSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
@@ -456,17 +457,19 @@ function renameContextInertIdentityFields(
       {
         ...character,
         spellPresentationSources: character.spellPresentationSources.map(
-          (source) => ({
-            ...source,
-            invocation: {
+          (source) => {
+            const invocation = {
               ...source.invocation,
               spell: {
                 ...source.invocation.spell,
                 id: unitId(syntheticSpellId),
                 name: syntheticSpellName,
               },
-            },
-          }),
+            };
+            if (!admittedSpellInvocationCastingFacts(invocation))
+              throw new Error("Identity renaming must preserve casting facts");
+            return { ...source, invocation };
+          },
         ),
         ...(character.druidWildShapeFormPresentations === undefined
           ? {}
