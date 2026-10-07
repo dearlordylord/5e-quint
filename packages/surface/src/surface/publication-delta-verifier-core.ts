@@ -176,6 +176,7 @@ const SchemaCertificateSchema = Schema.Struct({
           SchemaNodeClassificationSchema,
         ),
         featRepeatability: Schema.Array(SchemaNodeClassificationSchema),
+        spellDeathAftermath: Schema.Array(SchemaNodeClassificationSchema),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
       comparisonNormalizedRootSha256: HashSchema,
@@ -777,6 +778,7 @@ type CandidateSchemaClassifications = {
   readonly bonusActionHealingMovementRider: readonly SchemaNodeClassification[];
   readonly classFeatureIncrementMechanics: readonly SchemaNodeClassification[];
   readonly featRepeatability: readonly SchemaNodeClassification[];
+  readonly spellDeathAftermath: readonly SchemaNodeClassification[];
 };
 
 type ClassifiedSchemaTransform = {
@@ -1713,6 +1715,7 @@ function classifyCandidateSchema(
     bonusActionHealingMovementRider: SchemaNodeClassification[];
     classFeatureIncrementMechanics: SchemaNodeClassification[];
     featRepeatability: SchemaNodeClassification[];
+    spellDeathAftermath: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
@@ -1730,6 +1733,7 @@ function classifyCandidateSchema(
     bonusActionHealingMovementRider: [],
     classFeatureIncrementMechanics: [],
     featRepeatability: [],
+    spellDeathAftermath: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
   const authorize = (
@@ -2166,6 +2170,31 @@ function classifyCandidateSchema(
       ? comparisonOngoingMechanicsOwner.owner
       : transformed;
   };
+  const classifySpellDeathAftermath: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    const properties = objectAt(transformed, "properties");
+    if (properties === undefined) return transformed;
+    const aftermath = properties.deathAftermath;
+    if (
+      !reachable.has(value) ||
+      aftermath === undefined ||
+      !Array.isArray(transformed.required) ||
+      transformed.required.includes("deathAftermath") ||
+      canonicalNodeSha256(aftermath) !==
+        "151227adb4973567b72ecca005d7183195fb750bdf3e78ba856af3f381a12f04"
+    )
+      return transformed;
+    const proposed = {
+      ...transformed,
+      properties: jsonObjectWithoutKeys(properties, ["deathAftermath"]),
+    };
+    return authorize("spellDeathAftermath", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
   const classifiers = [
     classifyCasterHealLinkRangeFeetForCandidate,
     classifyGmSpeedChoiceMinimumForCandidate,
@@ -2184,6 +2213,7 @@ function classifyCandidateSchema(
     classifyBonusActionHealingMovementRider,
     classifyClassFeatureIncrementMechanics,
     classifyFeatRepeatability,
+    classifySpellDeathAftermath,
   ] as const;
   const classify: SchemaObjectClassifier = (value, pointer, transformed) =>
     classifiers.reduce(
@@ -3368,6 +3398,7 @@ function classifySchemaGraphDelta(
     classFeatureIncrementMechanics:
       expected.classifiedChanges.classFeatureIncrementMechanics,
     featRepeatability: expected.classifiedChanges.featRepeatability,
+    spellDeathAftermath: expected.classifiedChanges.spellDeathAftermath,
     targetSelectionVisibility:
       expected.classifiedChanges.targetSelectionVisibility,
     authoredConditionalMechanics:

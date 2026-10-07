@@ -10,7 +10,7 @@ export const SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH =
   "packages/surface/publication/srd-surface-delta-certificate.json";
 
 const SURFACE_PUBLICATION_DELTA_CERTIFICATE_SHA256 =
-  "a3caf0c060d6ae64819bb8e5a0f6ca3b469e6703b1dbe1797c4750df573cf98d";
+  "9cf2c0ffe875362c95f7ba0f8575190d15fb8574309ecd73c551917f617ad1fc";
 
 export type SurfacePublicationDeltaVerificationOptions = {
   readonly repoRoot: string;

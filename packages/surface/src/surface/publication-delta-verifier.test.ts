@@ -2218,7 +2218,11 @@ describe("Surface publication delta verifier", () => {
     180_000,
   );
 
-  test.each(["classFeatureIncrementMechanics", "featRepeatability"])(
+  test.each([
+    "classFeatureIncrementMechanics",
+    "featRepeatability",
+    "spellDeathAftermath",
+  ])(
     "rejects tampering with %s classification pointer",
     (classification) => {
       const result = withFixture(
@@ -2240,6 +2244,7 @@ describe("Surface publication delta verifier", () => {
       expect(result.tag).toBe("invalid");
       expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
     },
+    180_000,
   );
 
   test("rejects tampering with the Life Bond range classification pointer", () => {

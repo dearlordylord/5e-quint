@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "schemaSha256": "aa89a578342c58cad9919f0125eebcb95839a718b8a853e305e206c1b8715850",
-  "dependencyContractSha256": "be4905105f618037a7b2b9b86bffcc94f17a814318133544a0aedd9f83ddceda",
+  "schemaSha256": "b4543d2b7b0d3868a5d49e81813388348ed95dad96c3df5371e458ce5a1535cf",
+  "dependencyContractSha256": "f00b3d6d5a86a90ac0ba1ac6c1c5edd380d2d5e8a5ed394bae3fa19cb3c1de25",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "c409080516f03828a46ce6133ac86e541ef2bfe800a90ba61d8d6fb45c312870",
+      "inputSha256": "c7fdb2b50f2022c108e1ed57007ae375f932bf858ae49872105c3ff2f53811be",
       "expected": {
         "tag": "accepted"
       }
@@ -339,7 +339,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "103c2b00fdbeba0de8a5a85663bcadc272c631c06c850f535ba1b031be2d4294",
+      "inputSha256": "3e2e3c8cc71254b61b81e754e9623d39a98911d5d7c50cf68c184dd1498bf4bf",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1353,77 +1353,84 @@
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[0].statBlockId",
+            "path": "$.units[52].mechanics.deathAftermath[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[53].mechanics.creature.normalForms[0].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_bat",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[1].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[1].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_cat",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[10].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[10].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_weasel",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[2].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[2].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_frog",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[3].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[3].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_hawk",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[4].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[4].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_lizard",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[5].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[5].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_octopus",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[6].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[6].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_owl",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[7].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[7].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_rat",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[8].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[8].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_raven",
             "relation": "stat-block-reference"
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[52].mechanics.creature.normalForms[9].statBlockId",
+            "path": "$.units[53].mechanics.creature.normalForms[9].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_spider",
             "relation": "stat-block-reference"
@@ -1810,6 +1817,22 @@
             "path": "$.units[0].mechanics.creature.normalForms[9].statBlockId",
             "targetKind": "statBlock",
             "targetId": "stat_block_spider",
+            "relation": "stat-block-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.deathAftermath[].statBlockId",
+      "inputSha256": "078fda729ff63bc1853a123ca588d0bd3ed4e4760b5c2915d21f642e0d4d0339",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.deathAftermath[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
             "relation": "stat-block-reference"
           }
         ]

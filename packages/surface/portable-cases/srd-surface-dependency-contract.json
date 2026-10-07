@@ -24,6 +24,13 @@
     },
     {
       "sourceKind": "unit",
+      "path": "mechanics.deathAftermath[].statBlockId",
+      "fieldName": "statBlockId",
+      "targetKind": "statBlock",
+      "relation": "stat-block-reference"
+    },
+    {
+      "sourceKind": "unit",
       "path": "mechanics.grants[].spellId",
       "fieldName": "spellId",
       "targetKind": "unit",

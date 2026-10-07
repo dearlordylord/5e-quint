@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2672251,
-        "sha256": "17f1c5dfc1f46e765dc472fb066479d0105c916b39d27df286ca3b945b1c5d31"
+        "byteLength": 2672446,
+        "sha256": "215149a491a47586ac27b1d5ecf038ab13ef929d0753cd0021aff22e6701fb47"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "a900a7b2b6ae4182691eb4fd23dea7cc8e0dfe3a3846af63319dbdd4dc42c33d",
+        "candidateCanonicalJsonSha256": "d393cb5a81570ff2b532d5805b8079be186eab4e6f5ec2bdd12a88ca19c56006",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -3566,7 +3566,7 @@
             "kind": "added",
             "family": "units",
             "id": "finger_of_death",
-            "candidateCanonicalJsonSha256": "26abd1e713dd0d353e7fdfda8e52059f4b5b894f3a48f253fbe632744a82cab6",
+            "candidateCanonicalJsonSha256": "b3b1f15d30b533b07c665f843bb858ebaac6e4ee2fc8811d553a8ebd9ae39511",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -5903,19 +5903,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1614648,
-        "sha256": "b63a8eb560ffa437d279cf7cd388e7cf91d4c07a71df42b34ca6c8ff45ed5cfc"
+        "byteLength": 1616825,
+        "sha256": "76a0f432442a7d82ab2bf4158efc1d85c9aa6a2f561722e87592d9ed1bb47a06"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "8abea1e20b18d9142a6714e25dd499fe6705e61d4f6607c0314731b40da6c232",
+        "candidateCanonicalJsonSha256": "c8a041c2bc09e1f0bef6d6ff0e6d31c824cf4e00a310f5d82d7599aadde222e3",
         "definitions": {
           "baseline": 1305,
           "candidate": 1304
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7970
+          "candidate": 7998
         },
         "localReferencesComplete": {
           "baseline": true,
@@ -6218,6 +6218,13 @@
                 "pointer": "/$defs/PublishedSrdUnitRecord",
                 "beforeNodeSha256": "e73ea5ba1fa509b59af8e34913264926d67cf74a7ce69160e7e9da6e067e73d1",
                 "afterNodeSha256": "6805c2405608735744dc76b400e46b93db82a7a6f8ef484b43e9bf5ec75b5f24"
+              }
+            ],
+            "spellDeathAftermath": [
+              {
+                "pointer": "/$defs/SrdRecordUnion565Encoded",
+                "beforeNodeSha256": "956702340c413db623178e99d1684e4dfdd7fa63b3880cbe1ecfd60c7e4de00e",
+                "afterNodeSha256": "20a46e8edc668db95b3bbe82de1242e42dae0d8f5dbfe10f11e1fabd06d87a95"
               }
             ]
           },
