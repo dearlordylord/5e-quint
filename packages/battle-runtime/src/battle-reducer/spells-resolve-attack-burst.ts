@@ -1134,6 +1134,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   if (attackDamageAmount > 0) {
     const _concentrationDamageByTargetId: typeof concentrationDamageByTargetId =
       concentrationDamageByTargetId.set(target.combatantId, attackDamageAmount);
+    void _concentrationDamageByTargetId;
   }
   for (const [targetId, burstDamageAmount] of burstDamageByTargetId) {
     const _concentrationDamageByTargetId: typeof concentrationDamageByTargetId =
@@ -1141,6 +1142,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         targetId,
         (concentrationDamageByTargetId.get(targetId) ?? 0) + burstDamageAmount,
       );
+    void _concentrationDamageByTargetId;
   }
   const concentrationSaves = Array.from(
     concentrationDamageByTargetId,

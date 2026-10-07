@@ -3699,25 +3699,28 @@ function spendSpatialMeleeSpellAttackProxyRepositionResources(
   };
 }
 
+function isStatBlockInitialSpellInvocation(
+  invocation: BattleExecutableSpellInvocation | undefined,
+): boolean {
+  return (
+    invocation?.spellRuleFacts.castingSource.tag === "statBlock" &&
+    invocation.access.tag !== "spellEffect"
+  );
+}
+function isQuickenedMagicActionRewrite(
+  invocation: BattleExecutableSpellInvocation,
+  override: "magicAction" | "bonusAction" | undefined,
+): boolean {
+  return (
+    override === "bonusAction" &&
+    spellInvocationHasMagicActionCastingTime(invocation)
+  );
+}
+
 export function resolveBonusActionSpellAct(
   input: AdmittedBonusActionSpellBattleResolutionInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  const selectedActor = input.state.combatants.get(input.subject.actorId);
-  const selectedProcedure =
-    selectedActor === undefined
-      ? undefined
-      : supportedBonusActionSpellInvocationForSubject(
-          selectedActor,
-          input.subject,
-        );
-  if (
-    selectedProcedure?.spellRuleFacts.castingSource.tag === "statBlock" &&
-    selectedProcedure.access.tag !== "spellEffect"
-  )
-    return resolveSpellActInternal(input, executionRegistry, {
-      kind: "registeredProcedure",
-    });
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
   if (actor === undefined) {
@@ -3731,6 +3734,10 @@ export function resolveBonusActionSpellAct(
     actor,
     subject,
   );
+  if (isStatBlockInitialSpellInvocation(selectedInvocation))
+    return resolveSpellActInternal(input, executionRegistry, {
+      kind: "registeredProcedure",
+    });
   const invocationCandidate =
     selectedInvocation ??
     antimagicSuppressedInvocationForStaleSubject(actor, subject);
@@ -3758,9 +3765,10 @@ export function resolveBonusActionSpellAct(
   const actionCostOverride = metamagicActionCostOverride(
     invocationAdmission.applications,
   );
-  const isQuickenedActionSpellRewrite =
-    actionCostOverride === "bonusAction" &&
-    spellInvocationHasMagicActionCastingTime(invocation);
+  const isQuickenedActionSpellRewrite = isQuickenedMagicActionRewrite(
+    invocation,
+    actionCostOverride,
+  );
   if (
     !isQuickenedActionSpellRewrite &&
     !isNativeBonusActionSpellInvocation(invocation)

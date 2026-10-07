@@ -105,7 +105,7 @@ export function spellCastingTimeResourceForSpellCast(input: {
   return { kind: spellCastActionCost(input) };
 }
 
-export function spendSpellCastResources(input: {
+type SpellCastResourceSpendInput = {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
@@ -114,7 +114,11 @@ export function spendSpellCastResources(input: {
   readonly skipTargetActionSpellCastEarlyEnd?: boolean;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
-}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+};
+
+export function spendSpellCastResources(
+  input: SpellCastResourceSpendInput,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const metamagicApplications = metamagicApplicationsOrEmpty(
     input.metamagicApplications,
   );
@@ -146,6 +150,29 @@ export function spendSpellCastResources(input: {
   if (Result.isFailure(spent)) {
     return invalidResult(input.errorState, "staleSubject", spent.failure);
   }
+  return spendSpellCastPayment(
+    input,
+    spellCastState,
+    spent.success,
+    metamagicApplications,
+  );
+}
+
+function stateAfterPriorConcentration(
+  state: BattleState,
+  input: SpellCastResourceSpendInput,
+): BattleState {
+  return spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(state, input.actorId)
+    : state;
+}
+
+function spendSpellCastPayment(
+  input: SpellCastResourceSpendInput,
+  spellCastState: BattleState,
+  turnResources: BattleTurnResources,
+  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const shouldStartConcentration =
     input.startConcentration ?? spellRequiresConcentration(input.invocation);
   const resource = input.invocation.resource;
@@ -153,41 +180,25 @@ export function spendSpellCastResources(input: {
     resource.tag === "statBlockAtWill" ||
     resource.tag === "statBlockLimited"
   ) {
-    const paid = spendStatBlockSpellInvocationResource(
+    return spendStatBlockSpellCastPayment(
+      input,
       spellCastState,
-      input.actorId,
-      resource,
-      input.errorState,
-    );
-    if (paid.tag === "invalid") return paid;
-    const afterPriorConcentration = spellRequiresConcentration(input.invocation)
-      ? breakBattleConcentration(paid.state, input.actorId)
-      : paid.state;
-    return finishSpellCastResourceSpend({
-      state: {
-        ...afterPriorConcentration,
-        currentTurnResources: markInvocationLevelOnePlusSpellCastThisTurn(
-          spent.success,
-          input.actorId,
-          input.invocation,
-        ),
-      },
-      actorId: input.actorId,
-      invocation: input.invocation,
-      errorState: input.errorState,
-      applications: metamagicApplications,
+      turnResources,
+      metamagicApplications,
       shouldStartConcentration,
-    });
+      resource,
+    );
   }
   if (resource.tag === "none") {
-    const afterPriorConcentration = spellRequiresConcentration(input.invocation)
-      ? breakBattleConcentration(spellCastState, input.actorId)
-      : spellCastState;
+    const afterPriorConcentration = stateAfterPriorConcentration(
+      spellCastState,
+      input,
+    );
     const resourced = {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
         markInvocationLevelOnePlusSpellCastThisTurn(
-          spent.success,
+          turnResources,
           input.actorId,
           input.invocation,
         ),
@@ -212,14 +223,15 @@ export function spendSpellCastResources(input: {
       input.errorState,
     );
     if (freeCast.tag === "invalid") return freeCast;
-    const afterPriorConcentration = spellRequiresConcentration(input.invocation)
-      ? breakBattleConcentration(freeCast.state, input.actorId)
-      : freeCast.state;
+    const afterPriorConcentration = stateAfterPriorConcentration(
+      freeCast.state,
+      input,
+    );
     const resourced = {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
         markInvocationLevelOnePlusSpellCastThisTurn(
-          spent.success,
+          turnResources,
           input.actorId,
           input.invocation,
         ),
@@ -236,7 +248,7 @@ export function spendSpellCastResources(input: {
     });
   }
   const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spent.success,
+    turnResources,
     input.actorId,
   );
   if (Result.isFailure(slotTurnResources)) {
@@ -246,9 +258,10 @@ export function spendSpellCastResources(input: {
       "This turn has already expended a Spell Slot.",
     );
   }
-  const afterPriorConcentration = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(spellCastState, input.actorId)
-    : spellCastState;
+  const afterPriorConcentration = stateAfterPriorConcentration(
+    spellCastState,
+    input,
+  );
   const slotted = expendSpellSlot(
     afterPriorConcentration,
     input.actorId,
@@ -263,6 +276,42 @@ export function spendSpellCastResources(input: {
   };
   return finishSpellCastResourceSpend({
     state: resourced,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.errorState,
+    applications: metamagicApplications,
+    shouldStartConcentration,
+  });
+}
+
+function spendStatBlockSpellCastPayment(
+  input: SpellCastResourceSpendInput,
+  spellCastState: BattleState,
+  turnResources: BattleTurnResources,
+  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
+  shouldStartConcentration: boolean,
+  resource: StatBlockSpellInvocationResource,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const paid = spendStatBlockSpellInvocationResource(
+    spellCastState,
+    input.actorId,
+    resource,
+    input.errorState,
+  );
+  if (paid.tag === "invalid") return paid;
+  const afterPriorConcentration = stateAfterPriorConcentration(
+    paid.state,
+    input,
+  );
+  return finishSpellCastResourceSpend({
+    state: {
+      ...afterPriorConcentration,
+      currentTurnResources: markInvocationLevelOnePlusSpellCastThisTurn(
+        turnResources,
+        input.actorId,
+        input.invocation,
+      ),
+    },
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.errorState,

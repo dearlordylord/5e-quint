@@ -19,10 +19,7 @@ import {
   LeveledSpellAccessSchema,
   SpellEffectSpellAccessSchema,
 } from "../battle-reducer/codec-building-blocks.ts";
-import {
-  CantripSpellInvocationResourceSchema,
-  NoSpellInvocationResourceSchema,
-} from "./spell-invocation-codecs.ts";
+import { NoSpellInvocationResourceSchema } from "./spell-invocation-codecs.ts";
 import {
   SpellRuleExecutionFactsSchema,
   StatBlockSpellCastingSourceSchema,

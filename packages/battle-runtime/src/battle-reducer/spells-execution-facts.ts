@@ -39,25 +39,21 @@ export function attachmentValueHasOnlyKeys(
   );
 }
 
-export function supportedDamageAmountExpr(input: {
+type DamageAmountProjectionInput = {
   readonly amount: SurfaceDiceAmount;
   readonly spellLevel?: SpellLevel | undefined;
   readonly slotLevel?: SpellSlotLevel | undefined;
   readonly characterLevel?: number | null | undefined;
-}): DiceExpr | null {
+};
+
+export function supportedDamageAmountExpr(
+  input: DamageAmountProjectionInput,
+): DiceExpr | null {
   const { amount } = input;
-  if (
-    input.characterLevel === null &&
-    amount.kind === "threshold_tiers" &&
-    amount.axis === "character"
-  )
-    return amount.base;
-  if (
-    input.characterLevel === null &&
-    amount.kind === "threshold_tiers_exploding_max_die" &&
-    amount.axis === "character"
-  )
-    return { dice: amount.baseDice, dieSize: amount.dieSize };
+  if (input.characterLevel === null) {
+    const base = characterScalingBaseDamage(amount);
+    if (base !== null) return base;
+  }
   if (amount.kind === "fixed") return amount.expr;
   if (
     isCharacterThresholdTierDamageAmount(amount) &&
@@ -71,30 +67,48 @@ export function supportedDamageAmountExpr(input: {
     input.characterLevel !== undefined &&
     input.characterLevel !== null
   ) {
+    const characterLevel = input.characterLevel;
     return amount.tiers.reduce<DiceExpr>(
       (expr: DiceExpr, tier: ExplodingMaxDieThresholdTier): DiceExpr =>
-        input.characterLevel !== undefined &&
-        input.characterLevel !== null &&
-        input.characterLevel >= tier.atLevel
+        characterLevel >= tier.atLevel
           ? diceExprWithDelta(expr, { dice: tier.dice })
           : expr,
       { dice: amount.baseDice, dieSize: amount.dieSize },
     );
   }
-  if (
-    isSlotLinearDamageAmount(amount) &&
-    input.spellLevel !== undefined &&
-    input.slotLevel !== undefined &&
-    (amount.startingAtLevel === input.spellLevel ||
-      amount.startingAtLevel === input.spellLevel + 1)
-  ) {
-    return slotLinearDamageAmountExpr({
-      amount,
-      spellLevel: input.spellLevel,
-      slotLevel: input.slotLevel,
-    });
+  if (isSlotScalingDamageInput(input)) {
+    return slotLinearDamageAmountExpr(input);
   }
   return null;
+}
+
+function characterScalingBaseDamage(
+  amount: SurfaceDiceAmount,
+): DiceExpr | null {
+  if (amount.kind === "threshold_tiers" && amount.axis === "character")
+    return amount.base;
+  if (
+    amount.kind === "threshold_tiers_exploding_max_die" &&
+    amount.axis === "character"
+  )
+    return { dice: amount.baseDice, dieSize: amount.dieSize };
+  return null;
+}
+
+function isSlotScalingDamageInput(
+  input: DamageAmountProjectionInput,
+): input is DamageAmountProjectionInput & {
+  readonly amount: SlotLinearDamageAmount;
+  readonly spellLevel: SpellLevel;
+  readonly slotLevel: SpellSlotLevel;
+} {
+  return (
+    isSlotLinearDamageAmount(input.amount) &&
+    input.spellLevel !== undefined &&
+    input.slotLevel !== undefined &&
+    (input.amount.startingAtLevel === input.spellLevel ||
+      input.amount.startingAtLevel === input.spellLevel + 1)
+  );
 }
 
 type CharacterThresholdTierDamageAmount = Extract<

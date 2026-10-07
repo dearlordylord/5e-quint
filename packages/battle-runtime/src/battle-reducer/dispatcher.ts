@@ -219,6 +219,24 @@ type ResolveBattleSubjectInternalOptions = {
   readonly readiedActionActorId?: CombatantId;
 };
 
+function isEndConcentrationSubject(
+  subject: BattleSubject,
+): subject is Parameters<typeof resolveEndConcentrationCommand>[0]["subject"] {
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "endConcentration"
+  );
+}
+
+function isLongCastingCommandSubject(
+  subject: BattleSubject,
+): subject is Parameters<typeof resolveLongCastingCommand>[0]["subject"] {
+  return (
+    subject.tag === "runtimeCommand" &&
+    (subject.command === "startSpellCasting" ||
+      subject.command === "continueSpellCasting")
+  );
+}
+
 export function resolveAdmittedBattleSubject(
   input: AdmittedBattleResolutionInput,
   executionRegistry: SpellProcedureExecutionRegistry,
@@ -715,20 +733,13 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveSpecializedAdmission(input);
     }
     const subject = input.subject;
-    if (
-      subject.tag === "runtimeCommand" &&
-      (subject.command === "startSpellCasting" ||
-        subject.command === "continueSpellCasting")
-    ) {
+    if (isLongCastingCommandSubject(subject)) {
       return resolveLongCastingCommand(
         { ...input, subject },
         handledInterruptTrigger,
       );
     }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "endConcentration"
-    ) {
+    if (isEndConcentrationSubject(subject)) {
       return resolveEndConcentrationCommand({ ...input, subject });
     }
     if (subject.tag === "action") {
