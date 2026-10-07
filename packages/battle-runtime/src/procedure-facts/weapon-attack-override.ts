@@ -25,7 +25,7 @@ export type SpellWeaponAttackOverrideTemplate = {
 
 export type WeaponAttackOverrideProcedureFacts = {
   readonly access: CantripSpellAccess;
-  readonly actionCost: "magicAction" | "bonusAction";
+  readonly actionCost: "bonusAction";
   readonly activeEffect: SpellWeaponAttackOverrideTemplate;
   readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;
   readonly procedure: "weaponAttackOverride";

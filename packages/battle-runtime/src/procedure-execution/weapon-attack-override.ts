@@ -1,3 +1,5 @@
+import { spellProcedureExecutionSchema } from "../battle-reducer/spell-procedure-profiles/execution-profile.ts";
+import type { CorrelatedSpellExecution } from "./spell-procedure-execution.ts";
 import { AbilityModifier, AttackBonus } from "@dnd/shared/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { Match, Schema } from "effect";
@@ -26,10 +28,13 @@ import {
 } from "./spell-rule-facts.ts";
 
 /** Authored-identity-free facts consumed by weapon-attack-override execution. */
-export type WeaponAttackOverrideSpellProcedureExecution =
+type WeaponAttackOverrideSpellProcedureExecutionShape =
   WeaponAttackOverrideProcedureFacts & {
     readonly spellRuleFacts: SpellRuleExecutionFacts;
   };
+
+export type WeaponAttackOverrideSpellProcedureExecution =
+  CorrelatedSpellExecution<WeaponAttackOverrideSpellProcedureExecutionShape>;
 
 export type SourcedSpellWeaponAttackOverrideTemplate =
   SpellWeaponAttackOverrideTemplate & {
@@ -57,7 +62,7 @@ type WeaponAttackOverrideExecutableInvocation =
   };
 
 type WeaponAttackOverrideFillInput<ReactionFact> = {
-  readonly reactionFacts: readonly ReactionFact[];
+  readonly reactionSpellTargetFacts: readonly ReactionFact[];
 };
 
 type WeaponAttackOverrideSubject = {
@@ -354,7 +359,7 @@ export function weaponAttackOverrideExecutor<
         casterId: execution.caster.combatantId,
         invocation: input.invocation,
         targetIds: [execution.caster.combatantId],
-        reactionSpellTargetFacts: input.fillInput.reactionFacts,
+        reactionSpellTargetFacts: input.fillInput.reactionSpellTargetFacts,
         castingResource: { kind: "bonusAction" },
         continuation: input.continuation,
       }),
@@ -421,7 +426,7 @@ export const SpellWeaponAttackOverrideTemplateSchema =
   );
 
 export const WeaponAttackOverrideExecutionSchema =
-  exactSchema<WeaponAttackOverrideSpellProcedureExecution>()(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: CantripSpellInvocationResourceSchema,

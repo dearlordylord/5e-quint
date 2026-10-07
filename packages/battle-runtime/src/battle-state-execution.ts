@@ -3300,7 +3300,7 @@ type WeaponAttackOverrideSpellInvocationShape = {
   readonly resource: CantripSpellInvocationResource;
   readonly procedure: "weaponAttackOverride";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction" | "bonusAction";
+  readonly actionCost: import("./procedure-facts/weapon-attack-override.ts").WeaponAttackOverrideProcedureFacts["actionCost"];
   readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;
   readonly attachedWeapon: {
     readonly attack: BoundCharacterWeaponAttackActionOption;

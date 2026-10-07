@@ -1,3 +1,4 @@
+import { invalidResult } from "../result-helpers.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-attack-override
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 //
@@ -1164,6 +1165,15 @@ const resolveWeaponAttackOverride = weaponAttackOverrideExecutor<
 function resolveWeaponAttackOverrideProfile(
   input: Parameters<WeaponAttackOverrideProfile["resolve"]>[0],
 ) {
+  if (
+    input.input.subject.tag !== "bonusActionSpell" ||
+    input.input.subject.mode.tag !== "cast"
+  )
+    return invalidResult(
+      input.input.state,
+      "unsupportedSubject",
+      "Weapon attack override requires its native Bonus Action cast.",
+    );
   const continuation = {
     kind: "replay",
     subject: input.input.subject,

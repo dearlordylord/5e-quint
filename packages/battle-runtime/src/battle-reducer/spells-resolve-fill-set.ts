@@ -41,10 +41,7 @@ import {
   ATTACK_TARGET_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
-import {
-  isScalarBuffTargetListInvocation,
-  isTargetListSpellInvocation,
-} from "./spells-invocation-guards.ts";
+import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import { type SelfTransformationModeKind } from "./domain-constants.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
@@ -1154,20 +1151,8 @@ export function spellFillSet(
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        (invocation.procedure === "scalarBuff" &&
-          !isScalarBuffTargetListInvocation(invocation)) ||
-        (invocation.procedure === "saveGatedCondition" &&
-          !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "abilityD20TestRollModeSaveGate" &&
-          !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "saveGatedConditionWithRepeat" &&
-          !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "compelledNextTurnBehavior" &&
-          !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "targetingSaveInterdiction" &&
-          !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "directCondition" &&
-          !isTargetListSpellInvocation(invocation))
+        invocation.procedure === "scalarBuff" &&
+        invocation.targeting.kind !== "targetList"
       ) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {

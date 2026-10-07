@@ -46,7 +46,7 @@ describe("weapon attack override fill input", () => {
   test("parses no fills as no spell-cast Reaction facts", () => {
     expect(parseWeaponAttackOverrideFillInput([])).toEqual({
       tag: "parsed",
-      input: { reactionFacts: [] },
+      input: { reactionSpellTargetFacts: [] },
     });
   });
 
@@ -54,7 +54,7 @@ describe("weapon attack override fill input", () => {
     expect(parseWeaponAttackOverrideFillInput([reactionFactsFill([])])).toEqual(
       {
         tag: "parsed",
-        input: { reactionFacts: [] },
+        input: { reactionSpellTargetFacts: [] },
       },
     );
   });
@@ -66,7 +66,9 @@ describe("weapon attack override fill input", () => {
       ]),
     ).toEqual({
       tag: "parsed",
-      input: { reactionFacts: [spellCastInterruptionReactionTriggerFact] },
+      input: {
+        reactionSpellTargetFacts: [spellCastInterruptionReactionTriggerFact],
+      },
     });
   });
 

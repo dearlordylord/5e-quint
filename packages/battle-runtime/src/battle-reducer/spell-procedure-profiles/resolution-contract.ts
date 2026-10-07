@@ -353,17 +353,19 @@ export type StoredGlyphSpellProcedureResolution = {
   readonly replay: GlyphStoredSpellReleaseReplayInput;
 };
 
-type TriggeredReactionSaveGatedDamageExecution =
-  SpellProcedureExecutionByProcedure["saveGatedDamage"] & {
-    readonly access: { readonly tag: "prepared" };
-    readonly castingTime: { readonly kind: "reaction" };
-    readonly resource: { readonly tag: "spellSlot" };
-  };
+type TriggeredReactionSaveGatedDamageExecution = Extract<
+  BattleSpellProcedureExecution,
+  { readonly procedure: "saveGatedDamage" }
+> & {
+  readonly access: { readonly tag: "prepared" };
+  readonly castingTime: { readonly kind: "reaction" };
+  readonly resource: { readonly tag: "spellSlot" };
+};
 
 export type TriggeredReactionSaveGatedDamageResolution = {
   readonly input: TriggeredReactionSpellResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: BattleSpellProcedureExecution<TriggeredReactionSaveGatedDamageExecution>;
+  readonly invocation: TriggeredReactionSaveGatedDamageExecution;
   readonly fillSet: OkSpellFillSet;
 };
 

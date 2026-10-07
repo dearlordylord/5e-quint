@@ -1399,11 +1399,24 @@ export function applyMovableLightSpellEffect(
   if (owner.origin.kind !== "character") return state;
   /* v8 ignore stop -- @preserve */
   const activeEffect = allocation.effect;
+  const castingFacts = Match.value(invocation).pipe(
+    Match.when({ access: { tag: "classCantrip" } }, (selected) => ({
+      spellRuleFacts: selected.spellRuleFacts,
+      access: selected.access,
+      resource: { tag: "none" as const },
+    })),
+    Match.when({ access: { tag: "spellAccessCantrip" } }, (selected) => ({
+      spellRuleFacts: selected.spellRuleFacts,
+      access: selected.access,
+      resource: { tag: "none" as const },
+    })),
+    Match.when({ access: { tag: "statBlockCantrip" } }, () => null),
+    Match.exhaustive,
+  );
+  if (castingFacts === null) return state;
   const repositionExecution: RepositionMovableLightManifestationSpellProcedureExecution =
     {
-      spellRuleFacts: invocation.spellRuleFacts,
-      access: invocation.access,
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "movableLightManifestation",
       operation: "reposition",
       actionCost: "bonusAction",

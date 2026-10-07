@@ -7,7 +7,7 @@ import type { BattleFillAfterTurnConstraintSomaticSpellFailureOutcome } from "./
 import { parseSpellCastReactionFactsFill } from "./spells-resolve-fill-set.ts";
 
 export type WeaponAttackOverrideFillInput = {
-  readonly reactionFacts: readonly BattleSpellCastReactionFact[];
+  readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
 };
 
 export type WeaponAttackOverrideFillInputParseResult =
@@ -112,7 +112,7 @@ function classifyWeaponAttackOverrideFill(
 export function parseWeaponAttackOverrideFillInput(
   fills: readonly BattleFillAfterTurnConstraintSomaticSpellFailureOutcome[],
 ): WeaponAttackOverrideFillInputParseResult {
-  let reactionFacts: readonly BattleSpellCastReactionFact[] = [];
+  let reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[] = [];
   let reactionFactsWereSupplied = false;
   for (const fill of fills) {
     const classification = classifyWeaponAttackOverrideFill(fill);
@@ -127,8 +127,8 @@ export function parseWeaponAttackOverrideFillInput(
       };
     }
     /* v8 ignore stop -- @preserve */
-    reactionFacts = classification.facts;
+    reactionSpellTargetFacts = classification.facts;
     reactionFactsWereSupplied = true;
   }
-  return { tag: "parsed", input: { reactionFacts } };
+  return { tag: "parsed", input: { reactionSpellTargetFacts } };
 }
