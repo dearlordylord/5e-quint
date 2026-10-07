@@ -13,7 +13,10 @@ import {
 } from "./index.ts";
 import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
-import { StatBlockGmSpeedChoiceSchema } from "@dnd/surface/surface/schema";
+import {
+  decodeStatBlockRecordSync,
+  StatBlockGmSpeedChoiceSchema,
+} from "@dnd/surface/surface/schema";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 import { PositiveInteger } from "@dnd/shared/types";
@@ -44,13 +47,17 @@ it.each(["missingActor", "size", "speed", "resourceGraph"] as const)(
       Match.when("missingActor", (): StatBlockRecord => source),
       Match.when("size", (): StatBlockRecord => {
         expect(actor.size).not.toBe("gargantuan");
-        return {
+        expect(actor.size).not.toBe("tiny");
+        const statBlock = source.statBlock;
+        if (statBlock.swarm !== undefined)
+          throw new Error("Expected a non-Swarm restoration fixture.");
+        return decodeStatBlockRecordSync({
           ...source,
           statBlock: {
-            ...source.statBlock,
-            size: { kind: "alternatives", options: ["gargantuan"] },
+            ...statBlock,
+            size: { kind: "alternatives", options: ["tiny", "gargantuan"] },
           },
-        };
+        });
       }),
       Match.when("speed", (): StatBlockRecord => {
         const speed = Schema.decodeUnknownSync(StatBlockGmSpeedChoiceSchema)({

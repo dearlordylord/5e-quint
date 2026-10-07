@@ -3,7 +3,10 @@ import {
   battleSelectedSpellInvocationForProcedure,
   discoverBattleActs,
 } from "./battle-act-composition.ts";
-import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./index.ts";
 import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -42,13 +45,13 @@ test("omits initial and live spell acts when their retained presentation context
   if (characterContext === undefined)
     throw new Error("Expected admitted character presentation context.");
   const contexts = [
-    { ...active.context, characters: new Map() },
-    {
-      ...active.context,
-      characters: new Map([
+    battleRuntimeContextForTest(new Map(), active.context.statBlocks),
+    battleRuntimeContextForTest(
+      new Map([
         [spellCasterId, { ...characterContext, spellPresentationSources: [] }],
       ]),
-    },
+      active.context.statBlocks,
+    ),
   ];
   for (const context of contexts) {
     for (const [state, procedureRef] of [
