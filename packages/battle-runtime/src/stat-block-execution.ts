@@ -1199,7 +1199,6 @@ function persistedValuesEqual(actual: unknown, expected: unknown): boolean {
     return (
       Array.isArray(actual) &&
       Array.isArray(expected) &&
-      statBlockSpellDispatchBindingsAreValid(actual) &&
       actual.length === expected.length &&
       actual.every((value, index) =>
         persistedValuesEqual(value, expected[index]),
@@ -1272,7 +1271,6 @@ function resourcePoolStructuresMatch(
 
 function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
   return (
-    statBlockSpellDispatchBindingsAreValid(actual) &&
     actual.length === expected.length &&
     new Set(actual).size === actual.length &&
     new Set(expected).size === expected.length &&
