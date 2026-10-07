@@ -33,6 +33,7 @@
     "test:mbt:antimagic-field-ongoing-suppression": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "test:mbt:blur-attack-roll-defense-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "test:mbt:chained-attack-sequence": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/chained-attack-sequence.mbt.test.ts",
+    "test:mbt:stat-block-spell-concentration": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/stat-block-spell-concentration.mbt.test.ts",
     "test:mbt:concentration-break-teardown": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/concentration-break-teardown.mbt.test.ts",
     "test:mbt:condition-saving-throw-selected-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/condition-saving-throw-selected-identity.mbt.test.ts",
     "test:mbt:creature-size-change-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/creature-size-change-lifecycle.mbt.test.ts",

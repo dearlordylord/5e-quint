@@ -18,7 +18,6 @@ export function startBattleConcentration(
   actorId: CombatantId,
   concentration: BattleConcentration,
 ): Result.Result<BattleState, "missingActor"> {
-  if (!state.combatants.has(actorId)) return Result.fail("missingActor");
   const ended = breakBattleConcentration(state, actorId);
   const actor = ended.combatants.get(actorId);
   if (actor === undefined) return Result.fail("missingActor");

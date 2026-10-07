@@ -673,7 +673,14 @@ export function scalarBuffActiveEffectExpiration(
   duration: BattleSpellAdmissionSource["mechanics"]["duration"],
 ): BattleActiveEffectExpiration | null {
   if (duration.kind === "concentration") {
-    return { kind: "concentration", combatantId: actorId };
+    const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
+    return Result.isFailure(ticks)
+      ? null
+      : {
+          kind: "concentration",
+          combatantId: actorId,
+          durationTicks: ticks.success,
+        };
   }
   if (duration.kind === "timed") {
     const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.value);

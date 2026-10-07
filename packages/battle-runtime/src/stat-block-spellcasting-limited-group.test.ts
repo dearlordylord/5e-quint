@@ -4,7 +4,7 @@ import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
 import { PositiveInteger } from "@dnd/shared/types";
-import { unitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 import {
   admittedStatBlockSource,
@@ -30,6 +30,12 @@ function executionFor(ownership: "each" | "shared") {
     throw new Error("Expected synthetic spellcasting.");
   const record = {
     ...source,
+    id: statBlockId("stat_block_synthetic_limited_caster"),
+    name: "Synthetic Limited Caster",
+    provenance: {
+      kind: "synthetic-test" as const,
+      section: "stat-block-spellcasting-limited-group.test.ts",
+    },
     statBlock: {
       ...source.statBlock,
       actions: [
