@@ -5,7 +5,27 @@ import {
   wizardId,
   wizardTurnWithReadiedRay,
 } from "../battle-runtime.test-support.ts";
-import { resolveEndConcentrationCommand } from "./concentration-procedures.ts";
+import {
+  startBattleConcentration,
+  resolveEndConcentrationCommand,
+} from "./concentration-procedures.ts";
+
+test("starting a validated casting ends a prior readied spell immediately", () => {
+  const state = wizardTurnWithReadiedRay("attackHit").state;
+  const prior = state.combatants.get(wizardId)?.concentration;
+  if (prior === undefined || prior === null)
+    throw new Error("Expected prior Concentration.");
+  expect(state.readiedSpells.has(wizardId)).toBe(true);
+  const started = startBattleConcentration(state, wizardId, {
+    sourceProcedureRef: prior.sourceProcedureRef,
+    effectKind: "spellEffect",
+  });
+  expect(started.readiedSpells.has(wizardId)).toBe(false);
+  expect(started.combatants.get(wizardId)?.concentration).toEqual({
+    sourceProcedureRef: prior.sourceProcedureRef,
+    effectKind: "spellEffect",
+  });
+});
 
 describe("End Concentration procedure owner", () => {
   test("rejects fills, resolves an active Concentration, and rejects stale replay", () => {

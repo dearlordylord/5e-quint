@@ -1,12 +1,34 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 
+import type { CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleState,
+  BattleConcentration,
 } from "../battle-state-execution.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import { invalidResult, resolvedResult } from "./result-helpers.ts";
+
+/** Replace the prior source when a validated Concentration casting begins. */
+export function startBattleConcentration(
+  state: BattleState,
+  actorId: CombatantId,
+  concentration: BattleConcentration,
+): BattleState {
+  const ended = breakBattleConcentration(state, actorId);
+  const actor = ended.combatants.get(actorId);
+  return actor === undefined
+    ? ended
+    : {
+        ...ended,
+        combatants: new Map(ended.combatants).set(actorId, {
+          ...actor,
+          concentration,
+        }),
+      };
+}
 
 type EndConcentrationSubject = Extract<
   BattleSubject,
