@@ -1,7 +1,7 @@
 // RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spell-invocation.unrestricted
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import { expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { restoreAuthoredStatBlockExecutionAdmission } from "./index.ts";
@@ -13,11 +13,109 @@ import {
 } from "./index.ts";
 import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
+import { StatBlockGmSpeedChoiceSchema } from "@dnd/surface/surface/schema";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   statBlockConcentrationBattle,
   statBlockConcentrationCasterId,
   statBlockConcentrationCasterRecord,
 } from "./stat-block-spell-concentration.test-support.ts";
+
+it.each(["missingActor", "size", "speed", "resourceGraph"] as const)(
+  "rejects source-backed restoration when the %s boundary cannot be re-admitted",
+  (boundary) => {
+    const session = statBlockConcentrationBattle();
+    const actor = session.state.combatants.get(statBlockConcentrationCasterId);
+    if (actor?.origin.kind !== "statBlock")
+      throw new Error("Expected Stat Block actor");
+    const snapshot = Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(
+      JSON.parse(
+        JSON.stringify(
+          Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
+            actor.origin.execution,
+          ),
+        ),
+      ),
+    );
+    const source = statBlockConcentrationCasterRecord();
+    const record = Match.value(boundary).pipe(
+      Match.when("missingActor", (): StatBlockRecord => source),
+      Match.when("size", (): StatBlockRecord => {
+        expect(actor.size).not.toBe("gargantuan");
+        return {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            size: { kind: "alternatives", options: ["gargantuan"] },
+          },
+        };
+      }),
+      Match.when("speed", (): StatBlockRecord => {
+        const speed = Schema.decodeUnknownSync(StatBlockGmSpeedChoiceSchema)({
+          kind: "gm_choice",
+          alternatives: [
+            { kind: "climb", feet: { kind: "literal", value: 20 } },
+            { kind: "fly", feet: { kind: "literal", value: 20 } },
+          ],
+        });
+        return {
+          ...source,
+          statBlock: { ...source.statBlock, speeds: [speed] },
+        };
+      }),
+      Match.when("resourceGraph", (): StatBlockRecord => {
+        const group = syntheticSpellcastingProcedureEntry().procedure.groups[1];
+        if (group?.kind !== "limited")
+          throw new Error("Expected limited group");
+        const resource = {
+          ordinal: group.resourceRefs.ordinals[0],
+          ownership: "each" as const,
+          limit: { kind: "daily" as const, uses: PositiveInteger(1) },
+        };
+        return {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            resources: [resource, resource],
+          },
+        };
+      }),
+      Match.exhaustive,
+    );
+    const restored = restoreAuthoredStatBlockExecutionAdmission({
+      state: session.state,
+      actorId:
+        boundary === "missingActor"
+          ? combatantId("synthetic-absent-restoration-actor")
+          : statBlockConcentrationCasterId,
+      statBlock: record,
+      unitCatalog: unitLibrary,
+      snapshot,
+    });
+    expect(Result.isFailure(restored)).toBe(true);
+    if (Result.isSuccess(restored))
+      throw new Error("Expected rejected restoration");
+    if (boundary === "missingActor")
+      expect(restored.failure).toBe("missingStatBlockActor");
+    if (boundary === "size")
+      expect(restored.failure).toMatchObject({
+        reason: "invalidSizeSelection",
+      });
+    if (boundary === "speed")
+      expect(restored.failure).toMatchObject({
+        reason: "unresolvedGmSpeedChoice",
+      });
+    if (boundary === "resourceGraph")
+      expect(restored.failure).toMatchObject({
+        reason: "procedureBindingsMismatch",
+      });
+    expect(session.state.combatants.get(statBlockConcentrationCasterId)).toBe(
+      actor,
+    );
+  },
+);
 
 it.each(["medium", "small"] as const)(
   "restores the published Priest's admitted %s size selection",
