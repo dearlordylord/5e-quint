@@ -1,4 +1,4 @@
-import { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
+import { statBlockSpellInvocationActionCost } from "./stat-block-execution-state.ts";
 import { Match, Option } from "effect";
 import { isStatBlockSpellCastProcedureExecution } from "./stat-block-spell-invocation-dispatch.ts";
 import type { BattleExecutableSpellInvocation } from "./battle-state-execution.ts";

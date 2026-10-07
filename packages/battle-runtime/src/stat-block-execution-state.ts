@@ -650,6 +650,20 @@ export function statBlockSpellcastingActionCost(
   );
 }
 
+/** Effective initial casting cost; long casting uses repeated Magic actions. */
+export function statBlockSpellInvocationActionCost(
+  procedure: Pick<StatBlockSpellcastingProcedure, "kind" | "section">,
+  castingTime: import("@dnd/surface/surface/types").CastingTime,
+): StatBlockSpellcastingActionCost {
+  return Match.value(castingTime.kind).pipe(
+    Match.when(Match.is("minutes", "hours"), () => "magicAction" as const),
+    Match.when(Match.is("action", "bonus_action", "reaction"), () =>
+      statBlockSpellcastingActionCost(procedure),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export type StatBlockProcedure =
   | StatBlockAttackProcedure
   | StatBlockUnarmedStrikeProcedure

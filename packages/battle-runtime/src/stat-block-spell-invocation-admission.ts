@@ -31,7 +31,7 @@ import {
   type StatBlockSpellInvocationDispatch,
 } from "./stat-block-spell-invocation-dispatch.ts";
 import { admittedStatBlockExecutionState } from "./stat-block-execution-state.ts";
-import { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
+import { statBlockSpellInvocationActionCost } from "./stat-block-execution-state.ts";
 import { mapReadonlyNonEmptyArray } from "./readonly-non-empty-array.ts";
 
 export function admitSelectedStatBlockSpellInvocation(input: {
@@ -53,7 +53,10 @@ export function admitSelectedStatBlockSpellInvocation(input: {
   const castingSource = {
     tag: "statBlock" as const,
     castingTime: joined.value.castingTime,
-    actionCost: statBlockSpellcastingActionCost(selection.procedure),
+    actionCost: statBlockSpellInvocationActionCost(
+      selection.procedure,
+      joined.value.castingTime,
+    ),
     invocationRef: selection.ref,
     abilityModifier: abilityModifier(
       abilityScoreToMod(
