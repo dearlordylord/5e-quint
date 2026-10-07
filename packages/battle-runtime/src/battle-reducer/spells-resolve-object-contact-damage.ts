@@ -136,7 +136,9 @@ type ObjectContactTargetSelection = {
   >;
 };
 export function resolveObjectContactDamageSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageInvocation>;
   readonly fillSet: OkSpellFillSet;

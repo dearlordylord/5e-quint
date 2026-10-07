@@ -21,6 +21,7 @@ import { bindStoredSpellProcedureExecutionFacts } from "../character-execution-q
 import type { SpellProcedureExecution } from "../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
+  BonusActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
   BattleExecutableSpellInvocation,
   BattleSpellAreaIdentityChoice,
@@ -303,7 +304,9 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
 }
 
 export function resolvePersistentAreaTraitSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -364,7 +367,9 @@ export function resolvePersistentAreaTraitSpellAct(input: {
 }
 
 export function resolveMagicalDarknessPointOriginSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -474,7 +479,9 @@ function trackedOngoingSpellLightEmittersByEffectRef(
 }
 
 export function resolveRamMovablePersistentAreaSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -541,7 +548,9 @@ export function resolveRamMovablePersistentAreaSpellAct(input: {
 }
 
 export function resolveAreaMovementDistanceDamageSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -602,7 +611,9 @@ export function resolveAreaMovementDistanceDamageSpellAct(input: {
 }
 
 export function resolveMovablePersistentAreaSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -669,7 +680,9 @@ export function resolveMovablePersistentAreaSpellAct(input: {
 }
 
 export function resolvePersistentAreaSaveConditionEscapeSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -730,7 +743,9 @@ export function resolvePersistentAreaSaveConditionEscapeSpellAct(input: {
 }
 
 export function resolvePersistentAreaSaveCompositeSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -782,7 +797,9 @@ export function resolvePersistentAreaSaveCompositeSpellAct(input: {
 }
 
 export function resolveStationaryPersistentAreaAreaHazardSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -838,7 +855,9 @@ export function resolveStationaryPersistentAreaAreaHazardSpellAct(input: {
 }
 
 export function resolveTranslatingPersistentAreaAreaHazardSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -894,7 +913,9 @@ export function resolveTranslatingPersistentAreaAreaHazardSpellAct(input: {
 }
 
 export function resolveDirectionalPersistentAreaSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,

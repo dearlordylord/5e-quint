@@ -8,6 +8,7 @@ import { isReadonlyArrayNonEmpty } from "effect/Array";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
+  type BonusActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleCreatureState,
   type BattleFill,
@@ -90,7 +91,9 @@ export function resolvePreparedSlotSpellRelease(input: {
 }
 
 export function resolvePreparedSlotSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,

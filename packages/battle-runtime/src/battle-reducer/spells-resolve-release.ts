@@ -268,7 +268,9 @@ export function resolveReleaseSpellCreatedHeldObjectCommand(
 }
 
 export function resolveMovableLightCastSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,

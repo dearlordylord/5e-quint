@@ -7,6 +7,7 @@ import {
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import {
   type ActionSpellBattleResolutionInput,
+  type BonusActionSpellBattleResolutionInput,
   type BattleExecutableSpellInvocation,
   type BattleObjectDamageOutcome,
   type BattleObjectIgnitionOutcome,
@@ -97,7 +98,9 @@ type ObjectTargetSpellAttackFillSet = Extract<
 };
 
 type ObjectTargetSpellAttackInput = {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: ObjectTargetSpellAttackInvocation;
   readonly fillSet: ObjectTargetSpellAttackFillSet;
@@ -108,7 +111,9 @@ type DirectCastObjectTargetInput = ObjectTargetSpellAttackInput & {
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
-type ReadiedObjectTargetInput = ObjectTargetSpellAttackInput;
+type ReadiedObjectTargetInput = ObjectTargetSpellAttackInput & {
+  readonly input: ActionSpellBattleResolutionInput;
+};
 
 type ObjectTargetSpellAttackCoreInput = ObjectTargetSpellAttackInput & {
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];

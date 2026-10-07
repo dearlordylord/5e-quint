@@ -570,7 +570,9 @@ function saveMetamagicSelectionFills(
 }
 
 export function resolvePersistentAreaSaveConditionSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -831,7 +833,9 @@ export function resolveStagedSaveConditionSpellAct(
 }
 
 export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -979,7 +983,9 @@ export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
 }
 
 export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -2944,7 +2950,9 @@ function validateSaveGatedConditionImmunityTargets(
 }
 
 export function resolveCompelledNextTurnBehaviorSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -3115,7 +3123,9 @@ export function resolveCompelledNextTurnBehaviorSpellAct(input: {
 }
 
 export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
