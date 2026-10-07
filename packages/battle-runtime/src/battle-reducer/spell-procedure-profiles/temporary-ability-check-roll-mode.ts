@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
+
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -64,7 +64,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
+
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   isSpellCanonicalDurationValue,

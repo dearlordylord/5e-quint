@@ -1,7 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";

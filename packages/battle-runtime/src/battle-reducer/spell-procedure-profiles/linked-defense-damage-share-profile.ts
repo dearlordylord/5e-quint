@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type {
@@ -57,7 +57,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import {
   isSpellCanonicalDurationValue,
   spellConsumedMaterialEvidencePaths,

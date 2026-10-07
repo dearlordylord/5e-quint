@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -75,7 +75,6 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";

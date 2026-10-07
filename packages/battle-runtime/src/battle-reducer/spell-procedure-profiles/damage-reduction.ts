@@ -1,6 +1,6 @@
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
+
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -56,7 +56,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
+
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,

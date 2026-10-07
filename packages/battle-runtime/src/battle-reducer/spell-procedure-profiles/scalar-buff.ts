@@ -2,7 +2,7 @@ import {
   leveledSpellInvocationOptions,
   spellAdmissionActionCost,
 } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeSpellActiveEffectCast,
@@ -105,7 +105,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import { Match, Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {

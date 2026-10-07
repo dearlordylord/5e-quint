@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement
 import {
@@ -65,7 +65,6 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {

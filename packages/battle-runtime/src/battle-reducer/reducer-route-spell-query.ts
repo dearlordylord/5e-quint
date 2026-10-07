@@ -3,12 +3,8 @@ import type {
   BattleResolutionInput,
   BattleState,
 } from "../battle-state-execution.ts";
-import {
-  characterSpellProcedure,
-  type BattleSpellProcedureExecution,
-} from "../character-execution-queries.ts";
+import { type BattleSpellProcedureExecution } from "../character-execution-queries.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 
 export function spellInvocationForRouteSubject(
   state: BattleState,

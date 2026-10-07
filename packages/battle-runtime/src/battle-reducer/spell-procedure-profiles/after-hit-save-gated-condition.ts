@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { optionalProperty } from "../../optional-property.ts";
 import type {
   BattleSpellExecutionSource,
@@ -79,7 +79,6 @@ import type {
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import type {

@@ -1,6 +1,6 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -38,7 +38,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";

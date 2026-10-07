@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import {
   maybeOpenConfiguredSpellCastReactionWindow,
   spendConfiguredSpellCastResources,
@@ -78,7 +78,6 @@ import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-pat
 import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import {
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";

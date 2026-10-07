@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -68,7 +68,6 @@ import type {
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {

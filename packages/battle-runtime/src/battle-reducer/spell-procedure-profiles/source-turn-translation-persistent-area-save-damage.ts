@@ -1,6 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,

@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import type {
   BattleSpellExecutionSource,
   SupportedSpellInvocation,
@@ -62,7 +62,7 @@ import {
   spellProcedureExecutionSchema,
   spellProcedureResolutionContext,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
@@ -92,7 +92,6 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import {
-  attackBonus,
   movementFeet,
   PositiveInteger,
   type SpellSlotLevel,

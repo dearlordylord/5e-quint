@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
@@ -79,7 +79,6 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {

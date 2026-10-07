@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -48,7 +48,6 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {

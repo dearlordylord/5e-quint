@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement
@@ -54,7 +54,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import {
   admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,

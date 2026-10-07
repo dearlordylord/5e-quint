@@ -1076,10 +1076,11 @@ function copySpellCastInterruptCheckpointIdentityAndReturnTarget(input: {
   readonly source: SpellCastInterruptCheckpoint;
   readonly target: SpellCastInterruptCheckpoint;
 }): SpellCastInterruptCheckpoint {
-  const _copiedIdentity: void = copyInterruptCheckpointIdentity(
+  const copiedIdentity: void = copyInterruptCheckpointIdentity(
     input.source,
     input.target,
   );
+  void copiedIdentity;
   return input.target;
 }
 

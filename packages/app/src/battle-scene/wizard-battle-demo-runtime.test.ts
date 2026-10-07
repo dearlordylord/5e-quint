@@ -4,7 +4,9 @@ import {
   battleExecutionScopeOrdinal,
   battleId,
   battleProcedureExecutionRef,
+  battleResourcePoolExecutionRef,
   type BattleRuntimeResolutionResult,
+  battleStatBlockExecutionScopeRef,
   combatantId
 } from "@dnd/battle-runtime"
 import { NonNegativeInteger } from "@dnd/shared/types"
@@ -12,6 +14,7 @@ import { describe, expect, test } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
 import {
+  counterspellCastingResourceMatchesSlotLevel,
   requireActionSpellAct,
   requireCounterspellChoice,
   requireCounterspellProcedureRef,
@@ -32,6 +35,25 @@ function replaceNonEmptyAt<T>(
 }
 
 describe("wizard battle demo runtime guards", () => {
+  test("Stat Block casting resources do not satisfy a character slot selection", () => {
+    const scope = battleStatBlockExecutionScopeRef(
+      battleId("synthetic-resource-selection"),
+      combatantId("synthetic-caster"),
+      battleExecutionScopeOrdinal(0)
+    )
+    expect(counterspellCastingResourceMatchesSlotLevel({ tag: "statBlockAtWill", castLevel: 3 }, 3)).toBe(false)
+    expect(
+      counterspellCastingResourceMatchesSlotLevel(
+        {
+          tag: "statBlockLimited",
+          castLevel: 3,
+          resourcePoolRef: battleResourcePoolExecutionRef(scope, NonNegativeInteger(0))
+        },
+        3
+      )
+    ).toBe(false)
+  })
+
   test("reports stale authored fixture selections at their boundary", () => {
     const session = WIZARD_BATTLE_DEMO_STEPS[0].session
 

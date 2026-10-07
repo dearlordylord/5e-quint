@@ -15,7 +15,8 @@ import {
   type BattleSubject,
   type CombatantId,
   discoverBattleActs,
-  SPELL_CAST_REACTION_FACTS_HOLE_ID
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+  type SupportedSpellInvocation
 } from "@dnd/battle-runtime"
 import { d20Roll, DieRollResult, movementFeet } from "@dnd/shared/types"
 import { Match } from "effect"
@@ -126,24 +127,33 @@ export function counterspellTriggerFact(input: {
   }
 }
 
+export function counterspellCastingResourceMatchesSlotLevel(
+  resource: Extract<SupportedSpellInvocation, { readonly procedure: "spellCastInterruptionReaction" }>["resource"],
+  slotLevel: number
+): boolean {
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      spellSlot: ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel,
+      spellAccessFreeCast: ({ castLevel }) => Number(castLevel) === slotLevel,
+      statBlockAtWill: () => false,
+      statBlockLimited: () => false
+    })
+  )
+}
+
 export function requireCounterspellProcedureRef(
   context: BattleRuntimeContext,
   reactorId: CombatantId,
   slotLevel: number
 ): CounterspellTriggerFact["sourceProcedureRef"] {
   const sources =
-    context.characters.get(reactorId)?.spellPresentationSources.filter(
-      (candidate) =>
-        candidate.invocation.procedure === SPELL_CAST_INTERRUPTION_REACTION_PROCEDURE &&
-        Match.value(candidate.invocation.resource).pipe(
-          Match.discriminatorsExhaustive("tag")({
-            spellSlot: ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel,
-            spellAccessFreeCast: ({ castLevel }) => Number(castLevel) === slotLevel,
-            statBlockAtWill: () => false,
-            statBlockLimited: () => false
-          })
-        )
-    ) ?? []
+    context.characters
+      .get(reactorId)
+      ?.spellPresentationSources.filter(
+        (candidate) =>
+          candidate.invocation.procedure === SPELL_CAST_INTERRUPTION_REACTION_PROCEDURE &&
+          counterspellCastingResourceMatchesSlotLevel(candidate.invocation.resource, slotLevel)
+      ) ?? []
   /* v8 ignore next -- @preserve -- defensive failure after fixture-authored spell presentation setup */
   if (sources.length !== 1) {
     throw new Error(`Expected exactly one Counterspell procedure presentation source; got ${sources.length}.`)

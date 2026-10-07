@@ -12,7 +12,6 @@ import {
   abilityModifier,
   attackBonus,
   difficultyClass,
-  spellSlotLevel,
 } from "@dnd/shared/types";
 import { Match, Option, Result } from "effect";
 import type {

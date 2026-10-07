@@ -1,6 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
 import { replaceTargetActiveEffectsEndingDisplacedConcentrations } from "../active-effect-replacement.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -78,7 +78,6 @@ import type {
 } from "./profile.ts";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";

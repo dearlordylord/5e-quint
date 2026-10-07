@@ -1,7 +1,7 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-glyph-stored-concentration-full-duration
@@ -19,7 +19,6 @@ import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts
 //     Spell Invocation, Spell Effect, Speed, Damage Type, and Unarmed Strike.
 
 import {
-  attackBonus,
   AbilityModifier,
   PositiveInteger,
   type ReadonlyNonEmptyArray,
@@ -87,7 +86,7 @@ import {
   LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import {
   isSpellCanonicalDurationValue,
   spellConsumedMaterialEvidencePaths,

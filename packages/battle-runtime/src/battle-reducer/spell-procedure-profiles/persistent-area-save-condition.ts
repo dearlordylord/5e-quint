@@ -1,5 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import {
@@ -58,7 +58,6 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {

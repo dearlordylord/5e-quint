@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-damage-rider
@@ -84,7 +84,6 @@ import {
   LeveledSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 
 type WeaponDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
