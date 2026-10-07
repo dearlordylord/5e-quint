@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { SpellSlotLevel } from "@dnd/shared/types";
+import { SpellLevelSchema } from "@dnd/surface/surface/schema";
 import {
   ArmorOfShadowsSpellAccessSchema,
   CharacterPreparedSpellAccessSchema,
@@ -23,6 +23,12 @@ import {
   AccessSpellCastingSourceSchema,
   SpellDefinitionRuleFactsSchema,
 } from "./spell-rule-facts.ts";
+
+type LeveledDefinitionLevel = Exclude<typeof SpellLevelSchema.Type, 0>;
+const LeveledDefinitionLevelSchema = Schema.refine<
+  typeof SpellLevelSchema,
+  LeveledDefinitionLevel
+>((level): level is LeveledDefinitionLevel => level !== 0)(SpellLevelSchema);
 
 const CharacterCastingSourceSchema = Schema.Union([
   ClassSpellCastingSourceSchema,
@@ -62,7 +68,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
   Schema.Struct({
     spellRuleFacts: Schema.Struct({
       ...CharacterSpellRuleFactsSchema.fields,
-      level: SpellSlotLevel,
+      level: LeveledDefinitionLevelSchema,
     }),
     access: CharacterPreparedAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
@@ -70,7 +76,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
   Schema.Struct({
     spellRuleFacts: Schema.Struct({
       ...CharacterSpellRuleFactsSchema.fields,
-      level: SpellSlotLevel,
+      level: LeveledDefinitionLevelSchema,
       castingSource: AccessSpellCastingSourceSchema,
     }),
     access: CharacterPreparedAccessSchema,
@@ -92,7 +98,7 @@ export const SpellInvocationCastingFactsSchema = Schema.Union([
   Schema.Struct({
     spellRuleFacts: Schema.Struct({
       ...StatBlockSpellRuleFactsSchema.fields,
-      level: SpellSlotLevel,
+      level: LeveledDefinitionLevelSchema,
     }),
     access: StatBlockLeveledSpellAccessSchema,
     resource: StatBlockLeveledSpellInvocationResourceSchema,
