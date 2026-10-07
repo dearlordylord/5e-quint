@@ -87,17 +87,33 @@ describe("registered contextual spell admission result", () => {
     ]);
   });
 
-  test("keeps a root without Battle ownership distinct", () => {
-    const spell = spellAdmissionSource(spellRecord("identify"));
-    const result = admitRegisteredSpellProcedures(spell, {
-      ...admissionContextForTest(),
-      castingSource: spell.castingSource,
-      spellCastOptions: [],
-    });
+  test.each(["identify", "synthetic-no-effect-root"])(
+    "keeps a root without Battle ownership distinct: %s",
+    (selectedId) => {
+      const base = spellRecord("identify");
+      const record =
+        selectedId === "identify"
+          ? base
+          : decodeSpellRecordForTest({
+              ...base,
+              id: selectedId,
+              name: "Synthetic No Effect Root",
+              provenance: {
+                kind: "synthetic-test",
+                section: "explicit no-effect ownership",
+              },
+            });
+      const spell = spellAdmissionSource(record);
+      const result = admitRegisteredSpellProcedures(spell, {
+        ...admissionContextForTest(),
+        castingSource: spell.castingSource,
+        spellCastOptions: [],
+      });
 
-    expect(result).toEqual({ tag: "notBattleOwned" });
-    expect(battleSpellExecutionSourceFromAdmission(spell)).not.toHaveProperty(
-      "mechanics",
-    );
-  });
+      expect(result).toEqual({ tag: "notBattleOwned" });
+      expect(battleSpellExecutionSourceFromAdmission(spell)).not.toHaveProperty(
+        "mechanics",
+      );
+    },
+  );
 });

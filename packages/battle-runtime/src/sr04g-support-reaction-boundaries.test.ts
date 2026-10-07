@@ -324,7 +324,11 @@ describe("SR-04G support and reaction projection boundaries", () => {
         sourceCombatantId: spellCasterId,
         bonus: 2,
         negatesRepeatedDamageAllocation: false,
-        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: 100,
+        },
       },
     });
 
@@ -385,7 +389,11 @@ describe("SR-04G support and reaction projection boundaries", () => {
         spellCasterId,
         spellRecord("bless").mechanics.duration,
       ),
-    ).toEqual({ kind: "concentration", combatantId: spellCasterId });
+    ).toEqual({
+      kind: "concentration",
+      combatantId: spellCasterId,
+      durationTicks: 10,
+    });
     expect(
       scalarBuffActiveEffectExpiration(
         spellCasterId,
@@ -440,7 +448,11 @@ describe("SR-04G support and reaction projection boundaries", () => {
       on: ["attack_roll", "saving_throw"],
       delta: { dice: 1, dieSize: 4, sign: "+" },
       skillFilter: { kind: "none" },
-      expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: 10,
+      },
     });
     expect(
       rollModifierActiveEffect(
@@ -455,7 +467,11 @@ describe("SR-04G support and reaction projection boundaries", () => {
       on: ["attack_roll", "saving_throw"],
       delta: { dice: 1, dieSize: 4, sign: "-" },
       skillFilter: { kind: "none" },
-      expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: 10,
+      },
     });
 
     expect(
@@ -470,7 +486,11 @@ describe("SR-04G support and reaction projection boundaries", () => {
         kind: "abilityCheckRollMode",
         sourceCombatantId: spellCasterId,
         mode: "advantage",
-        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: 10,
+        },
       },
       abilityChoices: ["str", "dex", "int", "wis", "cha"],
       abilityChoiceApplication: "perTarget",

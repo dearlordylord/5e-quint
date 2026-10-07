@@ -1,7 +1,7 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -63,7 +63,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
@@ -81,7 +81,6 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import {
-  attackBonus,
   PositiveInteger,
   type MovementFeet as MovementFeetType,
 } from "@dnd/shared/types";

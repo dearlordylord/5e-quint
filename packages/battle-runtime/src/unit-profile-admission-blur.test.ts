@@ -57,6 +57,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
           expiresAt: {
             kind: "concentration",
             combatantId: spellCasterId,
+            durationTicks: 10,
           },
         }),
       ],
@@ -208,6 +209,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
+          durationTicks: 10,
         },
       }),
     );

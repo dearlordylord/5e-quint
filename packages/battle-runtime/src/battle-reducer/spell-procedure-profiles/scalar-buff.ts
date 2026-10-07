@@ -1343,6 +1343,21 @@ function scalarBuffOngoingEffectProjection(
   return projection;
 }
 
+function isInstantaneousNoEffectRoot(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  if (mechanics.duration.kind !== "instantaneous") return false;
+  return mechanics.phases.every((phase) => {
+    if (phase.kind !== "direct") return false;
+    const effects = phase.effects;
+    return (
+      effects !== undefined &&
+      effects.length > 0 &&
+      effects.every((effect) => effect.kind === "none")
+    );
+  });
+}
+
 function isScalarBuffRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ScalarBuffMechanics {
@@ -1354,6 +1369,7 @@ function isScalarBuffRepresentation(
   }
   return Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) => {
+      if (isInstantaneousNoEffectRoot(activation)) return false;
       const hasSupportedRangeRole =
         scalarBuffSpellRangeFeet(activation.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(
