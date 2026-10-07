@@ -2,7 +2,6 @@ import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import {
   ongoingSpellRepeatCastIsAvailable,
@@ -123,7 +122,6 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -1811,6 +1809,9 @@ function admitObjectContactDamage(
   ctx: SpellAdmissionContext,
   facts: ObjectContactDamageMechanicsFacts,
 ): readonly ObjectContactDamageInvocation[] {
+  // The later-turn repeat procedure is installed in character execution.
+  // Admit the initial cast only when that continuation has an owner.
+  if (ctx.kind === "statBlock") return [];
   return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ObjectContactDamageInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];

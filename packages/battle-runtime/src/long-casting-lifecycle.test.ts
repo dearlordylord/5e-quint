@@ -528,6 +528,21 @@ describe("long spellcasting through catalog admission and public battle executio
     expect(
       state.combatants.get(longCastingActorId)?.concentration,
     ).toMatchObject({ progress: { kind: "readyToComplete" } });
+    const completion = discoverBattleActCandidates(state).find(
+      (act) => act.subject.tag === "actionSpell",
+    );
+    if (completion === undefined) throw new Error("Expected Magic completion");
+    const roll = requireHole(completion.initialHoles, "rolledDice");
+    state = resolved(
+      resolveBattleSubject({
+        state,
+        subject: completion.subject,
+        fills: [damageRollFillWithGroups(roll, [[3, 4]])],
+      }),
+    );
+    expect(state.combatants.get(longCastingActorId)?.tempHp).toBe(11);
+    expect(state.currentTurnResources.currentHasBonusAction).toBe(true);
+    expect(state.combatants.get(longCastingActorId)?.concentration).toBeNull();
   });
 
   it("retains hour metadata and requires all 600 actual battle turns", () => {
