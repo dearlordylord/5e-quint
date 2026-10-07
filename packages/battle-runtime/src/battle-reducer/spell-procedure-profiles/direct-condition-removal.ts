@@ -1,7 +1,6 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type {
   BattleSpellExecutionSource,
@@ -20,7 +19,6 @@ import {
   type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 
@@ -61,7 +59,6 @@ import type {
 } from "./profile.ts";
 import { Match, Result, Schema } from "effect";
 import {
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -819,7 +816,7 @@ function resolveDirectConditionRemoval(
 }
 
 function directConditionRemovalSpellTargetSelection(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureProfileResolveInput<DirectConditionRemovalInvocation>["input"];
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<DirectConditionRemovalInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;

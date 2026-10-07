@@ -1,7 +1,6 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-removal-protection
@@ -17,7 +16,6 @@ import type { SpellMechanics, EffectAtom } from "@dnd/surface/surface/types";
 
 import {
   type BattleSpellExecutionSource,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -47,7 +45,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
   admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
@@ -853,7 +850,7 @@ function resolveConditionRemovalProtection(
 }
 
 function conditionRemovalProtectionSpellTargetSelection(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureProfileResolveInput<ConditionRemovalProtectionSpellInvocation>["input"];
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;

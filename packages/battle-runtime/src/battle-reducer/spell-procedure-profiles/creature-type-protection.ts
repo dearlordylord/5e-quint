@@ -33,7 +33,6 @@ import { Match, Schema } from "effect";
 
 import { CreatureTypeProtectionTemplateSchema } from "../../active-effect/codecs.ts";
 import type {
-  ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
   BattleExecutableSpellInvocation,
   BattleResolutionResult,
@@ -813,7 +812,7 @@ function resolve(
 }
 
 function targetSelection(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureProfileResolveInput<CreatureTypeProtectionSpellInvocation>["input"];
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
