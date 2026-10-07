@@ -5145,11 +5145,24 @@ export const ModalOngoingEffectMechanicsSchema =
     ),
   );
 
+/** A spell's lethal consequence remains an obligation beyond its initial damage. */
+export const SpellDeathAftermathSchema = strictStruct({
+  kind: Schema.Literal("reanimate_creature_killed_by_spell"),
+  creatureType: CreatureTypeSchema,
+  timing: Schema.Literal("start_of_caster_next_turn"),
+  statBlockId: surfaceStatBlockDependency(
+    Schema.Trimmed.check(Schema.isNonEmpty()),
+    "stat-block-reference",
+  ),
+  control: Schema.Literal("caster_verbal_orders"),
+});
+
 export const ActivationMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
   Schema.fieldsAssign(
     Schema.Struct({
       family: Schema.Literal("activation"),
       phases: nonEmpty(ActivationPhaseSchema),
+      deathAftermath: optionalExact(nonEmpty(SpellDeathAftermathSchema)),
     }).fields,
   ),
 );

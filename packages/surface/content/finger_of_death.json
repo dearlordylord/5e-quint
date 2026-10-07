@@ -10,6 +10,15 @@
       "s": true,
       "v": true
     },
+    "deathAftermath": [
+      {
+        "control": "caster_verbal_orders",
+        "creatureType": "humanoid",
+        "kind": "reanimate_creature_killed_by_spell",
+        "statBlockId": "stat_block_zombie",
+        "timing": "start_of_caster_next_turn"
+      }
+    ],
     "duration": {
       "kind": "instantaneous"
     },

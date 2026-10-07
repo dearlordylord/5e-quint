@@ -4,12 +4,8 @@
 -- Fail: 7d8+30 Necrotic damage; Success: half (half_damage sentinel).
 -- No upcast text in source.
 --
--- OMITTED RIDER: "A Humanoid killed by this spell rises at the start of your
--- next turn as a Zombie that follows your verbal orders."
--- → requires: (a) on_kill_window atom (not in v4); (b) create_companion
---   in Effect type (v4 atom but absent from surface); (c) creature-type
---   filter "Humanoid only" (no creature-type predicate in v4 taxonomy).
--- Classified as: atom_widening (on_kill_window absent from v4).
+-- The death aftermath is retained as a typed obligation; its execution owner
+-- must reanimate a Humanoid killed by this spell on the caster's next turn.
 --
 -- "Half damage on success" uses the SaveSuccessOutcome `half_damage`
 -- sentinel, which links to onFail.damage — no need to duplicate
@@ -32,6 +28,14 @@ let fingerOfDeath =
           , range = { kind = "point", feet = 60 }
           , components = { v = True, s = True, m = False }
           , duration = { kind = "instantaneous" }
+          , deathAftermath =
+              [ { kind = "reanimate_creature_killed_by_spell"
+                , creatureType = "humanoid"
+                , timing = "start_of_caster_next_turn"
+                , statBlockId = "stat_block_zombie"
+                , control = "caster_verbal_orders"
+                }
+              ]
           , phases =
               [ { kind = "save_gate"
                 , attachment =
