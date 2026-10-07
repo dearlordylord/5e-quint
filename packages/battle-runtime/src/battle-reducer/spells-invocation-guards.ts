@@ -69,7 +69,11 @@ export function isTargetListSpellInvocation<
   Invocation extends RuntimeSpellProcedure,
 >(
   invocation: Invocation,
-): invocation is Invocation & TargetListSpellInvocation {
+): invocation is Invocation & {
+  readonly targeting: {
+    readonly kind: TargetListSpellInvocation["targeting"]["kind"];
+  };
+} {
   return (
     "targeting" in invocation &&
     (invocation.targeting.kind === "targetList" ||

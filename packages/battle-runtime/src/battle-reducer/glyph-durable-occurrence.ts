@@ -168,7 +168,10 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { sameStringSet } from "./spells-execution-facts.ts";
-import { spellTargetHole, spellTargetListHole } from "./spells-holes-fills.ts";
+import {
+  spellTargetHole,
+  spellTargetListHoleId,
+} from "./spells-holes-fills.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
@@ -2085,11 +2088,7 @@ function glyphStoredSpellReleaseFills(input: {
       return [
         {
           kind: "spellTargetList",
-          holeId: spellTargetListHole(
-            input.state,
-            input.effect.sourceCombatantId,
-            targetListInvocation,
-          ).holeId,
+          holeId: spellTargetListHoleId(targetListInvocation),
           value: { targetIds: [input.witness.targeting.targetId] },
           spatialFacts: glyphStoredSpellTargetListSpatialFacts({
             state: input.state,
