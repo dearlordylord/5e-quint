@@ -43,7 +43,10 @@ export function admitSelectedStatBlockSpellInvocation(input: {
   const joined = input.definitionJoin;
   if (joined.kind !== "joined")
     return { kind: "unsupported", reason: joined.kind };
-  if (joined.value.continuation.kind === "restricted") {
+  if (
+    input.selection.invocation.kind === "restricted" ||
+    joined.value.continuation.kind === "restricted"
+  ) {
     return { kind: "unsupported", reason: "unsupportedRestriction" };
   }
   const { selection } = input;
@@ -179,6 +182,7 @@ export function statBlockCreatureWithAdmittedSpellInvocations(
         procedureOrdinal: procedure.procedureOrdinal,
         groupOrdinal: group.groupOrdinal,
         invocationOrdinal: invocation.invocationOrdinal,
+        invocation,
       })),
     );
   });
@@ -198,9 +202,14 @@ export function statBlockCreatureWithAdmittedSpellInvocations(
   if (
     candidatesByKey.size !== plan.length ||
     plan.length !== expectedCoordinates.length ||
-    !expectedCoordinates.every((entry) =>
-      candidatesByKey.has(coordinateKey(entry)),
-    )
+    !expectedCoordinates.every((entry) => {
+      const candidate = candidatesByKey.get(coordinateKey(entry));
+      if (candidate === undefined) return false;
+      if (candidate.definitionJoin.kind !== "joined") return true;
+      const continuation = candidate.definitionJoin.value.continuation;
+      if (continuation.kind !== entry.invocation.kind) return false;
+      return true;
+    })
   )
     return Result.fail("admissionPlanMismatch");
   const procedureBindings = execution.procedureBindings.map((binding) => {

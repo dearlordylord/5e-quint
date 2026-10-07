@@ -1,3 +1,4 @@
+import { StatBlockSpellInvocationDeltasSchema } from "@dnd/surface/surface/schema";
 import { statBlockSpellDispatchBindingsAreValid } from "../stat-block-spell-invocation-selection.ts";
 import { statBlockSpellInvocationProcedureRef } from "../identity.ts";
 import {
@@ -6347,11 +6348,27 @@ const StatBlockSpellInvocationDispatchSchema = Schema.Union([
   }),
 ]);
 
-const StatBlockSpellcastingInvocationOutcomeSchema = Schema.Struct({
-  invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
-  kind: Schema.Literals(["unrestricted", "restricted"]),
-  dispatch: StatBlockSpellInvocationDispatchSchema,
-});
+function statBlockSpellcastingInvocationOutcomeSchema<
+  const F extends Schema.Struct.Fields,
+>(fields: F) {
+  return Schema.Union([
+    Schema.Struct({
+      ...fields,
+      invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
+      kind: Schema.Literal("unrestricted"),
+      dispatch: StatBlockSpellInvocationDispatchSchema,
+    }),
+    Schema.Struct({
+      ...fields,
+      invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
+      kind: Schema.Literal("restricted"),
+      deltas: StatBlockSpellInvocationDeltasSchema,
+      dispatch: StatBlockSpellInvocationDispatchSchema,
+    }),
+  ]);
+}
+const StatBlockSpellcastingInvocationOutcomeSchema =
+  statBlockSpellcastingInvocationOutcomeSchema({});
 
 const StatBlockSpellcastingSpellSaveDcSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
@@ -6386,11 +6403,8 @@ const StatBlockSpellcastingGroupSchema = Schema.Union([
     groupOrdinal: StatBlockSpellcastingGroupOrdinal,
     resourceOwnership: Schema.Literal("each"),
     invocations: Schema.NonEmptyArray(
-      Schema.Struct({
-        kind: Schema.Literals(["unrestricted", "restricted"]),
-        invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
+      statBlockSpellcastingInvocationOutcomeSchema({
         resourcePoolRef: BattleResourcePoolExecutionRef,
-        dispatch: StatBlockSpellInvocationDispatchSchema,
       }),
     ),
   }),

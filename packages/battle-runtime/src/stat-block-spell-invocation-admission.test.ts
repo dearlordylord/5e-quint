@@ -108,34 +108,15 @@ describe("Stat Block invocation production admission", () => {
     const encoded = Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
       actor.origin.execution,
     );
-    const wrongCoordinates = {
-      ...encoded,
-      procedureBindings: encoded.procedureBindings.map((candidate) => {
-        if (candidate.procedure.kind !== "spellcasting") return candidate;
-        const groups = candidate.procedure.groups.map((group) => ({
-          ...group,
-          invocations: group.invocations.map((alternative) => {
-            if (alternative.dispatch.kind !== "executable") return alternative;
-            const executions = alternative.dispatch.executions.map((child) => ({
-              ...child,
-              access: {
-                tag: "statBlockLeveled",
-                invocationRef: {
-                  procedureRef: candidate.procedureRef,
-                  groupOrdinal: 999,
-                  invocationOrdinal: alternative.invocationOrdinal,
-                },
-              },
-            }));
-            return {
-              ...alternative,
-              dispatch: { ...alternative.dispatch, executions },
-            };
-          }),
-        }));
-        return { ...candidate, procedure: { ...candidate.procedure, groups } };
-      }),
-    };
+    const source = invocation.spellRuleFacts.castingSource;
+    if (source.tag !== "statBlock")
+      throw new Error("Expected Stat Block caster source");
+    const wrongCoordinates: unknown = JSON.parse(
+      JSON.stringify(encoded).replace(
+        JSON.stringify(source.invocationRef),
+        JSON.stringify({ ...source.invocationRef, groupOrdinal: 999 }),
+      ),
+    );
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(

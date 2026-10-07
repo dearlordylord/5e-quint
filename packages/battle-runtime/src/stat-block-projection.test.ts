@@ -609,7 +609,17 @@ describe("generic Stat Block projection", () => {
           resourceRefs: [],
           invocations: [
             { kind: "unrestricted", invocationOrdinal: 0 },
-            { kind: "restricted", invocationOrdinal: 1 },
+            {
+              kind: "restricted",
+              invocationOrdinal: 1,
+              deltas: [
+                {
+                  kind: "temporary_hit_points",
+                  maintenanceRequirement: "not_required",
+                  spellGrant: "none",
+                },
+              ],
+            },
           ],
         },
         {

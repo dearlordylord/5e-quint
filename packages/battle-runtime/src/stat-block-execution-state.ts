@@ -355,17 +355,7 @@ export type BattleStatBlockRuntimeMultiattackDispatch = {
   readonly count: PositiveIntegerType;
 };
 
-/**
- * A spell reference after the generic Stat Block procedure boundary has
- * removed authored identity and protected expression. Restricted references
- * remain a typed, non-executable child outcome; #428's semantic deltas are
- * intentionally not promoted into this runtime shape.
- *
- * This increment never selects a child invocation. The child owner will add a
- * canonical invocation reference at its own selection boundary; until then an
- * outcome kind is enough to preserve the procedure's admitted shape without
- * creating a positional or authored-identity dispatch key.
- */
+/** Identity-free invocation continuation retained after authored admission. */
 export type StatBlockSpellcastingInvocationCandidate =
   | {
       readonly kind: "unrestricted";
@@ -373,6 +363,7 @@ export type StatBlockSpellcastingInvocationCandidate =
     }
   | {
       readonly kind: "restricted";
+      readonly deltas: import("@dnd/surface/surface/types").StatBlockSpellInvocationDeltas;
       readonly invocationOrdinal: StatBlockSpellcastingInvocationOrdinal;
     };
 

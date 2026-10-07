@@ -558,6 +558,7 @@ function runtimeSpellcastingInvocations(
         }
       : {
           kind: "restricted" as const,
+          deltas: spell.restriction.deltas,
           invocationOrdinal: statBlockSpellcastingInvocationOrdinal(index),
         },
   );
