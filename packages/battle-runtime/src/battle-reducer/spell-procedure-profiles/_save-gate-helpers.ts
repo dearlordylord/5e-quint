@@ -1356,7 +1356,7 @@ export function supportedCantripSaveGateDamageProfile(
 
 export function supportedPreparedSaveGateDamageProfile(
   spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  castOptions: readonly import("./profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {
   return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
@@ -1373,7 +1373,7 @@ export function supportedPreparedSaveGateDamageProfile(
 
 export function supportedPreparedSaveGateConditionProfile(
   spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  castOptions: readonly import("./profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {
   const conditionSpell = supportedSaveGateConditionSpell(spell);
   const rangeFeet = saveGateRangeFeetFromRuleFacts(
@@ -2485,7 +2485,7 @@ export function supportedSaveGateConditionSpell(
 export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  castOptions: readonly import("./profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {
   const attackRollAdvantageSpell = areaSaveGatedAttackRollAdvantageSpell(
     actorId,
@@ -2528,7 +2528,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
 export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  castOptions: readonly import("./profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {
   const d20Lifecycle = abilityD20TestRollModeSaveGateSpell(actorId, spell);
   const rangeFeet = saveGateRangeFeetFromRuleFacts(
@@ -2572,7 +2572,7 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
 export function supportedPreparedSaveGateConditionImmunityProfile(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  castOptions: readonly import("./profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {
   const conditionImmunitySpell = areaConditionImmunitySaveGateSpell(
     actorId,

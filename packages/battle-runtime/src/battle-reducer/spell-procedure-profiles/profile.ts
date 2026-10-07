@@ -294,9 +294,6 @@ export function cantripSpellAccessFor(
   return cantripSpellAccessForCastingSource(castingSource);
 }
 
-export type PreparedSpellSlotInvocationBase<S = BattleSpellAdmissionSource> =
-  AuthoredLeveledCastingFacts<S>;
-
 export function spellInvocationResourceForCastOption(
   option: SpellAdmissionCastOption,
 ):
@@ -318,28 +315,6 @@ export function spellInvocationResourceForCastOption(
         castLevel: option.spellLevel,
         resourcePoolRef: option.payment.resourcePoolRef,
       };
-}
-export function preparedSpellSlotInvocations<
-  S extends Pick<
-    BattleSpellAdmissionSource,
-    "mechanics" | "castingSource" | "spellDefinitionRuleFacts"
-  >,
-  I,
->(
-  spell: S,
-  ctx: SpellAdmissionContext,
-  complete: (
-    base: PreparedSpellSlotInvocationBase<S>,
-    slotLevel: SpellSlotLevel,
-  ) => I | null,
-): readonly I[] {
-  return leveledSpellInvocationOptions(spell, ctx).flatMap(
-    ({ facts, spellLevel }) => {
-      if (Number(spellLevel) < spell.mechanics.level) return [];
-      const invocation = complete(facts, spellLevel);
-      return invocation === null ? [] : [invocation];
-    },
-  );
 }
 
 export function spellAdmissionBattleTurn(
