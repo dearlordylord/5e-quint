@@ -6,13 +6,9 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { breakBattleConcentration } from "./damage-apply.ts";
 import { resolvedResult } from "./result-helpers.ts";
 import { maybeOpenSpellCastReactionWindow } from "./spell-cast-reaction-window.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 type SpellCastReactionResolutionContext = Parameters<
   typeof maybeOpenSpellCastReactionWindow
@@ -108,20 +104,17 @@ export function completeSpellActiveEffectCast(input: {
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   const { resolution } = input;
-  const concentrationBase =
-    resolution.storedGlyphRelease !== undefined
-      ? resolution.input.state
-      : spellRequiresConcentration(resolution.invocation)
-        ? breakBattleConcentration(resolution.input.state, resolution.actorId)
-        : resolution.input.state;
-  const effected = input.applyEffect(concentrationBase);
   const finalizeState = input.finalizeState ?? ((state) => state);
   if (resolution.storedGlyphRelease !== undefined) {
-    return resolvedResult(finalizeState(effected));
+    return resolvedResult(
+      finalizeState(input.applyEffect(resolution.input.state)),
+    );
   }
-
+  // Admission precedes all committed effect changes. The resource owner alone
+  // replaces prior concentration and retains a long cast's ready proof until
+  // its final payment has been validated.
   const resourced = spendSpellCastResources({
-    state: effected,
+    state: resolution.input.state,
     actorId: resolution.actorId,
     invocation: resolution.invocation,
     errorState: resolution.input.state,
@@ -130,5 +123,5 @@ export function completeSpellActiveEffectCast(input: {
   });
   return resourced.tag === "invalid"
     ? resourced
-    : resolvedResult(finalizeState(resourced.state));
+    : resolvedResult(finalizeState(input.applyEffect(resourced.state)));
 }

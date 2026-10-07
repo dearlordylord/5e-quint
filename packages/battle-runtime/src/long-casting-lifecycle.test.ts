@@ -344,7 +344,7 @@ describe("long spellcasting through catalog admission and public battle executio
     ).toMatchObject({ effectKind: "spellEffect" });
     expect(state.combatants.get(longCastingActorId)?.activeEffects).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "armorClassBonus" }),
+        expect.objectContaining({ kind: "spellArmorClassBonus" }),
       ]),
     );
   });

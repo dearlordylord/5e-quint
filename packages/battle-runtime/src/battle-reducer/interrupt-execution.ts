@@ -5,7 +5,7 @@ import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match, Option } from "effect";
 import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
-import { longCastingCompletionResource } from "./long-casting-completion.ts";
+import { longCastingCompletionResource } from "./long-casting-readiness.ts";
 import * as Result from "effect/Result";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { type BattleSubject } from "../battle-subjects.ts";

@@ -58,7 +58,7 @@ import {
   sameInvocationRef,
   statBlockLongCastingTime,
   longCastingCompletionResource,
-} from "./long-casting-completion.ts";
+} from "./long-casting-readiness.ts";
 export {
   statBlockLongCastingTime,
   longCastingCompletionResource,

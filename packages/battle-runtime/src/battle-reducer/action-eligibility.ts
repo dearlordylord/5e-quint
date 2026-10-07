@@ -7,7 +7,9 @@ import {
   canSpendUnarmedStrikeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
-import { Match } from "effect";
+import { Match, Option } from "effect";
+import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
+import { longCastingCompletionResource } from "./long-casting-readiness.ts";
 import { characterProcedureBinding } from "../character-execution-queries.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -148,10 +150,16 @@ function actionEligibilityFacts(
       "companionAttack",
       () => ({ tag: "standardAction", action: "attack" }) as const,
     ),
-    byTag("actionSpell", () => ({ tag: "magicAction" }) as const),
+    byTag("actionSpell", (value) =>
+      spellSubjectActionEligibilityFacts(state, value, { tag: "magicAction" }),
+    ),
     byTag("bonusAction", () => ({ tag: "bonusAction" }) as const),
     byTag("bonusActionDashSpell", () => ({ tag: "bonusActionSpell" }) as const),
-    byTag("bonusActionSpell", () => ({ tag: "bonusActionSpell" }) as const),
+    byTag("bonusActionSpell", (value) =>
+      spellSubjectActionEligibilityFacts(state, value, {
+        tag: "bonusActionSpell",
+      }),
+    ),
     byTag("bonusActionStandardAction", () => ({ tag: "bonusAction" }) as const),
     byTag("companionLifecycle", () => ({ tag: "notApplicable" }) as const),
     byTag("druidWildShape", () => ({ tag: "wildShapeBonusAction" }) as const),
@@ -167,6 +175,38 @@ function actionEligibilityFacts(
     byTag("unitFeature", () => ({ tag: "unitFeatureActor" }) as const),
     Match.exhaustive,
   );
+}
+
+function spellSubjectActionEligibilityFacts(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >,
+  naturalCost: Extract<
+    ActionEligibilityFacts,
+    { readonly tag: "magicAction" | "bonusActionSpell" }
+  >,
+): Extract<
+  ActionEligibilityFacts,
+  { readonly tag: "magicAction" | "bonusActionSpell" | "actorEligibilityOnly" }
+> {
+  const actor = state.combatants.get(subject.actorId);
+  if (
+    actor === undefined ||
+    actor.concentration?.effectKind !== "castingSpell" ||
+    actor.concentration.progress.kind !== "readyToComplete" ||
+    actor.concentration.sourceProcedureRef !== subject.procedureRef ||
+    (subject.tag === "actionSpell" && subject.mode.tag === "ready")
+  )
+    return naturalCost;
+  const invocation = creatureSpellProcedure(actor, subject.procedureRef);
+  return invocation !== undefined &&
+    Option.isSome(
+      longCastingCompletionResource(state, subject.actorId, invocation),
+    )
+    ? { tag: "actorEligibilityOnly" }
+    : naturalCost;
 }
 
 function familiarCannotUseActionFacts(facts: ActionEligibilityFacts): boolean {
