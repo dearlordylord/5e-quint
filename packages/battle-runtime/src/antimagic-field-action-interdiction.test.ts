@@ -557,7 +557,6 @@ function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
         operation: "repositionAndAttack",
         activeEffectRef: activeEffect.effectRef,
         activeEffectSourceProcedureRef: sourceBinding.procedureRef,
-        repeatTargeting: { kind: "unrestricted" },
       },
     );
   return battleRuntimeSessionForTest({
@@ -581,6 +580,7 @@ function spatialMeleeSpellAttackProxyActiveEffectTemplate(
 > {
   return {
     kind: "spatialMeleeSpellAttackProxy",
+    repeatTargeting: { kind: "unrestricted" },
     sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     forcePositionId: battleTablePositionId(

@@ -934,6 +934,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       );
     expect(tickedEffect).toMatchObject({
       kind: "spatialMeleeSpellAttackProxy",
+      repeatTargeting: { kind: "unrestricted" },
       expiresAt: {
         kind: "concentration",
         durationTicks: elapsedTimeTicks(2),
@@ -1020,6 +1021,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ),
     ).toMatchObject({
       kind: "spatialMeleeSpellAttackProxy",
+      repeatTargeting: { kind: "unrestricted" },
       forcePositionId: spatialMeleeSpellAttackProxyEffect.forcePositionId,
     });
   });
@@ -1145,7 +1147,6 @@ function antimagicFieldBattle(input?: {
               operation: "repositionAndAttack",
               activeEffectRef: effect.effectRef,
               activeEffectSourceProcedureRef: effect.sourceProcedureRef,
-              repeatTargeting: { kind: "unrestricted" },
             },
           )
         : execution,
@@ -1425,6 +1426,7 @@ function spatialMeleeSpellAttackProxyActiveEffect(input: {
 > {
   return {
     kind: "spatialMeleeSpellAttackProxy",
+    repeatTargeting: { kind: "unrestricted" },
     effectRef: effectRefForTest(input.effectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),

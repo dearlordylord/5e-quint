@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+import { SpatialMeleeSpellAttackProxyRepeatTargetingSchema } from "./active-effect/codecs.ts";
 import { admittedSpellInvocationCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
@@ -3542,8 +3544,36 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       }),
     ]);
 
+    const caster = requireCombatant(released.state, spellCasterId);
+    const spatialEffect = caster.activeEffects.find(
+      (effect) => effect.kind === "spatialMeleeSpellAttackProxy",
+    );
+    if (spatialEffect?.kind !== "spatialMeleeSpellAttackProxy")
+      throw new Error("Expected released spatial spell effect.");
+    const encodedTargeting = Schema.encodeSync(
+      SpatialMeleeSpellAttackProxyRepeatTargetingSchema,
+    )(spatialEffect.repeatTargeting);
+    const decodedTargeting = Schema.decodeUnknownSync(
+      SpatialMeleeSpellAttackProxyRepeatTargetingSchema,
+    )(JSON.parse(JSON.stringify(encodedTargeting)));
+    expect(decodedTargeting).toEqual({
+      kind: "fixedCombatant",
+      combatantId: spellTargetId,
+    });
+    const restoredEffectState = {
+      ...released.state,
+      combatants: new Map(released.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.map((effect) =>
+          effect.effectRef === spatialEffect.effectRef &&
+          effect.kind === "spatialMeleeSpellAttackProxy"
+            ? { ...effect, repeatTargeting: decodedTargeting }
+            : effect,
+        ),
+      }),
+    };
     const targetTurn = endTurn({
-      state: released.state,
+      state: restoredEffectState,
       actorId: spellCasterId,
     });
     expect(targetTurn.tag).toBe("resolved");

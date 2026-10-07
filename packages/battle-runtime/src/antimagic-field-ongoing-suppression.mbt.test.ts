@@ -568,6 +568,7 @@ function spatialMeleeSpellAttackProxyActiveEffectTemplate(): Extract<
 > {
   return {
     kind: "spatialMeleeSpellAttackProxy",
+    repeatTargeting: { kind: "unrestricted" },
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "spiritual-weapon-effect-fixture",
     ),

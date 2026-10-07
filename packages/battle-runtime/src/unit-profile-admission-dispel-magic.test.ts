@@ -2600,6 +2600,7 @@ function spatialMeleeSpellAttackProxyEffect(): Extract<
 > {
   return {
     kind: "spatialMeleeSpellAttackProxy",
+    repeatTargeting: { kind: "unrestricted" },
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),
