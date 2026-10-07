@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type {
@@ -428,7 +431,7 @@ function admitDirectCondition(
   const durationTicks = spellDurationTicksFromCanonicalValue(
     facts.duration.upTo,
   );
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly DirectConditionInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const maxTargets = directConditionTargetCount(
@@ -437,11 +440,10 @@ function admitDirectCondition(
       );
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "directCondition",
-          spell,
-          actionCost: "magicAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "magicAction"),
           targeting: { kind: "targetList", minTargets: 1, maxTargets },
           activeEffect: {
             kind: "targetActionEndedSpellCondition",

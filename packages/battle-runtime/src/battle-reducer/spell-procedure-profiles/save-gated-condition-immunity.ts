@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-save-gated-condition-immunity
@@ -89,12 +91,10 @@ function admitSaveGatedConditionImmunityMechanics(
       spell: BattleSpellExecutionSource,
       ctx: SpellAdmissionContext,
     ) =>
-      ctx.spellCastOptions.flatMap((slot) =>
+      leveledSpellInvocationOptions(spell, ctx).flatMap((slot) =>
         saveGatedConditionImmunityInvocationsFromFacts({
-          spell,
           facts,
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           slotLevel: slot.spellLevel,
           sourceCombatantId: ctx.actor.combatantId,
         }),

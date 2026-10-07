@@ -1,3 +1,5 @@
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeAfterHitSpellDamageCast,
@@ -126,14 +128,14 @@ function admitAfterHitDamage(
     spellLevel: facts.level,
   }).map(
     ({ slotLevel, damageExpr, payment }): AfterHitDamageInvocation => ({
-      access: { tag: "prepared" },
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption({
         spellLevel: slotLevel,
         payment,
       }),
       procedure: "afterHitDamage",
       spell,
-      actionCost: "bonusAction",
+      actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
       damage: {
         expr: damageExpr,
         damageType: facts.damageType,
@@ -469,6 +471,22 @@ function resolveAfterHitDamage(
       ),
     ),
     Match.when({ tag: "spellSlot" }, () =>
+      spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.input.subject.casterId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+      }),
+    ),
+    Match.when({ tag: "statBlockAtWill" }, () =>
+      spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.input.subject.casterId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+      }),
+    ),
+    Match.when({ tag: "statBlockLimited" }, () =>
       spendSpellCastResources({
         state: input.input.state,
         actorId: input.input.subject.casterId,

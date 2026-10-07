@@ -1,3 +1,4 @@
+import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
 import {
   characterUnitProcedureQueryForSubject,
   type UnitProcedureSubject,
@@ -87,14 +88,10 @@ function admitSpellSubject(
   subject: SpellProcedureSubject,
 ): BattleResolutionAdmission {
   const actor = input.state.combatants.get(subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
+  if (actor === undefined) {
     return { tag: "staleCharacterProcedure" };
   }
-  return characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    actor,
-  ) === undefined
+  return creatureSpellProcedure(actor, subject.procedureRef) === undefined
     ? { tag: "staleCharacterProcedure" }
     : { tag: "admitted", input: asAdmitted(input) };
 }

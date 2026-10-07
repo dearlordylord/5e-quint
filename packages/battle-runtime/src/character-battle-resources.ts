@@ -744,7 +744,9 @@ function distinctAdmittedSpellsById(
 
 export function admittedSpellToAdmissionSource(
   admitted: CharacterBattleAdmittedSpell,
-): BattleSpellAdmissionSource {
+): BattleSpellAdmissionSource & {
+  readonly castingSource: import("./procedure-execution/spell-rule-facts.ts").CharacterSpellCastingSource;
+} {
   return {
     id: admitted.spell.id,
     name: admitted.spell.name,
@@ -761,7 +763,9 @@ export function admittedSpellToAdmissionSource(
 export function spellRecordToAdmissionSource(
   spell: SpellRecord,
   castingSource: CharacterBattleAdmittedSpell["castingSource"],
-): BattleSpellAdmissionSource {
+): BattleSpellAdmissionSource & {
+  readonly castingSource: import("./procedure-execution/spell-rule-facts.ts").CharacterSpellCastingSource;
+} {
   return {
     id: spell.id,
     name: spell.name,

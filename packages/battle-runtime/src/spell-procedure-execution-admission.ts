@@ -16,7 +16,7 @@ export function spellProcedureExecution(
     invocation.spell.spellDefinitionRuleFacts,
     invocation.spell.castingSource,
   );
-  return Match.value(invocation).pipe(
+  const execution = Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
       abilityD20TestRollModeSaveGate: (value) => ({
         spellRuleFacts,
@@ -1050,4 +1050,15 @@ export function spellProcedureExecution(
       }),
     }),
   );
+  const source = invocation.spell.castingSource;
+  return source.tag === "statBlock"
+    ? {
+        ...execution,
+        actionCost:
+          source.castingTime.kind === "minutes" ||
+          source.castingTime.kind === "hours"
+            ? "magicAction"
+            : source.actionCost,
+      }
+    : execution;
 }

@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -763,17 +765,16 @@ function admitPersistentAreaSaveComposite(
   facts: PersistentAreaSaveCompositeMechanicsFacts,
   executionBoundary: PersistentAreaSaveCompositeExecutionBoundary,
 ): readonly PersistentAreaSaveCompositeSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly PersistentAreaSaveCompositeSpellInvocation[] => {
       if (Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL) {
         return [];
       }
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "persistentAreaSaveComposite",
-          spell,
+
           ability: "dex",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {

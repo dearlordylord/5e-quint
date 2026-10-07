@@ -1,3 +1,8 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   maybeOpenConfiguredSpellCastReactionWindow,
   spendConfiguredSpellCastResources,
@@ -897,8 +902,9 @@ function admitSpellCreatedHeldObject(
   ctx: SpellAdmissionContext,
   facts: SpellCreatedHeldObjectFacts,
 ): readonly SpellCreatedHeldObjectInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
-  return ctx.spellCastOptions.flatMap(
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SpellCreatedHeldObjectInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) {
         return [];
@@ -908,15 +914,14 @@ function admitSpellCreatedHeldObject(
         facts,
         slotLevel: slot.spellLevel,
         spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-        proficiencyBonus: spellcasting.proficiencyBonus,
+        attackBonus: casterAttackBonus,
       });
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "spellCreatedHeldObject",
-          spell,
-          actionCost: "bonusAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           activeEffect,
         },
       ];
@@ -929,7 +934,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
   readonly facts: SpellCreatedHeldObjectFacts;
   readonly slotLevel: SpellSlotLevel;
   readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly proficiencyBonus: ProficiencyBonusType;
+  readonly attackBonus: AttackBonus;
 }): Omit<
   SpellCreatedHeldObjectActiveEffect,
   "effectRef" | "sourceProcedureRef"
@@ -955,10 +960,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
         damageType: input.facts.attack.damageType,
       },
       attackKind: input.facts.attack.attackKind,
-      attackBonus: attackBonus(
-        Number(input.spellcastingAbilityModifier) +
-          Number(input.proficiencyBonus),
-      ),
+      attackBonus: input.attackBonus,
     },
     expiresAt: {
       kind: "concentration",
@@ -1326,7 +1328,7 @@ const SpellCreatedHeldObjectInvocationSchema = spellProcedureExecutionSchema(
 );
 
 const SpellCreatedHeldObjectAttackInvocationSchema =
-  spellProcedureExecutionSchema(
+  spellEffectProcedureExecutionSchema(
     Schema.Struct({
       access: SpellEffectSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -1348,7 +1350,7 @@ const SpellCreatedHeldObjectAttackInvocationSchema =
   );
 
 const SpellCreatedHeldObjectReEvokeInvocationSchema =
-  spellProcedureExecutionSchema(
+  spellEffectProcedureExecutionSchema(
     Schema.Struct({
       access: SpellEffectSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,

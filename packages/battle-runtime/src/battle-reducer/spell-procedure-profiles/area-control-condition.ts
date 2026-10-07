@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control spell.invocation-glyph-stored-concentration-full-duration
@@ -742,17 +745,16 @@ function admitSaveGatedAreaControl(
   facts: SaveGatedAreaControlMechanicsFacts,
 ): readonly SaveGatedAreaControlSpellInvocation[] {
   const rangeFeet = movementFeet(facts.range.feet);
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SaveGatedAreaControlSpellInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "saveGatedAreaControl",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               ability: facts.ability,
               dc: facts.dc,
               targeting: facts.targeting,

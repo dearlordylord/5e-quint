@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-damage-rider
@@ -1077,17 +1080,16 @@ function admitWeaponDamageRider(
     ctx.actor.combatantId,
     facts,
   );
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly WeaponDamageRiderInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "weaponDamageRider",
-              spell,
-              actionCost: "bonusAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
               activeEffect,
             },
           ],

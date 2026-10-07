@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement
@@ -637,17 +640,16 @@ function admitFixedCostMovementReplacement(
   ctx: SpellAdmissionContext,
   facts: FixedCostMovementReplacementMechanicsFacts,
 ): readonly FixedCostMovementReplacementInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly FixedCostMovementReplacementInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "fixedCostMovementReplacement",
-              spell,
-              actionCost: "bonusAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
               targeting: {
                 kind: "targetList",
                 minTargets: 1,

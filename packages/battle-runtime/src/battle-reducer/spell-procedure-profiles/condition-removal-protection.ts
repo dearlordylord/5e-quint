@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-removal-protection
@@ -765,17 +768,16 @@ function admitConditionRemovalProtection(
     kind: "duration" as const,
     durationTicks: facts.durationTicks,
   };
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ConditionRemovalProtectionSpellInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "conditionRemovalProtection",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
               protection: {
                 conditionSaveRollMode: {

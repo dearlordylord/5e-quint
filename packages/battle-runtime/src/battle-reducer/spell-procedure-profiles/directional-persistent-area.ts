@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -1523,28 +1525,28 @@ function admitDirectionalPersistentArea(
   ctx: SpellAdmissionContext,
   facts: Facts,
 ): readonly Invocation[] {
-  return ctx.spellCastOptions.flatMap((slot): readonly Invocation[] =>
-    Number(slot.spellLevel) < facts.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: spellInvocationResourceForCastOption(slot),
-            procedure: "directionalPersistentArea",
-            spell,
-            ability: facts.ability,
-            dc: facts.dc,
-            targeting: {
-              kind: "selfOriginLine",
-              lengthFeet: facts.lengthFeet,
-              widthFeet: facts.widthFeet,
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
+    (slot): readonly Invocation[] =>
+      Number(slot.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              ...slot.facts,
+              procedure: "directionalPersistentArea",
+
+              ability: facts.ability,
+              dc: facts.dc,
+              targeting: {
+                kind: "selfOriginLine",
+                lengthFeet: facts.lengthFeet,
+                widthFeet: facts.widthFeet,
+              },
+              durationTicks: facts.durationTicks,
+              rangeFeet: facts.rangeFeet,
+              pushDistanceFeet: facts.pushDistanceFeet,
+              movementCost: facts.movementCost,
             },
-            durationTicks: facts.durationTicks,
-            rangeFeet: facts.rangeFeet,
-            pushDistanceFeet: facts.pushDistanceFeet,
-            movementCost: facts.movementCost,
-          },
-        ],
+          ],
   );
 }
 

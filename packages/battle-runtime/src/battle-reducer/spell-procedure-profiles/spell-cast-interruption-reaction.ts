@@ -1,4 +1,7 @@
 import { breakBattleConcentration } from "../damage-apply.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
@@ -259,16 +262,15 @@ function admitSpellCastInterruption(
   ctx: SpellAdmissionContext,
   facts: SpellCastInterruptionMechanicsFacts,
 ): readonly SpellCastInterruptionInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SpellCastInterruptionInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "spellCastInterruptionReaction",
-              spell,
+
               triggerComponents: facts.triggerComponents,
               ability: facts.ability,
               dc: facts.dc,
@@ -933,6 +935,22 @@ function resolveSpellCastInterruption(
         },
       };
     }),
+    Match.when({ tag: "statBlockAtWill" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        castingState,
+        input.input.subject.reactorId,
+        resource,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "statBlockLimited" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        castingState,
+        input.input.subject.reactorId,
+        resource,
+        input.input.state,
+      ),
+    ),
     Match.exhaustive,
   );
   if (resourced.tag === "invalid") {

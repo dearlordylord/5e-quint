@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-feather-fall-mitigation
@@ -120,16 +123,15 @@ function admitFallingCreatureMitigationReaction(
   ctx: SpellAdmissionContext,
   facts: FallingCreatureMitigationReactionMechanicsFacts,
 ): readonly FallingCreatureMitigationReactionInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly FallingCreatureMitigationReactionInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "fallingCreatureMitigationReaction",
-              spell,
+
               targeting: {
                 kind: "targetList",
                 minTargets: 1,
@@ -943,6 +945,22 @@ function resolveFallingCreatureMitigationReaction(
         casterId: input.input.subject.reactorId,
         slotLevel,
       }),
+    ),
+    Match.when({ tag: "statBlockAtWill" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        effected,
+        input.input.subject.reactorId,
+        resource,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "statBlockLimited" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        effected,
+        input.input.subject.reactorId,
+        resource,
+        input.input.state,
+      ),
     ),
     Match.exhaustive,
   );

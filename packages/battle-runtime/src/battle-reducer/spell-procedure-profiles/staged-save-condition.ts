@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
@@ -658,7 +659,7 @@ function saveGatedConditionWithRepeatInvocationsFromFacts(
         ? []
         : [
             {
-              access: { tag: "prepared" },
+              access: preparedSpellAccessForCastingSource(spell.castingSource),
               resource: spellInvocationResourceForCastOption(slot),
               procedure: "saveGatedConditionWithRepeat",
               spell,

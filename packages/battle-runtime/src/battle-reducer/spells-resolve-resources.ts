@@ -1,3 +1,11 @@
+import {
+  completeLongCastingSpellState,
+  longCastingCompletionResource,
+  statBlockLongCastingTime,
+} from "./long-casting-lifecycle.ts";
+import { Option } from "effect";
+import { spendStatBlockSpellcastingPool } from "../stat-block-execution-state.ts";
+import type { StatBlockSpellInvocationResource } from "../procedure-execution/spell-invocation-vocabulary.ts";
 // Spell cast resource spending and concentration setup shared by spell
 // resolution modules. Extracted from spells-resolve.ts to keep procedure
 // resolver modules from depending on the monolithic spell dispatcher.
@@ -111,17 +119,61 @@ export function spendSpellCastResources(input: {
           input.state,
           input.actorId,
         );
-  const actionCost = spellCastActionCost(input);
-  const spent = spendSpellCastAction(
-    spellCastState.currentTurnResources,
-    actionCost,
+  const completionResource = longCastingCompletionResource(
+    input.state,
+    input.actorId,
+    input.invocation,
   );
+  if (
+    Option.isSome(statBlockLongCastingTime(input.invocation)) &&
+    Option.isNone(completionResource)
+  )
+    return invalidResult(
+      input.errorState,
+      "staleSubject",
+      "The Stat Block spell has not completed its required casting time.",
+    );
+  const actionCost = spellCastActionCost(input);
+  const spent = Option.isSome(completionResource)
+    ? Result.succeed(spellCastState.currentTurnResources)
+    : spendSpellCastAction(spellCastState.currentTurnResources, actionCost);
   if (Result.isFailure(spent)) {
     return invalidResult(input.errorState, "staleSubject", spent.failure);
   }
   const shouldStartConcentration =
     input.startConcentration ?? spellRequiresConcentration(input.invocation);
-  if (input.invocation.resource.tag === "none") {
+  const resource = input.invocation.resource;
+  if (
+    resource.tag === "statBlockAtWill" ||
+    resource.tag === "statBlockLimited"
+  ) {
+    const paid = spendStatBlockSpellInvocationResource(
+      spellCastState,
+      input.actorId,
+      resource,
+      input.errorState,
+    );
+    if (paid.tag === "invalid") return paid;
+    const afterPriorConcentration = spellRequiresConcentration(input.invocation)
+      ? breakBattleConcentration(paid.state, input.actorId)
+      : paid.state;
+    return finishSpellCastResourceSpend({
+      state: {
+        ...afterPriorConcentration,
+        currentTurnResources: markInvocationLevelOnePlusSpellCastThisTurn(
+          spent.success,
+          input.actorId,
+          input.invocation,
+        ),
+      },
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.errorState,
+      applications: metamagicApplications,
+      shouldStartConcentration,
+    });
+  }
+  if (resource.tag === "none") {
     const afterPriorConcentration = spellRequiresConcentration(input.invocation)
       ? breakBattleConcentration(spellCastState, input.actorId)
       : spellCastState;
@@ -145,11 +197,11 @@ export function spendSpellCastResources(input: {
       shouldStartConcentration,
     });
   }
-  if (input.invocation.resource.tag === "spellAccessFreeCast") {
+  if (resource.tag === "spellAccessFreeCast") {
     const freeCast = spendSpellAccessFreeCastResource(
       spellCastState,
       input.actorId,
-      input.invocation.resource.resourcePoolRef,
+      resource.resourcePoolRef,
       input.invocation,
       input.errorState,
     );
@@ -194,7 +246,7 @@ export function spendSpellCastResources(input: {
   const slotted = expendSpellSlot(
     afterPriorConcentration,
     input.actorId,
-    input.invocation.resource.slotLevel,
+    resource.slotLevel,
   );
   const resourced = {
     ...slotted,
@@ -229,13 +281,18 @@ function finishSpellCastResourceSpend(input: {
       metamagicSpend.failure,
     );
   }
+  const castingCompletedState = completeLongCastingSpellState(
+    metamagicSpend.success,
+    input.actorId,
+    input.invocation,
+  );
   const nextState = input.shouldStartConcentration
     ? startSpellEffectConcentration(
-        metamagicSpend.success,
+        castingCompletedState,
         input.actorId,
         input.invocation,
       )
-    : metamagicSpend.success;
+    : castingCompletedState;
   return {
     tag: "resolved",
     state: nextState,
@@ -371,5 +428,44 @@ export function startSpellEffectConcentration(
         effectKind: "spellEffect",
       },
     }),
+  };
+}
+
+export function spendStatBlockSpellInvocationResource(
+  state: BattleState,
+  actorId: CombatantId,
+  resource: StatBlockSpellInvocationResource,
+  errorState: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "statBlock")
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "Stat Block spell caster is unavailable.",
+    );
+  if (resource.tag === "statBlockAtWill")
+    return { tag: "resolved", state, snapshot: snapshotBattle(state) };
+  const spent = spendStatBlockSpellcastingPool(
+    actor.origin.execution,
+    resource.resourcePoolRef,
+  );
+  if (Result.isFailure(spent))
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "Stat Block spell invocation resource is unavailable.",
+    );
+  const nextState = {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      origin: { ...actor.origin, execution: spent.success },
+    }),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
   };
 }

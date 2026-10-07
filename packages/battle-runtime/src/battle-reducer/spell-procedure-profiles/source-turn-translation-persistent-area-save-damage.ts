@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type {
   BattleSpellAdmissionSource,
@@ -827,7 +829,7 @@ function admitTranslatingPersistentAreaAreaHazard(
   ) {
     return [];
   }
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly TranslatingPersistentAreaAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < TRANSLATING_PERSISTENT_AREA_LEVEL) {
         return [];
@@ -842,8 +844,7 @@ function admitTranslatingPersistentAreaAreaHazard(
       }
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "persistentAreaSaveDamage",
           lifecycle: {
             kind: "sourceTurnTranslation",
@@ -852,7 +853,7 @@ function admitTranslatingPersistentAreaAreaHazard(
             movedAreaOperation: "saveDamage",
             environmentalEnd: "strongWind",
           },
-          spell,
+
           ability: "con",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {

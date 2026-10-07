@@ -1,3 +1,6 @@
+import { longCastingCompletionResource } from "./long-casting-lifecycle.ts";
+import { Option } from "effect";
+import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
@@ -532,7 +535,7 @@ type SpellInvocationResolutionAdmission =
 
 function admitSpellInvocationForResolution(input: {
   readonly state: BattleState;
-  readonly actor: CharacterBattleCreatureState;
+  readonly actor: BattleCreatureState;
   readonly subject:
     | ActionSpellBattleResolutionInput["subject"]
     | BonusActionSpellBattleResolutionInput["subject"];
@@ -1855,7 +1858,7 @@ function resolveSpellActInternal(
   const input = lane.input;
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
+  if (actor === undefined) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
@@ -1873,11 +1876,7 @@ function resolveSpellActInternal(
         ),
     }),
   );
-  const boundInvocation = characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    actor,
-  );
+  const boundInvocation = creatureSpellProcedure(actor, subject.procedureRef);
   const invocationCandidate =
     selectedProcedureInvocation ??
     (options.kind === "bonusActionSpellAttackProxy" &&
@@ -2049,6 +2048,13 @@ function resolveSpellActInternal(
   }
   if (
     !spatialProxyCommitAlreadyApplied &&
+    Option.isNone(
+      longCastingCompletionResource(
+        input.state,
+        input.subject.actorId,
+        invocation,
+      ),
+    ) &&
     !spellActTurnResourceAvailable(
       input.state.currentTurnResources,
       input.subject.actorId,
@@ -2535,13 +2541,21 @@ function resolveSpellActInternal(
           invocation: invocationForResolution,
           targetIds: [target.combatantId],
           reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-          castingResource: spellCastingTimeResourceForSpellCast({
-            invocation: invocationForResolution,
-            ...optionalProperty(
-              "actionCostOverride",
-              options.actionCostOverride,
+          castingResource: Option.getOrElse(
+            longCastingCompletionResource(
+              castingState,
+              subject.actorId,
+              invocationForResolution,
             ),
-          }),
+            () =>
+              spellCastingTimeResourceForSpellCast({
+                invocation: invocationForResolution,
+                ...optionalProperty(
+                  "actionCostOverride",
+                  options.actionCostOverride,
+                ),
+              }),
+          ),
           ...spellCastMetamagicApplicationsInput(
             metamagicApplicationsForResolution ?? [],
           ),
@@ -4043,38 +4057,30 @@ function isNativeBonusActionSpellInvocation(
 }
 
 function supportedActionSpellInvocationForSubject(
-  actor: CharacterBattleCreatureState,
+  actor: BattleCreatureState,
   subject: ActionSpellBattleResolutionInput["subject"],
 ): BattleSpellProcedureExecution | undefined {
   if (subject.procedureRef === undefined) {
     return undefined;
   }
-  const invocation = characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    actor,
-  );
+  const invocation = creatureSpellProcedure(actor, subject.procedureRef);
   return invocation;
 }
 
 function supportedBonusActionSpellInvocationForSubject(
-  actor: CharacterBattleCreatureState,
+  actor: BattleCreatureState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): BattleSpellProcedureExecution | undefined {
   if (subject.procedureRef === undefined) {
     return undefined;
   }
-  const invocation = characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    actor,
-  );
+  const invocation = creatureSpellProcedure(actor, subject.procedureRef);
   return invocation;
 }
 
 /* v8 ignore start -- @preserve -- Defensive stale-subject recovery: legal rediscovery removes repeat spell acts while Antimagic Field suppresses their source effect. */
 function antimagicSuppressedInvocationForStaleSubject(
-  actor: CharacterBattleCreatureState,
+  actor: BattleCreatureState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): BattleSpellProcedureExecution | undefined {
   const invocation = supportedBonusActionSpellInvocationForSubject(

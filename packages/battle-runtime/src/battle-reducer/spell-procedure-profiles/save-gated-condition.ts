@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHoles,
@@ -157,12 +159,10 @@ function admitSaveGatedConditionMechanics(
       spell: BattleSpellExecutionSource,
       ctx: SpellAdmissionContext,
     ) =>
-      ctx.spellCastOptions.flatMap((slot) =>
+      leveledSpellInvocationOptions(spell, ctx).flatMap((slot) =>
         saveGatedConditionInvocationsFromFacts({
-          spell,
           facts,
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           slotLevel: slot.spellLevel,
         }),
       ),

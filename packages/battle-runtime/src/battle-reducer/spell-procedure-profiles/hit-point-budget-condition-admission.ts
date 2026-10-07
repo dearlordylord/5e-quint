@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleep-target-admission
 //
 // The stagedSaveCondition Spell Procedure Profile: action-time Spell Slot
@@ -1049,7 +1050,7 @@ function stagedSaveConditionInvocationsFromFacts(
         ? []
         : [
             {
-              access: { tag: "prepared" },
+              access: preparedSpellAccessForCastingSource(spell.castingSource),
               resource: spellInvocationResourceForCastOption(slot),
               procedure: "stagedSaveCondition",
               spell,

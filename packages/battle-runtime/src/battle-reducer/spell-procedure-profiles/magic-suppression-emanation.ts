@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
@@ -822,17 +824,16 @@ function admitMagicSuppressionEmanation(
   ctx: SpellAdmissionContext,
   facts: MagicSuppressionEmanationMechanicsFacts,
 ): readonly MagicSuppressionEmanationInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly MagicSuppressionEmanationInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) {
         return [];
       }
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "magicSuppressionEmanation",
-          spell,
+
           targeting: {
             kind: "selfOriginEmanation",
             radiusFeet: facts.radiusFeet,

@@ -88,24 +88,6 @@ type ActionCostOf<Execution> = Execution extends {
 export type SpellProcedureActionCost<P extends BattleSpellProcedureKey> =
   ActionCostOf<SpellProcedureExecutionsWithActionCost<P>>;
 
-type SpellProcedureExecutionFactsForProcedure<
-  P extends BattleSpellProcedureKey,
-> = [SpellProcedureExecutionsWithActionCost<P>] extends [never]
-  ? SpellProcedureExecutionFacts
-  : [
-        Exclude<SpellProcedureActionCost<P>, "magicAction" | "bonusAction">,
-      ] extends [never]
-    ? [Extract<SpellProcedureActionCost<P>, "magicAction">] extends [never]
-      ? [Extract<SpellProcedureActionCost<P>, "bonusAction">] extends [never]
-        ? never
-        : NonMagicActionSpellProcedureExecutionFacts
-      : [Extract<SpellProcedureActionCost<P>, "bonusAction">] extends [never]
-        ? ActionSpellProcedureExecutionFacts
-        : ActionSpellProcedureExecutionFacts & {
-            readonly executionClass: "actionCostCast";
-          }
-    : never;
-
 const METAMAGIC_APPLICATION_RESOLUTION = {
   acceptsMetamagicApplications: true,
 } as const;
@@ -286,7 +268,7 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   weaponDamageRider: { executionClass: "bonusActionCast" },
   persistentAreaSaveConditionEscape: { executionClass: "actionCast" },
 } as const satisfies {
-  readonly [P in BattleSpellProcedureKey]: SpellProcedureExecutionFactsForProcedure<P>;
+  readonly [P in BattleSpellProcedureKey]: SpellProcedureExecutionFacts;
 };
 
 export type SpellExecutionClass =

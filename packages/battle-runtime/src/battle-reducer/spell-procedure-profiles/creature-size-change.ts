@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
@@ -1386,7 +1387,7 @@ function admitCreatureSizeChangeForProcedure<
         ? []
         : [
             {
-              access: { tag: "prepared" },
+              access: preparedSpellAccessForCastingSource(spell.castingSource),
               resource: spellInvocationResourceForCastOption(slot),
               spell,
               actionCost: "magicAction",

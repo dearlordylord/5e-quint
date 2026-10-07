@@ -1,3 +1,7 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-expeditious-retreat-dash
 import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -514,17 +518,16 @@ function admitGrantedAlternateActionCost(
       durationTicks: facts.durationTicks,
     },
   };
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly GrantedAlternateActionCostInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "grantedAlternateActionCost",
-              spell,
-              actionCost: "bonusAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
               activeEffect,
             },
           ],
@@ -693,6 +696,22 @@ function resolveGrantedAlternateActionCost(
         },
       };
     }),
+    Match.when({ tag: "statBlockAtWill" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        { ...afterPriorConcentration, currentTurnResources: spent.success },
+        subject.actorId,
+        resource,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "statBlockLimited" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        { ...afterPriorConcentration, currentTurnResources: spent.success },
+        subject.actorId,
+        resource,
+        input.input.state,
+      ),
+    ),
     Match.exhaustive,
   );
   if (resourced.tag === "invalid") {

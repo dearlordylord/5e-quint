@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type {
@@ -1107,17 +1110,16 @@ function admitLinkedDefenseResistanceDamageShare(
     ctx.actor.combatantId,
     facts,
   );
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly LinkedDefenseResistanceDamageShareSpellInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "linkedDefenseResistanceDamageShare",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               ...projection,
             },
           ],

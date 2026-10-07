@@ -81,7 +81,7 @@ import {
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import { ongoingSpellEndProfile } from "./battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
-import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   battleAreaId,
@@ -178,7 +178,7 @@ function dispelMechanicsWithTargetRangeOrigin(): SpellMechanicsAdmissionSource {
   return { ...dispelMechanicsSource(source), mechanics };
 }
 
-function staticDispelActor(): SpellAdmissionActor {
+function staticDispelActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
@@ -189,7 +189,7 @@ function staticDispelActor(): SpellAdmissionActor {
 
 function isStaticDispelActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -247,6 +247,7 @@ describe("ongoingSpellEnd static admission", () => {
       {
         actor: staticDispelActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },

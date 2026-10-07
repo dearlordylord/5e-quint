@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -777,7 +778,7 @@ function admitRepeatedDamageAllocation(
       });
       return [
         {
-          access: { tag: "prepared" },
+          access: preparedSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption({
             spellLevel: admissionFacts.selectedSlotLevel,
             payment: slot.payment,

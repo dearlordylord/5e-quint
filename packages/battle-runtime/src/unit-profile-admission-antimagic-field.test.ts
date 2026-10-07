@@ -25,7 +25,7 @@ import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { magicSuppressionEmanationProfile } from "./battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
-import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
@@ -148,18 +148,18 @@ function syntheticAntimagicFieldRecord(
   });
 }
 
-function staticSpellAdmissionActor(): SpellAdmissionActor {
+function staticCharacterSpellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor))
+  if (!isCharacterSpellAdmissionActor(actor))
     throw new Error("Expected a spellcasting character fixture.");
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -230,8 +230,9 @@ describe("magicSuppressionEmanation static admission", () => {
     const invocations = result.admitted.admit(
       battleSpellExecutionSourceFromAdmission(source),
       {
-        actor: staticSpellAdmissionActor(),
+        actor: staticCharacterSpellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(8), payment: { tag: "slot" } },

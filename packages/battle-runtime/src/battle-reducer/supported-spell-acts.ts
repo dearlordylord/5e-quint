@@ -1,3 +1,4 @@
+import { statBlockSpellProcedureInvocations } from "../stat-block-spell-invocation-selection.ts";
 import type {
   BattleCreatureState,
   BattleExecutableSpellInvocation,
@@ -11,6 +12,11 @@ export function supportedSpellActs(
   state: BattleState,
   actor: BattleCreatureState,
 ): readonly BattleExecutableSpellInvocation[] {
+  if (actor.origin.kind === "statBlock")
+    return statBlockSpellProcedureInvocations(actor.origin.execution).filter(
+      (invocation) =>
+        !activeOngoingFeaturesPreventSpellInvocation(state, actor, invocation),
+    );
   if (!isCharacterBattleCreatureState(actor)) return [];
   return actor.origin.execution.procedureBindings
     .flatMap((binding) => {

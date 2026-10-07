@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
@@ -450,7 +451,7 @@ function grantedAreaSaveDamageActionInvocationsFromFacts(
       );
       return [
         {
-          access: { tag: "prepared" },
+          access: preparedSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption(slot),
           procedure: "grantedAreaSaveDamageAction",
           spell,

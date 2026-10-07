@@ -1,3 +1,7 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -176,13 +180,15 @@ function admitCantripObjectLight(
     { readonly kind: "lightCantripObject" }
   >,
 ): readonly ObjectLightInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
   return [
     {
-      access: cantripSpellAccessFor(ctx.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "objectLight",
-      spell,
-      actionCost: "magicAction",
+
+      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
       targeting: {
         kind: "singleObject",
         object: {
@@ -806,7 +812,7 @@ function admitPreparedObjectLight(
       ? []
       : [
           {
-            access: { tag: "prepared" },
+            access: preparedSpellAccessForCastingSource(spell.castingSource),
             resource: spellInvocationResourceForCastOption(slot),
             procedure: "objectLight",
             spell,
@@ -1026,8 +1032,8 @@ function resolveObjectLight(
   return resolutionFromStateResult(resourced);
 }
 
-const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+const ObjectLightInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -1048,6 +1054,8 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
       }),
       expiresAt: BattleActiveEffectExpirationSchema,
     }),
+  ),
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -1067,8 +1075,8 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
       }),
       expiresAt: BattleActiveEffectExpirationSchema,
     }),
-  ]),
-);
+  ),
+]);
 export const objectLightProfile: SpellProcedureDeclaration<
   "objectLight",
   ObjectLightInvocation,

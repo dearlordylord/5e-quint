@@ -1,3 +1,6 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-make-stable
@@ -153,12 +156,14 @@ type MakeStableMechanicsIssue = {
 
 function makeStableRangeFeet(
   range: MakeStableRange,
-  characterLevel: number,
+  characterLevel: number | null,
 ): MovementFeet {
   return movementFeet(
     range.feet.tiers.reduce(
       (current, tier) =>
-        characterLevel >= tier.atLevel ? tier.value : current,
+        characterLevel !== null && characterLevel >= tier.atLevel
+          ? tier.value
+          : current,
       range.feet.base,
     ),
   );
@@ -665,13 +670,15 @@ function admitMakeStable(
   ctx: SpellAdmissionContext,
   facts: MakeStableMechanicsFacts,
 ): readonly MakeStableInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
   return [
     {
-      access: cantripSpellAccessFor(spell.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "makeStable",
-      spell,
-      actionCost: "magicAction",
+
+      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
       rangeFeet: makeStableRangeFeet(
         facts.range,
         spellAdmissionCharacterLevel(ctx),

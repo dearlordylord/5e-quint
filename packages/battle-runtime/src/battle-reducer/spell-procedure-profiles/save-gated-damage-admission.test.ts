@@ -29,21 +29,21 @@ import {
   supportedCantripSaveGateDamageProfile,
 } from "./_save-gate-helpers.ts";
 import { saveGatedDamageProfile } from "./save-gated-damage.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 
-function spellAdmissionActor(): SpellAdmissionActor {
+function spellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -121,6 +121,7 @@ describe("save-gated damage static admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },

@@ -6,6 +6,7 @@ import {
   spellAdmissionBattleProjection,
   type SpellAdmissionActor,
   type SpellAdmissionContext,
+  type CharacterSpellAdmissionContext,
 } from "./profile.ts";
 
 function isSpellAdmissionActor(
@@ -33,9 +34,10 @@ function isSpellAdmissionActor(
 export function spellAdmissionContextFor(
   actor: BattleCreatureState,
   state: BattleState | undefined,
-): Omit<SpellAdmissionContext, "castingSource"> | null {
+): Omit<CharacterSpellAdmissionContext, "castingSource"> | null {
   if (!isSpellAdmissionActor(actor)) return null;
   return {
+    kind: "character",
     actor,
     battle: spellAdmissionBattleProjection(state),
     spellCastOptions: actor.origin.spellcasting.spellSlots.map((slot) => ({

@@ -1,3 +1,10 @@
+import {
+  cantripSpellInvocationFacts,
+  leveledSpellInvocationOptions,
+} from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -1243,11 +1250,12 @@ function admitSpellAttackSequence(
   ctx: SpellAdmissionContext,
   facts: SpellAttackSequenceMechanicsFacts,
 ): readonly SpellAttackSequenceInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
-  const attackBonusValue = attackBonus(
-    Number(ctx.castingSource.abilityModifier) +
-      Number(spellcasting.proficiencyBonus),
-  );
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
+  const attackBonusValue = casterAttackBonus;
   if (facts.level === 0) {
     const characterLevel = spellAdmissionCharacterLevel(ctx);
     const attackCount = facts.count.tiers.reduce<MultiBeamSpellAttackBeamCount>(
@@ -1257,10 +1265,9 @@ function admitSpellAttackSequence(
     );
     return [
       {
-        access: cantripSpellAccessFor(spell.castingSource),
-        resource: { tag: "none" },
+        ...castingFacts,
         procedure: "spellAttackSequence",
-        spell,
+
         targeting: {
           kind: "spellAttackSequenceCreatureOrObject",
           countSource: "characterLevel",
@@ -1277,7 +1284,7 @@ function admitSpellAttackSequence(
     ];
   }
   const slotCount = facts.count;
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SpellAttackSequenceInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const attackCount = multiRaySpellAttackRayCount(
@@ -1288,10 +1295,9 @@ function admitSpellAttackSequence(
       if (attackCount === null) return [];
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "spellAttackSequence",
-          spell,
+
           targeting: {
             kind: "spellAttackSequenceCreatureOrObject",
             countSource: "spellSlotLevel",
@@ -1336,8 +1342,8 @@ function resolveSpellAttackSequence(
   return resolveSpellAttackSequenceAct(spellProcedureResolutionContext(input));
 }
 
-const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+const SpellAttackSequenceInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -1352,6 +1358,8 @@ const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
       attackKind: Schema.Literal("ranged_spell_attack"),
       attackBonus: AttackBonus,
     }),
+  ),
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -1366,8 +1374,8 @@ const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
       attackKind: Schema.Literal("ranged_spell_attack"),
       attackBonus: AttackBonus,
     }),
-  ]),
-);
+  ),
+]);
 export const spellAttackSequenceProfile: SpellProcedureDeclaration<
   "spellAttackSequence",
   Extract<

@@ -35,7 +35,9 @@ import {
 export function isPreparedDamageSpellSource(
   source: DamageSpellSource,
 ): source is PreparedDamageSpellSource {
-  return source.access.tag === "prepared";
+  return (
+    source.access.tag === "prepared" || source.access.tag === "statBlockLeveled"
+  );
 }
 
 export function damageSpellSource(

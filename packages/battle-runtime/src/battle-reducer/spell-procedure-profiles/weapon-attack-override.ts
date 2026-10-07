@@ -1111,8 +1111,15 @@ function admitWeaponAttackOverrideMechanics(
       procedure: "weaponAttackOverride",
       facts,
       evidence: weaponAttackOverrideMechanicsEvidence(mechanics),
-      admit: (executionSource, ctx) =>
-        admitWeaponAttackOverride(
+      admit: (executionSource, ctx) => {
+        const actor = ctx.actor;
+        if (
+          actor.origin.kind !== "character" ||
+          actor.origin.spellcasting === undefined ||
+          !actor.origin.spellcasting.canCastSpells
+        )
+          return [];
+        return admitWeaponAttackOverride(
           executionSource,
           {
             damageDie: facts.damageDie,
@@ -1121,11 +1128,21 @@ function admitWeaponAttackOverrideMechanics(
             ),
           } satisfies WeaponAttackOverrideMechanicsProjection,
           {
-            actor: ctx.actor,
+            actor: {
+              ...actor,
+              origin: {
+                ...actor.origin,
+                spellcasting: {
+                  ...actor.origin.spellcasting,
+                  canCastSpells: true,
+                },
+              },
+            },
             castingSource: ctx.castingSource,
-            activeDruidWildShape: activeDruidWildShapeEffect(ctx.actor),
+            activeDruidWildShape: activeDruidWildShapeEffect(actor),
           },
-        ),
+        );
+      },
     },
   };
 }

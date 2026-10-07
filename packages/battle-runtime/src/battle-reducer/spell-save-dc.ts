@@ -1,3 +1,6 @@
+import { Option } from "effect";
+import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
@@ -13,10 +16,18 @@ import {
 export function spellSaveDcForCaster(
   state: BattleState,
   casterId: CombatantId,
+  sourceProcedureRef?: BattleProcedureExecutionRef,
 ): DifficultyClass | null {
   const caster = state.combatants.get(casterId);
-  if (caster?.origin.kind !== "character") {
-    return null;
+  if (caster === undefined) return null;
+  if (caster.origin.kind === "statBlock") {
+    const invocation =
+      sourceProcedureRef === undefined
+        ? undefined
+        : creatureSpellProcedure(caster, sourceProcedureRef);
+    return invocation?.spellRuleFacts.castingSource.tag === "statBlock"
+      ? Option.getOrNull(invocation.spellRuleFacts.castingSource.spellSaveDc)
+      : null;
   }
   const spellcasting = caster.origin.spellcasting;
   if (

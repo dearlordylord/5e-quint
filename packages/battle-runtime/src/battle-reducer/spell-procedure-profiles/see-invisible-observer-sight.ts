@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
@@ -530,17 +533,16 @@ function admitSeeInvisibleObserverSight(
   ctx: SpellAdmissionContext,
   facts: SeeInvisibleObserverSightMechanicsFacts,
 ): readonly SeeInvisibleObserverSightSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SeeInvisibleObserverSightSpellInvocation[] =>
       Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "seeInvisibleObserverSight",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               activeEffect: {
                 kind: "seeInvisibleAndEthereal",
                 sourceCombatantId: ctx.actor.combatantId,

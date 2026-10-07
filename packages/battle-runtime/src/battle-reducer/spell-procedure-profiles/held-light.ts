@@ -1,3 +1,7 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { spellCastCandidate } from "../spell-cast-candidate.ts";
@@ -309,14 +313,14 @@ function heldLightDamageAmountProjection(
 
 function heldLightDamageExpr(
   amount: HeldLightDamageAmount,
-  characterLevel: CharacterLevel,
+  characterLevel: CharacterLevel | null,
 ): DiceExpr {
   return Match.value(amount).pipe(
     Match.when({ kind: "fixed" }, ({ expr }) => expr),
     Match.when({ kind: "threshold_tiers" }, (threshold) =>
       threshold.tiers.reduce(
         (expr, tier) =>
-          characterLevel >= tier.atLevel
+          characterLevel !== null && characterLevel >= tier.atLevel
             ? diceExprWithDelta(expr, tier.override)
             : expr,
         threshold.base,
@@ -817,27 +821,28 @@ function admitHeldLight(
   ctx: SpellAdmissionContext,
   facts: HeldLightMechanicsFacts,
 ): readonly HeldLightInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
   const damageExpr = heldLightDamageExpr(
     facts.hurl.damageAmount,
     spellAdmissionCharacterLevel(ctx),
   );
   return [
     {
-      access: cantripSpellAccessFor(ctx.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "heldLight",
-      spell,
-      actionCost: "bonusAction",
+
+      actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
       light: facts.light,
       hurl: {
         targeting: { kind: "singleCreatureOrObject" },
         damage: { expr: damageExpr, damageType: "fire" },
         rangeFeet: movementFeet(60),
         attackKind: "ranged_spell_attack",
-        attackBonus: attackBonus(
-          Number(ctx.castingSource.abilityModifier) +
-            Number(ctx.actor.origin.spellcasting.proficiencyBonus),
-        ),
+        attackBonus: casterAttackBonus,
       },
       expiresAt: {
         kind: "duration",

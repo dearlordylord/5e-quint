@@ -26,7 +26,7 @@ import {
   spellAdmissionSource,
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
 import { targetingSaveInterdictionProfile } from "./targeting-save-interdiction.ts";
@@ -51,23 +51,23 @@ function mechanicsSource(
   };
 }
 
-function sourceFor(spellId: string): BattleSpellAdmissionSource {
+function sourceFor(spellId: string): ReturnType<typeof spellAdmissionSource> {
   return spellAdmissionSource(spellRecord(spellId));
 }
 
-function spellAdmissionActor(): SpellAdmissionActor {
+function spellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -100,6 +100,7 @@ describe("SR-04G-B4 static spell procedure admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
@@ -142,6 +143,7 @@ describe("SR-04G-B4 static spell procedure admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
@@ -188,6 +190,7 @@ describe("SR-04G-B4 static spell procedure admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [],
       },

@@ -1,3 +1,8 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import {
   ongoingSpellRepeatCastIsAvailable,
@@ -1806,7 +1811,7 @@ function admitObjectContactDamage(
   ctx: SpellAdmissionContext,
   facts: ObjectContactDamageMechanicsFacts,
 ): readonly ObjectContactDamageInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ObjectContactDamageInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const damageExpr: DiceExpr = {
@@ -1821,11 +1826,10 @@ function admitObjectContactDamage(
       };
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "objectContactDamage",
-          spell,
-          actionCost: "magicAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "magicAction"),
           targeting: { kind: "singleManufacturedMetalObject" },
           damage: {
             expr: damageExpr,
@@ -1862,10 +1866,10 @@ function admitObjectContactDamageRepeat(
             tag: "spellEffect",
             sourceCombatantId: effect.sourceCombatantId,
           },
-          resource: { tag: "none" },
+          resource: cantripSpellInvocationResource(ctx),
           procedure: "objectContactDamageRepeat",
           spell,
-          actionCost: "bonusAction",
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           activeEffect: effect,
         },
       ];
@@ -1965,14 +1969,15 @@ const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
   }),
 );
 
-const ObjectContactDamageRepeatInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    procedure: Schema.Literal("objectContactDamageRepeat"),
-    spellRuleFacts: Schema.optionalKey(Schema.Never),
-    activeEffectRef: BattleEffectExecutionRef,
-    activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
-  }),
-);
+const ObjectContactDamageRepeatInvocationSchema =
+  spellEffectProcedureExecutionSchema(
+    Schema.Struct({
+      procedure: Schema.Literal("objectContactDamageRepeat"),
+      spellRuleFacts: Schema.optionalKey(Schema.Never),
+      activeEffectRef: BattleEffectExecutionRef,
+      activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
+    }),
+  );
 export const objectContactDamageProfile: SpellProcedureDeclaration<
   "objectContactDamage",
   ObjectContactDamageInvocation,

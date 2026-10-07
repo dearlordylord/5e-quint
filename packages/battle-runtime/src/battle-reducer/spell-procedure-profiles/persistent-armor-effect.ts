@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -871,7 +873,9 @@ type PersistentArmorSpellSource =
   | Pick<
       Extract<
         PersistentArmorInvocation,
-        { readonly access: { readonly tag: "prepared" } }
+        {
+          readonly access: import("../../procedure-execution/spell-invocation-vocabulary.ts").PreparedSpellAccess;
+        }
       >,
       "access" | "resource"
     >
@@ -922,17 +926,16 @@ function admitPersistentArmorEffect(
   ctx: SpellAdmissionContext,
   executionFacts: PersistentArmorEffectExecutionFacts,
 ): readonly PersistentArmorInvocation[] {
-  return ctx.spellCastOptions.flatMap((option) =>
+  return leveledSpellInvocationOptions(spell, ctx).flatMap((option) =>
     option.spellLevel < executionFacts.slotLevel
       ? []
       : [
           buildPersistentArmorEffectInvocation(
             ctx.actor.combatantId,
-            spell,
+
             executionFacts,
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(option),
+              ...option.facts,
             },
           ),
         ],
@@ -1090,8 +1093,8 @@ function resolvePersistentArmorEffect(
   });
 }
 
-const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+const PersistentArmorEffectInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -1100,6 +1103,8 @@ const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
       rangeFeet: MovementFeet,
       activeEffect: PersistentArmorEffectSchema,
     }),
+  ),
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: ArmorOfShadowsSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -1108,8 +1113,8 @@ const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
       rangeFeet: MovementFeet,
       activeEffect: PersistentArmorEffectSchema,
     }),
-  ]),
-);
+  ),
+]);
 export const persistentArmorEffectProfile: SpellProcedureDeclaration<
   "persistentArmorEffect",
   PersistentArmorInvocation,

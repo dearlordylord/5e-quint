@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -601,17 +604,16 @@ function admitChosenDamageResistance(
   ctx: SpellAdmissionContext,
   facts: ChosenDamageResistanceMechanicsFacts,
 ): readonly ChosenDamageResistanceSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ChosenDamageResistanceSpellInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "chosenDamageResistance",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               targeting: {
                 kind: "targetList",
                 minTargets: 1,

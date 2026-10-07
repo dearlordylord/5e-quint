@@ -31,7 +31,7 @@ import {
   spellAdmissionSource,
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import {
   objectContactDamageProfile,
@@ -63,17 +63,17 @@ function mechanicsSourceWithBaseDefinitionFacts(
 
 function spellAdmissionActor(
   input: Parameters<typeof spellBattle>[0] = { preparedSpells: [] },
-): SpellAdmissionActor {
+): CharacterSpellAdmissionActor {
   const actor = spellBattle(input).state.combatants.get(spellCasterId);
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -157,6 +157,7 @@ describe("SR-04G-A5 static spell procedure admission", () => {
                 })
               : spellAdmissionActor(),
           castingSource: source.castingSource,
+          kind: "character",
           battle: undefined,
           spellCastOptions: castOptions,
         },
@@ -243,6 +244,7 @@ describe("SR-04G-A5 static spell procedure admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(3), payment: { tag: "slot" as const } },
@@ -288,6 +290,7 @@ describe("SR-04G-A5 static spell procedure admission", () => {
           ],
         }),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [],
       },

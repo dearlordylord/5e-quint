@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
@@ -898,17 +901,16 @@ function admitOngoingSpellEnd(
   ctx: SpellAdmissionContext,
   facts: OngoingSpellEndMechanicsFacts,
 ): readonly OngoingSpellEndInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly OngoingSpellEndInvocation[] =>
       Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "ongoingSpellEnd",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               rangeFeet: facts.rangeFeet,
               abilityCheckDcBase: facts.abilityCheckDcBase,
             },
@@ -1122,6 +1124,8 @@ function resolveOngoingSpellEndSpellAct(input: {
     Match.value(input.invocation.resource).pipe(
       Match.when({ tag: "spellSlot" }, ({ slotLevel }) => slotLevel),
       Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => castLevel),
+      Match.when({ tag: "statBlockAtWill" }, ({ castLevel }) => castLevel),
+      Match.when({ tag: "statBlockLimited" }, ({ castLevel }) => castLevel),
       Match.exhaustive,
     ),
   );

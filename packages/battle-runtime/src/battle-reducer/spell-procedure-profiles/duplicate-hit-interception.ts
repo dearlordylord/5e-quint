@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
@@ -94,17 +97,16 @@ function admitDuplicateHitInterception(
   const durationTicks = spellDurationTicksFromCanonicalValue(
     facts.duration.value,
   );
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly DuplicateHitInterceptionInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "duplicateHitInterception",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               activeEffect: {
                 kind: "duplicateHitInterception",
                 sourceCombatantId: ctx.actor.combatantId,

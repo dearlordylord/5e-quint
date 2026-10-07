@@ -2264,7 +2264,8 @@ type SpellEffectSpellAccess = {
   readonly tag: "spellEffect";
   readonly sourceCombatantId: CombatantId;
 };
-type NoSpellInvocationResource = { readonly tag: "none" };
+type NoSpellInvocationResource =
+  import("./procedure-execution/spell-invocation-vocabulary.ts").NoSpellInvocationResource;
 type PreparedLeveledSpellSource = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
@@ -2435,7 +2436,7 @@ export type LinkedDefenseResistanceDamageShareSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "linkedDefenseResistanceDamageShare";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
       BattleActiveEffect,
@@ -2489,7 +2490,7 @@ export type TemporaryAbilityCheckRollModeSpellInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "temporaryAbilityCheckRollMode";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
       BattleActiveEffect,
@@ -2512,7 +2513,7 @@ type RollModifierSpellSaveGate = {
 type RollModifierSpellInvocationBase = {
   readonly procedure: "rollModifier";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: RollModifierSpellTargeting;
   readonly rangeFeet: MovementFeet;
   readonly saveGate: RollModifierSpellSaveGate | null;
@@ -2538,7 +2539,7 @@ export type CreatureTypeProtectionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureTypeProtection";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: CreatureTypeProtectionSpellTargeting;
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "creatureTypeProtection" }>
@@ -2550,7 +2551,7 @@ export type CreatureSizeChangeSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly ability: Extract<Ability, "con">;
   readonly dc: DcSource;
   readonly targeting: SpellTargetListTargeting;
@@ -2564,7 +2565,7 @@ export type ControlledVerticalSuspensionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "controlledVerticalSuspension";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly ability: Extract<Ability, "con">;
   readonly dc: DcSource;
   readonly targeting: SpellTargetListTargeting;
@@ -2580,7 +2581,7 @@ export type PerceptionGatedAttackRollDefenseSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "perceptionGatedAttackRollDefense";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
       BattleActiveEffect,
@@ -2593,7 +2594,7 @@ export type SeeInvisibleObserverSightSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "seeInvisibleObserverSight";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "seeInvisibleAndEthereal" }>
   >;
@@ -2603,7 +2604,7 @@ export type DuplicateHitInterceptionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "duplicateHitInterception";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "duplicateHitInterception" }>
   >;
@@ -2613,7 +2614,7 @@ export type ConditionRemovalProtectionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "conditionRemovalProtection";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting;
   readonly protection: {
     readonly conditionSaveRollMode: BattleSpellActiveEffectTemplate<
@@ -2633,7 +2634,7 @@ export type ChosenDamageResistanceSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "chosenDamageResistance";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting & {
     readonly requiredTargetDisposition: "willing";
   };
@@ -2649,7 +2650,7 @@ export type DirectConditionRemovalSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "directConditionRemoval";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting;
   readonly conditionChoices: typeof DIRECT_CONDITION_REMOVAL_CONDITIONS;
   readonly rangeFeet: MovementFeet;
@@ -2659,7 +2660,7 @@ export type DamageReductionSpellInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "damageReduction";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting & {
     readonly requiredTargetDisposition: "willing";
   };
@@ -2676,7 +2677,7 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting & {
     readonly requiredTargetDisposition: "willing";
   };
@@ -2696,7 +2697,7 @@ export type SelfTransformationModeSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTransformationMode";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly modeChoices: readonly [
     SelfTransformationModeKind,
     ...SelfTransformationModeKind[],
@@ -2712,7 +2713,7 @@ export type SaveGatedConditionImmunitySpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "saveGatedConditionImmunity";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly targeting: Extract<
@@ -2731,7 +2732,7 @@ export type FixedCostMovementReplacementSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "fixedCostMovementReplacement";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: {
     readonly kind: "targetList";
     readonly minTargets: 1;
@@ -2778,7 +2779,7 @@ export type CompositeTargetBuffWithAftermathSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "compositeTargetBuffWithAftermath";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting & {
     readonly maxTargets: 1;
     readonly requiredTargetDisposition: "willing";
@@ -2810,7 +2811,7 @@ export type SelfTeleportSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTeleport";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly maxDistanceFeet: MovementFeet;
 };
 export type TargetingSaveInterdictionSpellInvocation = {
@@ -2818,7 +2819,7 @@ export type TargetingSaveInterdictionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "targetingSaveInterdiction";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: {
     readonly kind: "targetList";
     readonly minTargets: 1;
@@ -2839,7 +2840,7 @@ export type DirectConditionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "directCondition";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly targeting: SpellTargetListTargeting;
   readonly activeEffect: Omit<
     BattleSpellActiveEffectTemplate<
@@ -2857,7 +2858,7 @@ export type WeaponDamageRiderSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "weaponDamageRider";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "spellWeaponDamageRider" }>
   >;
@@ -2867,14 +2868,14 @@ export type WeaponAttackDamageEnhancementSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "weaponAttackDamageEnhancement";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly bonus: WeaponAttackDamageEnhancementBonus;
   readonly durationTicks: ElapsedTimeTicks;
 };
 export type AfterHitDamageSpellInvocation = PreparedLeveledSpellSource & {
   readonly procedure: "afterHitDamage";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly damage: {
     readonly expr: DiceExpr;
     readonly damageType: DamageType;
@@ -2890,7 +2891,7 @@ export type AfterHitSaveGatedConditionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "afterHitSaveGatedCondition";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly targeting: Extract<
@@ -2904,7 +2905,7 @@ export type AfterHitTimedDamageAndSaveSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "afterHitTimedDamageAndSave";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly immediateDamage: {
     readonly expr: DiceExpr;
     readonly damageType: DamageType;
@@ -2921,7 +2922,7 @@ export type AfterHitDamageAndIlluminationSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "afterHitDamageAndIllumination";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly damage: {
     readonly expr: DiceExpr;
     readonly damageType: DamageType;
@@ -2969,7 +2970,7 @@ export type HeldLightSpellInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "heldLight";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly light: {
     readonly brightRadiusFeet: MovementFeet;
     readonly dimAdditionalFeet: MovementFeet;
@@ -3004,7 +3005,7 @@ type ObjectLightSpellSource =
 type ObjectLightSpellInvocationBase = {
   readonly procedure: "objectLight";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly light: Extract<
     BattleLightEmission,
     { readonly kind: "brightAndDim" }
@@ -3018,7 +3019,7 @@ export type OngoingSpellEndSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "ongoingSpellEnd";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly rangeFeet: MovementFeet;
   readonly abilityCheckDcBase: DifficultyClass;
 };
@@ -3143,7 +3144,7 @@ export type RepeatSpatialMeleeSpellAttackProxyInvocation = {
   readonly procedure: "spatialMeleeSpellAttackProxy";
   readonly operation: "repositionAndAttack";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "spatialMeleeSpellAttackProxy" }
@@ -3170,7 +3171,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "spellHostedWeaponAttack";
   readonly spell: BattleSpellExecutionSource;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly componentWeapon: {
     readonly objectId: BattleObjectId;
     readonly attack: BoundCharacterWeaponAttackActionOption;
@@ -3185,7 +3186,7 @@ export type WeaponAttackOverrideSpellInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "weaponAttackOverride";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;
   readonly attachedWeapon: {
     readonly attack: BoundCharacterWeaponAttackActionOption;

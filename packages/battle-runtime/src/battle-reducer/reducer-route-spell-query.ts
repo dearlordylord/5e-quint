@@ -1,3 +1,4 @@
+import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
 import type {
   BattleResolutionInput,
   BattleState,
@@ -17,17 +18,10 @@ export function spellInvocationForRouteSubject(
     return undefined;
   }
   const actor = state.combatants.get(subject.actorId);
-  if (
-    !isCharacterBattleCreatureState(actor) ||
-    subject.procedureRef === undefined
-  ) {
+  if (actor === undefined || subject.procedureRef === undefined) {
     return undefined;
   }
-  return characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    actor,
-  );
+  return creatureSpellProcedure(actor, subject.procedureRef);
 }
 
 export function spellInvocationForInterruptChoice(
@@ -36,7 +30,7 @@ export function spellInvocationForInterruptChoice(
   procedureRef: BattleProcedureExecutionRef,
 ): BattleSpellProcedureExecution | undefined {
   const reactor = state.combatants.get(reactorId);
-  return isCharacterBattleCreatureState(reactor)
-    ? characterSpellProcedure(reactor.origin.execution, procedureRef, reactor)
-    : undefined;
+  return reactor === undefined
+    ? undefined
+    : creatureSpellProcedure(reactor, procedureRef);
 }

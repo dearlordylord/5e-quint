@@ -1,3 +1,8 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type {
   BattleSpellAdmissionSource,
@@ -1503,7 +1508,7 @@ function admitMarkedDamageRider(
   ctx: SpellAdmissionContext,
   facts: MarkedDamageRiderMechanicsFacts,
 ): readonly MarkedDamageRiderInvocation[] {
-  const slotInvocations = ctx.spellCastOptions.flatMap(
+  const slotInvocations = leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly MarkedDamageRiderInvocation[] => {
       const expiresAt = markedDamageRiderConcentrationExpirationForSlot(
         ctx.actor.combatantId,
@@ -1514,12 +1519,11 @@ function admitMarkedDamageRider(
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "markedDamageRider",
               action: "cast",
-              spell,
-              actionCost: "bonusAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
               targeting: { kind: "singleCombatant" },
               damage: {
                 expr: facts.damageAmount.expr,
@@ -1765,6 +1769,22 @@ function resolveMarkedDamageRider(
         input.input.state,
       ),
     ),
+    Match.when({ tag: "statBlockAtWill" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        { ...concentrationBase, currentTurnResources: turnResources },
+        input.actorId,
+        resource,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "statBlockLimited" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        { ...concentrationBase, currentTurnResources: turnResources },
+        input.actorId,
+        resource,
+        input.input.state,
+      ),
+    ),
     Match.exhaustive,
   );
   if (resourced.tag === "invalid") {
@@ -1953,8 +1973,8 @@ function markedDamageRiderActiveAbilityCheckBehavior(
   );
 }
 
-const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+const MarkedDamageRiderInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -1986,6 +2006,8 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
       rangeFeet: MovementFeetSchema,
       expiresAt: BattleActiveEffectExpirationSchema,
     }),
+  ),
+  spellEffectProcedureExecutionSchema(
     Schema.Struct({
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("transfer"),
@@ -1993,8 +2015,8 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
       activeEffectRef: BattleEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
-  ]),
-);
+  ),
+]);
 export const markedDamageRiderProfile: SpellProcedureDeclaration<
   "markedDamageRider",
   MarkedDamageRiderInvocation

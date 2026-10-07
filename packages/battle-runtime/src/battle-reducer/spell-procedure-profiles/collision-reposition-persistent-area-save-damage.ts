@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -699,7 +702,7 @@ function admitRamMovablePersistentArea(
   ) {
     return [];
   }
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly RamMovablePersistentAreaSpellInvocation[] => {
       if (Number(slot.spellLevel) < RAM_MOVABLE_PERSISTENT_AREA_LEVEL) {
         return [];
@@ -713,16 +716,15 @@ function admitRamMovablePersistentArea(
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "persistentAreaSaveDamage",
               lifecycle: {
                 kind: "casterActionReposition",
-                actionCost: "bonusAction",
+                actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
                 movedAreaOperation: "saveDamage",
                 collisionDisposition: "stopAndAffectAdjacent",
               },
-              spell,
+
               ability: "dex",
               dc: { kind: "caster_spell_save_dc" },
               targeting: {

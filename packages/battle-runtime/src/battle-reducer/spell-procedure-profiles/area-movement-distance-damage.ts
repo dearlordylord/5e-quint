@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -1153,16 +1155,15 @@ function admitAreaMovementDistanceDamage(
   ctx: SpellAdmissionContext,
   facts: AreaMovementDistanceDamageMechanicsFacts,
 ): readonly AreaMovementDistanceDamageSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly AreaMovementDistanceDamageSpellInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "areaMovementDistanceDamage",
-              spell,
+
               targeting: {
                 kind: "pointOriginSphere",
                 radiusFeet: facts.radiusFeet,

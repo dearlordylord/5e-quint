@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -1540,7 +1543,7 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
   ctx: SpellAdmissionContext,
   facts: ConditionImmunityTemporaryHitPointsMechanicsFacts,
 ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (
       slot,
     ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] => {
@@ -1557,11 +1560,10 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
       };
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
-          spell,
-          actionCost: "magicAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "magicAction"),
           targeting: {
             kind: "targetList",
             minTargets: 1,

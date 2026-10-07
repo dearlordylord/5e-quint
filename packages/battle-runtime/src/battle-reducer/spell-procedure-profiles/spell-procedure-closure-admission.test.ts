@@ -178,6 +178,7 @@ describe("Spell procedure closure and evidence admission", () => {
         {
           actor,
           castingSource: source.castingSource,
+          kind: "character",
           battle: undefined,
           spellCastOptions: [
             { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
@@ -215,6 +216,7 @@ describe("Spell procedure closure and evidence admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: directSource.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
@@ -252,6 +254,7 @@ describe("Spell procedure closure and evidence admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: duplicateSource.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },

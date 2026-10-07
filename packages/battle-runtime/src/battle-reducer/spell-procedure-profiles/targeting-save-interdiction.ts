@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
@@ -854,17 +857,16 @@ function admitTargetingSaveInterdiction(
   ctx: SpellAdmissionContext,
   facts: TargetingSaveInterdictionMechanicsFacts,
 ): readonly TargetingSaveInterdictionInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly TargetingSaveInterdictionInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "targetingSaveInterdiction",
-              spell,
-              actionCost: "bonusAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
               targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
               activeEffect: {
                 kind: "targetingSaveInterdiction",

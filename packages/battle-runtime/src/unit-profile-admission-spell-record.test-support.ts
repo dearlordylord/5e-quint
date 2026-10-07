@@ -30,7 +30,9 @@ export function decodeSpellRecordForTest(raw: unknown): SpellRecord {
 export function spellAdmissionSource(
   spell: SpellRecord,
   spellAccessFreeCastResourcePoolRefs?: readonly BattleResourcePoolExecutionRef[],
-): BattleSpellAdmissionSource {
+): BattleSpellAdmissionSource & {
+  readonly castingSource: import("./procedure-execution/spell-rule-facts.ts").CharacterSpellCastingSource;
+} {
   return {
     id: spell.id,
     name: spell.name,

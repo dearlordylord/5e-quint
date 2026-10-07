@@ -1,3 +1,8 @@
+import {
+  leveledSpellInvocationOptions,
+  spellAdmissionActionCost,
+} from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeSpellActiveEffectCast,
@@ -1808,16 +1813,14 @@ function admitScalarBuff(
     ctx.castingSource.tag !== "statBlock"
   )
     return [];
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ScalarBuffInvocation[] => {
       if (slot.spellLevel < facts.level) return [];
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "scalarBuff",
-          spell,
-          actionCost: facts.actionCost,
+          actionCost: spellAdmissionActionCost(ctx, facts.actionCost),
           targeting: scalarBuffTargetingForSlot(
             facts.targeting,
             slot.spellLevel,

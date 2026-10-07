@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -872,15 +874,14 @@ function admitMagicalDarknessPointOrigin(
   ctx: SpellAdmissionContext,
   facts: MagicalDarknessPointOriginMechanicsFacts,
 ): readonly MagicalDarknessPointOriginSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly MagicalDarknessPointOriginSpellInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "magicalDarknessPointOrigin",
-          spell,
+
           targeting: {
             kind: "pointOriginSphere",
             radiusFeet: facts.radiusFeet,

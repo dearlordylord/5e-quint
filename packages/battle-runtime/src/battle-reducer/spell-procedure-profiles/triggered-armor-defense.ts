@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { unitId } from "@dnd/shared/game-facts";
@@ -251,16 +254,15 @@ function admitTriggeredArmorDefense(
   ctx: SpellAdmissionContext,
   facts: TriggeredArmorDefenseMechanicsFacts,
 ): readonly TriggeredArmorDefenseInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly TriggeredArmorDefenseInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "triggeredArmorDefense",
-              spell,
+
               armorClassBonus: facts.armorClassBonus,
               negatesRepeatedDamageAllocation:
                 facts.negatesRepeatedDamageAllocation,
@@ -1018,6 +1020,22 @@ function resolveTriggeredArmorDefense(
         casterId: input.input.subject.reactorId,
         slotLevel,
       }),
+    ),
+    Match.when({ tag: "statBlockAtWill" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        effected,
+        input.input.subject.reactorId,
+        resource,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "statBlockLimited" }, (resource) =>
+      spendStatBlockSpellInvocationResource(
+        effected,
+        input.input.subject.reactorId,
+        resource,
+        input.input.state,
+      ),
     ),
     Match.exhaustive,
   );

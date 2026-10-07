@@ -1,4 +1,10 @@
 import {
+  cantripSpellInvocationFacts,
+  leveledSpellInvocationOptions,
+} from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHolesOr,
 } from "../saving-throw-metamagic-holes.ts";
@@ -102,26 +108,27 @@ function admitSaveGatedDamageMechanics(source: SpellMechanicsAdmissionSource) {
       facts,
       spell: BattleSpellExecutionSource,
       ctx: SpellAdmissionContext,
-    ) =>
-      facts.level === 0
-        ? saveGatedDamageInvocationsFromFacts({
-            spell,
-            facts,
-            access: cantripSpellAccessFor(spell.castingSource),
-            resource: { tag: "none" },
-            characterLevel: spellAdmissionCharacterLevel(ctx),
-          })
-        : ctx.spellCastOptions.flatMap((slot) =>
-            Number(slot.spellLevel) < facts.level
-              ? []
-              : saveGatedDamageInvocationsFromFacts({
-                  spell,
-                  facts,
-                  access: { tag: "prepared" },
-                  resource: spellInvocationResourceForCastOption(slot),
-                  slotLevel: slot.spellLevel,
-                }),
-          ),
+    ) => {
+      if (facts.level === 0) {
+        const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+        return castingFacts === null
+          ? []
+          : saveGatedDamageInvocationsFromFacts({
+              ...castingFacts,
+              facts,
+              characterLevel: spellAdmissionCharacterLevel(ctx),
+            });
+      }
+      return leveledSpellInvocationOptions(spell, ctx).flatMap((slot) =>
+        Number(slot.spellLevel) < facts.level
+          ? []
+          : saveGatedDamageInvocationsFromFacts({
+              ...slot.facts,
+              facts,
+              slotLevel: slot.spellLevel,
+            }),
+      );
+    },
   });
 }
 
@@ -321,14 +328,16 @@ const SaveGatedDamageCommonFields = {
   postSaveAreaEffect: Schema.optionalKey(SpellPostSaveAreaEffectSchema),
 } as const;
 
-export const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+export const SaveGatedDamageInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       castingTime: ActionSpellInvocationCastingTimeSchema,
       ...SaveGatedDamageCommonFields,
     }),
+  ),
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -338,8 +347,8 @@ export const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
       ]),
       ...SaveGatedDamageCommonFields,
     }),
-  ]),
-);
+  ),
+]);
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   executionSchema: SaveGatedDamageInvocationSchema,

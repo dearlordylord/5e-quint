@@ -1,3 +1,7 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { characterBattleLevel } from "../../character-class-level.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   ammunitionForAttackIsAvailable,
@@ -796,9 +800,19 @@ function admitSpellHostedWeaponAttack(
   ctx: SpellAdmissionContext,
   facts: SpellHostedWeaponAttackMechanicsFacts,
 ): readonly SpellHostedWeaponAttackInvocation[] {
-  const origin = ctx.actor.origin;
-  const spellcasting = origin.spellcasting;
-  return spellHostedWeaponAttacks(ctx.actor)
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
+  const actor = ctx.actor;
+  if (
+    !isCharacterBattleCreatureState(actor) ||
+    actor.origin.spellcasting === undefined
+  )
+    return [];
+  const characterLevel = characterBattleLevel(actor.origin.classLevels);
+  const origin = actor.origin;
+  const spellcasting = actor.origin.spellcasting;
+  return spellHostedWeaponAttacks(actor)
     .filter(({ attack }) =>
       origin.weaponProficiencies.some((proficiency) =>
         weaponMatchesProficiency(attack.weapon, proficiency),
@@ -806,11 +820,10 @@ function admitSpellHostedWeaponAttack(
     )
     .map(
       ({ objectId, attack }): SpellHostedWeaponAttackInvocation => ({
-        access: cantripSpellAccessFor(spell.castingSource),
-        resource: { tag: "none" },
+        ...castingFacts,
         procedure: "spellHostedWeaponAttack",
-        spell,
-        actionCost: "magicAction",
+
+        actionCost: spellAdmissionActionCost(ctx, "magicAction"),
         componentWeapon: { objectId, attack },
         spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
         attackBonus: attackBonus(
@@ -828,7 +841,7 @@ function admitSpellHostedWeaponAttack(
         ],
         bonusDamage: spellHostedWeaponAttackBonusDamageApplicability(
           facts.bonusDamage,
-          spellAdmissionCharacterLevel(ctx),
+          characterLevel,
         ),
       }),
     );

@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -690,7 +692,7 @@ function admitPersistentAreaSaveConditionEscape(
   ) {
     return [];
   }
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly PersistentAreaSaveConditionEscapeSpellInvocation[] => {
       if (
         Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL
@@ -699,10 +701,9 @@ function admitPersistentAreaSaveConditionEscape(
       }
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "persistentAreaSaveConditionEscape",
-          spell,
+
           ability: "dex",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {

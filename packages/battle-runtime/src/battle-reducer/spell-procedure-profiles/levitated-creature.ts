@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
 import { replaceTargetActiveEffectsEndingDisplacedConcentrations } from "../active-effect-replacement.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -793,16 +796,15 @@ function admitControlledVerticalSuspension(
   ctx: SpellAdmissionContext,
   facts: SuspensionFacts,
 ): readonly ControlledVerticalSuspensionInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ControlledVerticalSuspensionInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              spell,
-              actionCost: "magicAction",
+              ...slot.facts,
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               procedure: "controlledVerticalSuspension",
               ability: facts.ability,
               dc: facts.dc,

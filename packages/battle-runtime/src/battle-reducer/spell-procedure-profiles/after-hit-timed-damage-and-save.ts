@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type {
@@ -144,7 +147,7 @@ function admitAfterHitTimedDamageAndSave(
   ctx: SpellAdmissionContext,
   facts: AfterHitTimedDamageAndSaveMechanicsFacts,
 ): readonly AfterHitTimedDamageAndSaveInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly AfterHitTimedDamageAndSaveInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) {
         return [];
@@ -169,11 +172,10 @@ function admitAfterHitTimedDamageAndSave(
       if (expiresAt === null) return [];
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "afterHitTimedDamageAndSave",
-          spell,
-          actionCost: "bonusAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           immediateDamage: {
             expr: immediateDamageExpr,
             damageType: facts.damageType,

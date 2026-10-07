@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -180,13 +183,14 @@ function admitAttackBurstSaveDamage(
   ctx: SpellAdmissionContext,
   facts: AttackBurstSaveDamageMechanicsFacts,
 ): readonly AttackBurstSaveDamageInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
   const rangeFeet = singleSpellAttackDamageRangeFeet(
     facts.targeting,
     facts.range,
   );
   if (rangeFeet === null) return [];
-  return ctx.spellCastOptions.flatMap((slot) => {
+  return leveledSpellInvocationOptions(spell, ctx).flatMap((slot) => {
     if (Number(slot.spellLevel) < facts.level) return [];
     const hitDamageExpr = supportedDamageAmountExpr({
       amount: facts.damageAmount,
@@ -201,16 +205,12 @@ function admitAttackBurstSaveDamage(
     if (hitDamageExpr === null || burstDamageExpr === null) return [];
     return [
       {
-        access: { tag: "prepared" },
-        resource: spellInvocationResourceForCastOption(slot),
+        ...slot.facts,
         procedure: "attackBurstSaveDamage",
-        spell,
+
         targeting: facts.targeting,
         attackKind: facts.attackKind,
-        attackBonus: attackBonus(
-          Number(ctx.castingSource.abilityModifier) +
-            Number(spellcasting.proficiencyBonus),
-        ),
+        attackBonus: casterAttackBonus,
         damage: {
           expr: hitDamageExpr,
           damageType: facts.damageType,

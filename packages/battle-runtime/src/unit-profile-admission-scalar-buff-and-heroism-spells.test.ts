@@ -74,7 +74,7 @@ import type {
   BattleCreatureState,
   BattleSpellAdmissionSource,
 } from "./battle-state-execution.ts";
-import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { scalarBuffProfile } from "./battle-reducer/spell-procedure-profiles/scalar-buff.ts";
@@ -2598,7 +2598,7 @@ function syntheticHeroismRecord(
   });
 }
 
-function heroismStaticActor(): SpellAdmissionActor {
+function heroismStaticActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
@@ -2609,7 +2609,7 @@ function heroismStaticActor(): SpellAdmissionActor {
 
 function isHeroismStaticActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -2674,6 +2674,7 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
       {
         actor: heroismStaticActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },

@@ -6,7 +6,7 @@ import {
   spellAdmissionSource,
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
 import { spatialMeleeSpellAttackProxyProfile } from "./spatial-melee-spell-attack-proxy.ts";
@@ -50,19 +50,19 @@ export function renamedSpell(
   });
 }
 
-export function spellAdmissionActor(): SpellAdmissionActor {
+export function spellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-export function isSpellAdmissionActor(
+export function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true

@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type {
   BattleSpellAdmissionSource,
@@ -855,7 +858,7 @@ function admitWeaponAttackDamageEnhancement(
   const durationTicks = spellDurationTicksFromCanonicalValue(
     facts.durationValue,
   );
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly WeaponAttackDamageEnhancementInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const bonus = weaponAttackDamageEnhancementBonusForSlot(
@@ -864,11 +867,10 @@ function admitWeaponAttackDamageEnhancement(
       );
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "weaponAttackDamageEnhancement",
-          spell,
-          actionCost: "bonusAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           bonus,
           durationTicks,
         },

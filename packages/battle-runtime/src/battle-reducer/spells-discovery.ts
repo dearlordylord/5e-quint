@@ -1,3 +1,8 @@
+import {
+  discoverLongCastingSpellActs,
+  longCastingCompletionResource,
+} from "./long-casting-lifecycle.ts";
+import { Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -248,7 +253,7 @@ export function discoverSupportedSpellInvocations(
   executionRegistry: SpellProcedureExecutionRegistry,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") {
+  if (actor === undefined) {
     return [];
   }
   const spellcastingPreventedByMagicSuppression =
@@ -280,11 +285,21 @@ export function discoverSupportedSpellInvocations(
       if (!spellInvocationCasterPrerequisiteIsMet(actor, executionInvocation)) {
         return [];
       }
-      const naturalTurnResourceAvailable = spellActTurnResourceAvailable(
-        state.currentTurnResources,
+      const longCastingActs = discoverLongCastingSpellActs({
+        state,
         actorId,
-        executionInvocation,
-      );
+        invocation: executionInvocation,
+      });
+      if (longCastingActs !== undefined) return longCastingActs;
+      const naturalTurnResourceAvailable =
+        Option.isSome(
+          longCastingCompletionResource(state, actorId, executionInvocation),
+        ) ||
+        spellActTurnResourceAvailable(
+          state.currentTurnResources,
+          actorId,
+          executionInvocation,
+        );
       const quickenedTurnResourceAvailable =
         spellInvocationSupportsQuickenedActionRewrite(executionInvocation) &&
         actorCanOfferQuickenedSpellMetamagic({
@@ -362,13 +377,17 @@ function spellActWithQuickenedRewrite(input: {
   if (invocation === undefined) {
     return [input.act];
   }
-  const naturalActs = spellActTurnResourceAvailable(
-    input.state.currentTurnResources,
-    input.actorId,
-    invocation,
-  )
-    ? [input.act]
-    : [];
+  const naturalActs =
+    Option.isSome(
+      longCastingCompletionResource(input.state, input.actorId, invocation),
+    ) ||
+    spellActTurnResourceAvailable(
+      input.state.currentTurnResources,
+      input.actorId,
+      invocation,
+    )
+      ? [input.act]
+      : [];
   if (subject.mode.tag !== "cast" || subject.metamagic !== undefined) {
     return naturalActs;
   }

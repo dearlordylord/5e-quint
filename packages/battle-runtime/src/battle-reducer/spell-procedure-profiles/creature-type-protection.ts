@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -742,7 +743,7 @@ function admit(
       if (Number(option.spellLevel) < facts.level) return [];
       return [
         {
-          access: { tag: "prepared" },
+          access: preparedSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption(option),
           procedure: "creatureTypeProtection",
           spell,

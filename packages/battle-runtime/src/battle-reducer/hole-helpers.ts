@@ -399,7 +399,11 @@ export function escapeSpellRestraintAbilityCheckHole(
   effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
   input: { readonly actorId: CombatantId; readonly targetId: CombatantId },
 ): BattleAbilityCheckHole {
-  const dc = spellSaveDcForCaster(state, effect.sourceCombatantId);
+  const dc = spellSaveDcForCaster(
+    state,
+    effect.sourceCombatantId,
+    effect.sourceProcedureRef,
+  );
   const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str");
   const key = escapeSpellRestraintAbilityCheckHoleKey(
     spellActiveEffectExecutionRef(effect),

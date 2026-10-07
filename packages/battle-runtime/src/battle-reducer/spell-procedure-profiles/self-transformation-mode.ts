@@ -1,3 +1,7 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-glyph-stored-concentration-full-duration
@@ -985,25 +989,23 @@ function admitSelfTransformationMode(
   ctx: SpellAdmissionContext,
   facts: SelfTransformationFacts,
 ): readonly SelfTransformationModeInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SelfTransformationModeInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "selfTransformationMode",
-              spell,
-              actionCost: "magicAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               modeChoices: facts.modeChoices,
               naturalWeaponFacts: {
                 damage: facts.naturalWeaponDamage,
                 spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-                attackBonus: attackBonus(
-                  Number(ctx.castingSource.abilityModifier) +
-                    Number(ctx.actor.origin.spellcasting.proficiencyBonus),
-                ),
+                attackBonus: casterAttackBonus,
               },
               expiresAt: {
                 kind: "concentration",

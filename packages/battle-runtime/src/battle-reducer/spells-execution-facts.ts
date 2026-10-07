@@ -43,9 +43,21 @@ export function supportedDamageAmountExpr(input: {
   readonly amount: SurfaceDiceAmount;
   readonly spellLevel?: SpellLevel | undefined;
   readonly slotLevel?: SpellSlotLevel | undefined;
-  readonly characterLevel?: number | undefined;
+  readonly characterLevel?: number | null | undefined;
 }): DiceExpr | null {
   const { amount } = input;
+  if (
+    input.characterLevel === null &&
+    amount.kind === "threshold_tiers" &&
+    amount.axis === "character"
+  )
+    return amount.base;
+  if (
+    input.characterLevel === null &&
+    amount.kind === "threshold_tiers_exploding_max_die" &&
+    amount.axis === "character"
+  )
+    return { dice: amount.baseDice, dieSize: amount.dieSize };
   if (amount.kind === "fixed") return amount.expr;
   if (
     isCharacterThresholdTierDamageAmount(amount) &&
@@ -56,11 +68,13 @@ export function supportedDamageAmountExpr(input: {
   if (
     amount.kind === "threshold_tiers_exploding_max_die" &&
     amount.axis === "character" &&
-    input.characterLevel !== undefined
+    input.characterLevel !== undefined &&
+    input.characterLevel !== null
   ) {
     return amount.tiers.reduce<DiceExpr>(
       (expr: DiceExpr, tier: ExplodingMaxDieThresholdTier): DiceExpr =>
         input.characterLevel !== undefined &&
+        input.characterLevel !== null &&
         input.characterLevel >= tier.atLevel
           ? diceExprWithDelta(expr, { dice: tier.dice })
           : expr,
@@ -132,9 +146,15 @@ function isCharacterThresholdTierDamageAmount(
   return amount.kind === "threshold_tiers" && amount.axis === "character";
 }
 
-function isCharacterLevel(value: number | undefined): value is CharacterLevel {
+function isCharacterLevel(
+  value: number | null | undefined,
+): value is CharacterLevel {
   return (
-    value !== undefined && Number.isInteger(value) && value >= 1 && value <= 20
+    value !== undefined &&
+    value !== null &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 20
   );
 }
 

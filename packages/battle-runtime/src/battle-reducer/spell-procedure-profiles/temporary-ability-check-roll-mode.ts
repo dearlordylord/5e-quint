@@ -1,3 +1,6 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -513,13 +516,15 @@ function admitTemporaryAbilityCheckRollMode(
   ctx: SpellAdmissionContext,
   facts: TemporaryAbilityCheckRollModeMechanicsFacts,
 ): readonly TemporaryAbilityCheckRollModeInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
   return [
     {
-      access: cantripSpellAccessFor(ctx.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "temporaryAbilityCheckRollMode",
-      spell,
-      actionCost: "magicAction",
+
+      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
       activeEffect: {
         kind: "temporaryAbilityCheckRollMode",
         sourceCombatantId: ctx.actor.combatantId,

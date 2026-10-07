@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type {
   BattleSpellExecutionSource,
@@ -239,17 +242,16 @@ function admitDirectConditionRemoval(
   ctx: SpellAdmissionContext,
   facts: DirectConditionRemovalMechanicsFacts,
 ): readonly DirectConditionRemovalInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly DirectConditionRemovalInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "directConditionRemoval",
-              spell,
-              actionCost: "bonusAction",
+
+              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
               targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
               conditionChoices: facts.conditionChoices,
               rangeFeet: spellTouchRangeFeet(),

@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement
 import {
@@ -835,7 +837,7 @@ function admitPersistentAreaTrait(
   ctx: SpellAdmissionContext,
   facts: PersistentAreaObscurementMechanicsFacts,
 ): readonly PersistentAreaTraitSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly PersistentAreaTraitSpellInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const radiusFeet =
@@ -847,10 +849,9 @@ function admitPersistentAreaTrait(
           Number(facts.radius.perSlotLevelFeet);
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "persistentAreaTrait",
-          spell,
+
           targeting: {
             kind: "pointOriginSphere",
             radiusFeet: movementFeet(radiusFeet),

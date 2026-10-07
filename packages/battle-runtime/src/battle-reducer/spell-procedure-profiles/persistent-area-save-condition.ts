@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import {
@@ -550,17 +552,16 @@ function admitPersistentAreaSaveCondition(
   ) {
     return [];
   }
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly PersistentAreaSaveConditionSpellInvocation[] => {
       if (Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_CONDITION_LEVEL) {
         return [];
       }
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "persistentAreaSaveCondition",
-          spell,
+
           ability: facts.ability,
           dc: facts.dc,
           targeting: {

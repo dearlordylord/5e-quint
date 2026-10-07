@@ -1,3 +1,6 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -1076,13 +1079,15 @@ function admitDamageReduction(
   ctx: SpellAdmissionContext,
   facts: DamageReductionMechanicsFacts,
 ): readonly DamageReductionSpellInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
   return [
     {
-      access: cantripSpellAccessFor(spell.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "damageReduction",
-      spell,
-      actionCost: "magicAction",
+
+      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
       targeting: facts.targeting,
       damageTypeChoices: facts.damageTypeChoices,
       amount: facts.amount,

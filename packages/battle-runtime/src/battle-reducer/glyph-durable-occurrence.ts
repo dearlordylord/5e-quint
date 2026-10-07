@@ -839,6 +839,7 @@ export function glyphExplosiveRuneSavingThrowOutcomeHole(input: {
   const spellSaveDc = spellSaveDcForCaster(
     input.state,
     input.effect.sourceCombatantId,
+    input.effect.sourceProcedureRef,
   );
   if (spellSaveDc === null) {
     return null;

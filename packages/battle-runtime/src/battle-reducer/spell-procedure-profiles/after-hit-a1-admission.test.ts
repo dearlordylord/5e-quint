@@ -32,7 +32,7 @@ import { afterHitDamageAndIlluminationProfile } from "./after-hit-damage-and-ill
 import { afterHitSaveGatedConditionProfile } from "./after-hit-save-gated-condition.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./after-hit-timed-damage-and-save.ts";
 import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 
 function mechanicsSource(spell: SpellRecord) {
   const source = spellAdmissionSource(spell);
@@ -62,19 +62,19 @@ function coordinate(path: { readonly nodes: readonly unknown[] }): string {
     .join("/");
 }
 
-function spellAdmissionActor(): SpellAdmissionActor {
+function spellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -245,6 +245,7 @@ describe("SR-04G-A1 static spell procedure admission", () => {
       {
         actor: spellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
@@ -487,6 +488,7 @@ describe("SR-04G-A1 static spell procedure admission", () => {
         {
           actor,
           castingSource: source.castingSource,
+          kind: "character",
           battle: undefined,
           spellCastOptions: [
             {

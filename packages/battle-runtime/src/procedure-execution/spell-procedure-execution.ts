@@ -131,7 +131,7 @@ export type AbilityD20TestRollModeSaveGateSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "con";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dc: DcSource;
     readonly failedSaveDamagePenaltyEffect: SpellActiveEffectTemplate<"sourceDamageRollPenalty">;
     readonly failedSaveEffect: SpellActiveEffectTemplate<"abilityD20TestRollModeEndTurnSave">;
@@ -149,7 +149,7 @@ export type AbilityD20TestRollModeSaveGateSpellProcedureExecution =
 export type AfterHitDamageSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly conditionalBonusDamage: {
       readonly targetCreatureTypes: readonly CreatureType[];
       readonly expr: DiceExpr;
@@ -160,15 +160,13 @@ export type AfterHitDamageSpellProcedureExecution =
       readonly damageType: DamageType;
     };
     readonly procedure: "afterHitDamage";
-    readonly resource:
-      | SpellSlotInvocationResource
-      | SpellAccessFreeCastInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type AfterHitDamageAndIlluminationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"afterHitDamageAndIllumination">;
     readonly damage: {
       readonly expr: DiceExpr;
@@ -183,7 +181,7 @@ export type AfterHitSaveGatedConditionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: Ability;
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dc: DcSource;
     readonly effect: SpellFailedSaveConditionEffect;
     readonly procedure: "afterHitSaveGatedCondition";
@@ -194,7 +192,7 @@ export type AfterHitSaveGatedConditionSpellProcedureExecution =
 export type AfterHitTimedDamageAndSaveSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"spellTurnStartDamageAndSave">;
     readonly immediateDamage: {
       readonly expr: DiceExpr;
@@ -249,7 +247,7 @@ export type AttackBurstSaveDamageSpellProcedureExecution =
 export type PerceptionGatedAttackRollDefenseSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"perceptionGatedAttackRollDefense">;
     readonly procedure: "perceptionGatedAttackRollDefense";
     readonly resource: LeveledSpellInvocationResource;
@@ -272,7 +270,7 @@ export type ChainedSpellAttackDamageSpellProcedureExecution =
 export type ChosenDamageResistanceSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly damageTypeChoices: readonly DamageType[];
     readonly expiresAt: {
       readonly kind: "concentration";
@@ -317,7 +315,7 @@ export type CompelledNextTurnBehaviorSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "wis";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dc: DcSource;
     readonly procedure: "compelledNextTurnBehavior";
     readonly resource: LeveledSpellInvocationResource;
@@ -332,7 +330,7 @@ export type CompelledNextTurnBehaviorSpellProcedureExecution =
 export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffects: readonly [
       ConditionImmunityActiveEffectTemplate,
       SpellActiveEffectTemplate<"turnStartTemporaryHitPoints">,
@@ -348,7 +346,7 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellProcedureExecuti
 export type ConditionRemovalProtectionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly procedure: "conditionRemovalProtection";
     readonly protection: {
       readonly conditionSaveRollMode: BattleSpellActiveEffectTemplate<
@@ -382,7 +380,7 @@ export type CreatureSizeDecreaseSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "con";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: Omit<
       SpellCreatureSizeChangeActiveEffect,
       "sourceProcedureRef" | "effectRef"
@@ -398,7 +396,7 @@ export type CreatureSizeIncreaseSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "con";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: Omit<
       SpellCreatureSizeChangeActiveEffect,
       "sourceProcedureRef" | "effectRef"
@@ -413,7 +411,7 @@ export type CreatureSizeIncreaseSpellProcedureExecution =
 export type CreatureTypeProtectionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"creatureTypeProtection">;
     readonly procedure: "creatureTypeProtection";
     readonly rangeFeet: MovementFeet;
@@ -424,7 +422,7 @@ export type CreatureTypeProtectionSpellProcedureExecution =
 export type DamageReductionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly amount: { readonly dice: 1; readonly dieSize: 4 };
     readonly damageTypeChoices: readonly DamageType[];
     readonly expiresAt: BattleActiveEffectExpiration;
@@ -439,7 +437,7 @@ export type DamageReductionSpellProcedureExecution =
 export type CombinedMovableLightManifestationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dimRadiusFeet: MovementFeet;
     readonly expiresAt: {
       readonly kind: "concentration";
@@ -458,7 +456,7 @@ export type CombinedMovableLightManifestationSpellProcedureExecution =
 export type RepositionMovableLightManifestationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffectRef: BattleEffectExecutionRef;
     readonly sourceManifestationProcedureRef: BattleProcedureExecutionRef;
     readonly maxMoveFeet: MovementFeet;
@@ -472,7 +470,7 @@ export type RepositionMovableLightManifestationSpellProcedureExecution =
 export type SeparateMovableLightManifestationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dimRadiusFeet: MovementFeet;
     readonly expiresAt: {
       readonly kind: "concentration";
@@ -491,7 +489,7 @@ export type SeparateMovableLightManifestationSpellProcedureExecution =
 export type DirectConditionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: DirectConditionSpellActiveEffectTemplate;
     readonly procedure: "directCondition";
     readonly rangeFeet: MovementFeet;
@@ -502,7 +500,7 @@ export type DirectConditionSpellProcedureExecution =
 export type DirectConditionRemovalSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly conditionChoices: readonly [
       "blinded",
       "deafened",
@@ -555,7 +553,7 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
 export type GrantedAlternateActionCostSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"spellDashBonusAction">;
     readonly procedure: "grantedAlternateActionCost";
     readonly resource: LeveledSpellInvocationResource;
@@ -653,7 +651,7 @@ export type DirectionalPersistentAreaSpellProcedureExecution =
 export type CompositeTargetBuffWithAftermathSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffects: {
       readonly speedRatio: BattleSpellActiveEffectTemplate<
         Extract<BattleActiveEffect, { readonly kind: "speedRatio" }>
@@ -685,7 +683,7 @@ export type CompositeTargetBuffWithAftermathSpellProcedureExecution =
 
 export type HeldLightSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
   readonly access: CantripSpellAccess;
-  readonly actionCost: "bonusAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly expiresAt: BattleActiveEffectExpiration;
   readonly light: {
     readonly brightRadiusFeet: MovementFeet;
@@ -752,7 +750,7 @@ export type SaveGatedAreaControlSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "wis";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dc: DcSource;
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "saveGatedAreaControl";
@@ -787,7 +785,7 @@ export type StationaryPersistentAreaSaveDamageSpellProcedureExecution =
 export type FixedCostMovementReplacementSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"fixedCostMovementReplacement"> & {
       readonly movementCostFeet: MovementFeet;
       readonly maxJumpDistanceFeet: MovementFeet;
@@ -807,7 +805,7 @@ export type ControlledVerticalSuspensionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "con";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: Omit<
       Omit<ControlledVerticalSuspensionActiveEffect, "altitudeFeet">,
       "sourceProcedureRef" | "effectRef"
@@ -838,7 +836,7 @@ export type MagicalDarknessPointOriginSpellProcedureExecution =
 export type WeaponAttackDamageEnhancementSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly bonus: 1 | 2 | 3;
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "weaponAttackDamageEnhancement";
@@ -847,7 +845,7 @@ export type WeaponAttackDamageEnhancementSpellProcedureExecution =
 
 export type MakeStableSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
   readonly access: CantripSpellAccess;
-  readonly actionCost: "magicAction";
+  readonly actionCost: "magicAction" | "bonusAction";
   readonly procedure: "makeStable";
   readonly rangeFeet: MovementFeet;
   readonly resource: NoSpellInvocationResource;
@@ -858,7 +856,7 @@ export type MarkedDamageRiderCastSpellProcedureExecution =
     readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
     readonly access: PreparedSpellAccess;
     readonly action: "cast";
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly damage: {
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
@@ -866,9 +864,7 @@ export type MarkedDamageRiderCastSpellProcedureExecution =
     readonly expiresAt: BattleActiveEffectExpiration;
     readonly procedure: "markedDamageRider";
     readonly rangeFeet: MovementFeet;
-    readonly resource:
-      | SpellSlotInvocationResource
-      | SpellAccessFreeCastInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly retargetTiming: MarkedDamageRiderRetargetTiming;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
@@ -883,7 +879,7 @@ export type MarkedDamageRiderTransferSpellProcedureExecution = {
 export type DuplicateHitInterceptionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"duplicateHitInterception">;
     readonly procedure: "duplicateHitInterception";
     readonly resource: LeveledSpellInvocationResource;
@@ -919,7 +915,7 @@ export type DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution =
 export type ObjectContactDamageSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly damage: {
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
@@ -940,7 +936,7 @@ export type ObjectContactDamageRepeatSpellProcedureExecution = {
 export type ObjectLightClassCantripSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly expiresAt: BattleActiveEffectExpiration;
     readonly light: {
       readonly kind: "brightAndDim";
@@ -961,7 +957,7 @@ export type ObjectLightClassCantripSpellProcedureExecution =
 export type ObjectLightPreparedSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly expiresAt: BattleActiveEffectExpiration;
     readonly light: {
       readonly kind: "brightAndDim";
@@ -979,7 +975,7 @@ export type ObjectLightPreparedSpellProcedureExecution =
 export type OngoingSpellEndSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly procedure: "ongoingSpellEnd";
     readonly rangeFeet: MovementFeet;
     readonly abilityCheckDcBase: DifficultyClass;
@@ -1024,7 +1020,7 @@ export type RollModifierWithoutAbilityChoiceApplicationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly abilityChoices: null;
     readonly access: PreparedSpellAccess | CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly effect: SpellActiveEffectTemplate<"d20RollModifier">;
     readonly procedure: "rollModifier";
     readonly rangeFeet: MovementFeet;
@@ -1040,7 +1036,7 @@ export type RollModifierWithAbilityChoiceApplicationSpellProcedureExecution =
     readonly abilityChoiceApplication: "single" | "perTarget";
     readonly abilityChoices: readonly Ability[];
     readonly access: PreparedSpellAccess | CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly effect: AbilityCheckRollModeSpellEffect;
     readonly procedure: "rollModifier";
     readonly rangeFeet: MovementFeet;
@@ -1054,7 +1050,7 @@ export type RollModifierWithAbilityChoiceApplicationSpellProcedureExecution =
 export type TargetingSaveInterdictionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"targetingSaveInterdiction"> & {
       readonly save: {
         readonly ability: "wis";
@@ -1102,7 +1098,7 @@ export type SaveGatedConditionImmunitySpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: Ability;
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffects: readonly [
       ConditionImmunityActiveEffectTemplate,
       ConditionImmunityActiveEffectTemplate,
@@ -1187,7 +1183,7 @@ export type ScalarBuffSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
 export type SeeInvisibleObserverSightSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"seeInvisibleAndEthereal">;
     readonly procedure: "seeInvisibleObserverSight";
     readonly resource: LeveledSpellInvocationResource;
@@ -1196,7 +1192,7 @@ export type SeeInvisibleObserverSightSpellProcedureExecution =
 export type SelfTeleportSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly maxDistanceFeet: MovementFeet;
     readonly procedure: "selfTeleport";
     readonly resource: LeveledSpellInvocationResource;
@@ -1205,7 +1201,7 @@ export type SelfTeleportSpellProcedureExecution =
 export type SelfTransformationModeSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly expiresAt: {
       readonly kind: "concentration";
       readonly combatantId: CombatantId;
@@ -1302,7 +1298,7 @@ export type SaveGatedTurnConstraintBundleSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "wis";
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly dc: DcSource;
     readonly durationTicks: ElapsedTimeTicks;
     readonly constraints: SaveGatedTurnConstraintFacts;
@@ -1381,7 +1377,7 @@ export type SpellAttackSequencePreparedSpellProcedureExecution =
 export type SpellCreatedHeldObjectSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: Omit<
       SpellCreatedHeldObjectActiveEffect,
       "sourceProcedureRef" | "effectRef"
@@ -1420,7 +1416,7 @@ export type SpellCreatedHeldObjectReEvokeSpellProcedureExecution =
 export type SpellHostedWeaponAttackSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly attackBonus: AttackBonus;
     readonly bonusDamage: SpellHostedWeaponAttackBonusDamageApplicability;
     readonly componentWeaponObjectId: BattleObjectId;
@@ -1451,7 +1447,7 @@ export type AreaMovementDistanceDamageSpellProcedureExecution =
 export type CreateSpatialMeleeSpellAttackProxySpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly attackBonus: AttackBonus;
     readonly attackKind: "melee_spell_attack";
     readonly damage: {
@@ -1495,7 +1491,7 @@ export type TemporaryAbilityCheckRollModeConcurrentDurationModeLimit =
 export type TemporaryAbilityCheckRollModeSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"temporaryAbilityCheckRollMode">;
     readonly procedure: "temporaryAbilityCheckRollMode";
     readonly rangeFeet: MovementFeet;
@@ -1507,7 +1503,7 @@ export type TemporaryAbilityCheckRollModeSpellProcedureExecution =
 export type LinkedDefenseResistanceDamageShareSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"linkedDefenseResistanceDamageShare">;
     readonly connectionRangeFeet: MovementFeet;
     readonly procedure: "linkedDefenseResistanceDamageShare";
@@ -1518,7 +1514,7 @@ export type LinkedDefenseResistanceDamageShareSpellProcedureExecution =
 export type WeaponDamageRiderSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
+    readonly actionCost: "magicAction" | "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"spellWeaponDamageRider">;
     readonly procedure: "weaponDamageRider";
     readonly resource: LeveledSpellInvocationResource;

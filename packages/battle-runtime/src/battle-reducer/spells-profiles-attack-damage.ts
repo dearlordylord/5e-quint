@@ -1,3 +1,4 @@
+import { isPreparedDamageSpellSource } from "./spells-invocation-guards.ts";
 // Spell attack damage profile projections extracted from spells-profiles.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
@@ -10,6 +11,7 @@ import {
   PositiveInteger,
   type ReadonlyNonEmptyArray,
   type AbilityModifier,
+  type AttackBonus,
   type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
@@ -1423,9 +1425,9 @@ type SpellAttackDamageInvocationInput = {
   readonly spell: BattleSpellExecutionSource;
   readonly facts: SpellAttackDamageMechanicsFacts;
   readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly proficiencyBonus: ProficiencyBonusType;
+  readonly attackBonus: AttackBonus;
   readonly slotLevel?: SpellSlotLevel;
-  readonly characterLevel?: number;
+  readonly characterLevel?: number | null | undefined;
 } & DamageSpellSource;
 
 export function spellAttackDamageInvocationsFromFacts(
@@ -1455,10 +1457,7 @@ export function spellAttackDamageInvocationsFromFacts(
     damage,
     rangeFeet: input.facts.rangeFeet,
     attackKind: input.facts.attackKind,
-    attackBonus: attackBonus(
-      Number(input.spellcastingAbilityModifier) +
-        Number(input.proficiencyBonus),
-    ),
+    attackBonus: input.attackBonus,
     missDamage: input.facts.missDamage,
     laterDamage:
       laterDamageExpr === null || input.facts.laterDamage === null
@@ -1521,15 +1520,9 @@ function spellAttackDamageInvocationForAccess(
   input: SpellAttackDamageInvocationInput,
   invocation: Omit<SpellAttackDamageInvocation, "access" | "resource">,
 ): readonly SpellAttackDamageInvocation[] {
-  if (isCantripSpellAccess(input.access) && input.resource.tag === "none") {
-    return [{ access: input.access, resource: { tag: "none" }, ...invocation }];
-  }
-  if (input.access.tag !== "prepared" || input.resource.tag !== "spellSlot") {
-    return [];
-  }
-  return [
-    { access: { tag: "prepared" }, resource: input.resource, ...invocation },
-  ];
+  return isPreparedDamageSpellSource(input)
+    ? [{ access: input.access, resource: input.resource, ...invocation }]
+    : [{ access: input.access, resource: input.resource, ...invocation }];
 }
 
 function supportedExplodingCantripProjection(

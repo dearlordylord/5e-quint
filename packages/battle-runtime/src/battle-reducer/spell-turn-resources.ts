@@ -1,3 +1,4 @@
+import { statBlockSpellcastingPoolAvailable } from "../stat-block-execution-state.ts";
 // Spell turn-resource predicates and markers shared by discovery and resolve.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
@@ -28,10 +29,18 @@ export function spellHasAvailableSpend(
   actor: BattleCreatureState,
   invocation: RuntimeSpellProcedure,
 ): boolean {
-  if (actor.origin.kind !== "character") {
-    return false;
-  }
   const resource = invocation.resource;
+  if (actor.origin.kind === "statBlock")
+    return (
+      resource.tag === "statBlockAtWill" ||
+      (resource.tag === "statBlockLimited" &&
+        statBlockSpellcastingPoolAvailable(
+          actor.origin.execution,
+          resource.resourcePoolRef,
+        ))
+    );
+  if (resource.tag === "statBlockAtWill" || resource.tag === "statBlockLimited")
+    return false;
   if (resource.tag === "none") {
     return true;
   }

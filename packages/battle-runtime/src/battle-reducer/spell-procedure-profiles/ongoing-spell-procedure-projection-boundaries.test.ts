@@ -27,7 +27,7 @@ import {
   mechanicsSourceWithBaseDefinitionFacts,
   renamedSpell,
   spellAdmissionActor,
-  isSpellAdmissionActor,
+  isCharacterSpellAdmissionActor,
   ONGOING_PROCEDURE_PROFILES,
   issuesOf,
   mechanicsSourceFromSource,
@@ -49,6 +49,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
         {
           actor: spellAdmissionActor(),
           castingSource: source.castingSource,
+          kind: "character",
           battle: undefined,
           spellCastOptions: [
             { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
@@ -279,6 +280,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
       .admit(battleSpellExecutionSourceFromAdmission(markedSource), {
         actor: spellAdmissionActor(),
         castingSource: markedSource.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
@@ -340,7 +342,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
         { kind: "weapon_category", category: "simple" },
       ],
     }).state.combatants.get(spellCasterId);
-    if (!isSpellAdmissionActor(hostedActor)) {
+    if (!isCharacterSpellAdmissionActor(hostedActor)) {
       throw new Error("Expected a weapon-bearing spellcasting fixture.");
     }
     const hostedInvocation = hostedResult.admitted.admit(
@@ -348,6 +350,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
       {
         actor: hostedActor,
         castingSource: hostedSource.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [],
       },
@@ -371,7 +374,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
         { kind: "weapon_category", category: "simple" },
       ],
     }).state.combatants.get(spellCasterId);
-    if (!isSpellAdmissionActor(levelFiveActor)) {
+    if (!isCharacterSpellAdmissionActor(levelFiveActor)) {
       throw new Error("Expected a level-five weapon-bearing spellcaster.");
     }
     const levelFiveInvocation = hostedResult.admitted.admit(
@@ -379,6 +382,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
       {
         actor: levelFiveActor,
         castingSource: hostedSource.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [],
       },

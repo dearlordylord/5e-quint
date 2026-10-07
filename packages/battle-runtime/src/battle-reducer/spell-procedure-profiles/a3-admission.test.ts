@@ -19,7 +19,7 @@ import {
   spellAdmissionSource,
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 import { fallingCreatureMitigationReactionProfile } from "./falling-creature-mitigation-reaction.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { perceptionGatedAttackRollDefenseProfile } from "./perception-gated-attack-roll-defense.ts";
@@ -55,19 +55,19 @@ function mechanicsSourceFromSpell(
   };
 }
 
-function spellAdmissionActor(): SpellAdmissionActor {
+function spellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -273,6 +273,7 @@ describe("SR-04G-A3 static spell procedure admission", () => {
         {
           actor,
           castingSource: authored.castingSource,
+          kind: "character",
           battle: undefined,
           spellCastOptions: [
             { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },

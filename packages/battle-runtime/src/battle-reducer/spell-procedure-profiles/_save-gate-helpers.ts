@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import {
   battleSpellExecutionSourceFromAdmission,
@@ -1361,7 +1362,7 @@ export function supportedPreparedSaveGateDamageProfile(
     }
     return supportedSaveGateDamageProfile({
       spell,
-      access: { tag: "prepared" },
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
       slotLevel: slot.spellLevel,
     });
@@ -1386,7 +1387,7 @@ export function supportedPreparedSaveGateConditionProfile(
     }
     return [
       {
-        access: { tag: "prepared" },
+        access: preparedSpellAccessForCastingSource(spell.castingSource),
         resource: spellInvocationResourceForCastOption(slot),
         procedure: "saveGatedCondition",
         spell,
@@ -2498,7 +2499,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
     /* v8 ignore stop -- @preserve */
     return [
       {
-        access: { tag: "prepared" },
+        access: preparedSpellAccessForCastingSource(spell.castingSource),
         resource: spellInvocationResourceForCastOption(slot),
         procedure: "saveGatedAttackRollAdvantage",
         spell,
@@ -2535,7 +2536,7 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
     }
     return [
       {
-        access: { tag: "prepared" },
+        access: preparedSpellAccessForCastingSource(spell.castingSource),
         resource: spellInvocationResourceForCastOption(slot),
         procedure: "abilityD20TestRollModeSaveGate",
         spell,
@@ -2575,7 +2576,7 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
     }
     return [
       {
-        access: { tag: "prepared" },
+        access: preparedSpellAccessForCastingSource(spell.castingSource),
         resource: spellInvocationResourceForCastOption(slot),
         procedure: "saveGatedConditionImmunity",
         spell,
@@ -4786,7 +4787,7 @@ export function supportedSaveGateDamageProfile(
   input: {
     readonly spell: BattleSpellAdmissionSource;
     readonly slotLevel?: SpellSlotLevel;
-    readonly characterLevel?: number;
+    readonly characterLevel?: number | null | undefined;
   } & DamageSpellSource,
 ): readonly SupportedSpellInvocation[] {
   const projection = saveGatedDamageMechanicsFacts(input.spell);
@@ -5247,7 +5248,7 @@ export function saveGatedDamageInvocationsFromFacts(
     readonly spell: SaveGatedDamageInvocation["spell"];
     readonly facts: SpellDefinitionRuleFacts & SaveGatedDamageMechanicsFacts;
     readonly slotLevel?: SpellSlotLevel;
-    readonly characterLevel?: number;
+    readonly characterLevel?: number | null | undefined;
   } & DamageSpellSource,
 ): readonly SaveGatedDamageInvocation[] {
   const primaryDamageExpr = supportedDamageAmountExpr({

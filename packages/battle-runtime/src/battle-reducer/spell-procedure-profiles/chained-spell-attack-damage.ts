@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellExecutionSource,
   SupportedSpellInvocation,
@@ -208,8 +211,9 @@ function admitChainedSpellAttackDamage(
   facts: ChainedSpellAttackDamageMechanicsFacts,
 ): readonly ChainedSpellAttackDamageInvocation[] {
   const rangeFeet = chainedSpellAttackDamageRangeFeet(facts.range);
-  const proficiencyBonus = ctx.actor.origin.spellcasting.proficiencyBonus;
-  return ctx.spellCastOptions.flatMap(
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly ChainedSpellAttackDamageInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const damageExpr = chainedSpellAttackDamageAmountExpr(
@@ -219,20 +223,16 @@ function admitChainedSpellAttackDamage(
       );
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "chainedSpellAttackDamage",
-          spell,
+
           targeting: facts.targeting,
           damage: { expr: damageExpr },
           damageTypeChoices: CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES,
           rangeFeet,
           leapRangeFeet: CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
           attackKind: facts.attackKind,
-          attackBonus: attackBonus(
-            Number(ctx.castingSource.abilityModifier) +
-              Number(proficiencyBonus),
-          ),
+          attackBonus: casterAttackBonus,
         },
       ];
     },

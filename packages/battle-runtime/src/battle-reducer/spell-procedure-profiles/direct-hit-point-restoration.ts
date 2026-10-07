@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
@@ -175,7 +177,7 @@ function admitDirectHitPointRestoration(
   facts: DirectHitPointRestorationMechanicsFacts,
 ): readonly DirectHitPointRestorationInvocation[] {
   const rangeFeet = hitPointRestorationRangeFeet(facts.range);
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly DirectHitPointRestorationInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) {
         return [];
@@ -188,10 +190,9 @@ function admitDirectHitPointRestoration(
       );
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "directHitPointRestoration",
-          spell,
+
           actionCost: facts.actionCost,
           targeting: facts.targeting,
           healing: { expr: healingExpr },
@@ -1020,6 +1021,8 @@ function spellSlotHealingModifierAmount(
   const castLevel = Match.value(invocation.resource).pipe(
     Match.when({ tag: "spellSlot" }, ({ slotLevel }) => slotLevel),
     Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => castLevel),
+    Match.when({ tag: "statBlockAtWill" }, ({ castLevel }) => castLevel),
+    Match.when({ tag: "statBlockLimited" }, ({ castLevel }) => castLevel),
     Match.exhaustive,
   );
   return characterUnitProcedureBindings(actor.origin.execution).reduce(

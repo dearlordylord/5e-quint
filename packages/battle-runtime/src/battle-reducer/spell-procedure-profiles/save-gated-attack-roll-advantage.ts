@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -83,12 +85,10 @@ function admitSaveGatedAttackRollAdvantageMechanics(
       spell: BattleSpellExecutionSource,
       ctx: SpellAdmissionContext,
     ) =>
-      ctx.spellCastOptions.flatMap((slot) =>
+      leveledSpellInvocationOptions(spell, ctx).flatMap((slot) =>
         saveGatedAttackRollAdvantageInvocationsFromFacts({
-          spell,
           facts,
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           slotLevel: slot.spellLevel,
           sourceCombatantId: ctx.actor.combatantId,
         }),

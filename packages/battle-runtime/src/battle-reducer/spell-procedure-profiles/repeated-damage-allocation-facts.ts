@@ -62,6 +62,8 @@ export function repeatedDamageAllocationAdmissionFactsForInvocation(
     selectedSlotLevel: Match.value(invocation.resource).pipe(
       Match.when({ tag: "spellSlot" }, ({ slotLevel }) => slotLevel),
       Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => castLevel),
+      Match.when({ tag: "statBlockAtWill" }, ({ castLevel }) => castLevel),
+      Match.when({ tag: "statBlockLimited" }, ({ castLevel }) => castLevel),
       Match.exhaustive,
     ),
     repeatedEffectCount: invocation.targeting.repeatedEffectCount,

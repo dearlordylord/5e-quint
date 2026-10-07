@@ -1,3 +1,4 @@
+import { attackBonus } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
 import { PositiveInteger, proficiencyBonus } from "@dnd/shared/types";
@@ -387,7 +388,7 @@ describe("spellAttackDamage static admission", () => {
       access: { tag: "classCantrip" },
       resource: { tag: "none" },
       spellcastingAbilityModifier: source.castingSource.abilityModifier,
-      proficiencyBonus: proficiencyBonus(2),
+      attackBonus: attackBonus(5),
       characterLevel: 1,
     });
 

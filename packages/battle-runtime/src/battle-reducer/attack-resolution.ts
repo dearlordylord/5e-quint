@@ -1707,7 +1707,11 @@ export function resolveEscapeSpellRestraint(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const dc = spellSaveDcForCaster(input.state, effect.sourceCombatantId);
+  const dc = spellSaveDcForCaster(
+    input.state,
+    effect.sourceCombatantId,
+    effect.sourceProcedureRef,
+  );
   /* v8 ignore start -- @preserve -- BattleState lifecycle invariant: removing a spell source also removes its sourced active effects, so a surviving restraint retains its caster DC. */
   if (dc === null) {
     return invalidResult(

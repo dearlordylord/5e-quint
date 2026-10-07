@@ -1,3 +1,10 @@
+import {
+  cantripSpellInvocationFacts,
+  leveledSpellInvocationOptions,
+} from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -83,29 +90,29 @@ function admitSpellAttackDamage(
   ctx: SpellAdmissionContext,
   facts: SpellAttackDamageMechanicsFacts,
 ): readonly SpellAttackDamageInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
   if (facts.level === 0) {
     return spellAttackDamageInvocationsFromFacts({
-      spell,
       facts,
-      access: cantripSpellAccessFor(ctx.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-      proficiencyBonus: spellcasting.proficiencyBonus,
+      attackBonus: casterAttackBonus,
       characterLevel: spellAdmissionCharacterLevel(ctx),
     });
   }
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SpellAttackDamageInvocation[] =>
       Number(slot.spellLevel) < facts.level
         ? []
         : spellAttackDamageInvocationsFromFacts({
-            spell,
             facts,
-            access: { tag: "prepared" },
-            resource: spellInvocationResourceForCastOption(slot),
+            ...slot.facts,
             spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-            proficiencyBonus: spellcasting.proficiencyBonus,
+            attackBonus: casterAttackBonus,
             slotLevel: slot.spellLevel,
           }),
   );
@@ -237,20 +244,22 @@ const SpellAttackDamageInvocationCommonFields = {
   ]),
 } as const;
 
-export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+export const SpellAttackDamageInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
     }),
+  ),
+  spellProcedureExecutionSchema(
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
     }),
-  ]),
-);
+  ),
+]);
 export const spellAttackDamageProfile: SpellProcedureDeclaration<
   "spellAttackDamage",
   Extract<

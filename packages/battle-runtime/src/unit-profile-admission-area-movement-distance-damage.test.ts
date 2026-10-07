@@ -15,7 +15,7 @@ import { describe, expect, test } from "vitest";
 
 import { areaMovementDistanceDamageProfile } from "./battle-reducer/spell-procedure-profiles/area-movement-distance-damage.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
-import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import {
   battleSpellExecutionSourceFromAdmission,
   type BattleCreatureState,
@@ -69,18 +69,18 @@ function mechanicsSource(
   };
 }
 
-function staticSpellAdmissionActor(): SpellAdmissionActor {
+function staticCharacterSpellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor))
+  if (!isCharacterSpellAdmissionActor(actor))
     throw new Error("Expected a spellcasting character fixture.");
   return actor;
 }
 
-function isSpellAdmissionActor(
+function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true
@@ -203,8 +203,9 @@ describe("areaMovementDistanceDamage static admission", () => {
     const invocations = result.admitted.admit(
       battleSpellExecutionSourceFromAdmission(source),
       {
-        actor: staticSpellAdmissionActor(),
+        actor: staticCharacterSpellAdmissionActor(),
         castingSource: source.castingSource,
+        kind: "character",
         battle: undefined,
         spellCastOptions: [
           { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },

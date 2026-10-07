@@ -1,3 +1,4 @@
+import { isSpellInvocationCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // A Spell Procedure Declaration bundles every layer the runtime needs to handle
 // one class of spell behavior — admission, discovery, dispatch, codec, and
@@ -61,7 +62,25 @@ export * from "./spell-mechanics-admission.ts";
 // Context handed to a supported static admission's bound closure at discovery
 // time. Profiles use only what they need, with character actor facts kept
 // canonical on `actor`.
-export type SpellAdmissionActor = BattleCreatureState;
+export type CharacterSpellAdmissionActor = BattleCreatureState & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  > & {
+    readonly spellcasting: CharacterBattleSpellcastingExecutionState & {
+      readonly canCastSpells: true;
+    };
+  };
+};
+export type StatBlockSpellAdmissionActor = BattleCreatureState & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "statBlock" }
+  >;
+};
+export type SpellAdmissionActor =
+  | CharacterSpellAdmissionActor
+  | StatBlockSpellAdmissionActor;
 export type SpellAdmissionBattleTurn = {
   readonly currentActorId: CombatantId;
   readonly round: BattleState["initiative"]["round"];
@@ -72,12 +91,146 @@ export type SpellAdmissionBattleProjection = {
   readonly suppressedOngoingSpellEffectKeys: ReadonlySet<string>;
 };
 
-export type SpellAdmissionContext = {
-  readonly actor: SpellAdmissionActor;
-  readonly castingSource: BattleSpellAdmissionSource["castingSource"];
+type SpellAdmissionBattleContext = {
   readonly battle: SpellAdmissionBattleProjection | undefined;
   readonly spellCastOptions: readonly SpellAdmissionCastOption[];
 };
+export type CharacterSpellAdmissionContext = SpellAdmissionBattleContext & {
+  readonly kind: "character";
+  readonly actor: CharacterSpellAdmissionActor;
+  readonly castingSource: import("../../procedure-execution/spell-rule-facts.ts").CharacterSpellCastingSource;
+};
+export type StatBlockSpellAdmissionContext = SpellAdmissionBattleContext & {
+  readonly kind: "statBlock";
+  readonly actor: StatBlockSpellAdmissionActor;
+  readonly castingSource: import("../../procedure-execution/spell-rule-facts.ts").StatBlockSpellCastingSource;
+  readonly payment:
+    | { readonly kind: "atWill" }
+    | {
+        readonly kind: "limited";
+        readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+      };
+};
+export type SpellAdmissionContext =
+  | CharacterSpellAdmissionContext
+  | StatBlockSpellAdmissionContext;
+
+type AuthoredCantripCastingFacts<S> = Extract<
+  import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S>,
+  {
+    readonly access: {
+      readonly tag: "classCantrip" | "spellAccessCantrip" | "statBlockCantrip";
+    };
+  }
+>;
+function admittedCantripCastingFacts<
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "castingSource" | "spellDefinitionRuleFacts"
+  >,
+>(candidate: {
+  readonly spell: S;
+  readonly access: CantripSpellAccess;
+  readonly resource: import("../../procedure-execution/spell-invocation-vocabulary.ts").NoSpellInvocationResource;
+}): candidate is typeof candidate & AuthoredCantripCastingFacts<S> {
+  return isSpellInvocationCastingFacts({
+    spellRuleFacts: {
+      ...candidate.spell.spellDefinitionRuleFacts,
+      castingSource: candidate.spell.castingSource,
+    },
+    access: candidate.access,
+    resource: candidate.resource,
+  });
+}
+function admittedLeveledCastingFacts<
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "castingSource" | "spellDefinitionRuleFacts"
+  >,
+>(candidate: {
+  readonly spell: S;
+  readonly access: PreparedSpellAccess;
+  readonly resource: LeveledSpellInvocationResource;
+}): candidate is typeof candidate & AuthoredLeveledCastingFacts<S> {
+  return isSpellInvocationCastingFacts({
+    spellRuleFacts: {
+      ...candidate.spell.spellDefinitionRuleFacts,
+      castingSource: candidate.spell.castingSource,
+    },
+    access: candidate.access,
+    resource: candidate.resource,
+  });
+}
+export function cantripSpellInvocationFacts<
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "castingSource" | "spellDefinitionRuleFacts"
+  >,
+>(spell: S, ctx: SpellAdmissionContext): AuthoredCantripCastingFacts<S> | null {
+  const candidate = {
+    spell: { ...spell, castingSource: ctx.castingSource },
+    access: cantripSpellAccessForCastingSource(ctx.castingSource),
+    resource: cantripSpellInvocationResource(ctx),
+  };
+  return admittedCantripCastingFacts(candidate) ? candidate : null;
+}
+type AuthoredLeveledCastingFacts<S> = Extract<
+  import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S>,
+  { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
+>;
+export function leveledSpellInvocationOptions<
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "castingSource" | "spellDefinitionRuleFacts"
+  >,
+>(
+  spell: S,
+  ctx: SpellAdmissionContext,
+): readonly {
+  readonly spellLevel: SpellSlotLevel;
+  readonly facts: AuthoredLeveledCastingFacts<S>;
+}[] {
+  return ctx.spellCastOptions.flatMap(
+    (
+      option,
+    ): readonly {
+      readonly spellLevel: SpellSlotLevel;
+      readonly facts: AuthoredLeveledCastingFacts<S>;
+    }[] => {
+      const resource =
+        ctx.kind === "character"
+          ? spellInvocationResourceForCastOption(option)
+          : ctx.payment.kind === "atWill"
+            ? { tag: "statBlockAtWill" as const, castLevel: option.spellLevel }
+            : {
+                tag: "statBlockLimited" as const,
+                castLevel: option.spellLevel,
+                resourcePoolRef: ctx.payment.resourcePoolRef,
+              };
+      const candidate = {
+        spell: { ...spell, castingSource: ctx.castingSource },
+        access: preparedSpellAccessForCastingSource(ctx.castingSource),
+        resource,
+      };
+      return admittedLeveledCastingFacts(candidate)
+        ? [{ spellLevel: option.spellLevel, facts: candidate }]
+        : [];
+    },
+  );
+}
+
+export function cantripSpellInvocationResource(
+  ctx: SpellAdmissionContext,
+): import("../../procedure-execution/spell-invocation-vocabulary.ts").NoSpellInvocationResource {
+  if (ctx.kind === "character") return { tag: "none" };
+  return ctx.payment.kind === "atWill"
+    ? { tag: "statBlockAtWill", castLevel: 0 }
+    : {
+        tag: "statBlockLimited",
+        castLevel: 0,
+        resourcePoolRef: ctx.payment.resourcePoolRef,
+      };
+}
 
 export type SpellAdmissionCastOption = {
   readonly spellLevel: SpellSlotLevel;
@@ -100,14 +253,8 @@ export function cantripSpellAccessFor(
   return cantripSpellAccessForCastingSource(castingSource);
 }
 
-export type PreparedSpellSlotInvocationBase<
-  S extends Pick<BattleSpellAdmissionSource, "mechanics" | "castingSource"> =
-    BattleSpellAdmissionSource,
-> = {
-  readonly access: PreparedSpellAccess;
-  readonly resource: LeveledSpellInvocationResource;
-  readonly spell: S;
-};
+export type PreparedSpellSlotInvocationBase<S = BattleSpellAdmissionSource> =
+  AuthoredLeveledCastingFacts<S>;
 
 export function spellInvocationResourceForCastOption(
   option: SpellAdmissionCastOption,
@@ -131,10 +278,11 @@ export function spellInvocationResourceForCastOption(
         resourcePoolRef: option.payment.resourcePoolRef,
       };
 }
-type PreparedSpellCastOptions = SpellAdmissionContext["spellCastOptions"];
-
 export function preparedSpellSlotInvocations<
-  S extends Pick<BattleSpellAdmissionSource, "mechanics" | "castingSource">,
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "mechanics" | "castingSource" | "spellDefinitionRuleFacts"
+  >,
   I,
 >(
   spell: S,
@@ -144,38 +292,13 @@ export function preparedSpellSlotInvocations<
     slotLevel: SpellSlotLevel,
   ) => I | null,
 ): readonly I[] {
-  return preparedSpellSlotInvocationsFrom(
-    spell,
-    ctx.spellCastOptions,
-    complete,
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
+    ({ facts, spellLevel }) => {
+      if (Number(spellLevel) < spell.mechanics.level) return [];
+      const invocation = complete(facts, spellLevel);
+      return invocation === null ? [] : [invocation];
+    },
   );
-}
-
-export function preparedSpellSlotInvocationsFrom<
-  S extends Pick<BattleSpellAdmissionSource, "mechanics" | "castingSource">,
-  I,
->(
-  spell: S,
-  castOptions: PreparedSpellCastOptions,
-  complete: (
-    base: PreparedSpellSlotInvocationBase<S>,
-    slotLevel: SpellSlotLevel,
-  ) => I | null,
-): readonly I[] {
-  return castOptions.flatMap((castOption): readonly I[] => {
-    if (Number(castOption.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const invocation = complete(
-      {
-        access: preparedSpellAccessForCastingSource(spell.castingSource),
-        resource: spellInvocationResourceForCastOption(castOption),
-        spell,
-      },
-      castOption.spellLevel,
-    );
-    return invocation === null ? [] : [invocation];
-  });
 }
 
 export function spellAdmissionBattleTurn(
@@ -212,10 +335,10 @@ export function spellAdmissionBattleProjection(
 
 export function spellAdmissionCharacterLevel(
   ctx: SpellAdmissionContext,
-): CharacterLevel | undefined {
-  return ctx.actor.origin.kind === "character"
+): CharacterLevel | null {
+  return ctx.kind === "character"
     ? characterBattleLevel(ctx.actor.origin.classLevels)
-    : undefined;
+    : null;
 }
 
 export type SpellInvocationAdmittedByRegisteredProcedure<
@@ -271,7 +394,7 @@ export type SynthesizedSpellProcedureDeclaration<
 export function spellAdmissionAttackBonus(
   ctx: SpellAdmissionContext,
 ): AttackBonus | null {
-  if (ctx.castingSource.tag === "statBlock")
+  if (ctx.kind === "statBlock")
     return Option.getOrNull(ctx.castingSource.spellAttackBonus);
   return ctx.actor.origin.kind === "character" &&
     ctx.actor.origin.spellcasting !== undefined
@@ -280,4 +403,15 @@ export function spellAdmissionAttackBonus(
           Number(ctx.actor.origin.spellcasting.proficiencyBonus),
       )
     : null;
+}
+
+export function spellAdmissionActionCost(
+  ctx: SpellAdmissionContext,
+  nativeCost: "magicAction" | "bonusAction",
+): "magicAction" | "bonusAction" {
+  if (ctx.kind === "character") return nativeCost;
+  return ctx.castingSource.castingTime.kind === "minutes" ||
+    ctx.castingSource.castingTime.kind === "hours"
+    ? "magicAction"
+    : ctx.castingSource.actionCost;
 }

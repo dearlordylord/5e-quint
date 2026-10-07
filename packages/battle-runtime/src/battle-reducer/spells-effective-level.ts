@@ -40,6 +40,12 @@ export function spellInvocationCastLevel(
       Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) =>
         Number(castLevel),
       ),
+      Match.when({ tag: "statBlockAtWill" }, ({ castLevel }) =>
+        Number(castLevel),
+      ),
+      Match.when({ tag: "statBlockLimited" }, ({ castLevel }) =>
+        Number(castLevel),
+      ),
       Match.when({ tag: "none" }, () => invocation.spellRuleFacts.level),
       Match.exhaustive,
     ),

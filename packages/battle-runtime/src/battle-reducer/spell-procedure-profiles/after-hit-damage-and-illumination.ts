@@ -1,3 +1,5 @@
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type {
@@ -146,14 +148,14 @@ function admitAfterHitDamageAndIllumination(
       damageExpr,
       payment,
     }): AfterHitDamageAndIlluminationInvocation => ({
-      access: { tag: "prepared" },
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption({
         spellLevel: slotLevel,
         payment,
       }),
       procedure: "afterHitDamageAndIllumination",
       spell,
-      actionCost: "bonusAction",
+      actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
       damage: {
         expr: damageExpr,
         damageType: facts.damageType,

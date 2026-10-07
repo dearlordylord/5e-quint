@@ -1,3 +1,4 @@
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
@@ -84,7 +85,7 @@ function admitAbilityD20TestRollModeSaveGateMechanics(
         abilityD20TestRollModeSaveGateInvocationsFromFacts({
           spell,
           facts,
-          access: { tag: "prepared" },
+          access: preparedSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption(slot),
           slotLevel: slot.spellLevel,
           sourceCombatantId: ctx.actor.combatantId,

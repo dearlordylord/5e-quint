@@ -1,3 +1,7 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeSpellActiveEffectCast,
@@ -2203,6 +2207,9 @@ function admitRollModifier(
   ctx: SpellAdmissionContext,
   facts: RollModifierMechanicsFacts,
 ): readonly RollModifierInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
+
   const expiresAt = rollModifierActiveEffectExpiration(
     ctx.actor.combatantId,
     facts.duration,
@@ -2236,8 +2243,8 @@ function admitRollModifier(
           access: cast.access,
           resource: cast.resource,
           procedure: "rollModifier",
-          spell,
-          actionCost: "magicAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "magicAction"),
           targeting,
           rangeFeet: facts.rangeFeet,
           saveGate: facts.saveGate,
@@ -2249,8 +2256,8 @@ function admitRollModifier(
         access: cast.access,
         resource: cast.resource,
         procedure: "rollModifier",
-        spell,
-        actionCost: "magicAction",
+
+        actionCost: spellAdmissionActionCost(ctx, "magicAction"),
         targeting,
         rangeFeet: facts.rangeFeet,
         saveGate: facts.saveGate,
@@ -2268,8 +2275,8 @@ function admitRollModifier(
         access: cast.access,
         resource: cast.resource,
         procedure: "rollModifier",
-        spell,
-        actionCost: "magicAction",
+
+        actionCost: spellAdmissionActionCost(ctx, "magicAction"),
         targeting,
         rangeFeet: facts.rangeFeet,
         saveGate: facts.saveGate,
@@ -2282,8 +2289,8 @@ function admitRollModifier(
       access: cast.access,
       resource: cast.resource,
       procedure: "rollModifier",
-      spell,
-      actionCost: "magicAction",
+
+      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
       targeting,
       rangeFeet: facts.rangeFeet,
       saveGate: facts.saveGate,
@@ -2297,8 +2304,7 @@ function admitRollModifier(
     invocations.push(
       complete({
         kind: "cantrip",
-        access: cantripSpellAccessFor(spell.castingSource),
-        resource: { tag: "none" },
+        ...castingFacts,
         slotLevel: spellSlotLevel(0),
       }),
     );
@@ -2308,7 +2314,7 @@ function admitRollModifier(
       invocations.push(
         complete({
           kind: "prepared",
-          access: { tag: "prepared" },
+          access: preparedSpellAccessForCastingSource(spell.castingSource),
           resource: spellInvocationResourceForCastOption(slot),
           slotLevel: slot.spellLevel,
         }),
@@ -2513,22 +2519,24 @@ const RollModifierInvocationCommonFields = {
   saveGate: RollModifierSpellSaveGateSchema,
 } as const;
 
-const RollModifierInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union([
+const RollModifierInvocationSchema = Schema.Union([
+  spellProcedureExecutionSchema(
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: D20RollModifierEffectSchema,
       abilityChoices: Schema.Null,
       abilityChoiceApplication: Schema.optionalKey(Schema.Never),
     }),
+  ),
+  spellProcedureExecutionSchema(
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: AbilityCheckRollModeEffectSchema,
       abilityChoices: Schema.Array(Schema.Literals(BATTLE_SURFACE_ABILITIES)),
       abilityChoiceApplication: Schema.Literals(["single", "perTarget"]),
     }),
-  ]),
-);
+  ),
+]);
 export const rollModifierProfile: SpellProcedureDeclaration<
   "rollModifier",
   RollModifierInvocation,

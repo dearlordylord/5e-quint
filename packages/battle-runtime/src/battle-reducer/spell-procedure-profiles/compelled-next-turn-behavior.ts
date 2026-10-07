@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel
@@ -250,17 +253,16 @@ function admitCompelledNextTurnBehavior(
   ctx: SpellAdmissionContext,
   facts: CompelledBehaviorMechanicsFacts,
 ): readonly CompelledNextTurnBehaviorSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (castOption): readonly CompelledNextTurnBehaviorSpellInvocation[] =>
       Number(castOption.spellLevel) < facts.level
         ? []
         : [
             {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(castOption),
-              spell,
+              ...castOption.facts,
+
               procedure: "compelledNextTurnBehavior",
-              actionCost: "magicAction",
+              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
               ability: facts.ability,
               dc: facts.dc,
               visibility: facts.visibility,

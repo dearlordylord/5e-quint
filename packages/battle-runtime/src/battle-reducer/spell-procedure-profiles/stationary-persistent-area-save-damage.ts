@@ -1,3 +1,5 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -192,7 +194,7 @@ function admitStationaryPersistentAreaAreaHazard(
   facts: StationaryPersistentAreaMechanicsFacts,
   executionBoundary: StationaryPersistentAreaExecutionBoundary,
 ): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < STATIONARY_PERSISTENT_AREA_LEVEL) {
         return [];
@@ -204,11 +206,10 @@ function admitStationaryPersistentAreaAreaHazard(
       });
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "persistentAreaSaveDamage",
           lifecycle: { kind: "stationary" },
-          spell,
+
           ability: "con",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {

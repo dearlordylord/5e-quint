@@ -7,7 +7,7 @@ import {
   spellAdmissionSource,
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
-import type { SpellAdmissionActor } from "./profile.ts";
+import type { CharacterSpellAdmissionActor } from "./profile.ts";
 
 export function mechanicsSource(spellId: string) {
   return mechanicsSourceFromSpell(spellRecord(spellId));
@@ -124,19 +124,19 @@ export const chainedTargetSelectionConstraintMutations = (
   ),
 );
 
-export function spellAdmissionActor(): SpellAdmissionActor {
+export function spellAdmissionActor(): CharacterSpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
   );
-  if (!isSpellAdmissionActor(actor)) {
+  if (!isCharacterSpellAdmissionActor(actor)) {
     throw new Error("Expected a spellcasting character fixture.");
   }
   return actor;
 }
 
-export function isSpellAdmissionActor(
+export function isCharacterSpellAdmissionActor(
   actor: BattleCreatureState | undefined,
-): actor is SpellAdmissionActor {
+): actor is CharacterSpellAdmissionActor {
   return (
     actor?.origin.kind === "character" &&
     actor.origin.spellcasting?.canCastSpells === true

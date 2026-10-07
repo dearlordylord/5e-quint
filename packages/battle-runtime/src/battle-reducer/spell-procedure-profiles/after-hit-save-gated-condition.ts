@@ -1,3 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import type {
   BattleSpellExecutionSource,
@@ -199,7 +202,7 @@ function admitAfterHitSaveGatedCondition(
   ctx: SpellAdmissionContext,
   facts: AfterHitSaveGatedConditionMechanicsFacts,
 ): readonly AfterHitSaveGatedConditionInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (castOption): readonly AfterHitSaveGatedConditionInvocation[] => {
       if (Number(castOption.spellLevel) < facts.level) return [];
       const damageExpr = supportedDamageAmountExpr({
@@ -210,11 +213,10 @@ function admitAfterHitSaveGatedCondition(
       if (damageExpr === null) return [];
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(castOption),
+          ...castOption.facts,
           procedure: "afterHitSaveGatedCondition",
-          spell,
-          actionCost: "bonusAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           ability: facts.ability,
           dc: facts.dc,
           targeting: { kind: "singleCombatant" },

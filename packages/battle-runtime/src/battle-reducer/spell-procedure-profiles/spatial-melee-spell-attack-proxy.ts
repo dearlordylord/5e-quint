@@ -1,3 +1,9 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
+import { spellAdmissionActionCost } from "./profile.ts";
+import { cantripSpellInvocationResource } from "./profile.ts";
+import { spellAdmissionAttackBonus } from "./profile.ts";
+import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -507,21 +513,21 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
   ctx: SpellAdmissionContext,
   facts: SpatialMeleeSpellAttackProxyMechanicsFacts,
 ): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
+  const casterAttackBonus = spellAdmissionAttackBonus(ctx);
+  if (casterAttackBonus === null) return [];
   const durationTicks = spellDurationTicksFromCanonicalValue(
     facts.durationValue,
   );
-  return ctx.spellCastOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       return [
         {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "spatialMeleeSpellAttackProxy",
           operation: "createAndAttack",
-          spell,
-          actionCost: "bonusAction",
+
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           targeting: { kind: "singleCombatant" },
           durationTicks,
           rangeFeet: facts.rangeFeet,
@@ -537,10 +543,7 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
             damageType: facts.damageType,
           },
           attackKind: facts.attackKind,
-          attackBonus: spatialMeleeSpellAttackProxyAttackBonus({
-            spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-            proficiencyBonus: spellcasting.proficiencyBonus,
-          }),
+          attackBonus: casterAttackBonus,
         },
       ];
     },
@@ -585,6 +588,7 @@ function spatialMeleeSpellAttackProxyRepeatBindingFor(
   >,
   ctx: SpellAdmissionContext,
 ) {
+  if (ctx.actor.origin.kind !== "character") return null;
   const procedure = ctx.actor.origin.execution.procedureBindings.find(
     (binding) =>
       binding.procedure.kind === "spellInvocation" &&
@@ -605,6 +609,7 @@ function spatialMeleeSpellAttackProxyRepeatExecutionFacts(
   >,
   ctx: SpellAdmissionContext,
 ) {
+  if (ctx.actor.origin.kind !== "character") return null;
   const source = characterRetainedSpellProcedureExecution(
     ctx.actor.origin.execution,
     effect.sourceProcedureRef,
@@ -638,11 +643,11 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
             tag: "spellEffect",
             sourceCombatantId: effect.sourceCombatantId,
           },
-          resource: { tag: "none" },
+          resource: cantripSpellInvocationResource(ctx),
           procedure: "spatialMeleeSpellAttackProxy",
           operation: "repositionAndAttack",
           spell,
-          actionCost: "bonusAction",
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
           activeEffect: effect,
           targeting: { kind: "singleCombatant" },
           repeatTargeting: execution.repeat.repeatTargeting,
@@ -1754,7 +1759,7 @@ const SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema =
   );
 
 const SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema =
-  spellProcedureExecutionSchema(
+  spellEffectProcedureExecutionSchema(
     Schema.Struct({
       procedure: Schema.Literal("spatialMeleeSpellAttackProxy"),
       operation: Schema.Literal("repositionAndAttack"),
