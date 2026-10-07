@@ -76,6 +76,7 @@ export const STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS = [
   "unsupportedRestriction",
   "missingCasterAttackBonus",
   "missingCasterSaveDc",
+  "missingCasterAttackBonusAndSaveDc",
 ] as const;
 export type StatBlockSpellInvocationUnsupportedReason =
   (typeof STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS)[number];

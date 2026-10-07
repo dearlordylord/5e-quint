@@ -137,6 +137,28 @@ export function admitSelectedStatBlockSpellInvocation(input: {
         reason: "unsupportedProfile" as const,
       }),
       admitted: ({ procedures }): StatBlockSpellInvocationDispatch => {
+        const casterRequirements = procedures.flatMap((procedure) =>
+          procedure.binding === "static" ? [] : [procedure.casterRequirements],
+        );
+        const missingAttackBonus =
+          Option.isNone(castingSource.spellAttackBonus) &&
+          casterRequirements.some(
+            (requirements) => requirements.spellAttackBonus === "required",
+          );
+        const missingSaveDc =
+          Option.isNone(castingSource.spellSaveDc) &&
+          casterRequirements.some(
+            (requirements) => requirements.spellSaveDc === "required",
+          );
+        if (missingAttackBonus && missingSaveDc)
+          return {
+            kind: "unsupported",
+            reason: "missingCasterAttackBonusAndSaveDc",
+          };
+        if (missingAttackBonus)
+          return { kind: "unsupported", reason: "missingCasterAttackBonus" };
+        if (missingSaveDc)
+          return { kind: "unsupported", reason: "missingCasterSaveDc" };
         const executionSource = battleSpellExecutionSourceFromAdmission(source);
         const executions = procedures
           .flatMap(
@@ -149,15 +171,6 @@ export function admitSelectedStatBlockSpellInvocation(input: {
           )
           .map(spellProcedureExecution)
           .filter(isStatBlockSpellCastProcedureExecution);
-        if (
-          Option.isNone(castingSource.spellSaveDc) &&
-          executions.some(
-            (execution) =>
-              "dc" in execution && execution.dc.kind === "caster_spell_save_dc",
-          )
-        ) {
-          return { kind: "unsupported", reason: "missingCasterSaveDc" };
-        }
         const nonEmpty = spellProcedureNonEmpty(executions);
         return nonEmpty === undefined
           ? { kind: "unsupported", reason: "missingChildProcedureOwner" }

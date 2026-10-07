@@ -1,3 +1,4 @@
+import type { SpellCasterRequirements } from "./spell-caster-requirements.ts";
 // Canonical procedure-keyed declarations. Admission and execution registries
 // project their own views from this table so procedure keys and completeness
 // cannot drift into parallel sources of truth.
@@ -120,12 +121,17 @@ type RegisteredSpellProcedureDeclaration<P extends BattleSpellProcedureKey> = {
       readonly admission: {
         readonly kind: "authored";
         /** Context-independent mechanics admission owned by the profile. */
-        readonly admitMechanics: SpellProcedureAdmissionDeclaration<
-          P,
-          SpellInvocationAdmittedByRegisteredProcedure<P>,
-          object,
-          SpellProcedureAdmissionIssue<P>
-        >["admitMechanics"];
+        readonly admitMechanics: (
+          source: SpellMechanicsAdmissionSource,
+        ) => WithCasterRequirementsInspection<
+          ReturnType<
+            SpellProcedureAdmissionDeclaration<
+              P,
+              SpellInvocationAdmittedByRegisteredProcedure<P>,
+              object
+            >["admitMechanics"]
+          >
+        >;
       };
     }
   | { readonly admission: { readonly kind: "synthesized" } }
@@ -159,7 +165,19 @@ function registeredSpellProcedureDeclaration<
     procedure: declaration.procedure,
     admission: {
       kind: "authored",
-      admitMechanics: declaration.admitMechanics,
+      admitMechanics: (source) => {
+        const inspection = declaration.admitMechanics(source);
+        if (inspection.tag !== "supported") return inspection;
+        return {
+          ...inspection,
+          admitted: {
+            ...inspection.admitted,
+            casterRequirements: declaration.casterRequirements(
+              inspection.admitted.facts,
+            ),
+          },
+        };
+      },
     },
     execution,
   };
@@ -462,6 +480,19 @@ export type RegisteredAdmittedSpellMechanics = Extract<
   { readonly tag: "supported" }
 >["admitted"];
 
+type WithSpellCasterRequirements<Mechanics> = Mechanics extends {
+  readonly binding: "ready";
+}
+  ? Mechanics & { readonly casterRequirements: SpellCasterRequirements }
+  : Mechanics;
+type WithCasterRequirementsInspection<Inspection> = Inspection extends {
+  readonly tag: "supported";
+  readonly admitted: infer Mechanics;
+}
+  ? Omit<Inspection, "admitted"> & {
+      readonly admitted: WithSpellCasterRequirements<Mechanics>;
+    }
+  : Inspection;
 export type RegisteredAdmittedStaticSpellMechanics = Extract<
   RegisteredAdmittedSpellMechanics,
   { readonly binding: "static" }

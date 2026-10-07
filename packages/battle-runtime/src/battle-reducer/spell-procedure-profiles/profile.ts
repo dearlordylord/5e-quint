@@ -1,4 +1,5 @@
 import { isSpellInvocationCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
+import type { SpellCasterRequirements } from "./spell-caster-requirements.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // A Spell Procedure Declaration bundles every layer the runtime needs to handle
 // one class of spell behavior — admission, discovery, dispatch, codec, and
@@ -361,6 +362,7 @@ export type SpellProcedureAdmissionDeclaration<
   Issue extends SpellProcedureAdmissionIssue<P> =
     SpellProcedureAdmissionIssue<P>,
 > = {
+  readonly casterRequirements: (facts: Facts) => SpellCasterRequirements;
   /**
    * Static authored-mechanics admission.  This is required at the declaration
    * boundary so every authored profile must migrate before the canonical
