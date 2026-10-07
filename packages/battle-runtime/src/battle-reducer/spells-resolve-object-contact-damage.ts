@@ -1,3 +1,4 @@
+import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
@@ -213,7 +214,9 @@ export function resolveObjectContactDamageSpellAct(input: {
       invocation: input.invocation,
       targetIds: contactSelection.targetIds,
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource: spellCastingTimeResourceForSpellCast({
+        invocation: input.invocation,
+      }),
       continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,

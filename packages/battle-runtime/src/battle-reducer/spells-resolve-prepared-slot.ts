@@ -1,3 +1,4 @@
+import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
 // Prepared-slot repeated-damage-allocation spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
@@ -301,7 +302,9 @@ export function resolvePreparedSlotSpellAct(input: {
           (allocation) => allocation.targetId,
         ),
         reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
+        castingResource: spellCastingTimeResourceForSpellCast({
+          invocation: input.invocation,
+        }),
         continuation: spellReplayContinuation(input.input),
       }),
       input.input.handledInterruptTrigger,

@@ -1,3 +1,4 @@
+import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -323,7 +324,9 @@ export function resolveMovableLightCastSpellAct(input: {
       invocation: input.invocation,
       targetIds: [],
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource: spellCastingTimeResourceForSpellCast({
+        invocation: input.invocation,
+      }),
       continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,
