@@ -1,7 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { unitId } from "@dnd/shared/game-facts";
 import { PositiveInteger } from "@dnd/shared/types";
@@ -254,6 +252,8 @@ function admitTriggeredArmorDefense(
   ctx: SpellAdmissionContext,
   facts: TriggeredArmorDefenseMechanicsFacts,
 ): readonly TriggeredArmorDefenseInvocation[] {
+  // The triggered Reaction resolver is owned by character execution.
+  if (ctx.kind === "statBlock") return [];
   return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly TriggeredArmorDefenseInvocation[] =>
       Number(slot.spellLevel) < facts.level

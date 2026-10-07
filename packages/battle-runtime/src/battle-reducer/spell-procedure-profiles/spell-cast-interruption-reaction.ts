@@ -261,6 +261,8 @@ function admitSpellCastInterruption(
   ctx: SpellAdmissionContext,
   facts: SpellCastInterruptionMechanicsFacts,
 ): readonly SpellCastInterruptionInvocation[] {
+  // The triggered Reaction resolver is owned by character execution.
+  if (ctx.kind === "statBlock") return [];
   return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SpellCastInterruptionInvocation[] =>
       Number(slot.spellLevel) < facts.level

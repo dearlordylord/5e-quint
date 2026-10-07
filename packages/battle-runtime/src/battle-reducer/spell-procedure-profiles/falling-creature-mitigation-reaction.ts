@@ -1,7 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-feather-fall-mitigation
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE
@@ -123,6 +121,8 @@ function admitFallingCreatureMitigationReaction(
   ctx: SpellAdmissionContext,
   facts: FallingCreatureMitigationReactionMechanicsFacts,
 ): readonly FallingCreatureMitigationReactionInvocation[] {
+  // The triggered Reaction resolver is owned by character execution.
+  if (ctx.kind === "statBlock") return [];
   return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly FallingCreatureMitigationReactionInvocation[] =>
       Number(slot.spellLevel) < facts.level
