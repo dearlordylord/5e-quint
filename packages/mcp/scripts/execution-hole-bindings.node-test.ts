@@ -9,6 +9,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import {
   nativeProjectionOperations,
+  nativeDiagnosticMessage,
   registryFactoryCall,
   genericFrontierResults,
 } from "./operation-accounting-compiler.ts";
@@ -412,4 +413,36 @@ test("registry factory bindings preserve local const aliases and reject dynamic 
   }
   visit(source);
   assert.deepEqual(results, [true, true, true, false, false]);
+});
+
+test("native diagnostic formatting retains nested contract mismatch evidence", () => {
+  const diagnostic = {
+    pos: 0,
+    end: 0,
+    code: 1,
+    category: 1,
+    text: "Argument is not assignable",
+    messageChain: [
+      {
+        pos: 0,
+        end: 0,
+        code: 2,
+        category: 1,
+        text: "Property operation differs",
+        messageChain: [
+          {
+            pos: 0,
+            end: 0,
+            code: 3,
+            category: 1,
+            text: "completeShortRest is not completeLongRest",
+          },
+        ],
+      },
+    ],
+  };
+  assert.equal(
+    nativeDiagnosticMessage(diagnostic),
+    "Argument is not assignable\nProperty operation differs\ncompleteShortRest is not completeLongRest",
+  );
 });

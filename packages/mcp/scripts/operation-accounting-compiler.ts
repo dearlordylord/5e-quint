@@ -11,6 +11,7 @@ import {
   API,
   TypeFlags,
   type Project,
+  type Diagnostic,
   type Type,
 } from "@typescript/native/unstable/sync";
 import {
@@ -274,6 +275,13 @@ function nativeAccountingExpression(
   return { project, node };
 }
 
+export function nativeDiagnosticMessage(diagnostic: Diagnostic): string {
+  return [
+    diagnostic.text,
+    ...(diagnostic.messageChain ?? []).map(nativeDiagnosticMessage),
+  ].join("\n");
+}
+
 export function accountingDiagnostics(program: ts.Program): readonly string[] {
   const packagesRoot = resolve(repositoryRoot, "packages") + "/";
   const proofSources = new Set([
@@ -304,7 +312,7 @@ export function accountingDiagnostics(program: ts.Program): readonly string[] {
       ].map((diagnostic) => {
         const line =
           source.getLineAndCharacterOfPosition(diagnostic.pos).line + 1;
-        return `${relative(repositoryRoot, file)}:${line}: ${diagnostic.text}`;
+        return `${relative(repositoryRoot, file)}:${line}: ${nativeDiagnosticMessage(diagnostic)}`;
       });
     });
   } catch (error) {
