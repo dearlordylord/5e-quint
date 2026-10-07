@@ -2788,6 +2788,7 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock,
     ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
     conditions: [],

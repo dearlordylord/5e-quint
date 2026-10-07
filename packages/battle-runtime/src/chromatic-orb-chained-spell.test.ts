@@ -53,6 +53,7 @@ import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import {
+  unitLibrary,
   battleProcedureExecutionRefForSpellHoleForTest,
   characterBattleFeatureInitForTest,
   characterSpellInvocationForProcedureRefForTest,
@@ -1885,6 +1886,7 @@ function poisonImmuneSkeletonCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock,
     currentHp: Hp(13),
     tempHp: Hp(0),

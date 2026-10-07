@@ -31,6 +31,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import {
+  unitLibrary,
   attackExecutionSelectionForSubjectForTest,
   movementFill,
   startBattleSessionRight,
@@ -314,6 +315,7 @@ function statBlockCreatureInit(input: {
   const statBlock = statBlockRecord();
   return {
     combatantId: input.combatantId,
+    unitCatalog: unitLibrary,
     statBlock,
     initiative: initiativeScore(input.initiative),
     currentHp: Hp(statBlock.statBlock.hp.value),

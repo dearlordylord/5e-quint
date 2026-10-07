@@ -1765,6 +1765,7 @@ function statBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock: input.statBlock,
     currentHp: Hp(input.statBlock.statBlock.hp.value),
     tempHp: Hp(0),

@@ -2,6 +2,7 @@ import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-MULTIATTACK-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
+  unitLibrary,
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   resolveBattleSubject,
   startBattleRight,
@@ -336,6 +337,7 @@ function statBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock: input.statBlock,
     ammunitionStocks: [],
     conditions: [],

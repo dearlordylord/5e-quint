@@ -11,6 +11,7 @@ import {
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
+  unitLibrary,
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   nonSpellExecutableProcedureEntry,
   resolveBattleSubject,
@@ -453,6 +454,7 @@ function statBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock: { ...input.statBlock, name: input.displayName },
     currentHp: Hp(12),
     tempHp: Hp(0),

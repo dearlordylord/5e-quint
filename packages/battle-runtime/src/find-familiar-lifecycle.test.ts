@@ -106,6 +106,7 @@ import { spendSpawnedCompanionTouchDeliveryReaction } from "./companion-communic
 import { admitSpawnedCompanionLifecycleMechanics } from "./battle-reducer/spell-procedure-profiles/spawned-companion-lifecycle-admission.ts";
 import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 import {
+  unitLibrary,
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
   readyDeclarationFillForTest,
@@ -837,6 +838,7 @@ function authoredSkeletonBattleInit(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock: { ...input.statBlock, name: input.displayName },
     currentHp: literalHp(input.statBlock),
     tempHp: Hp(0),

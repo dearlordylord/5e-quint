@@ -190,6 +190,7 @@ describe("Stat Block projection boundary coverage", () => {
         combatants: [
           {
             combatantId: combatantId(`synthetic-projection-failure-${index}`),
+            unitCatalog: unitLibrary,
             statBlock: projectionCase.record,
             initiative: initiativeScore(10),
             ammunitionStocks: [],
@@ -209,6 +210,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-battle-init-issue"),
+          unitCatalog: unitLibrary,
           statBlock: {
             ...source,
             statBlock: {
@@ -281,6 +283,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-fixed-size-selection"),
+          unitCatalog: unitLibrary,
           statBlock: source,
           size: "medium",
           initiative: initiativeScore(10),
@@ -308,6 +311,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-invalid-size-selection"),
+          unitCatalog: unitLibrary,
           statBlock: alternativeSizes,
           size: "large",
           initiative: initiativeScore(10),
@@ -337,6 +341,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-valid-size-selection"),
+          unitCatalog: unitLibrary,
           statBlock: alternativeSizes,
           size: "medium",
           initiative: initiativeScore(10),
@@ -640,6 +645,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-unsupported-procedures"),
+          unitCatalog: unitLibrary,
           statBlock: record,
           initiative: initiativeScore(10),
           ammunitionStocks: [],
@@ -1019,6 +1025,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-resource-graph-issue"),
+          unitCatalog: unitLibrary,
           statBlock: missingResourceForm,
           initiative: initiativeScore(10),
           ammunitionStocks: [],

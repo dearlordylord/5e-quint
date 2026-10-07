@@ -17887,6 +17887,7 @@ function skeletonCreatureInit(input: {
   return {
     combatantId: skeletonId,
     initiative: initiativeScore(input.initiative),
+    unitCatalog: unitLibrary,
     statBlock,
     currentHp: Hp(13),
     tempHp: Hp(0),

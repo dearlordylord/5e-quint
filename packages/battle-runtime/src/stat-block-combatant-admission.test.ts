@@ -28,6 +28,7 @@ import {
   startBattle,
 } from "./battle-reducer/api-lifecycle.ts";
 import {
+  unitLibrary,
   characterSeed,
   fighterId,
   expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
@@ -232,6 +233,7 @@ describe("Stat Block combatant admission capability", () => {
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: ["prone"],
+          unitCatalog: unitLibrary,
           statBlock: source,
         },
       ],
@@ -250,6 +252,7 @@ describe("Stat Block combatant admission capability", () => {
     const directInit = {
       combatantId: admittedCombatantId,
       initiative: initiativeScore(10),
+      unitCatalog: unitLibrary,
       statBlock: {
         ...source,
         statBlock: {
@@ -286,6 +289,7 @@ describe("Stat Block combatant admission capability", () => {
     const directInit = {
       combatantId: admittedCombatantId,
       initiative: initiativeScore(10),
+      unitCatalog: unitLibrary,
       statBlock: statBlockRecord(),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: ["prone"],
@@ -316,6 +320,7 @@ describe("Stat Block combatant admission capability", () => {
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: ["prone"],
+          unitCatalog: unitLibrary,
           statBlock: {
             ...source,
             statBlock: {

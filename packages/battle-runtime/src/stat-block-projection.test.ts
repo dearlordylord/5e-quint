@@ -30,6 +30,7 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  unitLibrary,
   admittedStatBlockSource,
   nonSpellExecutableProcedureEntry,
   isNonSpellExecutableProcedureEntryOfKind,
@@ -55,6 +56,7 @@ const authoredResourceOrdinal = (value: number) =>
 function initializedStatBlock(source: StatBlockRecord) {
   return {
     combatantId: combatantId("stat-block-projection-actor"),
+    unitCatalog: unitLibrary,
     statBlock: source,
     initiative: initiativeScore(10),
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -106,6 +108,7 @@ describe("generic Stat Block projection", () => {
       combatants: [
         {
           combatantId: combatantId("authored-stat-block"),
+          unitCatalog: unitLibrary,
           statBlock: source,
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -137,6 +140,7 @@ describe("generic Stat Block projection", () => {
       combatants: [
         {
           combatantId: combatantId("nonliteral-authored-stat-block"),
+          unitCatalog: unitLibrary,
           statBlock: {
             ...source,
             statBlock: {
@@ -170,6 +174,7 @@ describe("generic Stat Block projection", () => {
       combatants: [
         {
           combatantId: actorId,
+          unitCatalog: unitLibrary,
           statBlock: source,
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
