@@ -1,3 +1,7 @@
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { SpellPresentationSource } from "./battle-runtime-context.ts";
+import { bindAuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
+import { statBlockSpellInvocationProcedureRef } from "./identity.ts";
 import type { StatBlockSpellInvocationAdmissionPlan } from "./stat-block-spell-invocation-admission-plan.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import {
@@ -34,29 +38,52 @@ import { admittedStatBlockExecutionState } from "./stat-block-execution-state.ts
 import { statBlockSpellInvocationActionCost } from "./stat-block-execution-state.ts";
 import { mapReadonlyNonEmptyArray } from "./readonly-non-empty-array.ts";
 
+type StatBlockSpellInvocationAdmission =
+  | {
+      readonly dispatch: Extract<
+        StatBlockSpellInvocationDispatch,
+        { readonly kind: "unsupported" }
+      >;
+      readonly spellPresentationSources: readonly [];
+    }
+  | {
+      readonly dispatch: Extract<
+        StatBlockSpellInvocationDispatch,
+        { readonly kind: "executable" }
+      >;
+      readonly spellPresentationSources: ReadonlyNonEmptyArray<SpellPresentationSource>;
+    };
+
+function unsupportedSpellInvocationAdmission(
+  reason: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationUnsupportedReason,
+): Extract<
+  StatBlockSpellInvocationAdmission,
+  { readonly dispatch: { readonly kind: "unsupported" } }
+> {
+  return {
+    dispatch: { kind: "unsupported", reason },
+    spellPresentationSources: [],
+  };
+}
+
 export function admitSelectedStatBlockSpellInvocation(input: {
   readonly actor: StatBlockBattleCreatureState;
   readonly state: BattleState;
   readonly selection: SelectedStatBlockSpellInvocation;
   readonly definitionJoin: StatBlockSpellDefinitionJoin;
-}): StatBlockSpellInvocationDispatch {
+}): StatBlockSpellInvocationAdmission {
   const joined = input.definitionJoin;
   if (joined.kind !== "joined")
-    return { kind: "unsupported", reason: joined.kind };
+    return unsupportedSpellInvocationAdmission(joined.kind);
   if (
     input.selection.invocation.kind === "restricted" ||
     joined.value.continuation.kind === "restricted"
   ) {
-    return { kind: "unsupported", reason: "unsupportedRestriction" };
+    return unsupportedSpellInvocationAdmission("unsupportedRestriction");
   }
   const { selection } = input;
-  const castingSource = {
+  const castingSourceFacts = {
     tag: "statBlock" as const,
-    castingTime: joined.value.castingTime,
-    actionCost: statBlockSpellInvocationActionCost(
-      selection.procedure,
-      joined.value.castingTime,
-    ),
     invocationRef: selection.ref,
     abilityModifier: abilityModifier(
       abilityScoreToMod(
@@ -72,6 +99,28 @@ export function admitSelectedStatBlockSpellInvocation(input: {
         ? Option.none()
         : Option.some(attackBonus(selection.procedure.spellAttackBonus)),
   };
+  const castingSource = Match.value(joined.value.castingTime).pipe(
+    Match.when({ kind: Match.is("minutes", "hours") }, (castingTime) => ({
+      ...castingSourceFacts,
+      castingTime,
+      actionCost: statBlockSpellInvocationActionCost(
+        selection.procedure,
+        castingTime,
+      ),
+    })),
+    Match.when(
+      { kind: Match.is("action", "bonus_action", "reaction") },
+      (castingTime) => ({
+        ...castingSourceFacts,
+        castingTime,
+        actionCost: statBlockSpellInvocationActionCost(
+          selection.procedure,
+          castingTime,
+        ),
+      }),
+    ),
+    Match.exhaustive,
+  );
   const listedComponents = selection.procedure.components;
   const definitionRuleFacts =
     listedComponents === undefined
@@ -131,15 +180,10 @@ export function admitSelectedStatBlockSpellInvocation(input: {
   });
   return Match.value(staticAdmission).pipe(
     Match.discriminatorsExhaustive("tag")({
-      notBattleOwned: () => ({
-        kind: "unsupported" as const,
-        reason: "unsupportedProfile" as const,
-      }),
-      rejected: () => ({
-        kind: "unsupported" as const,
-        reason: "unsupportedProfile" as const,
-      }),
-      admitted: ({ procedures }): StatBlockSpellInvocationDispatch => {
+      notBattleOwned: () =>
+        unsupportedSpellInvocationAdmission("unsupportedProfile"),
+      rejected: () => unsupportedSpellInvocationAdmission("unsupportedProfile"),
+      admitted: ({ procedures }): StatBlockSpellInvocationAdmission => {
         const casterRequirements = procedures.flatMap((procedure) =>
           procedure.binding === "static" ? [] : [procedure.casterRequirements],
         );
@@ -154,42 +198,79 @@ export function admitSelectedStatBlockSpellInvocation(input: {
             (requirements) => requirements.spellSaveDc === "required",
           );
         if (missingAttackBonus && missingSaveDc)
-          return {
-            kind: "unsupported",
-            reason: "missingCasterAttackBonusAndSaveDc",
-          };
+          return unsupportedSpellInvocationAdmission(
+            "missingCasterAttackBonusAndSaveDc",
+          );
         if (missingAttackBonus)
-          return { kind: "unsupported", reason: "missingCasterAttackBonus" };
+          return unsupportedSpellInvocationAdmission(
+            "missingCasterAttackBonus",
+          );
         if (missingSaveDc)
-          return { kind: "unsupported", reason: "missingCasterSaveDc" };
+          return unsupportedSpellInvocationAdmission("missingCasterSaveDc");
         const executionSource = battleSpellExecutionSourceFromAdmission(source);
-        const executions = procedures
-          .flatMap(
-            (
-              procedure,
-            ): readonly import("./battle-state-execution.ts").SupportedSpellInvocation[] =>
-              procedure.binding === "static"
-                ? []
-                : procedure.admit(executionSource, context),
-          )
-          .map(spellProcedureExecution)
-          .filter(isStatBlockSpellCastProcedureExecution);
-        const nonEmpty = spellProcedureNonEmpty(executions);
+        const invocations = procedures.flatMap(
+          (
+            procedure,
+          ): readonly import("./battle-state-execution.ts").SupportedSpellInvocation[] =>
+            procedure.binding === "static"
+              ? []
+              : procedure.admit(executionSource, context),
+        );
+        const executablePairs = invocations.flatMap((invocation) => {
+          const facts = spellProcedureExecution(invocation);
+          if (!isStatBlockSpellCastProcedureExecution(facts)) return [];
+          const procedureRef = statBlockSpellInvocationProcedureRef(
+            selection.ref,
+            facts.procedure,
+          );
+          return [
+            {
+              facts,
+              presentation: {
+                procedureRef,
+                invocation: bindAuthoredSelectedSpellInvocation(
+                  invocation,
+                  procedureRef,
+                ),
+              },
+            },
+          ];
+        });
+        const nonEmpty = spellProcedureNonEmpty(executablePairs);
         return nonEmpty === undefined
-          ? { kind: "unsupported", reason: "missingChildProcedureOwner" }
-          : { kind: "executable", executions: nonEmpty };
+          ? unsupportedSpellInvocationAdmission("missingChildProcedureOwner")
+          : {
+              dispatch: {
+                kind: "executable",
+                executions: mapReadonlyNonEmptyArray(
+                  nonEmpty,
+                  (pair) => pair.facts,
+                ),
+              },
+              spellPresentationSources: mapReadonlyNonEmptyArray(
+                nonEmpty,
+                (pair) => pair.presentation,
+              ),
+            };
       },
     }),
   );
 }
 
 /** Consume one catalog plan against the real actor; retain only execution facts. */
-export function statBlockCreatureWithAdmittedSpellInvocations(
+export function admitStatBlockSpellInvocations(
   actor: StatBlockBattleCreatureState,
   state: BattleState,
   plan: StatBlockSpellInvocationAdmissionPlan,
-): Result.Result<StatBlockBattleCreatureState, "admissionPlanMismatch"> {
+): Result.Result<
+  {
+    readonly creature: StatBlockBattleCreatureState;
+    readonly spellPresentationSources: readonly SpellPresentationSource[];
+  },
+  "admissionPlanMismatch"
+> {
   const execution = actor.origin.execution;
+  const spellPresentationSources: SpellPresentationSource[] = [];
   const expectedCoordinates = execution.procedureBindings.flatMap((binding) => {
     const procedure = binding.procedure;
     if (procedure.kind !== "spellcasting") return [];
@@ -249,13 +330,14 @@ export function statBlockCreatureWithAdmittedSpellInvocations(
           invocationOrdinal: invocation.invocationOrdinal,
         });
         if (selected.kind !== "selected") return invocation;
-        const dispatch = admitSelectedStatBlockSpellInvocation({
+        const admitted = admitSelectedStatBlockSpellInvocation({
           actor,
           state,
           selection: selected.value,
           definitionJoin: candidate.definitionJoin,
         });
-        return { ...invocation, dispatch };
+        spellPresentationSources.push(...admitted.spellPresentationSources);
+        return { ...invocation, dispatch: admitted.dispatch };
       }
       return Match.value(group).pipe(
         Match.when({ kind: "at_will" }, (value) => ({
@@ -292,13 +374,16 @@ export function statBlockCreatureWithAdmittedSpellInvocations(
     };
   });
   return Result.succeed({
-    ...actor,
-    origin: {
-      ...actor.origin,
-      execution: admittedStatBlockExecutionState({
-        ...execution,
-        procedureBindings,
-      }),
+    spellPresentationSources,
+    creature: {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        execution: admittedStatBlockExecutionState({
+          ...execution,
+          procedureBindings,
+        }),
+      },
     },
   });
 }

@@ -40,7 +40,7 @@ export type RetainedCompanionBattleSelection =
       readonly selectedForm: PactOfTheChainSpawnedCompanionFormSelection;
     };
 
-export type CharacterSpellPresentationSource = {
+export type SpellPresentationSource = {
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly invocation: AuthoredSelectedSpellInvocation;
 };
@@ -54,7 +54,7 @@ export type CharacterBattleRuntimeContext = {
   readonly displayName?: string;
   readonly resourceOwnership: readonly CharacterBattleResourceOwnership[];
   readonly spellcastingPresentationSource?: CharacterBattleSpellcastingState;
-  readonly spellPresentationSources: readonly CharacterSpellPresentationSource[];
+  readonly spellPresentationSources: readonly SpellPresentationSource[];
   readonly unitProcedureOwnership: readonly CharacterUnitProcedureOwnership[];
   readonly unitPresentationSources: readonly BattleUnitRef[];
   readonly retainedCompanionSelection?: RetainedCompanionBattleSelection;
@@ -127,6 +127,7 @@ export type BattleStatBlockPresentationSource = {
   /** Authored trait facts retained for presentation-boundary diagnostics. */
   readonly traits: readonly BattleStatBlockAuthoredTraitPresentation[];
   readonly orderedProcedures: readonly BattleStatBlockAuthoredProcedurePresentation[];
+  readonly spellPresentationSources: readonly SpellPresentationSource[];
 };
 
 export function characterWeaponPresentationSource(

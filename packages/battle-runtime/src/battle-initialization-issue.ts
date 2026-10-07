@@ -35,7 +35,10 @@ type BattleAdmissionInitializationIssueFacts =
   | {
       readonly kind: "statBlockSpellAdmissionInvalid";
       readonly combatantId: CombatantId;
-      readonly cause: "admissionPlanMissing" | "admissionPlanMismatch";
+      readonly cause:
+        | "admissionPlanMissing"
+        | "admissionPlanMismatch"
+        | "presentationSourceMissing";
     }
   | {
       readonly kind: "characterSpellProcedureInvalid";

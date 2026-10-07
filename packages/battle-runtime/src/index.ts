@@ -71,7 +71,7 @@ export {
   emptyBattleRuntimeContext,
   type BattleRuntimeContext,
   type CharacterBattleRuntimeContext,
-  type CharacterSpellPresentationSource,
+  type SpellPresentationSource,
   type RetainedCompanionBattleSelection,
 } from "./battle-runtime-context.ts";
 

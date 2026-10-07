@@ -1,4 +1,4 @@
-import { statBlockCreatureWithAdmittedSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
+import { admitStatBlockSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { PositiveInteger } from "@dnd/shared/types";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 import { Result, Schema } from "effect";
@@ -69,6 +69,12 @@ describe("Stat Block invocation production admission", () => {
       actor.origin.execution,
     );
     expect(invocations).toHaveLength(1);
+    const presentation = started.success.context.statBlocks.get(casterId);
+    expect(presentation?.spellPresentationSources).toHaveLength(1);
+    expect(presentation?.spellPresentationSources[0]?.invocation.spell.id).toBe(
+      "magic_missile",
+    );
+
     const invocation = invocations[0];
     if (invocation === undefined)
       throw new Error("Expected executable invocation");
@@ -167,7 +173,7 @@ describe("Stat Block invocation production admission", () => {
     if (actor?.origin.kind !== "statBlock")
       throw new Error("Expected Stat Block actor");
     const execution = actor.origin.execution;
-    const admitted = statBlockCreatureWithAdmittedSpellInvocations(
+    const admitted = admitStatBlockSpellInvocations(
       { ...actor, origin: actor.origin },
       started.success.state,
       [],

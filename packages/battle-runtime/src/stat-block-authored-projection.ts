@@ -412,6 +412,7 @@ function presentationProjection(
     communication: record.statBlock.communication,
     traits: authoredTraitPresentations(record.statBlock.traits ?? []),
     orderedProcedures: admitted.map(({ presentation }) => presentation),
+    spellPresentationSources: [],
   };
 }
 
