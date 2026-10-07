@@ -154,4 +154,4 @@ describe("submission candidate evidence", () => {
       }),
     ).toThrow("duplicate ids");
   });
-}, 90_000);
+});
