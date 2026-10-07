@@ -214,6 +214,15 @@ export const isBattleStatBlockProcedureExecutionRef = Schema.is(
   BattleStatBlockProcedureExecutionRef,
 );
 
+/** Coordinates identify an admitted invocation without retaining authored identity. */
+export const StatBlockSpellInvocationRefSchema = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  groupOrdinal: StatBlockSpellcastingGroupOrdinal,
+  invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
+});
+export type StatBlockSpellInvocationRef =
+  typeof StatBlockSpellInvocationRefSchema.Type;
+
 export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
     Schema.makeFilter(battleResourcePoolExecutionReferenceIsCanonical, {
