@@ -1,10 +1,14 @@
+import { statBlockCreatureWithAdmittedSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { PositiveInteger } from "@dnd/shared/types";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
+import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
+import { restoreStatBlockExecutionAdmission } from "./stat-block-execution.ts";
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleId,
+  admittedStatBlockSource,
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
@@ -101,6 +105,61 @@ describe("Stat Block invocation production admission", () => {
     );
     if (binding?.procedure.kind !== "spellcasting")
       throw new Error("Expected spellcasting binding");
+    const encoded = Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
+      actor.origin.execution,
+    );
+    const wrongCoordinates = {
+      ...encoded,
+      procedureBindings: encoded.procedureBindings.map((candidate) => {
+        if (candidate.procedure.kind !== "spellcasting") return candidate;
+        const groups = candidate.procedure.groups.map((group) => ({
+          ...group,
+          invocations: group.invocations.map((alternative) => {
+            if (alternative.dispatch.kind !== "executable") return alternative;
+            const executions = alternative.dispatch.executions.map((child) => ({
+              ...child,
+              access: {
+                tag: "statBlockLeveled",
+                invocationRef: {
+                  procedureRef: candidate.procedureRef,
+                  groupOrdinal: 999,
+                  invocationOrdinal: alternative.invocationOrdinal,
+                },
+              },
+            }));
+            return {
+              ...alternative,
+              dispatch: { ...alternative.dispatch, executions },
+            };
+          }),
+        }));
+        return { ...candidate, procedure: { ...candidate.procedure, groups } };
+      }),
+    };
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(
+          wrongCoordinates,
+        ),
+      ),
+    ).toBe(true);
+    const decoded = Schema.decodeUnknownResult(
+      StatBlockExecutionSnapshotSchema,
+    )(encoded);
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded))
+      throw new Error("Expected valid execution snapshot");
+    const restored = restoreStatBlockExecutionAdmission(
+      started.success.state.battleId,
+      casterId,
+      admittedStatBlockSource(casterRecord()),
+      decoded.success,
+    );
+    expect(Result.isSuccess(restored)).toBe(true);
+    if (Result.isSuccess(restored))
+      expect(
+        statBlockSpellProcedureInvocations(restored.success.execution),
+      ).toEqual(invocations);
     expect(binding.procedure.groups[0].invocations[1]?.dispatch).toEqual({
       kind: "unsupported",
       reason: "unsupportedRestriction",
@@ -109,5 +168,30 @@ describe("Stat Block invocation production admission", () => {
       kind: "unsupported",
       reason: "missingDefinition",
     });
+  });
+  it("rejects a mismatched transient plan before replacing actor execution", () => {
+    const casterId = combatantId("synthetic-plan-mismatch");
+    const started = startBattle({
+      battleId: battleId("stat-block-plan-mismatch"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: casterId,
+          statBlock: casterRecord(),
+          initiative: 20,
+        }),
+      ],
+    });
+    if (Result.isFailure(started)) throw new Error("Expected admitted caster");
+    const actor = started.success.state.combatants.get(casterId);
+    if (actor?.origin.kind !== "statBlock")
+      throw new Error("Expected Stat Block actor");
+    const execution = actor.origin.execution;
+    const admitted = statBlockCreatureWithAdmittedSpellInvocations(
+      { ...actor, origin: actor.origin },
+      started.success.state,
+      [],
+    );
+    expect(admitted).toEqual(Result.fail("admissionPlanMismatch"));
+    expect(actor.origin.execution).toBe(execution);
   });
 });

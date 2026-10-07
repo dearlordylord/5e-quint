@@ -192,6 +192,10 @@ export function statBlockSpellDispatchBindingsAreValid(
               return false;
             const source = execution.spellRuleFacts.castingSource;
             if (
+              source.actionCost !==
+                (procedure.section === "actions"
+                  ? "magicAction"
+                  : "bonusAction") ||
               Option.getOrUndefined(source.spellSaveDc) !==
                 procedure.spellSaveDc ||
               Option.getOrUndefined(source.spellAttackBonus) !==

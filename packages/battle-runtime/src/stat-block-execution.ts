@@ -964,6 +964,24 @@ function restoreStatBlockExecutionAdmissionAtIndex<
     (binding) => binding.procedure.kind === "effectOccurrenceSource",
   );
   if (
+    !authoredBindings.every((binding) => {
+      const procedure = binding.procedure;
+      if (procedure.kind !== "spellcasting") return true;
+      const expectedAbilityModifier = abilityScoreToMod(
+        statBlock.statBlock.abilityScores[procedure.ability],
+      );
+      return procedure.groups.every((group) =>
+        group.invocations.every(
+          (invocation) =>
+            invocation.dispatch.kind !== "executable" ||
+            invocation.dispatch.executions.every(
+              (execution) =>
+                execution.spellRuleFacts.castingSource.abilityModifier ===
+                expectedAbilityModifier,
+            ),
+        ),
+      );
+    }) ||
     !procedureBindingSnapshotsEqual(
       authoredBindings,
       statBlockProcedureBindingSnapshots(expected.execution),
