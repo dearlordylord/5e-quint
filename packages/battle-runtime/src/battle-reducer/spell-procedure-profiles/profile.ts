@@ -431,6 +431,13 @@ export function spellAdmissionAttackBonus(
     : null;
 }
 
+export function spellAdmissionActionCost<
+  Cost extends "magicAction" | "bonusAction",
+>(ctx: CharacterSpellAdmissionContext, nativeCost: Cost): Cost;
+export function spellAdmissionActionCost(
+  ctx: SpellAdmissionContext,
+  nativeCost: "magicAction" | "bonusAction",
+): "magicAction" | "bonusAction";
 export function spellAdmissionActionCost(
   ctx: SpellAdmissionContext,
   nativeCost: "magicAction" | "bonusAction",

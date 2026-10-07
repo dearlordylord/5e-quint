@@ -1,9 +1,10 @@
-import { spellAdmissionCastOptions } from "./profile.ts";
+import {
+  leveledSpellInvocationOptions,
+  spellAdmissionActionCost,
+} from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 //
@@ -437,10 +438,9 @@ function grantedAreaSaveDamageActionMechanicsEvidence(
 function grantedAreaSaveDamageActionInvocationsFromFacts(
   spell: BattleSpellExecutionSource,
   facts: GrantedAreaSaveDamageActionMechanicsFacts,
-  actorId: CombatantId,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  ctx: SpellAdmissionContext,
 ): readonly GrantedAreaSaveDamageActionInvocation[] {
-  return castOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly GrantedAreaSaveDamageActionInvocation[] => {
       if (Number(slot.spellLevel) < Number(facts.level)) return [];
       const damageDice = PositiveInteger(
@@ -453,19 +453,20 @@ function grantedAreaSaveDamageActionInvocationsFromFacts(
       );
       return [
         {
-          access: leveledSpellAccessForCastingSource(spell.castingSource),
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           procedure: "grantedAreaSaveDamageAction",
-          spell,
-          actionCost: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost,
+          actionCost: spellAdmissionActionCost(
+            ctx,
+            GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost,
+          ),
           ability: facts.ability,
           targeting: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting,
           activeEffect: {
             kind: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.activeEffectKind,
-            sourceCombatantId: actorId,
+            sourceCombatantId: ctx.actor.combatantId,
             expiresAt: {
               kind: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.expirationKind,
-              combatantId: actorId,
+              combatantId: ctx.actor.combatantId,
               durationTicks: facts.durationTicks,
             },
           },
@@ -958,8 +959,7 @@ function admitGrantedAreaSaveDamageActionMechanics(
         grantedAreaSaveDamageActionInvocationsFromFacts(
           executionSource,
           facts,
-          ctx.actor.combatantId,
-          spellAdmissionCastOptions(ctx),
+          ctx,
         ),
     },
   };

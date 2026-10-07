@@ -1,6 +1,5 @@
-import { spellAdmissionCastOptions } from "./profile.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
@@ -42,7 +41,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
@@ -83,12 +81,10 @@ function admitAbilityD20TestRollModeSaveGateMechanics(
       spell: BattleSpellExecutionSource,
       ctx: SpellAdmissionContext,
     ) =>
-      spellAdmissionCastOptions(ctx).flatMap((slot) =>
+      leveledSpellInvocationOptions(spell, ctx).flatMap((slot) =>
         abilityD20TestRollModeSaveGateInvocationsFromFacts({
-          spell,
+          ...slot.facts,
           facts,
-          access: leveledSpellAccessForCastingSource(spell.castingSource),
-          resource: spellInvocationResourceForCastOption(slot),
           slotLevel: slot.spellLevel,
           sourceCombatantId: ctx.actor.combatantId,
         }),
