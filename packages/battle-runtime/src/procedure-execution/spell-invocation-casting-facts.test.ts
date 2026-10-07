@@ -16,7 +16,10 @@ import {
   SpellEffectSpellAccessSchema,
 } from "../battle-reducer/codec-building-blocks.ts";
 import { NoSpellInvocationResourceSchema } from "./spell-invocation-codecs.ts";
-import { SpellRuleExecutionFactsSchema } from "./spell-rule-facts.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  StatBlockSpellCastingSourceSchema,
+} from "./spell-rule-facts.ts";
 import {
   spellProcedureExecutionSchema,
   spellEffectProcedureExecutionSchema,
@@ -178,4 +181,23 @@ describe("correlated caster admission facts", () => {
       false,
     );
   });
+});
+
+it("rejects Bonus Action ownership for a long-casting source", () => {
+  const longSource = {
+    ...source,
+    castingTime: { kind: "minutes", amount: 1, ritual: false },
+  };
+  expect(
+    Schema.is(StatBlockSpellCastingSourceSchema)({
+      ...longSource,
+      actionCost: "bonusAction",
+    }),
+  ).toBe(false);
+  expect(
+    Schema.is(StatBlockSpellCastingSourceSchema)({
+      ...longSource,
+      actionCost: "magicAction",
+    }),
+  ).toBe(true);
 });

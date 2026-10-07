@@ -16,7 +16,6 @@ import { Schema } from "effect";
 import {
   BattleSpellAccessExecutionRef,
   StatBlockSpellInvocationRefSchema,
-  type StatBlockSpellInvocationRef,
 } from "../identity.ts";
 
 /** The dynamic caster/access fact joined to a static Spell Definition. */
@@ -32,19 +31,8 @@ export type CharacterSpellCastingSource =
       readonly abilityModifier: AbilityModifier;
     };
 
-export type StatBlockSpellCastingSource = {
-  readonly tag: "statBlock";
-  readonly castingTime: import("@dnd/surface/surface/types").CastingTime;
-  readonly actionCost: import("../stat-block-execution-state.ts").StatBlockSpellcastingActionCost;
-  readonly invocationRef: StatBlockSpellInvocationRef;
-  readonly abilityModifier: AbilityModifier;
-  readonly spellSaveDc: import("effect").Option.Option<
-    import("@dnd/shared/types").DifficultyClass
-  >;
-  readonly spellAttackBonus: import("effect").Option.Option<
-    import("@dnd/shared/types").AttackBonus
-  >;
-};
+export type StatBlockSpellCastingSource =
+  typeof StatBlockSpellCastingSourceSchema.Type;
 
 export type SpellCastingSource =
   | CharacterSpellCastingSource
@@ -80,18 +68,36 @@ export function spellRuleExecutionFactsWithCastingSource(
   return { ...definition, castingSource };
 }
 
-export const StatBlockSpellCastingSourceSchema = Schema.Struct({
+type ShortCastingTime = Exclude<
+  typeof CastingTimeSchema.Type,
+  { readonly kind: "minutes" | "hours" }
+>;
+const ShortCastingTimeSchema = Schema.refine<
+  typeof CastingTimeSchema,
+  ShortCastingTime
+>(
+  (value): value is ShortCastingTime =>
+    value.kind !== "minutes" && value.kind !== "hours",
+)(CastingTimeSchema);
+const StatBlockCastingSourceFields = {
   tag: Schema.Literal("statBlock"),
-  castingTime: CastingTimeSchema,
-  actionCost: Schema.Union([
-    Schema.Literal("magicAction"),
-    Schema.Literal("bonusAction"),
-  ]),
   invocationRef: StatBlockSpellInvocationRefSchema,
   abilityModifier: AbilityModifier,
   spellSaveDc: Schema.Option(DifficultyClass),
   spellAttackBonus: Schema.Option(AttackBonus),
-});
+};
+export const StatBlockSpellCastingSourceSchema = Schema.Union([
+  Schema.Struct({
+    ...StatBlockCastingSourceFields,
+    castingTime: CastingTimeSchema,
+    actionCost: Schema.Literal("magicAction"),
+  }),
+  Schema.Struct({
+    ...StatBlockCastingSourceFields,
+    castingTime: ShortCastingTimeSchema,
+    actionCost: Schema.Literal("bonusAction"),
+  }),
+]);
 export const ClassSpellCastingSourceSchema = Schema.Struct({
   tag: Schema.Literal("classSpellcasting"),
   className: ClassNameSchema,
