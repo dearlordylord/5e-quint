@@ -143,22 +143,25 @@ export type AuthoredSpellInvocationCastingFacts<Spell> = AuthoredCastingFacts<
 >;
 
 const hasCastingFactsShape = Schema.is(SpellInvocationCastingFactsSchema);
-/** Preserve the canonical invocation across nested source and access facts. */
-export function isSpellInvocationCastingFacts(
-  value: unknown,
-): value is SpellInvocationCastingFacts {
-  if (!hasCastingFactsShape(value)) return false;
+function resourceSupportsDefinitionLevel(
+  value: SpellInvocationCastingFacts,
+): boolean {
   const resource = value.resource;
   if (
     resource.tag === "spellSlot" &&
     resource.slotLevel < value.spellRuleFacts.level
   )
     return false;
-  if (
-    "castLevel" in resource &&
-    resource.castLevel < value.spellRuleFacts.level
-  )
-    return false;
+  return !(
+    "castLevel" in resource && resource.castLevel < value.spellRuleFacts.level
+  );
+}
+/** Preserve the canonical invocation across nested source and access facts. */
+export function isSpellInvocationCastingFacts(
+  value: unknown,
+): value is SpellInvocationCastingFacts {
+  if (!hasCastingFactsShape(value)) return false;
+  if (!resourceSupportsDefinitionLevel(value)) return false;
   const source = value.spellRuleFacts.castingSource;
   if (source.tag !== "statBlock" || value.access.tag === "spellEffect")
     return true;

@@ -38,6 +38,13 @@ export type StatBlockSpellDefinitionJoin =
       readonly requestedLevel: SpellLevel;
     };
 
+function castLevelSupportsDefinition(
+  level: SpellLevel,
+  castLevel: SpellLevel,
+): boolean {
+  return castLevel >= level && (level !== 0 || castLevel === 0);
+}
+
 /**
  * Catalog admission is the only place that joins an authored spell reference.
  * The caller consumes the definition transiently to admit its profile; the
@@ -54,7 +61,7 @@ export function joinStatBlockSpellDefinition(
   }
   const level = definition.mechanics.level;
   const castLevel = reference.castAtLevel ?? level;
-  if (castLevel < level || (level === 0 && castLevel !== 0)) {
+  if (!castLevelSupportsDefinition(level, castLevel)) {
     return {
       kind: "invalidCastLevel",
       definitionLevel: level,

@@ -9,6 +9,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId, StatBlockSpellInvocationRef } from "../identity.ts";
 import type { LongCastingTime } from "./long-casting-progress.ts";
+import { isLongCastingReadyToComplete } from "./long-casting-progress.ts";
 
 export function sameInvocationRef(
   left: StatBlockSpellInvocationRef,
@@ -39,12 +40,16 @@ export function longCastingCompletionResource(
 ): Option.Option<{ readonly kind: "alreadySpent" }> {
   const source = invocation.spellRuleFacts.castingSource;
   const concentration = state.combatants.get(actorId)?.concentration;
-  return source.tag === "statBlock" &&
-    concentration?.effectKind === "castingSpell" &&
+  if (
+    source.tag !== "statBlock" ||
+    concentration?.effectKind !== "castingSpell"
+  )
+    return Option.none();
+  const matchesInvocation =
     concentration.sourceProcedureRef === invocation.sourceProcedureRef &&
-    sameInvocationRef(concentration.invocationRef, source.invocationRef) &&
-    concentration.progress.kind === "readyToComplete" &&
-    concentration.progress.lastMagicActionRound === state.initiative.round
+    sameInvocationRef(concentration.invocationRef, source.invocationRef);
+  return matchesInvocation &&
+    isLongCastingReadyToComplete(concentration.progress, state.initiative.round)
     ? Option.some({ kind: "alreadySpent" as const })
     : Option.none();
 }

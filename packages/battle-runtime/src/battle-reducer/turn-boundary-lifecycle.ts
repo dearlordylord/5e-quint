@@ -1104,6 +1104,29 @@ function persistentAreaSourceTurnTranslationPendingResumeRequests(input: {
 
 // Advances the turn only; `resolveOrderedDeathSavingThrowOccurrence` resolves
 // the new actor's start-of-turn Death Saving Throw, settling the natural-1 reroll first.
+function endTurnCastingConcentration(state: BattleState): BattleState {
+  const actorId = currentActorId(state);
+  const concentration = state.combatants.get(actorId)?.concentration;
+  return concentration?.effectKind === "castingSpell" &&
+    longCastingMustFailAtTurnEnd(concentration.progress, state.initiative.round)
+    ? breakBattleConcentration(state, actorId)
+    : state;
+}
+
+function resetIncomingTurnCombatants(
+  state: BattleState,
+  nextActorId: CombatantId,
+): Map<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...state.combatants].map(([id, combatant]) => [
+      id,
+      id === nextActorId
+        ? resetStartOfTurnCombatant(resetPerTurnCharacterResources(combatant))
+        : combatant,
+    ]),
+  );
+}
+
 function resolveEndTurn({
   state: turnBoundaryState,
   statBlockRechargeRolls,
@@ -1127,28 +1150,10 @@ function resolveEndTurn({
   BattleResolutionResult,
   { readonly tag: "resolved" }
 > {
-  const endingActorId = currentActorId(turnBoundaryState);
-  const castingConcentration =
-    turnBoundaryState.combatants.get(endingActorId)?.concentration;
-  const state =
-    castingConcentration?.effectKind === "castingSpell" &&
-    longCastingMustFailAtTurnEnd(
-      castingConcentration.progress,
-      turnBoundaryState.initiative.round,
-    )
-      ? breakBattleConcentration(turnBoundaryState, endingActorId)
-      : turnBoundaryState;
+  const state = endTurnCastingConcentration(turnBoundaryState);
   const initiative = nextInitiative(state.initiative);
   const nextActorId = currentActing(initiative);
-  const combatants = new Map<CombatantId, BattleCreatureState>();
-  for (const [id, combatant] of state.combatants) {
-    combatants.set(
-      id,
-      id === nextActorId
-        ? resetStartOfTurnCombatant(resetPerTurnCharacterResources(combatant))
-        : combatant,
-    );
-  }
+  const combatants = resetIncomingTurnCombatants(state, nextActorId);
   const expiringReadiedSpellCasterIds = [...state.readiedSpells]
     .filter(
       ([, readiedSpell]) => readiedSpell.expiresAt.combatantId === nextActorId,

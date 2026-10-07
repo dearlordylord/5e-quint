@@ -75,3 +75,13 @@ export function longCastingMustFailAtTurnEnd(
     progress.lastMagicActionRound !== round
   );
 }
+
+export function isLongCastingReadyToComplete(
+  progress: BattleLongCastingProgress,
+  round: Round,
+): boolean {
+  return (
+    progress.kind === "readyToComplete" &&
+    progress.lastMagicActionRound === round
+  );
+}
