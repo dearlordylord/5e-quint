@@ -990,6 +990,10 @@ const FallingCreatureMitigationReactionInvocationSchema =
 export const fallingCreatureMitigationReactionProfile = {
   procedure: "fallingCreatureMitigationReaction",
   executionSchema: FallingCreatureMitigationReactionInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitFallingCreatureMitigationReactionMechanics,
   discoverCastAct: discoverFallingCreatureMitigationReactionCastAct,
   resolve: resolveFallingCreatureMitigationReaction,

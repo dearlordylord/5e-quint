@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import {
   cantripSpellInvocationFacts,
   leveledSpellInvocationOptions,
@@ -352,10 +353,16 @@ export const SaveGatedDamageInvocationSchema = Schema.Union([
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   executionSchema: SaveGatedDamageInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitSaveGatedDamageMechanics,
   discoverCastAct: discoverSaveGatedDamageCastAct,
   resolve: resolveSaveGatedDamage,
 } satisfies SpellProcedureDeclaration<
   "saveGatedDamage",
-  SaveGatedDamageSpellInvocation
+  SaveGatedDamageSpellInvocation,
+  AdmittedSpellFacts<typeof admitSaveGatedDamageMechanics>
 >;

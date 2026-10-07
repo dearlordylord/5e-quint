@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -1062,10 +1063,15 @@ export const WeaponAttackDamageEnhancementInvocationSchema =
   );
 export const weaponAttackDamageEnhancementProfile: SpellProcedureDeclaration<
   "weaponAttackDamageEnhancement",
-  WeaponAttackDamageEnhancementInvocation
+  WeaponAttackDamageEnhancementInvocation,
+  AdmittedSpellFacts<typeof admitWeaponAttackDamageEnhancementMechanics>
 > = {
   procedure: "weaponAttackDamageEnhancement",
   executionSchema: WeaponAttackDamageEnhancementInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitWeaponAttackDamageEnhancementMechanics,
   discoverCastAct: discoverWeaponAttackDamageEnhancementCastAct,
   resolve: resolveWeaponAttackDamageEnhancement,

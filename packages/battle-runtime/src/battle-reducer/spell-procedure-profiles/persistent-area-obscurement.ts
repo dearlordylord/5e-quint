@@ -892,6 +892,10 @@ const PersistentAreaTraitInvocationSchema = spellProcedureExecutionSchema(
 export const persistentAreaTraitProfile = {
   procedure: "persistentAreaTrait",
   executionSchema: PersistentAreaTraitInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitPersistentAreaObscurementMechanics,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolvePersistentAreaTrait,

@@ -1156,6 +1156,10 @@ const SpellCastInterruptionInvocationSchema = spellProcedureExecutionSchema(
 export const spellCastInterruptionReactionProfile = {
   procedure: "spellCastInterruptionReaction",
   executionSchema: SpellCastInterruptionInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSpellCastInterruptionMechanics,
   discoverCastAct: discoverSpellCastInterruptionCastAct,
   resolve: resolveSpellCastInterruption,

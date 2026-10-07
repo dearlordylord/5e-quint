@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
@@ -143,10 +144,16 @@ const SaveGatedConditionImmunityInvocationSchema =
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
   executionSchema: SaveGatedConditionImmunityInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitSaveGatedConditionImmunityMechanics,
   discoverCastAct: discoverSaveGatedConditionImmunityCastAct,
   resolve: resolveSaveGatedConditionImmunity,
 } satisfies SpellProcedureDeclaration<
   "saveGatedConditionImmunity",
-  SaveGatedConditionImmunitySpellInvocation
+  SaveGatedConditionImmunitySpellInvocation,
+  AdmittedSpellFacts<typeof admitSaveGatedConditionImmunityMechanics>
 >;

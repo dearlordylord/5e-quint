@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -957,10 +958,15 @@ const ConditionRemovalProtectionInvocationSchema =
   );
 export const conditionRemovalProtectionProfile: SpellProcedureDeclaration<
   "conditionRemovalProtection",
-  ConditionRemovalProtectionSpellInvocation
+  ConditionRemovalProtectionSpellInvocation,
+  AdmittedSpellFacts<typeof admitConditionRemovalProtectionMechanics>
 > = {
   procedure: "conditionRemovalProtection",
   executionSchema: ConditionRemovalProtectionInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitConditionRemovalProtectionMechanics,
   discoverCastAct: discoverConditionRemovalProtectionCastAct,
   resolve: resolveConditionRemovalProtection,

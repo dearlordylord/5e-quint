@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -1100,10 +1101,16 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
 export const grantedAreaSaveDamageActionProfile = {
   procedure: "grantedAreaSaveDamageAction",
   executionSchema: GrantedAreaSaveDamageActionInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitGrantedAreaSaveDamageActionMechanics,
   discoverCastAct: discoverGrantedAreaSaveDamageActionCastAct,
   resolve: resolveGrantedAreaSaveDamageAction,
 } satisfies SpellProcedureDeclaration<
   "grantedAreaSaveDamageAction",
-  GrantedAreaSaveDamageActionInvocation
+  GrantedAreaSaveDamageActionInvocation,
+  AdmittedSpellFacts<typeof admitGrantedAreaSaveDamageActionMechanics>
 >;

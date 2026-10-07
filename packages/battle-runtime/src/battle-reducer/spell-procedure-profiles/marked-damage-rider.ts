@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
@@ -2019,10 +2020,15 @@ const MarkedDamageRiderInvocationSchema = Schema.Union([
 ]);
 export const markedDamageRiderProfile: SpellProcedureDeclaration<
   "markedDamageRider",
-  MarkedDamageRiderInvocation
+  MarkedDamageRiderInvocation,
+  AdmittedSpellFacts<typeof admitMarkedDamageRiderMechanics>
 > = {
   procedure: "markedDamageRider",
   executionSchema: MarkedDamageRiderInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitMarkedDamageRiderMechanics,
   discoverCastAct: discoverMarkedDamageRiderCastAct,
   resolve: resolveMarkedDamageRider,

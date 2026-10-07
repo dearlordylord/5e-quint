@@ -1085,6 +1085,10 @@ export const objectLightProfile: SpellProcedureDeclaration<
 > = {
   procedure: "objectLight",
   executionSchema: ObjectLightInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitObjectLightMechanics,
   discoverCastAct: discoverObjectLightCastAct,
   resolve: resolveObjectLight,

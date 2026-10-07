@@ -628,6 +628,10 @@ export const seeInvisibleObserverSightProfile: SpellProcedureDeclaration<
 > = {
   procedure: "seeInvisibleObserverSight",
   executionSchema: SeeInvisibleObserverSightInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: seeInvisibleObserverSightMechanicsAdmission,
   discoverCastAct: discoverSeeInvisibleObserverSightCastAct,
   resolve: resolveSeeInvisibleObserverSight,

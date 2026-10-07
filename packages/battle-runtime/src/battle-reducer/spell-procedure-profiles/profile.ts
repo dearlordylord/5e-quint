@@ -34,6 +34,8 @@ import type {
 } from "../../identity.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 import type {
+  SpellAccess,
+  SpellInvocationResource,
   CantripSpellAccess,
   LeveledSpellInvocationResource,
   PreparedSpellAccess,
@@ -124,7 +126,27 @@ type AuthoredCantripCastingFacts<S> = Extract<
     };
   }
 >;
-function admittedCantripCastingFacts<
+export function admittedSpellInvocationCastingFacts<
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "castingSource" | "spellDefinitionRuleFacts"
+  >,
+>(candidate: {
+  readonly spell: S;
+  readonly access: SpellAccess;
+  readonly resource: SpellInvocationResource;
+}): candidate is typeof candidate &
+  import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S> {
+  return isSpellInvocationCastingFacts({
+    spellRuleFacts: {
+      ...candidate.spell.spellDefinitionRuleFacts,
+      castingSource: candidate.spell.castingSource,
+    },
+    access: candidate.access,
+    resource: candidate.resource,
+  });
+}
+export function admittedCantripCastingFacts<
   S extends Pick<
     BattleSpellAdmissionSource,
     "castingSource" | "spellDefinitionRuleFacts"
@@ -143,7 +165,7 @@ function admittedCantripCastingFacts<
     resource: candidate.resource,
   });
 }
-function admittedLeveledCastingFacts<
+export function admittedLeveledCastingFacts<
   S extends Pick<
     BattleSpellAdmissionSource,
     "castingSource" | "spellDefinitionRuleFacts"
@@ -355,6 +377,15 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
 // stay type-checked against the right shape. Most profiles register the same
 // literal their invocation carries; a combined profile may register one literal
 // while accepting an invocation whose procedure field admits that literal.
+export type AdmittedSpellFacts<
+  Admission extends (
+    source: import("./spell-mechanics-admission.ts").SpellMechanicsAdmissionSource,
+  ) => import("./spell-mechanics-admission.ts").SpellMechanicsInspectionView,
+> = Extract<
+  ReturnType<Admission>,
+  { readonly tag: "supported" }
+>["admitted"]["facts"];
+
 export type SpellProcedureAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,

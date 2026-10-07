@@ -1232,6 +1232,10 @@ function resolveWeaponAttackOverrideProfile(
 export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   procedure: "weaponAttackOverride",
   executionSchema: WeaponAttackOverrideExecutionSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitWeaponAttackOverrideMechanics,
   discoverCastAct: (state, actorId, invocation) =>
     discoverWeaponAttackOverrideCastAct(state, actorId, invocation, {

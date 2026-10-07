@@ -1025,6 +1025,11 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
 export const compelledNextTurnBehaviorProfile = {
   procedure: "compelledNextTurnBehavior",
   executionSchema: CommandInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitCompelledBehaviorMechanics,
   discoverCastAct: discoverCompelledNextTurnBehaviorCastAct,
   resolve: resolveCompelledNextTurnBehavior,

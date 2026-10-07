@@ -1093,6 +1093,10 @@ export const directConditionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "directCondition",
   executionSchema: DirectConditionInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitDirectConditionMechanics,
   discoverCastAct: discoverDirectConditionCastAct,
   resolve: resolveDirectCondition,

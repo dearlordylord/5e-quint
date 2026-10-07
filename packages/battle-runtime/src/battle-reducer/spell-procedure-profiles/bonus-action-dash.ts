@@ -779,6 +779,10 @@ const GrantedAlternateActionCostInvocationSchema =
 export const grantedAlternateActionCostProfile = {
   procedure: "grantedAlternateActionCost",
   executionSchema: GrantedAlternateActionCostInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitGrantedAlternateActionCostMechanics,
   discoverCastAct: discoverGrantedAlternateActionCostCastAct,
   resolve: resolveGrantedAlternateActionCost,

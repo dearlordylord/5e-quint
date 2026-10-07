@@ -1054,6 +1054,10 @@ const TriggeredArmorDefenseInvocationSchema = spellProcedureExecutionSchema(
 export const triggeredArmorDefenseProfile = {
   procedure: "triggeredArmorDefense",
   executionSchema: TriggeredArmorDefenseInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitTriggeredArmorDefenseMechanics,
   discoverCastAct: discoverTriggeredArmorDefenseCastAct,
   resolve: resolveTriggeredArmorDefense,

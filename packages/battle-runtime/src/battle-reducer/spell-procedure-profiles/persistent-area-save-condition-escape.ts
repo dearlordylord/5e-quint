@@ -839,6 +839,10 @@ const PersistentAreaSaveConditionEscapeInvocationSchema =
 export const persistentAreaSaveConditionEscapeProfile = {
   procedure: "persistentAreaSaveConditionEscape",
   executionSchema: PersistentAreaSaveConditionEscapeInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: persistentAreaSaveConditionEscapeMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolvePersistentAreaSaveConditionEscape,

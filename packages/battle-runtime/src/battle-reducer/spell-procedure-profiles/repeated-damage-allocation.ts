@@ -850,6 +850,10 @@ export const repeatedDamageAllocationProfile: SpellProcedureDeclaration<
 > = {
   procedure: "repeatedDamageAllocation",
   executionSchema: RepeatedDamageAllocationInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitRepeatedDamageAllocationMechanics,
   discoverCastAct: discoverRepeatedDamageAllocationCastAct,
   resolve: resolveRepeatedDamageAllocation,

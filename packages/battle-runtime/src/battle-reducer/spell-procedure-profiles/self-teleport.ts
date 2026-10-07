@@ -715,6 +715,10 @@ const SelfTeleportInvocationSchema = spellProcedureExecutionSchema(
 export const selfTeleportProfile = {
   procedure: "selfTeleport",
   executionSchema: SelfTeleportInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSelfTeleportMechanics,
   discoverCastAct: discoverSelfTeleportCastAct,
   resolve: resolveSelfTeleport,

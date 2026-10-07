@@ -984,6 +984,10 @@ export const heldLightProfile: SpellProcedureDeclaration<
 > = {
   procedure: "heldLight",
   executionSchema: HeldLightInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: heldLightFactsFromMechanics,
   discoverCastAct: discoverHeldLightCastAct,
   resolve: resolveHeldLight,

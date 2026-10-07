@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -1191,10 +1192,15 @@ const WeaponDamageRiderInvocationSchema = spellProcedureExecutionSchema(
 );
 export const weaponDamageRiderProfile: SpellProcedureDeclaration<
   "weaponDamageRider",
-  WeaponDamageRiderInvocation
+  WeaponDamageRiderInvocation,
+  AdmittedSpellFacts<typeof admitWeaponDamageRiderMechanics>
 > = {
   procedure: "weaponDamageRider",
   executionSchema: WeaponDamageRiderInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitWeaponDamageRiderMechanics,
   discoverCastAct: discoverWeaponDamageRiderCastAct,
   resolve: resolveWeaponDamageRider,

@@ -1319,6 +1319,10 @@ export const selfTransformationModeProfile: SpellProcedureDeclaration<
 > = {
   procedure: "selfTransformationMode",
   executionSchema: SelfTransformationModeInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSelfTransformationMechanics,
   discoverCastAct: discoverSelfTransformationModeCastAct,
   resolve: resolveSelfTransformationMode,

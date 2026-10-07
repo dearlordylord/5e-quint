@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
@@ -1503,10 +1504,16 @@ const SaveGatedTurnConstraintBundleInvocationSchema =
 export const saveGatedTurnConstraintBundleProfile = {
   procedure: "saveGatedTurnConstraintBundle",
   executionSchema: SaveGatedTurnConstraintBundleInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitSaveGatedTurnConstraintBundleMechanics,
   discoverCastAct: discoverSaveGatedTurnConstraintBundleCastAct,
   resolve: resolveSaveGatedTurnConstraintBundle,
 } satisfies SpellProcedureDeclaration<
   "saveGatedTurnConstraintBundle",
-  SaveGatedTurnConstraintBundleSpellInvocation
+  SaveGatedTurnConstraintBundleSpellInvocation,
+  AdmittedSpellFacts<typeof admitSaveGatedTurnConstraintBundleMechanics>
 >;

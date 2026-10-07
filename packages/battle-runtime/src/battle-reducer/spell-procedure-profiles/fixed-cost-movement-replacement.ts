@@ -792,6 +792,10 @@ const FixedCostMovementReplacementInvocationSchema =
 export const fixedCostMovementReplacementProfile = {
   procedure: "fixedCostMovementReplacement",
   executionSchema: FixedCostMovementReplacementInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitFixedCostMovementReplacementMechanics,
   discoverCastAct: discoverFixedCostMovementReplacementCastAct,
   resolve: resolveFixedCostMovementReplacement,

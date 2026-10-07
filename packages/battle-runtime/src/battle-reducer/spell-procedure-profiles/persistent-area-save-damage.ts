@@ -85,6 +85,10 @@ export const persistentAreaSaveDamageProfile = {
     stationaryPersistentAreaSaveDamageProfile.executionSchema,
     directedRepositionPersistentAreaSaveDamageProfile.executionSchema,
   ]),
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: persistentAreaSaveDamageMechanicsAdmission,
   discoverCastAct:
     sourceTurnTranslationPersistentAreaSaveDamageProfile.discoverCastAct,

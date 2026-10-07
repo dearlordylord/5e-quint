@@ -856,6 +856,10 @@ const RamMovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
 export const collisionRepositionPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: RamMovablePersistentAreaInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: ramMovablePersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveRamMovablePersistentArea,

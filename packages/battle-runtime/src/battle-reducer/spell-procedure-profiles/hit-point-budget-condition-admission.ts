@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleep-target-admission
 //
@@ -1134,10 +1135,16 @@ const StagedSaveConditionInvocationSchema = spellProcedureExecutionSchema(
 export const stagedSaveConditionProfile = {
   procedure: "stagedSaveCondition",
   executionSchema: StagedSaveConditionInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitStagedSaveConditionMechanics,
   discoverCastAct: discoverStagedSaveConditionCastAct,
   resolve: resolveStagedSaveCondition,
 } satisfies SpellProcedureDeclaration<
   "stagedSaveCondition",
-  StagedSaveConditionSpellInvocation
+  StagedSaveConditionSpellInvocation,
+  AdmittedSpellFacts<typeof admitStagedSaveConditionMechanics>
 >;

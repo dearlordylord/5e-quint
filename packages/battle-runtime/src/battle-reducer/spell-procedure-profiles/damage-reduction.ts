@@ -1193,6 +1193,10 @@ export const damageReductionProfile: SpellProcedureDeclaration<
   DamageReductionAdmissionIssue
 > = {
   procedure: "damageReduction",
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: damageReductionMechanicsAdmission,
   discoverCastAct: discoverDamageReductionCastAct,
   executionSchema: DamageReductionInvocationSchema,

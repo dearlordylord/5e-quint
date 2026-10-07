@@ -901,6 +901,10 @@ const StationaryPersistentAreaAreaHazardInvocationSchema =
 export const stationaryPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: StationaryPersistentAreaAreaHazardInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: stationaryPersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveStationaryPersistentAreaAreaHazard,

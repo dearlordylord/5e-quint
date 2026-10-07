@@ -789,6 +789,10 @@ export const perceptionGatedAttackRollDefenseProfile: SpellProcedureDeclaration<
 > = {
   procedure: "perceptionGatedAttackRollDefense",
   executionSchema: PerceptionGatedAttackRollDefenseInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitPerceptionGatedAttackRollDefenseMechanics,
   discoverCastAct: discoverPerceptionGatedAttackRollDefenseCastAct,
   resolve: resolvePerceptionGatedAttackRollDefense,

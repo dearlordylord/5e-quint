@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
@@ -139,10 +140,16 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
 export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
   executionSchema: SaveGatedAttackRollAdvantageInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitSaveGatedAttackRollAdvantageMechanics,
   discoverCastAct: discoverSaveGatedAttackRollAdvantageCastAct,
   resolve: resolveSaveGatedAttackRollAdvantage,
 } satisfies SpellProcedureDeclaration<
   "saveGatedAttackRollAdvantage",
-  SaveGatedAttackRollAdvantageSpellInvocation
+  SaveGatedAttackRollAdvantageSpellInvocation,
+  AdmittedSpellFacts<typeof admitSaveGatedAttackRollAdvantageMechanics>
 >;

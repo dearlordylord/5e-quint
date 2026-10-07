@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -895,10 +896,15 @@ const DirectConditionRemovalInvocationSchema = spellProcedureExecutionSchema(
 );
 export const directConditionRemovalProfile: SpellProcedureDeclaration<
   "directConditionRemoval",
-  DirectConditionRemovalInvocation
+  DirectConditionRemovalInvocation,
+  AdmittedSpellFacts<typeof admitDirectConditionRemovalMechanics>
 > = {
   procedure: "directConditionRemoval",
   executionSchema: DirectConditionRemovalInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitDirectConditionRemovalMechanics,
   discoverCastAct: discoverDirectConditionRemovalCastAct,
   resolve: resolveDirectConditionRemoval,

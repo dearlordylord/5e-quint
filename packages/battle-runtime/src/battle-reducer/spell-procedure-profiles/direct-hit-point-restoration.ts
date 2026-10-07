@@ -1067,6 +1067,10 @@ const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
 export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
   executionSchema: DirectHitPointRestorationInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitDirectHitPointRestorationMechanics,
   discoverCastAct: discoverDirectHitPointRestorationCastAct,
   resolve: resolveDirectHitPointRestoration,

@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -1313,10 +1314,15 @@ export const ChainedSpellAttackDamageInvocationSchema =
   );
 export const chainedSpellAttackDamageProfile: SpellProcedureDeclaration<
   "chainedSpellAttackDamage",
-  ChainedSpellAttackDamageInvocation
+  ChainedSpellAttackDamageInvocation,
+  AdmittedSpellFacts<typeof admitChainedSpellAttackDamageMechanics>
 > = {
   procedure: "chainedSpellAttackDamage",
   executionSchema: ChainedSpellAttackDamageInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitChainedSpellAttackDamageMechanics,
   discoverCastAct: discoverChainedSpellAttackDamageCastAct,
   resolve: resolveChainedSpellAttackDamage,

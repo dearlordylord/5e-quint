@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
@@ -208,5 +209,6 @@ export const abilityD20TestRollModeSaveGateProfile = {
   resolve: resolveAbilityD20TestRollModeSaveGate,
 } satisfies SpellProcedureDeclaration<
   "abilityD20TestRollModeSaveGate",
-  AbilityD20TestRollModeSaveGateSpellInvocation
+  AbilityD20TestRollModeSaveGateSpellInvocation,
+  AdmittedSpellFacts<typeof admitAbilityD20TestRollModeSaveGateMechanics>
 >;

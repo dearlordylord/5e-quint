@@ -1661,6 +1661,10 @@ const OngoingSpellEndInvocationSchema = spellProcedureExecutionSchema(
 export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
   executionSchema: OngoingSpellEndInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitOngoingSpellEndMechanics,
   discoverCastAct: discoverOngoingSpellEndCastAct,
   resolve: resolveOngoingSpellEndSpellAct,

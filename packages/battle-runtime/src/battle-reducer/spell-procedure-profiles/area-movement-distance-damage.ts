@@ -1212,6 +1212,10 @@ const AreaMovementDistanceDamageInvocationSchema =
 export const areaMovementDistanceDamageProfile = {
   procedure: "areaMovementDistanceDamage",
   executionSchema: AreaMovementDistanceDamageInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitAreaMovementDistanceDamageMechanics,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveAreaMovementDistanceDamage,

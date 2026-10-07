@@ -606,6 +606,10 @@ const AfterHitTimedDamageAndSaveInvocationSchema =
 export const afterHitTimedDamageAndSaveProfile = {
   procedure: "afterHitTimedDamageAndSave",
   executionSchema: AfterHitTimedDamageAndSaveInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitAfterHitTimedDamageAndSaveMechanics,
   discoverCastAct: discoverAfterHitTimedDamageAndSaveCastAct,
   resolve: resolveAfterHitTimedDamageAndSave,

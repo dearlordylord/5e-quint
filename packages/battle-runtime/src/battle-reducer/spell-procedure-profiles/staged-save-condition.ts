@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
@@ -1193,10 +1194,16 @@ const SaveGatedConditionWithRepeatInvocationSchema =
 export const saveGatedConditionWithRepeatProfile = {
   procedure: "saveGatedConditionWithRepeat",
   executionSchema: SaveGatedConditionWithRepeatInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitSaveGatedConditionWithRepeatMechanics,
   discoverCastAct: discoverSaveGatedConditionWithRepeatCastAct,
   resolve: resolveSaveGatedConditionWithRepeat,
 } satisfies SpellProcedureDeclaration<
   "saveGatedConditionWithRepeat",
-  SaveGatedConditionWithRepeatSpellInvocation
+  SaveGatedConditionWithRepeatSpellInvocation,
+  AdmittedSpellFacts<typeof admitSaveGatedConditionWithRepeatMechanics>
 >;

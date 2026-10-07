@@ -733,6 +733,10 @@ const AfterHitSaveGatedConditionInvocationSchema =
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
   executionSchema: AfterHitSaveGatedConditionInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitAfterHitSaveGatedConditionMechanics,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,
   resolve: resolveAfterHitSaveGatedCondition,

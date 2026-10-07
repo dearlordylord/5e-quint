@@ -1017,6 +1017,10 @@ const TranslatingPersistentAreaAreaHazardInvocationSchema =
 export const sourceTurnTranslationPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: TranslatingPersistentAreaAreaHazardInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: translatingPersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveTranslatingPersistentAreaAreaHazard,

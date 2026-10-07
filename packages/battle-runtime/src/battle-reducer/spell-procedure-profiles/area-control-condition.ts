@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -1215,11 +1216,17 @@ const SaveGatedAreaControlInvocationSchema = spellProcedureExecutionSchema(
 export const saveGatedAreaControlProfile = {
   procedure: "saveGatedAreaControl",
   executionSchema: SaveGatedAreaControlInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitSaveGatedAreaControlMechanics,
   discoverCastAct: discoverSaveGatedAreaControlCastAct,
   resolve: resolveSaveGatedAreaControl,
 } satisfies SpellProcedureDeclaration<
   "saveGatedAreaControl",
-  SaveGatedAreaControlSpellInvocation
+  SaveGatedAreaControlSpellInvocation,
+  AdmittedSpellFacts<typeof admitSaveGatedAreaControlMechanics>
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

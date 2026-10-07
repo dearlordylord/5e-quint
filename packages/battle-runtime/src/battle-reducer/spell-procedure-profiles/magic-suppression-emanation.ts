@@ -1038,6 +1038,10 @@ const MagicSuppressionEmanationInvocationSchema = spellProcedureExecutionSchema(
 export const magicSuppressionEmanationProfile = {
   procedure: "magicSuppressionEmanation",
   executionSchema: MagicSuppressionEmanationInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitMagicSuppressionEmanationMechanics,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveMagicSuppressionEmanation,

@@ -1781,6 +1781,10 @@ export const spatialMeleeSpellAttackProxyProfile = {
     SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
     SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema,
   ]),
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSpatialMeleeSpellAttackProxyMechanics,
   discoverCastAct: (state, actorId, invocation) =>
     Match.value(invocation).pipe(

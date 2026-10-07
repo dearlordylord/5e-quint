@@ -2103,6 +2103,10 @@ export const scalarBuffProfile: SpellProcedureDeclaration<
 > = {
   procedure: "scalarBuff",
   executionSchema: ScalarBuffInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: scalarBuffMechanicsAdmission,
   discoverCastAct: discoverScalarBuffCastAct,
   resolve: resolveScalarBuff,

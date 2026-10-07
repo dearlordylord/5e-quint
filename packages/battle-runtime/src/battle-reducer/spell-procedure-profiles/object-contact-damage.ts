@@ -1986,6 +1986,10 @@ export const objectContactDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "objectContactDamage",
   executionSchema: ObjectContactDamageInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitObjectContactDamageMechanics,
   discoverCastAct: discoverObjectContactDamageCastAct,
   resolve: resolveObjectContactDamage,
@@ -1999,6 +2003,10 @@ export const objectContactDamageRepeatProfile: SpellProcedureDeclaration<
 > = {
   procedure: "objectContactDamageRepeat",
   executionSchema: ObjectContactDamageRepeatInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitObjectContactDamageRepeatMechanics,
   discoverCastAct: discoverObjectContactDamageRepeatCastAct,
   resolve: resolveObjectContactDamageRepeat,

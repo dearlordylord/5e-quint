@@ -587,6 +587,10 @@ const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
 export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
   executionSchema: AfterHitDamageInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitAfterHitDamageMechanics,
   discoverCastAct: discoverAfterHitDamageCastAct,
   resolve: resolveAfterHitDamage,

@@ -1272,6 +1272,10 @@ const CompositeTargetBuffWithAftermathInvocationSchema =
 export const compositeTargetBuffWithAftermathProfile = {
   procedure: "compositeTargetBuffWithAftermath",
   executionSchema: CompositeTargetBuffWithAftermathInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitCompositeTargetBuffMechanics,
   discoverCastAct: discoverCompositeTargetBuffWithAftermathCastAct,
   resolve: resolveCompositeTargetBuffWithAftermath,

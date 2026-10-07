@@ -1369,6 +1369,10 @@ export const spellCreatedHeldObjectProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellCreatedHeldObject",
   executionSchema: SpellCreatedHeldObjectInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSpellCreatedHeldObjectMechanics,
   discoverCastAct: discoverSpellCreatedHeldObjectCastAct,
   resolve: resolveSpellCreatedHeldObject,

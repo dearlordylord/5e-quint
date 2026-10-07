@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
@@ -694,10 +695,15 @@ const TemporaryAbilityCheckRollModeInvocationSchema =
   );
 export const temporaryAbilityCheckRollModeProfile: SpellProcedureDeclaration<
   "temporaryAbilityCheckRollMode",
-  TemporaryAbilityCheckRollModeInvocation
+  TemporaryAbilityCheckRollModeInvocation,
+  AdmittedSpellFacts<typeof admitTemporaryAbilityCheckRollModeMechanics>
 > = {
   procedure: "temporaryAbilityCheckRollMode",
   executionSchema: TemporaryAbilityCheckRollModeInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitTemporaryAbilityCheckRollModeMechanics,
   discoverCastAct: discoverTemporaryAbilityCheckRollModeCastAct,
   resolve: resolveTemporaryAbilityCheckRollMode,

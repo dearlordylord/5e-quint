@@ -1784,6 +1784,10 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProced
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
   executionSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitConditionImmunityTemporaryHitPointsMechanics,
   discoverCastAct:
     discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct,

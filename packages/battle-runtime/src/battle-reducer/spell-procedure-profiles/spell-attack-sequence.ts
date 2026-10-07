@@ -1385,6 +1385,10 @@ export const spellAttackSequenceProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellAttackSequence",
   executionSchema: SpellAttackSequenceInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSpellAttackSequenceMechanics,
   discoverCastAct: discoverSpellAttackSequenceCastAct,
   resolve: resolveSpellAttackSequence,

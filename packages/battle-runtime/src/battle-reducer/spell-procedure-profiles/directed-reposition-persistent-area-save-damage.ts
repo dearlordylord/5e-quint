@@ -1038,6 +1038,10 @@ const MovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
 export const directedRepositionPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: MovablePersistentAreaInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: movablePersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveMovablePersistentArea,

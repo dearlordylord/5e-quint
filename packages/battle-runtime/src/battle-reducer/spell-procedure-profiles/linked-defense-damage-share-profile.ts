@@ -1241,6 +1241,10 @@ export const linkedDefenseResistanceDamageShareProfile: SpellProcedureDeclaratio
 > = {
   procedure: "linkedDefenseResistanceDamageShare",
   executionSchema: LinkedDefenseResistanceDamageShareInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitLinkedDefenseResistanceDamageShareMechanics,
   discoverCastAct: discoverLinkedDefenseResistanceDamageShareCastAct,
   resolve: resolveLinkedDefenseResistanceDamageShare,

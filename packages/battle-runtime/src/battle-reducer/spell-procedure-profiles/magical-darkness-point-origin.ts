@@ -927,6 +927,10 @@ const MagicalDarknessPointOriginInvocationSchema =
 export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
   executionSchema: MagicalDarknessPointOriginInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitMagicalDarknessPointOriginMechanics,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveMagicalDarknessPointOrigin,

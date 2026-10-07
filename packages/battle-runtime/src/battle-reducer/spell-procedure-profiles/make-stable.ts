@@ -789,6 +789,10 @@ export const makeStableProfile: SpellProcedureDeclaration<
 > = {
   procedure: "makeStable",
   executionSchema: MakeStableInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitMakeStableMechanics,
   discoverCastAct: discoverMakeStableCastAct,
   resolve: resolveMakeStable,

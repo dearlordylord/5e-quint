@@ -2544,6 +2544,14 @@ export const rollModifierProfile: SpellProcedureDeclaration<
   RollModifierAdmissionIssue
 > = {
   procedure: "rollModifier",
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.saveGate !== null &&
+      facts.saveGate.dc.kind === "caster_spell_save_dc"
+        ? "required"
+        : "unused",
+  }),
   admitMechanics: rollModifierMechanicsAdmission,
 
   discoverCastAct: discoverRollModifierCastAct,

@@ -1123,6 +1123,10 @@ export const persistentArmorEffectProfile: SpellProcedureDeclaration<
 > = {
   procedure: "persistentArmorEffect",
   executionSchema: PersistentArmorEffectInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitPersistentArmorEffectMechanics,
   discoverCastAct: discoverPersistentArmorEffectCastAct,
   resolve: resolvePersistentArmorEffect,

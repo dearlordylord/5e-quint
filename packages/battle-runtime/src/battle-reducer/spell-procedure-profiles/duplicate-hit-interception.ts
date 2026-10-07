@@ -550,6 +550,10 @@ export const duplicateHitInterceptionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "duplicateHitInterception",
   executionSchema: DuplicateHitInterceptionInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitDuplicateHitInterceptionMechanics,
   discoverCastAct: discoverDuplicateHitInterceptionCastAct,
   resolve: resolveDuplicateHitInterception,

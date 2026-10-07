@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -838,10 +839,15 @@ const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(
 );
 export const attackBurstSaveDamageProfile: SpellProcedureDeclaration<
   "attackBurstSaveDamage",
-  AttackBurstSaveDamageInvocation
+  AttackBurstSaveDamageInvocation,
+  AdmittedSpellFacts<typeof admitAttackBurstSaveDamageMechanics>
 > = {
   procedure: "attackBurstSaveDamage",
   executionSchema: AttackBurstSaveDamageInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitAttackBurstSaveDamageMechanics,
   discoverCastAct: discoverAttackBurstSaveDamageCastAct,
   resolve: resolveAttackBurstSaveDamage,

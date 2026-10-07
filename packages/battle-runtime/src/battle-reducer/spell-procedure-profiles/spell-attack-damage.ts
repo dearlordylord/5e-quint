@@ -270,6 +270,10 @@ export const spellAttackDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellAttackDamage",
   executionSchema: SpellAttackDamageInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "required",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSpellAttackDamageMechanics,
   discoverCastAct: discoverSpellAttackDamageCastAct,
   resolve: resolveSpellAttackDamage,

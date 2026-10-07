@@ -619,6 +619,10 @@ const AfterHitDamageAndIlluminationInvocationSchema =
 export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
   executionSchema: AfterHitDamageAndIlluminationInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitAfterHitDamageAndIlluminationMechanics,
   discoverCastAct: discoverAfterHitDamageAndIlluminationCastAct,
   resolve: resolveAfterHitDamageAndIllumination,

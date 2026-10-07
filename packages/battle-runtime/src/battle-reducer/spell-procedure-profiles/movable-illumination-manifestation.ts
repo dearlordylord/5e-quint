@@ -1003,6 +1003,10 @@ export const movableLightManifestationProfile = {
     MovableLightCombinedCastInvocationSchema,
     MovableLightRepositionInvocationSchema,
   ]),
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitMovableLightMechanics,
   discoverCastAct: (state, actorId, invocation) =>
     Match.value(invocation).pipe(

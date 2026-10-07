@@ -710,6 +710,11 @@ const PersistentAreaSaveConditionInvocationSchema =
 export const persistentAreaSaveConditionProfile = {
   procedure: "persistentAreaSaveCondition",
   executionSchema: PersistentAreaSaveConditionInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: persistentAreaSaveConditionMechanicsAdmission,
   discoverCastAct: discoverPersistentAreaSaveConditionCastAct,
   resolve: resolvePersistentAreaSaveCondition,

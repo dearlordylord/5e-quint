@@ -1680,6 +1680,10 @@ export const creatureSizeChangeProfile: SpellProcedureDeclaration<
 > = {
   procedure: "creatureSizeIncrease",
   executionSchema: CreatureSizeIncreaseInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitCreatureSizeChangeMechanics,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
   resolve: resolveCreatureSizeChange,
@@ -1693,6 +1697,10 @@ export const creatureSizeDecreaseProfile: SpellProcedureDeclaration<
 > = {
   procedure: "creatureSizeDecrease",
   executionSchema: CreatureSizeDecreaseInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitCreatureSizeDecreaseMechanics,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
   resolve: resolveCreatureSizeChange,

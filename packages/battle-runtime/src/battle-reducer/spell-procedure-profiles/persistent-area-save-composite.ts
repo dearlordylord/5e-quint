@@ -847,6 +847,10 @@ const PersistentAreaSaveCompositeInvocationSchema =
 export const persistentAreaSaveCompositeProfile = {
   procedure: "persistentAreaSaveComposite",
   executionSchema: PersistentAreaSaveCompositeInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: persistentAreaSaveCompositeMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolvePersistentAreaSaveComposite,

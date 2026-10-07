@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
@@ -1156,10 +1157,15 @@ export const SpellHostedWeaponAttackInvocationSchema =
   );
 export const spellHostedWeaponAttackProfile: SpellProcedureDeclaration<
   "spellHostedWeaponAttack",
-  SpellHostedWeaponAttackInvocation
+  SpellHostedWeaponAttackInvocation,
+  AdmittedSpellFacts<typeof admitSpellHostedWeaponAttackMechanics>
 > = {
   procedure: "spellHostedWeaponAttack",
   executionSchema: SpellHostedWeaponAttackInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitSpellHostedWeaponAttackMechanics,
   discoverCastAct: discoverSpellHostedWeaponAttackCastAct,
   resolve: resolveSpellHostedWeaponAttack,

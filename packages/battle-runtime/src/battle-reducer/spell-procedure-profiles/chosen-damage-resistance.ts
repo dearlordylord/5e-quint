@@ -1,3 +1,4 @@
+import type { AdmittedSpellFacts } from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
@@ -747,10 +748,15 @@ export const ChosenDamageResistanceInvocationSchema =
 
 export const chosenDamageResistanceProfile: SpellProcedureDeclaration<
   "chosenDamageResistance",
-  ChosenDamageResistanceSpellInvocation
+  ChosenDamageResistanceSpellInvocation,
+  AdmittedSpellFacts<typeof admitChosenDamageResistanceMechanics>
 > = {
   procedure: "chosenDamageResistance",
   executionSchema: ChosenDamageResistanceInvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics: admitChosenDamageResistanceMechanics,
   discoverCastAct: discoverChosenDamageResistanceCastAct,
   resolve: resolveChosenDamageResistance,
