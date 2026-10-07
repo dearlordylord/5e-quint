@@ -273,6 +273,18 @@ function discoverRegisteredSpellProcedureCastAct(
   });
 }
 
+function canOfferQuickenedInvocation(
+  state: BattleState,
+  actor: BattleCreatureState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): boolean {
+  return (
+    spellInvocationSupportsQuickenedActionRewrite(invocation) &&
+    actorCanOfferQuickenedSpellMetamagic({ state, actor, actorId, invocation })
+  );
+}
+
 function naturalSpellActTurnResourceAvailable(
   state: BattleState,
   actorId: CombatantId,
@@ -337,14 +349,12 @@ export function discoverSupportedSpellInvocations(
         actorId,
         executionInvocation,
       );
-      const quickenedTurnResourceAvailable =
-        spellInvocationSupportsQuickenedActionRewrite(executionInvocation) &&
-        actorCanOfferQuickenedSpellMetamagic({
-          state,
-          actor,
-          actorId,
-          invocation: executionInvocation,
-        });
+      const quickenedTurnResourceAvailable = canOfferQuickenedInvocation(
+        state,
+        actor,
+        actorId,
+        executionInvocation,
+      );
       if (!naturalTurnResourceAvailable && !quickenedTurnResourceAvailable) {
         return [];
       }
@@ -424,27 +434,25 @@ function spellActWithQuickenedRewrite(input: {
   if (subject.mode.tag !== "cast" || subject.metamagic !== undefined) {
     return naturalActs;
   }
-  const quickenedActs =
-    spellInvocationSupportsQuickenedActionRewrite(invocation) &&
-    actorCanOfferQuickenedSpellMetamagic({
-      state: input.state,
-      actor: input.actor,
-      actorId: input.actorId,
-      invocation,
-    })
-      ? [
-          {
-            ...input.act,
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId: input.actorId,
-              procedureRef: subject.procedureRef,
-              mode: subject.mode,
-              metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
-            },
+  const quickenedActs = canOfferQuickenedInvocation(
+    input.state,
+    input.actor,
+    input.actorId,
+    invocation,
+  )
+    ? [
+        {
+          ...input.act,
+          subject: {
+            tag: "bonusActionSpell" as const,
+            actorId: input.actorId,
+            procedureRef: subject.procedureRef,
+            mode: subject.mode,
+            metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
           },
-        ]
-      : [];
+        },
+      ]
+    : [];
   return [...naturalActs, ...quickenedActs];
 }
 

@@ -20,11 +20,11 @@
       "module/binding:isConditionApplyingActiveEffect": 11
     },
     "packages/battle-runtime/src/battle-act-composition.ts": {
-      "module/binding:characterProcedurePresentationJoin": 25,
       "module/binding:directSpellProcedurePresentationText": 13,
       "module/binding:intrinsicActPresentation": 17,
       "module/binding:intrinsicActPresentationText": 10,
-      "module/binding:intrinsicSubjectPresentation": 14
+      "module/binding:intrinsicSubjectPresentation": 14,
+      "module/binding:procedurePresentationJoin": 23
     },
     "packages/battle-runtime/src/battle-reducer/action-eligibility.ts": {
       "module/binding:actionSubjectEligibilityFacts": 9
@@ -40,7 +40,7 @@
       "module/binding:afterHitSpellTurnBoundaryRouteForResolution": 11
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
-      "module/binding:admitBattleCombatant": 11,
+      "module/binding:admitBattleCombatant": 10,
       "module/binding:applyInitiativeSwap": 12,
       "module/binding:battleInitializationLeafIssueFromStateIssue": 10
     },
@@ -424,7 +424,7 @@
       "module/binding:spellInvocationCasterPrerequisiteIsMet": 10
     },
     "packages/battle-runtime/src/battle-reducer/spells-execution-facts.ts": {
-      "module/binding:supportedDamageAmountExpr": 12
+      "module/binding:supportedDamageAmountExpr": 11
     },
     "packages/battle-runtime/src/battle-reducer/spells-invocation-guards.ts": {
       "module/binding:activeDruidWildShapeSupportProfile": 9
@@ -458,7 +458,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts": {
       "module/binding:spellAttackSequencePartIndexForHole": 12,
-      "module/binding:spellFillSet": 257,
+      "module/binding:spellFillSet": 245,
       "module/binding:spellFillSetSavingThrowTargeting": 19
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts": {
@@ -478,9 +478,6 @@
       "module/binding:movableLightFillSetHasUnrelatedFills": 22,
       "module/binding:movableLightRepositionPlacementPlan": 12,
       "module/binding:resolveReadySpellAct": 12
-    },
-    "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts": {
-      "module/binding:spendSpellCastResources": 11
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts": {
       "module/binding:resolveAbilityD20TestRollModeSaveGateSpellAct": 12,
@@ -504,7 +501,7 @@
     "packages/battle-runtime/src/battle-reducer/spells-resolve.ts": {
       "module/binding:resolveBonusActionDashSpellAct": 11,
       "module/binding:resolveBonusActionSpellAct": 27,
-      "module/binding:resolveSpellActInternal": 193,
+      "module/binding:resolveSpellActInternal": 192,
       "module/binding:resolveSpellActInternal/call:iife:argument--1": 54,
       "module/binding:spellAttackRerollValidationIssue": 9
     },

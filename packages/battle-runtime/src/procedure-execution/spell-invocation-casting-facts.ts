@@ -162,6 +162,12 @@ export function isSpellInvocationCastingFacts(
 ): value is SpellInvocationCastingFacts {
   if (!hasCastingFactsShape(value)) return false;
   if (!resourceSupportsDefinitionLevel(value)) return false;
+  return castingAccessMatchesSource(value);
+}
+
+function castingAccessMatchesSource(
+  value: SpellInvocationCastingFacts,
+): boolean {
   const source = value.spellRuleFacts.castingSource;
   if (source.tag !== "statBlock" || value.access.tag === "spellEffect")
     return true;
