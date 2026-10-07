@@ -171,7 +171,6 @@ export function spellProcedureExecution(
           Match.when(
             { operation: "create", form: "combinedMediumForm" },
             (created) => ({
-              actionCost: created.actionCost,
               dimRadiusFeet: created.dimRadiusFeet,
               expiresAt: created.expiresAt,
               form: created.form,
@@ -187,7 +186,6 @@ export function spellProcedureExecution(
           Match.when(
             { operation: "create", form: "separateLights" },
             (created) => ({
-              actionCost: created.actionCost,
               dimRadiusFeet: created.dimRadiusFeet,
               expiresAt: created.expiresAt,
               form: created.form,
@@ -201,7 +199,6 @@ export function spellProcedureExecution(
             }),
           ),
           Match.when({ operation: "reposition" }, (reposition) => ({
-            actionCost: reposition.actionCost,
             activeEffectRef: reposition.activeEffectRef,
             maxMoveFeet: reposition.maxMoveFeet,
             operation: reposition.operation,
@@ -454,7 +451,6 @@ export function spellProcedureExecution(
             return {
               abilityCheckBehavior: cast.abilityCheckBehavior,
               action: cast.action,
-              actionCost: cast.actionCost,
               damage: cast.damage,
               expiresAt: cast.expiresAt,
               procedure: cast.procedure,
@@ -796,7 +792,6 @@ export function spellProcedureExecution(
         Match.value(value).pipe(
           Match.when({ operation: "createAndAttack" }, (created) => {
             return {
-              actionCost: created.actionCost,
               attackBonus: created.attackBonus,
               attackKind: created.attackKind,
               damage: created.damage,
