@@ -1,4 +1,4 @@
-import { Brand, Schema } from "effect";
+import { Brand, Result, Schema } from "effect";
 import {
   CreatureId,
   Initiative,
@@ -156,7 +156,8 @@ export const BattleProcedureExecutionRef = NonEmptyTrimmedStringSchema.pipe(
     Schema.makeFilter(
       (reference) =>
         nestedExecutionReferenceIsCanonical(reference, "procedure") ||
-        statBlockSpellInvocationProcedureReferenceIsCanonical(reference),
+        statBlockSpellInvocationProcedureReferenceIsCanonical(reference) ||
+        spellEffectProcedureReferenceIsCanonical(reference),
       {
         /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
         message: "Invalid canonical Battle procedure execution ref.",
@@ -237,6 +238,25 @@ export function statBlockSpellInvocationProcedureRef(
       procedure,
     }),
   );
+}
+
+export function spellEffectProcedureRef(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  activeEffectRef: BattleEffectExecutionRef,
+): Result.Result<
+  BattleProcedureExecutionRef,
+  "invalidEffectProcedureSource" | "effectSourceScopeMismatch"
+> {
+  if (!initialSpellProcedureReferenceIsCanonical(sourceProcedureRef))
+    return Result.fail("invalidEffectProcedureSource");
+  const reference = JSON.stringify({
+    kind: "spellEffectProcedure",
+    sourceProcedureRef,
+    activeEffectRef,
+  });
+  return spellEffectProcedureReferenceIsCanonical(reference)
+    ? Result.succeed(BattleProcedureExecutionRef.make(reference))
+    : Result.fail("effectSourceScopeMismatch");
 }
 
 export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
@@ -568,6 +588,19 @@ export function battleProcedureExecutionRefBelongsToScope(
 ): boolean {
   const decoded = parseExecutionReference(procedureRef);
   if (
+    decoded?.kind === "spellEffectProcedure" &&
+    isBattleProcedureExecutionRef(decoded.sourceProcedureRef) &&
+    Schema.is(BattleEffectExecutionRef)(decoded.activeEffectRef)
+  ) {
+    return (
+      battleProcedureExecutionRefBelongsToScope(
+        decoded.sourceProcedureRef,
+        scopeRef,
+      ) &&
+      battleEffectExecutionRefBelongsToScope(decoded.activeEffectRef, scopeRef)
+    );
+  }
+  if (
     decoded?.kind === "statBlockSpellInvocation" &&
     Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
   ) {
@@ -584,6 +617,15 @@ export function battleProcedureExecutionRefBelongsToCombatant(
   combatantId: CombatantId,
 ): boolean {
   const decoded = parseExecutionReference(procedureRef);
+  if (
+    decoded?.kind === "spellEffectProcedure" &&
+    isBattleProcedureExecutionRef(decoded.sourceProcedureRef)
+  ) {
+    return battleProcedureExecutionRefBelongsToCombatant(
+      decoded.sourceProcedureRef,
+      combatantId,
+    );
+  }
   if (
     decoded?.kind === "statBlockSpellInvocation" &&
     Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
@@ -961,6 +1003,42 @@ function statBlockSpellInvocationProcedureReferenceIsCanonical(
         invocationOrdinal: decoded.invocationOrdinal,
         procedure: decoded.procedure,
       })
+  );
+}
+
+function spellEffectProcedureReferenceIsCanonical(reference: string): boolean {
+  const decoded = parseExecutionReference(reference);
+  if (
+    decoded === null ||
+    !hasExactKeys(decoded, ["kind", "sourceProcedureRef", "activeEffectRef"]) ||
+    decoded.kind !== "spellEffectProcedure" ||
+    typeof decoded.sourceProcedureRef !== "string" ||
+    !initialSpellProcedureReferenceIsCanonical(decoded.sourceProcedureRef) ||
+    !Schema.is(BattleEffectExecutionRef)(decoded.activeEffectRef)
+  )
+    return false;
+  const effect = parseExecutionReference(decoded.activeEffectRef);
+  return (
+    effect !== null &&
+    (Schema.is(BattleStatBlockExecutionScopeRef)(effect.ownerScopeRef) ||
+      Schema.is(BattleCharacterExecutionScopeRef)(effect.ownerScopeRef)) &&
+    battleProcedureExecutionRefBelongsToScope(
+      BattleProcedureExecutionRef.make(decoded.sourceProcedureRef),
+      effect.ownerScopeRef,
+    ) &&
+    reference ===
+      JSON.stringify({
+        kind: "spellEffectProcedure",
+        sourceProcedureRef: decoded.sourceProcedureRef,
+        activeEffectRef: decoded.activeEffectRef,
+      })
+  );
+}
+
+function initialSpellProcedureReferenceIsCanonical(reference: string): boolean {
+  return (
+    nestedExecutionReferenceIsCanonical(reference, "procedure") ||
+    statBlockSpellInvocationProcedureReferenceIsCanonical(reference)
   );
 }
 
