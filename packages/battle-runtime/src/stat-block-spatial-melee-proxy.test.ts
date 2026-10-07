@@ -1,3 +1,4 @@
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { Result } from "effect";
 import { expect, it } from "vitest";
@@ -38,7 +39,8 @@ it.each(["publishedBonus", "syntheticMagic"] as const)(
     const entry = record.statBlock.bonusActions?.[0];
     if (entry?.kind !== "executable" || entry.procedure.kind !== "spellcasting")
       throw new Error("Expected published spatial spellcasting.");
-    const source =
+    const { bonusActions: _bonusActions, ...initialFacts } = record.statBlock;
+    const source: StatBlockRecord =
       castingSection === "publishedBonus"
         ? record
         : {
@@ -50,9 +52,8 @@ it.each(["publishedBonus", "syntheticMagic"] as const)(
               section: "effective initial action cost",
             },
             statBlock: {
-              ...record.statBlock,
+              ...initialFacts,
               actions: [entry],
-              bonusActions: undefined,
             },
           };
     const casterId = combatantId("published-spatial-caster");

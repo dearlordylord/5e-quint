@@ -1,3 +1,4 @@
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
@@ -26,7 +27,7 @@ describe("profiled Stat Block spell execution", () => {
       throw new Error("Expected Spellcasting fixture.");
     const group = entry.procedure.groups[0];
     if (group?.kind !== "at_will") throw new Error("Expected at-will fixture.");
-    const record = {
+    const record: StatBlockRecord = {
       ...base,
       statBlock: {
         ...base.statBlock,

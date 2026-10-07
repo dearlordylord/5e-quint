@@ -42,15 +42,23 @@ export function isolatedSpellcastingAdmission(input: {
     input.entry.procedure.kind !== "spellcasting"
   )
     return Result.fail({ kind: "notSpellcasting" } as const);
-  const isolatedRecord = {
+  const {
+    actions: _actions,
+    bonusActions: _bonusActions,
+    resources: _resources,
+    ...baseFacts
+  } = input.isolationBase.statBlock;
+  const isolatedRecord: StatBlockRecord = {
     ...input.isolationBase,
     statBlock: {
-      ...input.isolationBase.statBlock,
+      ...baseFacts,
       abilityScores: input.record.statBlock.abilityScores,
-      resources: input.record.statBlock.resources,
-      actions: input.section === "actions" ? [input.entry] : undefined,
-      bonusActions:
-        input.section === "bonusActions" ? [input.entry] : undefined,
+      ...(input.record.statBlock.resources === undefined
+        ? {}
+        : { resources: input.record.statBlock.resources }),
+      ...(input.section === "actions"
+        ? { actions: [input.entry] }
+        : { bonusActions: [input.entry] }),
     },
   };
   const actorId = combatantId("isolated-spellcasting-caster");

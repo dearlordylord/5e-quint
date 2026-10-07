@@ -1,3 +1,13 @@
+import type { StatBlockSpellcastingExecutableProcedureEntry } from "@dnd/surface/surface/stat-block-types";
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spellcasting.at-will-group
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spellcasting.limited-group
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { isDeepStrictEqual } from "node:util";
 import { Result } from "effect";
 import { describe, it } from "vitest";
@@ -39,13 +49,18 @@ function execute(bonus: boolean, repeat: boolean) {
     throw new Error("Expected authored spellcasting fixture.");
   const group = entry.procedure.groups[0];
   if (group?.kind !== "at_will") throw new Error("Expected at-will group.");
-  const selected = {
+  const selected: StatBlockSpellcastingExecutableProcedureEntry = {
     ...entry,
     procedure: {
       ...entry.procedure,
       groups: [{ ...group, spells: [{ spellId: "false_life" }] }],
     },
   };
+  const {
+    actions: _actions,
+    bonusActions: _bonusActions,
+    ...baseFacts
+  } = base.statBlock;
   const started = startBattle({
     battleId: battleId("synthetic-profiled-mbt"),
     combatants: [
@@ -55,9 +70,8 @@ function execute(bonus: boolean, repeat: boolean) {
         statBlock: {
           ...base,
           statBlock: {
-            ...base.statBlock,
-            actions: bonus ? undefined : [selected],
-            bonusActions: bonus ? [selected] : undefined,
+            ...baseFacts,
+            ...(bonus ? { bonusActions: [selected] } : { actions: [selected] }),
           },
         },
       }),
