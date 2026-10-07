@@ -1,5 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type {
@@ -53,7 +54,6 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { supportedSpellSlotDamageFacts } from "../../procedure-admission/spell-slot-damage-facts.ts";
 import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
 import type {
   SpellAdmissionContext,
@@ -138,40 +138,36 @@ function admitAfterHitDamageAndIllumination(
       ? elapsedTimeTicksFromTimeSpanDuration(facts.duration.upTo)
       : null;
   if (durationTicks === null || Result.isFailure(durationTicks)) return [];
-  return supportedSpellSlotDamageFacts({
-    slots: ctx.spellCastOptions,
-    amount: facts.damageAmount,
-    spellLevel: facts.level,
-  }).map(
-    ({
-      slotLevel,
-      damageExpr,
-      payment,
-    }): AfterHitDamageAndIlluminationInvocation => ({
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
-      resource: spellInvocationResourceForCastOption({
-        spellLevel: slotLevel,
-        payment,
-      }),
-      procedure: "afterHitDamageAndIllumination",
-      spell,
-      actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
-      damage: {
-        expr: damageExpr,
-        damageType: facts.damageType,
-      },
-      illumination: facts.illumination,
-      activeEffect: {
-        kind: "afterHitDamageAndIllumination",
-        sourceCombatantId: ctx.actor.combatantId,
-        expiresAt: {
-          kind: "concentration",
-          combatantId: ctx.actor.combatantId,
-          durationTicks: durationTicks.success,
+  return leveledSpellInvocationOptions(spell, ctx).flatMap((slot) => {
+    if (Number(slot.spellLevel) < facts.level) return [];
+    const damageExpr = supportedDamageAmountExpr({
+      amount: facts.damageAmount,
+      spellLevel: facts.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (damageExpr === null) return [];
+    return [
+      {
+        ...slot.facts,
+        procedure: "afterHitDamageAndIllumination",
+        actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+        damage: {
+          expr: damageExpr,
+          damageType: facts.damageType,
+        },
+        illumination: facts.illumination,
+        activeEffect: {
+          kind: "afterHitDamageAndIllumination",
+          sourceCombatantId: ctx.actor.combatantId,
+          expiresAt: {
+            kind: "concentration",
+            combatantId: ctx.actor.combatantId,
+            durationTicks: durationTicks.success,
+          },
         },
       },
-    }),
-  );
+    ];
+  });
 }
 
 export const AFTER_HIT_DAMAGE_AND_ILLUMINATION_FAILED_FACTS = [
@@ -630,4 +626,3 @@ export const afterHitDamageAndIlluminationProfile = {
   "afterHitDamageAndIllumination",
   AfterHitDamageAndIlluminationInvocation
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -1,8 +1,10 @@
+import type {
+  AuthoredCantripCastingFacts,
+  AuthoredLeveledCastingFacts,
+} from "./profile.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeSpellActiveEffectCast,
@@ -29,12 +31,7 @@ import type {
   SpellLevel,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import type {
-  CantripSpellAccess,
-  LeveledSpellInvocationResource,
-  PreparedSpellAccess,
-  NoSpellInvocationResource,
-} from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import type {} from "../../procedure-execution/spell-invocation-vocabulary.ts";
 
 import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
@@ -88,7 +85,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
 import { Match, Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -2208,89 +2204,43 @@ function admitRollModifier(
   ctx: SpellAdmissionContext,
   facts: RollModifierMechanicsFacts,
 ): readonly RollModifierInvocation[] {
-  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-  if (facts.level === 0 && castingFacts === null) return [];
-
   const expiresAt = rollModifierActiveEffectExpiration(
     ctx.actor.combatantId,
     facts.duration,
   );
-  type RollModifierCast =
-    | {
-        readonly kind: "cantrip";
-        readonly access: CantripSpellAccess;
-        readonly resource: NoSpellInvocationResource;
-        readonly slotLevel: SpellSlotLevel;
-      }
-    | {
-        readonly kind: "prepared";
-        readonly access: PreparedSpellAccess;
-        readonly resource: LeveledSpellInvocationResource;
-        readonly slotLevel: SpellSlotLevel;
-      };
-  const complete = (cast: RollModifierCast): RollModifierInvocation => {
+  const complete = (cast: {
+    readonly facts:
+      | AuthoredCantripCastingFacts<BattleSpellExecutionSource>
+      | AuthoredLeveledCastingFacts<BattleSpellExecutionSource>;
+    readonly slotLevel: SpellSlotLevel;
+  }): RollModifierInvocation => {
     const targeting = rollModifierTargetingForSlot(
       facts.targeting,
       cast.slotLevel,
     );
-    if (facts.kind === "numeric") {
-      const modifier = rollModifierNumericActiveEffect(
-        ctx.actor.combatantId,
-        facts.effect,
-        expiresAt,
-      );
-      if (cast.kind === "cantrip") {
-        return {
-          access: cast.access,
-          resource: cast.resource,
-          procedure: "rollModifier",
-
-          actionCost: spellAdmissionActionCost(ctx, "magicAction"),
-          targeting,
-          rangeFeet: facts.rangeFeet,
-          saveGate: facts.saveGate,
-          effect: modifier,
-          abilityChoices: null,
-        };
-      }
+    if (facts.kind === "numeric")
       return {
-        access: cast.access,
-        resource: cast.resource,
+        ...cast.facts,
         procedure: "rollModifier",
-
         actionCost: spellAdmissionActionCost(ctx, "magicAction"),
         targeting,
         rangeFeet: facts.rangeFeet,
         saveGate: facts.saveGate,
-        effect: modifier,
+        effect: rollModifierNumericActiveEffect(
+          ctx.actor.combatantId,
+          facts.effect,
+          expiresAt,
+        ),
         abilityChoices: null,
       };
-    }
     const modifier = rollModifierAbilityCheckActiveEffect(
       ctx.actor.combatantId,
       facts.effect,
       expiresAt,
     );
-    if (cast.kind === "cantrip") {
-      return {
-        access: cast.access,
-        resource: cast.resource,
-        procedure: "rollModifier",
-
-        actionCost: spellAdmissionActionCost(ctx, "magicAction"),
-        targeting,
-        rangeFeet: facts.rangeFeet,
-        saveGate: facts.saveGate,
-        effect: modifier.effect,
-        abilityChoices: modifier.abilityChoices,
-        abilityChoiceApplication: modifier.abilityChoiceApplication,
-      };
-    }
     return {
-      access: cast.access,
-      resource: cast.resource,
+      ...cast.facts,
       procedure: "rollModifier",
-
       actionCost: spellAdmissionActionCost(ctx, "magicAction"),
       targeting,
       rangeFeet: facts.rangeFeet,
@@ -2302,25 +2252,17 @@ function admitRollModifier(
   };
   const invocations: RollModifierInvocation[] = [];
   if (facts.level === 0) {
-    invocations.push({
-      ...complete({
-        kind: "cantrip",
-        ...castingFacts,
-        slotLevel: spellSlotLevel(0),
-      }),
-      ...castingFacts,
-    });
+    const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+    if (castingFacts === null) return [];
+    invocations.push(
+      complete({ facts: castingFacts, slotLevel: spellSlotLevel(0) }),
+    );
   } else {
     for (const slot of leveledSpellInvocationOptions(spell, ctx)) {
       if (slot.spellLevel < facts.level) continue;
-      invocations.push({
-        ...complete({
-          kind: "prepared",
-          ...slot.facts,
-          slotLevel: slot.spellLevel,
-        }),
-        ...slot.facts,
-      });
+      invocations.push(
+        complete({ facts: slot.facts, slotLevel: slot.spellLevel }),
+      );
     }
   }
   return invocations;
@@ -2560,4 +2502,3 @@ export const rollModifierProfile: SpellProcedureDeclaration<
   executionSchema: RollModifierInvocationSchema,
   resolve: resolveRollModifier,
 };
-import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -121,7 +121,7 @@ export type SpellAdmissionContext =
   | CharacterSpellAdmissionContext
   | StatBlockSpellAdmissionContext;
 
-type AuthoredCantripCastingFacts<S> = Extract<
+export type AuthoredCantripCastingFacts<S> = Extract<
   import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S>,
   {
     readonly access: {
@@ -200,7 +200,7 @@ export function cantripSpellInvocationFacts<
   };
   return admittedCantripCastingFacts(candidate) ? candidate : null;
 }
-type AuthoredLeveledCastingFacts<S> = Extract<
+export type AuthoredLeveledCastingFacts<S> = Extract<
   import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S>,
   { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
 >;

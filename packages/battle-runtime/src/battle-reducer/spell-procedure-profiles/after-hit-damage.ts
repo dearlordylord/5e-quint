@@ -1,5 +1,6 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeAfterHitSpellDamageCast,
@@ -58,7 +59,6 @@ import {
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { supportedSpellSlotDamageFacts } from "../../procedure-admission/spell-slot-damage-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
   spendSpellAccessFreeCastResource,
@@ -122,30 +122,32 @@ function admitAfterHitDamage(
   ctx: SpellAdmissionContext,
   facts: AfterHitDamageMechanicsFacts,
 ): readonly AfterHitDamageInvocation[] {
-  const slotInvocations = supportedSpellSlotDamageFacts({
-    slots: ctx.spellCastOptions,
-    amount: facts.damageAmount,
-    spellLevel: facts.level,
-  }).map(
-    ({ slotLevel, damageExpr, payment }): AfterHitDamageInvocation => ({
-      access: preparedSpellAccessForCastingSource(spell.castingSource),
-      resource: spellInvocationResourceForCastOption({
-        spellLevel: slotLevel,
-        payment,
-      }),
-      procedure: "afterHitDamage",
-      spell,
-      actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
-      damage: {
-        expr: damageExpr,
-        damageType: facts.damageType,
-      },
-      conditionalBonusDamage: {
-        targetCreatureTypes: facts.conditionalBonusTargetTypes,
-        expr: facts.conditionalBonusExpr,
-        damageType: facts.conditionalBonusDamageType,
-      },
-    }),
+  const slotInvocations = leveledSpellInvocationOptions(spell, ctx).flatMap(
+    (slot) => {
+      if (Number(slot.spellLevel) < facts.level) return [];
+      const damageExpr = supportedDamageAmountExpr({
+        amount: facts.damageAmount,
+        spellLevel: facts.level,
+        slotLevel: slot.spellLevel,
+      });
+      if (damageExpr === null) return [];
+      return [
+        {
+          ...slot.facts,
+          procedure: "afterHitDamage",
+          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+          damage: {
+            expr: damageExpr,
+            damageType: facts.damageType,
+          },
+          conditionalBonusDamage: {
+            targetCreatureTypes: facts.conditionalBonusTargetTypes,
+            expr: facts.conditionalBonusExpr,
+            damageType: facts.conditionalBonusDamageType,
+          },
+        },
+      ];
+    },
   );
   return slotInvocations;
 }
@@ -598,4 +600,3 @@ export const afterHitDamageProfile = {
   "afterHitDamage",
   AfterHitDamageInvocation
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";
