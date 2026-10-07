@@ -68,7 +68,7 @@ type SpellProcedureExecutionFacts =
 export type SpellProcedureExecutionsWithActionCost<
   P extends BattleSpellProcedureKey,
 > = Extract<
-  SpellProcedureExecutionByProcedure[P],
+  SpellProcedureExecution<SpellProcedureExecutionByProcedure[P]>,
   { readonly actionCost: unknown }
 >;
 

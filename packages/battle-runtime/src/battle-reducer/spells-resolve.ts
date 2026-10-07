@@ -717,7 +717,7 @@ function spellProcedureActionCostResolutionOption(
 }
 
 function actionSpellProcedureResolveDispatchInput(
-  input: ActionSpellBattleResolutionInput,
+  input: SpellActInternalInput,
   castingState: BattleState,
   actorId: CombatantId,
   invocation: ActionSpellProfileInvocation,
@@ -2026,6 +2026,7 @@ function resolveSpellActInternal(
   if (
     "actionCost" in invocation &&
     invocation.actionCost === "bonusAction" &&
+    lane.tag === "action" &&
     options.kind !== "bonusActionSpellAttackProxy" &&
     !(
       lane.tag === "action" &&
@@ -2116,13 +2117,7 @@ function resolveSpellActInternal(
 
   if (invocation.procedure === "chainedSpellAttackDamage") {
     /* v8 ignore start -- @preserve -- Chained spell invocation admission exposes this profile only through the Action subject lane. */
-    if (lane.tag !== "action") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Chained spell attacks require the Action spell resolution lane.",
-      );
-    }
+
     /* v8 ignore stop -- @preserve */
     const fillSet = parseChainedSpellFillSet(
       input.fills,
@@ -2167,13 +2162,7 @@ function resolveSpellActInternal(
   );
   if (sharedInvocation === undefined) {
     /* v8 ignore start -- @preserve -- Registered non-shared spell profiles are admitted only from an Action subject; the Bonus Action proxy is narrowed to shared attack damage above. */
-    if (lane.tag !== "action") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "This spell procedure does not use the Bonus Action spell resolution lane.",
-      );
-    }
+
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- The registered profile resolution input is selected from the Action subject's procedure facts, which carry this action-profile support fact. */
     if (!invocationUsesActionSpellProfileResolution(invocation)) {
@@ -2291,13 +2280,7 @@ function resolveSpellActInternal(
   const objectTarget = fillSet.objectTarget;
   if (objectTarget !== undefined) {
     /* v8 ignore start -- @preserve -- Object-target spell attack profiles are admitted only through the Action subject lane. */
-    if (lane.tag !== "action") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Object-target spell attacks require the Action spell resolution lane.",
-      );
-    }
+
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -3828,6 +3811,21 @@ export function resolveBonusActionSpellAct(
   input: AdmittedBonusActionSpellBattleResolutionInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
+  const selectedActor = input.state.combatants.get(input.subject.actorId);
+  const selectedProcedure =
+    selectedActor === undefined
+      ? undefined
+      : supportedBonusActionSpellInvocationForSubject(
+          selectedActor,
+          input.subject,
+        );
+  if (
+    selectedProcedure?.spellRuleFacts.castingSource.tag === "statBlock" &&
+    selectedProcedure.access.tag !== "spellEffect"
+  )
+    return resolveSpellActInternal(input, executionRegistry, {
+      kind: "registeredProcedure",
+    });
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
   if (actor === undefined) {
