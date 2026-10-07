@@ -280,14 +280,6 @@ export function supportedRepeatedEffectCount(
     Math.max(0, Number(slotLevel) - baseLevel) * count.perSlotAboveBase;
 }
 
-export function sameDiceExpr(left: DiceExpr, right: DiceExpr): boolean {
-  return (
-    left.dice === right.dice &&
-    left.dieSize === right.dieSize &&
-    (left.flat ?? 0) === (right.flat ?? 0)
-  );
-}
-
 export function singleTargetSpellRangeFeet(range: Range): MovementFeet | null {
   if (isFixedDistancePointRange(range)) {
     return movementFeet(range.feet);
