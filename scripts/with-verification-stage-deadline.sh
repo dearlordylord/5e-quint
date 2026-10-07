@@ -12,9 +12,15 @@ execution_deadline=$(( $(date +%s%3N) + deadlines[2] ))
 event_name="verification-stage:$stage"
 supervision_require_owner "$event_name" || exit $?
 
+pending_signal_status=0
 handle_signal() {
   local status="$1" cleanup_status=0
-  trap - HUP INT TERM
+  if (( pending_signal_status == 0 )); then
+    pending_signal_status="$status"
+  fi
+  status="$pending_signal_status"
+  supervision_defer_signal_if_publishing "$status" && return 0
+  [[ "$supervision_cleanup_in_progress" == false ]] || return 0
   set +e
   supervision_cleanup_helper
   cleanup_status=$?

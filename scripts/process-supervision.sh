@@ -18,6 +18,24 @@ supervision_helper_start_time=""
 supervision_helper_directory=""
 supervision_compiler_pid=""
 supervision_compiler_start_time=""
+supervision_publication_in_progress=false
+supervision_pending_signal_status=0
+
+supervision_defer_signal_if_publishing() {
+  [[ "$supervision_publication_in_progress" == true ]] || return 1
+  if (( supervision_pending_signal_status == 0 )); then
+    supervision_pending_signal_status="$1"
+  fi
+  return 0
+}
+
+supervision_finish_publication() {
+  supervision_publication_in_progress=false
+  if (( supervision_pending_signal_status != 0 )); then
+    handle_signal "$supervision_pending_signal_status"
+  fi
+}
+
 
 supervision_process_stat_fields() {
   local pid="$1" stat rest
@@ -206,6 +224,7 @@ supervision_compile_helper() {
     return 124
   fi
   printf -v timeout_seconds '%d.%03ds' "$(( remaining_milliseconds / 1000 ))" "$(( remaining_milliseconds % 1000 ))"
+  supervision_publication_in_progress=true
   /usr/bin/setsid --wait /usr/bin/timeout --signal=TERM --kill-after=1s "$timeout_seconds" \
     env -i PATH=/usr/bin:/bin LC_ALL=C LANG=C /usr/bin/cc \
     -std=c11 -O2 -Wall -Wextra -Werror \
@@ -213,6 +232,7 @@ supervision_compile_helper() {
     -o "$helper_binary_path" &
   supervision_compiler_pid=$!
   supervision_compiler_start_time="$(supervision_process_start_time "$supervision_compiler_pid" 2>/dev/null || true)"
+  supervision_finish_publication
   while supervision_process_identity_is_live "$supervision_compiler_pid" "$supervision_compiler_start_time"; do
     if ! supervision_owner_is_alive; then
       printf '[%s] canceled: original parent owner exited during compiler bootstrap\n' "$supervision_event_name" >&2
@@ -228,7 +248,11 @@ supervision_compile_helper() {
   compiler_status=$?
   if (( compiler_status != 0 )); then
     if (( compiler_status == 124 || compiler_status == 137 )); then
-      printf '[%s] native supervisor compiler stopped with status %s; deadline or escalated cleanup prevents payload launch\n' "$supervision_event_name" "$compiler_status" >&2
+      if (( compiler_status == 124 )); then
+        printf '[%s] native supervisor compiler exceeded its execution deadline\n' "$supervision_event_name" >&2
+      else
+        printf '[%s] native supervisor compiler stopped with status 137; forced termination prevents payload launch\n' "$supervision_event_name" >&2
+      fi
       supervision_remove_helper
       return "$compiler_status"
     fi
@@ -253,12 +277,14 @@ supervision_start_helper() {
   supervision_helper_wait_status=0
   local helper_binary_path
   helper_binary_path="$(supervision_helper_binary_path)"
+  supervision_publication_in_progress=true
   "$helper_binary_path" --owner-pid "$$" --supervise-only "$@" &
   supervision_helper_pid=$!
   supervision_helper_start_time="$(
     supervision_process_start_time "$supervision_helper_pid" 2>/dev/null || true
   )"
   supervision_cleanup_in_progress=false
+  supervision_finish_publication
 }
 
 supervision_run_command() {

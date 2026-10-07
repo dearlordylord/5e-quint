@@ -61,6 +61,7 @@ handle_signal() {
     pending_signal_status="$status"
   fi
   status="$pending_signal_status"
+  supervision_defer_signal_if_publishing "$status" && return 0
   [[ "$supervision_cleanup_in_progress" == false ]] || return 0
   if [[ -n "$supervision_helper_pid" || -n "$supervision_helper_directory" ]]; then
     set +e

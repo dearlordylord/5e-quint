@@ -81,16 +81,20 @@ function waitForResult(resultProvider, description) {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
     const poll = () => {
-      const result = resultProvider();
-      if (result !== undefined) {
-        resolve(result);
-        return;
+      try {
+        const result = resultProvider();
+        if (result !== undefined) {
+          resolve(result);
+          return;
+        }
+        if (Date.now() - startedAt >= waitTimeoutMs) {
+          reject(new Error(`Timed out waiting for ${description}.`));
+          return;
+        }
+        setTimeout(poll, 10);
+      } catch (error) {
+        reject(error);
       }
-      if (Date.now() - startedAt >= waitTimeoutMs) {
-        reject(new Error(`Timed out waiting for ${description}.`));
-        return;
-      }
-      setTimeout(poll, 10);
     };
     poll();
   });
@@ -271,6 +275,15 @@ async function assertSerialized(holder, contender, logPath) {
 }
 
 async function runSelfTest() {
+  let readinessPolls = 0;
+  await assert.rejects(
+    waitForResult(() => {
+      readinessPolls += 1;
+      if (readinessPolls === 1) return undefined;
+      throw new Error("fixture readiness failure");
+    }, "scheduled readiness failure"),
+    /fixture readiness failure/,
+  );
   const guardSource = readFileSync(
     path.join(repositoryRoot, "scripts", "with-resource-lock.sh"),
     "utf8",
@@ -523,6 +536,7 @@ setInterval(() => {}, 1000);
       { name: "deadline", action: "wait", status: 124 },
       { name: "owner-death", action: "owner", status: 125 },
       { name: "signal", action: "wrapper", status: 143 },
+      { name: "publication", action: "publication", status: 143 },
     ]) {
       const pidPath = path.join(temporaryRoot, `compiler-${scenario.name}.pid`);
       const childPidPath = path.join(
@@ -535,10 +549,23 @@ setInterval(() => {}, 1000);
       );
       const wrapperPath = path.join(root, "scripts", "with-resource-lock.sh");
       const wrapperSource = readFileSync(wrapperPath, "utf8");
-      const caseCompiler = supervisionSource.replace(
+      const baseCompiler = supervisionSource.replace(
         "/usr/bin/cc",
         `${process.execPath} "${compilerProbePath}" "${pidPath}" "${childPidPath}" "cooperative"`,
       );
+      const publicationReleasePath = path.join(
+        temporaryRoot,
+        "publication-release",
+      );
+      const caseCompiler =
+        scenario.action === "publication"
+          ? baseCompiler.replace(
+              "  supervision_compiler_pid=$!",
+              () => `  while [[ ! -f "${publicationReleasePath}" ]]; do sleep 0.01; done
+  kill -TERM "$$"
+  supervision_compiler_pid=$!`,
+            )
+          : baseCompiler;
       writeFileSync(supervisionPath, caseCompiler);
       const recordedWrapper = wrapperSource.replace(
         "trap release_holder EXIT",
@@ -589,6 +616,9 @@ setInterval(() => {}, 1000);
         );
         const wrapper = processIdentity(children[0]);
         assert.ok(wrapper);
+        if (scenario.action === "publication") {
+          writeFileSync(publicationReleasePath, "release");
+        }
         if (scenario.action === "owner") owned.kill("SIGTERM");
         if (scenario.action === "wrapper")
           signalProcessIdentity(wrapper, "SIGTERM");
