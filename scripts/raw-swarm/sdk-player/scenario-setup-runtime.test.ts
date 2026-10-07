@@ -1285,8 +1285,12 @@ describe("scenario setup public-SDK boundary", () => {
           holeId: attackRoll.holeId,
           value: {
             total: 30,
-            naturalD20: DieRollResult(18),
-            rollMode: "disadvantage",
+            d20TestRoll: {
+              tag: "multiple",
+              first: DieRollResult(18),
+              second: DieRollResult(18),
+              rollMode: "disadvantage",
+            },
           },
         },
       ],
