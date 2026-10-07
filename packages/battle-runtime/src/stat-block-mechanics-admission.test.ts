@@ -623,6 +623,8 @@ describe("complete Stat Block mechanics admission", () => {
         "incomplete_graph|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:dependency:1",
         "incomplete_graph|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:2",
         "incomplete_graph|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:3",
+        // Removing the selected resource also invalidates the owning procedure graph.
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure",
         "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1",
         "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:1",
         "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:1/occurrence:extension:1",

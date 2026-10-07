@@ -84,6 +84,7 @@ export { removeBattleCombatants } from "./combatant-removal.ts";
 
 import type {
   BattleCreatureState,
+  StatBlockBattleCreatureState,
   BattleExecutionScopeAllocation,
   BattleState,
   BattleStateInitIssueFacts,
@@ -1100,10 +1101,7 @@ function appendCharacterWeaponPresentationIssues(input: {
 
 function initializeStatBlockSpellExecution(
   input: Parameters<typeof initializeBattleSpellExecutions>[0],
-  combatant: Extract<
-    BattleCreatureState,
-    { readonly origin: { readonly kind: "statBlock" } }
-  >,
+  combatant: StatBlockBattleCreatureState,
   combatantsWithSpellExecutions: Map<CombatantId, BattleCreatureState>,
 ): void {
   const combatantId = combatant.combatantId;
@@ -1735,7 +1733,8 @@ function admitBattleCombatant(
     characterSpellAdmissionForCombatant(admission, stateWithAdmission),
     input,
   );
-  if (Result.isFailure(characterSpellResult)) return characterSpellResult;
+  if (Result.isFailure(characterSpellResult))
+    return Result.fail(characterSpellResult.failure);
   const characterSpellAdmission = characterSpellResult.success;
   const actor = characterSpellAdmission?.creature ?? admission.creature;
   const spellPresentation = admittedStatBlockSpellPresentation(
@@ -1744,7 +1743,8 @@ function admitBattleCombatant(
     stateWithAdmission,
     admission,
   );
-  if (Result.isFailure(spellPresentation)) return spellPresentation;
+  if (Result.isFailure(spellPresentation))
+    return Result.fail(spellPresentation.failure);
   const admittedCreature = spellPresentation.success.creature;
   const statBlockPresentation = spellPresentation.success.statBlockPresentation;
   const nextCombatants = new Map(input.state.combatants).set(
