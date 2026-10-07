@@ -1768,7 +1768,7 @@ type CastingExecution<
   ? Omit<Execution, "access" | "resource" | "spellRuleFacts" | "actionCost"> &
       Facts & { readonly actionCost: "magicAction" | "bonusAction" }
   : Omit<Execution, "access" | "resource" | "spellRuleFacts"> & Facts;
-type CorrelatedSpellExecution<Execution> = Execution extends {
+export type CorrelatedSpellExecution<Execution> = Execution extends {
   readonly access: infer Access;
   readonly resource: infer Resource;
   readonly spellRuleFacts: SpellRuleExecutionFacts;
