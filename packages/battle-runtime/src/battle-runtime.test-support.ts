@@ -4413,6 +4413,7 @@ export function statBlockCreatureInit(input: {
   return {
     combatantId: input.combatantId ?? goblinId,
     statBlock: namedStatBlock,
+    unitCatalog: unitLibrary,
     initiative: initiativeScore(input.initiative),
     currentHp: Hp(input.currentHp ?? maxHp),
     tempHp: Hp(input.tempHp ?? 0),

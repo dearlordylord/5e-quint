@@ -326,6 +326,7 @@ export function statBlockCreature(input: {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
     statBlock: input.statBlock,
+    unitCatalog: unitLibrary,
     ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
       battleAmmunitionStock(ammunition, 20),
     ),

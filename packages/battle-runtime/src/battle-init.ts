@@ -1,5 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 import { optionalProperty } from "./optional-property.ts";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import {
+  statBlockSpellInvocationAdmissionPlan,
+  type StatBlockSpellInvocationAdmissionPlan,
+} from "./stat-block-spell-invocation-admission-plan.ts";
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type {
   AbilityModifier,
@@ -592,6 +597,8 @@ export type CharacterBattleCreatureInit = {
 export type AuthoredStatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
+  /** Caller-owned canonical Spell Definitions, consumed only at admission. */
+  readonly unitCatalog: UnitCatalog;
   readonly initiative: InitiativeScore;
   /** Required only when the authored Stat Block declares alternative Sizes. */
   readonly size?: Size;
@@ -624,6 +631,7 @@ type RuntimeStatBlockBattleInitInput = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
   readonly presentation: BattleStatBlockPresentationSource;
+  readonly spellInvocationAdmissionPlan: StatBlockSpellInvocationAdmissionPlan;
 };
 
 export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
@@ -638,6 +646,7 @@ type StatBlockBattleCreatureInit = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
   readonly presentation: BattleStatBlockPresentationSource;
+  readonly spellInvocationAdmissionPlan: StatBlockSpellInvocationAdmissionPlan;
 };
 
 type BattleCreatureInitCommon = {
@@ -703,6 +712,10 @@ export function projectAuthoredStatBlockBattleInit(
     ...input,
     statBlock: source.success,
     presentation: projected.success.presentation,
+    spellInvocationAdmissionPlan: statBlockSpellInvocationAdmissionPlan(
+      resolvedStatBlock.success,
+      input.unitCatalog,
+    ),
   });
 }
 
@@ -763,6 +776,7 @@ function battleCreatureInitFromRuntimeStatBlock(
       ammunitionStocks: input.ammunitionStocks,
       conditions: input.conditions,
       presentation: input.presentation,
+      spellInvocationAdmissionPlan: input.spellInvocationAdmissionPlan,
     },
   });
 }
