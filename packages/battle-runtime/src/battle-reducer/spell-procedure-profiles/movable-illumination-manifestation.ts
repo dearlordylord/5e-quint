@@ -1002,7 +1002,14 @@ const MovableLightRepositionInvocationSchema = spellProcedureExecutionSchema(
     spacingFeet: MovementFeet,
   }),
 );
-export const movableLightManifestationProfile = {
+export const movableLightManifestationProfile: SpellProcedureDeclaration<
+  "movableLightManifestation",
+  | MovableLightSeparateCastInvocation
+  | MovableLightCombinedCastInvocation
+  | MovableLightRepositionInvocation,
+  MovableLightMechanicsFacts,
+  MovableLightAdmissionIssue
+> = {
   procedure: "movableLightManifestation",
   executionSchema: Schema.Union([
     MovableLightSeparateCastInvocationSchema,
@@ -1034,11 +1041,4 @@ export const movableLightManifestationProfile = {
       ),
       Match.exhaustive,
     ),
-} satisfies SpellProcedureDeclaration<
-  "movableLightManifestation",
-  | MovableLightSeparateCastInvocation
-  | MovableLightCombinedCastInvocation
-  | MovableLightRepositionInvocation,
-  MovableLightMechanicsFacts,
-  MovableLightAdmissionIssue
->;
+};

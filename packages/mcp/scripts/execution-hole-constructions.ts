@@ -1,7 +1,13 @@
+import {
+  subjectCarriers,
+  constructionKinds,
+} from "./execution-type-projection.ts";
 import { resolve } from "node:path";
 import ts from "typescript";
 import {
   executionSourceLocation,
+  reflectionProjectionOperations,
+  nativeObjectHoleKinds,
   repositoryRoot,
   type SourceLocation,
 } from "./operation-accounting-compiler.ts";
@@ -32,19 +38,170 @@ export function namedCallImplementation(
   call: ts.CallExpression,
   checker: ts.TypeChecker,
 ): ts.FunctionDeclaration | undefined {
-  const declaration = checker.getResolvedSignature(call)?.declaration;
-  if (
-    !declaration ||
-    !ts.isFunctionDeclaration(declaration) ||
-    !declaration.name
-  )
+  type Binding =
+    | { readonly kind: "expression"; readonly expression: ts.Expression }
+    | { readonly kind: "symbol"; readonly symbol: ts.Symbol }
+    | { readonly kind: "absent" }
+    | { readonly kind: "unresolved" };
+  const seen = new Set<ts.Symbol>();
+  const unresolved: Binding = { kind: "unresolved" };
+  const absent: Binding = { kind: "absent" };
+  function unwrap(expression: ts.Expression): ts.Expression {
+    while (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isTypeAssertionExpression(expression)
+    )
+      expression = expression.expression;
+    return expression;
+  }
+  function nameOf(name: ts.PropertyName): string | undefined {
+    if (
+      ts.isIdentifier(name) ||
+      ts.isStringLiteral(name) ||
+      ts.isNumericLiteral(name)
+    )
+      return name.text;
+    if (ts.isComputedPropertyName(name) && ts.isStringLiteral(name.expression))
+      return name.expression.text;
     return undefined;
-  const symbol = checker.getSymbolAtLocation(declaration.name);
-  const implementations = symbol?.declarations?.filter(
-    (candidate): candidate is ts.FunctionDeclaration =>
-      ts.isFunctionDeclaration(candidate) && candidate.body !== undefined,
-  );
-  return implementations?.length === 1 ? implementations[0] : undefined;
+  }
+  function symbolBinding(symbol: ts.Symbol | undefined): Binding {
+    return symbol ? { kind: "symbol", symbol } : unresolved;
+  }
+  function expressionBinding(expression: ts.Expression): Binding {
+    expression = unwrap(expression);
+    if (ts.isIdentifier(expression))
+      return symbolBinding(checker.getSymbolAtLocation(expression));
+    if (ts.isPropertyAccessExpression(expression))
+      return propertyBinding(
+        expressionBinding(expression.expression),
+        expression.name.text,
+      );
+    if (
+      ts.isElementAccessExpression(expression) &&
+      ts.isStringLiteral(expression.argumentExpression)
+    )
+      return propertyBinding(
+        expressionBinding(expression.expression),
+        expression.argumentExpression.text,
+      );
+    return { kind: "expression", expression };
+  }
+  function withSymbol<T>(
+    symbol: ts.Symbol,
+    fallback: T,
+    resolve: (symbol: ts.Symbol) => T,
+  ): T {
+    if (seen.has(symbol)) return fallback;
+    seen.add(symbol);
+    try {
+      return symbol.flags & ts.SymbolFlags.Alias
+        ? withSymbol(checker.getAliasedSymbol(symbol), fallback, resolve)
+        : resolve(symbol);
+    } finally {
+      seen.delete(symbol);
+    }
+  }
+  function initializerBinding(declaration: ts.Declaration): Binding {
+    if (
+      ts.isVariableDeclaration(declaration) &&
+      declaration.initializer &&
+      ts.isVariableDeclarationList(declaration.parent) &&
+      declaration.parent.flags & ts.NodeFlags.Const
+    )
+      return expressionBinding(declaration.initializer);
+    if (
+      ts.isBindingElement(declaration) &&
+      !declaration.dotDotDotToken &&
+      ts.isObjectBindingPattern(declaration.parent) &&
+      ts.isVariableDeclaration(declaration.parent.parent)
+    ) {
+      const variable = declaration.parent.parent;
+      const name = declaration.propertyName ?? declaration.name;
+      const key =
+        ts.isIdentifier(name) || ts.isStringLiteral(name)
+          ? name.text
+          : undefined;
+      if (
+        key !== undefined &&
+        variable.initializer &&
+        ts.isVariableDeclarationList(variable.parent) &&
+        variable.parent.flags & ts.NodeFlags.Const
+      )
+        return propertyBinding(expressionBinding(variable.initializer), key);
+    }
+    return unresolved;
+  }
+  function propertyBinding(binding: Binding, name: string): Binding {
+    if (binding.kind === "absent" || binding.kind === "unresolved")
+      return binding;
+    if (binding.kind === "symbol")
+      return withSymbol(binding.symbol, unresolved, (symbol) => {
+        if (
+          symbol.flags &
+          (ts.SymbolFlags.ValueModule | ts.SymbolFlags.NamespaceModule)
+        ) {
+          const member = checker
+            .getExportsOfModule(symbol)
+            .find((member) => member.name === name);
+          return member ? symbolBinding(member) : absent;
+        }
+        const declaration =
+          symbol.declarations?.length === 1
+            ? symbol.declarations[0]
+            : undefined;
+        return declaration
+          ? propertyBinding(initializerBinding(declaration), name)
+          : unresolved;
+      });
+    const base = unwrap(binding.expression);
+    if (!ts.isObjectLiteralExpression(base)) return unresolved;
+    for (const property of [...base.properties].reverse()) {
+      if (ts.isSpreadAssignment(property)) {
+        const spread = propertyBinding(
+          expressionBinding(property.expression),
+          name,
+        );
+        if (spread.kind !== "absent") return spread;
+        continue;
+      }
+      const key = nameOf(property.name);
+      if (key === undefined) return unresolved;
+      if (key !== name) continue;
+      if (ts.isPropertyAssignment(property))
+        return expressionBinding(property.initializer);
+      if (ts.isShorthandPropertyAssignment(property))
+        return symbolBinding(
+          checker.getShorthandAssignmentValueSymbol(property),
+        );
+      return unresolved;
+    }
+    return absent;
+  }
+  function implementation(
+    binding: Binding,
+  ): ts.FunctionDeclaration | undefined {
+    if (binding.kind !== "symbol") return undefined;
+    return withSymbol(binding.symbol, undefined, (symbol) => {
+      const bodies = symbol.declarations?.filter(
+        (declaration): declaration is ts.FunctionDeclaration =>
+          ts.isFunctionDeclaration(declaration) &&
+          declaration.name !== undefined &&
+          declaration.body !== undefined,
+      );
+      if (bodies?.length === 1) return bodies[0];
+      const declaration =
+        symbol.declarations?.length === 1 ? symbol.declarations[0] : undefined;
+      return declaration
+        ? implementation(initializerBinding(declaration))
+        : undefined;
+    });
+  }
+  // Named syntax bindings are evidence; opaque callbacks remain unanalyzed.
+  return implementation(expressionBinding(call.expression));
 }
 
 type NamedCallSite = {
@@ -122,6 +279,34 @@ function namedCallerAncestors(
   );
 }
 
+function mayConstructExecutionHole(node: ts.ObjectLiteralExpression): boolean {
+  // Spreads and computed names can introduce any required field. Keep them for
+  // semantic classification; only plain, provably incomplete literals skip it.
+  if (
+    node.properties.some(
+      (property) =>
+        ts.isSpreadAssignment(property) ||
+        (property.name !== undefined &&
+          ts.isComputedPropertyName(property.name)),
+    )
+  )
+    return true;
+  const names = new Set(
+    node.properties.flatMap((property) => {
+      const name = property.name;
+      return name &&
+        (ts.isIdentifier(name) ||
+          ts.isStringLiteral(name) ||
+          ts.isNumericLiteral(name))
+        ? [name.text]
+        : [];
+    }),
+  );
+  return ["kind", "holeId", "holeInstanceKey"].every((field) =>
+    names.has(field),
+  );
+}
+
 /** Construction and direct named-call evidence; indirect and transitive calls remain unanalyzed. */
 export function executionHoleConstructions(
   program: ts.Program,
@@ -134,33 +319,26 @@ export function executionHoleConstructions(
   const sources = runtimeSources(program);
   for (const source of sources) {
     function visit(node: ts.Node): void {
-      if (ts.isObjectLiteralExpression(node)) {
-        const type = checker.getTypeAtLocation(node);
-        const kind = checker.getPropertyOfType(type, "kind");
-        if (
-          kind &&
-          checker.getPropertyOfType(type, "holeId") &&
-          checker.getPropertyOfType(type, "holeInstanceKey")
-        ) {
-          const discriminator = checker.getTypeOfSymbolAtLocation(kind, node);
-          const branches = discriminator.isUnion()
-            ? discriminator.types
-            : [discriminator];
+      if (
+        ts.isObjectLiteralExpression(node) &&
+        mayConstructExecutionHole(node)
+      ) {
+        const native = nativeObjectHoleKinds(program, node);
+        const classification =
+          native.kind === "classified"
+            ? native.classification
+            : constructionKinds(
+                reflectionProjectionOperations(checker, node),
+                checker.getTypeAtLocation(node),
+              );
+        if (classification.kind === "hole")
           constructions.push({
             node,
             construction: {
               source: executionSourceLocation(node, ownerName(node)),
-              kinds: branches.every((branch) => branch.isStringLiteral())
-                ? {
-                    kind: "finite",
-                    values: [
-                      ...new Set(branches.map((branch) => branch.value)),
-                    ].sort(),
-                  }
-                : { kind: "unclassified" },
+              kinds: classification.kinds,
             },
           });
-        }
       }
       ts.forEachChild(node, visit);
     }
@@ -180,65 +358,12 @@ export function executionHoleConstructions(
     .sort((left, right) => compareLocations(left.source, right.source));
 }
 
-function literalStrings(type: ts.Type): readonly string[] | undefined {
-  // Intersections can leave impossible discriminator branches with type never.
-  const branches = (type.isUnion() ? type.types : [type]).filter(
-    (branch) => (branch.flags & ts.TypeFlags.Never) === 0,
-  );
-  return branches.every((branch) => branch.isStringLiteral())
-    ? branches.map((branch) => branch.value)
-    : undefined;
-}
-
-/** Independent structural projection, checked against the canonical key type by accounting. */
 export function executionSubjectCarriers(
   type: ts.Type,
   node: ts.Node,
   checker: ts.TypeChecker,
 ): HoleConstruction["kinds"] {
-  const values: string[] = [];
-  const subjectType = checker.getBaseConstraintOfType(type) ?? type;
-  for (const member of subjectType.isUnion()
-    ? subjectType.types
-    : [subjectType]) {
-    // A narrowed intersection can reduce to never without carrying the Never flag.
-    if (checker.isTypeAssignableTo(member, checker.getNeverType())) continue;
-    const propertyType = (field: string) => {
-      const property = member.getProperty(field);
-      return property && checker.getTypeOfSymbolAtLocation(property, node);
-    };
-    const tagType = propertyType("tag");
-    const tags = tagType && literalStrings(tagType);
-    if (!tags) return { kind: "unclassified" };
-    const discriminator = ["command", "action", "option"].find((field) =>
-      member.getProperty(field),
-    );
-    const operationType = discriminator && propertyType(discriminator);
-    const operations = discriminator
-      ? operationType && literalStrings(operationType)
-      : [""];
-    if (!operations) return { kind: "unclassified" };
-    const modeType = propertyType("mode");
-    const modes: string[] = [];
-    if (modeType) {
-      for (const mode of modeType.isUnion() ? modeType.types : [modeType]) {
-        const direct = literalStrings(mode);
-        const tag = mode.getProperty("tag");
-        const tagged =
-          tag && literalStrings(checker.getTypeOfSymbolAtLocation(tag, node));
-        const selected = direct ?? tagged;
-        if (!selected) return { kind: "unclassified" };
-        modes.push(...selected);
-      }
-    } else modes.push("");
-    for (const tag of tags)
-      for (const operation of operations)
-        for (const mode of modes)
-          values.push(
-            [tag, operation, mode].filter((part) => part !== "").join("."),
-          );
-  }
-  return { kind: "finite", values: [...new Set(values)].sort() };
+  return subjectCarriers(reflectionProjectionOperations(checker, node), type);
 }
 
 export function canonicalSubjectCarriers(

@@ -1,6 +1,26 @@
+import {
+  ordinaryFrontiersForResult,
+  constructionKinds,
+  literalProperty,
+  type TypeProjectionOperations,
+} from "./execution-type-projection.ts";
 import { fileURLToPath } from "node:url";
 import { resolve, relative } from "node:path";
 import ts from "typescript";
+import {
+  API,
+  TypeFlags,
+  type Project,
+  type Type,
+} from "@typescript/native/unstable/sync";
+import {
+  isCallExpression as isNativeCallExpression,
+  isObjectLiteralExpression as isNativeObjectLiteralExpression,
+} from "@typescript/native/unstable/ast/is";
+import type {
+  CallExpression as NativeCallExpression,
+  ObjectLiteralExpression as NativeObjectLiteralExpression,
+} from "@typescript/native/unstable/ast";
 import type {
   ExecutionEvidence,
   OperationAccount,
@@ -26,6 +46,36 @@ const registryPath = resolve(
   "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
 );
 
+const accountingConfigPath = resolve(
+  repositoryRoot,
+  "packages/mcp/tsconfig.json",
+);
+const nativeInputs = new WeakMap<ts.Program, ReadonlyMap<string, string>>();
+type NativeAccountingSession = {
+  readonly api: API;
+  readonly files: Map<string, string>;
+  snapshot: ReturnType<API["updateSnapshot"]> | undefined;
+  program: ts.Program | undefined;
+  project: Project | undefined;
+  readonly expressions: Map<
+    string,
+    ReadonlyMap<string, NativeCallExpression | NativeObjectLiteralExpression>
+  >;
+};
+let nativeSession: NativeAccountingSession | undefined;
+
+export function closeAccountingCompiler(): void {
+  const session = nativeSession;
+  nativeSession = undefined;
+  if (session) {
+    try {
+      session.snapshot?.dispose();
+    } finally {
+      session.api.close();
+    }
+  }
+}
+
 export function accountingProgram(
   overrides: ReadonlyMap<string, string> = new Map(),
 ) {
@@ -43,9 +93,10 @@ export function accountingProgram(
     resolve(repositoryRoot, "packages/mcp"),
   );
   const host = ts.createCompilerHost(parsed.options);
+  const sourceOverrides = new Map(overrides);
   const read = host.readFile;
-  host.readFile = (file) => overrides.get(file) ?? read(file);
-  return ts.createProgram(
+  host.readFile = (file) => sourceOverrides.get(file) ?? read(file);
+  const program = ts.createProgram(
     [
       contractPath,
       decisionsPath,
@@ -56,6 +107,22 @@ export function accountingProgram(
     parsed.options,
     host,
   );
+  nativeInputs.set(
+    program,
+    new Map([
+      ...sourceOverrides,
+      [
+        accountingConfigPath,
+        JSON.stringify({
+          ...config.config,
+          files: program.getRootFileNames(),
+          include: [],
+          exclude: [],
+        }),
+      ],
+    ]),
+  );
+  return program;
 }
 function sourceFor(program: ts.Program, path: string) {
   const source = program.getSourceFile(path);
@@ -113,6 +180,100 @@ export function executionDomains(
       ]),
   );
 }
+function ensureNativeProject(program: ts.Program): Project {
+  const inputs = nativeInputs.get(program);
+  if (!inputs) throw new Error("Missing accounting compiler inputs.");
+  if (!nativeSession) {
+    const files = new Map<string, string>();
+    nativeSession = {
+      api: new API({
+        cwd: repositoryRoot,
+        fs: { readFile: (file) => files.get(file) },
+      }),
+      files,
+      snapshot: undefined,
+      program: undefined,
+      project: undefined,
+      expressions: new Map(),
+    };
+  }
+  const session = nativeSession;
+  if (session.program === program && session.project) return session.project;
+  try {
+    const changed = [
+      ...new Set([...session.files.keys(), ...inputs.keys()]),
+    ].filter((file) => session.files.get(file) !== inputs.get(file));
+    const firstSnapshot = session.snapshot === undefined;
+    session.snapshot?.dispose();
+    session.files.clear();
+    for (const [file, text] of inputs) session.files.set(file, text);
+    session.snapshot = session.api.updateSnapshot({
+      ...(firstSnapshot ? { openProjects: [accountingConfigPath] } : {}),
+      fileChanges: { changed },
+    });
+    const project = session.snapshot.getProject(accountingConfigPath);
+    if (!project) throw new Error("Missing native accounting project.");
+    const expectedRoots = new Set(program.getRootFileNames());
+    if (
+      project.rootFiles.length !== expectedRoots.size ||
+      project.rootFiles.some((file) => !expectedRoots.has(file))
+    )
+      throw new Error("Native accounting compiler root files differ.");
+    session.program = program;
+    session.project = project;
+    session.expressions.clear();
+    return project;
+  } catch (error) {
+    closeAccountingCompiler();
+    throw error;
+  }
+}
+function nativeAccountingExpression(
+  program: ts.Program,
+  expression: ts.CallExpression | ts.ObjectLiteralExpression,
+) {
+  const project = ensureNativeProject(program);
+  const session = nativeSession;
+  if (!session) throw new Error("Missing native accounting session.");
+  const source = expression.getSourceFile();
+  const nativeSource = project.program.getSourceFile(source.fileName);
+  if (!nativeSource)
+    throw new Error(`Missing native accounting source ${source.fileName}.`);
+  if (nativeSource.text !== source.text)
+    throw new Error(`Native accounting source differs ${source.fileName}.`);
+  const span = (kind: string, start: number, end: number) =>
+    `${kind}:${start}:${end}`;
+  const expressions =
+    session.expressions.get(source.fileName) ??
+    (() => {
+      const index = new Map<
+        string,
+        NativeCallExpression | NativeObjectLiteralExpression
+      >();
+      function visit(
+        node: import("@typescript/native/unstable/ast").Node,
+      ): void {
+        if (isNativeCallExpression(node))
+          index.set(span("call", node.getStart(), node.end), node);
+        if (isNativeObjectLiteralExpression(node))
+          index.set(span("object", node.getStart(), node.end), node);
+        node.forEachChild(visit);
+      }
+      visit(nativeSource);
+      session.expressions.set(source.fileName, index);
+      return index;
+    })();
+  const kind = ts.isCallExpression(expression) ? "call" : "object";
+  const node = expressions.get(
+    span(kind, expression.getStart(), expression.end),
+  );
+  if (!node)
+    throw new Error(
+      `Missing native accounting ${kind} ${source.fileName}:${expression.getStart()}.`,
+    );
+  return { project, node };
+}
+
 export function accountingDiagnostics(program: ts.Program): readonly string[] {
   const packagesRoot = resolve(repositoryRoot, "packages") + "/";
   const proofSources = new Set([
@@ -129,19 +290,27 @@ export function accountingDiagnostics(program: ts.Program): readonly string[] {
       )
       .map((source) => source.fileName),
   ]);
-  return [...proofSources].flatMap((file) => {
-    const source = sourceFor(program, file);
-    return [
-      ...program.getSyntacticDiagnostics(source),
-      ...program.getSemanticDiagnostics(source),
-    ].map((diagnostic) => {
-      const line =
-        diagnostic.start === undefined
-          ? 1
-          : source.getLineAndCharacterOfPosition(diagnostic.start).line + 1;
-      return `${relative(repositoryRoot, file)}:${line}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
+  const project = ensureNativeProject(program);
+  try {
+    const nativeFiles = new Set(project.program.getSourceFileNames());
+    return [...proofSources].flatMap((file) => {
+      if (!nativeFiles.has(file))
+        throw new Error(`Native accounting compiler omitted ${file}.`);
+      const source = sourceFor(program, file);
+      return [
+        ...project.program.getSyntacticDiagnostics(file),
+        ...project.program.getBindDiagnostics(file),
+        ...project.program.getSemanticDiagnostics(file),
+      ].map((diagnostic) => {
+        const line =
+          source.getLineAndCharacterOfPosition(diagnostic.pos).line + 1;
+        return `${relative(repositoryRoot, file)}:${line}: ${diagnostic.text}`;
+      });
     });
-  });
+  } catch (error) {
+    closeAccountingCompiler();
+    throw error;
+  }
 }
 export function exactCoverage(
   expected: readonly string[],
@@ -263,6 +432,35 @@ function unwrap(expression: ts.Expression): ts.Expression {
     return unwrap(expression.expression);
   return expression;
 }
+/** Follow only same-source immutable named bindings; ambiguous or dynamic owners fail closed. */
+export function registryFactoryCall(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+): ts.CallExpression | undefined {
+  const visited = new Set<ts.Symbol>();
+  function resolveCall(value: ts.Expression): ts.CallExpression | undefined {
+    const unwrapped = unwrap(value);
+    if (ts.isCallExpression(unwrapped)) return unwrapped;
+    if (!ts.isIdentifier(unwrapped)) return undefined;
+    const symbol = checker.getSymbolAtLocation(unwrapped);
+    if (!symbol || visited.has(symbol)) return undefined;
+    const declarations = symbol.declarations ?? [];
+    if (declarations.length !== 1) return undefined;
+    const declaration = declarations[0];
+    if (
+      !declaration ||
+      !ts.isVariableDeclaration(declaration) ||
+      !declaration.initializer ||
+      declaration.getSourceFile() !== expression.getSourceFile() ||
+      !ts.isVariableDeclarationList(declaration.parent) ||
+      !(declaration.parent.flags & ts.NodeFlags.Const)
+    )
+      return undefined;
+    visited.add(symbol);
+    return resolveCall(declaration.initializer);
+  }
+  return resolveCall(expression);
+}
 export function spellDeclarationOwners(
   program: ts.Program,
   isStatic: boolean,
@@ -281,14 +479,20 @@ export function spellDeclarationOwners(
     throw new Error("Registry must declare its entries upfront");
   const result = new Map<string, readonly SourceLocation[]>();
   for (const property of object.properties) {
-    if (
-      !ts.isPropertyAssignment(property) ||
-      !ts.isIdentifier(property.name) ||
-      !ts.isCallExpression(property.initializer)
-    )
+    if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name))
       throw new Error("Unaccounted registry declaration shape");
     const key = property.name.text;
-    const argument = property.initializer.arguments[isStatic ? 1 : 0];
+    const call = registryFactoryCall(property.initializer, checker);
+    const factory = isStatic
+      ? "registeredStaticSpellMechanicsDeclaration"
+      : "registeredSpellProcedureDeclaration";
+    if (
+      !call ||
+      !ts.isIdentifier(call.expression) ||
+      call.expression.text !== factory
+    )
+      throw new Error("Unaccounted registry factory binding");
+    const argument = call.arguments[isStatic ? 1 : 0];
     if (!argument) throw new Error(`Missing registry argument ${key}`);
     let symbol = checker.getSymbolAtLocation(argument);
     if (symbol && symbol.flags & ts.SymbolFlags.Alias)
@@ -330,4 +534,122 @@ export function spellDeclarationOwners(
     result.set(key, owners);
   }
   return result;
+}
+
+export function reflectionProjectionOperations(
+  checker: ts.TypeChecker,
+  node: ts.Node,
+): TypeProjectionOperations<ts.Type> {
+  return {
+    branches: (type) => (type.isUnion() ? type.types : [type]),
+    literalStrings: (type) => {
+      const branches = type.isUnion() ? type.types : [type];
+      return branches.every((branch): branch is ts.StringLiteralType =>
+        branch.isStringLiteral(),
+      )
+        ? branches.map((branch) => branch.value)
+        : undefined;
+    },
+    property: (type, name) => {
+      const symbol = checker.getPropertyOfType(type, name);
+      return symbol && checker.getTypeOfSymbolAtLocation(symbol, node);
+    },
+    numberElement: (type) =>
+      checker.getIndexTypeOfType(type, ts.IndexKind.Number),
+    baseConstraint: (type) => checker.getBaseConstraintOfType(type) ?? type,
+    isNever: (type) => checker.isTypeAssignableTo(type, checker.getNeverType()),
+  };
+}
+export function nativeProjectionOperations(
+  project: Project,
+  node: NativeCallExpression | NativeObjectLiteralExpression,
+): TypeProjectionOperations<Type> {
+  const checker = project.checker;
+  return {
+    branches: (type) => (type.isUnionType() ? type.getTypes() : [type]),
+    literalStrings: (type) => {
+      const branches = type.isUnionType() ? type.getTypes() : [type];
+      return branches.every((branch) => branch.isStringLiteralType())
+        ? branches.flatMap((branch) =>
+            branch.isStringLiteralType() ? [branch.value] : [],
+          )
+        : undefined;
+    },
+    property: (type, name) => {
+      const symbol = checker.getPropertyOfType(type, name);
+      return symbol && checker.getTypeOfSymbolAtLocation(symbol, node);
+    },
+    numberElement: (type) =>
+      checker
+        .getIndexInfosOfType(type)
+        .find((info) => info.keyType.flags & TypeFlags.Number)?.valueType,
+    baseConstraint: (type) => checker.getBaseConstraintOfType(type) ?? type,
+    isNever: (type) => checker.isTypeAssignableTo(type, checker.getNeverType()),
+  };
+}
+export function nativeCallGenericFrontierResults(
+  program: ts.Program,
+  call: ts.CallExpression,
+) {
+  if (!nativeInputs.has(program)) return undefined;
+  const { project, node } = nativeAccountingExpression(program, call);
+  if (!isNativeCallExpression(node))
+    throw new Error("Native accounting call kind differs.");
+  const type = project.checker.getTypeAtLocation(node);
+  if (!type) throw new Error("Missing native accounting call type.");
+  const operations = nativeProjectionOperations(project, node);
+  return genericFrontierResults(operations, type);
+}
+export function genericFrontierResults<T>(
+  operations: TypeProjectionOperations<T>,
+  type: T,
+) {
+  return operations.branches(type).flatMap((branch) => {
+    const tags = literalProperty(operations, branch, "tag");
+    if (tags?.length === 1 && tags[0] === "needsHoles")
+      return [
+        {
+          resultPath: [],
+          result: ordinaryFrontiersForResult(operations, branch),
+        },
+      ];
+    if (tags?.length === 1 && tags[0] === "resolution") {
+      const nested = operations.property(branch, "result");
+      if (
+        nested &&
+        operations
+          .branches(nested)
+          .some((member) =>
+            literalProperty(operations, member, "tag")?.includes("needsHoles"),
+          )
+      )
+        return [
+          {
+            resultPath: ["result"],
+            result: ordinaryFrontiersForResult(operations, nested),
+          },
+        ];
+    }
+    return [];
+  });
+}
+
+export function nativeObjectHoleKinds(
+  program: ts.Program,
+  object: ts.ObjectLiteralExpression,
+) {
+  if (!nativeInputs.has(program))
+    return { kind: "reflectionRequired" } as const;
+  const { project, node } = nativeAccountingExpression(program, object);
+  if (!isNativeObjectLiteralExpression(node))
+    throw new Error("Native accounting object kind differs.");
+  const type = project.checker.getTypeAtLocation(node);
+  if (!type) throw new Error("Missing native accounting object type.");
+  return {
+    kind: "classified",
+    classification: constructionKinds(
+      nativeProjectionOperations(project, node),
+      type,
+    ),
+  } as const;
 }

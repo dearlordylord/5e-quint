@@ -6,7 +6,7 @@ import {
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { after, test } from "node:test";
 import { OPERATION_ACCOUNTING } from "./operation-accounting-decisions.ts";
 import {
   executionHoleConstructions,
@@ -21,6 +21,7 @@ import { checkChatGptToolPlan } from "./chatgpt-tool-plan-check.ts";
 import {
   accountingProgram,
   accountingDiagnostics,
+  closeAccountingCompiler,
   contractPath,
   decisionsPath,
   exactCoverage,
@@ -30,6 +31,25 @@ import {
   executionOwnerResultTags,
   repositoryRoot,
 } from "./operation-accounting-compiler.ts";
+
+after(closeAccountingCompiler);
+
+test("native accounting snapshots restore source after a virtual mutation", () => {
+  const baseline = accountingProgram();
+  assert.deepEqual(accountingDiagnostics(baseline), []);
+  const source = readFileSync(contractPath, "utf8").replace(
+    "publicTools: PlaySessionNextOperationName;",
+    'publicTools: PlaySessionNextOperationName | "synthetic_snapshot_operation";',
+  );
+  assert.notEqual(source, readFileSync(contractPath, "utf8"));
+  const mutation = accountingProgram(new Map([[contractPath, source]]));
+  assert.ok(
+    accountingDiagnostics(mutation).some((issue) =>
+      issue.includes("synthetic_snapshot_operation"),
+    ),
+  );
+  assert.deepEqual(accountingDiagnostics(baseline), []);
+});
 
 // One integration mutation introduces a new primary operation, secondary mode,
 // public entry point and family. None may silently join an existing decision.
@@ -732,5 +752,74 @@ test("implemented descriptors must exactly cover the proposed tool contract", as
       definitions.filter((definition) => definition.name !== "attack"),
       CHATGPT_OPERATION_EXPOSURE,
     ).some((issue) => issue.includes("attack")),
+  );
+});
+
+test("spell registration rejects admission and caster facts from another procedure", () => {
+  const registryPath = resolve(
+    repositoryRoot,
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+  );
+  const source = readFileSync(registryPath, "utf8");
+  const valid = `${source}\nregisteredSpellProcedureDeclaration<typeof damageReductionProfile>(damageReductionProfile);\n`;
+  assert.deepEqual(
+    accountingDiagnostics(accountingProgram(new Map([[registryPath, valid]]))),
+    [],
+  );
+  const mutation = `${source}
+const syntheticWrongProcedureProfile = {
+  ...damageReductionProfile,
+  admitMechanics: rollModifierProfile.admitMechanics,
+  casterRequirements: rollModifierProfile.casterRequirements,
+};
+registeredSpellProcedureDeclaration<typeof syntheticWrongProcedureProfile>(syntheticWrongProcedureProfile);
+`;
+  const diagnostics = accountingDiagnostics(
+    accountingProgram(new Map([[registryPath, mutation]])),
+  );
+  assert.ok(
+    diagnostics.some(
+      (issue) =>
+        issue.includes("spell-procedure-profiles/registry.ts:") &&
+        issue.includes("rollModifier") &&
+        issue.includes("damageReduction"),
+    ),
+    "Admission for rollModifier must not register as damageReduction",
+  );
+  assert.ok(
+    diagnostics.every((issue) => !issue.includes("Cannot find name")),
+    "The rejection must use actual existing profile contracts",
+  );
+});
+
+test("spell registration rejects static admission as a ready invocation owner", () => {
+  const registryPath = resolve(
+    repositoryRoot,
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+  );
+  const source = readFileSync(registryPath, "utf8");
+  const mutation = `${source}
+const syntheticStaticInvocationProfile = {
+  ...damageReductionProfile,
+  admitMechanics: glyphDurableOccurrenceAdmission.admitMechanics,
+  casterRequirements: damageReductionProfile.casterRequirements,
+};
+registeredSpellProcedureDeclaration<typeof syntheticStaticInvocationProfile>(syntheticStaticInvocationProfile);
+`;
+  const diagnostics = accountingDiagnostics(
+    accountingProgram(new Map([[registryPath, mutation]])),
+  );
+  assert.ok(
+    diagnostics.some(
+      (issue) =>
+        issue.includes("spell-procedure-profiles/registry.ts:") &&
+        issue.includes("glyphDurableOccurrence") &&
+        issue.includes("damageReduction"),
+    ),
+    "A static glyph admission must not become a ready damageReduction invocation",
+  );
+  assert.ok(
+    diagnostics.every((issue) => !issue.includes("Cannot find name")),
+    "The rejection must use the canonical static admission owner",
   );
 });

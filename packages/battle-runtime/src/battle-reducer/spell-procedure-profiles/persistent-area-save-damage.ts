@@ -77,7 +77,12 @@ function persistentAreaSaveDamageMechanicsAdmission(
   return { tag: "notRepresented" };
 }
 
-export const persistentAreaSaveDamageProfile = {
+export const persistentAreaSaveDamageProfile: SpellProcedureDeclaration<
+  "persistentAreaSaveDamage",
+  SpellInvocationAdmittedByRegisteredProcedure<"persistentAreaSaveDamage">,
+  SpellProcedureMechanicsFacts,
+  PersistentAreaSaveDamageAdmissionIssue
+> = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: Schema.Union([
     sourceTurnTranslationPersistentAreaSaveDamageProfile.executionSchema,
@@ -136,9 +141,4 @@ export const persistentAreaSaveDamageProfile = {
       ),
       Match.exhaustive,
     ),
-} satisfies SpellProcedureDeclaration<
-  "persistentAreaSaveDamage",
-  SpellInvocationAdmittedByRegisteredProcedure<"persistentAreaSaveDamage">,
-  SpellProcedureMechanicsFacts,
-  PersistentAreaSaveDamageAdmissionIssue
->;
+};

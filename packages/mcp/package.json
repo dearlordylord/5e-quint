@@ -24,7 +24,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts src/mcp-level-nine-scenario.test.ts src/mcp-level-ten-scenario.test.ts",
-    "check:operation-accounting": "tsx --test scripts/operation-accounting.node-test.ts && tsx scripts/operation-accounting.ts"
+    "check:operation-accounting": "tsx --test scripts/execution-hole-bindings.node-test.ts scripts/operation-accounting.node-test.ts && tsx scripts/operation-accounting.ts"
   },
   "dependencies": {
     "@better-auth/cimd": "1.7.1",

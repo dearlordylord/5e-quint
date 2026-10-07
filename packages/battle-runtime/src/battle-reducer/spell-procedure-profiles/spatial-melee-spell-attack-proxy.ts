@@ -1754,7 +1754,12 @@ const SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema =
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );
-export const spatialMeleeSpellAttackProxyProfile = {
+export const spatialMeleeSpellAttackProxyProfile: SpellProcedureDeclaration<
+  "spatialMeleeSpellAttackProxy",
+  SpatialMeleeSpellAttackProxyInvocation,
+  SpatialMeleeSpellAttackProxyMechanicsFacts,
+  ReturnType<typeof spatialMeleeSpellAttackProxyIssueResult>
+> = {
   procedure: "spatialMeleeSpellAttackProxy",
   executionSchema: Schema.Union([
     SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
@@ -1784,7 +1789,4 @@ export const spatialMeleeSpellAttackProxyProfile = {
       Match.exhaustive,
     ),
   resolve: resolveSpatialMeleeSpellAttackProxy,
-} satisfies SpellProcedureDeclaration<
-  "spatialMeleeSpellAttackProxy",
-  SpatialMeleeSpellAttackProxyInvocation
->;
+};
