@@ -582,14 +582,37 @@ export function battleCharacterExecutionScopeRefOrdinalIsBefore(
   );
 }
 
+type ParsedExecutionReference = NonNullable<
+  ReturnType<typeof parseExecutionReference>
+>;
+function isDecodedSpellEffectSource(
+  decoded: ReturnType<typeof parseExecutionReference>,
+): decoded is ParsedExecutionReference & {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+} {
+  return (
+    decoded?.kind === "spellEffectProcedure" &&
+    isBattleProcedureExecutionRef(decoded.sourceProcedureRef)
+  );
+}
+function isDecodedStatBlockInvocationParent(
+  decoded: ReturnType<typeof parseExecutionReference>,
+): decoded is ParsedExecutionReference & {
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+} {
+  return (
+    decoded?.kind === "statBlockSpellInvocation" &&
+    Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
+  );
+}
+
 export function battleProcedureExecutionRefBelongsToScope(
   procedureRef: BattleProcedureExecutionRef,
   scopeRef: BattleExecutionScopeRef,
 ): boolean {
   const decoded = parseExecutionReference(procedureRef);
   if (
-    decoded?.kind === "spellEffectProcedure" &&
-    isBattleProcedureExecutionRef(decoded.sourceProcedureRef) &&
+    isDecodedSpellEffectSource(decoded) &&
     Schema.is(BattleEffectExecutionRef)(decoded.activeEffectRef)
   ) {
     return (
@@ -600,10 +623,7 @@ export function battleProcedureExecutionRefBelongsToScope(
       battleEffectExecutionRefBelongsToScope(decoded.activeEffectRef, scopeRef)
     );
   }
-  if (
-    decoded?.kind === "statBlockSpellInvocation" &&
-    Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
-  ) {
+  if (isDecodedStatBlockInvocationParent(decoded)) {
     return battleProcedureExecutionRefBelongsToScope(
       decoded.procedureRef,
       scopeRef,
@@ -617,19 +637,13 @@ export function battleProcedureExecutionRefBelongsToCombatant(
   combatantId: CombatantId,
 ): boolean {
   const decoded = parseExecutionReference(procedureRef);
-  if (
-    decoded?.kind === "spellEffectProcedure" &&
-    isBattleProcedureExecutionRef(decoded.sourceProcedureRef)
-  ) {
+  if (isDecodedSpellEffectSource(decoded)) {
     return battleProcedureExecutionRefBelongsToCombatant(
       decoded.sourceProcedureRef,
       combatantId,
     );
   }
-  if (
-    decoded?.kind === "statBlockSpellInvocation" &&
-    Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
-  ) {
+  if (isDecodedStatBlockInvocationParent(decoded)) {
     return battleProcedureExecutionRefBelongsToCombatant(
       decoded.procedureRef,
       combatantId,
@@ -974,6 +988,21 @@ function attackProcedureExecutionReferenceIsCanonical(
   );
 }
 
+function hasCanonicalStatBlockInvocationFields(
+  decoded: ParsedExecutionReference,
+): boolean {
+  return (
+    decoded.kind === "statBlockSpellInvocation" &&
+    typeof decoded.procedureRef === "string" &&
+    statBlockProcedureExecutionReferenceIsCanonical(decoded.procedureRef) &&
+    nonNegativeIntegerProperty(decoded, "groupOrdinal") &&
+    nonNegativeIntegerProperty(decoded, "invocationOrdinal") &&
+    typeof decoded.procedure === "string" &&
+    decoded.procedure.trim() === decoded.procedure &&
+    decoded.procedure.length > 0
+  );
+}
+
 function statBlockSpellInvocationProcedureReferenceIsCanonical(
   reference: string,
 ): boolean {
@@ -987,14 +1016,7 @@ function statBlockSpellInvocationProcedureReferenceIsCanonical(
       "invocationOrdinal",
       "procedure",
     ]) &&
-    decoded.kind === "statBlockSpellInvocation" &&
-    typeof decoded.procedureRef === "string" &&
-    statBlockProcedureExecutionReferenceIsCanonical(decoded.procedureRef) &&
-    nonNegativeIntegerProperty(decoded, "groupOrdinal") &&
-    nonNegativeIntegerProperty(decoded, "invocationOrdinal") &&
-    typeof decoded.procedure === "string" &&
-    decoded.procedure.trim() === decoded.procedure &&
-    decoded.procedure.length > 0 &&
+    hasCanonicalStatBlockInvocationFields(decoded) &&
     reference ===
       JSON.stringify({
         kind: "statBlockSpellInvocation",
@@ -1006,17 +1028,25 @@ function statBlockSpellInvocationProcedureReferenceIsCanonical(
   );
 }
 
+function hasCanonicalSpellEffectFields(
+  decoded: ReturnType<typeof parseExecutionReference>,
+): decoded is ParsedExecutionReference & {
+  readonly sourceProcedureRef: string;
+  readonly activeEffectRef: BattleEffectExecutionRef;
+} {
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, ["kind", "sourceProcedureRef", "activeEffectRef"]) &&
+    decoded.kind === "spellEffectProcedure" &&
+    typeof decoded.sourceProcedureRef === "string" &&
+    initialSpellProcedureReferenceIsCanonical(decoded.sourceProcedureRef) &&
+    Schema.is(BattleEffectExecutionRef)(decoded.activeEffectRef)
+  );
+}
+
 function spellEffectProcedureReferenceIsCanonical(reference: string): boolean {
   const decoded = parseExecutionReference(reference);
-  if (
-    decoded === null ||
-    !hasExactKeys(decoded, ["kind", "sourceProcedureRef", "activeEffectRef"]) ||
-    decoded.kind !== "spellEffectProcedure" ||
-    typeof decoded.sourceProcedureRef !== "string" ||
-    !initialSpellProcedureReferenceIsCanonical(decoded.sourceProcedureRef) ||
-    !Schema.is(BattleEffectExecutionRef)(decoded.activeEffectRef)
-  )
-    return false;
+  if (!hasCanonicalSpellEffectFields(decoded)) return false;
   const effect = parseExecutionReference(decoded.activeEffectRef);
   return (
     effect !== null &&
