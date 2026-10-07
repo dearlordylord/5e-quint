@@ -1,6 +1,5 @@
-import { spellAdmissionCastOptions } from "./profile.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
@@ -82,7 +81,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -1088,7 +1086,7 @@ function turnConstraintBundleSupportedInspection(
         saveGatedTurnConstraintBundleInvocationsFromFacts(
           executionSource,
           facts,
-          spellAdmissionCastOptions(ctx),
+          ctx,
         ),
     },
   };
@@ -1149,18 +1147,16 @@ function admitSaveGatedTurnConstraintBundleMechanics(
 function saveGatedTurnConstraintBundleInvocationsFromFacts(
   spell: BattleSpellExecutionSource,
   facts: SaveGatedTurnConstraintBundleMechanicsFacts,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  ctx: SpellAdmissionContext,
 ): readonly SaveGatedTurnConstraintBundleSpellInvocation[] {
-  return castOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SaveGatedTurnConstraintBundleSpellInvocation[] =>
       Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
-              access: leveledSpellAccessForCastingSource(spell.castingSource),
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "saveGatedTurnConstraintBundle",
-              spell,
               actionCost: "magicAction",
               ability: facts.ability,
               dc: facts.dc,

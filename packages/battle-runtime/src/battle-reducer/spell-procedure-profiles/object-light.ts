@@ -1,8 +1,6 @@
-import { spellAdmissionCastOptions } from "./profile.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -77,7 +75,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
@@ -802,34 +799,33 @@ function admitObjectLightMechanics(
 
 function admitPreparedObjectLight(
   spell: BattleSpellExecutionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  ctx: SpellAdmissionContext,
   facts: Extract<
     ObjectLightMechanicsFacts,
     { readonly kind: "permanentTouchedObject" }
   >,
 ): readonly ObjectLightInvocation[] {
-  return castOptions.flatMap((slot): readonly ObjectLightInvocation[] =>
-    Number(slot.spellLevel) < facts.level
-      ? []
-      : [
-          {
-            access: leveledSpellAccessForCastingSource(spell.castingSource),
-            resource: spellInvocationResourceForCastOption(slot),
-            procedure: "objectLight",
-            spell,
-            actionCost: "magicAction",
-            targeting: {
-              kind: "singleObject",
-              object: { kind: "touchedObject" },
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
+    (slot): readonly ObjectLightInvocation[] =>
+      Number(slot.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              ...slot.facts,
+              procedure: "objectLight",
+              actionCost: "magicAction",
+              targeting: {
+                kind: "singleObject",
+                object: { kind: "touchedObject" },
+              },
+              light: {
+                kind: "brightAndDim",
+                brightRadiusFeet: facts.brightRadiusFeet,
+                dimAdditionalFeet: facts.dimAdditionalFeet,
+              },
+              expiresAt: { kind: "untilDispelled" },
             },
-            light: {
-              kind: "brightAndDim",
-              brightRadiusFeet: facts.brightRadiusFeet,
-              dimAdditionalFeet: facts.dimAdditionalFeet,
-            },
-            expiresAt: { kind: "untilDispelled" },
-          },
-        ],
+          ],
   );
 }
 
@@ -843,11 +839,7 @@ function admitObjectLight(
       admitCantripObjectLight(spell, ctx, cantripFacts),
     ),
     Match.when({ kind: "permanentTouchedObject" }, (permanentFacts) =>
-      admitPreparedObjectLight(
-        spell,
-        spellAdmissionCastOptions(ctx),
-        permanentFacts,
-      ),
+      admitPreparedObjectLight(spell, ctx, permanentFacts),
     ),
     Match.exhaustive,
   );
@@ -1107,4 +1099,3 @@ const OBJECT_LIGHT_TARGET_FACT_KINDS = [
 ] as const satisfies ReadonlyArray<ObjectLightTargetFact["kind"]>;
 type ObjectLightTargetFactKind =
   (typeof OBJECT_LIGHT_TARGET_FACT_KINDS)[number];
-import { spellInvocationResourceForCastOption } from "./profile.ts";

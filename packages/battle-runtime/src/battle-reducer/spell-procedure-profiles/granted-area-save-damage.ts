@@ -1,7 +1,4 @@
-import {
-  leveledSpellInvocationOptions,
-  spellAdmissionActionCost,
-} from "./profile.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
@@ -455,10 +452,7 @@ function grantedAreaSaveDamageActionInvocationsFromFacts(
         {
           ...slot.facts,
           procedure: "grantedAreaSaveDamageAction",
-          actionCost: spellAdmissionActionCost(
-            ctx,
-            GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost,
-          ),
+          actionCost: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost,
           ability: facts.ability,
           targeting: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting,
           activeEffect: {
