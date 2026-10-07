@@ -14,7 +14,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, posix, relative, resolve, sep } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join, posix, relative, resolve, sep } from "node:path";
 import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
 import ts from "typescript";
 
@@ -104,13 +105,13 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
       "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
   },
   measure: {
-    files: 285,
-    bytes: 8_137_616,
+    files: 383,
+    bytes: 9_530_714,
   },
   pathLedgerSha256:
-    "9f5717f9301a785b2355e0bc263f770771c996a76482cac457f13e9e9f77447e",
+    "f58c03e61b3e49d69e5a71a268b351bd6371c540395472c32d2e4237457a1e63",
   contentLedgerSha256:
-    "47e12f2cfbf394e949844cf4e1994b75e8259ee7b5d43783449469a3de262ae7",
+    "16dd37073f073620ec0182c09d0de3af0f0e13b8f7741b96b5645b72ee0a8d22",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
@@ -521,7 +522,10 @@ export function emitPublicDeclarations(
   destination: string,
 ): PublicDeclarationBundleMeasure {
   const declarationsDirectory = resolve(destination, "declarations");
-  const compiler = resolve(repoRoot, "node_modules/typescript/bin/tsc");
+  const nativePackage = createRequire(import.meta.url).resolve(
+    "@typescript/native/package.json",
+  );
+  const compiler = resolve(dirname(nativePackage), "bin/tsc");
   const config = resolve(
     repoRoot,
     "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",

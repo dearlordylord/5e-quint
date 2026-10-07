@@ -13,46 +13,45 @@
     "moduleResolution": "bundler",
     "lib": ["ES2022", "ESNext.Disposable", "DOM", "DOM.Iterable"],
     "types": ["node"],
-    "baseUrl": "../../..",
     "paths": {
-      "@dnd/battle-runtime": ["packages/battle-runtime/src/index.ts"],
+      "@dnd/battle-runtime": ["../../../packages/battle-runtime/src/index.ts"],
       "@dnd/battle-runtime/consumer-protocol": [
-        "packages/battle-runtime/src/consumer-protocol.ts"
+        "../../../packages/battle-runtime/src/consumer-protocol.ts"
       ],
       "@dnd/character-creation-runtime": [
-        "packages/character-creation-runtime/src/index.ts"
+        "../../../packages/character-creation-runtime/src/index.ts"
       ],
       "@dnd/character-creation-runtime/consumer-protocol": [
-        "packages/character-creation-runtime/src/consumer-protocol.ts"
+        "../../../packages/character-creation-runtime/src/consumer-protocol.ts"
       ],
       "@dnd/character-sheet-runtime": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "../../../packages/character-sheet-runtime/src/index.ts"
       ],
       "@dnd/character-sheet-runtime/consumer-protocol": [
-        "packages/character-sheet-runtime/src/consumer-protocol.ts"
+        "../../../packages/character-sheet-runtime/src/consumer-protocol.ts"
       ],
       "@dnd/character-sheet-runtime/battle-init-protocol": [
-        "packages/character-sheet-runtime/src/battle-init-protocol.ts"
+        "../../../packages/character-sheet-runtime/src/battle-init-protocol.ts"
       ],
       "@dnd/character-sheet-runtime/fresh-character-sheet-schema": [
-        "packages/character-sheet-runtime/src/fresh-character-sheet-schema.ts"
+        "../../../packages/character-sheet-runtime/src/fresh-character-sheet-schema.ts"
       ],
       "@dnd/character-sheet-runtime/source-free-construction": [
-        "packages/character-sheet-runtime/src/source-free-construction.ts"
+        "../../../packages/character-sheet-runtime/src/source-free-construction.ts"
       ],
       "@dnd/character-battle-runtime/source-free-construction": [
-        "packages/character-battle-runtime/src/source-free-construction.ts"
+        "../../../packages/character-battle-runtime/src/source-free-construction.ts"
       ],
       "@dnd/scenario-character-sdk": [
-        "scripts/raw-swarm/sdk-player/scenario-character-contract.ts"
+        "../../../scripts/raw-swarm/sdk-player/scenario-character-contract.ts"
       ],
       "@dnd/scenario-setup-sdk": [
-        "scripts/raw-swarm/sdk-player/scenario-setup-contract.ts"
+        "../../../scripts/raw-swarm/sdk-player/scenario-setup-contract.ts"
       ],
-      "@dnd/shared/*": ["packages/shared/src/*"],
-      "@dnd/shared-algebras/*": ["packages/shared-algebras/src/*"],
-      "@dnd/tactical-space": ["packages/tactical-space/src/index.ts"],
-      "@dnd/surface/*": ["packages/surface/src/*"]
+      "@dnd/shared/*": ["../../../packages/shared/src/*"],
+      "@dnd/shared-algebras/*": ["../../../packages/shared-algebras/src/*"],
+      "@dnd/tactical-space": ["../../../packages/tactical-space/src/index.ts"],
+      "@dnd/surface/*": ["../../../packages/surface/src/*"]
     },
     "rootDir": "../../..",
     "declaration": true,
