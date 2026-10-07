@@ -252,3 +252,11 @@ export const LinkedDefenseResistanceDamageShareTemplateSchema =
       ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );
+
+export const SpatialMeleeSpellAttackProxyRepeatTargetingSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("unrestricted") }),
+  Schema.Struct({
+    kind: Schema.Literal("fixedCombatant"),
+    combatantId: CombatantId,
+  }),
+]);

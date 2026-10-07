@@ -1479,7 +1479,6 @@ export type RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution = {
   readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
   readonly procedure: "spatialMeleeSpellAttackProxy";
   readonly operation: "repositionAndAttack";
-  readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
 };
 
 export const TemporaryAbilityCheckRollModeSelectedModeSchema = Schema.Struct({

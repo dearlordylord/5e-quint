@@ -295,11 +295,7 @@ export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase &
     > & { readonly durationTicks: ElapsedTimeTicks };
   };
 export type SpatialMeleeSpellAttackProxyRepeatTargeting =
-  | { readonly kind: "unrestricted" }
-  | {
-      readonly kind: "fixedCombatant";
-      readonly combatantId: CombatantId;
-    };
+  typeof import("./codecs.ts").SpatialMeleeSpellAttackProxyRepeatTargetingSchema.Type;
 export type SpellConcentrationOrStoredDurationExpiration =
   | (Extract<
       BattleActiveEffectExpiration,
@@ -309,6 +305,7 @@ export type SpellConcentrationOrStoredDurationExpiration =
 export type SpatialMeleeSpellAttackProxyActiveEffect = BattleSpellEffectBase &
   BattleReplayAddressableEffect & {
     readonly kind: "spatialMeleeSpellAttackProxy";
+    readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
     readonly forcePositionId: BattleTablePositionId;
     readonly startedOn: BattleTurnAnchor;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
