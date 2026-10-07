@@ -62,87 +62,97 @@ export type SpellProcedureProfileResolveInput<
       : never
     : never;
 
-export type SpellProcedureExecutionDeclaration<
+export type SpellProcedureExecutionFields<
   P extends BattleSpellProcedureKey,
+  Codec,
+  Discover,
+  Resolve,
 > = {
   readonly procedure: P;
-  readonly discoverCastAct: (
+  readonly executionSchema: Codec;
+  readonly discoverCastAct: Discover;
+  readonly resolve: Resolve;
+};
+
+export type SpellProcedureExecutionDeclaration<
+  P extends BattleSpellProcedureKey,
+> = SpellProcedureExecutionFields<
+  P,
+  SpellProcedureExecutionCodec<P>,
+  (
     state: BattleState,
     actorId: CombatantId,
     invocation: BattleSpellProcedureExecution<
       SpellProcedureExecutionByProcedure[P]
     >,
-  ) => readonly BattleActDiscoveryCandidate[];
-  readonly executionSchema: SpellProcedureExecutionCodec<P>;
-  readonly resolve: (
+  ) => readonly BattleActDiscoveryCandidate[],
+  (
     input: SpellProcedureDeclarationResolution<P>,
     executionRegistry: SpellProcedureExecutionRegistry,
-  ) => BattleResolutionResult;
+  ) => BattleResolutionResult
+>;
+
+type StatBlockSpellProcedureSchemaFields<F extends Schema.Struct.Fields> = F & {
+  readonly actionCost: Schema.Literals<readonly ["magicAction", "bonusAction"]>;
 };
+type StatBlockSpellProcedureSchema<F extends Schema.Struct.Fields> =
+  Schema.Struct<StatBlockSpellProcedureSchemaFields<F>>;
+type CharacterSpellProcedureSchemaType<F extends Schema.Struct.Fields> =
+  Schema.Struct<F>["Type"] &
+    Exclude<
+      CorrelatedSpellExecution<Schema.Struct<F>["Type"]>,
+      {
+        readonly access: {
+          readonly tag: "statBlockCantrip" | "statBlockLeveled" | "spellEffect";
+        };
+      }
+    >;
+type StatBlockSpellProcedureSchemaType<F extends Schema.Struct.Fields> =
+  StatBlockSpellProcedureSchema<F>["Type"] &
+    Extract<
+      CorrelatedSpellExecution<StatBlockSpellProcedureSchema<F>["Type"]>,
+      {
+        readonly access: {
+          readonly tag: "statBlockCantrip" | "statBlockLeveled";
+        };
+      }
+    >;
+export type SpellProcedureExecutionSchema<F extends Schema.Struct.Fields> =
+  Schema.Union<
+    readonly [
+      Schema.refine<CharacterSpellProcedureSchemaType<F>, Schema.Struct<F>>,
+      Schema.refine<
+        StatBlockSpellProcedureSchemaType<F>,
+        StatBlockSpellProcedureSchema<F>
+      >,
+    ]
+  >;
 
 export function spellProcedureExecutionSchema<
   const F extends Schema.Struct.Fields,
->(schema: Schema.Struct<F>) {
+>(schema: Schema.Struct<F>): SpellProcedureExecutionSchema<F> {
   const character = Schema.refine<
     typeof schema,
-    Schema.Struct<F>["Type"] &
-      Exclude<
-        CorrelatedSpellExecution<Schema.Struct<F>["Type"]>,
-        {
-          readonly access: {
-            readonly tag:
-              | "statBlockCantrip"
-              | "statBlockLeveled"
-              | "spellEffect";
-          };
-        }
-      >
+    CharacterSpellProcedureSchemaType<F>
   >(
     (
       value: Schema.Struct<F>["Type"],
-    ): value is Schema.Struct<F>["Type"] &
-      Exclude<
-        CorrelatedSpellExecution<Schema.Struct<F>["Type"]>,
-        {
-          readonly access: {
-            readonly tag:
-              | "statBlockCantrip"
-              | "statBlockLeveled"
-              | "spellEffect";
-          };
-        }
-      > =>
+    ): value is CharacterSpellProcedureSchemaType<F> =>
       isSpellInvocationCastingFacts(value) &&
       value.spellRuleFacts.castingSource.tag !== "statBlock" &&
       value.access.tag !== "spellEffect",
   )(schema);
-  const statBlockSchema = Schema.Struct({
+  const statBlockSchema: StatBlockSpellProcedureSchema<F> = Schema.Struct({
     ...schema.fields,
     actionCost: Schema.Literals(["magicAction", "bonusAction"]),
   });
   const statBlock = Schema.refine<
     typeof statBlockSchema,
-    typeof statBlockSchema.Type &
-      Extract<
-        CorrelatedSpellExecution<typeof statBlockSchema.Type>,
-        {
-          readonly access: {
-            readonly tag: "statBlockCantrip" | "statBlockLeveled";
-          };
-        }
-      >
+    StatBlockSpellProcedureSchemaType<F>
   >(
     (
       value: typeof statBlockSchema.Type,
-    ): value is typeof statBlockSchema.Type &
-      Extract<
-        CorrelatedSpellExecution<typeof statBlockSchema.Type>,
-        {
-          readonly access: {
-            readonly tag: "statBlockCantrip" | "statBlockLeveled";
-          };
-        }
-      > => {
+    ): value is StatBlockSpellProcedureSchemaType<F> => {
       if (
         typeof value !== "object" ||
         value === null ||
