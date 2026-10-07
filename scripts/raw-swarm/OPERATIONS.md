@@ -657,6 +657,18 @@ reporting normalizes the one player invocation by both continuations and
 canonical SDK calls.
 `evidence/supervisor-timings.jsonl` separates continuation typechecking,
 prior-call verification/replay, new SDK execution, and evidence writes.
+The deterministic tracer profile for [#496](https://github.com/dearlordylord/5e-quint/issues/496)
+used these existing [supervisor timing owners](sdk-player/supervisor-cli.ts),
+with separate scratch directories for discovery and state-changing End Turn
+continuations. Repeated turn profiles matched their canonical input-session and
+result hashes, and each retained transcript passed deterministic replay.
+Submitted-source typechecking dominated the recorded continuation phases;
+prefix replay, SDK execution, and evidence writes were small in this bounded
+case. This supports evaluating compilation reuse, while providing no measured
+reason to restructure scenario execution or cache replay. No model calls were
+included, so these observations do not estimate whole model-backed Execution
+cost. Exact timings and artifact hashes remain in the profiling evidence rather
+than defining a performance budget here.
 `performance-comparison.ts summarize` combines those records with typed model
 invocation ledgers. The review invocation evidence binds each retained
 milestone/final source input to the corresponding replay input and measured
