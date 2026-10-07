@@ -1784,7 +1784,7 @@ type SpellProcedureExecutionForInput<Input extends SpellProcedureInput> =
         ? InputAccess extends ExecutionAccess
           ? CorrelatedSpellExecution<Execution>
           : never
-        : Execution
+        : CorrelatedSpellExecution<Execution>
       : Execution
     : never;
 export type SpellProcedureExecution<
