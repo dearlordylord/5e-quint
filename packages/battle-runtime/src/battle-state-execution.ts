@@ -1380,6 +1380,10 @@ export type BattleSpellCastPaymentCommitment =
   | {
       readonly kind: "spellAccessFreeCast";
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+    }
+  | {
+      readonly kind: "statBlockLimited";
+      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
     };
 export type BattleSpellCastMetamagicCommitment =
   | { readonly kind: "none" }

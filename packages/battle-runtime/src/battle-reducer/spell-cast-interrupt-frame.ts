@@ -16,6 +16,8 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
 import { spellInvocationCastLevel } from "./spells-effective-level.ts";
+import { statBlockLongCastingTime } from "./long-casting-readiness.ts";
+import { Option } from "effect";
 
 export function spellCastReactionFactsHole(input: {
   readonly casterId: CombatantId;
@@ -90,7 +92,13 @@ export function spellCastInterruptFrame(
               kind: "spellAccessFreeCast",
               resourcePoolRef: resource.resourcePoolRef,
             }
-          : { kind: "none" },
+          : resource.tag === "statBlockLimited" &&
+              Option.isNone(statBlockLongCastingTime(input.invocation))
+            ? {
+                kind: "statBlockLimited",
+                resourcePoolRef: resource.resourcePoolRef,
+              }
+            : { kind: "none" },
     metamagicCommitment:
       input.metamagicApplications === undefined
         ? { kind: "none" }

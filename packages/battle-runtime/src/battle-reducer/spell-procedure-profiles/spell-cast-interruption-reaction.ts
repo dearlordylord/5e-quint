@@ -1,7 +1,7 @@
 import { breakBattleConcentration } from "../damage-apply.ts";
+import { spendStatBlockSpellcastingPool } from "../../stat-block-execution-state.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
@@ -117,7 +117,6 @@ import {
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 
 type SpellCastInterruptionInvocation = Extract<
   SupportedSpellInvocation,
@@ -1101,14 +1100,39 @@ function commitCounteredSpellPayment(
   state: BattleState,
   frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
 ): Result.Result<BattleState, string> {
-  if (frame.paymentCommitment.kind !== "spellAccessFreeCast") {
-    return Result.succeed(state);
-  }
-  return commitSpellAccessFreeCastResourceUse({
-    state,
-    actorId: frame.casterId,
-    resourcePoolRef: frame.paymentCommitment.resourcePoolRef,
-  });
+  return Match.value(frame.paymentCommitment).pipe(
+    Match.when({ kind: "none" }, () => Result.succeed(state)),
+    Match.when({ kind: "pendingCasterSpellSlot" }, () => Result.succeed(state)),
+    Match.when({ kind: "spellAccessFreeCast" }, (payment) =>
+      commitSpellAccessFreeCastResourceUse({
+        state,
+        actorId: frame.casterId,
+        resourcePoolRef: payment.resourcePoolRef,
+      }),
+    ),
+    Match.when({ kind: "statBlockLimited" }, (payment) => {
+      const actor = state.combatants.get(frame.casterId);
+      if (actor?.origin.kind !== "statBlock")
+        return Result.fail("Stat Block spell caster is unavailable.");
+      return Result.map(
+        Result.mapError(
+          spendStatBlockSpellcastingPool(
+            actor.origin.execution,
+            payment.resourcePoolRef,
+          ),
+          () => "Stat Block spell invocation resource is unavailable.",
+        ),
+        (execution) => ({
+          ...state,
+          combatants: new Map(state.combatants).set(frame.casterId, {
+            ...actor,
+            origin: { ...actor.origin, execution },
+          }),
+        }),
+      );
+    }),
+    Match.exhaustive,
+  );
 }
 
 function turnResourcesAfterWastedSpellCastingResource(
