@@ -27,6 +27,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const goblin = {
     combatantId: sdk.combatantId("goblin-warrior"),
     initiative: sdk.initiativeScore(15),
+    unitCatalog: context.unitCatalog,
     statBlock: goblinStatBlock,
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
@@ -34,6 +35,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const skeleton = {
     combatantId: sdk.combatantId("skeleton"),
     initiative: sdk.initiativeScore(10),
+    unitCatalog: context.unitCatalog,
     statBlock: skeletonStatBlock,
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],

@@ -42,6 +42,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const skeletonResult = {
     combatantId: skeletonId,
+    unitCatalog: context.unitCatalog,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(17),
     currentHp: sdk.hp(13),
@@ -50,6 +51,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const goblinResult = {
     combatantId: goblinId,
+    unitCatalog: context.unitCatalog,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(12),
     currentHp: sdk.hp(10),

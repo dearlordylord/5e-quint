@@ -29,6 +29,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const nearerGoblin = {
     combatantId: nearerGoblinId,
+    unitCatalog: context.unitCatalog,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
@@ -36,6 +37,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const skeleton = {
     combatantId: skeletonId,
+    unitCatalog: context.unitCatalog,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
@@ -43,6 +45,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const fartherGoblin = {
     combatantId: fartherGoblinId,
+    unitCatalog: context.unitCatalog,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(9),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],

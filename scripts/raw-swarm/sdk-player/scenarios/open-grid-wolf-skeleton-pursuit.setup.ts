@@ -1,6 +1,10 @@
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
-export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
+export const setupScenario: ScenarioSetup = ({
+  sdk,
+  statBlocks,
+  unitCatalog,
+}) => {
   const wolfStatBlock = statBlocks.find(({ id }) => id === "stat_block_wolf");
   const skeletonStatBlock = statBlocks.find(
     ({ id }) => id === "stat_block_skeleton",
@@ -25,6 +29,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
 
   const wolfInit = {
     combatantId: wolfId,
+    unitCatalog,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(19),
     currentHp: sdk.hp(11),
@@ -33,6 +38,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   };
   const skeletonInit = {
     combatantId: skeletonId,
+    unitCatalog,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(9),
     currentHp: sdk.hp(13),

@@ -81,6 +81,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const skeletonInits = skeletonIds.map((combatantId) => ({
     combatantId,
+    unitCatalog: context.unitCatalog,
     statBlock: skeleton,
     initiative: sdk.initiativeScore(14 + 3),
     currentHp: sdk.hp(13),

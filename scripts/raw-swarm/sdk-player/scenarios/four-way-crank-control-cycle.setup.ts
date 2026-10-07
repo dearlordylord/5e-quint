@@ -48,6 +48,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const combatantInits = [
     {
       combatantId: brineId,
+      unitCatalog: context.unitCatalog,
       statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(22),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
@@ -55,6 +56,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     },
     {
       combatantId: rivetId,
+      unitCatalog: context.unitCatalog,
       statBlock: rivetStatBlock,
       initiative: sdk.initiativeScore(17),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
@@ -62,6 +64,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     },
     {
       combatantId: sootId,
+      unitCatalog: context.unitCatalog,
       statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(12),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
@@ -69,6 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     },
     {
       combatantId: tangleId,
+      unitCatalog: context.unitCatalog,
       statBlock: tangleStatBlock,
       initiative: sdk.initiativeScore(7),
       ammunitionStocks: [],

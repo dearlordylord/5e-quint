@@ -72,6 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const arrowStock = () => [sdk.battleAmmunitionStock("arrow", 20)];
   const skeleton = {
     combatantId: skeletonId,
+    unitCatalog: context.unitCatalog,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.skeleton),
     ammunitionStocks: arrowStock(),
@@ -79,6 +80,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const wolf = {
     combatantId: wolfId,
+    unitCatalog: context.unitCatalog,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.wolf),
     ammunitionStocks: [],
@@ -86,6 +88,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const goblin = {
     combatantId: goblinId,
+    unitCatalog: context.unitCatalog,
     statBlock: goblinStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.goblinWarrior),
     ammunitionStocks: arrowStock(),

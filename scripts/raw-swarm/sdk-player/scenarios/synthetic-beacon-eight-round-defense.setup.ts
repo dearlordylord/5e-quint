@@ -127,6 +127,7 @@ export const setupScenario: ScenarioSetup = ({
     }
     const projected = {
       combatantId: sdk.combatantId(choice.combatantId),
+      unitCatalog,
       statBlock,
       initiative: sdk.initiativeScore(choice.initiative),
       ammunitionStocks:

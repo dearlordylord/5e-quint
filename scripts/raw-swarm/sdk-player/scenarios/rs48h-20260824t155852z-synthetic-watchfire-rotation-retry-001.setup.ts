@@ -142,6 +142,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   for (const { input, statBlock } of statBlockResolution.statBlocks) {
     const initialized = {
       combatantId: input.combatantId,
+      unitCatalog: context.unitCatalog,
       statBlock,
       initiative: context.sdk.initiativeScore(input.initiative),
       ammunitionStocks: input.ammunitionStocks,

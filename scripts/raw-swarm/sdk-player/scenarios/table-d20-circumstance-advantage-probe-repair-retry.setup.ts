@@ -26,6 +26,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const ridingHorse = {
     combatantId: ridingHorseId,
+    unitCatalog: context.unitCatalog,
     statBlock: ridingHorseStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
@@ -33,6 +34,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const wolf = {
     combatantId: wolfId,
+    unitCatalog: context.unitCatalog,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],

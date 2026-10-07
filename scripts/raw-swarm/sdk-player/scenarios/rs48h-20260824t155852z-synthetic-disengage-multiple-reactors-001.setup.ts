@@ -91,6 +91,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const wolf = {
     combatantId: wolfId,
+    unitCatalog: context.unitCatalog,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.wolf),
     ammunitionStocks: [],
@@ -98,6 +99,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const skeleton = {
     combatantId: skeletonId,
+    unitCatalog: context.unitCatalog,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.skeleton),
     ammunitionStocks: arrowStock(),
@@ -105,6 +107,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const goblinWarrior = {
     combatantId: goblinWarriorId,
+    unitCatalog: context.unitCatalog,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.goblinWarrior),
     ammunitionStocks: arrowStock(),

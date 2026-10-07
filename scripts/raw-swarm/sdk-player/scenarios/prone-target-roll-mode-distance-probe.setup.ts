@@ -1,6 +1,10 @@
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
-export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
+export const setupScenario: ScenarioSetup = ({
+  sdk,
+  statBlocks,
+  unitCatalog,
+}) => {
   const meleeGoblinWarriorId = sdk.combatantId("melee-goblin-warrior");
   const rangedGoblinWarriorId = sdk.combatantId("ranged-goblin-warrior");
   const wolfId = sdk.combatantId("wolf");
@@ -27,6 +31,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   const arrowStock = () => sdk.battleAmmunitionStock("arrow", 20);
   const meleeGoblinWarrior = {
     combatantId: meleeGoblinWarriorId,
+    unitCatalog,
     statBlock: goblinWarrior,
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [arrowStock()],
@@ -34,6 +39,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   };
   const rangedGoblinWarrior = {
     combatantId: rangedGoblinWarriorId,
+    unitCatalog,
     statBlock: goblinWarrior,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [arrowStock()],
@@ -41,6 +47,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   };
   const wolfCreature = {
     combatantId: wolfId,
+    unitCatalog,
     statBlock: wolf,
     initiative: sdk.initiativeScore(7),
     ammunitionStocks: [],

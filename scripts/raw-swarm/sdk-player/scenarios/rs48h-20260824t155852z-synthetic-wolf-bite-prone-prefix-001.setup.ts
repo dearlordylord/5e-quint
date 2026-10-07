@@ -41,6 +41,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const targetWolfId = sdk.combatantId(TARGET_WOLF_ID);
   const bitingWolf = {
     combatantId: bitingWolfId,
+    unitCatalog: context.unitCatalog,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.bitingWolf),
     ammunitionStocks: [],
@@ -48,6 +49,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   };
   const targetWolf = {
     combatantId: targetWolfId,
+    unitCatalog: context.unitCatalog,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.targetWolf),
     ammunitionStocks: [],

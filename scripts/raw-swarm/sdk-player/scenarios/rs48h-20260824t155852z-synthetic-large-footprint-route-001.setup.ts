@@ -50,6 +50,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: ReturnType<typeof arrowStock> | readonly [] = [],
   ) => ({
     combatantId: sdk.combatantId(combatantId),
+    unitCatalog: context.unitCatalog,
     statBlock,
     initiative: sdk.initiativeScore(initiative),
     ammunitionStocks,

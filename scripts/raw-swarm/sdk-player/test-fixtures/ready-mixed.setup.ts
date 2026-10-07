@@ -40,6 +40,7 @@ export const setupScenario: ScenarioSetup = ({
   }
   const monster = {
     combatantId: sdk.combatantId("external-skeleton"),
+    unitCatalog,
     statBlock,
     initiative: sdk.initiativeScore(10),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],

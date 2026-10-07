@@ -42,6 +42,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const skeletonInit = {
     combatantId: skeletonId,
+    unitCatalog: context.unitCatalog,
     statBlock: skeletonStatBlock,
     initiative: skeletonInitiative,
     currentHp: sdk.hp(13),
@@ -51,6 +52,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const wolfInit = {
     combatantId: wolfId,
+    unitCatalog: context.unitCatalog,
     statBlock: wolfStatBlock,
     initiative: wolfInitiative,
     currentHp: sdk.hp(11),
