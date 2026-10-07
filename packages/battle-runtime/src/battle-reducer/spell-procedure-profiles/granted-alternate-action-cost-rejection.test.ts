@@ -6,6 +6,7 @@ import {
 } from "../../unit-profile-admission-spell-record.test-support.ts";
 import { grantedAlternateActionCostProfile } from "./bonus-action-dash.ts";
 import { mechanicsSource } from "./support-spell-procedure-admission.test-support.ts";
+import { mapReadonlyNonEmptyArray } from "../../readonly-non-empty-array.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 
 type Ongoing = Extract<SpellMechanics, { family: "ongoing_effect" }>;
@@ -33,14 +34,17 @@ function expectIssues(
   if (result.tag !== "unsupported")
     throw new Error("Expected unsupported authored mechanics.");
   expect(result.issues.map((issue) => issue.failedFact)).toEqual(
-    expect.arrayContaining(failedFacts),
+    expect.arrayContaining([...failedFacts]),
   );
 }
 test("an unrelated ongoing effect cannot replace the authored Dash permission", () => {
   expectIssues(
     (mechanics) => ({
       ...mechanics,
-      operations: mechanics.operations.map((operation) => ({
+      operations: mapReadonlyNonEmptyArray<
+        Ongoing["operations"][number],
+        Ongoing["operations"][number]
+      >(mechanics.operations, (operation) => ({
         ...operation,
         effect: { kind: "none" },
       })),
@@ -63,7 +67,10 @@ test("an alternate action grant cannot change the permitted standard action", ()
   expectIssues(
     (mechanics) => ({
       ...mechanics,
-      operations: mechanics.operations.map((operation) => {
+      operations: mapReadonlyNonEmptyArray<
+        Ongoing["operations"][number],
+        Ongoing["operations"][number]
+      >(mechanics.operations, (operation) => {
         if (operation.effect.kind !== "grant_alternate_action_cost")
           throw new Error("Expected alternate action cost.");
         return {
@@ -103,7 +110,10 @@ test("a conditional Dash permission is rejected instead of becoming passive", ()
   expectIssues(
     (mechanics) => ({
       ...mechanics,
-      operations: mechanics.operations.map((operation) => ({
+      operations: mapReadonlyNonEmptyArray<
+        Ongoing["operations"][number],
+        Ongoing["operations"][number]
+      >(mechanics.operations, (operation) => ({
         ...operation,
         trigger: { kind: "on_caster_turn_start" },
       })),
