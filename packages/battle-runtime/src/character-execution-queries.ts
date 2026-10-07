@@ -581,7 +581,7 @@ function executableSpatialMeleeSpellAttackProxyReposition(
     actionCost: "bonusAction",
     activeEffect,
     targeting: { kind: "singleCombatant" },
-    repeatTargeting: stored.repeatTargeting,
+    repeatTargeting: activeEffect.repeatTargeting,
     damage: source.damage,
     attackKind: source.attackKind,
     attackBonus: source.attackBonus,

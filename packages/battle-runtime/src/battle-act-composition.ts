@@ -1239,7 +1239,11 @@ function spellPresentationSourceForProcedure(
     .get(actorId)
     ?.spellPresentationSources.filter(
       (source) =>
-        source.procedureRef === procedureRef &&
+        source.procedureRef ===
+          (execution.procedure === "spatialMeleeSpellAttackProxy" &&
+          execution.operation === "repositionAndAttack"
+            ? execution.activeEffect.sourceProcedureRef
+            : procedureRef) &&
         source.invocation.procedure === execution.procedure,
     );
   return matches?.length === 1 ? matches[0] : undefined;
@@ -1292,6 +1296,22 @@ function spellPresentationInvocationForProcedure(
     procedureRef,
   );
   if (direct !== undefined) {
+    if (actor?.origin.kind === "statBlock") {
+      const execution = creatureSpellProcedure(actor, procedureRef);
+      if (
+        execution?.procedure === "spatialMeleeSpellAttackProxy" &&
+        execution.operation === "repositionAndAttack"
+      ) {
+        const candidate = {
+          ...execution,
+          spell: direct.invocation.spell,
+          sourceProcedureRef: procedureRef,
+        };
+        return admittedSpellInvocationCastingFacts(candidate)
+          ? candidate
+          : undefined;
+      }
+    }
     return { ...direct.invocation, sourceProcedureRef: procedureRef };
   }
   if (!isCharacterBattleCreatureState(actor)) return undefined;

@@ -2253,6 +2253,7 @@ export function applySpatialMeleeSpellAttackProxyEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       forcePositionId: input.forcePositionId,
+      repeatTargeting: input.repeatTargeting,
       startedOn: {
         actorId: input.actorId,
         round: input.state.initiative.round,
@@ -2276,25 +2277,32 @@ export function applySpatialMeleeSpellAttackProxyEffect(input: {
     activeEffect,
   ];
   const owner = allocation.owner;
-  if (owner.origin.kind !== "character") return input.state;
-  const repeatExecution = {
-    procedure: "spatialMeleeSpellAttackProxy" as const,
-    operation: "repositionAndAttack" as const,
-    activeEffectRef: activeEffect.effectRef,
-    activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
-    repeatTargeting: input.repeatTargeting,
-  } satisfies RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution;
-  combatants.set(input.actorId, {
-    ...owner,
-    activeEffects,
-    origin: {
-      ...owner.origin,
-      execution: characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
-        owner.origin.execution,
-        repeatExecution,
-      ),
-    },
-  });
+  const installed = Match.value(owner.origin).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      statBlock: () => ({ ...owner, activeEffects }),
+      character: (origin) => {
+        const repeatExecution = {
+          procedure: "spatialMeleeSpellAttackProxy" as const,
+          operation: "repositionAndAttack" as const,
+          activeEffectRef: activeEffect.effectRef,
+          activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
+        } satisfies RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution;
+        return {
+          ...owner,
+          activeEffects,
+          origin: {
+            ...origin,
+            execution:
+              characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
+                origin.execution,
+                repeatExecution,
+              ),
+          },
+        };
+      },
+    }),
+  );
+  combatants.set(input.actorId, installed);
   return { ...input.state, combatants };
 }
 

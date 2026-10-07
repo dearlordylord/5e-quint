@@ -1,6 +1,6 @@
+import { spellSubjectTagForInvocation } from "../spell-execution-facts.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
 import type {
   BattleSpellAdmissionSource,
@@ -76,7 +76,7 @@ import {
   spatialMeleeSpellAttackProxyPositionHole,
   spellTargetHole,
 } from "../spells-targeting.ts";
-import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
+import { resolveSpatialMeleeSpellAttackProxyAct } from "../spells-resolve.ts";
 import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import type {
@@ -508,8 +508,6 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
   ctx: SpellAdmissionContext,
   facts: SpatialMeleeSpellAttackProxyMechanicsFacts,
 ): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] {
-  // Repeat execution bindings are owned by character execution storage.
-  if (ctx.kind === "statBlock") return [];
   const casterAttackBonus = spellAdmissionAttackBonus(ctx);
   if (casterAttackBonus === null) return [];
   const durationTicks = spellDurationTicksFromCanonicalValue(
@@ -524,7 +522,7 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
           procedure: "spatialMeleeSpellAttackProxy",
           operation: "createAndAttack",
 
-          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+          actionCost: "bonusAction",
           targeting: { kind: "singleCombatant" },
           durationTicks,
           rangeFeet: facts.rangeFeet,
@@ -647,7 +645,7 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
           actionCost: "bonusAction",
           activeEffect: effect,
           targeting: { kind: "singleCombatant" },
-          repeatTargeting: execution.repeat.repeatTargeting,
+          repeatTargeting: effect.repeatTargeting,
           damage: execution.source.damage,
           attackKind: execution.source.attackKind,
           attackBonus: execution.source.attackBonus,
@@ -1705,7 +1703,7 @@ function spatialMeleeSpellAttackProxyAttackCandidate(
     ? []
     : [
         spellCastCandidate(
-          "bonusActionSpell",
+          spellSubjectTagForInvocation(invocation),
           actorId,
           invocation.sourceProcedureRef,
           [spatialMeleeSpellAttackProxyPositionHole(invocation), targetHole],
@@ -1717,7 +1715,7 @@ function resolveSpatialMeleeSpellAttackProxy(
   input: SpatialMeleeSpellAttackProxyResolveInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  return resolveBonusActionSpellAttackProxyAct(input.input, executionRegistry);
+  return resolveSpatialMeleeSpellAttackProxyAct(input.input, executionRegistry);
 }
 
 const SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema =
