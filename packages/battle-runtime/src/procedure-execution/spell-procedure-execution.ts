@@ -75,7 +75,6 @@ import type {
   ArmorOfShadowsSpellAccess,
   CantripSpellAccess,
   LeveledSpellInvocationResource,
-  SpellAccessFreeCastInvocationResource,
   CantripSpellInvocationResource,
   NoSpellInvocationResource,
   LeveledSpellAccess,
@@ -83,7 +82,6 @@ import type {
   SaveGatedConditionSpellTargeting,
   SaveGatedDamageSpellTargeting,
   SpellEffectSpellAccess,
-  SpellSlotInvocationResource,
   SpellTargeting,
 } from "./spell-invocation-vocabulary.ts";
 import type { WeaponAttackOverrideSpellProcedureExecution } from "./weapon-attack-override.ts";
