@@ -1,7 +1,9 @@
+import { admittedCantripCastingFacts } from "./profile.ts";
+import { characterLevel } from "@dnd/shared/types";
 import { attackBonus } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
-import { PositiveInteger, proficiencyBonus } from "@dnd/shared/types";
+import { PositiveInteger } from "@dnd/shared/types";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import {
   spellActivationAttachmentPath,
@@ -382,14 +384,19 @@ describe("spellAttackDamage static admission", () => {
     const source = spellAdmissionSource(spellRecord("fire_bolt"));
     const result = supportedAdmission(mechanicsSource(source));
     const executionSource = battleSpellExecutionSourceFromAdmission(source);
-    const invocations = spellAttackDamageInvocationsFromFacts({
+    const castingFacts = {
       spell: executionSource,
+      access: { tag: "classCantrip" as const },
+      resource: { tag: "none" as const },
+    };
+    if (!admittedCantripCastingFacts(castingFacts))
+      throw new Error("Expected character cantrip facts");
+    const invocations = spellAttackDamageInvocationsFromFacts({
+      ...castingFacts,
       facts: result.admitted.facts,
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
       spellcastingAbilityModifier: source.castingSource.abilityModifier,
       attackBonus: attackBonus(5),
-      characterLevel: 1,
+      cantripScaling: { kind: "characterLevel", level: characterLevel(1) },
     });
 
     expect(invocations).toHaveLength(1);

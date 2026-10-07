@@ -1,10 +1,8 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import {
-  cantripSpellInvocationFacts,
+  cantripSpellInvocationScalingFacts,
   leveledSpellInvocationOptions,
 } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHolesOr,
@@ -46,10 +44,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import {
-  cantripSpellAccessFor,
-  spellInvocationResourceForCastOption,
-} from "./profile.ts";
+import {} from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Match, Schema } from "effect";
 import { invalidResult } from "../result-helpers.ts";
@@ -82,7 +77,6 @@ import {
   spellTargetHole,
 } from "../spells-holes-fills.ts";
 import {
-  spellAdmissionCharacterLevel,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
   spellProcedureResolutionContext,
@@ -111,13 +105,12 @@ function admitSaveGatedDamageMechanics(source: SpellMechanicsAdmissionSource) {
       ctx: SpellAdmissionContext,
     ) => {
       if (facts.level === 0) {
-        const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+        const castingFacts = cantripSpellInvocationScalingFacts(spell, ctx);
         return castingFacts === null
           ? []
           : saveGatedDamageInvocationsFromFacts({
               ...castingFacts,
               facts,
-              characterLevel: spellAdmissionCharacterLevel(ctx),
             });
       }
       return leveledSpellInvocationOptions(spell, ctx).flatMap((slot) =>

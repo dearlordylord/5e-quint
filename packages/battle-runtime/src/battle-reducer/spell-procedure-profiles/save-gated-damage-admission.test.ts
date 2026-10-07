@@ -1,3 +1,5 @@
+import { admittedCantripCastingFacts } from "./profile.ts";
+import { characterLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -232,7 +234,17 @@ describe("save-gated damage static admission", () => {
 
   test("retains a mechanics-free spell shell on compatibility projections", () => {
     const source = spellAdmissionSource(spellRecord("acid_splash"));
-    const [invocation] = supportedCantripSaveGateDamageProfile(source, 5);
+    const castingFacts = {
+      spell: source,
+      access: { tag: "classCantrip" as const },
+      resource: { tag: "none" as const },
+    };
+    if (!admittedCantripCastingFacts(castingFacts))
+      throw new Error("Expected character cantrip facts");
+    const [invocation] = supportedCantripSaveGateDamageProfile({
+      ...castingFacts,
+      cantripScaling: { kind: "characterLevel", level: characterLevel(5) },
+    });
 
     expect(invocation?.spell).toBeDefined();
     expect(invocation?.spell).not.toHaveProperty("mechanics");

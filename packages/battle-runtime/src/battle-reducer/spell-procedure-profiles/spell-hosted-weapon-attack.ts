@@ -1,7 +1,6 @@
 import type { AdmittedSpellFacts } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
@@ -72,7 +71,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
   AbilityModifier,
@@ -82,7 +80,6 @@ import {
   CantripSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  spellAdmissionCharacterLevel,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";

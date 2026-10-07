@@ -260,3 +260,25 @@ export type AuthoredLeveledCastingFacts<S> = Extract<
   AuthoredSpellInvocationCastingFacts<S>,
   { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
 >;
+
+export type CantripSpellInvocationScalingFacts<S> =
+  | (Extract<
+      AuthoredCantripCastingFacts<S>,
+      { readonly access: { readonly tag: "statBlockCantrip" } }
+    > & { readonly cantripScaling: { readonly kind: "noCharacterLevel" } })
+  | (Exclude<
+      AuthoredCantripCastingFacts<S>,
+      { readonly access: { readonly tag: "statBlockCantrip" } }
+    > & {
+      readonly cantripScaling: {
+        readonly kind: "characterLevel";
+        readonly level: import("@dnd/shared/types").CharacterLevel;
+      };
+    });
+
+export type SpellDamageCastingFacts<S> =
+  | (CantripSpellInvocationScalingFacts<S> & { readonly slotLevel?: never })
+  | (AuthoredLeveledCastingFacts<S> & {
+      readonly slotLevel: import("@dnd/shared/types").SpellSlotLevel;
+      readonly cantripScaling?: never;
+    });

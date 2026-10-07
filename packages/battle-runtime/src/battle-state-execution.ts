@@ -237,9 +237,9 @@ export type BattleSpellExecutionSource = Omit<
  * Profile admission owns the call site; execution consumers receive only the
  * projected Definition facts and dynamic casting source.
  */
-export function battleSpellExecutionSourceFromAdmission(
-  source: BattleSpellAdmissionSource,
-): BattleSpellExecutionSource {
+export function battleSpellExecutionSourceFromAdmission<
+  S extends BattleSpellAdmissionSource,
+>(source: S): Omit<S, "mechanics"> {
   const { mechanics: _mechanics, ...executionSource } = source;
   return executionSource;
 }

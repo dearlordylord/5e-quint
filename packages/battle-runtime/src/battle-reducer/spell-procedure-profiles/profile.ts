@@ -1,6 +1,7 @@
 import {
   admittedCantripCastingFacts,
   admittedLeveledCastingFacts,
+  type CantripSpellInvocationScalingFacts,
   type AuthoredCantripCastingFacts,
   type AuthoredLeveledCastingFacts,
 } from "../../procedure-execution/spell-invocation-casting-facts.ts";
@@ -8,6 +9,7 @@ export {
   admittedSpellInvocationCastingFacts,
   admittedCantripCastingFacts,
   admittedLeveledCastingFacts,
+  type CantripSpellInvocationScalingFacts,
   type AuthoredCantripCastingFacts,
   type AuthoredLeveledCastingFacts,
 } from "../../procedure-execution/spell-invocation-casting-facts.ts";
@@ -31,7 +33,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { Option } from "effect";
 import { attackBonus, type AttackBonus } from "@dnd/shared/types";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
-import type { CharacterLevel } from "@dnd/shared/types";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { SpellLevel } from "@dnd/surface/surface/types";
 import type { SpellSlotLevel } from "@dnd/shared/types";
@@ -129,19 +130,59 @@ export type SpellAdmissionContext =
   | CharacterSpellAdmissionContext
   | StatBlockSpellAdmissionContext;
 
+export function cantripSpellInvocationScalingFacts<
+  S extends Pick<
+    BattleSpellAdmissionSource,
+    "castingSource" | "spellDefinitionRuleFacts"
+  >,
+>(
+  spell: S,
+  ctx: SpellAdmissionContext,
+): CantripSpellInvocationScalingFacts<S> | null {
+  if (ctx.kind === "statBlock") {
+    const candidate = {
+      spell: { ...spell, castingSource: ctx.castingSource },
+      access: {
+        tag: "statBlockCantrip" as const,
+        invocationRef: ctx.castingSource.invocationRef,
+      },
+      resource: cantripSpellInvocationResource(ctx),
+    };
+    return admittedCantripCastingFacts(candidate)
+      ? { ...candidate, cantripScaling: { kind: "noCharacterLevel" } }
+      : null;
+  }
+  const candidate = {
+    spell: { ...spell, castingSource: ctx.castingSource },
+    access:
+      ctx.castingSource.tag === "classSpellcasting"
+        ? { tag: "classCantrip" as const }
+        : { tag: "spellAccessCantrip" as const },
+    resource: { tag: "none" as const },
+  };
+  return admittedCantripCastingFacts(candidate)
+    ? {
+        ...candidate,
+        cantripScaling: {
+          kind: "characterLevel",
+          level: characterBattleLevel(ctx.actor.origin.classLevels),
+        },
+      }
+    : null;
+}
+
 export function cantripSpellInvocationFacts<
   S extends Pick<
     BattleSpellAdmissionSource,
     "castingSource" | "spellDefinitionRuleFacts"
   >,
 >(spell: S, ctx: SpellAdmissionContext): AuthoredCantripCastingFacts<S> | null {
-  const candidate = {
-    spell: { ...spell, castingSource: ctx.castingSource },
-    access: cantripSpellAccessForCastingSource(ctx.castingSource),
-    resource: cantripSpellInvocationResource(ctx),
-  };
-  return admittedCantripCastingFacts(candidate) ? candidate : null;
+  const admission = cantripSpellInvocationScalingFacts(spell, ctx);
+  if (admission === null) return null;
+  const { cantripScaling: _scaling, ...castingFacts } = admission;
+  return castingFacts;
 }
+
 export function leveledSpellInvocationOptions<
   S extends Pick<
     BattleSpellAdmissionSource,
@@ -285,14 +326,6 @@ export function spellAdmissionBattleProjection(
         suppressedOngoingSpellEffectKeys:
           magicSuppressionOngoingSpellEffectKeys(state),
       };
-}
-
-export function spellAdmissionCharacterLevel(
-  ctx: SpellAdmissionContext,
-): CharacterLevel | null {
-  return ctx.kind === "character"
-    ? characterBattleLevel(ctx.actor.origin.classLevels)
-    : null;
 }
 
 export type SpellInvocationAdmittedByRegisteredProcedure<

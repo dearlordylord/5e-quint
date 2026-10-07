@@ -1,10 +1,8 @@
 import {
-  cantripSpellInvocationFacts,
+  cantripSpellInvocationScalingFacts,
   leveledSpellInvocationOptions,
 } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -64,9 +62,6 @@ import {
   type MultiRaySpellAttackRayCount,
 } from "../domain-constants.ts";
 import {
-  cantripSpellAccessFor,
-  spellAdmissionCharacterLevel,
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
   spellProcedureResolutionContext,
@@ -107,7 +102,6 @@ import {
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   PositiveInteger,
-  attackBonus,
   type CharacterLevel,
   type MovementFeet as MovementFeetType,
   type ReadonlyNonEmptyArray,
@@ -1254,10 +1248,12 @@ function admitSpellAttackSequence(
   if (casterAttackBonus === null) return [];
   const attackBonusValue = casterAttackBonus;
   if (facts.level === 0) {
-    const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-    if (castingFacts === null) return [];
+    const admission = cantripSpellInvocationScalingFacts(spell, ctx);
+    if (admission === null) return [];
+    const { cantripScaling, ...castingFacts } = admission;
 
-    const characterLevel = spellAdmissionCharacterLevel(ctx);
+    const characterLevel =
+      cantripScaling.kind === "characterLevel" ? cantripScaling.level : null;
     const attackCount = facts.count.tiers.reduce<MultiBeamSpellAttackBeamCount>(
       (current, tier) =>
         Number(characterLevel) >= Number(tier.atLevel) ? tier.value : current,

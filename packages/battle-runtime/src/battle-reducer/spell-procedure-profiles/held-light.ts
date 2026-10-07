@@ -1,6 +1,5 @@
-import { cantripSpellInvocationFacts } from "./profile.ts";
+import { cantripSpellInvocationScalingFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -28,7 +27,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - heldLightHurl has its own paired profile; the shared attack/damage
 //     resolver still owns the hurl damage lifecycle.
 
-import { attackBonus, movementFeet, PositiveInteger } from "@dnd/shared/types";
+import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import type {
   CharacterLevel,
   MovementFeet as MovementFeetType,
@@ -51,8 +50,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -823,14 +820,15 @@ function admitHeldLight(
 ): readonly HeldLightInvocation[] {
   // Dynamic continuation installation is owned by character execution storage.
   if (ctx.kind === "statBlock") return [];
-  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-  if (castingFacts === null) return [];
+  const admission = cantripSpellInvocationScalingFacts(spell, ctx);
+  if (admission === null) return [];
+  const { cantripScaling, ...castingFacts } = admission;
 
   const casterAttackBonus = spellAdmissionAttackBonus(ctx);
   if (casterAttackBonus === null) return [];
   const damageExpr = heldLightDamageExpr(
     facts.hurl.damageAmount,
-    spellAdmissionCharacterLevel(ctx),
+    cantripScaling.kind === "characterLevel" ? cantripScaling.level : null,
   );
   return [
     {

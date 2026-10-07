@@ -1,10 +1,8 @@
 import {
-  cantripSpellInvocationFacts,
+  cantripSpellInvocationScalingFacts,
   leveledSpellInvocationOptions,
 } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -57,7 +55,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { cantripSpellAccessFor } from "./profile.ts";
 import type {
   SpellMechanicsAdmissionSource,
   SpellProcedureMechanicsInspection,
@@ -77,7 +74,6 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  spellAdmissionCharacterLevel,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -93,7 +89,7 @@ function admitSpellAttackDamage(
   const casterAttackBonus = spellAdmissionAttackBonus(ctx);
   if (casterAttackBonus === null) return [];
   if (facts.level === 0) {
-    const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+    const castingFacts = cantripSpellInvocationScalingFacts(spell, ctx);
     if (castingFacts === null) return [];
 
     return spellAttackDamageInvocationsFromFacts({
@@ -101,7 +97,6 @@ function admitSpellAttackDamage(
       ...castingFacts,
       spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
       attackBonus: casterAttackBonus,
-      characterLevel: spellAdmissionCharacterLevel(ctx),
     });
   }
   return leveledSpellInvocationOptions(spell, ctx).flatMap(
@@ -278,4 +273,3 @@ export const spellAttackDamageProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverSpellAttackDamageCastAct,
   resolve: resolveSpellAttackDamage,
 };
-import { spellInvocationResourceForCastOption } from "./profile.ts";

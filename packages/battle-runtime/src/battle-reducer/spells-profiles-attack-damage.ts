@@ -1,11 +1,10 @@
-import type { AuthoredSpellInvocationCastingFacts } from "../procedure-execution/spell-invocation-casting-facts.ts";
+import type { SpellDamageCastingFacts } from "../procedure-execution/spell-invocation-casting-facts.ts";
 // Spell attack damage profile projections extracted from spells-profiles.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 
 import {
   DAMAGE_TYPES,
-  attackBonus,
   movementDeltaFeet,
   movementFeet,
   PositiveInteger,
@@ -13,18 +12,13 @@ import {
   type AbilityModifier,
   type AttackBonus,
   type MovementFeet,
-  type ProficiencyBonus as ProficiencyBonusType,
-  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
   type Attachment,
   type DamageType,
   type SpellMechanics,
 } from "@dnd/surface/surface/types";
-import type {
-  BattleSpellAdmissionSource,
-  BattleSpellExecutionSource,
-} from "../battle-state-execution.ts";
+import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
@@ -1424,21 +1418,7 @@ type SpellAttackDamageInvocationInput = {
   readonly facts: SpellAttackDamageMechanicsFacts;
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
-  readonly slotLevel?: SpellSlotLevel;
-  readonly characterLevel?: number | null | undefined;
-} & Extract<
-  AuthoredSpellInvocationCastingFacts<SpellAttackDamageInvocation["spell"]>,
-  {
-    readonly access: {
-      readonly tag:
-        | "prepared"
-        | "statBlockLeveled"
-        | "classCantrip"
-        | "spellAccessCantrip"
-        | "statBlockCantrip";
-    };
-  }
->;
+} & SpellDamageCastingFacts<SpellAttackDamageInvocation["spell"]>;
 
 export function spellAttackDamageInvocationsFromFacts(
   input: SpellAttackDamageInvocationInput,
@@ -1450,7 +1430,10 @@ export function spellAttackDamageInvocationsFromFacts(
     amount: input.facts.damageAmount,
     spellLevel: input.facts.level,
     slotLevel: input.slotLevel,
-    characterLevel: input.characterLevel,
+    characterLevel:
+      input.cantripScaling?.kind === "characterLevel"
+        ? input.cantripScaling.level
+        : null,
   });
   if (damageExpr === null) {
     return [];
@@ -1482,7 +1465,7 @@ export function spellAttackDamageInvocationsFromFacts(
   const {
     facts,
     slotLevel,
-    characterLevel,
+    cantripScaling,
     spellcastingAbilityModifier,
     attackBonus,
     ...castingFacts
@@ -1505,7 +1488,10 @@ function spellAttackLaterDamageExpr(input: SpellAttackDamageInvocationInput) {
         amount: input.facts.laterDamage.amount,
         spellLevel: input.facts.level,
         slotLevel: input.slotLevel,
-        characterLevel: input.characterLevel,
+        characterLevel:
+          input.cantripScaling?.kind === "characterLevel"
+            ? input.cantripScaling.level
+            : null,
       });
 }
 

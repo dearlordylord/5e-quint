@@ -1,3 +1,5 @@
+import { admittedCantripCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import { characterLevel } from "@dnd/shared/types";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
 import {
   unitId as parseSharedUnitId,
@@ -630,7 +632,16 @@ function damageAdmission(spell: SpellRecord) {
 }
 
 function cantripDamageAdmission(spell: SpellRecord) {
-  return supportedCantripSaveGateDamageProfile(spellAdmissionSource(spell), 5);
+  const castingFacts = {
+    spell: spellAdmissionSource(spell),
+    access: { tag: "classCantrip" as const },
+    resource: { tag: "none" as const },
+  };
+  if (!admittedCantripCastingFacts(castingFacts)) return [];
+  return supportedCantripSaveGateDamageProfile({
+    ...castingFacts,
+    cantripScaling: { kind: "characterLevel", level: characterLevel(5) },
+  });
 }
 
 function acidSplashWithFailure(

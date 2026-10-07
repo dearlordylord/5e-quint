@@ -1,7 +1,6 @@
-import {
-  admittedLeveledCastingFacts,
-  admittedCantripCastingFacts,
-} from "./profile.ts";
+import { battleSpellExecutionSourceFromAdmission } from "../../battle-state-execution.ts";
+import type { SpellDamageCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
+import { admittedLeveledCastingFacts } from "./profile.ts";
 import type { AuthoredSpellInvocationCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
 import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
@@ -56,7 +55,6 @@ import {
   SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
-  type DamageSpellSource,
   type DimIlluminationEmissionFacts,
   type SaveGateFailureEffect,
   type SpellActivationPhase,
@@ -68,10 +66,8 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { isPreparedDamageSpellSource } from "../spells-invocation-guards.ts";
 import { isCantripSpellAccess } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
-  cantripSpellAccessFor,
   spellInvocationResourceForCastOption,
   type SpellAdmissionContext,
 } from "./profile.ts";
@@ -1343,15 +1339,9 @@ export function hasSaveGateRepeatSaves(
 }
 
 export function supportedCantripSaveGateDamageProfile(
-  spell: BattleSpellAdmissionSource,
-  characterLevel: number,
+  input: import("../../procedure-execution/spell-invocation-casting-facts.ts").CantripSpellInvocationScalingFacts<BattleSpellAdmissionSource>,
 ): readonly SupportedSpellInvocation[] {
-  return supportedSaveGateDamageProfile({
-    spell,
-    access: cantripSpellAccessFor(spell.castingSource),
-    resource: { tag: "none" },
-    characterLevel,
-  });
+  return supportedSaveGateDamageProfile(input);
 }
 
 export function supportedPreparedSaveGateDamageProfile(
@@ -1362,12 +1352,15 @@ export function supportedPreparedSaveGateDamageProfile(
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
-    return supportedSaveGateDamageProfile({
+    const candidate = {
       spell,
       access: leveledSpellAccessForCastingSource(spell.castingSource),
       resource: spellInvocationResourceForCastOption(slot),
       slotLevel: slot.spellLevel,
-    });
+    };
+    return admittedLeveledCastingFacts(candidate)
+      ? supportedSaveGateDamageProfile(candidate)
+      : [];
   });
 }
 
@@ -4811,11 +4804,7 @@ export function persistentAreaRestrainedSaveGateConditionSpell(
 }
 
 export function supportedSaveGateDamageProfile(
-  input: {
-    readonly spell: BattleSpellAdmissionSource;
-    readonly slotLevel?: SpellSlotLevel;
-    readonly characterLevel?: number | null | undefined;
-  } & DamageSpellSource,
+  input: SpellDamageCastingFacts<BattleSpellAdmissionSource>,
 ): readonly SupportedSpellInvocation[] {
   const projection = saveGatedDamageMechanicsFacts(input.spell);
   if (projection.tag !== "supported") {
@@ -4828,16 +4817,9 @@ export function supportedSaveGateDamageProfile(
   ) {
     return [];
   }
-  if (isPreparedDamageSpellSource(input)) {
-    if (!admittedLeveledCastingFacts(input)) return [];
-    return saveGatedDamageInvocationsFromFacts({
-      ...input,
-      facts: { ...input.spell.spellDefinitionRuleFacts, ...projection.facts },
-    });
-  }
-  if (!admittedCantripCastingFacts(input)) return [];
   return saveGatedDamageInvocationsFromFacts({
     ...input,
+    spell: battleSpellExecutionSourceFromAdmission(input.spell),
     facts: { ...input.spell.spellDefinitionRuleFacts, ...projection.facts },
   });
 }
@@ -5277,27 +5259,16 @@ function saveGatedDamageMechanicsEvidence(
 export function saveGatedDamageInvocationsFromFacts(
   input: {
     readonly facts: SpellDefinitionRuleFacts & SaveGatedDamageMechanicsFacts;
-    readonly slotLevel?: SpellSlotLevel;
-    readonly characterLevel?: number | null | undefined;
-  } & Extract<
-    AuthoredSpellInvocationCastingFacts<SaveGatedDamageInvocation["spell"]>,
-    {
-      readonly access: {
-        readonly tag:
-          | "prepared"
-          | "statBlockLeveled"
-          | "classCantrip"
-          | "spellAccessCantrip"
-          | "statBlockCantrip";
-      };
-    }
-  >,
+  } & SpellDamageCastingFacts<SaveGatedDamageInvocation["spell"]>,
 ): readonly SaveGatedDamageInvocation[] {
   const primaryDamageExpr = supportedDamageAmountExpr({
     amount: input.facts.failedSaveEffects.damage.amount,
     spellLevel: input.facts.level,
     slotLevel: input.slotLevel,
-    characterLevel: input.characterLevel,
+    characterLevel:
+      input.cantripScaling?.kind === "characterLevel"
+        ? input.cantripScaling.level
+        : null,
   });
   if (primaryDamageExpr === null) {
     return [];
@@ -5317,7 +5288,10 @@ export function saveGatedDamageInvocationsFromFacts(
       amount: damage.amount,
       spellLevel: input.facts.level,
       slotLevel: input.slotLevel,
-      characterLevel: input.characterLevel,
+      characterLevel:
+        input.cantripScaling?.kind === "characterLevel"
+          ? input.cantripScaling.level
+          : null,
     });
     if (expr === null || !isDamageType(damage.damageType)) {
       return [];
@@ -5347,7 +5321,7 @@ export function saveGatedDamageInvocationsFromFacts(
       ? {}
       : { postSaveAreaEffect: input.facts.postSaveAreaEffect }),
   };
-  const { facts, slotLevel, characterLevel, ...castingFacts } = input;
+  const { facts, slotLevel, cantripScaling, ...castingFacts } = input;
   return [{ ...castingFacts, ...saveGatedInvocation }];
 }
 

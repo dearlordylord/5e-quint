@@ -1,4 +1,4 @@
-import { cantripSpellInvocationFacts } from "./profile.ts";
+import { cantripSpellInvocationScalingFacts } from "./profile.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-make-stable
@@ -57,7 +57,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
 import {
   CantripSpellAccessSchema,
@@ -665,8 +664,9 @@ function admitMakeStable(
   ctx: SpellAdmissionContext,
   facts: MakeStableMechanicsFacts,
 ): readonly MakeStableInvocation[] {
-  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-  if (castingFacts === null) return [];
+  const admission = cantripSpellInvocationScalingFacts(spell, ctx);
+  if (admission === null) return [];
+  const { cantripScaling, ...castingFacts } = admission;
 
   return [
     {
@@ -676,7 +676,7 @@ function admitMakeStable(
       actionCost: "magicAction",
       rangeFeet: makeStableRangeFeet(
         facts.range,
-        spellAdmissionCharacterLevel(ctx),
+        cantripScaling.kind === "characterLevel" ? cantripScaling.level : null,
       ),
     },
   ];
