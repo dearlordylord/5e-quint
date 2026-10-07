@@ -75,6 +75,9 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeReaction";
     case "retaliationAttack":
       return "runtimeCommandRetaliationAttack";
+    case "startSpellCasting":
+    case "continueSpellCasting":
+      return "runtimeSpellCastingProgress";
     case "reportReadyTrigger":
       return "runtimeTableDecision";
     case "releaseGrapple":

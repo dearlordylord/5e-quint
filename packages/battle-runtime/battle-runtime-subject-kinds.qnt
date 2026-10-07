@@ -38,6 +38,7 @@ module battleRuntimeSubjectKinds {
     | RuntimeTableDecisionSubjectKind
     | RuntimeReactionSubjectKind
     | RuntimeCommandRetaliationAttackSubjectKind
+    | RuntimeSpellCastingProgressSubjectKind
     | RuntimeLinkReleaseSubjectKind
     | RuntimeSavingThrowSubjectKind
     | RuntimeEffectCleanupSubjectKind
