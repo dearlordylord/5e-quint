@@ -2437,17 +2437,20 @@ export type SpellFailedSaveAttackRollEffect = BattleSpellActiveEffectTemplate<
 type StatBlockInitialAuthoredCastingFacts = {
   readonly access: { readonly tag: "statBlockCantrip" | "statBlockLeveled" };
 };
-type AuthoredInvocationWithCastingFacts<Invocation, Facts> = Omit<
-  Invocation,
-  "spell" | "access" | "resource" | "actionCost"
-> &
-  (
-    | (Extract<Facts, StatBlockInitialAuthoredCastingFacts> & {
-        readonly actionCost: "magicAction" | "bonusAction";
-      })
-    | (Exclude<Facts, StatBlockInitialAuthoredCastingFacts> &
-        Pick<Invocation, Extract<"actionCost", keyof Invocation>>)
-  );
+type AuthoredInvocationWithCastingFacts<Invocation, Facts> =
+  Invocation extends {
+    readonly actionCost: infer NativeCost;
+  }
+    ? Omit<Invocation, "spell" | "access" | "resource" | "actionCost"> &
+        (
+          | (Extract<Facts, StatBlockInitialAuthoredCastingFacts> & {
+              readonly actionCost: "magicAction" | "bonusAction";
+            })
+          | (Exclude<Facts, StatBlockInitialAuthoredCastingFacts> & {
+              readonly actionCost: NativeCost;
+            })
+        )
+    : Omit<Invocation, "spell" | "access" | "resource"> & Facts;
 type CanonicalAuthoredSpellInvocation<Invocation> = Invocation extends {
   readonly spell: infer Spell;
   readonly access: infer Access;
