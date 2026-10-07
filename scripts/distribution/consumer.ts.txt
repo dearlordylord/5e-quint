@@ -211,3 +211,124 @@ const nextEndTurn = completedFrontier.acts.find(
     act.subject.tag === "runtimeCommand" && act.subject.command === "endTurn",
 );
 assert(nextEndTurn, "expected the incoming actor's next End Turn act");
+
+// Exercise Stat Block spell admission and execution through the packed SDK.
+const priest = srdSurface.statBlocks.find(
+  (record) => record.id === "stat_block_priest",
+);
+const falseLife = srdSurface.units.find((record) => record.id === "false_life");
+if (priest === undefined || falseLife?.kind !== "spell")
+  throw new Error("Expected SRD spellcasting fixture sources");
+const priestSpellcasting = priest.statBlock.actions?.find(
+  (entry) =>
+    entry.kind === "executable" && entry.procedure.kind === "spellcasting",
+);
+if (
+  priestSpellcasting?.kind !== "executable" ||
+  priestSpellcasting.procedure.kind !== "spellcasting"
+)
+  throw new Error("Expected authored Priest Spellcasting");
+const { resources: _priestResources, ...priestFacts } = priest.statBlock;
+const sdkSpellCaster: Parameters<
+  typeof battle.restoreAuthoredStatBlockExecutionAdmission
+>[0]["statBlock"] = {
+  ...priest,
+  name: "Synthetic SDK Spellcaster",
+  provenance: { kind: "synthetic-test", section: "packed SDK consumer" },
+  statBlock: {
+    ...priestFacts,
+    size: "medium",
+    actions: [
+      {
+        kind: "executable",
+        procedureOrdinal: priestSpellcasting.procedureOrdinal,
+        resourceRefs: { kind: "none" },
+        procedure: {
+          ...priestSpellcasting.procedure,
+          groups: [
+            {
+              kind: "at_will",
+              resourceRefs: { kind: "none" },
+              spells: [{ spellId: falseLife.id }],
+            },
+          ],
+        },
+      },
+    ],
+  },
+};
+const sdkSpellCasterId = battle.combatantId("synthetic-sdk-spellcaster");
+const sdkSpellSession = requireSuccess(
+  battle.startBattle({
+    battleId: battle.battleId("synthetic-sdk-stat-block-spell"),
+    combatants: [
+      {
+        combatantId: sdkSpellCasterId,
+        statBlock: sdkSpellCaster,
+        unitCatalog,
+        initiative: battle.initiativeScore(20),
+        ammunitionStocks: [],
+        conditions: [],
+      },
+    ],
+  }),
+  "SDK Stat Block spell admission",
+);
+const sdkSpellAct = battle
+  .discoverBattleActs(sdkSpellSession)
+  .find((act) => act.subject.tag === "actionSpell");
+if (sdkSpellAct === undefined)
+  throw new Error("Expected discovered SDK Stat Block spell");
+assert(
+  battle.battleActSpellPresentation(sdkSpellAct),
+  "expected authored spell presentation",
+);
+const sdkSpellDice = sdkSpellAct.initialHoles.find(
+  (hole) => hole.kind === "rolledDice",
+);
+if (sdkSpellDice === undefined) throw new Error("Expected SDK spell dice hole");
+const sdkSpellFill = Schema.decodeUnknownSync(battle.BattleFillSchema)({
+  kind: "rolledDice",
+  holeId: sdkSpellDice.holeId,
+  value: [{ results: [3, 4] }],
+});
+const sdkSpellResolved = battle.resolveBattleRuntimeSubject({
+  session: sdkSpellSession,
+  subject: sdkSpellAct.subject,
+  fills: [sdkSpellFill],
+});
+if (sdkSpellResolved.tag !== "resolved")
+  throw new Error(
+    `Expected SDK Stat Block spell resolution: ${sdkSpellResolved.tag}`,
+  );
+const sdkSpellActor =
+  sdkSpellResolved.session.state.combatants.get(sdkSpellCasterId);
+if (sdkSpellActor?.origin.kind !== "statBlock")
+  throw new Error("Expected SDK Stat Block caster");
+assert.equal(sdkSpellActor.tempHp, 11);
+assert.equal(
+  sdkSpellResolved.session.state.currentTurnResources.actionTakenThisTurn,
+  true,
+);
+const sdkSpellSnapshot = Schema.decodeUnknownSync(
+  battle.StatBlockExecutionSnapshotSchema,
+)(
+  JSON.parse(
+    JSON.stringify(
+      Schema.encodeSync(battle.StatBlockExecutionSnapshotSchema)(
+        sdkSpellActor.origin.execution,
+      ),
+    ),
+  ),
+);
+const sdkSpellRestored = requireSuccess(
+  battle.restoreAuthoredStatBlockExecutionAdmission({
+    state: sdkSpellResolved.session.state,
+    actorId: sdkSpellCasterId,
+    statBlock: sdkSpellCaster,
+    unitCatalog,
+    snapshot: sdkSpellSnapshot,
+  }),
+  "SDK source-backed spell execution restore",
+);
+assert.deepEqual(sdkSpellRestored.execution, sdkSpellActor.origin.execution);
