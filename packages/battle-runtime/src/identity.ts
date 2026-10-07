@@ -11,6 +11,27 @@ const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
 
+export const StatBlockSpellcastingGroupOrdinal = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  Schema.brand("StatBlockSpellcastingGroupOrdinal"),
+);
+export type StatBlockSpellcastingGroupOrdinal =
+  typeof StatBlockSpellcastingGroupOrdinal.Type;
+export const statBlockSpellcastingGroupOrdinal: (
+  value: number,
+) => StatBlockSpellcastingGroupOrdinal = StatBlockSpellcastingGroupOrdinal.make;
+
+export const StatBlockSpellcastingInvocationOrdinal = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  Schema.brand("StatBlockSpellcastingInvocationOrdinal"),
+);
+export type StatBlockSpellcastingInvocationOrdinal =
+  typeof StatBlockSpellcastingInvocationOrdinal.Type;
+export const statBlockSpellcastingInvocationOrdinal: (
+  value: number,
+) => StatBlockSpellcastingInvocationOrdinal =
+  StatBlockSpellcastingInvocationOrdinal.make;
+
 export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
 export type CombatantId = typeof CombatantId.Type;
 export const combatantId: (value: string) => CombatantId = CombatantId.make;
