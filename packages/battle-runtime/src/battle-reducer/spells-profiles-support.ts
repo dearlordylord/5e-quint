@@ -100,7 +100,10 @@ export function scalarBuffSpellActionCost(
   return Match.value(castingTime).pipe(
     Match.when({ kind: "action" }, () => "magicAction" as const),
     Match.when({ kind: "bonus_action" }, () => "bonusAction" as const),
-    Match.orElse(() => null),
+    Match.when({ kind: "minutes" }, () => "magicAction" as const),
+    Match.when({ kind: "hours" }, () => "magicAction" as const),
+    Match.when({ kind: "reaction" }, () => null),
+    Match.exhaustive,
   );
 }
 

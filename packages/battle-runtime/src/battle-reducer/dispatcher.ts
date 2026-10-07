@@ -1,3 +1,4 @@
+import { resolveLongCastingCommand } from "./long-casting-lifecycle.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
@@ -714,6 +715,16 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveSpecializedAdmission(input);
     }
     const subject = input.subject;
+    if (
+      subject.tag === "runtimeCommand" &&
+      (subject.command === "startSpellCasting" ||
+        subject.command === "continueSpellCasting")
+    ) {
+      return resolveLongCastingCommand(
+        { ...input, subject },
+        handledInterruptTrigger,
+      );
+    }
     if (
       subject.tag === "runtimeCommand" &&
       subject.command === "endConcentration"

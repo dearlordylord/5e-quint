@@ -310,6 +310,7 @@ type ScalarBuffNonTemporaryEffect = Exclude<
   { readonly kind: "temporaryHitPoints" }
 >;
 type ScalarBuffProfileShape = {
+  readonly castingTime: ScalarBuffMechanics["castingTime"];
   readonly actionCost: HealingSpellActionCost;
   readonly targeting: ScalarBuffTargetingProjection;
   readonly rangeFeet: MovementFeet;
@@ -1010,10 +1011,12 @@ function scalarBuffFactsFromBranch(
   branch: ScalarBuffSupportedBranch,
   actionCost: HealingSpellActionCost,
   rangeFeet: MovementFeet,
+  castingTime: ScalarBuffMechanics["castingTime"],
 ): ScalarBuffMechanicsFacts {
   if (branch.branchKind === "instantaneous") {
     return {
       ...baseFacts,
+      castingTime,
       actionCost,
       targeting: branch.targeting,
       rangeFeet,
@@ -1024,6 +1027,7 @@ function scalarBuffFactsFromBranch(
   }
   return {
     ...baseFacts,
+    castingTime,
     actionCost,
     targeting: branch.targeting,
     rangeFeet,
@@ -1350,9 +1354,9 @@ function isScalarBuffRepresentation(
       const hasSupportedDurationRole = isScalarBuffDuration(
         activation.duration,
       );
+      const castingTime = topLevelSpellCastingTime(activation);
       const hasSupportedCastingRole =
-        topLevelSpellCastingTime(activation)?.kind === "action" ||
-        topLevelSpellCastingTime(activation)?.kind === "bonus_action";
+        castingTime !== null && scalarBuffSpellActionCost(castingTime) !== null;
       const hasSingleDirectPhase =
         activation.phases.length === 1 &&
         activation.phases[0]?.kind === "direct";
@@ -1427,8 +1431,7 @@ function isScalarBuffRepresentation(
     }),
     Match.when({ family: "ongoing_effect" }, (ongoing) => {
       const hasSupportedCastingRole =
-        ongoing.castingTime.kind === "action" ||
-        ongoing.castingTime.kind === "bonus_action";
+        scalarBuffSpellActionCost(ongoing.castingTime) !== null;
       const hasSupportedRangeRole =
         scalarBuffSpellRangeFeet(ongoing.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(ongoing.duration);
@@ -1584,6 +1587,7 @@ function scalarBuffMechanicsAdmission(
     ready.branch,
     ready.actionCost,
     ready.range,
+    mechanics.castingTime,
   );
   return {
     tag: "supported",
@@ -1798,6 +1802,12 @@ function admitScalarBuff(
   ctx: SpellAdmissionContext,
   facts: ScalarBuffMechanicsFacts,
 ): readonly ScalarBuffInvocation[] {
+  if (
+    (facts.castingTime.kind === "minutes" ||
+      facts.castingTime.kind === "hours") &&
+    ctx.castingSource.tag !== "statBlock"
+  )
+    return [];
   return ctx.spellCastOptions.flatMap(
     (slot): readonly ScalarBuffInvocation[] => {
       if (slot.spellLevel < facts.level) return [];

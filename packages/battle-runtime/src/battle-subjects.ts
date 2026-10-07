@@ -45,6 +45,7 @@ import {
   StatBlockSpellInvocationRefSchema,
   type StatBlockSpellInvocationRef,
   battleProcedureExecutionRefBelongsToCombatant,
+  StatBlockSpellInvocationRefSchema,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -98,6 +99,8 @@ export type BattleSubjectBonusAction =
 export const BATTLE_RUNTIME_COMMANDS = [
   "endTurn",
   "endConcentration",
+  "startSpellCasting",
+  "continueSpellCasting",
   "move",
   "standFromProne",
   "releaseReadiedSpell",
@@ -981,6 +984,20 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("startSpellCasting"),
+    procedureRef: BattleProcedureExecutionRef,
+    invocationRef: StatBlockSpellInvocationRefSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("continueSpellCasting"),
+    procedureRef: BattleProcedureExecutionRef,
+    invocationRef: StatBlockSpellInvocationRefSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("endTurn"),
   }),
   Schema.Struct({
@@ -1340,6 +1357,11 @@ function battleRuntimeCommandProcedureRefs(
     Match.discriminatorsExhaustive("command")({
       endTurn: noProcedureExecutionReferences,
       endConcentration: noProcedureExecutionReferences,
+      startSpellCasting: (v) => [v.procedureRef, v.invocationRef.procedureRef],
+      continueSpellCasting: (v) => [
+        v.procedureRef,
+        v.invocationRef.procedureRef,
+      ],
       move: noProcedureExecutionReferences,
       standFromProne: noProcedureExecutionReferences,
       releaseReadiedSpell: (value) => [value.procedureRef],
@@ -1426,6 +1448,8 @@ export function battleSubjectProcedureRefsBelongToOwners(
       Match.discriminatorsExhaustive("command")({
         endTurn: (v) => v.actorId,
         endConcentration: (v) => v.actorId,
+        startSpellCasting: (v) => v.actorId,
+        continueSpellCasting: (v) => v.actorId,
         move: (v) => v.actorId,
         standFromProne: (v) => v.actorId,
         releaseReadiedSpell: (v) => v.readiedSpellCasterId,
@@ -1618,6 +1642,8 @@ function battleRuntimeCommandBoundExecutionReferences(
     Match.discriminatorsExhaustive("command")({
       endTurn: noBoundExecutionReferences,
       endConcentration: noBoundExecutionReferences,
+      startSpellCasting: noBoundExecutionReferences,
+      continueSpellCasting: noBoundExecutionReferences,
       move: noBoundExecutionReferences,
       standFromProne: noBoundExecutionReferences,
       releaseReadiedSpell: noBoundExecutionReferences,

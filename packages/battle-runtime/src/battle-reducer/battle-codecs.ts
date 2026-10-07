@@ -8732,6 +8732,8 @@ function serializedRuntimeCommandReferencePolicy(
       endPersistentAreaTraitForEnvironment: actorOwned,
       grantedAreaSaveDamageAction: actorOwned,
       endConcentration: actorOwned,
+      startSpellCasting: actorOwned,
+      continueSpellCasting: actorOwned,
       endTurn: actorOwned,
       persistentAreaSaveConditionSave: actorOwned,
       directionalPersistentAreaDirectionChange: actorOwned,

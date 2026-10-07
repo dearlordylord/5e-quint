@@ -181,6 +181,7 @@ import {
   type ReadonlyNonEmptyArray,
   type ResourceCount,
   type Round as RoundType,
+  type PositiveInteger as PositiveIntegerType,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
 import type {
@@ -439,6 +440,7 @@ import type {
   BattleSpellEffectOccurrenceId,
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
+  StatBlockSpellInvocationRef,
   BattleTablePositionId,
   CharacterId,
   InitiativeScore,
@@ -497,14 +499,31 @@ export type {
   SpatialMeleeSpellAttackProxyRepeatTargeting,
 } from "./active-effect/types.ts";
 
+export type BattleLongCastingProgress =
+  | {
+      readonly kind: "casting";
+      readonly remainingTurns: PositiveIntegerType;
+      readonly lastMagicActionRound: RoundType;
+    }
+  | {
+      readonly kind: "readyToComplete";
+      readonly lastMagicActionRound: RoundType;
+    };
+
 export type BattleConcentration = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly effectKind: "spellEffect" | "readiedSpell";
   readonly maintenanceSavingThrowRollMode?: Extract<
     AttackRollMode,
     "advantage"
   >;
-};
+} & (
+  | { readonly effectKind: "spellEffect" | "readiedSpell" }
+  | {
+      readonly effectKind: "castingSpell";
+      readonly invocationRef: StatBlockSpellInvocationRef;
+      readonly progress: BattleLongCastingProgress;
+    }
+);
 export type BattleObjectOutline = BattleSpellEffectBase & {
   readonly kind: "saveGatedTargetProjectionObject";
   readonly objectId: BattleObjectId;

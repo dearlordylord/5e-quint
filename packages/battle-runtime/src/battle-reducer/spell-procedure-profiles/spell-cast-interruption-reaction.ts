@@ -1,3 +1,4 @@
+import { breakBattleConcentration } from "../damage-apply.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
@@ -1017,6 +1018,14 @@ function stateAfterCounteredSpellCast(
     return { tag: "invalid", message: metamagicSpend.failure };
   }
   /* v8 ignore stop -- @preserve */
+  const castingConcentration = metamagicSpend.success.combatants.get(
+    frame.casterId,
+  )?.concentration;
+  const failedState =
+    castingConcentration?.effectKind === "castingSpell" &&
+    castingConcentration.sourceProcedureRef === frame.sourceProcedureRef
+      ? breakBattleConcentration(metamagicSpend.success, frame.casterId)
+      : metamagicSpend.success;
   const spellCastInterruptionFrame = {
     ...spellCastCheckpoint,
     offeredResponders: spellCastCheckpoint.eligibleResponders,
@@ -1033,7 +1042,7 @@ function stateAfterCounteredSpellCast(
   return {
     tag: "ok",
     state: {
-      ...metamagicSpend.success,
+      ...failedState,
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
         spellCastInterruptionReactionReactionInterruptFrame(

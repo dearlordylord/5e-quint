@@ -3,7 +3,9 @@
 
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { Match } from "effect";
+import { Match, Option } from "effect";
+import { creatureSpellProcedure } from "./creature-spell-procedure.ts";
+import { longCastingCompletionResource } from "./long-casting-completion.ts";
 import * as Result from "effect/Result";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { type BattleSubject } from "../battle-subjects.ts";
@@ -446,6 +448,23 @@ export function maybeOpenInterruptWindow(
   frame: BattleInterruptCheckpointInput,
   handledInterruptTrigger: BattleInterruptTrigger | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  // The final required Magic action already opened this casting checkpoint.
+  // Target selection resumes that same action; unrelated nested casts retain
+  // their own checkpoints.
+  if (frame.trigger === "spellCast" && frame.continuation.kind === "replay") {
+    const caster = state.combatants.get(frame.casterId);
+    const invocation =
+      caster === undefined
+        ? undefined
+        : creatureSpellProcedure(caster, frame.sourceProcedureRef);
+    if (
+      invocation !== undefined &&
+      Option.isSome(
+        longCastingCompletionResource(state, frame.casterId, invocation),
+      )
+    )
+      return null;
+  }
   const progress = interruptWindowProgress(
     state,
     frame,

@@ -1,3 +1,4 @@
+import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle stat-block.resource-lifecycle
@@ -130,6 +131,7 @@ import {
   applyTemporaryHitPoints,
   battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks,
   breakCombatantConcentration,
+  breakBattleConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
@@ -1099,7 +1101,7 @@ function persistentAreaSourceTurnTranslationPendingResumeRequests(input: {
 // Advances the turn only; `resolveOrderedDeathSavingThrowOccurrence` resolves
 // the new actor's start-of-turn Death Saving Throw, settling the natural-1 reroll first.
 function resolveEndTurn({
-  state,
+  state: turnBoundaryState,
   statBlockRechargeRolls,
   hitPointBudgetConditionRepeatSaves,
   saveGatedConditionWithRepeatRepeatSaves,
@@ -1121,6 +1123,17 @@ function resolveEndTurn({
   BattleResolutionResult,
   { readonly tag: "resolved" }
 > {
+  const endingActorId = currentActorId(turnBoundaryState);
+  const castingConcentration =
+    turnBoundaryState.combatants.get(endingActorId)?.concentration;
+  const state =
+    castingConcentration?.effectKind === "castingSpell" &&
+    longCastingMustFailAtTurnEnd(
+      castingConcentration.progress,
+      turnBoundaryState.initiative.round,
+    )
+      ? breakBattleConcentration(turnBoundaryState, endingActorId)
+      : turnBoundaryState;
   const initiative = nextInitiative(state.initiative);
   const nextActorId = currentActing(initiative);
   const combatants = new Map<CombatantId, BattleCreatureState>();

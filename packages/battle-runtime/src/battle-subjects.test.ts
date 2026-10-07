@@ -38,6 +38,8 @@ import {
   battleProcedureExecutionRefBelongsToCombatant,
   battleStatBlockExecutionScopeRef,
   battleStatBlockProcedureExecutionRef,
+  statBlockSpellcastingGroupOrdinal,
+  statBlockSpellcastingInvocationOrdinal,
 } from "./identity.ts";
 
 const decodeBattleSubject = Schema.decodeUnknownSync(BattleSubjectSchema);
@@ -118,6 +120,38 @@ describe("BattleSubject identity", () => {
     const runtimeCommandExtras = {
       endTurn: {},
       endConcentration: {},
+      startSpellCasting: {
+        actorId: targetId,
+        procedureRef: targetProcedureRef,
+        invocationRef: {
+          procedureRef: battleStatBlockProcedureExecutionRef(
+            battleStatBlockExecutionScopeRef(
+              battleId("runtime-command-battle"),
+              targetId,
+              battleExecutionScopeOrdinal(3),
+            ),
+            NonNegativeInteger(0),
+          ),
+          groupOrdinal: statBlockSpellcastingGroupOrdinal(0),
+          invocationOrdinal: statBlockSpellcastingInvocationOrdinal(0),
+        },
+      },
+      continueSpellCasting: {
+        actorId: targetId,
+        procedureRef: targetProcedureRef,
+        invocationRef: {
+          procedureRef: battleStatBlockProcedureExecutionRef(
+            battleStatBlockExecutionScopeRef(
+              battleId("runtime-command-battle"),
+              targetId,
+              battleExecutionScopeOrdinal(3),
+            ),
+            NonNegativeInteger(0),
+          ),
+          groupOrdinal: statBlockSpellcastingGroupOrdinal(0),
+          invocationOrdinal: statBlockSpellcastingInvocationOrdinal(0),
+        },
+      },
       move: {},
       standFromProne: {},
       releaseReadiedSpell: {

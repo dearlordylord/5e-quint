@@ -45,3 +45,29 @@ describe("Scalar-buff spell procedure admission", () => {
     },
   );
 });
+
+// Synthetic casting-time variants exercise the mechanics admission boundary.
+describe("long-casting scalar-buff definition admission", () => {
+  test.each(["minutes", "hours"] as const)(
+    "retains the declared %s casting time in the mechanics owner",
+    (kind) => {
+      const source = sourceWith("false_life", (mechanics) => {
+        if (mechanics.family !== "activation")
+          throw new Error("Expected scalar activation mechanics.");
+        return {
+          ...mechanics,
+          castingTime: { kind, amount: 1, ritual: false },
+        };
+      });
+      const admission = scalarBuffProfile.admitMechanics(source);
+      expect(admission.tag).toBe("supported");
+      if (admission.tag !== "supported") return;
+      expect(admission.admitted.facts.castingTime).toEqual({
+        kind,
+        amount: 1,
+        ritual: false,
+      });
+      expect(admission.admitted.facts.actionCost).toBe("magicAction");
+    },
+  );
+});

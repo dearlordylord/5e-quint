@@ -772,6 +772,8 @@ const INTRINSIC_ACTION_LABELS = {
 const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   endTurn: "End Turn",
   endConcentration: "End Concentration",
+  startSpellCasting: "Start Casting",
+  continueSpellCasting: "Continue Casting",
   move: "Move",
   standFromProne: "Stand",
   releaseReadiedSpell: "Release Readied Spell",

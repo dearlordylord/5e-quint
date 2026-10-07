@@ -346,6 +346,8 @@ function runtimeCommandSubjectKind(
   return Match.value(subject)
     .pipe(
       byCommand("endTurn", () => "runtimeTurnBoundary" as const),
+      byCommand("startSpellCasting", () => "runtimeSpellCasting" as const),
+      byCommand("continueSpellCasting", () => "runtimeSpellCasting" as const),
       byCommand("move", () => "runtimeMovement" as const),
       byCommand("standFromProne", () => "runtimeMovement" as const),
       byCommand("releaseReadiedSpell", () => "runtimeReadiedResponse" as const),
