@@ -453,7 +453,7 @@ export type CombinedMovableLightManifestationSpellProcedureExecution =
     readonly spacingFeet: MovementFeet;
   };
 
-export type RepositionMovableLightManifestationSpellProcedureExecution =
+type RepositionMovableLightManifestationSpellProcedureExecutionShape =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction" | "bonusAction";
@@ -466,6 +466,9 @@ export type RepositionMovableLightManifestationSpellProcedureExecution =
     readonly resource: CantripSpellInvocationResource;
     readonly spacingFeet: MovementFeet;
   };
+
+export type RepositionMovableLightManifestationSpellProcedureExecution =
+  CorrelatedSpellExecution<RepositionMovableLightManifestationSpellProcedureExecutionShape>;
 
 export type SeparateMovableLightManifestationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {

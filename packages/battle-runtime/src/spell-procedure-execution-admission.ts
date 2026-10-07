@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { Match } from "effect";
 import type { SupportedSpellInvocation } from "./battle-state-execution.ts";
 import type { SpellProcedureExecution } from "./procedure-execution/spell-procedure-execution.ts";
@@ -934,7 +937,9 @@ type ProjectedCastingFacts<Input extends AuthoredCastingInput> =
         };
       }
         ? { readonly actionCost: "magicAction" | "bonusAction" }
-        : {})
+        : Input extends { readonly actionCost: infer Cost }
+          ? { readonly actionCost: Cost }
+          : object)
     : never;
 function projectCastingFacts<Input extends AuthoredCastingInput>(
   value: Input,
@@ -944,6 +949,7 @@ function projectCastingFacts(
 ): SpellInvocationCastingFacts {
   return Match.value(value).pipe(
     Match.when({ access: { tag: "classCantrip" } }, (selected) => ({
+      ...authoredNativeCastingCost(selected),
       access: selected.access,
       resource: selected.resource,
       spellRuleFacts: {
@@ -952,6 +958,7 @@ function projectCastingFacts(
       },
     })),
     Match.when({ access: { tag: "spellAccessCantrip" } }, (selected) => ({
+      ...authoredNativeCastingCost(selected),
       access: selected.access,
       resource: selected.resource,
       spellRuleFacts: {
@@ -962,6 +969,7 @@ function projectCastingFacts(
     Match.when(
       { access: { tag: "prepared" }, resource: { tag: "spellSlot" } },
       (selected) => ({
+        ...authoredNativeCastingCost(selected),
         access: selected.access,
         resource: selected.resource,
         spellRuleFacts: {
@@ -973,6 +981,7 @@ function projectCastingFacts(
     Match.when(
       { access: { tag: "prepared" }, resource: { tag: "spellAccessFreeCast" } },
       (selected) => ({
+        ...authoredNativeCastingCost(selected),
         access: selected.access,
         resource: selected.resource,
         spellRuleFacts: {
@@ -982,6 +991,7 @@ function projectCastingFacts(
       }),
     ),
     Match.when({ access: { tag: "armorOfShadows" } }, (selected) => ({
+      ...authoredNativeCastingCost(selected),
       access: selected.access,
       resource: selected.resource,
       spellRuleFacts: {
@@ -990,6 +1000,7 @@ function projectCastingFacts(
       },
     })),
     Match.when({ access: { tag: "statBlockCantrip" } }, (selected) => ({
+      ...authoredNativeCastingCost(selected),
       actionCost: selected.spell.castingSource.actionCost,
       access: selected.access,
       resource: selected.resource,
@@ -999,6 +1010,7 @@ function projectCastingFacts(
       },
     })),
     Match.when({ access: { tag: "statBlockLeveled" } }, (selected) => ({
+      ...authoredNativeCastingCost(selected),
       actionCost: selected.spell.castingSource.actionCost,
       access: selected.access,
       resource: selected.resource,
@@ -1008,6 +1020,7 @@ function projectCastingFacts(
       },
     })),
     Match.when({ access: { tag: "spellEffect" } }, (selected) => ({
+      ...authoredNativeCastingCost(selected),
       access: selected.access,
       resource: selected.resource,
       spellRuleFacts: {
@@ -1017,4 +1030,12 @@ function projectCastingFacts(
     })),
     Match.exhaustive,
   );
+}
+
+function authoredNativeCastingCost(
+  value: AuthoredCastingInput & {
+    readonly actionCost?: "magicAction" | "bonusAction";
+  },
+) {
+  return value.actionCost === undefined ? {} : { actionCost: value.actionCost };
 }

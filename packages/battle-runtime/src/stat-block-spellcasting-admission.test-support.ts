@@ -1,3 +1,4 @@
+import type { StatBlockSpellcastingProcedure } from "./stat-block-execution-state.ts";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { statBlockRecord } from "./battle-runtime.test-support.ts";
 import { Result } from "effect";
@@ -9,6 +10,19 @@ import type {
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import { battleId, combatantId, initiativeScore } from "./identity.ts";
 
+type IsolatedSpellcastingAdmissionFailure =
+  | { readonly kind: "nonSyntheticIsolationBase" }
+  | { readonly kind: "notSpellcasting" }
+  | { readonly kind: "missingStatBlockCaster" }
+  | { readonly kind: "missingSpellcastingBinding" }
+  | {
+      readonly kind: "initializationRejected";
+      readonly failure: Extract<
+        ReturnType<typeof startBattle>,
+        { readonly _tag: "Failure" }
+      >["failure"];
+    };
+
 /** Verification isolation admits the original procedure and caster facts,
  * rather than claiming that unrelated procedures on its whole parent work. */
 export function isolatedSpellcastingAdmission(input: {
@@ -17,7 +31,10 @@ export function isolatedSpellcastingAdmission(input: {
   readonly section: "actions" | "bonusActions";
   readonly entry: StatBlockProcedureEntry;
   readonly unitCatalog: UnitCatalog;
-}) {
+}): Result.Result<
+  StatBlockSpellcastingProcedure,
+  IsolatedSpellcastingAdmissionFailure
+> {
   if (input.isolationBase.provenance.kind !== "synthetic-test")
     return Result.fail({ kind: "nonSyntheticIsolationBase" } as const);
   if (

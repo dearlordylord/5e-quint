@@ -2,6 +2,7 @@ import type { Schema } from "effect";
 import type {
   SpellProcedureExecutionByProcedure,
   SpellProcedureKey,
+  SpellProcedureExecution,
 } from "../../character-execution.ts";
 
 // The registry is heterogeneous by procedure: each profile can have a
@@ -11,7 +12,7 @@ import type {
 // the profile boundary, and registry consumers encode through that codec.
 export type SpellProcedureExecutionCodec<P extends SpellProcedureKey> =
   Schema.ConstraintCodec<
-    SpellProcedureExecutionByProcedure[P],
+    SpellProcedureExecution<SpellProcedureExecutionByProcedure[P]>,
     unknown,
     never,
     never
