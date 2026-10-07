@@ -7,7 +7,7 @@ import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 
 import type {
   BattleCreatureState,
@@ -29,34 +29,28 @@ export function spellHasAvailableSpend(
   actor: BattleCreatureState,
   invocation: RuntimeSpellProcedure,
 ): boolean {
-  const resource = invocation.resource;
-  if (actor.origin.kind === "statBlock")
-    return (
-      (invocation.access.tag === "spellEffect" && resource.tag === "none") ||
-      resource.tag === "statBlockAtWill" ||
-      (resource.tag === "statBlockLimited" &&
-        statBlockSpellcastingPoolAvailable(
-          actor.origin.execution,
-          resource.resourcePoolRef,
-        ))
-    );
-  if (resource.tag === "statBlockAtWill" || resource.tag === "statBlockLimited")
-    return false;
-  if (resource.tag === "none") {
-    return true;
-  }
-  if (resource.tag === "spellAccessFreeCast") {
-    return actor.origin.resources.some(
-      (candidate) =>
-        candidate.resourcePoolRef === resource.resourcePoolRef &&
-        resourceHasUsesRemaining(candidate),
-    );
-  }
-  return (
-    actor.origin.spellcasting?.spellSlots.some(
-      (slot) =>
-        slot.spellLevel === resource.slotLevel && slot.expended < slot.count,
-    ) === true
+  const origin = actor.origin;
+  return Match.value(invocation.resource).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      none: () =>
+        origin.kind === "character" || invocation.access.tag === "spellEffect",
+      statBlockAtWill: () => origin.kind === "statBlock",
+      statBlockLimited: ({ resourcePoolRef }) =>
+        origin.kind === "statBlock" &&
+        statBlockSpellcastingPoolAvailable(origin.execution, resourcePoolRef),
+      spellAccessFreeCast: ({ resourcePoolRef }) =>
+        origin.kind === "character" &&
+        origin.resources.some(
+          (candidate) =>
+            candidate.resourcePoolRef === resourcePoolRef &&
+            resourceHasUsesRemaining(candidate),
+        ),
+      spellSlot: ({ slotLevel }) =>
+        origin.kind === "character" &&
+        origin.spellcasting?.spellSlots.some(
+          (slot) => slot.spellLevel === slotLevel && slot.expended < slot.count,
+        ) === true,
+    }),
   );
 }
 

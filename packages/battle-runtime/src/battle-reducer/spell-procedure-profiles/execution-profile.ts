@@ -170,12 +170,7 @@ export function spellProcedureExecutionSchema<
       const source = value.spellRuleFacts.castingSource;
       if (source.tag !== "statBlock" || value.access.tag === "spellEffect")
         return false;
-      const actionCost =
-        source.castingTime.kind === "minutes" ||
-        source.castingTime.kind === "hours"
-          ? "magicAction"
-          : source.actionCost;
-      return currentActionCost === actionCost;
+      return currentActionCost === source.actionCost;
     },
   )(statBlockSchema);
   return Schema.Union([character, statBlock]);

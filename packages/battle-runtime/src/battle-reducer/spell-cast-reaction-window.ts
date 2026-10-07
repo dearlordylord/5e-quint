@@ -45,9 +45,8 @@ export function maybeOpenSpellCastReactionWindow(
     | undefined,
 ): BattleResolutionResult | null {
   const initialStatBlockCast =
-    resolution.invocation.spellRuleFacts?.castingSource.tag === "statBlock" &&
-    (resolution.invocation.access?.tag === "statBlockCantrip" ||
-      resolution.invocation.access?.tag === "statBlockLeveled");
+    resolution.invocation.access?.tag === "statBlockCantrip" ||
+    resolution.invocation.access?.tag === "statBlockLeveled";
   const effectiveCastingResource =
     initialStatBlockCast && castingResource.kind !== "alreadySpent"
       ? spellCastingTimeResourceForSpellCast({

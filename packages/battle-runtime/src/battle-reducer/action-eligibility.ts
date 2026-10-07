@@ -194,9 +194,6 @@ function spellSubjectActionEligibilityFacts(
   const actor = state.combatants.get(subject.actorId);
   if (
     actor === undefined ||
-    actor.concentration?.effectKind !== "castingSpell" ||
-    actor.concentration.progress.kind !== "readyToComplete" ||
-    actor.concentration.sourceProcedureRef !== subject.procedureRef ||
     (subject.tag === "actionSpell" && subject.mode.tag === "ready")
   )
     return naturalCost;

@@ -984,6 +984,17 @@ function resolveSpellCastInterruption(
   };
 }
 
+function stateAfterCounteredLongCasting(
+  state: BattleState,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+): BattleState {
+  const concentration = state.combatants.get(frame.casterId)?.concentration;
+  return concentration?.effectKind === "castingSpell" &&
+    concentration.sourceProcedureRef === frame.sourceProcedureRef
+    ? breakBattleConcentration(state, frame.casterId)
+    : state;
+}
+
 function stateAfterCounteredSpellCast(
   state: BattleState,
   frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
@@ -1037,14 +1048,10 @@ function stateAfterCounteredSpellCast(
     return { tag: "invalid", message: metamagicSpend.failure };
   }
   /* v8 ignore stop -- @preserve */
-  const castingConcentration = metamagicSpend.success.combatants.get(
-    frame.casterId,
-  )?.concentration;
-  const failedState =
-    castingConcentration?.effectKind === "castingSpell" &&
-    castingConcentration.sourceProcedureRef === frame.sourceProcedureRef
-      ? breakBattleConcentration(metamagicSpend.success, frame.casterId)
-      : metamagicSpend.success;
+  const failedState = stateAfterCounteredLongCasting(
+    metamagicSpend.success,
+    frame,
+  );
   const spellCastInterruptionFrame = {
     ...spellCastCheckpoint,
     offeredResponders: spellCastCheckpoint.eligibleResponders,

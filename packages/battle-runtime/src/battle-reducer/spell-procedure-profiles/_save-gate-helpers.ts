@@ -5283,14 +5283,15 @@ export function saveGatedDamageInvocationsFromFacts(
     readonly facts: SpellDefinitionRuleFacts & SaveGatedDamageMechanicsFacts;
   } & SpellDamageCastingFacts<SaveGatedDamageInvocation["spell"]>,
 ): readonly SaveGatedDamageInvocation[] {
+  const characterLevel =
+    input.cantripScaling?.kind === "characterLevel"
+      ? input.cantripScaling.level
+      : null;
   const primaryDamageExpr = supportedDamageAmountExpr({
     amount: input.facts.failedSaveEffects.damage.amount,
     spellLevel: input.facts.level,
     slotLevel: input.slotLevel,
-    characterLevel:
-      input.cantripScaling?.kind === "characterLevel"
-        ? input.cantripScaling.level
-        : null,
+    characterLevel: characterLevel,
   });
   if (primaryDamageExpr === null) {
     return [];
@@ -5310,10 +5311,7 @@ export function saveGatedDamageInvocationsFromFacts(
       amount: damage.amount,
       spellLevel: input.facts.level,
       slotLevel: input.slotLevel,
-      characterLevel:
-        input.cantripScaling?.kind === "characterLevel"
-          ? input.cantripScaling.level
-          : null,
+      characterLevel: characterLevel,
     });
     if (expr === null || !isDamageType(damage.damageType)) {
       return [];

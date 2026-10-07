@@ -1426,14 +1426,12 @@ export function spellAttackDamageInvocationsFromFacts(
   if (!spellAttackDamageLevelIsRepresented(input)) {
     return [];
   }
+  const characterLevel = spellAttackCharacterLevel(input);
   const damageExpr = supportedDamageAmountExpr({
     amount: input.facts.damageAmount,
     spellLevel: input.facts.level,
     slotLevel: input.slotLevel,
-    characterLevel:
-      input.cantripScaling?.kind === "characterLevel"
-        ? input.cantripScaling.level
-        : null,
+    characterLevel,
   });
   if (damageExpr === null) {
     return [];
@@ -1473,6 +1471,12 @@ export function spellAttackDamageInvocationsFromFacts(
   return [{ ...castingFacts, ...attackDamageInvocation }];
 }
 
+function spellAttackCharacterLevel(input: SpellAttackDamageInvocationInput) {
+  return input.cantripScaling?.kind === "characterLevel"
+    ? input.cantripScaling.level
+    : null;
+}
+
 function spellAttackDamageLevelIsRepresented(
   input: SpellAttackDamageInvocationInput,
 ): boolean {
@@ -1488,10 +1492,7 @@ function spellAttackLaterDamageExpr(input: SpellAttackDamageInvocationInput) {
         amount: input.facts.laterDamage.amount,
         spellLevel: input.facts.level,
         slotLevel: input.slotLevel,
-        characterLevel:
-          input.cantripScaling?.kind === "characterLevel"
-            ? input.cantripScaling.level
-            : null,
+        characterLevel: spellAttackCharacterLevel(input),
       });
 }
 
