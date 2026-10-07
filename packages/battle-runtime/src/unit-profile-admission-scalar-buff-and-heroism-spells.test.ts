@@ -1,3 +1,4 @@
+import { isSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId } from "@dnd/shared/game-facts";
@@ -2707,6 +2708,10 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
         "synthetic-heroism-static",
       ),
     };
+    if (!isSpellInvocationCastingFacts(execution)) {
+      throw new Error("Expected canonical character casting facts.");
+    }
+
     expect(spellInvocationRequiresKnownWillingTarget(execution)).toBe(true);
     expect(
       spellTargetIsKnownWilling(spellCasterId, spellTargetId, execution),

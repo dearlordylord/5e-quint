@@ -1,3 +1,4 @@
+import { isSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -2047,6 +2048,12 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         targetKinds: ["creature", "object"] as const,
       },
     };
+
+    if (
+      !isSpellInvocationCastingFacts(creatureOrObjectTargetScalingInvocation)
+    ) {
+      throw new Error("Expected canonical character casting facts.");
+    }
 
     expect(
       twinnedSpellTargetCountInvocation(

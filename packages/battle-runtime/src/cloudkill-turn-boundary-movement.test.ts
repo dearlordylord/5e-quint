@@ -1,3 +1,5 @@
+import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts";
+import { persistentAreaSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-cloudkill-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -24,10 +26,7 @@ import type {
 import type { BattleMechanicalHole } from "./battle-mechanical-frontier.ts";
 import type { SpellProcedureExecution } from "./character-execution.ts";
 import type { CharacterProcedureBinding } from "./character-execution-vocabulary.ts";
-import type {
-  PersistentAreaSaveConditionSpellProcedureExecution,
-  SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
-} from "./procedure-execution/spell-procedure-execution.ts";
+import type { PersistentAreaSaveConditionSpellProcedureExecution } from "./procedure-execution/spell-procedure-execution.ts";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
   BattleFillSchema,
@@ -262,19 +261,20 @@ function withCloudkillTranslationDistance(
               ) {
                 return binding;
               }
-              const execution = binding.procedure
-                .execution as SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution;
+              const execution = binding.procedure.execution;
               return {
                 procedureRef: binding.procedureRef,
                 procedure: {
                   kind: "spellInvocation",
-                  execution: {
+                  execution: Schema.decodeUnknownSync(
+                    sourceTurnTranslationPersistentAreaSaveDamageProfile.executionSchema,
+                  )({
                     ...execution,
                     lifecycle: {
                       ...execution.lifecycle,
                       distanceFeet,
                     },
-                  },
+                  }),
                 },
               };
             },
@@ -471,7 +471,9 @@ function withGreaseGroundHazard(state: BattleState): {
                 procedureRef: greaseProcedureRef,
                 procedure: {
                   kind: "spellInvocation",
-                  execution: {
+                  execution: Schema.decodeUnknownSync(
+                    persistentAreaSaveConditionProfile.executionSchema,
+                  )({
                     spellRuleFacts:
                       cloudkillBinding.procedure.execution.spellRuleFacts,
                     ability: "dex",
@@ -486,7 +488,7 @@ function withGreaseGroundHazard(state: BattleState): {
                       kind: "pointOriginGroundSquare",
                       sideFeet: movementFeet(10),
                     },
-                  } satisfies PersistentAreaSaveConditionSpellProcedureExecution,
+                  } satisfies PersistentAreaSaveConditionSpellProcedureExecution),
                 },
               },
             ],
