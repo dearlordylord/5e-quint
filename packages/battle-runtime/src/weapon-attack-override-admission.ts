@@ -1,4 +1,8 @@
 import {
+  admittedCantripCastingFacts,
+  type AuthoredCantripCastingFacts,
+} from "./procedure-execution/spell-invocation-casting-facts.ts";
+import {
   attackBonus,
   type CharacterLevel,
   type DamageDieSize,
@@ -47,9 +51,11 @@ export type WeaponAttackOverrideAdmissionContext = {
   > | null;
 };
 
-export type WeaponAttackOverrideInvocation =
-  WeaponAttackOverrideProcedureFacts & {
-    readonly spell: BattleSpellExecutionSource;
+export type WeaponAttackOverrideInvocation = Omit<
+  WeaponAttackOverrideProcedureFacts,
+  "access" | "resource"
+> &
+  AuthoredCantripCastingFacts<BattleSpellExecutionSource> & {
     readonly attachedWeapon: {
       readonly attack: BoundCharacterWeaponAttackActionOption;
     };
@@ -89,6 +95,12 @@ export function admitWeaponAttackOverride(
   projection: WeaponAttackOverrideMechanicsProjection,
   ctx: WeaponAttackOverrideAdmissionContext,
 ): readonly WeaponAttackOverrideInvocation[] {
+  const castingFacts = {
+    spell,
+    access: cantripSpellAccessForCastingSource(spell.castingSource),
+    resource: { tag: "none" as const },
+  };
+  if (!admittedCantripCastingFacts(castingFacts)) return [];
   const damageExpr = weaponAttackOverrideDamageExpr(
     projection.damageDie,
     characterBattleLevel(ctx.actor.origin.classLevels),
@@ -96,10 +108,8 @@ export function admitWeaponAttackOverride(
   const spellcasting = ctx.actor.origin.spellcasting;
   return attachedWeaponAttacksEligibleForOverride(ctx).map(
     ({ itemId, slot, attack }): WeaponAttackOverrideInvocation => ({
-      access: cantripSpellAccessForCastingSource(spell.castingSource),
-      resource: { tag: "none" },
+      ...castingFacts,
       procedure: "weaponAttackOverride",
-      spell,
       actionCost: "bonusAction",
       attachedWeaponSlot: slot,
       attachedWeapon: { attack },

@@ -1,3 +1,11 @@
+import type {
+  SpellAccess,
+  SpellInvocationResource,
+  CantripSpellAccess,
+  CantripSpellInvocationResource,
+  LeveledSpellAccess,
+  LeveledSpellInvocationResource,
+} from "./spell-invocation-vocabulary.ts";
 import { Schema } from "effect";
 import { SpellLevelSchema } from "@dnd/surface/surface/schema";
 import {
@@ -187,3 +195,68 @@ export function isSpellProcedureCastingFacts(
 ): value is SpellProcedureCastingFacts {
   return isSpellInvocationCastingFacts(value) || hasNoCastingFacts(value);
 }
+
+type AuthoredCastingSourceFacts = {
+  readonly castingSource: import("./spell-rule-facts.ts").SpellCastingSource;
+  readonly spellDefinitionRuleFacts: import("./spell-rule-facts.ts").SpellDefinitionRuleFacts;
+};
+export type AuthoredCantripCastingFacts<S> = Extract<
+  AuthoredSpellInvocationCastingFacts<S>,
+  {
+    readonly access: {
+      readonly tag: "classCantrip" | "spellAccessCantrip" | "statBlockCantrip";
+    };
+  }
+>;
+export function admittedSpellInvocationCastingFacts<
+  S extends AuthoredCastingSourceFacts,
+>(candidate: {
+  readonly spell: S;
+  readonly access: SpellAccess;
+  readonly resource: SpellInvocationResource;
+}): candidate is typeof candidate & AuthoredSpellInvocationCastingFacts<S> {
+  return isSpellInvocationCastingFacts({
+    spellRuleFacts: {
+      ...candidate.spell.spellDefinitionRuleFacts,
+      castingSource: candidate.spell.castingSource,
+    },
+    access: candidate.access,
+    resource: candidate.resource,
+  });
+}
+export function admittedCantripCastingFacts<
+  S extends AuthoredCastingSourceFacts,
+>(candidate: {
+  readonly spell: S;
+  readonly access: CantripSpellAccess;
+  readonly resource: CantripSpellInvocationResource;
+}): candidate is typeof candidate & AuthoredCantripCastingFacts<S> {
+  return isSpellInvocationCastingFacts({
+    spellRuleFacts: {
+      ...candidate.spell.spellDefinitionRuleFacts,
+      castingSource: candidate.spell.castingSource,
+    },
+    access: candidate.access,
+    resource: candidate.resource,
+  });
+}
+export function admittedLeveledCastingFacts<
+  S extends AuthoredCastingSourceFacts,
+>(candidate: {
+  readonly spell: S;
+  readonly access: LeveledSpellAccess;
+  readonly resource: LeveledSpellInvocationResource;
+}): candidate is typeof candidate & AuthoredLeveledCastingFacts<S> {
+  return isSpellInvocationCastingFacts({
+    spellRuleFacts: {
+      ...candidate.spell.spellDefinitionRuleFacts,
+      castingSource: candidate.spell.castingSource,
+    },
+    access: candidate.access,
+    resource: candidate.resource,
+  });
+}
+export type AuthoredLeveledCastingFacts<S> = Extract<
+  AuthoredSpellInvocationCastingFacts<S>,
+  { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
+>;

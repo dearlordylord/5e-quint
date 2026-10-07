@@ -1,6 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
@@ -48,7 +47,6 @@ import {
   type DifficultyClass as DifficultyClassType,
 } from "@dnd/shared/types";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
@@ -93,12 +91,12 @@ import { spellInvocationEffectiveSpellLevel } from "../spells-effective-level.ts
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
+  SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Match, Schema } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
@@ -1032,7 +1030,7 @@ function ongoingSpellTargetMatchesFact(input: {
 }
 
 function resolveOngoingSpellEndSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureProfileResolveInput<OngoingSpellEndInvocation>["input"];
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;

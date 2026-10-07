@@ -3278,7 +3278,7 @@ export type RepeatSpatialMeleeSpellAttackProxyInvocation = {
 export type SpellAttackSequenceTargeting =
   | CantripSpellAttackSequenceTargeting
   | PreparedSpellAttackSequenceTargeting;
-export type SpellHostedWeaponAttackInvocation = {
+type SpellHostedWeaponAttackInvocationShape = {
   readonly access: CantripSpellAccess;
   readonly resource: CantripSpellInvocationResource;
   readonly procedure: "spellHostedWeaponAttack";
@@ -3293,6 +3293,8 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly damageTypeChoices: readonly DamageType[];
   readonly bonusDamage: SpellHostedWeaponAttackBonusDamageApplicability;
 };
+export type SpellHostedWeaponAttackInvocation =
+  CanonicalAuthoredSpellInvocation<SpellHostedWeaponAttackInvocationShape>;
 type WeaponAttackOverrideSpellInvocationShape = {
   readonly access: CantripSpellAccess;
   readonly resource: CantripSpellInvocationResource;

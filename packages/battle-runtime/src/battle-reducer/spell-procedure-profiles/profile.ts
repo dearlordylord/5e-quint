@@ -1,4 +1,16 @@
-import { isSpellInvocationCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
+import {
+  admittedCantripCastingFacts,
+  admittedLeveledCastingFacts,
+  type AuthoredCantripCastingFacts,
+  type AuthoredLeveledCastingFacts,
+} from "../../procedure-execution/spell-invocation-casting-facts.ts";
+export {
+  admittedSpellInvocationCastingFacts,
+  admittedCantripCastingFacts,
+  admittedLeveledCastingFacts,
+  type AuthoredCantripCastingFacts,
+  type AuthoredLeveledCastingFacts,
+} from "../../procedure-execution/spell-invocation-casting-facts.ts";
 import type { SpellCasterRequirements } from "./spell-caster-requirements.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // A Spell Procedure Declaration bundles every layer the runtime needs to handle
@@ -36,11 +48,7 @@ import type {
 } from "../../identity.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 import type {
-  SpellAccess,
-  SpellInvocationResource,
   CantripSpellAccess,
-  LeveledSpellInvocationResource,
-  LeveledSpellAccess,
   SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
   StatBlockSpellInvocationResource,
@@ -121,72 +129,6 @@ export type SpellAdmissionContext =
   | CharacterSpellAdmissionContext
   | StatBlockSpellAdmissionContext;
 
-export type AuthoredCantripCastingFacts<S> = Extract<
-  import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S>,
-  {
-    readonly access: {
-      readonly tag: "classCantrip" | "spellAccessCantrip" | "statBlockCantrip";
-    };
-  }
->;
-export function admittedSpellInvocationCastingFacts<
-  S extends Pick<
-    BattleSpellAdmissionSource,
-    "castingSource" | "spellDefinitionRuleFacts"
-  >,
->(candidate: {
-  readonly spell: S;
-  readonly access: SpellAccess;
-  readonly resource: SpellInvocationResource;
-}): candidate is typeof candidate &
-  import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S> {
-  return isSpellInvocationCastingFacts({
-    spellRuleFacts: {
-      ...candidate.spell.spellDefinitionRuleFacts,
-      castingSource: candidate.spell.castingSource,
-    },
-    access: candidate.access,
-    resource: candidate.resource,
-  });
-}
-export function admittedCantripCastingFacts<
-  S extends Pick<
-    BattleSpellAdmissionSource,
-    "castingSource" | "spellDefinitionRuleFacts"
-  >,
->(candidate: {
-  readonly spell: S;
-  readonly access: CantripSpellAccess;
-  readonly resource: import("../../procedure-execution/spell-invocation-vocabulary.ts").CantripSpellInvocationResource;
-}): candidate is typeof candidate & AuthoredCantripCastingFacts<S> {
-  return isSpellInvocationCastingFacts({
-    spellRuleFacts: {
-      ...candidate.spell.spellDefinitionRuleFacts,
-      castingSource: candidate.spell.castingSource,
-    },
-    access: candidate.access,
-    resource: candidate.resource,
-  });
-}
-export function admittedLeveledCastingFacts<
-  S extends Pick<
-    BattleSpellAdmissionSource,
-    "castingSource" | "spellDefinitionRuleFacts"
-  >,
->(candidate: {
-  readonly spell: S;
-  readonly access: LeveledSpellAccess;
-  readonly resource: LeveledSpellInvocationResource;
-}): candidate is typeof candidate & AuthoredLeveledCastingFacts<S> {
-  return isSpellInvocationCastingFacts({
-    spellRuleFacts: {
-      ...candidate.spell.spellDefinitionRuleFacts,
-      castingSource: candidate.spell.castingSource,
-    },
-    access: candidate.access,
-    resource: candidate.resource,
-  });
-}
 export function cantripSpellInvocationFacts<
   S extends Pick<
     BattleSpellAdmissionSource,
@@ -200,10 +142,6 @@ export function cantripSpellInvocationFacts<
   };
   return admittedCantripCastingFacts(candidate) ? candidate : null;
 }
-export type AuthoredLeveledCastingFacts<S> = Extract<
-  import("../../procedure-execution/spell-invocation-casting-facts.ts").AuthoredSpellInvocationCastingFacts<S>,
-  { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
->;
 export function leveledSpellInvocationOptions<
   S extends Pick<
     BattleSpellAdmissionSource,

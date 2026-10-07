@@ -694,7 +694,7 @@ export type HeldLightSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
   readonly resource: CantripSpellInvocationResource;
 };
 
-export type HeldLightHurlSpellProcedureExecution =
+type HeldLightHurlSpellProcedureExecutionShape =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
     readonly attackBonus: AttackBonus;
@@ -710,6 +710,9 @@ export type HeldLightHurlSpellProcedureExecution =
     readonly sourceHeldLightProcedureRef: BattleProcedureExecutionRef;
     readonly targeting: { readonly kind: "singleCreatureOrObject" };
   };
+
+export type HeldLightHurlSpellProcedureExecution =
+  CorrelatedSpellExecution<HeldLightHurlSpellProcedureExecutionShape>;
 
 export type SaveGatedConditionWithRepeatSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
