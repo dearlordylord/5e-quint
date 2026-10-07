@@ -1,4 +1,5 @@
-import { isSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
+import { Schema } from "effect";
+import { rollModifierProfile } from "./battle-reducer/spell-procedure-profiles/roll-modifier.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -2038,22 +2039,19 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       throw new Error("Expected Bless target selection.");
     }
     const creatureOrObjectTargetScalingInvocation = {
-      ...baseBlessInvocation,
-      spellRuleFacts: {
-        ...baseBlessInvocation.spellRuleFacts,
-        twinnedTargetCount: null,
-      },
-      targeting: {
-        ...baseBlessInvocation.targeting,
-        targetKinds: ["creature", "object"] as const,
-      },
+      ...Schema.decodeUnknownSync(rollModifierProfile.executionSchema)({
+        ...baseBlessInvocation,
+        spellRuleFacts: {
+          ...baseBlessInvocation.spellRuleFacts,
+          twinnedTargetCount: null,
+        },
+        targeting: {
+          ...baseBlessInvocation.targeting,
+          targetKinds: ["creature", "object"] as const,
+        },
+      }),
+      sourceProcedureRef: baseBlessInvocation.sourceProcedureRef,
     };
-
-    if (
-      !isSpellInvocationCastingFacts(creatureOrObjectTargetScalingInvocation)
-    ) {
-      throw new Error("Expected canonical character casting facts.");
-    }
 
     expect(
       twinnedSpellTargetCountInvocation(

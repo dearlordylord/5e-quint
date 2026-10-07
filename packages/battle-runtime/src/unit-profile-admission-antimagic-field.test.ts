@@ -27,7 +27,6 @@ import { magicSuppressionEmanationProfile } from "./battle-reducer/spell-procedu
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
   characterExecutionWithSpellInvocations,
@@ -249,13 +248,8 @@ describe("magicSuppressionEmanation static admission", () => {
       "artifact",
       "deity",
     ]);
-    const { spell: _spell, ...procedureFacts } = invocation;
     const execution = {
-      ...procedureFacts,
-      spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
-        source.spellDefinitionRuleFacts,
-        source.castingSource,
-      ),
+      ...spellProcedureExecution(invocation),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-antimagic-static",
       ),

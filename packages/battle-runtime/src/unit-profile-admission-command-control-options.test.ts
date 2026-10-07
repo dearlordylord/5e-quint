@@ -57,7 +57,6 @@ import {
 } from "./battle-state-execution.ts";
 import { compelledNextTurnBehaviorProfile } from "./battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts";
 import { spellTargetListHole } from "./battle-reducer/spells-targeting.ts";
-import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import { spellProcedureExecution } from "./character-execution-admission.ts";
@@ -204,18 +203,7 @@ describe("compelledNextTurnBehavior static admission", () => {
     );
     expect(
       spellTargetListHole(session.state, spellCasterId, {
-        access: invocation.access,
-        resource: invocation.resource,
-        procedure: invocation.procedure,
-        spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
-          source.spellDefinitionRuleFacts,
-          source.castingSource,
-        ),
-        actionCost: invocation.actionCost,
-        ability: invocation.ability,
-        dc: invocation.dc,
-        targeting: invocation.targeting,
-        visibility: invocation.visibility,
+        ...spellProcedureExecution(invocation),
         sourceProcedureRef:
           battleProcedureExecutionRefForTest("command-visibility"),
       }),

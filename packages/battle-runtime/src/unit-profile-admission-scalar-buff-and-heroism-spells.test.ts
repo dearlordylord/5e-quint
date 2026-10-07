@@ -1,4 +1,4 @@
-import { isSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId } from "@dnd/shared/game-facts";
@@ -83,7 +83,6 @@ import {
   spellInvocationRequiresKnownWillingTarget,
   spellTargetIsKnownWilling,
 } from "./battle-reducer/spells-targeting.ts";
-import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   applyCondition,
   applyBattleHitPointDamage,
@@ -2689,29 +2688,15 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
     expect(invocation.targeting.maxTargets).toBe(3);
     expect(invocation.targeting.requiredTargetDisposition).toBe("willing");
     expect(invocation.spell).not.toHaveProperty("mechanics");
-    const { spell: _spell, ...procedureFacts } = invocation;
-    const [conditionImmunity, turnStartTemporaryHitPoints] =
-      invocation.activeEffects;
+    const [conditionImmunity] = invocation.activeEffects;
     if (conditionImmunity.condition !== "frightened")
       throw new Error("Expected admitted Frightened immunity.");
     const execution = {
-      ...procedureFacts,
-      activeEffects: [
-        { ...conditionImmunity, condition: "frightened" as const },
-        turnStartTemporaryHitPoints,
-      ] as const,
-      spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
-        source.spellDefinitionRuleFacts,
-        source.castingSource,
-      ),
+      ...spellProcedureExecution(invocation),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-heroism-static",
       ),
     };
-    if (!isSpellInvocationCastingFacts(execution)) {
-      throw new Error("Expected canonical character casting facts.");
-    }
-
     expect(spellInvocationRequiresKnownWillingTarget(execution)).toBe(true);
     expect(
       spellTargetIsKnownWilling(spellCasterId, spellTargetId, execution),

@@ -80,8 +80,11 @@ export function sourceWith(
 }
 
 export function contextFor(
-  castingSource: SpellAdmissionContext["castingSource"],
-): SpellAdmissionContext {
+  castingSource: Extract<
+    SpellAdmissionContext,
+    { readonly kind: "character" }
+  >["castingSource"],
+): Extract<SpellAdmissionContext, { readonly kind: "character" }> {
   const session = spellBattle({
     spellSlots: [{ spellLevel: 5, count: 1 }],
   });

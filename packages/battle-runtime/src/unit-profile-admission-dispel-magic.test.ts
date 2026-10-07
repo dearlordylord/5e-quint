@@ -1,3 +1,4 @@
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
@@ -82,7 +83,6 @@ import {
 import { ongoingSpellEndProfile } from "./battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
-import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   battleAreaId,
   battleObjectId,
@@ -258,13 +258,8 @@ describe("ongoingSpellEnd static admission", () => {
     const invocation = invocations[0];
     if (invocation === undefined) throw new Error("Expected invocation.");
     expect(invocation.spell).not.toHaveProperty("mechanics");
-    const { spell: _spell, ...facts } = invocation;
     const execution = {
-      ...facts,
-      spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
-        source.spellDefinitionRuleFacts,
-        source.castingSource,
-      ),
+      ...spellProcedureExecution(invocation),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-dispel-static",
       ),

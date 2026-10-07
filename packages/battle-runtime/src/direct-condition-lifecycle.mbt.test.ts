@@ -391,6 +391,9 @@ function directConditionInvocation(
   BattleExecutableSpellInvocation,
   { readonly procedure: "directCondition" }
 > {
+  const source = spellAdmissionSource(spellRecord(invisibilityUnitId));
+  const level = source.spellDefinitionRuleFacts.level;
+  if (level === 0) throw new Error("Expected leveled Invisibility fixture.");
   const invocation: DirectConditionSpellInvocation = {
     access: { tag: "prepared" },
     resource: {
@@ -398,7 +401,10 @@ function directConditionInvocation(
       slotLevel: spellSlotLevel(spellSlotLevelForBattle(slotLevel)),
     },
     procedure: "directCondition",
-    spell: spellAdmissionSource(spellRecord(invisibilityUnitId)),
+    spell: {
+      ...source,
+      spellDefinitionRuleFacts: { ...source.spellDefinitionRuleFacts, level },
+    },
     actionCost: "magicAction",
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     activeEffect: {
