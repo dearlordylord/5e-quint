@@ -1,3 +1,5 @@
+import { combatantId } from "../identity.ts";
+import * as Result from "effect/Result";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 import type { BattleFill, BattleSubject } from "../index.ts";
@@ -20,11 +22,26 @@ test("starting a validated casting ends a prior readied spell immediately", () =
     sourceProcedureRef: prior.sourceProcedureRef,
     effectKind: "spellEffect",
   });
-  expect(started.readiedSpells.has(wizardId)).toBe(false);
-  expect(started.combatants.get(wizardId)?.concentration).toEqual({
+  if (Result.isFailure(started)) throw new Error("Expected admitted caster.");
+  expect(started.success.readiedSpells.has(wizardId)).toBe(false);
+  expect(started.success.combatants.get(wizardId)?.concentration).toEqual({
     sourceProcedureRef: prior.sourceProcedureRef,
     effectKind: "spellEffect",
   });
+});
+
+test("Concentration start rejects a missing actor without installing state", () => {
+  const state = wizardTurnWithReadiedRay("attackHit").state;
+  const prior = state.combatants.get(wizardId)?.concentration;
+  if (prior === undefined || prior === null)
+    throw new Error("Expected prior Concentration.");
+  expect(
+    startBattleConcentration(
+      state,
+      combatantId("synthetic-absent-caster"),
+      prior,
+    ),
+  ).toEqual(Result.fail("missingActor"));
 });
 
 describe("End Concentration procedure owner", () => {

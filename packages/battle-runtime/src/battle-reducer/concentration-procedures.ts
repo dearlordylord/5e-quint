@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 
 import type { CombatantId } from "../identity.ts";
@@ -16,18 +17,18 @@ export function startBattleConcentration(
   state: BattleState,
   actorId: CombatantId,
   concentration: BattleConcentration,
-): BattleState {
+): Result.Result<BattleState, "missingActor"> {
+  if (!state.combatants.has(actorId)) return Result.fail("missingActor");
   const ended = breakBattleConcentration(state, actorId);
   const actor = ended.combatants.get(actorId);
-  return actor === undefined
-    ? ended
-    : {
-        ...ended,
-        combatants: new Map(ended.combatants).set(actorId, {
-          ...actor,
-          concentration,
-        }),
-      };
+  if (actor === undefined) return Result.fail("missingActor");
+  return Result.succeed({
+    ...ended,
+    combatants: new Map(ended.combatants).set(actorId, {
+      ...actor,
+      concentration,
+    }),
+  });
 }
 
 type EndConcentrationSubject = Extract<

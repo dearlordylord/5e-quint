@@ -43,6 +43,33 @@ module spellConcentrationSourceLifecycle {
     if (concentrating and result.concentration == RC::NoConcentration) endSourceConcentration(state) else state
   }
 
+  pure def sourceConcentrationWhenPrevented(state: SourceConcentrationState, incapacitatedOrDead: bool): SourceConcentrationState = {
+    val concentration = {
+      interruptedActor: if (state.concentration == NoConcentrationSource) RC::NoConcentration else RC::Concentrating,
+      reactor: RC::NoConcentration,
+    }
+    val result = RC::breakConcentrationIfPrevented(concentration, RC::InterruptedActor, incapacitatedOrDead)
+    if (result.interruptedActor == RC::NoConcentration) endSourceConcentration(state) else state
+  }
+
+  pure def expireSpellEffectConcentrationSource(state: SourceConcentrationState, expiredProcedure: int): SourceConcentrationState = match state.concentration {
+    | SpellEffectSource(procedure) => if (procedure == expiredProcedure) endSourceConcentration(state) else state
+    | CastingSpellSource(_) => state
+    | NoConcentrationSource => state
+  }
+
+  run test_preventionAndDurationKeepUnrelatedSources = {
+    val state = { concentration: SpellEffectSource(1), effects: Map(10 -> ConcentrationMaintained(1), 20 -> ConcentrationMaintained(2)) }
+    all {
+      assert(sourceConcentrationWhenPrevented(state, false) == state),
+      assert(sourceConcentrationWhenPrevented(state, true).concentration == NoConcentrationSource),
+      assert(sourceConcentrationWhenPrevented(state, true).effects.keys() == Set(20)),
+      assert(expireSpellEffectConcentrationSource(state, 2) == state),
+      assert(expireSpellEffectConcentrationSource(state, 1).effects.keys() == Set(20)),
+      assert(expireSpellEffectConcentrationSource(state.with("concentration", CastingSpellSource(1)), 1).concentration == CastingSpellSource(1)),
+    }
+  }
+
   run test_replacementAtCastingStartCleansOnlyPriorSource = {
     val state = {
       concentration: SpellEffectSource(1),
