@@ -875,6 +875,7 @@ function applyHeldLightEffect(
   invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
 ): BattleState {
   const caster = state.combatants.get(actorId);
+  if (invocation.access.tag === "statBlockCantrip") return state;
   if (caster === undefined) {
     return state;
   }

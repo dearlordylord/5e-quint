@@ -1,7 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import {
   ongoingSpellRepeatCastIsAvailable,
@@ -1867,10 +1866,10 @@ function admitObjectContactDamageRepeat(
             tag: "spellEffect",
             sourceCombatantId: effect.sourceCombatantId,
           },
-          resource: cantripSpellInvocationResource(ctx),
+          resource: { tag: "none" },
           procedure: "objectContactDamageRepeat",
           spell,
-          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+          actionCost: "bonusAction",
           activeEffect: effect,
         },
       ];

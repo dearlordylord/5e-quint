@@ -122,7 +122,7 @@ function admitAfterHitDamage(
   facts: AfterHitDamageMechanicsFacts,
 ): readonly AfterHitDamageInvocation[] {
   const slotInvocations = leveledSpellInvocationOptions(spell, ctx).flatMap(
-    (slot) => {
+    (slot): readonly AfterHitDamageInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const damageExpr = supportedDamageAmountExpr({
         amount: facts.damageAmount,

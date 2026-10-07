@@ -383,10 +383,6 @@ function oneHourCastingTimeMinutes(hours: 1): 60 {
 }
 
 export const spawnedCompanionLifecycleAdmission = {
-  casterRequirements: () => ({
-    spellAttackBonus: "unused",
-    spellSaveDc: "unused",
-  }),
   admitMechanics: admitSpawnedCompanionLifecycleMechanics,
 } satisfies StaticSpellMechanicsAdmissionDeclaration<
   "spawnedCompanionLifecycle",

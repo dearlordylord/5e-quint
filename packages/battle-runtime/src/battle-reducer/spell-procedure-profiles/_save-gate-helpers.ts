@@ -4817,9 +4817,31 @@ export function supportedSaveGateDamageProfile(
   ) {
     return [];
   }
+  const executionInput = Match.value(input).pipe(
+    Match.when({ access: { tag: "classCantrip" } }, (value) => ({
+      ...value,
+      spell: battleSpellExecutionSourceFromAdmission(value.spell),
+    })),
+    Match.when({ access: { tag: "spellAccessCantrip" } }, (value) => ({
+      ...value,
+      spell: battleSpellExecutionSourceFromAdmission(value.spell),
+    })),
+    Match.when({ access: { tag: "statBlockCantrip" } }, (value) => ({
+      ...value,
+      spell: battleSpellExecutionSourceFromAdmission(value.spell),
+    })),
+    Match.when({ access: { tag: "prepared" } }, (value) => ({
+      ...value,
+      spell: battleSpellExecutionSourceFromAdmission(value.spell),
+    })),
+    Match.when({ access: { tag: "statBlockLeveled" } }, (value) => ({
+      ...value,
+      spell: battleSpellExecutionSourceFromAdmission(value.spell),
+    })),
+    Match.exhaustive,
+  );
   return saveGatedDamageInvocationsFromFacts({
-    ...input,
-    spell: battleSpellExecutionSourceFromAdmission(input.spell),
+    ...executionInput,
     facts: { ...input.spell.spellDefinitionRuleFacts, ...projection.facts },
   });
 }
