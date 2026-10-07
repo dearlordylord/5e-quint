@@ -83,8 +83,8 @@ const StatBlockCastingSourceFields = {
   tag: Schema.Literal("statBlock"),
   invocationRef: StatBlockSpellInvocationRefSchema,
   abilityModifier: AbilityModifier,
-  spellSaveDc: Schema.Option(DifficultyClass),
-  spellAttackBonus: Schema.Option(AttackBonus),
+  spellSaveDc: Schema.OptionFromNullOr(DifficultyClass),
+  spellAttackBonus: Schema.OptionFromNullOr(AttackBonus),
 };
 export const StatBlockSpellCastingSourceSchema = Schema.Union([
   Schema.Struct({

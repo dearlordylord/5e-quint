@@ -1,4 +1,8 @@
-import { NonNegativeInteger } from "@dnd/shared/types";
+import {
+  NonNegativeInteger,
+  difficultyClass,
+  attackBonus,
+} from "@dnd/shared/types";
 import { Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -200,4 +204,40 @@ it("rejects Bonus Action ownership for a long-casting source", () => {
       actionCost: "magicAction",
     }),
   ).toBe(true);
+});
+
+it("round trips absent caster facts through actual JSON", () => {
+  const validSource = Schema.decodeUnknownSync(
+    Schema.toType(StatBlockSpellCastingSourceSchema),
+  )(source);
+  const encoded = Schema.encodeSync(StatBlockSpellCastingSourceSchema)(
+    validSource,
+  );
+  const decoded = Schema.decodeUnknownSync(StatBlockSpellCastingSourceSchema)(
+    JSON.parse(JSON.stringify(encoded)),
+  );
+  expect(decoded).toEqual(source);
+  expect(encoded.spellSaveDc).toBeNull();
+  expect(encoded.spellAttackBonus).toBeNull();
+});
+
+it("round trips listed caster facts as JSON numbers", () => {
+  const validSource = Schema.decodeUnknownSync(
+    Schema.toType(StatBlockSpellCastingSourceSchema),
+  )(source);
+  const listedSource = {
+    ...validSource,
+    spellSaveDc: Option.some(difficultyClass(15)),
+    spellAttackBonus: Option.some(attackBonus(7)),
+  };
+  const encoded = Schema.encodeSync(StatBlockSpellCastingSourceSchema)(
+    listedSource,
+  );
+  expect(encoded.spellSaveDc).toBe(15);
+  expect(encoded.spellAttackBonus).toBe(7);
+  expect(
+    Schema.decodeUnknownSync(StatBlockSpellCastingSourceSchema)(
+      JSON.parse(JSON.stringify(encoded)),
+    ),
+  ).toEqual(listedSource);
 });
