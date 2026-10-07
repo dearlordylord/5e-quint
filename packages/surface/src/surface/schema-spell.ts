@@ -7312,15 +7312,16 @@ const CreatureStatBlockProjectionFields = {
 } as const;
 
 /** Facts needed by spawned and parameterized creature/runtime consumers. */
-export const CreatureStatBlockProjectionSchema = Schema.Struct(
-  CreatureStatBlockProjectionFields,
-);
+export const CreatureStatBlockProjectionSchema: Schema.Struct<
+  typeof CreatureStatBlockProjectionFields
+> = Schema.Struct(CreatureStatBlockProjectionFields);
 
 /**
  * The existing creature shape is retained as the projection contract while
  * the standalone catalog records migrate to the authored shape in #341.
  */
-export const CreatureStatBlockSchema = CreatureStatBlockProjectionSchema;
+export const CreatureStatBlockSchema: typeof CreatureStatBlockProjectionSchema =
+  CreatureStatBlockProjectionSchema;
 
 const StandaloneStatBlockProcedureFields = {
   resources: optionalExact(StatBlockProcedureResourcesSchema),
