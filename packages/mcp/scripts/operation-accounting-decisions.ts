@@ -580,6 +580,24 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.startSpellCasting": account(
+      "operation",
+      "runtimeCommand.startSpellCasting",
+      at(
+        "packages/battle-runtime/src/battle-reducer/long-casting-lifecycle.ts",
+        "resolveLongCastingCommand",
+      ),
+      REASONS.admittedSubject,
+    ),
+    "runtimeCommand.continueSpellCasting": account(
+      "operation",
+      "runtimeCommand.continueSpellCasting",
+      at(
+        "packages/battle-runtime/src/battle-reducer/long-casting-lifecycle.ts",
+        "resolveLongCastingCommand",
+      ),
+      REASONS.admittedSubject,
+    ),
     "runtimeCommand.castAttackHitBonusActionSpell": account(
       "operation",
       "runtimeCommand.castAttackHitBonusActionSpell",

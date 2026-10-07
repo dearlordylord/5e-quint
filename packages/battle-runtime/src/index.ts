@@ -1,3 +1,4 @@
+export { creatureSpellProcedure } from "./creature-spell-procedure.ts";
 export { characterSpellProcedure } from "./character-execution-queries.ts";
 export * from "./consumer-protocol.ts";
 

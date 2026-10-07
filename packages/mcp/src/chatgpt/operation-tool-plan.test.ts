@@ -44,6 +44,25 @@ describe("ChatGPT operation routing plan", () => {
       }),
     ).toBe(true);
   });
+  it("exposes long casting progress through the spell casting tool", () => {
+    for (const operation of [
+      "runtimeCommand.startSpellCasting",
+      "runtimeCommand.continueSpellCasting",
+    ] as const) {
+      expect(
+        chatGptToolAcceptsSelection("cast_spell", {
+          family: "battleSubjects",
+          operation,
+        }),
+      ).toBe(true);
+      expect(
+        chatGptToolAcceptsSelection("attack", {
+          family: "battleSubjects",
+          operation,
+        }),
+      ).toBe(false);
+    }
+  });
   it("requires reference refinement before a named tool can execute", () => {
     expect(
       chatGptToolAcceptsSelection("attack", {

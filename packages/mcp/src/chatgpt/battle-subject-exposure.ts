@@ -50,6 +50,8 @@ export const BATTLE_SUBJECT_EXPOSURE = {
   ),
   "monkFocusOption.stepOfTheWind.freeDash": tool("dash"),
   "runtimeCommand.castAttackHitBonusActionSpell": tool("cast_spell"),
+  "runtimeCommand.startSpellCasting": tool("cast_spell"),
+  "runtimeCommand.continueSpellCasting": tool("cast_spell"),
   "runtimeCommand.castTriggeredReactionSpell": tool("cast_spell"),
   "runtimeCommand.controlledVerticalSuspensionAltitudeControl": tool(
     "adjust_spell_altitude",

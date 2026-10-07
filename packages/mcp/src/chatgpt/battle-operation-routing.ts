@@ -4,7 +4,7 @@ import type {
   BattleInterruptDecision,
 } from "@dnd/battle-runtime";
 import { Match, Result } from "effect";
-import { characterSpellProcedure } from "@dnd/battle-runtime";
+import { creatureSpellProcedure } from "@dnd/battle-runtime";
 import { errorContent } from "../tool-content.ts";
 import type { ToolError } from "../schema-codec.ts";
 import type { ChatGptExposure } from "./operation-exposure.ts";
@@ -190,7 +190,7 @@ function statBlockBonusActionExposure(subject: BattleSubject) {
     : unexposedSubject(subject);
 }
 
-type SpellInvocation = NonNullable<ReturnType<typeof characterSpellProcedure>>;
+type SpellInvocation = NonNullable<ReturnType<typeof creatureSpellProcedure>>;
 
 function spellInvocationOperationKey(invocation: SpellInvocation): string {
   const base =
@@ -208,12 +208,8 @@ function spellOperationExposure(state: BattleState, subject: BattleSubject) {
   if (!(subject.tag === "actionSpell" || subject.tag === "bonusActionSpell"))
     return unexposedSubject(subject);
   const actor = state.combatants.get(subject.actorId);
-  if (actor?.origin.kind !== "character") return unexposedSubject(subject);
-  const invocation = characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    actor,
-  );
+  if (actor === undefined) return unexposedSubject(subject);
+  const invocation = creatureSpellProcedure(actor, subject.procedureRef);
   return invocation === undefined
     ? unexposedSubject(subject)
     : exposureAt(
