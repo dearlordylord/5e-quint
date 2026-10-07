@@ -178,6 +178,11 @@ Do not write to the memory system unless explicitly asked.
 
 ### Background jobs
 
+Start verification through its public lock-taking command and await that command's
+completion handle. Let the lock wrapper queue the job; never write a separate
+process-name polling loop to wait for other verification jobs. Process inspection
+is for the documented failure and orphan-cleanup procedure, not lock admission.
+
 Prefer awaiting job completion through a supported blocking tool or completion
 handle. Use the longest wait permitted by the governing tool instructions.
 Continue independent work first when useful. If a bounded wait returns while
@@ -192,6 +197,8 @@ notification-backed waiting from periodic progress-update requirements. Where
 higher-priority configuration requires updates, configure the exception there;
 repository instructions cannot override it.
 
+- Verification input scope and filesystem searches:
+  [`docs/agents/verification.md`](docs/agents/verification.md)
 - Quint proofs, focused QNT, or battle MBT:
   [`docs/agents/QNT-MBT.md`](docs/agents/QNT-MBT.md)
 - Retired Ralph harness history: [`docs/tooling/ralph/README.md`](docs/tooling/ralph/README.md)
