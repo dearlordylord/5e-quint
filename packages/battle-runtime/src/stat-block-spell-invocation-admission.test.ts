@@ -291,7 +291,7 @@ describe("Stat Block invocation production admission", () => {
       else expect(dispatch).toEqual({ kind: "unsupported", reason: expected });
     },
   );
-  it.each(["produce_flame", "hunters_mark"] as const)(
+  it.each(["produce_flame", "hunters_mark", "spiritual_weapon"] as const)(
     "rejects %s without a Stat Block continuation owner",
     (spellId) => {
       const record = casterRecord();

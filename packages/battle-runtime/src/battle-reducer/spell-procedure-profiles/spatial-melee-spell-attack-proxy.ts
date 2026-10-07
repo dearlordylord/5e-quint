@@ -1,9 +1,7 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
@@ -42,11 +40,9 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // and concentration-save lifecycle.
 
 import {
-  attackBonus,
   movementFeet,
   PositiveInteger,
   type AbilityModifier,
-  type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
@@ -98,7 +94,6 @@ import {
 import {
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -513,6 +508,8 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
   ctx: SpellAdmissionContext,
   facts: SpatialMeleeSpellAttackProxyMechanicsFacts,
 ): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] {
+  // Repeat execution bindings are owned by character execution storage.
+  if (ctx.kind === "statBlock") return [];
   const casterAttackBonus = spellAdmissionAttackBonus(ctx);
   if (casterAttackBonus === null) return [];
   const durationTicks = spellDurationTicksFromCanonicalValue(
@@ -643,11 +640,11 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
             tag: "spellEffect",
             sourceCombatantId: effect.sourceCombatantId,
           },
-          resource: cantripSpellInvocationResource(ctx),
+          resource: { tag: "none" },
           procedure: "spatialMeleeSpellAttackProxy",
           operation: "repositionAndAttack",
           spell,
-          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+          actionCost: "bonusAction",
           activeEffect: effect,
           targeting: { kind: "singleCombatant" },
           repeatTargeting: execution.repeat.repeatTargeting,
@@ -659,15 +656,6 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
         },
       ];
     },
-  );
-}
-
-function spatialMeleeSpellAttackProxyAttackBonus(input: {
-  readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly proficiencyBonus: ProficiencyBonusType;
-}) {
-  return attackBonus(
-    Number(input.spellcastingAbilityModifier) + Number(input.proficiencyBonus),
   );
 }
 
