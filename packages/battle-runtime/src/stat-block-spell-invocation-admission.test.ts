@@ -7,7 +7,8 @@ import { unitId } from "@dnd/shared/game-facts";
 import { admitStatBlockSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { PositiveInteger } from "@dnd/shared/types";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
-import { Result, Schema } from "effect";
+import { Option, Result, Schema } from "effect";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { describe, expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { restoreAuthoredStatBlockExecutionAdmission } from "./index.ts";
@@ -19,6 +20,7 @@ import {
   statBlockCreatureInit,
   statBlockRecord,
   unitLibrary,
+  spellRecord,
 } from "./battle-runtime.test-support.ts";
 import {
   combatantId,
@@ -299,6 +301,70 @@ describe("Stat Block invocation production admission", () => {
       else expect(dispatch).toEqual({ kind: "unsupported", reason: expected });
     },
   );
+  it("reports both absent caster facts for a synthetic attack-and-save spell", () => {
+    const spell = {
+      ...spellRecord("ice_knife"),
+      id: unitId("synthetic_attack_and_save_probe"),
+      name: "Synthetic Attack and Save Probe",
+      provenance: {
+        kind: "synthetic-test" as const,
+        section: "synthetic caster requirements",
+      },
+    };
+    const unitCatalog: UnitCatalog = {
+      getUnit: (id) =>
+        id === spell.id ? Option.some(spell) : unitLibrary.getUnit(id),
+      listUnits: () => [...unitLibrary.listUnits(), spell],
+      requireUnit: (id) =>
+        id === spell.id ? spell : unitLibrary.requireUnit(id),
+    };
+    const entry = syntheticSpellcastingProcedureEntry({
+      unrestrictedSpellId: spell.id,
+    });
+    const {
+      spellSaveDc: _dc,
+      spellAttackBonus: _attack,
+      ...procedure
+    } = entry.procedure;
+    const record = casterRecord();
+    const casterId = combatantId("synthetic-both-missing-caster-facts");
+    const started = startBattle({
+      battleId: battleId("both-missing-caster-facts"),
+      combatants: [
+        {
+          ...statBlockCreatureInit({
+            combatantId: casterId,
+            statBlock: {
+              ...record,
+              statBlock: {
+                ...record.statBlock,
+                actions: [{ ...entry, procedure }],
+              },
+            },
+            initiative: 20,
+          }),
+          unitCatalog,
+        },
+      ],
+    });
+    if (Result.isFailure(started)) throw new Error("Expected admitted actor");
+    const actor = started.success.state.combatants.get(casterId);
+    if (actor?.origin.kind !== "statBlock")
+      throw new Error("Expected Stat Block actor");
+    const binding = actor.origin.execution.procedureBindings.find(
+      (candidate) => candidate.procedure.kind === "spellcasting",
+    );
+    if (binding?.procedure.kind !== "spellcasting")
+      throw new Error("Expected spellcasting binding");
+    expect(binding.procedure.groups[0].invocations[0].dispatch).toEqual({
+      kind: "unsupported",
+      reason: "missingCasterAttackBonusAndSaveDc",
+    });
+    expect(statBlockSpellProcedureInvocations(actor.origin.execution)).toEqual(
+      [],
+    );
+  });
+
   it.each(["produce_flame", "hunters_mark"] as const)(
     "rejects %s without a Stat Block continuation owner",
     (spellId) => {
