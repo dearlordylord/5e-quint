@@ -1790,24 +1790,23 @@ export type SpellProcedureExecution<
 > = Input extends SpellProcedureInput
   ? SpellProcedureExecutionForInput<Input>
   : never;
+/** Live-effect hydration consumes an execution whose casting facts are already correlated. */
+type SpellExecutionWithLiveEffects<Execution> =
+  Execution extends DynamicActiveEffectSpellProcedureExecution
+    ? LiveDynamicSpellProcedureExecution<Execution>
+    : Execution;
 export type SpellExecutableExecutionOf<Input extends SpellProcedureInput> =
   Input extends { readonly spellRuleFacts: SpellRuleExecutionFacts }
-    ? CorrelatedSpellExecution<Input> extends infer Execution
-      ? Execution extends DynamicActiveEffectSpellProcedureExecution
-        ? LiveDynamicSpellProcedureExecution<Execution>
-        : Execution
-      : never
-    : SpellProcedureExecution<Input> extends infer Execution
-      ? Execution extends DynamicActiveEffectSpellProcedureExecution
-        ? LiveDynamicSpellProcedureExecution<Execution>
-        : Execution
-      : never;
+    ? SpellExecutionWithLiveEffects<CorrelatedSpellExecution<Input>>
+    : SpellExecutionWithLiveEffects<SpellProcedureExecution<Input>>;
 export type BattleStoredSpellProcedureExecution =
   SpellProcedureExecution<AnyBattleSpellProcedureExecution>;
 export type RuntimeSpellProcedureExecution =
-  SpellExecutableExecutionOf<BattleStoredSpellProcedureExecution>;
+  SpellExecutionWithLiveEffects<BattleStoredSpellProcedureExecution>;
 export type BattleSpellProcedureExecution<
-  Input extends SpellProcedureInput = BattleStoredSpellProcedureExecution,
-> = SpellExecutableExecutionOf<Input> & {
+  Input extends SpellProcedureInput = never,
+> = ([Input] extends [never]
+  ? RuntimeSpellProcedureExecution
+  : SpellExecutableExecutionOf<Input>) & {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };

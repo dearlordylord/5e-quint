@@ -21,7 +21,7 @@ import type {
   ObjectContactDamageRepeatSpellProcedureExecution,
   SpellCreatedHeldObjectAttackSpellProcedureExecution,
   SpellCreatedHeldObjectReEvokeSpellProcedureExecution,
-  SpellExecutableExecutionOf,
+  RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution,
   SpellProcedureExecution,
   RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution,
   RuntimeSpellProcedureExecution,
@@ -441,7 +441,7 @@ function executableSpellProcedureFromLiveEffects(
         readonly activeEffects: readonly BattleActiveEffect[];
       }
     | undefined,
-): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
+): RuntimeSpellProcedureExecution | undefined {
   if (
     stored.procedure === "markedDamageRider" &&
     stored.action === "transfer"
@@ -548,7 +548,7 @@ function executableSpatialMeleeSpellAttackProxyReposition(
         readonly activeEffects: readonly BattleActiveEffect[];
       }
     | undefined,
-): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
+): RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution | undefined {
   if (liveActor === undefined) return undefined;
   const source = characterRetainedSpellProcedureExecution(
     execution,

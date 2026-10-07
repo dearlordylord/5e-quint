@@ -4001,8 +4001,10 @@ export type BattleSelectedSpellInvocation =
 
 /** A reducer-safe procedure containing typed mechanics and no authored spell. */
 export type BattleExecutableSpellInvocation<
-  I extends SpellProcedureInput = RuntimeSpellProcedureExecution,
-> = SpellExecutableExecutionOf<I> & {
+  I extends SpellProcedureInput = never,
+> = ([I] extends [never]
+  ? RuntimeSpellProcedureExecution
+  : SpellExecutableExecutionOf<I>) & {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
 
