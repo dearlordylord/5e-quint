@@ -1,3 +1,4 @@
+import { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
 import { Match, Option } from "effect";
 import { isStatBlockSpellCastProcedureExecution } from "./stat-block-spell-invocation-dispatch.ts";
 import type { BattleExecutableSpellInvocation } from "./battle-state-execution.ts";
@@ -193,9 +194,7 @@ export function statBlockSpellDispatchBindingsAreValid(
             const source = execution.spellRuleFacts.castingSource;
             if (
               source.actionCost !==
-                (procedure.section === "actions"
-                  ? "magicAction"
-                  : "bonusAction") ||
+                statBlockSpellcastingActionCost(procedure) ||
               Option.getOrUndefined(source.spellSaveDc) !==
                 procedure.spellSaveDc ||
               Option.getOrUndefined(source.spellAttackBonus) !==

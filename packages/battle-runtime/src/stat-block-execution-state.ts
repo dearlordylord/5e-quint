@@ -368,9 +368,21 @@ export type StatBlockSpellcastingInvocationCandidate =
     };
 
 export type StatBlockSpellcastingInvocationOutcome =
-  StatBlockSpellcastingInvocationCandidate & {
-    readonly dispatch: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationDispatch;
-  };
+  | (Extract<
+      StatBlockSpellcastingInvocationCandidate,
+      { readonly kind: "unrestricted" }
+    > & {
+      readonly dispatch: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationDispatch;
+    })
+  | (Extract<
+      StatBlockSpellcastingInvocationCandidate,
+      { readonly kind: "restricted" }
+    > & {
+      readonly dispatch: Extract<
+        import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationDispatch,
+        { readonly kind: "unsupported" }
+      >;
+    });
 
 /**
  * Group facts retain only the execution-relevant group kind, child outcome

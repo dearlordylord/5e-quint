@@ -6326,11 +6326,12 @@ const StatBlockUnarmedStrikeProcedureSchema: StatBlockUnarmedStrikeProcedureCode
     attack: SupportedStatBlockUnarmedStrikeRollMechanicsSchema,
   });
 
+const StatBlockSpellInvocationUnsupportedDispatchSchema = Schema.Struct({
+  kind: Schema.Literal("unsupported"),
+  reason: Schema.Literals(STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS),
+});
 const StatBlockSpellInvocationDispatchSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("unsupported"),
-    reason: Schema.Literals(STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS),
-  }),
+  StatBlockSpellInvocationUnsupportedDispatchSchema,
   Schema.Struct({
     kind: Schema.Literal("executable"),
     executions: Schema.NonEmptyArray(
@@ -6363,7 +6364,7 @@ function statBlockSpellcastingInvocationOutcomeSchema<
       invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
       kind: Schema.Literal("restricted"),
       deltas: StatBlockSpellInvocationDeltasSchema,
-      dispatch: StatBlockSpellInvocationDispatchSchema,
+      dispatch: StatBlockSpellInvocationUnsupportedDispatchSchema,
     }),
   ]);
 }
