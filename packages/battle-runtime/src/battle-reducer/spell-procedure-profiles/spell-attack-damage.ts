@@ -90,12 +90,12 @@ function admitSpellAttackDamage(
   ctx: SpellAdmissionContext,
   facts: SpellAttackDamageMechanicsFacts,
 ): readonly SpellAttackDamageInvocation[] {
-  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-  if (castingFacts === null) return [];
-
   const casterAttackBonus = spellAdmissionAttackBonus(ctx);
   if (casterAttackBonus === null) return [];
   if (facts.level === 0) {
+    const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+    if (castingFacts === null) return [];
+
     return spellAttackDamageInvocationsFromFacts({
       facts,
       ...castingFacts,

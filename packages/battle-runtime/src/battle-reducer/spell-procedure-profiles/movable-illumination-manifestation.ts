@@ -1,3 +1,4 @@
+import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dancing-lights-movable-dim-light
@@ -163,9 +164,12 @@ function admitMovableLightSeparateCast(
   ctx: SpellAdmissionContext,
   facts: MovableLightMechanicsFacts,
 ): readonly MovableLightSeparateCastInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
   return [
     {
       ...movableLightCantripBase(spell, facts),
+      ...castingFacts,
       procedure: "movableLightManifestation",
       operation: "create",
       actionCost: spellAdmissionActionCost(ctx, "magicAction"),
@@ -184,9 +188,12 @@ function admitMovableLightCombinedCast(
   ctx: SpellAdmissionContext,
   facts: MovableLightMechanicsFacts,
 ): readonly MovableLightCombinedCastInvocation[] {
+  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+  if (castingFacts === null) return [];
   return [
     {
       ...movableLightCantripBase(spell, facts),
+      ...castingFacts,
       procedure: "movableLightManifestation",
       operation: "create",
       actionCost: spellAdmissionActionCost(ctx, "magicAction"),

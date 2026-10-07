@@ -1,3 +1,4 @@
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import { cantripSpellInvocationFacts } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
 import { cantripSpellInvocationResource } from "./profile.ts";
@@ -2208,7 +2209,7 @@ function admitRollModifier(
   facts: RollModifierMechanicsFacts,
 ): readonly RollModifierInvocation[] {
   const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-  if (castingFacts === null) return [];
+  if (facts.level === 0 && castingFacts === null) return [];
 
   const expiresAt = rollModifierActiveEffectExpiration(
     ctx.actor.combatantId,
@@ -2301,24 +2302,25 @@ function admitRollModifier(
   };
   const invocations: RollModifierInvocation[] = [];
   if (facts.level === 0) {
-    invocations.push(
-      complete({
+    invocations.push({
+      ...complete({
         kind: "cantrip",
         ...castingFacts,
         slotLevel: spellSlotLevel(0),
       }),
-    );
+      ...castingFacts,
+    });
   } else {
-    for (const slot of ctx.spellCastOptions) {
+    for (const slot of leveledSpellInvocationOptions(spell, ctx)) {
       if (slot.spellLevel < facts.level) continue;
-      invocations.push(
-        complete({
+      invocations.push({
+        ...complete({
           kind: "prepared",
-          access: preparedSpellAccessForCastingSource(spell.castingSource),
-          resource: spellInvocationResourceForCastOption(slot),
+          ...slot.facts,
           slotLevel: slot.spellLevel,
         }),
-      );
+        ...slot.facts,
+      });
     }
   }
   return invocations;

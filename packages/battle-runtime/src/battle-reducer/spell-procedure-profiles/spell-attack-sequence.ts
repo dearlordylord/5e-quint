@@ -1250,13 +1250,13 @@ function admitSpellAttackSequence(
   ctx: SpellAdmissionContext,
   facts: SpellAttackSequenceMechanicsFacts,
 ): readonly SpellAttackSequenceInvocation[] {
-  const castingFacts = cantripSpellInvocationFacts(spell, ctx);
-  if (castingFacts === null) return [];
-
   const casterAttackBonus = spellAdmissionAttackBonus(ctx);
   if (casterAttackBonus === null) return [];
   const attackBonusValue = casterAttackBonus;
   if (facts.level === 0) {
+    const castingFacts = cantripSpellInvocationFacts(spell, ctx);
+    if (castingFacts === null) return [];
+
     const characterLevel = spellAdmissionCharacterLevel(ctx);
     const attackCount = facts.count.tiers.reduce<MultiBeamSpellAttackBeamCount>(
       (current, tier) =>
