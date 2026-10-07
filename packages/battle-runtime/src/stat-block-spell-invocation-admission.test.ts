@@ -156,6 +156,54 @@ describe("Stat Block invocation production admission", () => {
       reason: "missingDefinition",
     });
   });
+  it.each([
+    ["ray_of_frost", "missingCasterAttackBonus"],
+    ["hold_person", "missingCasterSaveDc"],
+    ["magic_missile", "executable"],
+  ] as const)(
+    "reports exact absent caster facts for %s",
+    (spellId, expected) => {
+      const record = casterRecord();
+      const entry = syntheticSpellcastingProcedureEntry({
+        unrestrictedSpellId: spellId,
+      });
+      const {
+        spellSaveDc: _dc,
+        spellAttackBonus: _attack,
+        ...procedure
+      } = entry.procedure;
+      const casterId = combatantId("synthetic-missing-caster-facts");
+      const started = startBattle({
+        battleId: battleId("missing-caster-facts"),
+        combatants: [
+          statBlockCreatureInit({
+            combatantId: casterId,
+            statBlock: {
+              ...record,
+              statBlock: {
+                ...record.statBlock,
+                actions: [{ ...entry, procedure }],
+              },
+            },
+            initiative: 20,
+          }),
+        ],
+      });
+      expect(Result.isSuccess(started)).toBe(true);
+      if (Result.isFailure(started)) throw new Error("Expected admitted actor");
+      const actor = started.success.state.combatants.get(casterId);
+      if (actor?.origin.kind !== "statBlock")
+        throw new Error("Expected Stat Block actor");
+      const binding = actor.origin.execution.procedureBindings.find(
+        (candidate) => candidate.procedure.kind === "spellcasting",
+      );
+      if (binding?.procedure.kind !== "spellcasting")
+        throw new Error("Expected spellcasting binding");
+      const dispatch = binding.procedure.groups[0].invocations[0].dispatch;
+      if (expected === "executable") expect(dispatch.kind).toBe("executable");
+      else expect(dispatch).toEqual({ kind: "unsupported", reason: expected });
+    },
+  );
   it("rejects a mismatched transient plan before replacing actor execution", () => {
     const casterId = combatantId("synthetic-plan-mismatch");
     const started = startBattle({

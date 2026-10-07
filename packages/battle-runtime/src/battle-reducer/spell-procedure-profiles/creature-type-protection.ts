@@ -905,6 +905,10 @@ export const creatureTypeProtectionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "creatureTypeProtection",
   executionSchema: InvocationSchema,
+  casterRequirements: () => ({
+    spellAttackBonus: "unused",
+    spellSaveDc: "unused",
+  }),
   admitMechanics,
   discoverCastAct,
   resolve,

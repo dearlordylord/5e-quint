@@ -1594,6 +1594,11 @@ const InvocationSchema = spellProcedureExecutionSchema(
 export const directionalPersistentAreaProfile = {
   procedure: "directionalPersistentArea",
   executionSchema: InvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics,
   discoverCastAct,
   resolve,

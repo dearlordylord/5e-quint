@@ -204,6 +204,11 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
 export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
   executionSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
+  casterRequirements: (facts) => ({
+    spellAttackBonus: "unused",
+    spellSaveDc:
+      facts.dc.kind === "caster_spell_save_dc" ? "required" : "unused",
+  }),
   admitMechanics: admitAbilityD20TestRollModeSaveGateMechanics,
   discoverCastAct: discoverAbilityD20TestRollModeSaveGateCastAct,
   resolve: resolveAbilityD20TestRollModeSaveGate,
