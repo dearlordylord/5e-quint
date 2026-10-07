@@ -3,6 +3,7 @@ import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   startBattle,
+  discoverBattleActs,
   resolveBattleSubject,
   type BattleRuntimeSession,
 } from "./index.ts";
@@ -11,7 +12,6 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { statBlockRecord, unitLibrary } from "./battle-runtime.test-support.ts";
 import { statBlockCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
-import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 
 export const statBlockConcentrationCasterId = combatantId(
   "synthetic-concentration-caster",
@@ -92,7 +92,7 @@ export function statBlockConcentrationBattle(): BattleRuntimeSession {
 export function castStatBlockConcentrationSpell(
   session: BattleRuntimeSession,
 ): BattleRuntimeSession {
-  const act = discoverBattleActCandidates(session.state).find(
+  const act = discoverBattleActs(session).find(
     (act) => act.subject.tag === "actionSpell",
   );
   if (act === undefined)

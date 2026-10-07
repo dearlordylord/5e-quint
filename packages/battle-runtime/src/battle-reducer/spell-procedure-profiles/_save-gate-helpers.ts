@@ -1,9 +1,11 @@
+import {
+  admittedLeveledCastingFacts,
+  admittedCantripCastingFacts,
+} from "./profile.ts";
+import type { AuthoredSpellInvocationCastingFacts } from "../../procedure-execution/spell-invocation-casting-facts.ts";
 import { preparedSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-import {
-  battleSpellExecutionSourceFromAdmission,
-  type BattleSpellExecutionSource,
-} from "../../battle-state-execution.ts";
+import { type BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
@@ -66,7 +68,7 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { damageSpellSource } from "../spells-invocation-guards.ts";
+import { isPreparedDamageSpellSource } from "../spells-invocation-guards.ts";
 import { isCantripSpellAccess } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   cantripSpellAccessFor,
@@ -1385,12 +1387,16 @@ export function supportedPreparedSaveGateConditionProfile(
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
+    const castingFacts = {
+      spell,
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      resource: spellInvocationResourceForCastOption(slot),
+    };
+    if (!admittedLeveledCastingFacts(castingFacts)) return [];
     return [
       {
-        access: preparedSpellAccessForCastingSource(spell.castingSource),
-        resource: spellInvocationResourceForCastOption(slot),
+        ...castingFacts,
         procedure: "saveGatedCondition",
-        spell,
         ability: conditionSpell.phase.ability,
         dc: conditionSpell.phase.dc,
         targeting: saveGatedConditionTargetingFromFacts(
@@ -1449,13 +1455,15 @@ export function saveGatedConditionMechanicsFacts(
 }
 
 /** Build prepared invocations from one correlated static condition projection. */
-export function saveGatedConditionInvocationsFromFacts(input: {
-  readonly spell: SaveGatedConditionInvocation["spell"];
-  readonly facts: SpellDefinitionRuleFacts & SaveGatedConditionMechanicsFacts;
-  readonly access: SaveGatedConditionInvocation["access"];
-  readonly resource: SaveGatedConditionInvocation["resource"];
-  readonly slotLevel: SpellSlotLevel;
-}): readonly SaveGatedConditionInvocation[] {
+export function saveGatedConditionInvocationsFromFacts(
+  input: {
+    readonly facts: SpellDefinitionRuleFacts & SaveGatedConditionMechanicsFacts;
+    readonly slotLevel: SpellSlotLevel;
+  } & Extract<
+    AuthoredSpellInvocationCastingFacts<SaveGatedConditionInvocation["spell"]>,
+    { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
+  >,
+): readonly SaveGatedConditionInvocation[] {
   const { level } = input.facts;
   if (Number(input.slotLevel) < level) {
     return [];
@@ -1473,12 +1481,11 @@ export function saveGatedConditionInvocationsFromFacts(input: {
   if (effect === null) {
     return [];
   }
+  const { facts, slotLevel, ...castingFacts } = input;
   return [
     {
-      access: input.access,
-      resource: input.resource,
+      ...castingFacts,
       procedure: "saveGatedCondition",
-      spell: input.spell,
       ability: input.facts.ability,
       dc: input.facts.dc,
       targeting: saveGatedConditionTargetingFromFacts(
@@ -2497,12 +2504,16 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
       return [];
     }
     /* v8 ignore stop -- @preserve */
+    const castingFacts = {
+      spell,
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      resource: spellInvocationResourceForCastOption(slot),
+    };
+    if (!admittedLeveledCastingFacts(castingFacts)) return [];
     return [
       {
-        access: preparedSpellAccessForCastingSource(spell.castingSource),
-        resource: spellInvocationResourceForCastOption(slot),
+        ...castingFacts,
         procedure: "saveGatedAttackRollAdvantage",
-        spell,
         ability: attackRollAdvantageSpell.phase.ability,
         dc: attackRollAdvantageSpell.phase.dc,
         targeting: attackRollAdvantageSpell.targeting,
@@ -2534,12 +2545,16 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
+    const castingFacts = {
+      spell,
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      resource: spellInvocationResourceForCastOption(slot),
+    };
+    if (!admittedLeveledCastingFacts(castingFacts)) return [];
     return [
       {
-        access: preparedSpellAccessForCastingSource(spell.castingSource),
-        resource: spellInvocationResourceForCastOption(slot),
+        ...castingFacts,
         procedure: "abilityD20TestRollModeSaveGate",
-        spell,
         actionCost: "magicAction",
         ability: d20Lifecycle.phase.ability,
         dc: d20Lifecycle.phase.dc,
@@ -2574,12 +2589,16 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
+    const castingFacts = {
+      spell,
+      access: preparedSpellAccessForCastingSource(spell.castingSource),
+      resource: spellInvocationResourceForCastOption(slot),
+    };
+    if (!admittedLeveledCastingFacts(castingFacts)) return [];
     return [
       {
-        access: preparedSpellAccessForCastingSource(spell.castingSource),
-        resource: spellInvocationResourceForCastOption(slot),
+        ...castingFacts,
         procedure: "saveGatedConditionImmunity",
-        spell,
         actionCost: "magicAction",
         ability: conditionImmunitySpell.phase.ability,
         dc: conditionImmunitySpell.phase.dc,
@@ -2633,15 +2652,19 @@ export function saveGatedConditionImmunityMechanicsFacts(
 }
 
 /** Build condition-immunity effects from static facts and actor state. */
-export function saveGatedConditionImmunityInvocationsFromFacts(input: {
-  readonly spell: SaveGatedConditionImmunitySpellInvocation["spell"];
-  readonly facts: SpellDefinitionRuleFacts &
-    SaveGatedConditionImmunityMechanicsFacts;
-  readonly access: SaveGatedConditionImmunitySpellInvocation["access"];
-  readonly resource: SaveGatedConditionImmunitySpellInvocation["resource"];
-  readonly slotLevel: SpellSlotLevel;
-  readonly sourceCombatantId: CombatantId;
-}): readonly SaveGatedConditionImmunitySpellInvocation[] {
+export function saveGatedConditionImmunityInvocationsFromFacts(
+  input: {
+    readonly facts: SpellDefinitionRuleFacts &
+      SaveGatedConditionImmunityMechanicsFacts;
+    readonly slotLevel: SpellSlotLevel;
+    readonly sourceCombatantId: CombatantId;
+  } & Extract<
+    AuthoredSpellInvocationCastingFacts<
+      SaveGatedConditionImmunitySpellInvocation["spell"]
+    >,
+    { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
+  >,
+): readonly SaveGatedConditionImmunitySpellInvocation[] {
   const { level } = input.facts;
   if (Number(input.slotLevel) < level) {
     return [];
@@ -2650,12 +2673,11 @@ export function saveGatedConditionImmunityInvocationsFromFacts(input: {
   if (rangeFeet === null) {
     return [];
   }
+  const { facts, slotLevel, sourceCombatantId, ...castingFacts } = input;
   return [
     {
-      access: input.access,
-      resource: input.resource,
+      ...castingFacts,
       procedure: "saveGatedConditionImmunity",
-      spell: input.spell,
       actionCost: "magicAction",
       ability: input.facts.ability,
       dc: input.facts.dc,
@@ -3182,15 +3204,19 @@ export function abilityD20TestRollModeSaveGateMechanicsFacts(
 }
 
 /** Build D20 test roll-mode effects from static facts and actor state. */
-export function abilityD20TestRollModeSaveGateInvocationsFromFacts(input: {
-  readonly spell: AbilityD20TestRollModeSaveGateInvocation["spell"];
-  readonly facts: SpellDefinitionRuleFacts &
-    AbilityD20TestRollModeSaveGateMechanicsFacts;
-  readonly access: AbilityD20TestRollModeSaveGateInvocation["access"];
-  readonly resource: AbilityD20TestRollModeSaveGateInvocation["resource"];
-  readonly slotLevel: SpellSlotLevel;
-  readonly sourceCombatantId: CombatantId;
-}): readonly AbilityD20TestRollModeSaveGateInvocation[] {
+export function abilityD20TestRollModeSaveGateInvocationsFromFacts(
+  input: {
+    readonly facts: SpellDefinitionRuleFacts &
+      AbilityD20TestRollModeSaveGateMechanicsFacts;
+    readonly slotLevel: SpellSlotLevel;
+    readonly sourceCombatantId: CombatantId;
+  } & Extract<
+    AuthoredSpellInvocationCastingFacts<
+      AbilityD20TestRollModeSaveGateInvocation["spell"]
+    >,
+    { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
+  >,
+): readonly AbilityD20TestRollModeSaveGateInvocation[] {
   const { level } = input.facts;
   if (Number(input.slotLevel) < level) {
     return [];
@@ -3202,13 +3228,11 @@ export function abilityD20TestRollModeSaveGateInvocationsFromFacts(input: {
   if (rangeFeet === null || durationTicks === null) {
     return [];
   }
-  const { sourceCombatantId } = input;
+  const { facts, slotLevel, sourceCombatantId, ...castingFacts } = input;
   return [
     {
-      access: input.access,
-      resource: input.resource,
+      ...castingFacts,
       procedure: "abilityD20TestRollModeSaveGate",
-      spell: input.spell,
       actionCost: "magicAction",
       ability: input.facts.ability,
       dc: input.facts.dc,
@@ -3811,15 +3835,19 @@ export function saveGatedAttackRollAdvantageMechanicsFacts(
 }
 
 /** Build attack-roll advantage effects from static facts and actor state. */
-export function saveGatedAttackRollAdvantageInvocationsFromFacts(input: {
-  readonly spell: SaveGatedAttackRollAdvantageInvocation["spell"];
-  readonly facts: SpellDefinitionRuleFacts &
-    SaveGatedAttackRollAdvantageMechanicsFacts;
-  readonly access: SaveGatedAttackRollAdvantageInvocation["access"];
-  readonly resource: SaveGatedAttackRollAdvantageInvocation["resource"];
-  readonly slotLevel: SpellSlotLevel;
-  readonly sourceCombatantId: CombatantId;
-}): readonly SaveGatedAttackRollAdvantageInvocation[] {
+export function saveGatedAttackRollAdvantageInvocationsFromFacts(
+  input: {
+    readonly facts: SpellDefinitionRuleFacts &
+      SaveGatedAttackRollAdvantageMechanicsFacts;
+    readonly slotLevel: SpellSlotLevel;
+    readonly sourceCombatantId: CombatantId;
+  } & Extract<
+    AuthoredSpellInvocationCastingFacts<
+      SaveGatedAttackRollAdvantageInvocation["spell"]
+    >,
+    { readonly access: { readonly tag: "prepared" | "statBlockLeveled" } }
+  >,
+): readonly SaveGatedAttackRollAdvantageInvocation[] {
   const { level } = input.facts;
   if (Number(input.slotLevel) < level) {
     return [];
@@ -3828,12 +3856,11 @@ export function saveGatedAttackRollAdvantageInvocationsFromFacts(input: {
   if (rangeFeet === null) {
     return [];
   }
+  const { facts, slotLevel, sourceCombatantId, ...castingFacts } = input;
   return [
     {
-      access: input.access,
-      resource: input.resource,
+      ...castingFacts,
       procedure: "saveGatedAttackRollAdvantage",
-      spell: input.spell,
       ability: input.facts.ability,
       dc: input.facts.dc,
       targeting: input.facts.targeting,
@@ -4801,13 +4828,17 @@ export function supportedSaveGateDamageProfile(
   ) {
     return [];
   }
+  if (isPreparedDamageSpellSource(input)) {
+    if (!admittedLeveledCastingFacts(input)) return [];
+    return saveGatedDamageInvocationsFromFacts({
+      ...input,
+      facts: { ...input.spell.spellDefinitionRuleFacts, ...projection.facts },
+    });
+  }
+  if (!admittedCantripCastingFacts(input)) return [];
   return saveGatedDamageInvocationsFromFacts({
     ...input,
-    spell: battleSpellExecutionSourceFromAdmission(input.spell),
-    facts: {
-      ...input.spell.spellDefinitionRuleFacts,
-      ...projection.facts,
-    },
+    facts: { ...input.spell.spellDefinitionRuleFacts, ...projection.facts },
   });
 }
 
@@ -5245,11 +5276,22 @@ function saveGatedDamageMechanicsEvidence(
 
 export function saveGatedDamageInvocationsFromFacts(
   input: {
-    readonly spell: SaveGatedDamageInvocation["spell"];
     readonly facts: SpellDefinitionRuleFacts & SaveGatedDamageMechanicsFacts;
     readonly slotLevel?: SpellSlotLevel;
     readonly characterLevel?: number | null | undefined;
-  } & DamageSpellSource,
+  } & Extract<
+    AuthoredSpellInvocationCastingFacts<SaveGatedDamageInvocation["spell"]>,
+    {
+      readonly access: {
+        readonly tag:
+          | "prepared"
+          | "statBlockLeveled"
+          | "classCantrip"
+          | "spellAccessCantrip"
+          | "statBlockCantrip";
+      };
+    }
+  >,
 ): readonly SaveGatedDamageInvocation[] {
   const primaryDamageExpr = supportedDamageAmountExpr({
     amount: input.facts.failedSaveEffects.damage.amount,
@@ -5286,7 +5328,6 @@ export function saveGatedDamageInvocationsFromFacts(
     damageComponents;
   const saveGatedInvocation = {
     procedure: "saveGatedDamage" as const,
-    spell: input.spell,
     castingTime: input.facts.castingTime,
     ability: input.facts.ability,
     dc: input.facts.dc,
@@ -5306,7 +5347,8 @@ export function saveGatedDamageInvocationsFromFacts(
       ? {}
       : { postSaveAreaEffect: input.facts.postSaveAreaEffect }),
   };
-  return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
+  const { facts, slotLevel, characterLevel, ...castingFacts } = input;
+  return [{ ...castingFacts, ...saveGatedInvocation }];
 }
 
 function saveGateDamageSuccessIsSupported(

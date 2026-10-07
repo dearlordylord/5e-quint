@@ -1,4 +1,4 @@
-import { isPreparedDamageSpellSource } from "./spells-invocation-guards.ts";
+import type { AuthoredSpellInvocationCastingFacts } from "../procedure-execution/spell-invocation-casting-facts.ts";
 // Spell attack damage profile projections extracted from spells-profiles.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
@@ -44,7 +44,6 @@ import {
 import { isCantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-  type DamageSpellSource,
   type SpellActivationPhase,
   type SpellAttackDamageTargeting,
   type SpellAttackHitEffect,
@@ -1422,13 +1421,24 @@ export function isBouncingAttackContinuationLimitSetShape(
 }
 
 type SpellAttackDamageInvocationInput = {
-  readonly spell: BattleSpellExecutionSource;
   readonly facts: SpellAttackDamageMechanicsFacts;
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
   readonly slotLevel?: SpellSlotLevel;
   readonly characterLevel?: number | null | undefined;
-} & DamageSpellSource;
+} & Extract<
+  AuthoredSpellInvocationCastingFacts<SpellAttackDamageInvocation["spell"]>,
+  {
+    readonly access: {
+      readonly tag:
+        | "prepared"
+        | "statBlockLeveled"
+        | "classCantrip"
+        | "spellAccessCantrip"
+        | "statBlockCantrip";
+    };
+  }
+>;
 
 export function spellAttackDamageInvocationsFromFacts(
   input: SpellAttackDamageInvocationInput,
@@ -1452,7 +1462,6 @@ export function spellAttackDamageInvocationsFromFacts(
   const damage = spellAttackInvocationDamage(input, damageExpr);
   const attackDamageInvocation = {
     procedure: "spellAttackDamage" as const,
-    spell: input.spell,
     targeting: input.facts.targeting,
     damage,
     rangeFeet: input.facts.rangeFeet,
@@ -1470,7 +1479,15 @@ export function spellAttackDamageInvocationsFromFacts(
     objectHitEffect: input.facts.objectHitEffect,
   };
 
-  return spellAttackDamageInvocationForAccess(input, attackDamageInvocation);
+  const {
+    facts,
+    slotLevel,
+    characterLevel,
+    spellcastingAbilityModifier,
+    attackBonus,
+    ...castingFacts
+  } = input;
+  return [{ ...castingFacts, ...attackDamageInvocation }];
 }
 
 function spellAttackDamageLevelIsRepresented(
@@ -1514,15 +1531,6 @@ function spellAttackInvocationDamage(
       }),
     }),
   );
-}
-
-function spellAttackDamageInvocationForAccess(
-  input: SpellAttackDamageInvocationInput,
-  invocation: Omit<SpellAttackDamageInvocation, "access" | "resource">,
-): readonly SpellAttackDamageInvocation[] {
-  return isPreparedDamageSpellSource(input)
-    ? [{ access: input.access, resource: input.resource, ...invocation }]
-    : [{ access: input.access, resource: input.resource, ...invocation }];
 }
 
 function supportedExplodingCantripProjection(

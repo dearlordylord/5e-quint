@@ -23,7 +23,7 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
+
 import {
   endTurn,
   resolveBattleSubject,
@@ -187,7 +187,7 @@ function replacementState(): BattleState {
 
 function incapacitatedState(): BattleState {
   const session = nextTurn(castState());
-  const act = discoverBattleActCandidates(session.state).find(
+  const act = discoverBattleActs(session).find(
     (act) => act.subject.tag === "actionSpell",
   );
   if (act === undefined)

@@ -1,3 +1,4 @@
+import { admittedSpellInvocationCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import type {
   BattleActDiscoveryCandidate,
   BattleActPresentation,
@@ -59,12 +60,9 @@ import {
   type BattleSpellProcedureExecution,
 } from "./character-execution-admission.ts";
 import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composition-admission.ts";
+import { creatureSpellProcedure } from "./creature-spell-procedure.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import type { BattleActiveEffect } from "./active-effect/types.ts";
-import type {
-  RepositionMovableLightManifestationSpellProcedureExecution,
-  RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution,
-} from "./procedure-execution/spell-procedure-execution.ts";
 
 const byTag = Match.discriminator("tag");
 
@@ -153,7 +151,7 @@ export function presentBattleActs(
   candidates: readonly BattleActDiscoveryCandidate[],
 ): readonly AvailableBattleAct[] {
   const { state, context } = session;
-  const acts = admitCharacterProcedureDiscoveryActs(state, context, candidates);
+  const acts = admitProcedureDiscoveryActs(state, context, candidates);
   return battleActsWithReducerRouteEvents(state, acts);
 }
 
@@ -171,11 +169,8 @@ export function battleSubjectPresentation(
   subject: BattleSubject,
 ): BattleActPresentation | undefined {
   if (isCharacterProcedureBattleSubject(subject)) {
-    return characterProcedurePresentationJoin(
-      session.state,
-      session.context,
-      subject,
-    )?.presentation;
+    return procedurePresentationJoin(session.state, session.context, subject)
+      ?.presentation;
   }
   return intrinsicActPresentation(session.state, session.context, subject)
     ?.presentation;
@@ -184,52 +179,44 @@ export function battleSubjectPresentation(
 export function battleAdmittedSpellPresentations(
   session: BattleRuntimeSession,
 ): readonly Extract<BattleActPresentation, { readonly kind: "spell" }>[] {
-  return [...session.context.characters].flatMap(([actorId, context]) =>
-    context.spellPresentationSources.flatMap((source) => {
-      const correlated = spellPresentationSourceForProcedure(
-        session.state,
-        session.context,
-        actorId,
-        source.procedureRef,
-      );
-      if (correlated === undefined) return [];
-      if (correlated.invocation.procedure === "spawnedCompanionLifecycle") {
-        return [];
-      }
-      const presentation: Extract<
-        BattleActPresentation,
-        { readonly kind: "spell" }
-      > = {
-        kind: "spell",
-        procedureRef: correlated.procedureRef,
-        invocation: supportedSpellInvocationRef(correlated.invocation),
-      };
-      return [presentation];
-    }),
+  return [...session.context.characters, ...session.context.statBlocks].flatMap(
+    ([actorId, context]) =>
+      context.spellPresentationSources.flatMap((source) => {
+        const correlated = spellPresentationSourceForProcedure(
+          session.state,
+          session.context,
+          actorId,
+          source.procedureRef,
+        );
+        if (correlated === undefined) return [];
+        if (correlated.invocation.procedure === "spawnedCompanionLifecycle") {
+          return [];
+        }
+        const presentation: Extract<
+          BattleActPresentation,
+          { readonly kind: "spell" }
+        > = {
+          kind: "spell",
+          procedureRef: correlated.procedureRef,
+          invocation: supportedSpellInvocationRef(correlated.invocation),
+        };
+        return [presentation];
+      }),
   );
 }
 
-function admitCharacterProcedureDiscoveryActs(
+function admitProcedureDiscoveryActs(
   state: BattleState,
   context: BattleRuntimeContext,
   acts: readonly BattleActDiscoveryCandidate[],
 ): readonly AvailableBattleAct[] {
-  const characterIds = new Set<CombatantId>();
-  for (const [combatantId, combatant] of state.combatants) {
-    if (combatant.origin.kind === "character") characterIds.add(combatantId);
-  }
   return acts.flatMap((act) => {
     const subject = act.subject;
-    if (!characterIds.has(subject.actorId)) {
-      if (isCharacterProcedureBattleSubject(subject)) return [];
-      const composed = composeIntrinsicAct(state, context, act, subject);
-      return composed === undefined ? [] : [composed];
-    }
     if (!isCharacterProcedureBattleSubject(subject)) {
       const composed = composeIntrinsicAct(state, context, act, subject);
       return composed === undefined ? [] : [composed];
     }
-    const joined = characterProcedurePresentationJoin(state, context, subject);
+    const joined = procedurePresentationJoin(state, context, subject);
     return joined === undefined ? [] : [{ ...act, ...joined, subject }];
   });
 }
@@ -852,13 +839,13 @@ function intrinsicActPresentationLabel(
   );
 }
 
-function characterProcedurePresentationJoin(
+function procedurePresentationJoin(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: CharacterProcedureBattleSubject,
 ): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
   const actor = state.combatants.get(subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) return undefined;
+  if (actor === undefined) return undefined;
   const procedureRef = subject.procedureRef;
   if (isPresentedSpellProcedureSubject(subject)) {
     const invocation = spellPresentationInvocationForProcedure(
@@ -885,6 +872,7 @@ function characterProcedurePresentationJoin(
       },
     };
   }
+  if (!isCharacterBattleCreatureState(actor)) return undefined;
   if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
     const form = actor.origin.druidWildShapeAvailableForms?.find(
       (candidate) => candidate.execution.scopeRef === subject.formExecutionRef,
@@ -1242,9 +1230,19 @@ function spellPresentationSourceForProcedure(
   procedureRef: BattleProcedureExecutionRef,
 ) {
   const actor = state.combatants.get(actorId);
-  return isCharacterBattleCreatureState(actor)
-    ? spellPresentationSourceForCharacter(actor, context, procedureRef)
-    : undefined;
+  if (actor === undefined) return undefined;
+  if (isCharacterBattleCreatureState(actor))
+    return spellPresentationSourceForCharacter(actor, context, procedureRef);
+  const execution = creatureSpellProcedure(actor, procedureRef);
+  if (execution === undefined) return undefined;
+  const matches = context.statBlocks
+    .get(actorId)
+    ?.spellPresentationSources.filter(
+      (source) =>
+        source.procedureRef === procedureRef &&
+        source.invocation.procedure === execution.procedure,
+    );
+  return matches?.length === 1 ? matches[0] : undefined;
 }
 
 function spellPresentationSourceForCharacter(
@@ -1272,14 +1270,6 @@ export function battleSelectedSpellInvocationForProcedure(
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
 ): AuthoredSelectedSpellInvocation | undefined {
-  const actor = session.state.combatants.get(actorId);
-  if (
-    !isCharacterBattleCreatureState(actor) ||
-    characterSpellProcedureExecution(actor.origin.execution, procedureRef) ===
-      undefined
-  ) {
-    return undefined;
-  }
   return spellPresentationInvocationForProcedure(
     session.state,
     session.context,
@@ -1295,15 +1285,16 @@ function spellPresentationInvocationForProcedure(
   procedureRef: BattleProcedureExecutionRef,
 ): AuthoredSelectedSpellInvocation | undefined {
   const actor = state.combatants.get(actorId);
-  if (!isCharacterBattleCreatureState(actor)) return undefined;
-  const direct = spellPresentationSourceForCharacter(
-    actor,
+  const direct = spellPresentationSourceForProcedure(
+    state,
     context,
+    actorId,
     procedureRef,
   );
   if (direct !== undefined) {
     return { ...direct.invocation, sourceProcedureRef: procedureRef };
   }
+  if (!isCharacterBattleCreatureState(actor)) return undefined;
   const execution = characterSpellProcedure(
     actor.origin.execution,
     procedureRef,
@@ -1326,25 +1317,27 @@ function spellPresentationInvocationForProcedure(
 type DynamicSpellPresentationExecution =
   | Extract<
       BattleSpellProcedureExecution,
-      { readonly procedure: "heldLightHurl" }
+      {
+        readonly procedure:
+          | "heldLightHurl"
+          | "spellCreatedHeldObjectAttack"
+          | "spellCreatedHeldObjectReEvoke"
+          | "objectContactDamageRepeat";
+      }
     >
-  | (RepositionMovableLightManifestationSpellProcedureExecution & {
-      readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    })
   | Extract<
       BattleSpellProcedureExecution,
       {
-        readonly procedure:
-          | "spellCreatedHeldObjectAttack"
-          | "spellCreatedHeldObjectReEvoke";
+        readonly procedure: "movableLightManifestation";
+        readonly operation: "reposition";
       }
     >
-  | (RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution & {
-      readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    })
   | Extract<
       BattleSpellProcedureExecution,
-      { readonly procedure: "objectContactDamageRepeat" }
+      {
+        readonly procedure: "spatialMeleeSpellAttackProxy";
+        readonly operation: "repositionAndAttack";
+      }
     >
   | Extract<
       BattleSpellProcedureExecution,
@@ -1381,9 +1374,9 @@ function dynamicSpellPresentationInvocation(
   execution: DynamicSpellPresentationExecution,
 ): AuthoredSelectedSpellInvocation | undefined {
   const spell = dynamicSpellPresentationSourceSpell(actor, context, execution);
-  return spell === undefined
-    ? undefined
-    : { ...execution, spell, sourceProcedureRef: procedureRef };
+  if (spell === undefined) return undefined;
+  const candidate = { ...execution, spell, sourceProcedureRef: procedureRef };
+  return admittedSpellInvocationCastingFacts(candidate) ? candidate : undefined;
 }
 
 function dynamicSpellPresentationSourceSpell(
