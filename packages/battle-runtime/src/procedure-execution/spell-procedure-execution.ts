@@ -1793,9 +1793,11 @@ export type SpellProcedureExecution<
   : never;
 export type SpellExecutableExecutionOf<Input extends SpellProcedureInput> =
   Input extends { readonly spellRuleFacts: SpellRuleExecutionFacts }
-    ? Input extends DynamicActiveEffectSpellProcedureExecution
-      ? LiveDynamicSpellProcedureExecution<Input>
-      : Input
+    ? CorrelatedSpellExecution<Input> extends infer Execution
+      ? Execution extends DynamicActiveEffectSpellProcedureExecution
+        ? LiveDynamicSpellProcedureExecution<Execution>
+        : Execution
+      : never
     : SpellProcedureExecution<Input> extends infer Execution
       ? Execution extends DynamicActiveEffectSpellProcedureExecution
         ? LiveDynamicSpellProcedureExecution<Execution>
