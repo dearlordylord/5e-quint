@@ -96,7 +96,9 @@
     "test:mbt:tactical-shift-selected-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/tactical-shift-selected-identity.mbt.test.ts",
     "test:mbt:attack-roll-defense": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/attack-roll-defense.mbt.test.ts",
     "test:mbt:marked-creature-defenses": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/marked-creature-defenses.mbt.test.ts",
-    "test:mbt:spell-long-casting": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/spell-long-casting.mbt.test.ts"
+    "test:mbt:spell-long-casting": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/spell-long-casting.mbt.test.ts",
+    "test:mbt:stat-block-profiled-spell-execution": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/stat-block-profiled-spell-execution.mbt.test.ts",
+    "test:mbt:stat-block-spell-invocation": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/stat-block-spell-invocation.mbt.test.ts"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",

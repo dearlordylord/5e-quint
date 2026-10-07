@@ -1098,6 +1098,50 @@ function appendCharacterWeaponPresentationIssues(input: {
   }
 }
 
+function initializeStatBlockSpellExecution(
+  input: Parameters<typeof initializeBattleSpellExecutions>[0],
+  combatant: Extract<
+    BattleCreatureState,
+    { readonly origin: { readonly kind: "statBlock" } }
+  >,
+  combatantsWithSpellExecutions: Map<CombatantId, BattleCreatureState>,
+): void {
+  const combatantId = combatant.combatantId;
+  const plan = input.statBlockSpellAdmissionPlans.get(combatantId);
+  const admitted =
+    plan === undefined
+      ? Result.fail("admissionPlanMissing" as const)
+      : admitStatBlockSpellInvocations(
+          { ...combatant, origin: combatant.origin },
+          input.state,
+          plan,
+        );
+  if (Result.isFailure(admitted))
+    input.initializationIssues.push({
+      tag: "battleAdmissionInitIssue",
+      kind: "statBlockSpellAdmissionInvalid",
+      combatantId,
+      cause: admitted.failure,
+    });
+  else {
+    const presentation = input.statBlockPresentations.get(combatantId);
+    if (presentation === undefined)
+      input.initializationIssues.push({
+        tag: "battleAdmissionInitIssue",
+        kind: "statBlockSpellAdmissionInvalid",
+        combatantId,
+        cause: "presentationSourceMissing",
+      });
+    else {
+      combatantsWithSpellExecutions.set(combatantId, admitted.success.creature);
+      input.statBlockPresentations.set(combatantId, {
+        ...presentation,
+        spellPresentationSources: admitted.success.spellPresentationSources,
+      });
+    }
+  }
+}
+
 function initializeBattleSpellExecutions(input: {
   readonly statBlockPresentations: Map<
     CombatantId,
@@ -1115,42 +1159,11 @@ function initializeBattleSpellExecutions(input: {
   const combatantsWithSpellExecutions = new Map(input.state.combatants);
   for (const [combatantId, combatant] of input.state.combatants) {
     if (combatant.origin.kind === "statBlock") {
-      const plan = input.statBlockSpellAdmissionPlans.get(combatantId);
-      const admitted =
-        plan === undefined
-          ? Result.fail("admissionPlanMissing" as const)
-          : admitStatBlockSpellInvocations(
-              { ...combatant, origin: combatant.origin },
-              input.state,
-              plan,
-            );
-      if (Result.isFailure(admitted))
-        input.initializationIssues.push({
-          tag: "battleAdmissionInitIssue",
-          kind: "statBlockSpellAdmissionInvalid",
-          combatantId,
-          cause: admitted.failure,
-        });
-      else {
-        const presentation = input.statBlockPresentations.get(combatantId);
-        if (presentation === undefined)
-          input.initializationIssues.push({
-            tag: "battleAdmissionInitIssue",
-            kind: "statBlockSpellAdmissionInvalid",
-            combatantId,
-            cause: "presentationSourceMissing",
-          });
-        else {
-          combatantsWithSpellExecutions.set(
-            combatantId,
-            admitted.success.creature,
-          );
-          input.statBlockPresentations.set(combatantId, {
-            ...presentation,
-            spellPresentationSources: admitted.success.spellPresentationSources,
-          });
-        }
-      }
+      initializeStatBlockSpellExecution(
+        input,
+        { ...combatant, origin: combatant.origin },
+        combatantsWithSpellExecutions,
+      );
       continue;
     }
     if (!isCharacterBattleCreatureState(combatant)) continue;
@@ -1582,6 +1595,104 @@ function projectedBattleCombatantAdmissionIssueLeaves(
   return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
 }
 
+function statBlockSpellAdmissionForActor(
+  actor: BattleCreatureState,
+  input: AddProjectedBattleCombatantInput,
+  state: BattleState,
+): ReturnType<typeof admitStatBlockSpellInvocations> | undefined {
+  if (
+    actor.origin.kind !== "statBlock" ||
+    input.combatant.creatureInit.kind !== "statBlock"
+  )
+    return undefined;
+  return admitStatBlockSpellInvocations(
+    { ...actor, origin: actor.origin },
+    state,
+    input.combatant.creatureInit.spellInvocationAdmissionPlan,
+  );
+}
+
+function admittedStatBlockSpellPresentation(
+  actor: BattleCreatureState,
+  input: AddProjectedBattleCombatantInput,
+  stateWithAdmission: BattleState,
+  admission: ValidBattleCreatureAdmission,
+): Result.Result<
+  {
+    readonly creature: BattleCreatureState;
+    readonly statBlockPresentation?: BattleStatBlockPresentationSource;
+  },
+  ProjectedBattleCombatantAdmissionIssue
+> {
+  const statBlockSpellAdmission = statBlockSpellAdmissionForActor(
+    actor,
+    input,
+    stateWithAdmission,
+  );
+  if (
+    statBlockSpellAdmission !== undefined &&
+    Result.isFailure(statBlockSpellAdmission)
+  )
+    return Result.fail({
+      tag: "battleAdmissionInitIssue",
+      kind: "statBlockSpellAdmissionInvalid",
+      combatantId: actor.combatantId,
+      cause: statBlockSpellAdmission.failure,
+    });
+  const spellPresentationSources =
+    statBlockSpellAdmission === undefined
+      ? []
+      : statBlockSpellAdmission.success.spellPresentationSources;
+  const statBlockPresentation = statBlockPresentationForAdmission(
+    admission,
+    spellPresentationSources,
+  );
+  if (actor.origin.kind === "statBlock" && statBlockPresentation === undefined)
+    return Result.fail({
+      tag: "battleAdmissionInitIssue",
+      kind: "statBlockSpellAdmissionInvalid",
+      combatantId: actor.combatantId,
+      cause: "presentationSourceMissing",
+    });
+  return Result.succeed({
+    creature: statBlockSpellAdmission?.success.creature ?? actor,
+    ...optionalProperty("statBlockPresentation", statBlockPresentation),
+  });
+}
+
+function characterSpellAdmissionResult(
+  admission: ReturnType<typeof characterSpellAdmissionForCombatant>,
+  input: AddProjectedBattleCombatantInput,
+): Result.Result<
+  | Extract<
+      ReturnType<typeof admitCharacterSpellExecution>,
+      { readonly tag: "admitted" }
+    >
+  | undefined,
+  ProjectedBattleCombatantAdmissionIssue
+> {
+  if (admission?.tag === "rejected") {
+    const issues = spellProcedureMapNonEmpty(
+      admission.issues,
+      (issue, issueIndex) =>
+        characterSpellProcedureInitializationIssue(
+          input.combatant.combatantId,
+          issue,
+          issueIndex,
+          input.ownerPath,
+        ),
+    );
+    const [first, second, ...rest] = issues;
+    return second === undefined
+      ? Result.fail(first)
+      : Result.fail({
+          tag: "battleStateInitIssues",
+          issues: [first, second, ...rest],
+        });
+  }
+  return Result.succeed(admission);
+}
+
 function admitBattleCombatant(
   input: AddProjectedBattleCombatantInput,
 ): Result.Result<
@@ -1620,61 +1731,22 @@ function admitBattleCombatant(
     ...input.state,
     combatants: combatantsWithAdmission,
   };
-  const characterSpellAdmission = characterSpellAdmissionForCombatant(
-    admission,
-    stateWithAdmission,
+  const characterSpellResult = characterSpellAdmissionResult(
+    characterSpellAdmissionForCombatant(admission, stateWithAdmission),
+    input,
   );
-  if (characterSpellAdmission?.tag === "rejected") {
-    const issues = spellProcedureMapNonEmpty(
-      characterSpellAdmission.issues,
-      (issue, issueIndex) =>
-        characterSpellProcedureInitializationIssue(
-          input.combatant.combatantId,
-          issue,
-          issueIndex,
-          input.ownerPath,
-        ),
-    );
-    const [first, second, ...rest] = issues;
-    return second === undefined
-      ? Result.fail(first)
-      : Result.fail({
-          tag: "battleStateInitIssues",
-          issues: [first, second, ...rest],
-        });
-  }
+  if (Result.isFailure(characterSpellResult)) return characterSpellResult;
+  const characterSpellAdmission = characterSpellResult.success;
   const actor = characterSpellAdmission?.creature ?? admission.creature;
-  const statBlockSpellAdmission =
-    actor.origin.kind === "statBlock" &&
-    input.combatant.creatureInit.kind === "statBlock"
-      ? admitStatBlockSpellInvocations(
-          { ...actor, origin: actor.origin },
-          stateWithAdmission,
-          input.combatant.creatureInit.spellInvocationAdmissionPlan,
-        )
-      : undefined;
-  if (
-    statBlockSpellAdmission !== undefined &&
-    Result.isFailure(statBlockSpellAdmission)
-  )
-    return Result.fail({
-      tag: "battleAdmissionInitIssue",
-      kind: "statBlockSpellAdmissionInvalid",
-      combatantId: actor.combatantId,
-      cause: statBlockSpellAdmission.failure,
-    });
-  const admittedCreature = statBlockSpellAdmission?.success.creature ?? actor;
-  const statBlockPresentation = statBlockPresentationForAdmission(
+  const spellPresentation = admittedStatBlockSpellPresentation(
+    actor,
+    input,
+    stateWithAdmission,
     admission,
-    statBlockSpellAdmission?.success.spellPresentationSources ?? [],
   );
-  if (actor.origin.kind === "statBlock" && statBlockPresentation === undefined)
-    return Result.fail({
-      tag: "battleAdmissionInitIssue",
-      kind: "statBlockSpellAdmissionInvalid",
-      combatantId: actor.combatantId,
-      cause: "presentationSourceMissing",
-    });
+  if (Result.isFailure(spellPresentation)) return spellPresentation;
+  const admittedCreature = spellPresentation.success.creature;
+  const statBlockPresentation = spellPresentation.success.statBlockPresentation;
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
     admittedCreature,

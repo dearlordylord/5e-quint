@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module reactionsContinuationsConcentrationExamples {
-  import battleRuntimeSpellCastInterruptionReaction.* from "../../../battle-runtime/battle-runtime-spell-cast-interruption-reaction"
   import statBlockSpellcastingGroup as group from "./stat-block-spellcasting-group"
   import statBlockResourceLifecycle as resource from "./stat-block-resource-lifecycle"
   import hitPointDamage.* from "./hit-point-damage"
@@ -409,15 +408,15 @@ module reactionsContinuationsConcentrationExamples {
     )
     val each = group::EachInvocationPool(Map(0 -> 1, 1 -> 2))
     val shared = group::SharedGroupPool({ invocations: Set(0, 1), pool: 1 })
-    val eachPaid = counteredImmediateLimitedSpellPayment(pools, each, 0)
-    val sharedPaid = counteredImmediateLimitedSpellPayment(pools, shared, 0)
+    val eachPaid = group::counteredImmediateLimitedSpellPayment(pools, each, 0)
+    val sharedPaid = group::counteredImmediateLimitedSpellPayment(pools, shared, 0)
     all {
       assert(eachPaid.admitted),
       assert(eachPaid.pools.get(2) == pools.get(2)),
-      assert(not(counteredImmediateLimitedSpellPayment(eachPaid.pools, each, 0).admitted)),
+      assert(not(group::counteredImmediateLimitedSpellPayment(eachPaid.pools, each, 0).admitted)),
       assert(sharedPaid.admitted),
       assert(sharedPaid.pools.get(2) == pools.get(2)),
-      assert(not(counteredImmediateLimitedSpellPayment(sharedPaid.pools, shared, 1).admitted)),
+      assert(not(group::counteredImmediateLimitedSpellPayment(sharedPaid.pools, shared, 1).admitted)),
     }
   }
 }

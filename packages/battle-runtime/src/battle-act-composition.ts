@@ -3,6 +3,7 @@ import type {
   BattleActDiscoveryCandidate,
   BattleActPresentation,
   BattleState,
+  BattleCreatureState,
   CharacterBattleCreatureState,
   AvailableBattleAct,
 } from "./battle-state-execution.ts";
@@ -839,6 +840,47 @@ function intrinsicActPresentationLabel(
   );
 }
 
+function presentedSpellProcedureJoin(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+  subject: Extract<
+    CharacterProcedureBattleSubject,
+    {
+      readonly tag:
+        | "actionSpell"
+        | "bonusActionSpell"
+        | "bonusActionDashSpell"
+        | "spawnedCompanionTouchSpellProxy";
+    }
+  >,
+): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
+  const procedureRef = subject.procedureRef;
+  const invocation = spellPresentationInvocationForProcedure(
+    state,
+    context,
+    actorId,
+    procedureRef,
+  );
+  if (invocation === undefined) return undefined;
+  if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
+  const presentationText = spellProcedurePresentationText(
+    state,
+    context,
+    invocation,
+    subject,
+  );
+  if (presentationText === undefined) return undefined;
+  return {
+    ...presentationText,
+    presentation: {
+      kind: "spell",
+      procedureRef,
+      invocation: supportedSpellInvocationRef(invocation),
+    },
+  };
+}
+
 function procedurePresentationJoin(
   state: BattleState,
   context: BattleRuntimeContext,
@@ -848,29 +890,12 @@ function procedurePresentationJoin(
   if (actor === undefined) return undefined;
   const procedureRef = subject.procedureRef;
   if (isPresentedSpellProcedureSubject(subject)) {
-    const invocation = spellPresentationInvocationForProcedure(
+    return presentedSpellProcedureJoin(
       state,
       context,
       actor.combatantId,
-      procedureRef,
-    );
-    if (invocation === undefined) return undefined;
-    if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
-    const presentationText = spellProcedurePresentationText(
-      state,
-      context,
-      invocation,
       subject,
     );
-    if (presentationText === undefined) return undefined;
-    return {
-      ...presentationText,
-      presentation: {
-        kind: "spell",
-        procedureRef,
-        invocation: supportedSpellInvocationRef(invocation),
-      },
-    };
   }
   if (!isCharacterBattleCreatureState(actor)) return undefined;
   if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
@@ -1282,6 +1307,30 @@ export function battleSelectedSpellInvocationForProcedure(
   );
 }
 
+function directSpellPresentationInvocation(
+  actor: BattleCreatureState | undefined,
+  direct: NonNullable<ReturnType<typeof spellPresentationSourceForProcedure>>,
+  procedureRef: BattleProcedureExecutionRef,
+): AuthoredSelectedSpellInvocation | undefined {
+  if (actor?.origin.kind === "statBlock") {
+    const execution = creatureSpellProcedure(actor, procedureRef);
+    if (
+      execution?.procedure === "spatialMeleeSpellAttackProxy" &&
+      execution.operation === "repositionAndAttack"
+    ) {
+      const candidate = {
+        ...execution,
+        spell: direct.invocation.spell,
+        sourceProcedureRef: procedureRef,
+      };
+      return admittedSpellInvocationCastingFacts(candidate)
+        ? candidate
+        : undefined;
+    }
+  }
+  return { ...direct.invocation, sourceProcedureRef: procedureRef };
+}
+
 function spellPresentationInvocationForProcedure(
   state: BattleState,
   context: BattleRuntimeContext,
@@ -1296,23 +1345,7 @@ function spellPresentationInvocationForProcedure(
     procedureRef,
   );
   if (direct !== undefined) {
-    if (actor?.origin.kind === "statBlock") {
-      const execution = creatureSpellProcedure(actor, procedureRef);
-      if (
-        execution?.procedure === "spatialMeleeSpellAttackProxy" &&
-        execution.operation === "repositionAndAttack"
-      ) {
-        const candidate = {
-          ...execution,
-          spell: direct.invocation.spell,
-          sourceProcedureRef: procedureRef,
-        };
-        return admittedSpellInvocationCastingFacts(candidate)
-          ? candidate
-          : undefined;
-      }
-    }
-    return { ...direct.invocation, sourceProcedureRef: procedureRef };
+    return directSpellPresentationInvocation(actor, direct, procedureRef);
   }
   if (!isCharacterBattleCreatureState(actor)) return undefined;
   const execution = characterSpellProcedure(

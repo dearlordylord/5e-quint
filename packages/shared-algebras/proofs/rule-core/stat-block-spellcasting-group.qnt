@@ -52,4 +52,14 @@ module statBlockSpellcastingGroup {
     }
   }
 
+  // RAW monsters.md:425-429 counts using the limited stat-block part.
+  // spells.md:1497 preserves a Spell Slot only; the use remains committed.
+  // Long-casting progress is not an immediate cast and defers final payment.
+  pure def counteredImmediateLimitedSpellPayment(
+    pools: int -> StatBlockLimitedUseResource,
+    selectedGroup: LimitedSpellcastingGroup,
+    invocation: int,
+  ): LimitedSpellcastingSpend =
+    spendSelectedSpellcastingInvocation(pools, selectedGroup, invocation, true)
+
 }

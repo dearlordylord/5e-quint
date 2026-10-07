@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "09beb163423e57989b8f6a5821f7c2515dc26645",
+    "registryCommit": "c28c38fcec993f664fc0dbc33ad1905f2a3a9310",
     "generator": {
       "path": "scripts/spell-lifecycle-owner-manifest.cjs",
       "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "50c5671bce8f1e65ce79d388e9599e471c54f079c41100bbd29a661090a9e3af"
+        "sha256": "209341ff08f0f3255149e482ceab075995d77454d1e18a74aa5c4d08119cbe9c"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "5f6ed431a1ba2fdd676bd3c02740d807e450d6f26d59c087ad86cc207a3c9732"
+        "sha256": "b916380407f8d26097d38da73c2287a5cb9775059784d8f81115ebfa5c0f98df"
       }
     ]
   },
@@ -490,6 +490,7 @@
     "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
     "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
     "packages/battle-runtime/src/battle-reducer/ongoing-feature-helpers.ts",
+    "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts",
     "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts",
     "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
     "packages/battle-runtime/src/battle-reducer/readied-release.ts",
@@ -562,6 +563,7 @@
     "packages/battle-runtime/src/companion-lifecycle.ts",
     "packages/battle-runtime/src/companion-reaction-attack.ts",
     "packages/battle-runtime/src/companion-state.ts",
+    "packages/battle-runtime/src/creature-spell-procedure.ts",
     "packages/battle-runtime/src/stat-block-execution-state.ts",
     "packages/battle-runtime/src/stat-block-execution.ts",
     "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
@@ -646,6 +648,7 @@
     "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts",
     "packages/battle-runtime/src/spell-created-held-object-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/spike-growth-movement-hazard.mbt.test.ts",
+    "packages/battle-runtime/src/stat-block-persistent-area.test.ts",
     "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
     "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
@@ -946,8 +949,8 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 245,
-    "parityOrFixture": 100,
+    "sourceOrPure": 247,
+    "parityOrFixture": 101,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },

@@ -2,19 +2,6 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 module battleRuntimeSpellCastInterruptionReaction {
-  import statBlockSpellcastingGroup as group from "../shared-algebras/proofs/rule-core/stat-block-spellcasting-group"
-  import statBlockResourceLifecycle as resource from "../shared-algebras/proofs/rule-core/stat-block-resource-lifecycle"
-
-  // RAW monsters.md:425-429 counts using the limited stat-block part.
-  // spells.md:1497 preserves a Spell Slot only; the use remains committed.
-  // Long-casting progress is not an immediate cast and defers final payment.
-  pure def counteredImmediateLimitedSpellPayment(
-    pools: int -> resource::StatBlockLimitedUseResource,
-    selectedGroup: group::LimitedSpellcastingGroup,
-    invocation: int,
-  ): group::LimitedSpellcastingSpend =
-    group::spendSelectedSpellcastingInvocation(pools, selectedGroup, invocation, true)
-
   type SpellCastInterruptionDisposition =
     | SpellCastInterruptionUnchanged
     | SpellCastInterruptionDeclinedResume
