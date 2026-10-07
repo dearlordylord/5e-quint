@@ -4,10 +4,8 @@ import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/sc
 import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
-import {
-  restoreAuthoredStatBlockExecutionAdmission,
-  restoreStatBlockExecutionAdmission,
-} from "./stat-block-execution.ts";
+import { restoreAuthoredStatBlockExecutionAdmission } from "./index.ts";
+import { restoreStatBlockExecutionAdmission } from "./stat-block-execution.ts";
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleId,

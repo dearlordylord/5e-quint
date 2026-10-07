@@ -112,6 +112,7 @@ export type {
 
 export {
   restoreStatBlockExecutionAdmission,
+  restoreAuthoredStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,
   statBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
