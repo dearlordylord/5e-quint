@@ -1,6 +1,5 @@
-import { spellAdmissionCastOptions } from "./profile.ts";
+import { leveledSpellInvocationOptions } from "./profile.ts";
 import type { AdmittedSpellFacts } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
@@ -45,7 +44,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -653,18 +651,16 @@ function saveGatedConditionWithRepeatMechanicsEvidence(
 function saveGatedConditionWithRepeatInvocationsFromFacts(
   spell: BattleSpellExecutionSource,
   facts: SaveGatedConditionWithRepeatMechanicsFacts,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+  ctx: SpellAdmissionContext,
 ): readonly SaveGatedConditionWithRepeatSpellInvocation[] {
-  return castOptions.flatMap(
+  return leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly SaveGatedConditionWithRepeatSpellInvocation[] =>
       Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
-              access: leveledSpellAccessForCastingSource(spell.castingSource),
-              resource: spellInvocationResourceForCastOption(slot),
+              ...slot.facts,
               procedure: "saveGatedConditionWithRepeat",
-              spell,
               actionCost:
                 SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.actionCost,
               ability: facts.ability,
@@ -1119,7 +1115,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
         saveGatedConditionWithRepeatInvocationsFromFacts(
           executionSource,
           facts,
-          spellAdmissionCastOptions(ctx),
+          ctx,
         ),
     },
   };

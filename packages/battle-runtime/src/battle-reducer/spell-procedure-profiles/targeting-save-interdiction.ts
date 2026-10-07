@@ -1,6 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
@@ -83,7 +82,6 @@ import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-pat
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
-  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -981,5 +979,6 @@ export const targetingSaveInterdictionProfile = {
   resolve: resolveTargetingSaveInterdiction,
 } satisfies SpellProcedureDeclaration<
   "targetingSaveInterdiction",
-  TargetingSaveInterdictionInvocation
+  TargetingSaveInterdictionInvocation,
+  TargetingSaveInterdictionMechanicsFacts
 >;
