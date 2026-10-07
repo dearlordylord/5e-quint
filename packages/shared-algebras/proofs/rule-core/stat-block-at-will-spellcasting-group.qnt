@@ -14,8 +14,8 @@ module statBlockAtWillSpellcastingGroup {
   ): turn::ActionResourceSpendResult = {
     val selected = match group {
       | AtWillGroup(data) =>
-          invocationOrdinal >= 1 and
-          invocationOrdinal <= data.invocations.length() and
+          invocationOrdinal >= 0 and
+          invocationOrdinal < data.invocations.length() and
           executionAdmitted
       | LimitedGroup(_) => false
     }
