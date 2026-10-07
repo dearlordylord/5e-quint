@@ -53,7 +53,6 @@ export function longCastingBattle(
   const base = spellRecord(baseSpellId);
   if (
     base.mechanics.family !== "activation" &&
-    base.mechanics.family !== "ongoing" &&
     base.mechanics.family !== "ongoing_effect"
   )
     throw new Error("Expected scalar activation fixture.");
@@ -70,10 +69,7 @@ export function longCastingBattle(
     name: "Synthetic Slow Vitality Sibling",
   };
   const concentrationBase = spellRecord("shield_of_faith");
-  if (
-    concentrationBase.mechanics.family !== "activation" &&
-    concentrationBase.mechanics.family !== "ongoing"
-  )
+  if (concentrationBase.mechanics.family !== "activation")
     throw new Error("Expected phased scalar fixture.");
   const selectedSibling: SpellRecord = immediateConcentrationSibling
     ? {

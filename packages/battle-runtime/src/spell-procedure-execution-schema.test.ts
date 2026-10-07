@@ -9,20 +9,45 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { thunderwaveUnitId } from "./unit-profile-admission-catalog.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import { SpellRuleExecutionFactsSchema } from "./procedure-execution/spell-rule-facts.ts";
+import {
+  CharacterPreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "./battle-reducer/codec-building-blocks.ts";
 import { describe, expect, test } from "vitest";
 
 describe("spell procedure execution schema constraint", () => {
   test("preserves transformed encoded and decoded views", () => {
-    const schema = spellProcedureExecutionSchema(Schema.NumberFromString);
+    const schema = spellProcedureExecutionSchema(
+      Schema.Struct({
+        spellRuleFacts: SpellRuleExecutionFactsSchema,
+        access: CharacterPreparedSpellAccessSchema,
+        resource: SpellSlotInvocationResourceSchema,
+        actionCost: Schema.Literal("magicAction"),
+        amount: Schema.NumberFromString,
+      }),
+    );
+    const source = spellAdmissionSource(spellRecord(thunderwaveUnitId));
+    const input = {
+      spellRuleFacts: {
+        ...source.spellDefinitionRuleFacts,
+        castingSource: source.castingSource,
+      },
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel: 2 },
+      actionCost: "magicAction",
+      amount: "42",
+    };
+    const decoded = Schema.decodeUnknownSync(schema)(input);
+    const encoded = Schema.encodeSync(schema)(decoded);
 
-    const decoded: Schema.Schema.Type<typeof schema> =
-      Schema.decodeSync(schema)("42");
-    const encoded: Schema.Codec.Encoded<typeof schema> =
-      Schema.encodeSync(schema)(decoded);
-
-    expect(decoded).toBe(42);
-    expect(encoded).toBe("42");
+    expect(decoded.amount).toBe(42);
+    expect(encoded.amount).toBe("42");
+    expect(encoded).toEqual(input);
   });
 
   test("round-trips save-gated spell optional execution facts", () => {

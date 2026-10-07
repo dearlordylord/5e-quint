@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { spellSlotLevel } from "@dnd/shared/types";
-import {
-  battleSpellExecutionSourceFromAdmission,
-  type BattleSpellAdmissionSource,
-} from "./battle-state-execution.ts";
+import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
 import { combatantId } from "./identity.ts";
 import {
   abilityD20TestRollModeSaveGateInvocationsFromFacts,
@@ -30,8 +27,26 @@ import {
 
 const sourceCombatantId = combatantId("sr04g-save-gate-caster");
 
-function admitted(spellId: string): BattleSpellAdmissionSource {
+function admitted(spellId: string) {
   return spellAdmissionSource(spellRecord(spellId));
+}
+
+function admittedLeveled(spellId: string) {
+  const source = spellAdmissionSource(spellRecord(spellId));
+  const level = source.spellDefinitionRuleFacts.level;
+  if (level === 0) throw new Error("Expected a leveled spell fixture.");
+  return {
+    ...source,
+    spellDefinitionRuleFacts: { ...source.spellDefinitionRuleFacts, level },
+  };
+}
+
+function executionSource(source: ReturnType<typeof admittedLeveled>) {
+  return {
+    ...battleSpellExecutionSourceFromAdmission(source),
+    castingSource: source.castingSource,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
 }
 
 function slot(level: number) {
@@ -40,7 +55,7 @@ function slot(level: number) {
 
 describe("SR-04 save-gate helper branch contracts", () => {
   test("materializes each contextual invocation from parsed supported facts", () => {
-    const conditionSource = admitted("hold_person");
+    const conditionSource = admittedLeveled("hold_person");
     const conditionProjection =
       saveGatedConditionMechanicsFacts(conditionSource);
     expect(conditionProjection.tag).toBe("supported");
@@ -50,7 +65,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
       ...conditionProjection.facts,
     };
     const conditionInvocations = saveGatedConditionInvocationsFromFacts({
-      spell: battleSpellExecutionSourceFromAdmission(conditionSource),
+      spell: executionSource(conditionSource),
       facts: conditionFacts,
       access: { tag: "prepared" },
       resource: { tag: "spellSlot", slotLevel: slot(2) },
@@ -64,7 +79,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
     });
     expect(
       saveGatedConditionInvocationsFromFacts({
-        spell: battleSpellExecutionSourceFromAdmission(conditionSource),
+        spell: executionSource(conditionSource),
         facts: conditionFacts,
         access: { tag: "prepared" },
         resource: { tag: "spellSlot", slotLevel: slot(1) },
@@ -72,7 +87,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
       }),
     ).toEqual([]);
 
-    const immunitySource = admitted("calm_emotions");
+    const immunitySource = admittedLeveled("calm_emotions");
     const immunityProjection =
       saveGatedConditionImmunityMechanicsFacts(immunitySource);
     expect(immunityProjection.tag).toBe("supported");
@@ -82,7 +97,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
       ...immunityProjection.facts,
     };
     const immunityInvocations = saveGatedConditionImmunityInvocationsFromFacts({
-      spell: battleSpellExecutionSourceFromAdmission(immunitySource),
+      spell: executionSource(immunitySource),
       facts: immunityFacts,
       access: { tag: "prepared" },
       resource: { tag: "spellSlot", slotLevel: slot(2) },
@@ -98,7 +113,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
     });
     expect(
       saveGatedConditionImmunityInvocationsFromFacts({
-        spell: battleSpellExecutionSourceFromAdmission(immunitySource),
+        spell: executionSource(immunitySource),
         facts: immunityFacts,
         access: { tag: "prepared" },
         resource: { tag: "spellSlot", slotLevel: slot(1) },
@@ -107,7 +122,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
       }),
     ).toEqual([]);
 
-    const d20Source = admitted("ray_of_enfeeblement");
+    const d20Source = admittedLeveled("ray_of_enfeeblement");
     const d20Projection =
       abilityD20TestRollModeSaveGateMechanicsFacts(d20Source);
     expect(d20Projection.tag).toBe("supported");
@@ -117,7 +132,7 @@ describe("SR-04 save-gate helper branch contracts", () => {
       ...d20Projection.facts,
     };
     const d20Invocations = abilityD20TestRollModeSaveGateInvocationsFromFacts({
-      spell: battleSpellExecutionSourceFromAdmission(d20Source),
+      spell: executionSource(d20Source),
       facts: d20Facts,
       access: { tag: "prepared" },
       resource: { tag: "spellSlot", slotLevel: slot(2) },
@@ -132,13 +147,13 @@ describe("SR-04 save-gate helper branch contracts", () => {
       },
     });
 
-    const attackSource = admitted("faerie_fire");
+    const attackSource = admittedLeveled("faerie_fire");
     const attackProjection =
       saveGatedAttackRollAdvantageMechanicsFacts(attackSource);
     expect(attackProjection.tag).toBe("supported");
     if (attackProjection.tag !== "supported") return;
     const attackInvocations = saveGatedAttackRollAdvantageInvocationsFromFacts({
-      spell: battleSpellExecutionSourceFromAdmission(attackSource),
+      spell: executionSource(attackSource),
       facts: {
         ...attackSource.spellDefinitionRuleFacts,
         ...attackProjection.facts,
