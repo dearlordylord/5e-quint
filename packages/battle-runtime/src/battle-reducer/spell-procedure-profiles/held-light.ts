@@ -821,6 +821,8 @@ function admitHeldLight(
   ctx: SpellAdmissionContext,
   facts: HeldLightMechanicsFacts,
 ): readonly HeldLightInvocation[] {
+  // Dynamic continuation installation is owned by character execution storage.
+  if (ctx.kind === "statBlock") return [];
   const castingFacts = cantripSpellInvocationFacts(spell, ctx);
   if (castingFacts === null) return [];
 

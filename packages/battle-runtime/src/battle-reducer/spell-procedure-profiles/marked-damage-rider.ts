@@ -1509,6 +1509,8 @@ function admitMarkedDamageRider(
   ctx: SpellAdmissionContext,
   facts: MarkedDamageRiderMechanicsFacts,
 ): readonly MarkedDamageRiderInvocation[] {
+  // Dynamic continuation installation is owned by character execution storage.
+  if (ctx.kind === "statBlock") return [];
   const slotInvocations = leveledSpellInvocationOptions(spell, ctx).flatMap(
     (slot): readonly MarkedDamageRiderInvocation[] => {
       const expiresAt = markedDamageRiderConcentrationExpirationForSlot(

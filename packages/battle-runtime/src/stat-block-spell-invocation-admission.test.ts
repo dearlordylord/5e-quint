@@ -204,6 +204,43 @@ describe("Stat Block invocation production admission", () => {
       else expect(dispatch).toEqual({ kind: "unsupported", reason: expected });
     },
   );
+  it.each(["produce_flame", "hunters_mark"] as const)(
+    "rejects %s without a Stat Block continuation owner",
+    (spellId) => {
+      const record = casterRecord();
+      const entry = syntheticSpellcastingProcedureEntry({
+        unrestrictedSpellId: spellId,
+      });
+      const casterId = combatantId("synthetic-missing-continuation");
+      const started = startBattle({
+        battleId: battleId("missing-continuation-owner"),
+        combatants: [
+          statBlockCreatureInit({
+            combatantId: casterId,
+            statBlock: {
+              ...record,
+              statBlock: { ...record.statBlock, actions: [entry] },
+            },
+            initiative: 20,
+          }),
+        ],
+      });
+      if (Result.isFailure(started))
+        throw new Error("Expected admitted parent actor.");
+      const actor = started.success.state.combatants.get(casterId);
+      if (actor?.origin.kind !== "statBlock")
+        throw new Error("Expected Stat Block actor.");
+      const binding = actor.origin.execution.procedureBindings.find(
+        (candidate) => candidate.procedure.kind === "spellcasting",
+      );
+      if (binding?.procedure.kind !== "spellcasting")
+        throw new Error("Expected spellcasting binding.");
+      expect(binding.procedure.groups[0].invocations[0].dispatch).toEqual({
+        kind: "unsupported",
+        reason: "missingChildProcedureOwner",
+      });
+    },
+  );
   it("rejects a mismatched transient plan before replacing actor execution", () => {
     const casterId = combatantId("synthetic-plan-mismatch");
     const started = startBattle({
