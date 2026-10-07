@@ -194,7 +194,10 @@ export function statBlockSpellDispatchBindingsAreValid(
             const source = execution.spellRuleFacts.castingSource;
             if (
               source.actionCost !==
-                statBlockSpellcastingActionCost(procedure) ||
+                statBlockSpellInvocationActionCost(
+                  procedure,
+                  source.castingTime,
+                ) ||
               Option.getOrUndefined(source.spellSaveDc) !==
                 procedure.spellSaveDc ||
               Option.getOrUndefined(source.spellAttackBonus) !==
