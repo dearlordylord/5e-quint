@@ -619,8 +619,9 @@ function spellProcedureResolveDispatchInput<
 
 function resolveRegisteredSpellProcedureExecution(
   executionRegistry: SpellProcedureExecutionRegistry,
-  input: SpellProcedureResolveDispatchInput,
+  input: SpellProcedureResolveDispatchInput | BattleResolutionResult,
 ): BattleResolutionResult {
+  if ("tag" in input) return input;
   return executionRegistry
     .executionFor(input.procedure)
     .resolve(input.resolution);
@@ -725,7 +726,7 @@ function commonSpellProcedureResolveDispatchInput(
   invocation: ActionSpellProfileInvocation,
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
   resolutionOptions: SpellProcedureResolutionOptions,
-): SpellProcedureResolveDispatchInput {
+): SpellProcedureResolveDispatchInput | BattleResolutionResult {
   return Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
       heldLight: (value) =>
@@ -838,29 +839,7 @@ function commonSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      spellCreatedHeldObjectReEvoke: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: { ...input, state: castingState },
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
       spatialMeleeSpellAttackProxy: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: { ...input, state: castingState },
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
-      objectContactDamageRepeat: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1387,17 +1366,28 @@ function commonSpellProcedureResolveDispatchInput(
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellCreatedHeldObjectAttack: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: commonSpellProfileResolutionInput(input, castingState, value),
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-          metamagicApplications: resolutionOptions.metamagicApplications,
-        }),
+        Match.value(spellActLane(input)).pipe(
+          Match.discriminatorsExhaustive("tag")({
+            action: (lane) =>
+              spellProcedureResolveDispatchInput(value.procedure, {
+                input: { ...lane.input, state: castingState },
+                actorId,
+                invocation: value,
+                fillSet,
+                ...spellProcedureActionCostResolutionOption(
+                  value.procedure,
+                  resolutionOptions.actionCostOverride,
+                ),
+                metamagicApplications: resolutionOptions.metamagicApplications,
+              }),
+            bonusAction: () =>
+              invalidResult(
+                input.state,
+                "invalidSubject",
+                "This spell continuation requires the Magic action.",
+              ),
+          }),
+        ),
       objectContactDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: commonSpellProfileResolutionInput(input, castingState, value),
@@ -1465,14 +1455,42 @@ function bonusActionSpellProcedureResolveDispatchInput(
   invocation: OrdinaryBonusActionSpellProfileInvocation,
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
   resolutionOptions: SpellProcedureResolutionOptions,
-): SpellProcedureResolveDispatchInput {
-  return commonSpellProcedureResolveDispatchInput(
-    input,
-    castingState,
-    actorId,
-    invocation,
-    fillSet,
-    resolutionOptions,
+): SpellProcedureResolveDispatchInput | BattleResolutionResult {
+  return Match.value(invocation).pipe(
+    Match.when({ procedure: "spellCreatedHeldObjectReEvoke" }, (value) =>
+      spellProcedureResolveDispatchInput(value.procedure, {
+        input: { ...input, state: castingState },
+        actorId,
+        invocation: value,
+        fillSet,
+        ...spellProcedureActionCostResolutionOption(
+          value.procedure,
+          resolutionOptions.actionCostOverride,
+        ),
+      }),
+    ),
+    Match.when({ procedure: "objectContactDamageRepeat" }, (value) =>
+      spellProcedureResolveDispatchInput(value.procedure, {
+        input: { ...input, state: castingState },
+        actorId,
+        invocation: value,
+        fillSet,
+        ...spellProcedureActionCostResolutionOption(
+          value.procedure,
+          resolutionOptions.actionCostOverride,
+        ),
+      }),
+    ),
+    Match.orElse((value) =>
+      commonSpellProcedureResolveDispatchInput(
+        input,
+        castingState,
+        actorId,
+        value,
+        fillSet,
+        resolutionOptions,
+      ),
+    ),
   );
 }
 

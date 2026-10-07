@@ -1,3 +1,4 @@
+import type { SpellProcedureResolutionInput } from "./spell-procedure-profiles/resolution-contract.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
@@ -719,7 +720,7 @@ export function resolvePersistentAreaSaveConditionSpellAct(input: {
 }
 
 type StagedSaveConditionSpellActInput = {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureResolutionInput<"stagedSaveCondition">;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,

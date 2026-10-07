@@ -1,6 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -36,7 +35,6 @@ import {
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -75,7 +73,6 @@ import type {
 import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
@@ -1663,7 +1660,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
 }
 
 function conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureProfileResolveInput<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>["input"];
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;

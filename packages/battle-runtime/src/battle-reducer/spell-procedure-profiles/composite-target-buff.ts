@@ -1,6 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -47,7 +46,6 @@ import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/
 
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -1116,7 +1114,7 @@ function hasNonCompositeTargetBuffWithAftermathFill(
 }
 
 function compositeTargetBuffWithAftermathTargetSelection(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: SpellProcedureProfileResolveInput<CompositeTargetBuffWithAftermathSpellInvocation>["input"];
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<CompositeTargetBuffWithAftermathSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -1285,4 +1283,3 @@ export const compositeTargetBuffWithAftermathProfile = {
   CompositeTargetBuffFacts,
   CompositeTargetBuffIssue
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";
