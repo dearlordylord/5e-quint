@@ -234,10 +234,24 @@ export function schemaJsonContent<T, E, RD>(
 function jsonSchemaFromCodec<A, I>(
   schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
+  // Extract repeated anonymous composites before JSON tree traversal can expand
+  // the codec's shared AST graph. Declared schema identifier requests stay
+  // unchanged; Effect disambiguates reference-name collisions deterministically.
+  const document = Schema.toJsonSchemaDocument(schema, {
+    referencePolicy: ({ ast, occurrences, identifier }) =>
+      identifier ??
+      (occurrences > 1 &&
+      (ast._tag === "Objects" || ast._tag === "Arrays" || ast._tag === "Union")
+        ? "McpShared"
+        : undefined),
+  });
   return stripNestedJsonSchemaIds(
-    Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.input({
-      target: "draft-2020-12",
-    }),
+    {
+      ...document.schema,
+      ...(Object.keys(document.definitions).length === 0
+        ? {}
+        : { $defs: document.definitions }),
+    },
     { preserveRootId: false },
   );
 }

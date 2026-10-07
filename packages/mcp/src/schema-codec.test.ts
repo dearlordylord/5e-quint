@@ -335,3 +335,80 @@ describe("MCP model output JSON Schema", () => {
     ).toBe(battleProjection);
   });
 });
+
+describe("shared anonymous MCP codec graphs", () => {
+  test("extracts repeated composites before expanding a deep binary schema graph", () => {
+    const leaf = Schema.Struct({ value: Schema.String });
+    let tree: Schema.Codec<unknown, unknown, never> = leaf;
+    for (let depth = 0; depth < 18; depth += 1) {
+      tree = Schema.Struct({ left: tree, right: tree });
+    }
+    const advertised = mcpOutputJsonSchema(tree);
+    expect(JSON.stringify(advertised).length).toBeLessThan(12_000);
+    expect(advertised.$defs).toBeDefined();
+    expect(mcpOutputJsonSchema(tree)).toBe(advertised);
+  });
+
+  test("shared references preserve full validation constraints and declared identifier requests", async () => {
+    const { createDraft2020JsonSchemaValidator, requireJsonSchema } =
+      await import("../test-support/json-schema.ts");
+    const branch = Schema.Struct({
+      value: Schema.String.check(Schema.isMinLength(2)),
+    });
+    const named = Schema.Struct({ count: Schema.Int }).annotate({
+      identifier: "DeclaredLeaf",
+    });
+    const codec = Schema.Struct({ left: branch, right: branch, named });
+    const advertised = mcpOutputJsonSchema(codec);
+    const baseline = Schema.toStandardJSONSchemaV1(codec)[
+      "~standard"
+    ].jsonSchema.input({ target: "draft-2020-12" });
+    const ajv = createDraft2020JsonSchemaValidator();
+    const validate = ajv.getValidator(
+      requireJsonSchema(advertised, "shared codec"),
+    );
+    const original = ajv.getValidator(
+      requireJsonSchema(baseline, "original codec"),
+    );
+    for (const value of [
+      { left: { value: "yes" }, right: { value: "ok" }, named: { count: 2 } },
+      { left: { value: "x" }, right: { value: "ok" }, named: { count: 2 } },
+      {
+        left: { value: "yes", extra: true },
+        right: { value: "ok" },
+        named: { count: 2 },
+      },
+      { left: { value: "yes" }, right: { value: "ok" }, named: { count: 2.5 } },
+    ])
+      expect(validate(value).valid).toBe(original(value).valid);
+    expect(advertised.$defs).toHaveProperty("DeclaredLeaf");
+  });
+  test("disambiguates a declared name that collides with an anonymous alias", async () => {
+    const { createDraft2020JsonSchemaValidator, requireJsonSchema } =
+      await import("../test-support/json-schema.ts");
+    const shared = Schema.Struct({ value: Schema.String });
+    const named = Schema.Struct({ count: Schema.Int }).annotate({
+      identifier: "McpShared",
+    });
+    const advertised = mcpOutputJsonSchema(
+      Schema.Struct({ left: shared, right: shared, named }),
+    );
+    const validate = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(advertised, "colliding definitions"),
+    );
+    expect(
+      validate({
+        left: { value: "a" },
+        right: { value: "b" },
+        named: { count: 1 },
+      }).valid,
+    ).toBe(true);
+    expect(
+      validate({
+        left: { count: 1 },
+        right: { value: "b" },
+        named: { value: "wrong" },
+      }).valid,
+    ).toBe(false);
+  });
+});
