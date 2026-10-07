@@ -1116,6 +1116,7 @@ function commitCounteredSpellPayment(
       const actor = state.combatants.get(frame.casterId);
       if (actor?.origin.kind !== "statBlock")
         return Result.fail("Stat Block spell caster is unavailable.");
+      const origin = actor.origin;
       return Result.map(
         Result.mapError(
           spendStatBlockSpellcastingPool(
@@ -1128,7 +1129,7 @@ function commitCounteredSpellPayment(
           ...state,
           combatants: new Map(state.combatants).set(frame.casterId, {
             ...actor,
-            origin: { ...actor.origin, execution },
+            origin: { ...origin, execution },
           }),
         }),
       );

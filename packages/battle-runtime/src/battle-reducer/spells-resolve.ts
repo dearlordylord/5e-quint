@@ -751,6 +751,17 @@ function commonSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
+      weaponAttackOverride: (value) =>
+        spellProcedureResolveDispatchInput(value.procedure, {
+          input: { ...input, state: castingState },
+          actorId,
+          invocation: value,
+          fillSet,
+          ...spellProcedureActionCostResolutionOption(
+            value.procedure,
+            resolutionOptions.actionCostOverride,
+          ),
+        }),
       directConditionRemoval: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
@@ -1383,7 +1394,7 @@ function commonSpellProcedureResolveDispatchInput(
             bonusAction: () =>
               invalidResult(
                 input.state,
-                "invalidSubject",
+                "unsupportedSubject",
                 "This spell continuation requires the Magic action.",
               ),
           }),
