@@ -147,7 +147,13 @@ function admitLongCastingCommand(
 function admitLongCastingReactionFacts(
   input: LongCastingInput,
   invocation: BattleExecutableSpellInvocation,
-) {
+): Result.Result<
+  Extract<
+    ReturnType<typeof parseSpellCastReactionFactsFill>,
+    { readonly tag: "ok" }
+  >,
+  BattleResolutionResult
+> {
   if (input.fills.length > 1)
     return Result.fail(
       invalidResult(
