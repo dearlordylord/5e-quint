@@ -87,7 +87,7 @@ function discoverRegisteredSpellProcedureCastAct(
   const executionFor = <Procedure extends RegisteredSpellProcedure>(
     procedure: Procedure,
   ) => spellProcedureExecutionFor(executionRegistry, procedure);
-  return Match.value(invocation).pipe(
+  const candidates = Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
       damageReduction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
@@ -245,6 +245,16 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
     }),
   );
+  const subjectTag = spellSubjectTagForInvocation(invocation);
+  return candidates.map((candidate): BattleActDiscoveryCandidate => {
+    const subject = candidate.subject;
+    if (
+      (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
+      subject.mode.tag !== "cast"
+    )
+      return candidate;
+    return { ...candidate, subject: { ...subject, tag: subjectTag } };
+  });
 }
 
 export function discoverSupportedSpellInvocations(
