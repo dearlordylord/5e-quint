@@ -1,3 +1,4 @@
+import { isSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test battle.spell-access-magic-initiate-casting
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -173,8 +174,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
         actor,
       );
       return invocation !== undefined &&
-        "spellRuleFacts" in invocation &&
-        "resource" in invocation
+        isSpellInvocationCastingFacts(invocation)
         ? [invocation]
         : [];
     });
@@ -390,7 +390,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       return invocation !== undefined &&
         "access" in invocation &&
         "resource" in invocation &&
-        "spellRuleFacts" in invocation
+        isSpellInvocationCastingFacts(invocation)
         ? [invocation]
         : [];
     });
@@ -456,7 +456,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
       act.subject.procedureRef,
       actor,
     );
-    if (invocation === undefined) {
+    if (
+      invocation === undefined ||
+      !isSpellInvocationCastingFacts(invocation)
+    ) {
       throw new Error("Expected Magic Missile invocation.");
     }
     const staleState: BattleState = {
@@ -503,7 +506,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
       act.subject.procedureRef,
       actor,
     );
-    if (invocation === undefined) {
+    if (
+      invocation === undefined ||
+      !isSpellInvocationCastingFacts(invocation)
+    ) {
       throw new Error("Expected Magic Missile invocation.");
     }
     const staleState: BattleState = {
@@ -581,7 +587,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     if (
       invocation === undefined ||
-      !("resource" in invocation) ||
+      !isSpellInvocationCastingFacts(invocation) ||
       invocation.resource.tag !== "spellAccessFreeCast"
     ) {
       throw new Error("Expected Hunter's Mark class-feature invocation.");
