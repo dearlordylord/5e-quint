@@ -9,7 +9,7 @@ import {
   battleStatBlockExecutionScopeRef,
   combatantId
 } from "@dnd/battle-runtime"
-import { NonNegativeInteger } from "@dnd/shared/types"
+import { NonNegativeInteger, SpellSlotLevel } from "@dnd/shared/types"
 import { describe, expect, test } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
@@ -41,12 +41,14 @@ describe("wizard battle demo runtime guards", () => {
       combatantId("synthetic-caster"),
       battleExecutionScopeOrdinal(0)
     )
-    expect(counterspellCastingResourceMatchesSlotLevel({ tag: "statBlockAtWill", castLevel: 3 }, 3)).toBe(false)
+    expect(
+      counterspellCastingResourceMatchesSlotLevel({ tag: "statBlockAtWill", castLevel: SpellSlotLevel.make(3) }, 3)
+    ).toBe(false)
     expect(
       counterspellCastingResourceMatchesSlotLevel(
         {
           tag: "statBlockLimited",
-          castLevel: 3,
+          castLevel: SpellSlotLevel.make(3),
           resourcePoolRef: battleResourcePoolExecutionRef(scope, NonNegativeInteger(0))
         },
         3
