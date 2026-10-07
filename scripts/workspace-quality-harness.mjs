@@ -25,6 +25,7 @@ import {
 } from "./workspace-source-policy.mjs";
 import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "./shared-host-test-policy.mjs";
 import qualityMilestonePlan from "./quality-milestone-plan.cjs";
+import { readVerificationDeadlinePolicy } from "./verification-deadline-policy.mjs";
 
 const { QUALITY_MILESTONE_PLAN } = qualityMilestonePlan;
 
@@ -282,12 +283,27 @@ function checkInventory() {
 }
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
-    cwd: options.cwd ?? ROOT,
-    encoding: "utf8",
-    stdio: options.capture === true ? "pipe" : "inherit",
-    env: options.env ?? process.env,
-  });
+  const env = options.env ?? process.env;
+  readVerificationDeadlinePolicy(env);
+  const result = spawnSync(
+    "bash",
+    [
+      "-c",
+      '. "$1"; shift; with_resource_lock_owner "$@"',
+      "verification-stage-owner",
+      join(ROOT, "scripts/resource-lock-owner.sh"),
+      join(ROOT, "scripts/with-verification-stage-deadline.sh"),
+      options.stage ?? command,
+      command,
+      ...args,
+    ],
+    {
+      cwd: options.cwd ?? ROOT,
+      encoding: "utf8",
+      stdio: options.capture === true ? "pipe" : "inherit",
+      env,
+    },
+  );
   if (result.error !== undefined) throw result.error;
   return result;
 }
@@ -356,6 +372,7 @@ function failureDescription(result) {
   if (result.signal !== null && result.signal !== undefined) {
     return `signal ${result.signal}`;
   }
+  if (result.status === 124) return "execution deadline exceeded";
   return `exit ${result.status ?? "unknown"}`;
 }
 
@@ -381,12 +398,7 @@ function executeQualityMilestoneCheck(check, execute) {
 function executeQualityMilestone(
   plan,
   {
-    execute = (check) =>
-      spawnSync(check.command, check.args, {
-        cwd: ROOT,
-        encoding: "utf8",
-        stdio: "inherit",
-      }),
+    execute = (check) => run(check.command, check.args, { stage: check.id }),
     now = () => process.hrtime.bigint(),
     write = (message) => process.stdout.write(message),
   } = {},
@@ -887,7 +899,83 @@ function runCoverageDiagnostic(args) {
   );
 }
 
+function deadlineSelfTest() {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), "dnd-stage-deadline-"));
+  const descendantPidPath = join(fixtureRoot, "descendant-pid");
+  const priorDeadline = process.env.DND_VERIFICATION_STAGE_TIMEOUT_MS;
+  try {
+    process.env.DND_VERIFICATION_STAGE_TIMEOUT_MS = "5000";
+    const check = (id, script, prerequisites = []) => ({
+      id,
+      command: process.execPath,
+      args: ["--input-type=module", "-e", script],
+      prerequisites,
+    });
+    const descendant = [
+      'import { readFileSync, writeFileSync } from "node:fs";',
+      'const stat = readFileSync(`/proc/${process.pid}/stat`, "utf8");',
+      'const startTime = stat.slice(stat.lastIndexOf(") ") + 2).split(" ")[19];',
+      `writeFileSync(${JSON.stringify(descendantPidPath)}, JSON.stringify({ pid: process.pid, startTime }));`,
+      "setInterval(() => {}, 1000);",
+    ].join("\n");
+    const parent = [
+      'import { spawn } from "node:child_process";',
+      `spawn(${JSON.stringify(process.execPath)}, ["--input-type=module", "-e", ${JSON.stringify(descendant)}], { detached: true, env: {}, stdio: "ignore" });`,
+      "setInterval(() => {}, 1000);",
+    ].join("\n");
+    const afterCleanup = [
+      'import assert from "node:assert/strict";',
+      'import { existsSync, readFileSync } from "node:fs";',
+      `const { pid } = JSON.parse(readFileSync(${JSON.stringify(descendantPidPath)}, "utf8"));`,
+      'assert.equal(existsSync(`/proc/${pid}`), false, "Escaped descendant must be reaped before the next stage");',
+    ].join("\n");
+    const messages = [];
+    const result = executeQualityMilestone(
+      [
+        check("deadline-fixture", parent),
+        check("dependent-fixture", "process.exit(99)", ["deadline-fixture"]),
+        check("after-cleanup-fixture", afterCleanup),
+      ],
+      { write: (message) => messages.push(message) },
+    );
+    assert.deepEqual(
+      result.outcomes.map((outcome) => outcome.status),
+      ["FAIL", "BLOCKED", "PASS"],
+    );
+    assert.equal(result.outcomes[0].failure, "execution deadline exceeded");
+    assert.equal(result.exitCode, 1);
+    assert.match(
+      messages.join(""),
+      /FAIL .* deadline-fixture \(execution deadline exceeded\)/,
+    );
+    assert.match(messages.join(""), /blocked by deadline-fixture/);
+  } catch (error) {
+    if (existsSync(descendantPidPath))
+      process.stderr.write(
+        `Deadline fixture descendant identity: ${readFileSync(descendantPidPath, "utf8")}\n`,
+      );
+    throw error;
+  } finally {
+    if (priorDeadline === undefined)
+      delete process.env.DND_VERIFICATION_STAGE_TIMEOUT_MS;
+    else process.env.DND_VERIFICATION_STAGE_TIMEOUT_MS = priorDeadline;
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+  process.stdout.write(
+    "Milestone stage deadline and descendant cleanup self-test passed.\n",
+  );
+}
+
 function selfTest() {
+  deadlineSelfTest();
+  assert.equal(
+    run(process.execPath, [
+      "--test",
+      join(ROOT, "scripts/verification-deadline-policy.test.mjs"),
+    ]).status,
+    0,
+    "Shared deadline policy self-tests must pass.",
+  );
   checkInventory();
   const rootPackage = JSON.parse(
     readFileSync(join(ROOT, "package.json"), "utf8"),
@@ -1382,6 +1470,7 @@ function selfTest() {
 
 const command = process.argv[2];
 if (command === "--self-test") selfTest();
+else if (command === "--deadline-self-test") deadlineSelfTest();
 else if (command === "inventory") checkInventory();
 else if (command === "circular") checkCircularDependencies();
 else if (command === "complexity") await checkCyclomaticComplexity(false);
@@ -1393,6 +1482,6 @@ else if (command === "coverage:diagnose")
 else if (command === "milestone") runQualityMilestone();
 else {
   throw new Error(
-    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone",
+    "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone",
   );
 }
