@@ -155,7 +155,8 @@ export const BattleProcedureExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
     Schema.makeFilter(
       (reference) =>
-        nestedExecutionReferenceIsCanonical(reference, "procedure"),
+        nestedExecutionReferenceIsCanonical(reference, "procedure") ||
+        statBlockSpellInvocationProcedureReferenceIsCanonical(reference),
       {
         /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
         message: "Invalid canonical Battle procedure execution ref.",
@@ -222,6 +223,21 @@ export const StatBlockSpellInvocationRefSchema = Schema.Struct({
 });
 export type StatBlockSpellInvocationRef =
   typeof StatBlockSpellInvocationRefSchema.Type;
+
+export function statBlockSpellInvocationProcedureRef(
+  ref: StatBlockSpellInvocationRef,
+  procedure: import("./character-execution.ts").BattleSpellProcedureKey,
+): BattleProcedureExecutionRef {
+  return BattleProcedureExecutionRef.make(
+    JSON.stringify({
+      kind: "statBlockSpellInvocation",
+      procedureRef: ref.procedureRef,
+      groupOrdinal: ref.groupOrdinal,
+      invocationOrdinal: ref.invocationOrdinal,
+      procedure,
+    }),
+  );
+}
 
 export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
@@ -550,6 +566,16 @@ export function battleProcedureExecutionRefBelongsToScope(
   procedureRef: BattleProcedureExecutionRef,
   scopeRef: BattleExecutionScopeRef,
 ): boolean {
+  const decoded = parseExecutionReference(procedureRef);
+  if (
+    decoded?.kind === "statBlockSpellInvocation" &&
+    Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
+  ) {
+    return battleProcedureExecutionRefBelongsToScope(
+      decoded.procedureRef,
+      scopeRef,
+    );
+  }
   return executionReferenceBelongsToScope(procedureRef, "procedure", scopeRef);
 }
 
@@ -558,6 +584,15 @@ export function battleProcedureExecutionRefBelongsToCombatant(
   combatantId: CombatantId,
 ): boolean {
   const decoded = parseExecutionReference(procedureRef);
+  if (
+    decoded?.kind === "statBlockSpellInvocation" &&
+    Schema.is(BattleStatBlockProcedureExecutionRef)(decoded.procedureRef)
+  ) {
+    return battleProcedureExecutionRefBelongsToCombatant(
+      decoded.procedureRef,
+      combatantId,
+    );
+  }
   if (
     decoded === null ||
     !hasExactKeys(decoded, ["scopeRef", "kind", "ordinal"]) ||
@@ -894,6 +929,38 @@ function attackProcedureExecutionReferenceIsCanonical(
       decoded.scopeRef,
       "attackExecution",
     )
+  );
+}
+
+function statBlockSpellInvocationProcedureReferenceIsCanonical(
+  reference: string,
+): boolean {
+  const decoded = parseExecutionReference(reference);
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, [
+      "kind",
+      "procedureRef",
+      "groupOrdinal",
+      "invocationOrdinal",
+      "procedure",
+    ]) &&
+    decoded.kind === "statBlockSpellInvocation" &&
+    typeof decoded.procedureRef === "string" &&
+    statBlockProcedureExecutionReferenceIsCanonical(decoded.procedureRef) &&
+    nonNegativeIntegerProperty(decoded, "groupOrdinal") &&
+    nonNegativeIntegerProperty(decoded, "invocationOrdinal") &&
+    typeof decoded.procedure === "string" &&
+    decoded.procedure.trim() === decoded.procedure &&
+    decoded.procedure.length > 0 &&
+    reference ===
+      JSON.stringify({
+        kind: "statBlockSpellInvocation",
+        procedureRef: decoded.procedureRef,
+        groupOrdinal: decoded.groupOrdinal,
+        invocationOrdinal: decoded.invocationOrdinal,
+        procedure: decoded.procedure,
+      })
   );
 }
 

@@ -8,6 +8,7 @@ import {
   scopedSpellAccessFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
   scopedSpellSlotInvocationRef,
+  statBlockSpellInvocationRef,
   type SpellInvocationRef,
 } from "../battle-subjects.ts";
 import type { SupportedSpellInvocation } from "../battle-state-execution.ts";
@@ -43,6 +44,20 @@ export function supportedSpellInvocationRef(
   invocation: AuthoredSpellInvocation,
 ): SpellInvocationRef {
   return Match.value(invocation).pipe(
+    Match.when({ access: { tag: "statBlockCantrip" } }, (value) =>
+      statBlockSpellInvocationRef(
+        value.spell.id,
+        value.access.invocationRef,
+        value.procedure,
+      ),
+    ),
+    Match.when({ access: { tag: "statBlockLeveled" } }, (value) =>
+      statBlockSpellInvocationRef(
+        value.spell.id,
+        value.access.invocationRef,
+        value.procedure,
+      ),
+    ),
     Match.when({ access: { tag: "prepared" } }, (value) =>
       Match.value(value.resource).pipe(
         Match.when({ tag: "spellAccessFreeCast" }, (resource) =>

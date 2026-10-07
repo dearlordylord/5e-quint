@@ -437,6 +437,11 @@ export function battleInitializationIssueFactFields(
         combatantId,
         issueIndex,
       }),
+      statBlockSpellAdmissionInvalid: ({ kind, combatantId, cause }) => ({
+        reason: kind,
+        combatantId,
+        cause,
+      }),
       characterSpellProcedureInvalid: ({
         kind,
         combatantId,
@@ -706,6 +711,10 @@ type ValidBattleCreatureAdmission = Extract<
 >;
 
 type InitialBattleAdmissionAccumulator = {
+  readonly statBlockSpellAdmissionPlans: Map<
+    CombatantId,
+    StatBlockSpellInvocationAdmissionPlan
+  >;
   readonly initializationIssues: BattleInitializationLeafIssue[];
   readonly seenCombatantIds: Set<CombatantId>;
   readonly combatants: Map<CombatantId, BattleCreatureState>;
@@ -722,6 +731,7 @@ type InitialBattleAdmissionAccumulator = {
 
 function initialBattleAdmissionAccumulator(): InitialBattleAdmissionAccumulator {
   return {
+    statBlockSpellAdmissionPlans: new Map(),
     initializationIssues: [],
     seenCombatantIds: new Set(),
     combatants: new Map(),
@@ -798,6 +808,12 @@ function recordValidInitialBattleCombatant(input: {
 }): void {
   const { accumulator, combatant, admission, ownerPath } = input;
   accumulator.combatants.set(combatant.combatantId, admission.creature);
+  if (combatant.creatureInit.kind === "statBlock") {
+    accumulator.statBlockSpellAdmissionPlans.set(
+      combatant.combatantId,
+      combatant.creatureInit.spellInvocationAdmissionPlan,
+    );
+  }
   if (
     "runtimeContext" in admission &&
     combatant.creatureInit.kind === "character" &&
@@ -1082,14 +1098,38 @@ function appendCharacterWeaponPresentationIssues(input: {
   }
 }
 
-function initializeCharacterBattleExecutions(input: {
+function initializeBattleSpellExecutions(input: {
+  readonly statBlockSpellAdmissionPlans: ReadonlyMap<
+    CombatantId,
+    StatBlockSpellInvocationAdmissionPlan
+  >;
   readonly state: BattleState;
   readonly battleInput: BattleStartInput;
   readonly characterContexts: Map<CombatantId, CharacterBattleRuntimeContext>;
   readonly initializationIssues: BattleInitializationLeafIssue[];
 }): Map<CombatantId, BattleCreatureState> {
-  const combatantsWithCharacterExecutions = new Map(input.state.combatants);
+  const combatantsWithSpellExecutions = new Map(input.state.combatants);
   for (const [combatantId, combatant] of input.state.combatants) {
+    if (combatant.origin.kind === "statBlock") {
+      const plan = input.statBlockSpellAdmissionPlans.get(combatantId);
+      const admitted =
+        plan === undefined
+          ? Result.fail("admissionPlanMissing" as const)
+          : statBlockCreatureWithAdmittedSpellInvocations(
+              { ...combatant, origin: combatant.origin },
+              input.state,
+              plan,
+            );
+      if (Result.isFailure(admitted))
+        input.initializationIssues.push({
+          tag: "battleAdmissionInitIssue",
+          kind: "statBlockSpellAdmissionInvalid",
+          combatantId,
+          cause: admitted.failure,
+        });
+      else combatantsWithSpellExecutions.set(combatantId, admitted.success);
+      continue;
+    }
     if (!isCharacterBattleCreatureState(combatant)) continue;
     const characterContext = input.characterContexts.get(combatantId);
     if (characterContext === undefined) {
@@ -1130,10 +1170,10 @@ function initializeCharacterBattleExecutions(input: {
       );
       continue;
     }
-    combatantsWithCharacterExecutions.set(combatantId, spellAdmission.creature);
+    combatantsWithSpellExecutions.set(combatantId, spellAdmission.creature);
     input.characterContexts.set(combatantId, spellAdmission.runtimeContext);
   }
-  return combatantsWithCharacterExecutions;
+  return combatantsWithSpellExecutions;
 }
 
 export const startBattle: StartBattle = (input) => {
@@ -1149,14 +1189,13 @@ export const startBattle: StartBattle = (input) => {
   appendInitialHidePrerequisiteIssues(input, admission);
   const state = initialBattleState(input, admission);
   if (Result.isFailure(state)) return Result.fail(state.failure);
-  const combatantsWithCharacterExecutions = initializeCharacterBattleExecutions(
-    {
-      state: state.success,
-      battleInput: input,
-      characterContexts: admission.characterContexts,
-      initializationIssues: admission.initializationIssues,
-    },
-  );
+  const combatantsWithSpellExecutions = initializeBattleSpellExecutions({
+    statBlockSpellAdmissionPlans: admission.statBlockSpellAdmissionPlans,
+    state: state.success,
+    battleInput: input,
+    characterContexts: admission.characterContexts,
+    initializationIssues: admission.initializationIssues,
+  });
   if (isNonEmptyReadonlyArray(admission.initializationIssues)) {
     return battleInitializationIssueFromLeafIssues(
       admission.initializationIssues,
@@ -1166,7 +1205,7 @@ export const startBattle: StartBattle = (input) => {
     battleRuntimeSessionFromAdmittedContext(
       {
         ...state.success,
-        combatants: combatantsWithCharacterExecutions,
+        combatants: combatantsWithSpellExecutions,
       },
       battleRuntimeContextFromCharacterAdmission(
         admission.characterContexts,
@@ -1579,11 +1618,26 @@ function admitBattleCombatant(
           issues: [first, second, ...rest],
         });
   }
+  const actor = characterSpellAdmission?.creature ?? admission.creature;
   const admittedCreature =
-    characterSpellAdmission?.creature ?? admission.creature;
+    actor.origin.kind === "statBlock" &&
+    input.combatant.creatureInit.kind === "statBlock"
+      ? statBlockCreatureWithAdmittedSpellInvocations(
+          { ...actor, origin: actor.origin },
+          stateWithAdmission,
+          input.combatant.creatureInit.spellInvocationAdmissionPlan,
+        )
+      : Result.succeed(actor);
+  if (Result.isFailure(admittedCreature))
+    return Result.fail({
+      tag: "battleAdmissionInitIssue",
+      kind: "statBlockSpellAdmissionInvalid",
+      combatantId: actor.combatantId,
+      cause: admittedCreature.failure,
+    });
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
-    admittedCreature,
+    admittedCreature.success,
   );
   const insertionIndex = combatantInitiativeInsertionIndex(
     input.state,
@@ -1782,3 +1836,5 @@ export function removeBattleRuntimeCombatants(input: {
       ),
   );
 }
+import { statBlockCreatureWithAdmittedSpellInvocations } from "../stat-block-spell-invocation-admission.ts";
+import type { StatBlockSpellInvocationAdmissionPlan } from "../stat-block-spell-invocation-admission-plan.ts";

@@ -13,6 +13,8 @@ import {
   statBlockSpellcastingGroupOrdinal,
   statBlockSpellcastingInvocationOrdinal,
   type StatBlockSpellInvocationRef,
+  statBlockSpellInvocationProcedureRef,
+  BattleProcedureExecutionRef,
 } from "./identity.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
@@ -118,4 +120,23 @@ describe("canonical Stat Block spell invocation selection", () => {
       }),
     ).toEqual({ kind: "missingInvocation" });
   });
+});
+
+it("allocates distinct canonical child refs for each invocation and mechanical branch", () => {
+  const { ref } = selectionFixture("each");
+  const refs = [
+    statBlockSpellInvocationProcedureRef(ref, "afterHitDamage"),
+    statBlockSpellInvocationProcedureRef(
+      { ...ref, groupOrdinal: statBlockSpellcastingGroupOrdinal(1) },
+      "afterHitDamage",
+    ),
+    statBlockSpellInvocationProcedureRef(
+      { ...ref, invocationOrdinal: statBlockSpellcastingInvocationOrdinal(1) },
+      "afterHitDamage",
+    ),
+    statBlockSpellInvocationProcedureRef(ref, "weaponDamageRider"),
+  ];
+  expect(new Set(refs).size).toBe(4);
+  for (const ref of refs)
+    expect(Schema.is(BattleProcedureExecutionRef)(ref)).toBe(true);
 });

@@ -4383,6 +4383,7 @@ export function testPoisonWeaponAttack(): TestCharacterWeaponAttack {
 }
 
 export function statBlockCreatureInit(input: {
+  readonly unitCatalog?: AuthoredStatBlockBattleInitInput["unitCatalog"];
   readonly combatantId?: CombatantId;
   readonly statBlockName?: string;
   readonly statBlock?: StatBlockRecord;
@@ -4413,7 +4414,7 @@ export function statBlockCreatureInit(input: {
   return {
     combatantId: input.combatantId ?? goblinId,
     statBlock: namedStatBlock,
-    unitCatalog: unitLibrary,
+    unitCatalog: input.unitCatalog ?? unitLibrary,
     initiative: initiativeScore(input.initiative),
     currentHp: Hp(input.currentHp ?? maxHp),
     tempHp: Hp(input.tempHp ?? 0),

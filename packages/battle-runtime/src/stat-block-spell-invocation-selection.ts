@@ -1,4 +1,7 @@
-import { Match } from "effect";
+import { Match, Option } from "effect";
+import { isStatBlockSpellCastProcedureExecution } from "./stat-block-spell-invocation-dispatch.ts";
+import type { BattleExecutableSpellInvocation } from "./battle-state-execution.ts";
+import { statBlockSpellInvocationProcedureRef } from "./identity.ts";
 import type {
   BattleResourcePoolExecutionRef,
   StatBlockSpellInvocationRef,
@@ -119,4 +122,99 @@ export function selectStatBlockSpellInvocation(
     ),
     Match.exhaustive,
   );
+}
+
+export function statBlockSpellProcedureInvocations(
+  execution: StatBlockExecutionState,
+): readonly BattleExecutableSpellInvocation[] {
+  return execution.procedureBindings.flatMap((binding) => {
+    if (binding.procedure.kind !== "spellcasting") return [];
+    return binding.procedure.groups.flatMap((group) =>
+      group.invocations.flatMap((invocation) => {
+        if (invocation.dispatch.kind !== "executable") return [];
+        const ref = {
+          procedureRef: binding.procedureRef,
+          groupOrdinal: group.groupOrdinal,
+          invocationOrdinal: invocation.invocationOrdinal,
+        };
+        return invocation.dispatch.executions.map((facts) => ({
+          ...facts,
+          sourceProcedureRef: statBlockSpellInvocationProcedureRef(
+            ref,
+            facts.procedure,
+          ),
+        }));
+      }),
+    );
+  });
+}
+
+export function statBlockSpellProcedure(
+  execution: StatBlockExecutionState,
+  procedureRef: import("./identity.ts").BattleProcedureExecutionRef,
+): BattleExecutableSpellInvocation | undefined {
+  return statBlockSpellProcedureInvocations(execution).find(
+    (invocation) => invocation.sourceProcedureRef === procedureRef,
+  );
+}
+
+/** Persisted child facts must retain their owning invocation and pool. */
+export function statBlockSpellDispatchBindingsAreValid(
+  bindings: readonly import("./stat-block-execution-state.ts").StatBlockProcedureBindingSnapshot[],
+): boolean {
+  return bindings.every((binding) => {
+    if (binding.procedure.kind !== "spellcasting") return true;
+    const procedure = binding.procedure;
+    return procedure.groups.every((group) =>
+      group.invocations.every((invocation) => {
+        if (invocation.dispatch.kind === "unsupported") return true;
+        const expected = {
+          procedureRef: binding.procedureRef,
+          groupOrdinal: group.groupOrdinal,
+          invocationOrdinal: invocation.invocationOrdinal,
+        };
+        const sameRef = (ref: StatBlockSpellInvocationRef) =>
+          ref.procedureRef === expected.procedureRef &&
+          ref.groupOrdinal === expected.groupOrdinal &&
+          ref.invocationOrdinal === expected.invocationOrdinal;
+        const procedures = invocation.dispatch.executions.map(
+          (execution) => execution.procedure,
+        );
+        if (new Set(procedures).size !== procedures.length) return false;
+        return (
+          invocation.kind === "unrestricted" &&
+          invocation.dispatch.executions.every((execution) => {
+            if (
+              !isStatBlockSpellCastProcedureExecution(execution) ||
+              !sameRef(execution.access.invocationRef) ||
+              !sameRef(execution.spellRuleFacts.castingSource.invocationRef)
+            )
+              return false;
+            const source = execution.spellRuleFacts.castingSource;
+            if (
+              Option.getOrUndefined(source.spellSaveDc) !==
+                procedure.spellSaveDc ||
+              Option.getOrUndefined(source.spellAttackBonus) !==
+                procedure.spellAttackBonus
+            )
+              return false;
+            if (group.kind === "at_will")
+              return execution.resource.tag === "statBlockAtWill";
+            const poolRef =
+              group.resourceOwnership === "shared"
+                ? group.resourcePoolRef
+                : group.invocations.find(
+                    (candidate) =>
+                      candidate.invocationOrdinal ===
+                      invocation.invocationOrdinal,
+                  )?.resourcePoolRef;
+            return (
+              execution.resource.tag === "statBlockLimited" &&
+              execution.resource.resourcePoolRef === poolRef
+            );
+          })
+        );
+      }),
+    );
+  });
 }

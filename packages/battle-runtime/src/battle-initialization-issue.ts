@@ -33,6 +33,11 @@ export type BattleInvocationSpellAccessInitializationCause =
 
 type BattleAdmissionInitializationIssueFacts =
   | {
+      readonly kind: "statBlockSpellAdmissionInvalid";
+      readonly combatantId: CombatantId;
+      readonly cause: "admissionPlanMissing" | "admissionPlanMismatch";
+    }
+  | {
       readonly kind: "characterSpellProcedureInvalid";
       readonly combatantId: CombatantId;
       readonly issueIndex: number;
@@ -115,6 +120,8 @@ export function battleProjectedCombatantAdmissionLeafIssueMessage(
     Match.when({ tag: "battleAdmissionInitIssue" }, (admissionIssue) =>
       Match.value(admissionIssue).pipe(
         Match.discriminatorsExhaustive("kind")({
+          statBlockSpellAdmissionInvalid: ({ cause }) =>
+            `Stat Block spell admission failed: ${cause}.`,
           characterSpellProcedureInvalid: ({ cause }) => cause.message,
           characterInvocationSpellAccessInvalid: ({ cause }) =>
             Match.value(cause).pipe(

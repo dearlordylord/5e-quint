@@ -366,7 +366,7 @@ export type BattleStatBlockRuntimeMultiattackDispatch = {
  * outcome kind is enough to preserve the procedure's admitted shape without
  * creating a positional or authored-identity dispatch key.
  */
-export type StatBlockSpellcastingInvocationOutcome =
+export type StatBlockSpellcastingInvocationCandidate =
   | {
       readonly kind: "unrestricted";
       readonly invocationOrdinal: StatBlockSpellcastingInvocationOrdinal;
@@ -375,6 +375,11 @@ export type StatBlockSpellcastingInvocationOutcome =
       readonly kind: "restricted";
       readonly invocationOrdinal: StatBlockSpellcastingInvocationOrdinal;
     };
+
+export type StatBlockSpellcastingInvocationOutcome =
+  StatBlockSpellcastingInvocationCandidate & {
+    readonly dispatch: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationDispatch;
+  };
 
 /**
  * Group facts retain only the execution-relevant group kind, child outcome
@@ -387,14 +392,14 @@ export type BattleStatBlockRuntimeSpellcastingGroup =
       readonly kind: "at_will";
       readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
       readonly resourceRefs: readonly [];
-      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
+      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationCandidate>;
     }
   | {
       readonly kind: "limited";
       readonly groupOrdinal: StatBlockSpellcastingGroupOrdinal;
       readonly resourceOwnership: "each" | "shared";
       readonly resourceRefs: readonly [StatBlockProcedureResourceOrdinal];
-      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
+      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationCandidate>;
     };
 
 export type BattleStatBlockRuntimeSpellcastingComponents = {

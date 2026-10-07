@@ -1,8 +1,15 @@
+import { statBlockSpellDispatchBindingsAreValid } from "../stat-block-spell-invocation-selection.ts";
+import { statBlockSpellInvocationProcedureRef } from "../identity.ts";
 import {
   StatBlockSpellcastingGroupOrdinal,
   StatBlockSpellcastingInvocationOrdinal,
 } from "../identity.ts";
 import { statBlockSpellcastingGroupPoolRefs } from "../stat-block-execution-state.ts";
+import {
+  STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS,
+  isStatBlockSpellCastProcedureExecution,
+} from "../stat-block-spell-invocation-dispatch.ts";
+import { registeredSpellProcedureDeclarations } from "./spell-procedure-profiles/registry.ts";
 // Runtime codecs for battle reducer public payloads.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -6318,9 +6325,32 @@ const StatBlockUnarmedStrikeProcedureSchema: StatBlockUnarmedStrikeProcedureCode
     attack: SupportedStatBlockUnarmedStrikeRollMechanicsSchema,
   });
 
+const StatBlockSpellInvocationDispatchSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("unsupported"),
+    reason: Schema.Literals(STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("executable"),
+    executions: Schema.NonEmptyArray(
+      Schema.suspend(() =>
+        Schema.Union(
+          Object.values(registeredSpellProcedureDeclarations()).flatMap(
+            (declaration) =>
+              "execution" in declaration
+                ? [declaration.execution.executionSchema]
+                : [],
+          ),
+        ).pipe(Schema.refine(isStatBlockSpellCastProcedureExecution)),
+      ),
+    ),
+  }),
+]);
+
 const StatBlockSpellcastingInvocationOutcomeSchema = Schema.Struct({
   invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
   kind: Schema.Literals(["unrestricted", "restricted"]),
+  dispatch: StatBlockSpellInvocationDispatchSchema,
 });
 
 const StatBlockSpellcastingSpellSaveDcSchema = Schema.Number.pipe(
@@ -6360,6 +6390,7 @@ const StatBlockSpellcastingGroupSchema = Schema.Union([
         kind: Schema.Literals(["unrestricted", "restricted"]),
         invocationOrdinal: StatBlockSpellcastingInvocationOrdinal,
         resourcePoolRef: BattleResourcePoolExecutionRef,
+        dispatch: StatBlockSpellInvocationDispatchSchema,
       }),
     ),
   }),
@@ -6531,6 +6562,8 @@ type StatBlockResourcePoolInvariantInput = Schema.Schema.Type<
 function statBlockExecutionSnapshotGraphIsValid(
   snapshot: StatBlockExecutionSnapshotInvariantInput,
 ): boolean {
+  if (!statBlockSpellDispatchBindingsAreValid(snapshot.procedureBindings))
+    return false;
   const procedureRefs = snapshot.procedureBindings.map(
     (binding) => binding.procedureRef,
   );
@@ -8764,6 +8797,26 @@ function serializedStatBlockAuthoritativeExecutionReferences(
 ): readonly string[] {
   return [
     execution.scopeRef,
+    ...execution.procedureBindings.flatMap((binding) =>
+      binding.procedure.kind !== "spellcasting"
+        ? []
+        : binding.procedure.groups.flatMap((group) =>
+            group.invocations.flatMap((invocation) =>
+              invocation.dispatch.kind !== "executable"
+                ? []
+                : invocation.dispatch.executions.map((facts) =>
+                    statBlockSpellInvocationProcedureRef(
+                      {
+                        procedureRef: binding.procedureRef,
+                        groupOrdinal: group.groupOrdinal,
+                        invocationOrdinal: invocation.invocationOrdinal,
+                      },
+                      facts.procedure,
+                    ),
+                  ),
+            ),
+          ),
+    ),
     ...execution.procedureBindings.map((binding) => binding.procedureRef),
     ...execution.resourcePools.map((pool) => pool.resourcePoolRef),
   ];

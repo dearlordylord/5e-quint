@@ -1,3 +1,4 @@
+import { statBlockSpellDispatchBindingsAreValid } from "./stat-block-spell-invocation-selection.ts";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.spellcasting.procedure
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
@@ -651,7 +652,16 @@ function runtimeSpellcastingGroupBinding(
       kind: "at_will" as const,
       groupOrdinal: group.groupOrdinal,
       resourcePoolRefs: [] as const,
-      invocations: group.invocations,
+      invocations: mapReadonlyNonEmptyArray(
+        group.invocations,
+        (invocation) => ({
+          ...invocation,
+          dispatch: {
+            kind: "unsupported" as const,
+            reason: "missingChildProcedureOwner" as const,
+          },
+        }),
+      ),
     })),
     Match.when({ kind: "limited" }, (group) =>
       Match.value(group.resourceOwnership).pipe(
@@ -668,7 +678,16 @@ function runtimeSpellcastingGroupBinding(
             groupOrdinal: group.groupOrdinal,
             resourceOwnership: "shared" as const,
             resourcePoolRef,
-            invocations: group.invocations,
+            invocations: mapReadonlyNonEmptyArray(
+              group.invocations,
+              (invocation) => ({
+                ...invocation,
+                dispatch: {
+                  kind: "unsupported" as const,
+                  reason: "missingChildProcedureOwner" as const,
+                },
+              }),
+            ),
           };
         }),
         Match.when("each", () => ({
@@ -685,7 +704,14 @@ function runtimeSpellcastingGroupBinding(
                 sharedResourcePools,
                 resourcePools,
               );
-              return { ...invocation, resourcePoolRef };
+              return {
+                ...invocation,
+                resourcePoolRef,
+                dispatch: {
+                  kind: "unsupported" as const,
+                  reason: "missingChildProcedureOwner" as const,
+                },
+              };
             },
           ),
         })),
@@ -976,7 +1002,7 @@ function restoreStatBlockExecutionAdmissionAtIndex<
       execution: admittedStatBlockExecutionState({
         scopeRef: snapshot.scopeRef,
         procedureBindings: [
-          ...expected.execution.procedureBindings,
+          ...authoredBindings,
           ...effectOccurrenceSourceBindings,
         ],
         resourcePools: restoredResourcePools,
@@ -1040,6 +1066,7 @@ function procedureBindingSnapshotsEqual(
     expected.map((binding) => [binding.procedureRef, binding]),
   );
   return (
+    statBlockSpellDispatchBindingsAreValid(actual) &&
     actual.length === expected.length &&
     new Set(actual.map((binding) => binding.procedureRef)).size ===
       actual.length &&
@@ -1053,9 +1080,27 @@ function procedureBindingSnapshotsEqual(
       ) {
         return false;
       }
-      return persistedValuesEqual(binding.procedure, expectedBinding.procedure);
+      return persistedValuesEqual(
+        statBlockProcedureWithoutSpellDispatch(binding.procedure),
+        statBlockProcedureWithoutSpellDispatch(expectedBinding.procedure),
+      );
     })
   );
+}
+
+function statBlockProcedureWithoutSpellDispatch(
+  procedure: import("./stat-block-execution-state.ts").StatBlockProcedure,
+) {
+  if (procedure.kind !== "spellcasting") return procedure;
+  return {
+    ...procedure,
+    groups: procedure.groups.map((group) => ({
+      ...group,
+      invocations: group.invocations.map(
+        ({ dispatch: _dispatch, ...candidate }) => candidate,
+      ),
+    })),
+  };
 }
 
 function authoredStatBlockProcedureBindingSnapshots(
@@ -1136,6 +1181,7 @@ function persistedValuesEqual(actual: unknown, expected: unknown): boolean {
     return (
       Array.isArray(actual) &&
       Array.isArray(expected) &&
+      statBlockSpellDispatchBindingsAreValid(actual) &&
       actual.length === expected.length &&
       actual.every((value, index) =>
         persistedValuesEqual(value, expected[index]),
@@ -1208,6 +1254,7 @@ function resourcePoolStructuresMatch(
 
 function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
   return (
+    statBlockSpellDispatchBindingsAreValid(actual) &&
     actual.length === expected.length &&
     new Set(actual).size === actual.length &&
     new Set(expected).size === expected.length &&
