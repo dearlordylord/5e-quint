@@ -33,7 +33,7 @@ import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-kn
 import type { StatBlockExecutionAdmission } from "./stat-block-execution-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { admittedSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
+import type { AuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
 import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
@@ -450,6 +450,16 @@ function renameContextInertIdentityFields(
   const syntheticStatBlockDisplayName = "Synthetic Stat Block";
   const syntheticFormDisplayName = "Synthetic Form";
   const syntheticProcedureLabel = "Synthetic Procedure";
+  const renameInvocation = <Invocation extends AuthoredSelectedSpellInvocation>(
+    invocation: Invocation,
+  ): Invocation => ({
+    ...invocation,
+    spell: {
+      ...invocation.spell,
+      id: unitId(syntheticSpellId),
+      name: syntheticSpellName,
+    },
+  });
 
   const characters = new Map(
     Array.from(context.characters.entries()).map(([id, character]) => [
@@ -457,19 +467,10 @@ function renameContextInertIdentityFields(
       {
         ...character,
         spellPresentationSources: character.spellPresentationSources.map(
-          (source) => {
-            const invocation = {
-              ...source.invocation,
-              spell: {
-                ...source.invocation.spell,
-                id: unitId(syntheticSpellId),
-                name: syntheticSpellName,
-              },
-            };
-            if (!admittedSpellInvocationCastingFacts(invocation))
-              throw new Error("Identity renaming must preserve casting facts");
-            return { ...source, invocation };
-          },
+          (source) => ({
+            ...source,
+            invocation: renameInvocation(source.invocation),
+          }),
         ),
         ...(character.druidWildShapeFormPresentations === undefined
           ? {}
