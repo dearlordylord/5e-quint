@@ -479,7 +479,10 @@ export const scalarBuffMultiIssueUpdate = (
     ? {
         ...mechanics,
         range: { kind: "unlimited" },
-        castingTime: { kind: "minutes", amount: 1, ritual: false },
+        castingTime: {
+          kind: "reaction",
+          trigger: { kind: "hit_by_attack_roll" },
+        },
       }
     : mechanics;
 

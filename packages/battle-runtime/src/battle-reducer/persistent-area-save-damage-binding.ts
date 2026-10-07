@@ -4,7 +4,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { BattleAreaId, BattleEffectExecutionRef } from "../identity.ts";
-import { characterRetainedSpellProcedureExecution } from "../character-execution-queries.ts";
+import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
 import type {
   CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution,
   DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution,
@@ -38,7 +38,7 @@ type DirectedEffect = Extract<
 >;
 
 type RetainedPersistentAreaFacts = Extract<
-  ReturnType<typeof characterRetainedSpellProcedureExecution>,
+  ReturnType<typeof creatureSpellProcedure>,
   { readonly procedure: "persistentAreaSaveDamage" }
 >;
 type StationaryFacts = Extract<
@@ -105,16 +105,10 @@ export function boundPersistentAreaSaveDamageEffect(
   owner: BattleCreatureState,
   effect: PersistentAreaSaveDamageEffect,
 ): BoundPersistentAreaSaveDamageEffect | undefined {
-  if (
-    owner.origin.kind !== "character" ||
-    effect.sourceCombatantId !== owner.combatantId
-  ) {
+  if (effect.sourceCombatantId !== owner.combatantId) {
     return undefined;
   }
-  const facts = characterRetainedSpellProcedureExecution(
-    owner.origin.execution,
-    effect.sourceProcedureRef,
-  );
+  const facts = creatureSpellProcedure(owner, effect.sourceProcedureRef);
   if (facts?.procedure !== "persistentAreaSaveDamage") return undefined;
   return Match.value(effect).pipe(
     Match.discriminatorsExhaustive("lifecycle")({
