@@ -270,6 +270,31 @@ emission reproduced the declaration bytes qualified by an isolated strict
 consumer check of every retained declaration. The comparison baseline and
 acceptance gates remain unchanged.
 
+Declaration-cache evaluation found repeated equivalent emissions and a material
+potential saving from copying a validated declaration artifact. Adoption is
+deferred: no declaration cache is installed. The canonical emitter above remains
+the production owner, and each execution retains fresh destinations, identities,
+and evidence.
+
+A future cache must resolve the actual native compiler input closure afresh on
+every request. Its content key must cover that closure, effective configuration
+and configuration dependencies, resolution-affecting package metadata, pinned
+compiler and platform implementation, copied declarations, and the owning
+emission, pruning, and admission algorithms. A file list alone does not capture
+package-format or export changes; discovery without checking also does not prove
+that imports are valid. Only a successful strict emission may produce an entry.
+
+Publication must use an immutable digest entry and an atomic operation, with
+concurrent publishers validating an existing winner. Before publication, and
+again after copying a hit into a fresh destination, re-resolve and revalidate
+inputs and artifact admission. Content comparison alone misses an A→B→A rewrite
+during compilation: input inode, size and timestamp stability, relevant directory
+changes, and resolution stability require an enforced witness or an immutable
+input snapshot. Adoption still needs executable invalidation, shadow-file and
+package-metadata changes, transient rewrite, corrupt artifact, and concurrent
+publication proofs. These checks must preserve the existing consumer parsing,
+required and forbidden graph owners, exact reviewed manifest, and caps.
+
 The pinned native compiler recorded by the root package manifest supplies
 declaration emission. The pinned TypeScript implementation remains the hermetic
 Raw Swarm implementation for submitted-source checking, declaration graph
