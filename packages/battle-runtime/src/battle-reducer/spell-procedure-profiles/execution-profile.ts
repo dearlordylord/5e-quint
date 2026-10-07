@@ -92,7 +92,10 @@ export type SpellProcedureExecutionDeclaration<
   ) => BattleResolutionResult
 >;
 
-type StatBlockSpellProcedureSchemaFields<F extends Schema.Struct.Fields> = F & {
+type StatBlockSpellProcedureSchemaFields<F extends Schema.Struct.Fields> = Omit<
+  F,
+  "actionCost"
+> & {
   readonly actionCost: Schema.Literals<readonly ["magicAction", "bonusAction"]>;
 };
 type StatBlockSpellProcedureSchema<F extends Schema.Struct.Fields> =
@@ -142,10 +145,13 @@ export function spellProcedureExecutionSchema<
       value.spellRuleFacts.castingSource.tag !== "statBlock" &&
       value.access.tag !== "spellEffect",
   )(schema);
-  const statBlockSchema: StatBlockSpellProcedureSchema<F> = Schema.Struct({
-    ...schema.fields,
+  const { actionCost: _declaredActionCost, ...retainedFields } = schema.fields;
+  const statBlockFields: StatBlockSpellProcedureSchemaFields<F> = {
+    ...retainedFields,
     actionCost: Schema.Literals(["magicAction", "bonusAction"]),
-  });
+  };
+  const statBlockSchema: StatBlockSpellProcedureSchema<F> =
+    Schema.Struct(statBlockFields);
   const statBlock = Schema.refine<
     typeof statBlockSchema,
     StatBlockSpellProcedureSchemaType<F>
