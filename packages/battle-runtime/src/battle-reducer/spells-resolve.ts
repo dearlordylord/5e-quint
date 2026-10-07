@@ -675,10 +675,14 @@ type OrdinaryBonusActionSpellProfileInvocation = Exclude<
   { readonly procedure: "weaponAttackOverride" }
 >;
 
-function invocationUsesActionSpellProfileResolution(
+function invocationUsesCommonSpellProfileResolution(
   invocation: BattleSpellProcedureExecution,
 ): invocation is ActionSpellProfileInvocation {
-  return spellExecutionFacts(invocation).kind === "actionSpell";
+  return (
+    spellExecutionFacts(invocation).kind === "actionSpell" ||
+    (invocation.spellRuleFacts.castingSource.tag === "statBlock" &&
+      invocation.access.tag !== "spellEffect")
+  );
 }
 
 function invocationUsesBonusActionSpellProfileResolution(
@@ -2165,7 +2169,7 @@ function resolveSpellActInternal(
 
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- The registered profile resolution input is selected from the Action subject's procedure facts, which carry this action-profile support fact. */
-    if (!invocationUsesActionSpellProfileResolution(invocation)) {
+    if (!invocationUsesCommonSpellProfileResolution(invocation)) {
       return invalidResult(
         input.state,
         "unsupportedSubject",
