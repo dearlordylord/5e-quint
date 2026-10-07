@@ -270,30 +270,41 @@ emission reproduced the declaration bytes qualified by an isolated strict
 consumer check of every retained declaration. The comparison baseline and
 acceptance gates remain unchanged.
 
-Declaration-cache evaluation found repeated equivalent emissions and a material
-potential saving from copying a validated declaration artifact. Adoption is
-deferred: no declaration cache is installed. The canonical emitter above remains
-the production owner, and each execution retains fresh destinations, identities,
-and evidence.
+The [declaration cache](sdk-player/declaration-cache.ts) stores only successful
+strict emissions admitted by the owning consumer distribution module. Its
+checkout-local temporary storage is keyed by the canonical repository root;
+execution destinations, identities, role context and evidence remain fresh.
+Entries are immutable complete directory publications, and consumers receive
+independent copies rather than links to cache bytes. A concurrent publisher that
+loses the atomic rename returns its own admitted output without consuming or
+replacing the winner. Corrupt entries cause strict recompilation and are left
+untouched, preserving concurrent replacements; persistent corruption therefore
+continues to cost a compilation until the temporary cache is removed.
 
-A future cache must resolve the actual native compiler input closure afresh on
-every request. Its content key must cover that closure, effective configuration
-and configuration dependencies, resolution-affecting package metadata, pinned
-compiler and platform implementation, copied declarations, and the owning
-emission, pruning, and admission algorithms. A file list alone does not capture
-package-format or export changes; discovery without checking also does not prove
-that imports are valid. Only a successful strict emission may produce an entry.
+Each request runs actual native source and resolution discovery, including failed
+lookup candidates, and instruments the pinned configuration reader's filesystem
+walk for configuration ancestry and glob namespaces. The key covers source and
+copied declaration bytes, logical and physical path identity, symlink topology,
+resolution-affecting package metadata and absence, effective configuration,
+compiler and parser cohorts, the platform executable resolved by its launcher,
+Node, and the emission/cache/admission owners. Unsupported trace or configuration
+adapter forms fail closed; successful discovery alone does not establish semantic
+validity. Child compiler processes clear Node loader preloads and search-path
+overrides. Loaded owner/parser fingerprints reject on-disk implementation drift
+and require a process restart.
 
-Publication must use an immutable digest entry and an atomic operation, with
-concurrent publishers validating an existing winner. Before publication, and
-again after copying a hit into a fresh destination, re-resolve and revalidate
-inputs and artifact admission. Content comparison alone misses an A→B→A rewrite
-during compilation: input inode, size and timestamp stability, relevant directory
-changes, and resolution stability require an enforced witness or an immutable
-input snapshot. Adoption still needs executable invalidation, shadow-file and
-package-metadata changes, transient rewrite, corrupt artifact, and concurrent
-publication proofs. These checks must preserve the existing consumer parsing,
-required and forbidden graph owners, exact reviewed manifest, and caps.
+Content identity is separate from transaction stability. Discovery surrounds a
+capture of inode, device, type, size and high-resolution modification/change
+witnesses, including nearest existing parents of absent candidates and consulted
+directory namespaces. Re-discovery and witness comparison precede publication
+and exposure of each copied artifact. Ordinary rewrites, atomic saves and
+transient shadow or symlink changes exhaust a finite retry budget rather than
+publish under an unstable key. This supports local filesystems whose change
+witnesses advance for ordinary writes; it does not attest against adversarial
+restoration of inode/change metadata, replacement during implementation loading,
+or mutation of already loaded code. All existing graph, manifest, cap and strict
+consumer checks remain owned by their original boundaries and run on copied
+artifacts before exposure.
 
 The pinned native compiler recorded by the root package manifest supplies
 declaration emission. The pinned TypeScript implementation remains the hermetic

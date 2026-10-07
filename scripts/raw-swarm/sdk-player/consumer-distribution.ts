@@ -1,3 +1,7 @@
+import {
+  declarationCompilerEnvironment,
+  emitCachedDeclarations,
+} from "./declaration-cache.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -518,18 +522,27 @@ function assertReviewedPublicDeclarationBundle(
   return measure;
 }
 
-export function emitPublicDeclarations(
-  destination: string,
-): PublicDeclarationBundleMeasure {
-  const declarationsDirectory = resolve(destination, "declarations");
-  const nativePackage = createRequire(import.meta.url).resolve(
-    "@typescript/native/package.json",
-  );
-  const compiler = resolve(dirname(nativePackage), "bin/tsc");
-  const config = resolve(
-    repoRoot,
-    "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
-  );
+const declarationImplementationPaths = [
+  "scripts/raw-swarm/sdk-player/consumer-distribution.ts",
+  "scripts/raw-swarm/sdk-player/declaration-cache.ts",
+  "scripts/raw-swarm/transcript.ts",
+].map((path) => resolve(repoRoot, path));
+const declarationPolicyPaths = [
+  ...declarationImplementationPaths,
+  ...["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"].map((path) =>
+    resolve(repoRoot, path),
+  ),
+];
+const loadedDeclarationPolicy = declarationImplementationPaths.map((path) => ({
+  path,
+  digest: createHash("sha256").update(readFileSync(path)).digest("hex"),
+}));
+
+function strictDeclarationEmission(
+  compiler: string,
+  config: string,
+  declarationsDirectory: string,
+): void {
   const result = spawnSync(
     process.execPath,
     [
@@ -541,7 +554,7 @@ export function emitPublicDeclarations(
       "--pretty",
       "false",
     ],
-    { cwd: repoRoot, encoding: "utf8" },
+    { cwd: repoRoot, encoding: "utf8", env: declarationCompilerEnvironment() },
   );
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) {
@@ -556,6 +569,11 @@ export function emitPublicDeclarations(
       `Public declaration emission failed:\n${result.stdout}${result.stderr}`,
     );
   }
+}
+
+function finalizePublicDeclarations(
+  declarationsDirectory: string,
+): PublicDeclarationBundleMeasure {
   copyFileSync(
     resolve(repoRoot, "packages/shared/src/non-empty-array.d.ts"),
     resolve(declarationsDirectory, "packages/shared/src/non-empty-array.d.ts"),
@@ -593,6 +611,41 @@ export function emitPublicDeclarations(
       );
     }
   }
+  return assertReviewedPublicDeclarationBundle(declarationsDirectory);
+}
+
+export function emitPublicDeclarations(
+  destination: string,
+): PublicDeclarationBundleMeasure {
+  const nativePackage = createRequire(import.meta.url).resolve(
+    "@typescript/native/package.json",
+  );
+  const compiler = resolve(dirname(nativePackage), "bin/tsc");
+  const config = resolve(
+    repoRoot,
+    "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
+  );
+  const declarationsDirectory = resolve(destination, "declarations");
+  const result = emitCachedDeclarations({
+    repoRoot,
+    compiler,
+    config,
+    destination: declarationsDirectory,
+    ownerPaths: declarationPolicyPaths,
+    loadedOwners: loadedDeclarationPolicy,
+    copiedPaths: [
+      resolve(repoRoot, "packages/shared/src/non-empty-array.d.ts"),
+    ],
+    compile(directory) {
+      strictDeclarationEmission(compiler, config, directory);
+      return { kind: "ok" };
+    },
+    admit(directory) {
+      finalizePublicDeclarations(directory);
+      return { kind: "ok" };
+    },
+  });
+  if (result.kind === "failure") throw new Error(result.message);
   return assertReviewedPublicDeclarationBundle(declarationsDirectory);
 }
 
