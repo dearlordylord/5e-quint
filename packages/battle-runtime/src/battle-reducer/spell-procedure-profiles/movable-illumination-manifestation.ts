@@ -1,5 +1,4 @@
 import { cantripSpellInvocationFacts } from "./profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dancing-lights-movable-dim-light
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
@@ -172,7 +171,7 @@ function admitMovableLightSeparateCast(
       ...castingFacts,
       procedure: "movableLightManifestation",
       operation: "create",
-      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
+      actionCost: "magicAction",
       form: "separateLights",
       expiresAt: {
         kind: "concentration",
@@ -196,7 +195,7 @@ function admitMovableLightCombinedCast(
       ...castingFacts,
       procedure: "movableLightManifestation",
       operation: "create",
-      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
+      actionCost: "magicAction",
       form: "combinedMediumForm",
       expiresAt: {
         kind: "concentration",

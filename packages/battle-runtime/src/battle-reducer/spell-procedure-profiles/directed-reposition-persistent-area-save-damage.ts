@@ -1,6 +1,4 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import type {
   BattleExecutableSpellInvocation,
   BattleResolutionResult,
@@ -68,7 +66,6 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
@@ -893,7 +890,7 @@ function admitMovablePersistentArea(
               procedure: "persistentAreaSaveDamage",
               lifecycle: {
                 kind: "casterActionReposition",
-                actionCost: spellAdmissionActionCost(ctx, "magicAction"),
+                actionCost: "magicAction",
                 movedAreaOperation: "saveDamage",
                 collisionDisposition: "ignoreObstacles",
               },

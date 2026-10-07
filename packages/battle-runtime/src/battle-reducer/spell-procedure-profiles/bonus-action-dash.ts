@@ -1,7 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
 import { spendStatBlockSpellInvocationResource } from "../spells-resolve-resources.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-expeditious-retreat-dash
 import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -57,7 +55,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
   isSpellCanonicalDurationValue,
   spellDurationChildCoordinates,
@@ -527,7 +524,7 @@ function admitGrantedAlternateActionCost(
               ...slot.facts,
               procedure: "grantedAlternateActionCost",
 
-              actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+              actionCost: "bonusAction",
               activeEffect,
             },
           ],

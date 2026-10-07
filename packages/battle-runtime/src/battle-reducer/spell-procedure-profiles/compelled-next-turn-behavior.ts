@@ -1,6 +1,4 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel
@@ -54,7 +52,6 @@ import type {
 import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
-  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
@@ -262,7 +259,7 @@ function admitCompelledNextTurnBehavior(
               ...castOption.facts,
 
               procedure: "compelledNextTurnBehavior",
-              actionCost: spellAdmissionActionCost(ctx, "magicAction"),
+              actionCost: "magicAction",
               ability: facts.ability,
               dc: facts.dc,
               visibility: facts.visibility,

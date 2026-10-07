@@ -1,8 +1,6 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { spellEffectProcedureExecutionSchema } from "./execution-profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
 import { spellAdmissionAttackBonus } from "./profile.ts";
-import { leveledSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   maybeOpenConfiguredSpellCastReactionWindow,
   spendConfiguredSpellCastResources,
@@ -44,12 +42,10 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import {
-  attackBonus,
   movementFeet,
   PositiveInteger,
   type AbilityModifier,
   type MovementFeet as MovementFeetType,
-  type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
@@ -123,7 +119,6 @@ import {
 import {
   AttackBonus,
   MovementFeet,
-  CantripSpellInvocationResourceSchema,
   NoSpellInvocationResourceSchema,
   LeveledSpellAccessSchema,
   SpellEffectSpellAccessSchema,
@@ -922,7 +917,7 @@ function admitSpellCreatedHeldObject(
           ...slot.facts,
           procedure: "spellCreatedHeldObject",
 
-          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+          actionCost: "bonusAction",
           activeEffect,
         },
       ];
@@ -1394,4 +1389,3 @@ export const spellCreatedHeldObjectReEvokeProfile = {
   discoverCastAct: discoverSpellCreatedHeldObjectReEvokeCastAct,
   resolve: resolveSpellCreatedHeldObjectReEvoke,
 } satisfies SynthesizedSpellProcedureDeclaration<"spellCreatedHeldObjectReEvoke">;
-import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -1,6 +1,5 @@
 import { leveledSpellInvocationOptions } from "./profile.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
   completeAfterHitSpellDamageCast,
@@ -135,7 +134,7 @@ function admitAfterHitDamage(
         {
           ...slot.facts,
           procedure: "afterHitDamage",
-          actionCost: spellAdmissionActionCost(ctx, "bonusAction"),
+          actionCost: "bonusAction",
           damage: {
             expr: damageExpr,
             damageType: facts.damageType,

@@ -1,6 +1,4 @@
 import { cantripSpellInvocationFacts } from "./profile.ts";
-import { spellAdmissionActionCost } from "./profile.ts";
-import { cantripSpellInvocationResource } from "./profile.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-make-stable
@@ -59,10 +57,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import {
-  cantripSpellAccessFor,
-  spellAdmissionCharacterLevel,
-} from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
 import {
   CantripSpellAccessSchema,
@@ -678,7 +673,7 @@ function admitMakeStable(
       ...castingFacts,
       procedure: "makeStable",
 
-      actionCost: spellAdmissionActionCost(ctx, "magicAction"),
+      actionCost: "magicAction",
       rangeFeet: makeStableRangeFeet(
         facts.range,
         spellAdmissionCharacterLevel(ctx),
