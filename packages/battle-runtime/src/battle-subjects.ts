@@ -45,7 +45,6 @@ import {
   StatBlockSpellInvocationRefSchema,
   type StatBlockSpellInvocationRef,
   battleProcedureExecutionRefBelongsToCombatant,
-  StatBlockSpellInvocationRefSchema,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";

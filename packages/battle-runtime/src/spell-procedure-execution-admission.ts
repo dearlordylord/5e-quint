@@ -23,7 +23,6 @@ export function spellProcedureExecution(
     Match.discriminatorsExhaustive("procedure")({
       abilityD20TestRollModeSaveGate: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         dc: value.dc,
         failedSaveDamagePenaltyEffect: value.failedSaveDamagePenaltyEffect,
         failedSaveEffect: value.failedSaveEffect,
@@ -34,14 +33,12 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       afterHitDamage: (value) => ({
-        actionCost: value.actionCost,
         conditionalBonusDamage: value.conditionalBonusDamage,
         damage: value.damage,
         procedure: value.procedure,
         ...projectCastingFacts(value),
       }),
       afterHitDamageAndIllumination: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         damage: value.damage,
         illumination: value.illumination,
@@ -50,7 +47,6 @@ export function spellProcedureExecution(
       }),
       afterHitSaveGatedCondition: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         dc: value.dc,
         effect: value.effect,
         procedure: value.procedure,
@@ -58,7 +54,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       afterHitTimedDamageAndSave: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         immediateDamage: value.immediateDamage,
         procedure: value.procedure,
@@ -83,7 +78,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       perceptionGatedAttackRollDefense: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         ...projectCastingFacts(value),
@@ -100,7 +94,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       chosenDamageResistance: (value) => ({
-        actionCost: value.actionCost,
         damageTypeChoices: value.damageTypeChoices,
         expiresAt: value.expiresAt,
         procedure: value.procedure,
@@ -110,7 +103,6 @@ export function spellProcedureExecution(
       }),
       compelledNextTurnBehavior: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         dc: value.dc,
         procedure: value.procedure,
         targeting: value.targeting,
@@ -118,7 +110,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       conditionImmunityAndTurnStartTemporaryHitPoints: (value) => ({
-        actionCost: value.actionCost,
         activeEffects: value.activeEffects,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -126,7 +117,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       conditionRemovalProtection: (value) => ({
-        actionCost: value.actionCost,
         procedure: value.procedure,
         protection: value.protection,
         rangeFeet: value.rangeFeet,
@@ -144,7 +134,6 @@ export function spellProcedureExecution(
       }),
       creatureSizeDecrease: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         dc: value.dc,
         procedure: value.procedure,
@@ -154,7 +143,6 @@ export function spellProcedureExecution(
       }),
       creatureSizeIncrease: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         dc: value.dc,
         procedure: value.procedure,
@@ -163,7 +151,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       creatureTypeProtection: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -171,7 +158,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       damageReduction: (value) => ({
-        actionCost: value.actionCost,
         amount: value.amount,
         damageTypeChoices: value.damageTypeChoices,
         expiresAt: value.expiresAt,
@@ -230,7 +216,6 @@ export function spellProcedureExecution(
           Match.exhaustive,
         ),
       directCondition: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -238,7 +223,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       directConditionRemoval: (value) => ({
-        actionCost: value.actionCost,
         conditionChoices: value.conditionChoices,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -246,7 +230,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       directHitPointRestoration: (value) => ({
-        actionCost: value.actionCost,
         healing: value.healing,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -254,7 +237,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       grantedAreaSaveDamageAction: (value) => ({
-        actionCost: value.actionCost,
         ability: value.ability,
         activeEffect: value.activeEffect,
         coneLengthFeet: value.coneLengthFeet,
@@ -268,7 +250,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       grantedAlternateActionCost: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         ...projectCastingFacts(value),
@@ -385,7 +366,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       compositeTargetBuffWithAftermath: (value) => ({
-        actionCost: value.actionCost,
         activeEffects: value.activeEffects,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -393,7 +373,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       heldLight: (value) => ({
-        actionCost: value.actionCost,
         expiresAt: value.expiresAt,
         hurl: value.hurl,
         light: value.light,
@@ -414,7 +393,6 @@ export function spellProcedureExecution(
       }),
       saveGatedConditionWithRepeat: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         dc: value.dc,
         durationTicks: value.durationTicks,
         procedure: value.procedure,
@@ -425,7 +403,6 @@ export function spellProcedureExecution(
       /* v8 ignore stop -- @preserve */
       saveGatedAreaControl: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         dc: value.dc,
         durationTicks: value.durationTicks,
         procedure: value.procedure,
@@ -434,7 +411,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       fixedCostMovementReplacement: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -443,7 +419,6 @@ export function spellProcedureExecution(
       }),
       controlledVerticalSuspension: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         dc: value.dc,
         maxAltitudeChangeFeet: value.maxAltitudeChangeFeet,
@@ -463,14 +438,12 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       weaponAttackDamageEnhancement: (value) => ({
-        actionCost: value.actionCost,
         bonus: value.bonus,
         durationTicks: value.durationTicks,
         procedure: value.procedure,
         ...projectCastingFacts(value),
       }),
       makeStable: (value) => ({
-        actionCost: value.actionCost,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         ...projectCastingFacts(value),
@@ -501,13 +474,11 @@ export function spellProcedureExecution(
           Match.exhaustive,
         ),
       duplicateHitInterception: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         ...projectCastingFacts(value),
       }),
       objectContactDamage: (value) => ({
-        actionCost: value.actionCost,
         damage: value.damage,
         durationTicks: value.durationTicks,
         procedure: value.procedure,
@@ -523,7 +494,6 @@ export function spellProcedureExecution(
       objectLight: (value) =>
         Match.value(value).pipe(
           Match.when({ access: isCantripSpellAccess }, (value) => ({
-            actionCost: value.actionCost,
             expiresAt: value.expiresAt,
             light: value.light,
             procedure: value.procedure,
@@ -531,7 +501,6 @@ export function spellProcedureExecution(
             ...projectCastingFacts(value),
           })),
           Match.when({ access: isLeveledSpellAccess }, (value) => ({
-            actionCost: value.actionCost,
             expiresAt: value.expiresAt,
             light: value.light,
             procedure: value.procedure,
@@ -541,7 +510,6 @@ export function spellProcedureExecution(
           Match.exhaustive,
         ),
       ongoingSpellEnd: (value) => ({
-        actionCost: value.actionCost,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         abilityCheckDcBase: value.abilityCheckDcBase,
@@ -575,7 +543,6 @@ export function spellProcedureExecution(
           ? {
               abilityChoiceApplication: value.abilityChoiceApplication,
               abilityChoices: value.abilityChoices,
-              actionCost: value.actionCost,
               effect: value.effect,
               procedure: value.procedure,
               rangeFeet: value.rangeFeet,
@@ -585,7 +552,6 @@ export function spellProcedureExecution(
             }
           : {
               abilityChoices: value.abilityChoices,
-              actionCost: value.actionCost,
               effect: value.effect,
               procedure: value.procedure,
               rangeFeet: value.rangeFeet,
@@ -594,7 +560,6 @@ export function spellProcedureExecution(
               ...projectCastingFacts(value),
             },
       targetingSaveInterdiction: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -624,7 +589,6 @@ export function spellProcedureExecution(
       }),
       saveGatedConditionImmunity: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         activeEffects: value.activeEffects,
         dc: value.dc,
         procedure: value.procedure,
@@ -672,7 +636,6 @@ export function spellProcedureExecution(
           Match.exhaustive,
         ),
       scalarBuff: (value) => ({
-        actionCost: value.actionCost,
         effect: value.effect,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -680,19 +643,16 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       seeInvisibleObserverSight: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         ...projectCastingFacts(value),
       }),
       selfTeleport: (value) => ({
-        actionCost: value.actionCost,
         maxDistanceFeet: value.maxDistanceFeet,
         procedure: value.procedure,
         ...projectCastingFacts(value),
       }),
       selfTransformationMode: (value) => ({
-        actionCost: value.actionCost,
         expiresAt: value.expiresAt,
         modeChoices: value.modeChoices,
         naturalWeaponFacts: value.naturalWeaponFacts,
@@ -707,7 +667,6 @@ export function spellProcedureExecution(
       }),
       saveGatedTurnConstraintBundle: (value) => ({
         ability: value.ability,
-        actionCost: value.actionCost,
         constraints: value.constraints,
         dc: value.dc,
         durationTicks: value.durationTicks,
@@ -790,7 +749,6 @@ export function spellProcedureExecution(
           Match.exhaustive,
         ),
       spellCreatedHeldObject: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         ...projectCastingFacts(value),
@@ -810,7 +768,6 @@ export function spellProcedureExecution(
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Held-object re-evocation is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
       spellCreatedHeldObjectReEvoke: (value) => ({
-        actionCost: value.actionCost,
         sourceEffectRef: value.sourceEffectRef,
         sourceHeldObjectProcedureRef: value.sourceHeldObjectProcedureRef,
         procedure: value.procedure,
@@ -818,7 +775,6 @@ export function spellProcedureExecution(
       }),
       /* v8 ignore stop -- @preserve */
       spellHostedWeaponAttack: (value) => ({
-        actionCost: value.actionCost,
         attackBonus: value.attackBonus,
         bonusDamage: value.bonusDamage,
         componentWeaponObjectId: value.componentWeapon.objectId,
@@ -877,7 +833,6 @@ export function spellProcedureExecution(
         touchSpellProxy: value.touchSpellProxy,
       }),
       temporaryAbilityCheckRollMode: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -886,7 +841,6 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       linkedDefenseResistanceDamageShare: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         connectionRangeFeet: value.connectionRangeFeet,
         procedure: value.procedure,
@@ -894,14 +848,12 @@ export function spellProcedureExecution(
         ...projectCastingFacts(value),
       }),
       weaponAttackOverride: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         attachedWeaponSlot: value.attachedWeaponSlot,
         procedure: value.procedure,
         ...projectCastingFacts(value),
       }),
       weaponDamageRider: (value) => ({
-        actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         ...projectCastingFacts(value),
