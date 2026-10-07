@@ -4,13 +4,17 @@ import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/sc
 import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
-import { restoreStatBlockExecutionAdmission } from "./stat-block-execution.ts";
+import {
+  restoreAuthoredStatBlockExecutionAdmission,
+  restoreStatBlockExecutionAdmission,
+} from "./stat-block-execution.ts";
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleId,
   admittedStatBlockSource,
   statBlockCreatureInit,
   statBlockRecord,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import {
   combatantId,
@@ -132,21 +136,106 @@ describe("Stat Block invocation production admission", () => {
     ).toBe(true);
     const decoded = Schema.decodeUnknownResult(
       StatBlockExecutionSnapshotSchema,
-    )(encoded);
+    )(JSON.parse(JSON.stringify(encoded)));
     expect(Result.isSuccess(decoded)).toBe(true);
     if (Result.isFailure(decoded))
       throw new Error("Expected valid execution snapshot");
-    const restored = restoreStatBlockExecutionAdmission(
-      started.success.state.battleId,
-      casterId,
-      admittedStatBlockSource(casterRecord()),
-      decoded.success,
-    );
+    const restoreInput = {
+      state: started.success.state,
+      actorId: casterId,
+      statBlock: casterRecord(),
+      unitCatalog: unitLibrary,
+      snapshot: decoded.success,
+    };
+    expect(
+      Result.isFailure(
+        restoreStatBlockExecutionAdmission(
+          started.success.state.battleId,
+          casterId,
+          admittedStatBlockSource(casterRecord()),
+          decoded.success,
+        ),
+      ),
+    ).toBe(true);
+    const restored = restoreAuthoredStatBlockExecutionAdmission(restoreInput);
     expect(Result.isSuccess(restored)).toBe(true);
     if (Result.isSuccess(restored))
       expect(
         statBlockSpellProcedureInvocations(restored.success.execution),
       ).toEqual(invocations);
+    const changedMechanics = Schema.decodeUnknownResult(
+      StatBlockExecutionSnapshotSchema,
+    )({
+      ...encoded,
+      procedureBindings: encoded.procedureBindings.map((binding) =>
+        binding.procedure.kind !== "spellcasting"
+          ? binding
+          : {
+              ...binding,
+              procedure: {
+                ...binding.procedure,
+                groups: binding.procedure.groups.map((group) => ({
+                  ...group,
+                  invocations: group.invocations.map((candidate) =>
+                    candidate.dispatch.kind !== "executable"
+                      ? candidate
+                      : {
+                          ...candidate,
+                          dispatch: {
+                            ...candidate.dispatch,
+                            executions: candidate.dispatch.executions.map(
+                              (execution) => ({
+                                ...execution,
+                                spellRuleFacts: {
+                                  ...execution.spellRuleFacts,
+                                  components: {
+                                    ...execution.spellRuleFacts.components,
+                                    verbal:
+                                      !execution.spellRuleFacts.components
+                                        .verbal,
+                                  },
+                                },
+                              }),
+                            ),
+                          },
+                        },
+                  ),
+                })),
+              },
+            },
+      ),
+    });
+    expect(Result.isSuccess(changedMechanics)).toBe(true);
+    if (Result.isFailure(changedMechanics))
+      throw new Error("Expected structurally valid altered mechanics");
+    const changedRestore = restoreAuthoredStatBlockExecutionAdmission({
+      ...restoreInput,
+      snapshot: changedMechanics.success,
+    });
+    expect(Result.isFailure(changedRestore)).toBe(true);
+    if (Result.isFailure(changedRestore))
+      expect(changedRestore.failure).toMatchObject({
+        reason: "procedureBindingsMismatch",
+      });
+    const missingDefinitionEntry = syntheticSpellcastingProcedureEntry({
+      unrestrictedSpellId: "synthetic_missing_definition",
+      restrictedSpellId: "cure_wounds",
+    });
+    const missingDefinitionRecord = {
+      ...casterRecord(),
+      statBlock: {
+        ...casterRecord().statBlock,
+        actions: [missingDefinitionEntry],
+      },
+    };
+    expect(
+      Result.isFailure(
+        restoreAuthoredStatBlockExecutionAdmission({
+          ...restoreInput,
+          statBlock: missingDefinitionRecord,
+        }),
+      ),
+    ).toBe(true);
     expect(binding.procedure.groups[0].invocations[1]?.dispatch).toEqual({
       kind: "unsupported",
       reason: "unsupportedRestriction",

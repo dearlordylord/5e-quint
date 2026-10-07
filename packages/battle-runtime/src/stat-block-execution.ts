@@ -1,3 +1,10 @@
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { BattleState } from "./battle-state-execution.ts";
+import type { BattleStatBlockProjectionFailure } from "./stat-block-projection-failure.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { statBlockSpellInvocationAdmissionPlan } from "./stat-block-spell-invocation-admission-plan.ts";
+import { admitStatBlockSpellInvocations } from "./stat-block-spell-invocation-admission.ts";
 import { statBlockSpellDispatchBindingsAreValid } from "./stat-block-spell-invocation-selection.ts";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.spellcasting.procedure
@@ -933,6 +940,7 @@ function restoreStatBlockExecutionAdmissionAtIndex<
     BattleEffectExecutionRef,
     number
   >,
+  expectedSpellExecution?: StatBlockExecutionState,
 ): Result.Result<
   RestoredStatBlockExecutionAdmission<TStatBlock>,
   StatBlockExecutionRestoreIssue
@@ -984,7 +992,9 @@ function restoreStatBlockExecutionAdmissionAtIndex<
     }) ||
     !procedureBindingSnapshotsEqual(
       authoredBindings,
-      statBlockProcedureBindingSnapshots(expected.execution),
+      statBlockProcedureBindingSnapshots(
+        expectedSpellExecution ?? expected.execution,
+      ),
     ) ||
     !effectOccurrenceSourceBindingsAreCanonical(
       snapshot.scopeRef,
@@ -1065,6 +1075,57 @@ export function restoreStatBlockExecutionAdmission<
   return Result.succeed(restored.success[0]);
 }
 
+/** Re-admit catalog-backed spell facts before trusting a persisted execution. */
+export function restoreAuthoredStatBlockExecutionAdmission(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly statBlock: StatBlockRecord;
+  readonly unitCatalog: UnitCatalog;
+  readonly snapshot: StatBlockExecutionSnapshot;
+}): Result.Result<
+  RestoredStatBlockExecutionAdmission<BattleStatBlockExecutionSource>,
+  | StatBlockExecutionRestoreIssue
+  | BattleStatBlockProjectionFailure
+  | "missingStatBlockActor"
+  | "admissionPlanMismatch"
+> {
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor?.origin.kind !== "statBlock")
+    return Result.fail("missingStatBlockActor");
+  const projected = projectAuthoredStatBlock(input.statBlock);
+  if (Result.isFailure(projected)) return Result.fail(projected.failure);
+  const source = admitStatBlockResourceGraph(projected.success.runtime);
+  if (Result.isFailure(source))
+    return Result.fail(
+      statBlockExecutionRestoreIssue(
+        0,
+        input.snapshot.scopeRef,
+        "procedureBindingsMismatch",
+      ),
+    );
+  const admitted = admitStatBlock(source.success);
+  const allocated = allocateStatBlockExecution(
+    executionReferenceAllocator(input.snapshot.scopeRef),
+    admitted.occurrences,
+  );
+  const expected = admitStatBlockSpellInvocations(
+    { ...actor, origin: { ...actor.origin, execution: allocated.execution } },
+    input.state,
+    statBlockSpellInvocationAdmissionPlan(input.statBlock, input.unitCatalog),
+  );
+  if (Result.isFailure(expected)) return Result.fail(expected.failure);
+  const restoration = { statBlock: source.success, snapshot: input.snapshot };
+  return restoreStatBlockExecutionAdmissionAtIndex(
+    input.state.battleId,
+    input.actorId,
+    0,
+    restoration,
+    new Set(),
+    effectOccurrenceSourceRefCountsForRestorationCohort([restoration]),
+    expected.success.creature.origin.execution,
+  );
+}
+
 function resourcePoolStateIsOutOfBounds(
   pool: StatBlockResourcePoolState,
 ): boolean {
@@ -1098,27 +1159,9 @@ function procedureBindingSnapshotsEqual(
       ) {
         return false;
       }
-      return persistedValuesEqual(
-        statBlockProcedureWithoutSpellDispatch(binding.procedure),
-        statBlockProcedureWithoutSpellDispatch(expectedBinding.procedure),
-      );
+      return persistedValuesEqual(binding.procedure, expectedBinding.procedure);
     })
   );
-}
-
-function statBlockProcedureWithoutSpellDispatch(
-  procedure: import("./stat-block-execution-state.ts").StatBlockProcedure,
-) {
-  if (procedure.kind !== "spellcasting") return procedure;
-  return {
-    ...procedure,
-    groups: procedure.groups.map((group) => ({
-      ...group,
-      invocations: group.invocations.map(
-        ({ dispatch: _dispatch, ...candidate }) => candidate,
-      ),
-    })),
-  };
 }
 
 function authoredStatBlockProcedureBindingSnapshots(
