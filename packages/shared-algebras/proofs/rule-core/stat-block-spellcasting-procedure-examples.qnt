@@ -5,14 +5,6 @@
 module statBlockSpellcastingProcedureExamples {
   import statBlockSpellcastingProcedure.* from "./stat-block-spellcasting-procedure"
 
-  run test_stat_block_spell_level_uses_definition_unless_listed = all {
-    assert(statBlockSpellCastLevel(3, DefinitionSpellLevel) == EffectiveSpellLevel(3)),
-    assert(statBlockSpellCastLevel(3, ListedSpellLevel(5)) == EffectiveSpellLevel(5)),
-    assert(statBlockSpellCastLevel(3, ListedSpellLevel(2)) == InvalidSpellLevel),
-    assert(statBlockSpellCastLevel(0, DefinitionSpellLevel) == EffectiveSpellLevel(0)),
-    assert(statBlockSpellCastLevel(0, ListedSpellLevel(1)) == InvalidSpellLevel),
-  }
-
   run test_admits_action_spellcasting_and_preserves_child_outcomes = {
     val facts = {
       section: Actions,

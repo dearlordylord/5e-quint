@@ -1,5 +1,5 @@
 module statBlockSpellInvocationMbt {
-  import statBlockSpellcastingProcedure.* from "../shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure"
+  import statBlockSpellInvocation.* from "../shared-algebras/proofs/rule-core/stat-block-spell-invocation"
 
   var qResult: StatBlockSpellCastLevel
 

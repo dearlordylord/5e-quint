@@ -211,28 +211,4 @@ module statBlockSpellcastingProcedure {
   pure def statBlockSpellAttackBonus(
     facts: StatBlockSpellcastingAdmittedProcedureFacts
   ): StatBlockSpellcastingOptionalAttackBonus = facts.spellAttackBonus
-
-
-  type StatBlockSpellCastLevelOverride =
-    | DefinitionSpellLevel
-    | ListedSpellLevel(int)
-
-  type StatBlockSpellCastLevel =
-    | EffectiveSpellLevel(int)
-    | InvalidSpellLevel
-
-  // monsters.md: Spellcasting uses the lowest possible level unless listed
-  // otherwise. spells.md: Spell Level fixes cantrips at level zero.
-  pure def statBlockSpellCastLevel(
-    definitionLevel: int,
-    override: StatBlockSpellCastLevelOverride
-  ): StatBlockSpellCastLevel = {
-    val level = match override {
-      | DefinitionSpellLevel => definitionLevel
-      | ListedSpellLevel(value) => value
-    }
-    if (level < definitionLevel or (definitionLevel == 0 and level != 0))
-      InvalidSpellLevel
-    else EffectiveSpellLevel(level)
-  }
 }

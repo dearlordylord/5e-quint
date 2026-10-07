@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
 import { isDeepStrictEqual } from "node:util";
 import { Schema } from "effect";
 import { SpellLevelSchema } from "@dnd/surface/surface/schema";
