@@ -258,8 +258,13 @@ describe("ongoingSpellEnd static admission", () => {
     const invocation = invocations[0];
     if (invocation === undefined) throw new Error("Expected invocation.");
     expect(invocation.spell).not.toHaveProperty("mechanics");
+    const projected = spellProcedureExecution(invocation);
+    const actionCost = projected.actionCost;
+    if (actionCost !== "magicAction")
+      throw new Error("Expected Dispel Magic's native Magic action cost.");
     const execution = {
-      ...spellProcedureExecution(invocation),
+      ...projected,
+      actionCost,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-dispel-static",
       ),
