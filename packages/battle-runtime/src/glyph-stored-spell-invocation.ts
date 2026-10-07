@@ -1,5 +1,4 @@
 import type {
-  LeveledSpellInvocationResource,
   LeveledSpellAccess,
   ReadiedSpellInvocation,
   SpellSlotInvocationResource,
@@ -51,15 +50,13 @@ type GlyphStoredNonConcentrationSpellExecutionSource =
     };
   };
 
-type GlyphStoredPreparedSlotInvocation<Invocation> = Invocation extends {
-  readonly access: LeveledSpellAccess;
-  readonly resource: LeveledSpellInvocationResource;
-}
-  ? Omit<Invocation, "access" | "resource"> & {
-      readonly access: LeveledSpellAccess;
-      readonly resource: SpellSlotInvocationResource;
-    }
-  : never;
+type GlyphStoredPreparedSlotInvocation<Invocation> = Extract<
+  Invocation,
+  {
+    readonly access: Extract<LeveledSpellAccess, { readonly tag: "prepared" }>;
+    readonly resource: SpellSlotInvocationResource;
+  }
+>;
 
 type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
   GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,

@@ -1493,7 +1493,7 @@ describe("battle boundary admission owners", () => {
     expect(
       opportunityAttackExecutionCandidates(state, fighterId, fighterId),
     ).toEqual([]);
-    const blindedState = {
+    const blindedState: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(
         goblinId,
@@ -1502,18 +1502,18 @@ describe("battle boundary admission owners", () => {
           applyCondition(goblinCombatant.conditions, "blinded"),
         ),
       ),
-    } as BattleState;
+    };
     expect(combatantCanSee(blindedState, goblinId, fighterId)).toBe(false);
     expect(
       opportunityAttackExecutionCandidates(blindedState, goblinId, fighterId),
     ).toEqual([]);
-    const reactionSpentState = {
+    const reactionSpentState: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(goblinId, {
         ...goblinCombatant,
         reactionAvailable: false,
       }),
-    } as BattleState;
+    };
     expect(
       opportunityAttackExecutionCandidates(
         reactionSpentState,

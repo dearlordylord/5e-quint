@@ -1,5 +1,4 @@
 import { admittedSpellInvocationCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
-import { type AuthoredSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
@@ -5089,10 +5088,7 @@ function storedSpellInvocation(
   slotLevel: TestSpellSlotLevel,
   expectedProcedure?: GlyphStoredSpellInvocationCandidate["procedure"],
   caster: StoredSpellInvocationCaster = {},
-): GlyphStoredSpellInvocationCandidate &
-  AuthoredSpellInvocationCastingFacts<
-    GlyphStoredSpellInvocationCandidate["spell"]
-  > {
+): GlyphStoredSpellInvocationCandidate {
   const session = spellBattle({
     ...caster,
     preparedSpells: [spellRecord(storedSpellId)],
@@ -5105,16 +5101,13 @@ function storedSpellInvocation(
       (
         candidate,
       ): candidate is AuthoredSelectedSpellInvocation &
-        GlyphStoredSpellInvocationCandidate &
-        AuthoredSpellInvocationCastingFacts<
-          GlyphStoredSpellInvocationCandidate["spell"]
-        > =>
-        admittedSpellInvocationCastingFacts(candidate) &&
+        GlyphStoredSpellInvocationCandidate =>
         candidate.spell.id === storedSpellId &&
         "access" in candidate &&
         candidate.access.tag === "prepared" &&
         "resource" in candidate &&
         candidate.resource.tag === "spellSlot" &&
+        admittedSpellInvocationCastingFacts(candidate) &&
         Number(candidate.resource.slotLevel) === slotLevel &&
         ("targeting" in candidate ||
           candidate.procedure === "selfTransformationMode") &&
@@ -5133,10 +5126,7 @@ function storedSpellInvocation(
 
 function storedSpellProcedureRefInState(
   state: BattleState,
-  invocation: GlyphStoredSpellInvocationCandidate &
-    AuthoredSpellInvocationCastingFacts<
-      GlyphStoredSpellInvocationCandidate["spell"]
-    >,
+  invocation: GlyphStoredSpellInvocationCandidate,
 ): BattleProcedureExecutionRef {
   const caster = requireCombatant(state, spellCasterId);
   if (caster.origin.kind !== "character") {
