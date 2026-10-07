@@ -141,6 +141,7 @@ describe("battle spell static mechanics admission", () => {
   test("does not make an unowned root a capability prerequisite", () => {
     expect(admitBattleSpellMechanicsFrom(mechanicsSource, [])).toEqual({
       tag: "notBattleOwned",
+      reason: { kind: "noMatchingBattleProcedure" },
     });
   });
 

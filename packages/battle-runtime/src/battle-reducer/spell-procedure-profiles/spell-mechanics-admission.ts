@@ -1192,7 +1192,15 @@ export type BattleSpellMechanicsAdmission<
   Admitted extends AdmittedSpellMechanicsView = AdmittedSpellMechanicsView,
   Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
 > =
-  | { readonly tag: "notBattleOwned" }
+  | {
+      readonly tag: "notBattleOwned";
+      readonly reason:
+        | { readonly kind: "noMatchingBattleProcedure" }
+        | {
+            readonly kind: "unownedMechanicsFacet";
+            readonly facet: "deathAftermath";
+          };
+    }
   | {
       readonly tag: "admitted";
       readonly procedures: ReadonlyNonEmptyArray<Admitted>;
@@ -1365,6 +1373,14 @@ export function admitBattleSpellMechanicsFrom(
   source: SpellMechanicsAdmissionSource,
   admissions: readonly AnySpellProcedureMechanicsAdmission[],
 ): BattleSpellMechanicsAdmission {
+  if (
+    "deathAftermath" in source.mechanics &&
+    source.mechanics.deathAftermath !== undefined
+  )
+    return {
+      tag: "notBattleOwned",
+      reason: { kind: "unownedMechanicsFacet", facet: "deathAftermath" },
+    };
   const inspections = admissions.map(({ admitMechanics }) =>
     admitMechanics(source),
   );
@@ -1382,6 +1398,6 @@ export function admitBattleSpellMechanicsFrom(
 
   const admittedProcedures = spellProcedureNonEmpty(supported);
   return admittedProcedures === undefined
-    ? { tag: "notBattleOwned" }
+    ? { tag: "notBattleOwned", reason: { kind: "noMatchingBattleProcedure" } }
     : { tag: "admitted", procedures: admittedProcedures };
 }

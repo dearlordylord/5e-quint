@@ -166,8 +166,12 @@ export function admitSelectedStatBlockSpellInvocation(input: {
   });
   return Match.value(staticAdmission).pipe(
     Match.discriminatorsExhaustive("tag")({
-      notBattleOwned: () =>
-        unsupportedSpellInvocationAdmission("unsupportedProfile"),
+      notBattleOwned: (admission) =>
+        unsupportedSpellInvocationAdmission(
+          admission.reason.kind === "unownedMechanicsFacet"
+            ? "unsupportedDeathAftermath"
+            : "unsupportedProfile",
+        ),
       rejected: () => unsupportedSpellInvocationAdmission("unsupportedProfile"),
       admitted: ({ procedures }): StatBlockSpellInvocationAdmission => {
         const casterRequirements = procedures.flatMap((procedure) =>

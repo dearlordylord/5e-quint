@@ -72,6 +72,7 @@ export const STAT_BLOCK_SPELL_INVOCATION_UNSUPPORTED_REASONS = [
   "missingCastingTimeOwner",
   "invalidCastLevel",
   "unsupportedProfile",
+  "unsupportedDeathAftermath",
   "missingChildProcedureOwner",
   "unsupportedRestriction",
   "missingCasterAttackBonus",
