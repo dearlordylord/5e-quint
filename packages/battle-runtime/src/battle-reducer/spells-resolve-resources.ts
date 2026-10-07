@@ -7,10 +7,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 
-import {
-  spendAction,
-  spendActivationResource,
-} from "@dnd/shared-algebras/action-economy-algebra";
+import { spendSpellCastAction } from "./spellcasting-action-cost.ts";
 import { Result } from "effect";
 import type {
   BattleResolutionResult,
@@ -214,23 +211,6 @@ export function spendSpellCastResources(input: {
     applications: metamagicApplications,
     shouldStartConcentration,
   });
-}
-
-function spendSpellCastAction(
-  resources: BattleTurnResources,
-  actionCost: "magicAction" | "bonusAction",
-): Result.Result<BattleTurnResources, string> {
-  const spent =
-    actionCost === "bonusAction"
-      ? spendActivationResource(resources, { kind: "bonusAction" })
-      : spendAction(resources, "magic");
-  return Result.isFailure(spent)
-    ? Result.fail(
-        actionCost === "bonusAction"
-          ? "Bonus Action spell is no longer available for the current actor."
-          : "Magic action is no longer available for the current actor.",
-      )
-    : Result.succeed(spent.success);
 }
 
 function finishSpellCastResourceSpend(input: {
