@@ -614,7 +614,7 @@ export function spellTargetAllocationHole(
 }
 
 export function spellTargetListHoleId(
-  invocation: RuntimeSpellProcedure,
+  invocation: Pick<RuntimeSpellProcedure, "procedure">,
 ): BattleHoleId {
   return holeId(`battle:spell:target-list:${invocation.procedure}`);
 }

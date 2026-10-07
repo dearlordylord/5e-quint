@@ -977,7 +977,7 @@ export type BattleAttackHostSubject =
       }
     >
   | MonkFocusFlurryOfBlowsStrikeSubject
-  | Extract<BattleSubject, { readonly tag: "actionSpell" }>
+  | Extract<BattleSubject, { readonly tag: "actionSpell" | "bonusActionSpell" }>
   | Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
