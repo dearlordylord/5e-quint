@@ -20,8 +20,7 @@ import {
 } from "../identity.ts";
 
 /** The dynamic caster/access fact joined to a static Spell Definition. */
-export type SpellCastingSource =
-  | StatBlockSpellCastingSource
+export type CharacterSpellCastingSource =
   | {
       readonly tag: "classSpellcasting";
       readonly className: ClassName;
@@ -36,6 +35,7 @@ export type SpellCastingSource =
 export type StatBlockSpellCastingSource = {
   readonly tag: "statBlock";
   readonly castingTime: import("@dnd/surface/surface/types").CastingTime;
+  readonly actionCost: import("../stat-block-execution-state.ts").StatBlockSpellcastingActionCost;
   readonly invocationRef: StatBlockSpellInvocationRef;
   readonly abilityModifier: AbilityModifier;
   readonly spellSaveDc: import("effect").Option.Option<
@@ -45,6 +45,10 @@ export type StatBlockSpellCastingSource = {
     import("@dnd/shared/types").AttackBonus
   >;
 };
+
+export type SpellCastingSource =
+  | CharacterSpellCastingSource
+  | StatBlockSpellCastingSource;
 
 /** Spell Definition facts carried across the admission/execution boundary. */
 export type SpellDefinitionRuleFacts = {
@@ -80,6 +84,10 @@ export const SpellCastingSourceSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("statBlock"),
     castingTime: CastingTimeSchema,
+    actionCost: Schema.Union([
+      Schema.Literal("magicAction"),
+      Schema.Literal("bonusAction"),
+    ]),
     invocationRef: StatBlockSpellInvocationRefSchema,
     abilityModifier: AbilityModifier,
     spellSaveDc: Schema.Option(DifficultyClass),
