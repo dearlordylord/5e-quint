@@ -1,11 +1,20 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, onTestFailed, test } from "vitest";
 
 import { repoRoot } from "./transcript.ts";
 
 const BATTLE_SLICE_SERVER = "scripts/raw-swarm/battle-slice-server.ts" as const;
-const LIFECYCLE_TIMEOUT_MS = 30_000;
+const LIFECYCLE_PHASE_TIMEOUT_MS = 30_000;
+const LIFECYCLE_PHASES = [
+  "initialization",
+  "starting-tool-response",
+  "draining-interrupted-response",
+  "settling-interrupted-process",
+] as const;
+type LifecyclePhase = (typeof LIFECYCLE_PHASES)[number];
+const LIFECYCLE_TIMEOUT_MS =
+  LIFECYCLE_PHASE_TIMEOUT_MS * LIFECYCLE_PHASES.length;
 
 type ProcessExit = Readonly<{
   code: number | null;
@@ -19,7 +28,29 @@ function waitForExit(
 ): Promise<ProcessExit> {
   return new Promise((resolve, reject) => {
     child.once("error", reject);
-    child.once("exit", (code, signal) => resolve({ code, signal }));
+    child.once("close", (code, signal) => resolve({ code, signal }));
+  });
+}
+
+function waitForSettledExit(
+  exited: Promise<ProcessExit>,
+): Promise<ProcessExit> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(
+        new Error("Battle-slice server did not settle after interruption."),
+      );
+    }, LIFECYCLE_PHASE_TIMEOUT_MS);
+    void exited.then(
+      (exit) => {
+        clearTimeout(timeout);
+        resolve(exit);
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      },
+    );
   });
 }
 
@@ -52,7 +83,7 @@ function waitForLineAfter(
     const timeout = setTimeout(() => {
       cleanup();
       reject(new Error("Battle-slice server did not emit a response."));
-    }, LIFECYCLE_TIMEOUT_MS);
+    }, LIFECYCLE_PHASE_TIMEOUT_MS);
     child.stdout.on("data", onData);
     child.once("exit", onExit);
     resolveIfComplete();
@@ -87,7 +118,7 @@ function waitForOutputAfter(
     const timeout = setTimeout(() => {
       cleanup();
       reject(new Error("Battle-slice server did not start its response."));
-    }, LIFECYCLE_TIMEOUT_MS);
+    }, LIFECYCLE_PHASE_TIMEOUT_MS);
     child.stdout.on("data", onData);
     child.once("exit", onExit);
     resolveIfStarted();
@@ -107,6 +138,13 @@ async function verifySignalLifecycle(signal: "SIGINT" | "SIGTERM") {
   });
   child.stderr.on("data", (chunk: Buffer) => {
     stderr += chunk.toString("utf8");
+  });
+  const phase: { value: LifecyclePhase } = { value: "initialization" };
+  const startedAt = Date.now();
+  onTestFailed(() => {
+    console.error(
+      `Battle-slice lifecycle phase=${phase.value} elapsed=${Date.now() - startedAt}ms child=${child.pid} status=${child.exitCode}/${child.signalCode} stdoutBytes=${stdout.value.byteLength} stderr=${stderr}`,
+    );
   });
   const exited = waitForExit(child);
   try {
@@ -134,6 +172,7 @@ async function verifySignalLifecycle(signal: "SIGINT" | "SIGTERM") {
       result: { serverInfo: { name: "dnd-surface-runtime" } },
     });
 
+    phase.value = "starting-tool-response";
     const toolResponseOffset = stdout.value.byteLength;
     const toolResponseStarted = waitForOutputAfter(
       child,
@@ -154,6 +193,7 @@ async function verifySignalLifecycle(signal: "SIGINT" | "SIGTERM") {
     await toolResponseStarted;
     expect(stdout.value.indexOf(0x0a, toolResponseOffset)).toBe(-1);
 
+    phase.value = "draining-interrupted-response";
     const toolResponseLine = waitForLineAfter(
       child,
       stdout,
@@ -171,7 +211,8 @@ async function verifySignalLifecycle(signal: "SIGINT" | "SIGTERM") {
       result: { tools: expect.any(Array) },
     });
     expect(toolResponse.result?.tools?.length).toBeGreaterThan(0);
-    const exit = await exited;
+    phase.value = "settling-interrupted-process";
+    const exit = await waitForSettledExit(exited);
     expect(exit).toEqual({ code: 130, signal: null });
     expect(stdout.value).toEqual(
       Buffer.from(`${initializeResponseText}\n${toolResponseText}\n`),
