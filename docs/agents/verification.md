@@ -29,6 +29,52 @@ package scope, elapsed time, and result. A passing result requires unchanged
 inputs during execution. Changed inputs invalidate that evidence; rerun before
 handoff. This scoped check does not replace the final integrated milestone.
 
+## Local Repair And Integration Reruns
+
+Use character-to-SDK handoff and battle-command tests to qualify behavior across
+layers. When one fails, preserve its inputs, seed, fills, and continuation state;
+reproduce the failure at the narrowest owning boundary. Fix and retest that local
+case until it passes, then recheck the affected invariant and consumers. Existing
+fixtures and deterministic trace replays should let the repair loop start after
+character creation or battle setup when those earlier steps are unaffected.
+
+Run the broader handoff again only when local evidence cannot establish the
+result, the fix changes a crossed boundary, or a required acceptance gate calls
+for it. Record that reason with the result. Keep broad reruns sparse; local
+repair can require none before the final required integration run. Preserve all
+existing acceptance obligations, including the stable-candidate milestone and
+its coverage repair protocol.
+
+## MCP And Browser Qualification
+
+Use MCP/browser end-to-end qualification exceptionally: normally at most once
+per calendar day per workstream. Gather local evidence and reviewer convergence
+first so that one run qualifies the combined candidate. An explicit user request,
+a mandatory acceptance gate, or a changed boundary whose correctness requires
+end-to-end evidence can justify another run; record the reason. Package-local
+MCP handler tests and protocol fixtures remain part of the local repair loop.
+
+After an end-to-end failure, preserve the tool request/response or browser state
+and reproduce it through the owning local handler, SDK command, or component.
+Fix and retest there before considering another end-to-end run. Reuse the
+captured session or fixture to enter after successful setup when its inputs and
+preconditions remain valid.
+
+## Reuse Past A Successful Stage
+
+Prefer the owner's supported stage selector, package diagnostic, deterministic
+replay, or saved-session entry point to repeating successful setup. Record the
+entry point, checked revision, input fingerprint, prerequisite evidence, and
+remaining stages. Reuse a prerequisite only when its relevant source, generated
+artifacts, configuration, and session preconditions are unchanged. Invalidate
+it when those inputs change.
+
+A focused rerun supplies evidence for its own scope. If the owner has no supported
+resume point, use a local reproduction rather than bypassing its acceptance
+stages. The milestone and production coverage have no resumable acceptance
+checkpoint: after coverage repair, a changed candidate still requires a fresh
+full milestone. Build/test caches may reuse artifacts within that run.
+
 ## Milestone Failure Policy
 
 `pnpm quality:milestone` collects prerequisite failures and blocks production
