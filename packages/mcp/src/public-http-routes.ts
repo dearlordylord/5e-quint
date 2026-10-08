@@ -119,7 +119,25 @@ const FIXED_PUBLIC_ROUTE_HANDLERS: readonly FixedPublicRouteHandler[] = [
   handleAppsChallengeRoute,
   handleMetricsRoute,
   handleProtectedResourceRoute,
+  handleMcpGetRoute,
 ] as const;
+
+async function handleMcpGetRoute(
+  input: PublicHttpRequestInput,
+  pathname: string,
+): Promise<PublicHttpRequestObservation | undefined> {
+  if (pathname !== "/mcp" || input.incoming.method !== "GET") return undefined;
+  // This request-owned transport buffers complete JSON responses. The optional
+  // server stream must be declined before allocating a transport keepalive.
+  await writePublicHttpResponse(
+    input.outgoing,
+    new Response("Method not allowed", {
+      status: 405,
+      headers: { Allow: "POST" },
+    }),
+  );
+  return { status: 405, outcome: "rejected" };
+}
 
 async function handlePluginDemoRoute(
   input: PublicHttpRequestInput,

@@ -19,6 +19,29 @@ import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import type { SavedSessionAuthorizationService } from "./saved-session-authorization/service.ts";
 
 describe("public HTTP boundary", () => {
+  test.each(["application/json", "text/event-stream"])(
+    "rejects MCP GET with %s before opening a server stream",
+    async (accept) => {
+      const repository = openRepository();
+      const server = createDndMcpHttpServer({
+        playSessionRepository: repository,
+      });
+      const endpoint = await listen(server);
+      try {
+        const response = await fetch(endpoint, {
+          headers: { accept, connection: "close" },
+          signal: AbortSignal.timeout(30_000),
+        });
+        expect(response.status).toBe(405);
+        expect(response.headers.get("allow")).toBe("POST");
+        await response.body?.cancel();
+      } finally {
+        await close(server);
+        repository.close();
+      }
+    },
+  );
+
   test("serves the silent plugin demonstration as a stable MP4", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({

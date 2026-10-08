@@ -115,6 +115,11 @@ restart and concurrent-operation behavior;
 
 ## Run the server
 
+The public `/mcp` endpoint executes requests through a request-owned transport
+with complete JSON responses over POST. Optional server-to-client SSE GET
+requests return `405` with `Allow: POST` before allocating a transport. This
+keeps unsupported open streams from retaining keepalive timers during shutdown.
+
 Run the provider-neutral Node HTTP entrypoint with explicit application and
 authorization state paths:
 
