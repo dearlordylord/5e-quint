@@ -1,7 +1,6 @@
 export * from "./consumer-protocol.ts";
 
 export {
-  classSpellcastingCreationAtLevel,
   isListPreparedSpellcastingCreation,
   isPactMagicSpellcastingCreation,
   isWizardSpellcastingCreation,
