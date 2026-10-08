@@ -2001,10 +2001,10 @@ describe("Opaque Oracle source-free distribution", () => {
         'const { spawn } = require("node:child_process");',
         'process.stdin.once("data", () => {',
         `  const grandchildScript = ${JSON.stringify(
-          `setTimeout(() => process.stdout.write(${JSON.stringify(trailingLine)}), 50);`,
+          `process.once("disconnect", () => process.stdout.write(${JSON.stringify(trailingLine)})); process.send("ready");`,
         )};`,
-        '  spawn(process.execPath, ["-e", grandchildScript], { stdio: ["ignore", "inherit", "inherit"] });',
-        "  setTimeout(() => process.exit(0), 10);",
+        '  const grandchild = spawn(process.execPath, ["-e", grandchildScript], { stdio: ["ignore", "inherit", "inherit", "ipc"] });',
+        '  grandchild.once("message", () => process.exit(0));',
         "});",
       ].join("\n");
       const trailingLineProcess = launchOracleStream(
@@ -2020,11 +2020,11 @@ describe("Opaque Oracle source-free distribution", () => {
           { scenario: "inherited trailing response line", timeoutMs: 1_000 },
         );
         expect(observation.rawLine).toBe(response);
-        // The inherited line is delivered after the parent process exits. The
-        // child exit event can be dispatched after that stdout callback, so
-        // inspect the settled process status rather than callback ordering.
-        expect(trailingLineProcess.child.exitCode).toBe(0);
+        // IPC disconnect releases the inherited line after the parent exits.
+        // Await close before inspecting status: stdout and exit callbacks can
+        // reach the test in either order.
         await waitForOracleStreamClose(trailingLineProcess);
+        expect(trailingLineProcess.child.exitCode).toBe(0);
         expect(trailingLineProcess.closed).toBe(true);
         expect(trailingLineProcess.rawLines).toEqual([response]);
       } finally {
