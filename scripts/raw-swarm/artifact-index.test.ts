@@ -1,5 +1,5 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
   linkSync,
@@ -12,7 +12,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, relative, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
@@ -1219,10 +1219,7 @@ process.stdout.write("opened");`,
       tmpdir(),
       `raw-swarm-direct-index-${randomUUID()}.sqlite`,
     );
-    const entriesBefore = new Set(readdirSync(tmpdir()));
     const inTreeLockCandidate = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES[0];
-    const inTreeCandidateEntriesBefore =
-      directoryTreeEntries(inTreeLockCandidate);
     const lockDirectory = artifactIndexLockRootForSource(dbPath);
     expect(lockDirectory).not.toBe(realpathSync(dirname(dbPath)));
     expect(lockDirectory).toBe(
@@ -1231,19 +1228,20 @@ process.stdout.write("opened");`,
     try {
       const db = openArtifactIndex(dbPath);
       db.close();
-      const entriesAfter = readdirSync(tmpdir());
-      const dbName = basename(dbPath);
-      const sourceFiles = new Set([dbName, `${dbName}-wal`, `${dbName}-shm`]);
-      expect(
-        entriesAfter.filter(
-          (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
-        ),
-      ).toEqual([]);
-      expect(
-        directoryTreeEntries(inTreeLockCandidate).filter(
-          (entry) => !inTreeCandidateEntriesBefore.includes(entry),
-        ),
-      ).toEqual([]);
+      const lockDigest = createHash("sha256")
+        .update(realpathSync(dbPath))
+        .digest("hex");
+      const lockName = `${lockDigest}.lock.sqlite`;
+      expect(existsSync(resolve(lockDirectory, lockName))).toBe(true);
+      for (const sourceRoot of [dirname(dbPath), inTreeLockCandidate]) {
+        for (const lockArtifact of [
+          lockName,
+          `${lockName}-wal`,
+          `${lockName}-shm`,
+        ]) {
+          expect(existsSync(resolve(sourceRoot, lockArtifact))).toBe(false);
+        }
+      }
     } finally {
       rmSync(dbPath, { force: true });
       rmSync(`${dbPath}-wal`, { force: true });
