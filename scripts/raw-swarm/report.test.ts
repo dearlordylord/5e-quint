@@ -118,8 +118,8 @@ function report(
   env?: Readonly<Record<string, string>>,
 ): string {
   return execFileSync(
-    "mise",
-    ["exec", "--", "pnpm", "exec", "tsx", reportScript, ...args],
+    process.execPath,
+    ["--experimental-transform-types", reportScript, ...args],
     {
       cwd: repoRoot,
       encoding: "utf8",
@@ -227,14 +227,24 @@ describe("RAW swarm artifact report index", () => {
 
   test("rejects the unnamed review-replay flag with a value", () => {
     expect(() =>
-      report([
-        "findings",
-        "transcript.jsonl",
-        "--db",
-        "report.sqlite",
-        "--review-replay",
-        "final.json",
-      ]),
+      execFileSync(
+        "mise",
+        [
+          "exec",
+          "--",
+          "pnpm",
+          "exec",
+          "tsx",
+          reportScript,
+          "findings",
+          "transcript.jsonl",
+          "--db",
+          "report.sqlite",
+          "--review-replay",
+          "final.json",
+        ],
+        { cwd: repoRoot, encoding: "utf8", env: process.env },
+      ),
     ).toThrow(/review replay uses the named/);
   }, 15_000);
 
