@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 541,
-      "numerator": 396,
-      "percent": "73.2%"
+      "denominator": 543,
+      "numerator": 398,
+      "percent": "73.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 629,
-      "numerator": 446,
-      "percent": "70.9%"
+      "denominator": 631,
+      "numerator": 448,
+      "percent": "71%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 447
+      "value": 449
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 240,
-      "numerator": 232,
+      "denominator": 242,
+      "numerator": 234,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 447,
-      "numerator": 447,
+      "denominator": 449,
+      "numerator": 449,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 168,
-      "numerator": 163,
-      "percent": "97%"
+      "denominator": 170,
+      "numerator": 165,
+      "percent": "97.1%"
     },
     "qntProofCoverage": {
-      "denominator": 168,
-      "numerator": 160,
-      "percent": "95.2%"
+      "denominator": 170,
+      "numerator": 162,
+      "percent": "95.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 213,
-      "numerator": 188,
-      "percent": "88.3%"
+      "denominator": 215,
+      "numerator": 190,
+      "percent": "88.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 213,
-      "numerator": 211,
+      "denominator": 215,
+      "numerator": 213,
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 226,
-      "numerator": 184,
-      "percent": "81.4%"
+      "denominator": 228,
+      "numerator": 186,
+      "percent": "81.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 168,
-      "numerator": 163,
-      "percent": "97%"
+      "denominator": 170,
+      "numerator": 165,
+      "percent": "97.1%"
     },
     "runtimeParityCoverage": {
-      "denominator": 168,
-      "numerator": 163,
-      "percent": "97%"
+      "denominator": 170,
+      "numerator": 165,
+      "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 203,
-      "numerator": 199,
+      "denominator": 205,
+      "numerator": 201,
       "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 397,
-      "numerator": 240,
-      "percent": "60.5%"
+      "denominator": 399,
+      "numerator": 242,
+      "percent": "60.7%"
     }
   },
   "metricSemantics": [
@@ -8245,19 +8245,75 @@
           "ownerPath": "packages/character-creation-runtime/src/wizard-spellcasting-gains.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.passive-initiative-roll-mode",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/character-execution-admission.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts"
+      ],
+      "sourceBoundary": "Selected class-feature admission consumes parsed Surface facts. Execution uses generic passive Initiative or ongoing-feature activation movement facts and existing movement validation without authored identity dispatch.",
+      "taskRefs": [
+        "FACTORY-578"
+      ],
+      "title": "Selected passive Initiative Advantage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.ongoing-feature-activation-movement-rider",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/character-execution-admission.ts",
+        "packages/battle-runtime/src/battle-reducer/ongoing-feature-activation-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "Selected class-feature admission consumes parsed Surface facts. Execution uses generic passive Initiative or ongoing-feature activation movement facts and existing movement validation without authored identity dispatch.",
+      "taskRefs": [
+        "FACTORY-579"
+      ],
+      "title": "Optional movement when entering an ongoing feature with a Bonus Action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 213,
-        "numerator": 188,
-        "percent": "88.3%"
+        "denominator": 215,
+        "numerator": 190,
+        "percent": "88.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 213,
-        "numerator": 211,
+        "denominator": 215,
+        "numerator": 213,
         "percent": "99.1%"
       }
     },
@@ -11930,6 +11986,38 @@
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/wizard-spellcasting-gains.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.passive-initiative-roll-mode",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.ongoing-feature-activation-movement-rider",
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -11940,9 +12028,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 226,
-          "numerator": 184,
-          "percent": "81.4%"
+          "denominator": 228,
+          "numerator": 186,
+          "percent": "81.6%"
         }
       },
       "units": [
@@ -12282,6 +12370,28 @@
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 }
               ],
+              "profileId": "unit-feature.passive-initiative-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "barbarian_feral_instinct"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.attack-damage-rider",
               "profileKind": "persistent-effect",
               "qntOwners": [
@@ -12291,6 +12401,28 @@
             }
           ],
           "unitId": "barbarian_frenzy"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.ongoing-feature-activation-movement-rider",
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "barbarian_instinctive_pounce"
         },
         {
           "joinStatus": "mapped-open",
@@ -23180,6 +23312,38 @@
         "stat-block.spell-invocation.unrestricted"
       ],
       "taskId": "SB-SPELLCASTING-LONG-CASTING-TIME-4"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused generic passive Initiative and ongoing-feature entry half-Speed movement witnesses.",
+      "profileIds": [
+        "unit-feature.passive-initiative-roll-mode"
+      ],
+      "taskId": "FACTORY-578"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Real SRD catalog character creation, sheet handoff, Initiative query, optional Rage entry movement, rejection, and Opportunity Attack resume witnesses.",
+      "profileIds": [
+        "unit-feature.passive-initiative-roll-mode"
+      ],
+      "taskId": "FACTORY-578"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused generic passive Initiative and ongoing-feature entry half-Speed movement witnesses.",
+      "profileIds": [
+        "unit-feature.ongoing-feature-activation-movement-rider"
+      ],
+      "taskId": "FACTORY-579"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Real SRD catalog character creation, sheet handoff, Initiative query, optional Rage entry movement, rejection, and Opportunity Attack resume witnesses.",
+      "profileIds": [
+        "unit-feature.ongoing-feature-activation-movement-rider"
+      ],
+      "taskId": "FACTORY-579"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -23248,17 +23412,17 @@
         "unsupportedOrOtherUnits": 75
       },
       {
-        "executableUnitDenominator": 126,
-        "installedUnitDenominator": 126,
+        "executableUnitDenominator": 128,
+        "installedUnitDenominator": 128,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 178,
+        "profileFactDenominator": 180,
         "profileSubsetSupportedUnits": 10,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 89,
+        "selectedIdentityReplayDenominator": 91,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 89,
-        "supportedProfileUnits": 114,
+        "selectedIdentityReplayWitnessUnits": 91,
+        "supportedProfileUnits": 116,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -53353,6 +53517,132 @@
       ],
       "sourceRecordPath": "packages/surface/content/wizard_memorize_spell.json",
       "unitId": "wizard_memorize_spell"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.passive-initiative-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FACTORY-578"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "FACTORY-578"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-initiative-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/character-execution-admission.ts",
+            "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts"
+          ],
+          "sourceBoundary": "Selected class-feature admission consumes parsed Surface facts. Execution uses generic passive Initiative or ongoing-feature activation movement facts and existing movement validation without authored identity dispatch.",
+          "taskRefs": [
+            "FACTORY-578"
+          ],
+          "title": "Selected passive Initiative Advantage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_feral_instinct.json",
+      "unitId": "barbarian_feral_instinct"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.ongoing-feature-activation-movement-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FACTORY-579"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "FACTORY-579"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.ongoing-feature-activation-movement-rider",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/character-execution-admission.ts",
+            "packages/battle-runtime/src/battle-reducer/ongoing-feature-activation-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "Selected class-feature admission consumes parsed Surface facts. Execution uses generic passive Initiative or ongoing-feature activation movement facts and existing movement validation without authored identity dispatch.",
+          "taskRefs": [
+            "FACTORY-579"
+          ],
+          "title": "Optional movement when entering an ongoing feature with a Bonus Action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_instinctive_pounce.json",
+      "unitId": "barbarian_instinctive_pounce"
     },
     {
       "catalogAdmission": {

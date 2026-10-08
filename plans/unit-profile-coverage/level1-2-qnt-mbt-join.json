@@ -505,6 +505,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -598,6 +602,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -691,6 +699,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -897,6 +909,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -990,6 +1006,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3388,6 +3408,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3535,6 +3559,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3628,6 +3656,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -6247,6 +6279,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -6372,6 +6408,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -8155,6 +8195,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -8275,6 +8319,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -9452,6 +9500,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",

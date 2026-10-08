@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-initiative-roll-mode unit-feature.ongoing-feature-activation-movement-rider
 import type { AttackRollDefenseSelection as SharedAttackRollDefenseSelection } from "@dnd/shared/game-facts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
@@ -466,6 +467,24 @@ export type BattleFailedAbilityCheckResourceBoostSupportProfile = {
   readonly kind: typeof FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE;
   readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
 };
+export type BattleOngoingFeatureActivationMovementRiderSupportProfile = {
+  readonly kind: "ongoingFeatureActivationMovementRider";
+  readonly activatesWith: { readonly resourceUnitId: AuthoredUnitSource["id"] };
+  readonly movement: {
+    readonly optional: true;
+    readonly maximum: "halfCurrentSpeed";
+    readonly opportunityAttacks: "ordinary";
+  };
+};
+
+export type BattlePassiveInitiativeRollModeSupportProfile = {
+  readonly kind: "passiveInitiativeRollMode";
+  readonly initiative: {
+    readonly kind: "rollAdvantage";
+    readonly roll: "initiative";
+  };
+};
+
 export type BattleBonusActionHealingMovementRiderSupportProfile = {
   readonly kind: "bonusActionHealingMovementRider";
   readonly activatesWith: { readonly resourceUnitId: AuthoredUnitSource["id"] };
@@ -686,10 +705,6 @@ export type BattleBonusActionDelegatedStandardActionsSupportProfile = {
   };
 };
 export type RemarkableAthleteProfile = {
-  readonly initiative: {
-    readonly kind: "rollAdvantage";
-    readonly roll: "initiative";
-  };
   readonly abilityCheck: {
     readonly kind: "rollAdvantage";
     readonly ability: "str";
@@ -1078,6 +1093,8 @@ export type BattleUnitSupportProfile =
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | BattleOngoingFeatureActivationMovementRiderSupportProfile
+  | BattlePassiveInitiativeRollModeSupportProfile
   | BattleBonusActionHealingMovementRiderSupportProfile
   | BattleFailedSavingThrowRerollSupportProfile
   | BattleSpellSlotHealingModifierSupportProfile
@@ -1241,6 +1258,76 @@ function markedCreatureDisclosureSupportProfiles(
     unit.mechanics.family === "marked_creature_defenses_disclosure"
     ? ["markedCreatureDefensesDisclosure"]
     : [];
+}
+
+function presentSupportProfiles(
+  profile: BattleUnitSupportProfile | null,
+): readonly BattleUnitSupportProfile[] {
+  return profile === null ? [] : [profile];
+}
+const PASSIVE_INITIATIVE_PROFILE: BattlePassiveInitiativeRollModeSupportProfile =
+  {
+    kind: "passiveInitiativeRollMode",
+    initiative: { kind: "rollAdvantage", roll: "initiative" },
+  };
+type PassiveClassFeatureMechanics = Extract<
+  Extract<
+    BattleUnitSupportProfilesInput["unit"],
+    { readonly kind: "class_feature" }
+  >["mechanics"],
+  { readonly family: "passive" }
+>;
+function isSingleInitiativeAdvantageGrant(
+  mechanics: PassiveClassFeatureMechanics,
+): boolean {
+  const [effect] = mechanics.grants;
+  return (
+    mechanics.condition === undefined &&
+    mechanics.grants.length === 1 &&
+    effect?.kind === "modify_roll_advantage" &&
+    effect.mode === "advantage" &&
+    Object.keys(effect).every((key) => ["kind", "mode", "on"].includes(key))
+  );
+}
+function initiativeAndActivationProfilesForUnit(
+  unit: BattleUnitSupportProfilesInput["unit"],
+): Result.Result<
+  readonly (
+    | BattlePassiveInitiativeRollModeSupportProfile
+    | BattleOngoingFeatureActivationMovementRiderSupportProfile
+  )[],
+  BattleUnitSupportProfileIssue
+> {
+  if (unit.kind !== "class_feature") return Result.succeed([]);
+  const mechanics = unit.mechanics;
+  if (mechanics.family === "ongoing_feature_activation_movement_rider")
+    return Result.succeed([
+      {
+        kind: "ongoingFeatureActivationMovementRider",
+        activatesWith: {
+          resourceUnitId: mechanics.activatesWith.resourceUnitId,
+        },
+        movement: {
+          optional: true,
+          maximum: "halfCurrentSpeed",
+          opportunityAttacks: "ordinary",
+        },
+      },
+    ]);
+  if (mechanics.family === "remarkable_athlete")
+    return Result.succeed([PASSIVE_INITIATIVE_PROFILE]);
+  if (mechanics.family !== "passive") return Result.succeed([]);
+  const hasInitiativeGrant = mechanics.grants.some(
+    (effect) =>
+      effect.kind === "modify_roll_advantage" &&
+      sameStringSet(effect.on, ["initiative"]),
+  );
+  if (!hasInitiativeGrant) return Result.succeed([]);
+  return isSingleInitiativeAdvantageGrant(mechanics)
+    ? Result.succeed([PASSIVE_INITIATIVE_PROFILE])
+    : battleUnitSupportProfileIssue(
+        "Unsupported passive Initiative roll mode.",
+      );
 }
 
 function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
@@ -1671,13 +1758,19 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (failedAbilityCheckResourceBoostSupport !== null) {
-    supportProfiles.push(failedAbilityCheckResourceBoostSupport);
-  }
+  supportProfiles.push(
+    ...presentSupportProfiles(failedAbilityCheckResourceBoostSupport),
+  );
 
   supportProfiles.push(
     ...bonusActionHealingMovementRiderProfilesForUnit(input.unit),
   );
+  const initiativeAndActivation = initiativeAndActivationProfilesForUnit(
+    input.unit,
+  );
+  if (Result.isFailure(initiativeAndActivation))
+    return Result.fail(initiativeAndActivation.failure);
+  supportProfiles.push(...initiativeAndActivation.success);
 
   const spellSlotHealingModifierSupport =
     battleSpellSlotHealingModifierSupportForUnit(input.unit);
@@ -5685,7 +5778,6 @@ function remarkableAthleteProfileForUnit(
     kind: "remarkableAthlete",
     unit,
     remarkableAthlete: {
-      initiative: { kind: "rollAdvantage", roll: "initiative" },
       abilityCheck: {
         kind: "rollAdvantage",
         ability: "str",

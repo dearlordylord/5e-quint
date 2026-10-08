@@ -24,6 +24,8 @@ const UNIT_PROCEDURE_EXPOSURE = {
   bonusActionDashTemporaryHitPoints: tool("dash"),
   bonusActionDelegatedStandardActions: tools("dash", "disengage", "hide"),
   bonusActionHealingMovementRider: boundContinuation(),
+  ongoingFeatureActivationMovementRider: boundContinuation(),
+  passiveInitiativeRollMode: internal(),
   brutalStrike: boundContinuation(),
   creatureSpaceMovementPermission: internal(),
   cunningStrike: boundContinuation(),
@@ -169,6 +171,10 @@ export const UNIT_FEATURE_EXPOSURE = {
 } as const satisfies ChatGptExposureAccounting["unitFeatureProcedures"];
 
 export const UNIT_SUPPORT_EXPOSURE = {
+  ongoingFeatureActivationMovementRider:
+    UNIT_PROCEDURE_EXPOSURE["ongoingFeatureActivationMovementRider"],
+  passiveInitiativeRollMode:
+    UNIT_PROCEDURE_EXPOSURE["passiveInitiativeRollMode"],
   ...SHARED_UNIT_PROCEDURE_EXPOSURE,
   alternateActionCost: UNIT_PROCEDURE_EXPOSURE["alternateActionCost"],
   attackDamageReductionZeroDamageRedirect:

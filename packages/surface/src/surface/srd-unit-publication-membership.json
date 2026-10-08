@@ -446,6 +446,8 @@
     "weapon_shortbow",
     "weapon_shortsword",
     "weapon_quarterstaff",
-    "wizard_memorize_spell"
+    "wizard_memorize_spell",
+    "barbarian_feral_instinct",
+    "barbarian_instinctive_pounce"
   ]
 }

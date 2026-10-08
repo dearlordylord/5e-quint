@@ -1,3 +1,5 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.ongoing-feature-activation-movement-rider
+import { resolveOngoingFeatureActivationMovement } from "./ongoing-feature-activation-movement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
@@ -3544,17 +3546,7 @@ export function resolveOngoingFeatureUnitFeature(
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleResourceState,
   unitFeature: MechanicalUnitFeature<"ongoingFeature">,
-): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.fills.length > 0) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "This Unit feature does not accept battle fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
+): BattleResolutionResult {
   if (
     !ongoingFeatureIsAvailable(
       input.state,
@@ -3633,11 +3625,15 @@ export function resolveOngoingFeatureUnitFeature(
           input.subject.actorId,
         )
       : nextStateBeforeConcentration;
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return resolveOngoingFeatureActivationMovement({
+    input,
+    activatedState: nextState,
+    actor,
+    resourcePoolRef: resource.resourcePoolRef,
+    entering:
+      activeOngoingFeature === undefined &&
+      unitFeature.activationTrigger === "bonusAction",
+  });
 }
 
 export function selfBonusActionHealingRollFill(

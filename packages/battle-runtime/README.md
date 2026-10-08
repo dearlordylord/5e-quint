@@ -139,6 +139,20 @@ use its source-free execution projection; identity stays in the presentation
 companion. Armor Class uses `ArmorClassState`, turn resources use
 `RuntimeActionResource[]`, and zero-HP lifecycle is a typed union.
 
+Selected passive Initiative Advantage is retained in generic `passiveInitiativeRollMode`
+procedure facts, including the Initiative component of Remarkable Athlete.
+`characterBattleInitiativeRollMode` in character-battle-runtime queries selected
+build facts before the caller rolls Initiative; Battle accepts the resulting
+caller-supplied scores and keeps its turn order fixed.
+
+An acquired `ongoingFeatureActivationMovementRider` links to the existing
+ongoing-feature resource pool. It offers optional half-current-Speed movement
+only when entering that feature with a Bonus Action. The existing movement
+owner validates cost, terrain, occupied spaces, and Opportunity Attacks; Rage
+entry and its spend are retained across the ordinary reaction continuation.
+The movement does not spend ordinary turn Movement, and extending an already
+active occurrence does not trigger the rider.
+
 ## Reducer extensibility
 
 Implement reusable SRD procedures. Authored identity must be inert during

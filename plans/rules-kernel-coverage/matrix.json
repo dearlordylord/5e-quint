@@ -528,6 +528,10 @@
           "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ],
       "profiles": [],
@@ -583,7 +587,8 @@
         "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
         "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt"
+        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -9274,6 +9279,14 @@
     {
       "obligationIds": ["CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"],
       "profileId": "character-creation.wizard-spellcasting-advancement"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "profileId": "unit-feature.passive-initiative-roll-mode"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "profileId": "unit-feature.ongoing-feature-activation-movement-rider"
     }
   ],
   "qntOwnerRoles": [
@@ -12988,6 +13001,28 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Generic selected Initiative and Bonus Action ongoing-feature entry movement facts trace directly to SRD 5.2.1 classes.md:298-305.",
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+          "profileId": "unit-feature.ongoing-feature-activation-movement-rider"
+        },
+        {
+          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+          "profileId": "unit-feature.passive-initiative-roll-mode"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused selected/unselected, half-Speed, entry-only, zero-Speed, and ordinary movement legality witnesses.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15039,6 +15074,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt",
       "role": "proof-only"
     },
@@ -15586,6 +15631,16 @@
       ]
     },
     {
+      "profileId": "unit-feature.ongoing-feature-activation-movement-rider",
+      "qntOwners": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.open-hand-technique",
       "qntOwners": [
         {
@@ -15621,6 +15676,16 @@
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-initiative-roll-mode",
+      "qntOwners": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -16265,7 +16330,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-brutal-strike-bridge-examples.qnt"
+        "packages/battle-runtime/battle-runtime-brutal-strike-bridge-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
@@ -16299,7 +16365,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
         "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
-        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt"
+        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -20575,11 +20642,13 @@
     "unit-feature.metamagic-heightened-save-disadvantage",
     "unit-feature.metamagic-missed-spell-attack-reroll",
     "unit-feature.monk-focus-battle-options",
+    "unit-feature.ongoing-feature-activation-movement-rider",
     "unit-feature.open-hand-technique",
     "unit-feature.paladin-sacred-weapon",
     "unit-feature.passive-ability-check-roll-mode",
     "unit-feature.passive-armor-class-bonus",
     "unit-feature.passive-damage-resistance",
+    "unit-feature.passive-initiative-roll-mode",
     "unit-feature.passive-ranged-attack-roll-bonus",
     "unit-feature.passive-saving-throw-roll-mode",
     "unit-feature.passive-speed-bonus",

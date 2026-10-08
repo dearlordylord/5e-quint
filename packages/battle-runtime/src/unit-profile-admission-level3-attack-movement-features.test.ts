@@ -215,7 +215,6 @@ function unitFeatureDecisionFill(
 const remarkableAthleteSupport = {
   kind: REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   remarkableAthlete: {
-    initiative: { kind: "rollAdvantage", roll: "initiative" },
     abilityCheck: {
       kind: "rollAdvantage",
       ability: "str",
@@ -548,7 +547,16 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       ).toEqual(
         Result.succeed({
           unit,
-          supportProfiles: [support],
+          supportProfiles:
+            support.kind === "remarkableAthlete"
+              ? [
+                  {
+                    kind: "passiveInitiativeRollMode",
+                    initiative: { kind: "rollAdvantage", roll: "initiative" },
+                  },
+                  support,
+                ]
+              : [support],
         }),
       );
       expect(supportForUnit(unit)).toEqual(support);

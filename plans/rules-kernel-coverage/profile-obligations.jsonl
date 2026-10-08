@@ -209,3 +209,5 @@
 {"profileId":"character-creation.chosen-prepared-spell-access","obligationIds":["CREATION.SPELL_ACCESS.CHOSEN_PREPARED_PAIR"]}
 {"profileId":"character-creation.class-feature-proficiency-choice","obligationIds":["CREATION.FEATURE.PROFICIENCY_CHOICE"]}
 {"profileId":"character-creation.wizard-spellcasting-advancement","obligationIds":["CREATION.SPELL_ACCESS.WIZARD_PROGRESSION"]}
+{"profileId":"unit-feature.passive-initiative-roll-mode","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.ongoing-feature-activation-movement-rider","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

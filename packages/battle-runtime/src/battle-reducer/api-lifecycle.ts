@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-initiative-roll-mode
 // Public battle lifecycle API and Initial Initiative setup workflow.
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
@@ -690,20 +691,15 @@ export function requiredInitiativeRollModeForCombatant(
   if (combatant?.origin.kind !== "character") {
     return undefined;
   }
-  const hasRemarkableAthleteAdvantage = characterUnitProcedureBindings(
+  const hasAdvantage = characterUnitProcedureBindings(
     combatant.origin.execution,
-  ).some(({ procedure }) =>
-    Match.value(procedure).pipe(
-      Match.discriminatorsExhaustive("kind")({
-        unitFeature: ({ execution }) =>
-          execution.kind === "remarkableAthlete" &&
-          execution.remarkableAthlete.initiative.kind === "rollAdvantage" &&
-          execution.remarkableAthlete.initiative.roll === "initiative",
-        unitSupportProfile: () => false,
-      }),
-    ),
+  ).some(
+    ({ procedure }) =>
+      procedure.kind === "unitSupportProfile" &&
+      typeof procedure.execution !== "string" &&
+      procedure.execution.kind === "passiveInitiativeRollMode",
   );
-  return hasRemarkableAthleteAdvantage ? "advantage" : undefined;
+  return hasAdvantage ? "advantage" : undefined;
 }
 
 type ValidBattleCreatureAdmission = Extract<

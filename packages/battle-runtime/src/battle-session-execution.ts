@@ -1,3 +1,4 @@
+import { resolveMoveAfterMovement } from "./battle-reducer/movement-procedures.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
@@ -847,9 +848,11 @@ function resolveBattleSubjectWithInterruptRoute(
       snapshot: snapshotBattle(input.state),
     };
   }
-  const mechanical = resolveAdmittedBattleSubject(
-    admission.input,
-    interruptRouteOptionsForSubjectResolution({
+  const mechanical = resolveSubjectMechanicalContinuation({
+    input: admission.input,
+    phase,
+    reportsReadyTrigger,
+    routeOptions: interruptRouteOptionsForSubjectResolution({
       phase,
       reportsReadyTrigger,
       ...optionalProperty(
@@ -857,7 +860,7 @@ function resolveBattleSubjectWithInterruptRoute(
         handledInterruptOccurrence,
       ),
     }),
-  );
+  });
   const result = reportsReadyTrigger
     ? mechanicalResultWithPreservedSubjectPhase(
         mechanical,
@@ -866,6 +869,33 @@ function resolveBattleSubjectWithInterruptRoute(
     : mechanical;
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
+}
+
+function resolveSubjectMechanicalContinuation(input: {
+  readonly input: Parameters<typeof resolveAdmittedBattleSubject>[0];
+  readonly phase: BattleState["subjectResolutionPhase"];
+  readonly reportsReadyTrigger: boolean;
+  readonly routeOptions: BattleInterruptRouteOptions;
+}): BattleResolutionResult {
+  const phase = input.phase;
+  if (
+    phase.kind !== "subjectContinuation" ||
+    phase.admittedMovement === undefined ||
+    input.reportsReadyTrigger
+  )
+    return resolveAdmittedBattleSubject(input.input, input.routeOptions);
+  const result = resolveMoveAfterMovement({
+    state: {
+      ...input.input.state,
+      subjectResolutionPhase: { kind: "subjectSelection" },
+    },
+    subject: phase.subject,
+    movement: phase.admittedMovement,
+    remainingFills: input.input.fills,
+  });
+  return result.tag === "needsHoles"
+    ? mechanicalResultWithPreservedSubjectPhase(result, phase)
+    : result;
 }
 
 function interruptRouteOptionsForSubjectResolution(input: {

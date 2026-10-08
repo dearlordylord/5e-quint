@@ -38,6 +38,14 @@
       "unitId": "barbarian_fast_movement"
     },
     {
+      "level": 7,
+      "unitId": "barbarian_feral_instinct"
+    },
+    {
+      "level": 7,
+      "unitId": "barbarian_instinctive_pounce"
+    },
+    {
       "level": 8,
       "unitId": "barbarian_ability_score_improvement_l4"
     },

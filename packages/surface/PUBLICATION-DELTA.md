@@ -200,7 +200,7 @@ the existing authored feature instead of copying its rule record. The Ability
 Score Improvement feat retains its RAW repeatability fact. Catalog installation
 remains separate from each runtime profile's supported behavior.
 
-The `classFeatureIncrementMechanics` graph class removes only the five reviewed
+The `classFeatureIncrementMechanics` graph class removes only the reviewed
 mechanic branches at reachable class feature mechanics unions. Each exact branch
 shape and its owning pointer require before/after node hash authorization. The
 `featRepeatability` class reverses only the optional true-only repeatability field
@@ -212,3 +212,14 @@ The independent portable dependency contract includes the recovery feature's
 resource reference. Its separately validated cases retain strict schema,
 dependency-contract, and input fingerprints and check both the complete catalog
 and rejection of a dangling resource reference.
+
+The level 7 Barbarian publication adds Feral Instinct and Instinctive Pounce as
+exact catalog-membership additions and retains their class-owned grants as an
+authored cross-record-reference change. Feral Instinct uses the existing passive
+Initiative grant vocabulary. Instinctive Pounce adds one strict activation
+movement shape: an authored resource reference, optional half-current-Speed
+movement, and ordinary Opportunity Attacks. The class-feature graph reversal
+recognizes only that complete branch hash, including its shared mechanics union;
+the certificate additionally pins the reachable owner pointer and before/after
+node hashes. Additional fields, altered movement policies, and lookalike owners
+remain unclassified. Runtime admission and execution evidence remain separate.

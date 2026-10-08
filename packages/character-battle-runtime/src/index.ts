@@ -143,6 +143,7 @@ export function characterBattleRuntimeIssueMessage(
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 export {
   battleCreatureInitFromCharacterBuild,
+  characterBattleInitiativeRollMode,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
   type CharacterBattleInitiativeProficiencyChoice,

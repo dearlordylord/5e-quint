@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-initiative-roll-mode unit-feature.ongoing-feature-activation-movement-rider
 import { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
 export { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
 import { optionalProperty } from "./optional-property.ts";
@@ -446,6 +447,90 @@ function hasAcquiredHealingMovementActivation(
   );
 }
 
+function hasAcquiredOngoingFeatureMovementActivation(
+  unit: BattleUnitSupportSource,
+  profile: Extract<
+    BattleUnitSupportProfile,
+    { readonly kind: "ongoingFeatureActivationMovementRider" }
+  >,
+  classLevels: CharacterBattleClassLevels,
+  resourceProcedures: ReturnType<typeof resourceUnitFeatureProcedures>,
+): boolean {
+  return (
+    isAcquiredClassFeature(unit, classLevels) &&
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "ongoing_feature_activation_movement_rider" &&
+    unit.mechanics.activatesWith.resourceUnitId ===
+      profile.activatesWith.resourceUnitId &&
+    resourceProcedures.some(
+      (procedure) =>
+        procedure.sourceUnitId === profile.activatesWith.resourceUnitId &&
+        procedure.facts.kind === "ongoingFeature" &&
+        procedure.facts.activationTrigger === "bonusAction",
+    )
+  );
+}
+
+function passiveInitiativeProfileAdmission(
+  unit: BattleUnitSupportSource,
+  profile: BattleUnitSupportProfile,
+  classLevels: CharacterBattleClassLevels,
+  procedureRefs: UnitSupportProcedureExecutionContext["unitFeatureProcedureRefsByUnitId"],
+): Result.Result<boolean, BattleUnitSupportProfileIssue> {
+  if (
+    typeof profile !== "object" ||
+    profile.kind !== "passiveInitiativeRollMode"
+  )
+    return Result.succeed(true);
+  if (!isAcquiredClassFeature(unit, classLevels))
+    return Result.fail({
+      tag: "battleUnitSupportProfileIssue",
+      message:
+        "Passive Initiative roll mode requires an acquired class feature Unit.",
+    });
+  return Result.succeed(
+    !(
+      unit.kind === "class_feature" &&
+      unit.mechanics.family === "remarkable_athlete" &&
+      !procedureRefs.has(unit.id)
+    ),
+  );
+}
+
+function activationMovementProfileAdmissionIssue(
+  unit: BattleUnitSupportSource,
+  profile: BattleUnitSupportProfile,
+  classLevels: CharacterBattleClassLevels,
+  resourceProcedures: ReturnType<typeof resourceUnitFeatureProcedures>,
+): BattleUnitSupportProfileIssue | undefined {
+  if (
+    typeof profile !== "object" ||
+    (profile.kind !== "bonusActionHealingMovementRider" &&
+      profile.kind !== "ongoingFeatureActivationMovementRider")
+  )
+    return undefined;
+  const acquired =
+    profile.kind === "bonusActionHealingMovementRider"
+      ? hasAcquiredHealingMovementActivation(
+          unit,
+          profile,
+          classLevels,
+          resourceProcedures,
+        )
+      : hasAcquiredOngoingFeatureMovementActivation(
+          unit,
+          profile,
+          classLevels,
+          resourceProcedures,
+        );
+  if (acquired) return undefined;
+  return {
+    tag: "battleUnitSupportProfileIssue",
+    message:
+      "Activation movement requires an acquired matching class feature Unit.",
+  };
+}
+
 export function characterExecutionFromUnits(input: {
   readonly battleId: BattleId;
   readonly combatantId: CombatantId;
@@ -586,25 +671,26 @@ export function characterExecutionFromUnits(input: {
   const unitSupportProcedures = input.unitRefs
     .flatMap((unitRef) =>
       unitRef.supportProfiles.flatMap((profile) => {
-        if (
-          typeof profile === "object" &&
-          profile.kind === "bonusActionHealingMovementRider"
-        ) {
-          if (
-            !hasAcquiredHealingMovementActivation(
-              unitRef.unit,
-              profile,
-              input.classLevels,
-              resourceProfileProcedures,
-            )
-          ) {
-            supportProfileIssues.push({
-              tag: "battleUnitSupportProfileIssue",
-              message:
-                "Bonus Action healing movement requires an acquired matching class feature Unit.",
-            });
-            return [];
-          }
+        const initiativeAdmission = passiveInitiativeProfileAdmission(
+          unitRef.unit,
+          profile,
+          input.classLevels,
+          unitFeatureProcedureRefsByUnitId,
+        );
+        if (Result.isFailure(initiativeAdmission)) {
+          supportProfileIssues.push(initiativeAdmission.failure);
+          return [];
+        }
+        if (!initiativeAdmission.success) return [];
+        const activationIssue = activationMovementProfileAdmissionIssue(
+          unitRef.unit,
+          profile,
+          input.classLevels,
+          resourceProfileProcedures,
+        );
+        if (activationIssue !== undefined) {
+          supportProfileIssues.push(activationIssue);
+          return [];
         }
         return [{ unitId: unitRef.unit.id, profile }];
       }),
@@ -1635,6 +1721,22 @@ export function unitSupportProcedureExecution(
               },
             };
       },
+      ongoingFeatureActivationMovementRider: (value) => {
+        const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
+          value.activatesWith.resourceUnitId,
+        );
+        return resourcePoolRef === undefined
+          ? undefined
+          : {
+              kind: value.kind,
+              activatesWith: { resourcePoolRef },
+              movement: value.movement,
+            };
+      },
+      passiveInitiativeRollMode: (value) => ({
+        kind: value.kind,
+        initiative: value.initiative,
+      }),
       bonusActionHealingMovementRider: (value) => {
         const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
           value.activatesWith.resourceUnitId,

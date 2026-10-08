@@ -1,3 +1,5 @@
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-initiative-roll-mode
 import {
   battleAvailableDruidWildShapeKnownForms,
   wildShapeKnownFormsIssueMessage,
@@ -171,6 +173,42 @@ export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
   "Character battle initialization max HP exceeds build-derived max HP.";
 
 export type CharacterBattleInitiativeProficiencyChoice = "add" | "omit";
+
+/** Query selected passive Initiative facts before the caller rolls and fixes turn order. */
+export function characterBattleInitiativeRollMode(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Result.Result<
+  Exclude<AttackRollMode, "disadvantage">,
+  BattleCreatureInitIssue
+> {
+  const classLevels = characterBattleClassLevels(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Result.isFailure(classLevels)) return Result.fail(classLevels.failure);
+  const projection = characterBattleSupportAdmission(
+    input.build,
+    input.unitLibrary,
+    undefined,
+    classLevels.success,
+  );
+  if (Result.isFailure(projection))
+    return battleSupportProfileIssuesToBattleCreatureInitIssue(
+      projection.failure,
+    );
+  return Result.succeed(
+    projection.success.unitAdmissions.some(({ battleUnitRef }) =>
+      battleUnitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile !== "string" &&
+          profile.kind === "passiveInitiativeRollMode",
+      ),
+    )
+      ? "advantage"
+      : "normal",
+  );
+}
 
 export function characterBattleInitiativeScore(input: {
   readonly build: CharacterBuild;

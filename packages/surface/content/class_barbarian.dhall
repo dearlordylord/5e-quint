@@ -25,6 +25,8 @@ let barbarian =
         , { level = 4, unitId = "barbarian_ability_score_improvement_l4" }
         , { level = 5, unitId = "barbarian_extra_attack" }
         , { level = 5, unitId = "barbarian_fast_movement" }
+        , { level = 7, unitId = "barbarian_feral_instinct" }
+        , { level = 7, unitId = "barbarian_instinctive_pounce" }
         , { level = 8, unitId = "barbarian_ability_score_improvement_l4" }
         , { level = 9, unitId = "barbarian_brutal_strike" }
         ]

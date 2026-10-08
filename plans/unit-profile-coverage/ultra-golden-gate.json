@@ -100,7 +100,7 @@
               "numerator": 47
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 5,
               "focused-mbt": 57,
               "runtime-test": 19
@@ -480,7 +480,7 @@
               "numerator": 50
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 8,
               "focused-mbt": 57,
               "runtime-test": 19
@@ -863,7 +863,7 @@
               "numerator": 76
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 14,
               "focused-mbt": 79,
               "runtime-test": 34
@@ -1109,7 +1109,7 @@
               "numerator": 77
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 15,
               "focused-mbt": 79,
               "runtime-test": 36
@@ -1356,7 +1356,7 @@
               "numerator": 83
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 17,
               "focused-mbt": 82,
               "runtime-test": 42
@@ -1609,7 +1609,7 @@
               "numerator": 84
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 18,
               "focused-mbt": 82,
               "runtime-test": 44
@@ -1815,13 +1815,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 214,
-              "numerator": 214,
+              "denominator": 216,
+              "numerator": 216,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 122,
-              "numerator": 122,
+              "denominator": 124,
+              "numerator": 124,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1830,8 +1830,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 303,
-              "numerator": 303,
+              "denominator": 305,
+              "numerator": 305,
               "percent": "100%"
             }
           },
@@ -1863,7 +1863,7 @@
               "numerator": 85
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2070,13 +2070,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 215,
-              "numerator": 215,
+              "denominator": 217,
+              "numerator": 217,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 134,
-              "numerator": 134,
+              "denominator": 136,
+              "numerator": 136,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2085,8 +2085,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 304,
-              "numerator": 304,
+              "denominator": 306,
+              "numerator": 306,
               "percent": "100%"
             }
           },
@@ -2118,7 +2118,7 @@
               "numerator": 85
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2325,13 +2325,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 261,
-              "numerator": 261,
+              "denominator": 263,
+              "numerator": 263,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 143,
-              "numerator": 143,
+              "denominator": 145,
+              "numerator": 145,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2340,8 +2340,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 350,
-              "numerator": 350,
+              "denominator": 352,
+              "numerator": 352,
               "percent": "100%"
             }
           },
@@ -2373,7 +2373,7 @@
               "numerator": 85
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2568,13 +2568,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 273,
-              "numerator": 273,
+              "denominator": 275,
+              "numerator": 275,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 150,
-              "numerator": 150,
+              "denominator": 152,
+              "numerator": 152,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2583,8 +2583,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 362,
-              "numerator": 362,
+              "denominator": 364,
+              "numerator": 364,
               "percent": "100%"
             }
           },
@@ -2616,7 +2616,7 @@
               "numerator": 85
             },
             "witnessKinds": {
-              "contract-test": 7,
+              "contract-test": 8,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2919,15 +2919,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 177,
-            "numerator": 177
+            "denominator": 179,
+            "numerator": 179
           },
           "joinedEvidenceRows": {
-            "denominator": 177,
-            "numerator": 177
+            "denominator": 179,
+            "numerator": 179
           },
           "missingJoinRows": {
-            "denominator": 177,
+            "denominator": 179,
             "numerator": 0
           }
         },
@@ -2938,15 +2938,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 178,
-            "numerator": 178
+            "denominator": 180,
+            "numerator": 180
           },
           "joinedEvidenceRows": {
-            "denominator": 178,
-            "numerator": 178
+            "denominator": 180,
+            "numerator": 180
           },
           "missingJoinRows": {
-            "denominator": 178,
+            "denominator": 180,
             "numerator": 0
           }
         },
@@ -2957,15 +2957,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 185,
-            "numerator": 185
+            "denominator": 187,
+            "numerator": 187
           },
           "joinedEvidenceRows": {
-            "denominator": 185,
-            "numerator": 185
+            "denominator": 187,
+            "numerator": 187
           },
           "missingJoinRows": {
-            "denominator": 185,
+            "denominator": 187,
             "numerator": 0
           }
         },
@@ -2976,15 +2976,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 190,
-            "numerator": 190
+            "denominator": 192,
+            "numerator": 192
           },
           "joinedEvidenceRows": {
-            "denominator": 190,
-            "numerator": 190
+            "denominator": 192,
+            "numerator": 192
           },
           "missingJoinRows": {
-            "denominator": 190,
+            "denominator": 192,
             "numerator": 0
           }
         },

@@ -2,6 +2,11 @@
 
 ## 0.2.0 — unreleased
 
+- Support level-7 Barbarian Feral Instinct and Instinctive Pounce through character
+  creation and battle handoff. Query selected Initiative Advantage before rolling;
+  entering Rage can optionally move half current Speed through ordinary movement,
+  Opportunity Attack, and movement-hazard resolution.
+
 - Extend character creation and level gains with source-scoped repeated feat
   choices, College of Lore skill and spell choices, and additional Fighting Style
   selection. Retain the original grant when replacing a Fighting Style.

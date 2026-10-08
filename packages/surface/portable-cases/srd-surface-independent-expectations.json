@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "schemaSha256": "b4543d2b7b0d3868a5d49e81813388348ed95dad96c3df5371e458ce5a1535cf",
+  "schemaSha256": "9f71be7510d0aa6c3d764531694005cf869c834c333b3a1e7fea44724bbb0dad",
   "dependencyContractSha256": "f00b3d6d5a86a90ac0ba1ac6c1c5edd380d2d5e8a5ed394bae3fa19cb3c1de25",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "c7fdb2b50f2022c108e1ed57007ae375f932bf858ae49872105c3ff2f53811be",
+      "inputSha256": "9ea8ed5cd3f3fa59c0aa3181298046c6bb64d463fa971af2ce96431ae9328c04",
       "expected": {
         "tag": "accepted"
       }
     },
     {
       "name": "unknown field",
-      "inputSha256": "da3603d394025cb9ce995e17549756738d6d8ae86f15250b8c7fe83111ab38eb",
+      "inputSha256": "7134a1e7d047d9c800a59d31b91669969ce427b1f27db3b631ab62baa97f1d51",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -108,7 +108,7 @@
     },
     {
       "name": "duplicate identity within one family",
-      "inputSha256": "13583ccb7163dd603386f7c3ced21b0a95198830de88a65355b4b75e66b79835",
+      "inputSha256": "da2c1b563b0f1edb86b114f8a8ac88f276d1f84cad8d0cd4f39eacb2e5af01d6",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -124,6 +124,13 @@
             "path": "$.units[0].featureGrants[1].unitId",
             "targetKind": "unit",
             "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[10].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_brutal_strike",
             "relation": "unit-reference"
           },
           {
@@ -165,14 +172,21 @@
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[7].unitId",
             "targetKind": "unit",
-            "targetId": "barbarian_ability_score_improvement_l4",
+            "targetId": "barbarian_feral_instinct",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[8].unitId",
             "targetKind": "unit",
-            "targetId": "barbarian_brutal_strike",
+            "targetId": "barbarian_instinctive_pounce",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[9].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
             "relation": "unit-reference"
           },
           {
@@ -187,6 +201,13 @@
             "path": "$.units[1].featureGrants[1].unitId",
             "targetKind": "unit",
             "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[10].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_brutal_strike",
             "relation": "unit-reference"
           },
           {
@@ -228,14 +249,21 @@
             "code": "dangling-authored-dependency",
             "path": "$.units[1].featureGrants[7].unitId",
             "targetKind": "unit",
-            "targetId": "barbarian_ability_score_improvement_l4",
+            "targetId": "barbarian_feral_instinct",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[1].featureGrants[8].unitId",
             "targetKind": "unit",
-            "targetId": "barbarian_brutal_strike",
+            "targetId": "barbarian_instinctive_pounce",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[9].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
             "relation": "unit-reference"
           },
           {
@@ -302,7 +330,7 @@
     },
     {
       "name": "independent record failures accumulate",
-      "inputSha256": "0069401a616e3b000008ce241f246394a347e6d7fb15465d6f8ebc9b1a9ae56c",
+      "inputSha256": "9e901830a267960c420836e2931df0f4dabbfc88ea9c39a48b131d2760611f15",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -319,7 +347,7 @@
     },
     {
       "name": "schema and dependency failures accumulate",
-      "inputSha256": "067011a3f5a1b806395eab2d7eea3673920fd855e594aa6d6647ad0d68e38a77",
+      "inputSha256": "4d19a11b60d73faf45ab5dd1cc8c2d0d3134162ad573a6db13d90d76eccfde20",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -339,7 +367,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "3e2e3c8cc71254b61b81e754e9623d39a98911d5d7c50cf68c184dd1498bf4bf",
+      "inputSha256": "6dd36e647dce2b7b7af0594472e043504a7cdec99ae0698d06a674ecc326a665",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -395,6 +423,13 @@
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_feral_instinct",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[9].unitId",
             "targetKind": "unit",
             "targetId": "barbarian_ability_score_improvement_l4",
             "relation": "unit-reference"
@@ -1437,6 +1472,13 @@
           },
           {
             "code": "dangling-authored-dependency",
+            "path": "$.units[54].mechanics.activatesWith.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_rage",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
             "path": "$.units[6].featureGrants[0].unitId",
             "targetKind": "unit",
             "targetId": "paladin_lay_on_hands",
@@ -1650,7 +1692,7 @@
     },
     {
       "name": "canonical dependency role: unit.featureGrants[].unitId",
-      "inputSha256": "999f11fc687f5506e3e16aec7a279933a44c4d6301ba193b8c792a92118c155a",
+      "inputSha256": "a854c8c3e8621df2f33e7e75f4cd33c323e72e2d223cc29384633629e2130ad2",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1666,6 +1708,13 @@
             "path": "$.units[0].featureGrants[1].unitId",
             "targetKind": "unit",
             "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[10].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_brutal_strike",
             "relation": "unit-reference"
           },
           {
@@ -1707,14 +1756,21 @@
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[7].unitId",
             "targetKind": "unit",
-            "targetId": "barbarian_ability_score_improvement_l4",
+            "targetId": "barbarian_feral_instinct",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[8].unitId",
             "targetKind": "unit",
-            "targetId": "barbarian_brutal_strike",
+            "targetId": "barbarian_instinctive_pounce",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[9].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
             "relation": "unit-reference"
           }
         ]

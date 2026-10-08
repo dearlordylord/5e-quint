@@ -1,0 +1,22 @@
+{
+  "acquiredAtLevel": 7,
+  "className": "barbarian",
+  "id": "barbarian_instinctive_pounce",
+  "kind": "class_feature",
+  "mechanics": {
+    "activatesWith": {
+      "resourceUnitId": "barbarian_rage"
+    },
+    "family": "ongoing_feature_activation_movement_rider",
+    "movement": {
+      "maximum": "half_current_speed",
+      "opportunityAttacks": "ordinary",
+      "optional": true
+    }
+  },
+  "name": "Instinctive Pounce",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:302-305"
+  }
+}

@@ -533,10 +533,6 @@ export const BonusActionDelegatedStandardActionsProcedureExecutionSchema =
 export const RemarkableAthleteProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("remarkableAthlete"),
   remarkableAthlete: Schema.Struct({
-    initiative: Schema.Struct({
-      kind: Schema.Literal("rollAdvantage"),
-      roll: Schema.Literal("initiative"),
-    }),
     abilityCheck: Schema.Struct({
       kind: Schema.Literal("rollAdvantage"),
       ability: Schema.Literal("str"),
@@ -1304,6 +1300,24 @@ export const PaladinSacredWeaponProcedureExecutionSchema = Schema.Struct({
 
 export const UnitSupportProcedureExecutionSchema = Schema.Union([
   LiteralUnitSupportProcedureExecutionSchema,
+  Schema.Struct({
+    kind: Schema.Literal("passiveInitiativeRollMode"),
+    initiative: Schema.Struct({
+      kind: Schema.Literal("rollAdvantage"),
+      roll: Schema.Literal("initiative"),
+    }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("ongoingFeatureActivationMovementRider"),
+    activatesWith: Schema.Struct({
+      resourcePoolRef: BattleResourcePoolExecutionRef,
+    }),
+    movement: Schema.Struct({
+      optional: Schema.Literal(true),
+      maximum: Schema.Literal("halfCurrentSpeed"),
+      opportunityAttacks: Schema.Literal("ordinary"),
+    }),
+  }),
   BonusActionHealingMovementRiderProcedureExecutionSchema,
   AlternateActionCostProcedureExecutionSchema,
   PassiveRangedAttackRollBonusProcedureExecutionSchema,

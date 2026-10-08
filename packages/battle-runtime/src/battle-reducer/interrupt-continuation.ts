@@ -309,6 +309,9 @@ function resumeMovementContinuation(
             kind: "subjectContinuation",
             subject: result.frontier.replaySubject,
             handledInterruptTrigger,
+            ...(continuation.subject.tag === "unitFeature"
+              ? { admittedMovement: continuation.movement }
+              : {}),
           },
         },
       };

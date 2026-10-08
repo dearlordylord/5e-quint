@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2672446,
-        "sha256": "215149a491a47586ac27b1d5ecf038ab13ef929d0753cd0021aff22e6701fb47"
+        "byteLength": 2673529,
+        "sha256": "78380f5e81a87465049ed4f09572b9d7ec12ec3f72a5c8036b13313142df8ca8"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "d393cb5a81570ff2b532d5805b8079be186eab4e6f5ec2bdd12a88ca19c56006",
+        "candidateCanonicalJsonSha256": "4d0943785ae43d4199f4d27fd3fea20b731b83dc1710622f1503659fa9d22ee9",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -29,14 +29,14 @@
           },
           "candidate": {
             "recordCounts": {
-              "units": 446,
+              "units": 448,
               "statBlocks": 330,
-              "total": 776
+              "total": 778
             },
             "orderedIdSha256": {
-              "units": "86f2f4b8d51804c676cd866f7d44a19f2fb08e9d6505a1e5b60e4c0b74281640",
+              "units": "230ee18e1751210322f9b2a8ff3d1f9fac2e5e3c46038bad822c9f5cf04269d5",
               "statBlocks": "45ed846dccc5b724a6e80509244db57dd927ed5bcfd901f9e42def8da2451ba4",
-              "all": "33de32df8bb54ed3b1e0d8ee5c93dcd6c595e46e4ea06932d236716d695276a8"
+              "all": "6006c9b69e8e7624f173d748f7e12d7cdf60ddd0c3a76ec3cbafd493809c006d"
             }
           }
         },
@@ -46,7 +46,7 @@
             "family": "units",
             "id": "class_barbarian",
             "baselineCanonicalJsonSha256": "ef4579e49023426dbb6e9fa9fdde858c50f301d587459192d7078794ca340272",
-            "candidateCanonicalJsonSha256": "993ebc65d6630b23f4f7c48fd4ca31802ec49bc772eb85cee24b3657ae229cd0",
+            "candidateCanonicalJsonSha256": "362ff2bf437745d8bff9323c5f641939b6feef88df23cc9a1b88c3b491d12f5f",
             "semanticClass": "authored-cross-record-reference"
           },
           {
@@ -5892,6 +5892,20 @@
             "id": "stat_block_ogre_zombie",
             "candidateCanonicalJsonSha256": "47d2fffc7900f573e98f53e4e1847098c8440674551fd1963138d196fb5e1d87",
             "semanticClass": "authored-catalog-membership"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "barbarian_feral_instinct",
+            "candidateCanonicalJsonSha256": "278aecc3958a2e8409a626a365b1b249b6beb00b12c68ed48b3d5a2c63cddde3",
+            "semanticClass": "authored-catalog-membership"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "barbarian_instinctive_pounce",
+            "candidateCanonicalJsonSha256": "264b266f1238666190b71b6dfb8dcb963416727bc56dcb1054a8bd7f645fede3",
+            "semanticClass": "authored-catalog-membership"
           }
         ],
         "reviewedOrderDeltas": []
@@ -5903,19 +5917,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1616825,
-        "sha256": "76a0f432442a7d82ab2bf4158efc1d85c9aa6a2f561722e87592d9ed1bb47a06"
+        "byteLength": 1617574,
+        "sha256": "4db7bf0b8ebea2df66f223166d0144645f7963b60b847e0c930e2ca97501c0e5"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "c8a041c2bc09e1f0bef6d6ff0e6d31c824cf4e00a310f5d82d7599aadde222e3",
+        "candidateCanonicalJsonSha256": "0943b6694ec8205cd1fa5f3c430b9d4b2d2ab7b21a45b79d3ff92b1783de8834",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1304
+          "candidate": 1305
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7998
+          "candidate": 7999
         },
         "localReferencesComplete": {
           "baseline": true,
@@ -5953,36 +5967,36 @@
           "classifiedChanges": {
             "gmSpeedChoiceMinimum": [
               {
-                "pointer": "/$defs/SrdRecordUnion1131Encoded/properties/alternatives",
-                "beforeNodeSha256": "4bf6e4fd20484c219f3fa504309b7df3f97e4b11dbda1e8c62a301c077439f5c",
-                "afterNodeSha256": "530d8f899e2bc2c5e66360c2f17abb11e62a4fc09a07186f148c9aafc1540014"
+                "pointer": "/$defs/SrdRecordUnion1132Encoded/properties/alternatives",
+                "beforeNodeSha256": "cccdbf328be6cd2d952bb25c17ab7f3e5a64c281609a9d021c49f350ce941cfd",
+                "afterNodeSha256": "6b01bb2cca72ced7906506ce92e1015827c7b95331f13ceef0078b0a13aa98e6"
               }
             ],
             "flyOnlyHover": [
               {
-                "pointer": "/$defs/SrdRecordUnion1121Encoded",
-                "beforeNodeSha256": "73aa10fcf50735433d4e2efc14e8b2b6bff1769ab9a99f2d24bd29c4151d9470",
-                "afterNodeSha256": "c9c1ab8f0e9799ff2cf6a9f1fa370f14356763a1f2a9852e50bcfcc986d6514a"
+                "pointer": "/$defs/SrdRecordUnion1122Encoded",
+                "beforeNodeSha256": "51e560a71db6f5ea8e079a0f674dc20213728b372a2400b8c3b83c33145ede47",
+                "afterNodeSha256": "fd90a891496cf070fe5f78b55d3a61cdfab6fead6818d4791a06ed746729c0d4"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1128Encoded",
-                "beforeNodeSha256": "a600ed5626e49a36b187a77d22f483f02c8bcde50744db28d65394c970c83cf2",
-                "afterNodeSha256": "01407b3dcad38f59b1e7c1abb50ae23b238f0b5dfa046e84c9bfbd4f3059d12f"
+                "pointer": "/$defs/SrdRecordUnion1129Encoded",
+                "beforeNodeSha256": "e59dbb64c36b3f2dece5a09d6f8656b981553d9e3175aac636e022bb6ab5481f",
+                "afterNodeSha256": "435516d6a46465207d9d887f300f8f359b2118fe514db401847e90d00998c52e"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1131Encoded/properties/alternatives/prefixItems/0",
-                "beforeNodeSha256": "73aa10fcf50735433d4e2efc14e8b2b6bff1769ab9a99f2d24bd29c4151d9470",
-                "afterNodeSha256": "c9c1ab8f0e9799ff2cf6a9f1fa370f14356763a1f2a9852e50bcfcc986d6514a"
+                "pointer": "/$defs/SrdRecordUnion1132Encoded/properties/alternatives/prefixItems/0",
+                "beforeNodeSha256": "51e560a71db6f5ea8e079a0f674dc20213728b372a2400b8c3b83c33145ede47",
+                "afterNodeSha256": "fd90a891496cf070fe5f78b55d3a61cdfab6fead6818d4791a06ed746729c0d4"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1131Encoded/properties/alternatives/prefixItems/1",
-                "beforeNodeSha256": "73aa10fcf50735433d4e2efc14e8b2b6bff1769ab9a99f2d24bd29c4151d9470",
-                "afterNodeSha256": "c9c1ab8f0e9799ff2cf6a9f1fa370f14356763a1f2a9852e50bcfcc986d6514a"
+                "pointer": "/$defs/SrdRecordUnion1132Encoded/properties/alternatives/prefixItems/1",
+                "beforeNodeSha256": "51e560a71db6f5ea8e079a0f674dc20213728b372a2400b8c3b83c33145ede47",
+                "afterNodeSha256": "fd90a891496cf070fe5f78b55d3a61cdfab6fead6818d4791a06ed746729c0d4"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1131Encoded/properties/alternatives/items",
-                "beforeNodeSha256": "73aa10fcf50735433d4e2efc14e8b2b6bff1769ab9a99f2d24bd29c4151d9470",
-                "afterNodeSha256": "c9c1ab8f0e9799ff2cf6a9f1fa370f14356763a1f2a9852e50bcfcc986d6514a"
+                "pointer": "/$defs/SrdRecordUnion1132Encoded/properties/alternatives/items",
+                "beforeNodeSha256": "51e560a71db6f5ea8e079a0f674dc20213728b372a2400b8c3b83c33145ede47",
+                "afterNodeSha256": "fd90a891496cf070fe5f78b55d3a61cdfab6fead6818d4791a06ed746729c0d4"
               }
             ],
             "unitIdItemId": [
@@ -6017,7 +6031,7 @@
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1218Encoded/properties/itemId",
+                "pointer": "/$defs/SrdRecordUnion1219Encoded/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               }
@@ -6177,47 +6191,45 @@
             ],
             "canonicalMasteryVariants": [
               {
-                "pointer": "/$defs/SrdRecordUnion991Encoded/properties/mechanics",
-                "beforeNodeSha256": "37b72c0fbd14b8c1b79f3bdc1457fff4bf92409e2cf9a1041d9c9dc4c357a32d",
+                "pointer": "/$defs/SrdRecordUnion992Encoded/properties/mechanics",
+                "beforeNodeSha256": "7a7c6e65bcad24e752902d3c2cfc69396331eadfa9e2105e877190d8d771db09",
                 "afterNodeSha256": "057b07c525aad208330fb3ef2a5a3412ee837db8131b2dcecb40d155992745c2"
               }
             ],
             "bonusActionHealingMovementRider": [
               {
-                "pointer": "/$defs/SrdRecordUnion930Encoded/properties/mechanics",
-                "beforeNodeSha256": "dc79a9dad4418515b41f49e6d181569464d529f995e8ddcdc17f4b79ba50227b",
-                "afterNodeSha256": "b46e94fc398211767bdd98001a930a953d465468e5372a7516d8595b0bbe973b"
+                "pointer": "/$defs/SrdRecordUnion931Encoded/properties/mechanics",
+                "beforeNodeSha256": "ed6ce2bd36f9f8a6d2c5feb222cc3cce6aadad28dbb7f606fb379be049395885",
+                "afterNodeSha256": "ea187c962beb66da3a6bb6ef55667913e1a311b63880a5a53ea2408c52ab6d49"
               }
             ],
             "classFeatureIncrementMechanics": [
               {
+                "pointer": "/$defs/SrdRecordUnion782Encoded",
+                "beforeNodeSha256": "9a74a3516461d91e0040c82b6004bdc024d301fc4a123891795b7d4e8b8dd1f1",
+                "afterNodeSha256": "d10371e4813b08b0bc4ca901effdd10b3db94d14cea594ba1f05ef82d621b93c"
+              },
+              {
                 "pointer": "/$defs/SrdRecordUnion781Encoded/properties/mechanics",
-                "beforeNodeSha256": "49f329e76dd99cdd470a948e8b6c95479071ba717f92a094f7346ddbb9a0a08e",
-                "afterNodeSha256": "8f5e98311bbbb223d0d731ab1e22e4fa2f4ac22667ac1b1b4c6d7e4041a06675"
+                "beforeNodeSha256": "d5290dc9d3cc57f197fcfa9659f182cbfa92de82460e37004f01ee24fb594b3e",
+                "afterNodeSha256": "499ab4e12169dcce2b0e503d9ae478dc5cba020548e691f9d3a22e9a4941a68d"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion919Encoded/properties/mechanics",
-                "beforeNodeSha256": "9656f0788aad13f58a9d5041ecf87ee54876d8031f11c59c46dc0bcc9e1928c7",
-                "afterNodeSha256": "b8525db2430cfc09e661736455091d790d7d849d6dd39ad82be094b145fa21a6"
+                "pointer": "/$defs/SrdRecordUnion920Encoded/properties/mechanics",
+                "beforeNodeSha256": "23f5473452698d5d96f6ad4d4c689508dc20678f918a72f5669191a35b8969d8",
+                "afterNodeSha256": "cac5acb3b25716ad19b491d7cc7ed38daa6af7542ba45d2aa9976b4fb4bfdd79"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion954Encoded/properties/mechanics",
-                "beforeNodeSha256": "5165ee91ac54285484f317148a3cb11b7f405abcd8c81b604c568084d011a3cf",
-                "afterNodeSha256": "1d0eee4d9620d8684d1d57b5be8de56780ab1210af95d70daa9a061fbf9ffe57"
+                "pointer": "/$defs/SrdRecordUnion955Encoded/properties/mechanics",
+                "beforeNodeSha256": "7119a11e4520ece93f62d12a55a44dc5043a4f3156b468b91fbccf277eccd87f",
+                "afterNodeSha256": "9fd87732764bb9b21c24a70b77300040d8bb8ec8b1d291cc48d1eae35370efba"
               }
             ],
             "featRepeatability": [
               {
-                "pointer": "/$defs/SrdRecordUnion994Encoded",
-                "beforeNodeSha256": "0b653837ca04e8b1c1b4a5e29978a47cf1f6554b6f5d84720381a976073854c9",
-                "afterNodeSha256": "8c028c86c551bd68d08b1855675949c3addf696262cbf4ae6e552e46fd8f633c"
-              }
-            ],
-            "redundantSubsets": [
-              {
-                "pointer": "/$defs/PublishedSrdUnitRecord",
-                "beforeNodeSha256": "e73ea5ba1fa509b59af8e34913264926d67cf74a7ce69160e7e9da6e067e73d1",
-                "afterNodeSha256": "6805c2405608735744dc76b400e46b93db82a7a6f8ef484b43e9bf5ec75b5f24"
+                "pointer": "/$defs/SrdRecordUnion995Encoded",
+                "beforeNodeSha256": "26e353dd3ec68412832d2c918afe03d976ce82d46fd01d7cf7d09d7c8c348b03",
+                "afterNodeSha256": "735c3616aea1244535b23e80499142df454a8b7d5146a0b82a0d69a196d1762b"
               }
             ],
             "spellDeathAftermath": [
@@ -6225,6 +6237,13 @@
                 "pointer": "/$defs/SrdRecordUnion565Encoded",
                 "beforeNodeSha256": "956702340c413db623178e99d1684e4dfdd7fa63b3880cbe1ecfd60c7e4de00e",
                 "afterNodeSha256": "20a46e8edc668db95b3bbe82de1242e42dae0d8f5dbfe10f11e1fabd06d87a95"
+              }
+            ],
+            "redundantSubsets": [
+              {
+                "pointer": "/$defs/PublishedSrdUnitRecord",
+                "beforeNodeSha256": "e73ea5ba1fa509b59af8e34913264926d67cf74a7ce69160e7e9da6e067e73d1",
+                "afterNodeSha256": "6805c2405608735744dc76b400e46b93db82a7a6f8ef484b43e9bf5ec75b5f24"
               }
             ]
           },

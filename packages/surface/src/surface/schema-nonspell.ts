@@ -1341,6 +1341,20 @@ type FailedAbilityCheckResourceBoostMechanicsCodec = Schema.Struct<
 export const FailedAbilityCheckResourceBoostMechanicsSchema: FailedAbilityCheckResourceBoostMechanicsCodec =
   Schema.Struct(failedAbilityCheckResourceBoostMechanicsFields);
 
+const ongoingFeatureActivationMovementRiderMechanicsFields = codecFields({
+  family: Schema.Literal("ongoing_feature_activation_movement_rider"),
+  activatesWith: strictStruct({
+    resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
+  }),
+  movement: strictStruct({
+    optional: Schema.Literal(true),
+    maximum: Schema.Literal("half_current_speed"),
+    opportunityAttacks: Schema.Literal("ordinary"),
+  }),
+});
+export const OngoingFeatureActivationMovementRiderMechanicsSchema =
+  strictStruct(ongoingFeatureActivationMovementRiderMechanicsFields);
+
 const bonusActionHealingMovementRiderMechanicsFields = codecFields({
   family: Schema.Literal("bonus_action_healing_movement_rider"),
   activatesWith: Schema.Struct({
@@ -2296,6 +2310,7 @@ export const CombatTurnStartHeroicInspirationMechanicsSchema: CombatTurnStartHer
 const classFeatureMechanicsMembers = codecMembers(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
+  OngoingFeatureActivationMovementRiderMechanicsSchema,
   FeatureChoiceMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassFeatureResourceContainerMechanicsSchema,
@@ -2351,6 +2366,7 @@ export const ClassFeatureMechanicsSchema: ClassFeatureMechanicsCodec =
 const classGeneralFeatureMechanicsMembers = codecMembers(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
+  OngoingFeatureActivationMovementRiderMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassFeatureResourceContainerMechanicsSchema,
   ClassFeatureResourcePoolMechanicsSchema,

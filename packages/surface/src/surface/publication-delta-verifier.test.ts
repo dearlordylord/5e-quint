@@ -2094,6 +2094,33 @@ describe("Surface publication delta verifier", () => {
       },
     },
     {
+      name: "ongoing feature activation movement with suppressed Opportunity Attacks",
+      mutate: (schema: Record<string, unknown>): void => {
+        const branch = fixtureSingleMatch(
+          Object.values(fixtureObjectField(schema, "$defs")),
+          "activation movement branch",
+          (value) =>
+            isFixtureObject(value) &&
+            isFixtureObject(value.properties) &&
+            isFixtureObject(value.properties.family) &&
+            Array.isArray(value.properties.family.enum) &&
+            value.properties.family.enum[0] ===
+              "ongoing_feature_activation_movement_rider",
+        );
+        const movement = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObject(branch, "activation movement branch"),
+            "properties",
+          ),
+          "movement",
+        );
+        fixtureObjectField(
+          fixtureObjectField(movement, "properties"),
+          "opportunityAttacks",
+        ).enum = ["none"];
+      },
+    },
+    {
       name: "Tactical Shift activation without required resource",
       mutate: (schema: Record<string, unknown>): void => {
         const activation = fixtureObjectField(

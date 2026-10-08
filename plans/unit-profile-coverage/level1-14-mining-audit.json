@@ -46,14 +46,14 @@
       "spell-level": 791
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 645,
-      "accepted-no-battle-effect": 528,
+      "accepted": 647,
+      "accepted-no-battle-effect": 526,
       "battle-runtime-required": 47,
       "owner-evidence-required": 69
     },
     "rowsByCatalogAdmission": {
-      "installed": 1045,
-      "not-installed": 244
+      "installed": 1047,
+      "not-installed": 242
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 256,
@@ -68,8 +68,8 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 32,
-      "catalog-installed-owner-evidence-present": 649,
-      "catalog-only/dead-for-now": 333,
+      "catalog-installed-owner-evidence-present": 651,
+      "catalog-only/dead-for-now": 331,
       "class-progression-follow-up-required": 37,
       "missing-authored-record": 47,
       "missing-authored-runtime-closed": 23,
@@ -116,8 +116,8 @@
     "rowsByUnitProfileDisposition": {
       "not-recorded": 130,
       "profile-subset-supported": 139,
-      "supported-profile": 377,
-      "unsupported-profile": 643
+      "supported-profile": 379,
+      "unsupported-profile": 641
     }
   },
   "rows": [
@@ -21155,7 +21155,7 @@
         "sourceInventoryRowId": "srd521:classes:level-7:class-feature-grant:barbarian_feral_instinct",
         "state": "present"
       },
-      "nextAction": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes:level-7:class-feature-grant:barbarian_feral_instinct",
       "rowKind": "class-feature-grant",
       "source": {
@@ -21165,26 +21165,24 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/barbarian_feral_instinct.json",
+          "state": "authored-record-present",
+          "unitId": "barbarian_feral_instinct"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future generic start-battle Initiative roll-mode owner plus character-battle selected class-feature admission owner",
-          "reason": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "barbarian_feral_instinct"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -21201,7 +21199,7 @@
         "sourceInventoryRowId": "srd521:classes:level-7:class-feature-grant:barbarian_instinctive_pounce",
         "state": "present"
       },
-      "nextAction": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes:level-7:class-feature-grant:barbarian_instinctive_pounce",
       "rowKind": "class-feature-grant",
       "source": {
@@ -21211,26 +21209,24 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/barbarian_instinctive_pounce.json",
+          "state": "authored-record-present",
+          "unitId": "barbarian_instinctive_pounce"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "resource-option-rider-boundary",
-          "owner": "future battle-runtime Rage activation rider owner plus existing movement, path, and Opportunity Attack validation owners",
-          "reason": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "barbarian_instinctive_pounce"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }

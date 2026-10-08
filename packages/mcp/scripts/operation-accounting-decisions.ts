@@ -4006,6 +4006,24 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitActivation,
     ),
+    ongoingFeatureActivationMovementRider: account(
+      "continuation",
+      "ongoingFeatureActivationMovementRider",
+      at(
+        "packages/battle-runtime/src/battle-reducer/ongoing-feature-activation-movement.ts",
+        "resolveOngoingFeatureActivationMovement",
+      ),
+      REASONS.unitContinuation,
+    ),
+    passiveInitiativeRollMode: account(
+      "internal",
+      "passiveInitiativeRollMode",
+      at(
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "requiredInitiativeRollModeForCombatant",
+      ),
+      REASONS.unitFact,
+    ),
     bonusActionHealingMovementRider: account(
       "continuation",
       "bonusActionHealingMovementRider",

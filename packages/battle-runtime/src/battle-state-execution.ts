@@ -4444,6 +4444,10 @@ export type BattleSubjectResolutionPhase =
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
       readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
+      readonly admittedMovement?: Extract<
+        BattleInterruptedProcedure,
+        { readonly kind: "movement" }
+      >["movement"];
     };
 
 export type BattleAcceptedAttackAmmunitionSpend = {

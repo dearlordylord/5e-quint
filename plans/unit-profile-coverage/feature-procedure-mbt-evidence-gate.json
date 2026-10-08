@@ -197,6 +197,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -369,6 +373,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -538,6 +546,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -710,6 +722,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -882,6 +898,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -1049,6 +1069,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
@@ -1216,6 +1240,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
@@ -1383,6 +1411,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.attack-damage-rider",
@@ -1554,6 +1586,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.innate-sorcery-activation",
@@ -1756,6 +1792,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -1928,6 +1968,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -2097,6 +2141,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.passive-saving-throw-roll-mode",
@@ -2264,6 +2312,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -2431,6 +2483,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.first-attack-roll-reckless-advantage",
@@ -2603,6 +2659,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -2775,6 +2835,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -2942,6 +3006,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.action-surge-resource",
@@ -3109,6 +3177,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
@@ -3276,6 +3348,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.failed-ability-check-resource-boost",
@@ -3443,6 +3519,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
@@ -3610,6 +3690,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.passive-speed-bonus",
@@ -3777,6 +3861,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.alternate-action-cost",
@@ -3944,6 +4032,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.attack-damage-rider",
@@ -4115,6 +4207,10 @@
               "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.innate-sorcery-activation",

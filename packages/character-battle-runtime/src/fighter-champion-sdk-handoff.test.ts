@@ -95,7 +95,6 @@ describe("Fighter Champion real-catalog SDK handoff", () => {
           execution: {
             kind: "remarkableAthlete",
             remarkableAthlete: {
-              initiative: { kind: "rollAdvantage", roll: "initiative" },
               abilityCheck: {
                 kind: "rollAdvantage",
                 ability: "str",

@@ -349,6 +349,10 @@ function battleResolutionWithExecutionSnapshot(
                       kind: "subjectContinuation" as const,
                       subject: battleSubjectForReplay(pendingSubject),
                       ...optionalProperty(
+                        "admittedMovement",
+                        continuation.admittedMovement,
+                      ),
+                      ...optionalProperty(
                         "acceptedAttackAmmunitionSpend",
                         continuation.acceptedAttackAmmunitionSpend,
                       ),
@@ -394,6 +398,10 @@ function continuationMetadata(
   readonly acceptedAttackAmmunitionSpend:
     | BattleAcceptedAttackAmmunitionSpend
     | undefined;
+  readonly admittedMovement: Extract<
+    BattleState["subjectResolutionPhase"],
+    { readonly kind: "subjectContinuation" }
+  >["admittedMovement"];
 } {
   if (
     result.tag === "invalid" ||
@@ -402,6 +410,7 @@ function continuationMetadata(
     return {
       handledInterruptTrigger,
       acceptedAttackAmmunitionSpend: undefined,
+      admittedMovement: undefined,
     };
   }
   return {
@@ -410,6 +419,7 @@ function continuationMetadata(
       handledInterruptTrigger,
     acceptedAttackAmmunitionSpend:
       result.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend,
+    admittedMovement: result.state.subjectResolutionPhase.admittedMovement,
   };
 }
 

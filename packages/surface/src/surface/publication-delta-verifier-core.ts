@@ -1858,23 +1858,40 @@ function classifyCandidateSchema(
   };
   // Finite reviewed authored mechanics shapes. Changing any nested field changes
   // this digest and requires a separately reviewed classification and certificate.
+  const activationMovementRiderBranchHash =
+    "888d52745a182128f7c030ef66dd0bea132eb9200ef5eaf90da0bf8d4c77bf03";
   const classFeatureIncrementBranchHashes: ReadonlySet<string> = new Set([
+    activationMovementRiderBranchHash,
     "3b1215d02eedd9272f1317f9b7ff20f4b06bf507660be5874a55883d56e76b3b",
     "607744bd49566c6c57ff42203b377c0c98a745943f1106d336a44cf79086a8cc",
     "fbacc05fa4d00a7e48a96763a5b1028194059f869199a648c12988cadbfc2d63",
     "16cc37268ed0d78af5458f7c4cbcacc7845bdbdd28db9afbce385dbe656610cc",
     "a88f2f62f00251fdf98c703ba7552561ce2be3758fb3625ff54085b283da00df",
   ] as const);
+  const isClassFeatureIncrementUnionOwner = (
+    pointer: string,
+    matching: readonly JsonValue[],
+    memberCount: number,
+  ): boolean => {
+    if (
+      matching.length === 0 ||
+      matching.length > 2 ||
+      matching.length === memberCount
+    )
+      return false;
+    if (pointer.endsWith("/properties/mechanics")) return true;
+    return (
+      matching.length === 1 &&
+      canonicalNodeSha256(resolvePureLocalReference(schema, matching[0]!)) ===
+        activationMovementRiderBranchHash
+    );
+  };
   const classifyClassFeatureIncrementMechanics: SchemaObjectClassifier = (
     value,
     pointer,
     transformed,
   ) => {
-    if (
-      !reachable.has(value) ||
-      !pointer.endsWith("/properties/mechanics") ||
-      !Array.isArray(transformed.anyOf)
-    )
+    if (!reachable.has(value) || !Array.isArray(transformed.anyOf))
       return transformed;
     const matching = transformed.anyOf.filter((member) =>
       classFeatureIncrementBranchHashes.has(
@@ -1882,9 +1899,11 @@ function classifyCandidateSchema(
       ),
     );
     if (
-      matching.length === 0 ||
-      matching.length > 2 ||
-      matching.length === transformed.anyOf.length
+      !isClassFeatureIncrementUnionOwner(
+        pointer,
+        matching,
+        transformed.anyOf.length,
+      )
     )
       return transformed;
     const proposed = {

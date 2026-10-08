@@ -41,6 +41,16 @@ export function traceClassFeatureMechanics(
   }
   return Match.value(m).pipe(
     Match.discriminatorsExhaustive("family")({
+      ongoing_feature_activation_movement_rider: (m) => {
+        const movementId = ids("activation-movement");
+        nodes.push({
+          id: movementId,
+          category: "effect",
+          atomKind: m.family,
+          label: `${m.family}\n${m.activatesWith.resourceUnitId}\n${m.movement.maximum}\nordinary Opportunity Attacks`,
+        });
+        return [movementId];
+      },
       activation: (m) => {
         return [traceActivatedAbility(m, nodes, edges, ids)];
       },

@@ -1,0 +1,23 @@
+{
+  "acquiredAtLevel": 7,
+  "className": "barbarian",
+  "id": "barbarian_feral_instinct",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "modify_roll_advantage",
+        "mode": "advantage",
+        "on": [
+          "initiative"
+        ]
+      }
+    ]
+  },
+  "name": "Feral Instinct",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:298-301"
+  }
+}

@@ -8006,7 +8006,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 189,
+      "count": 191,
       "description": "An executable Unit profile exists for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -8020,7 +8020,9 @@
         "barbarian_danger_sense",
         "barbarian_extra_attack",
         "barbarian_fast_movement",
+        "barbarian_feral_instinct",
         "barbarian_frenzy",
+        "barbarian_instinctive_pounce",
         "barbarian_primal_knowledge",
         "barbarian_rage",
         "barbarian_reckless_attack",
@@ -8357,24 +8359,24 @@
       "numerator": 930,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 522,
-        "accepted-no-battle-effect": 408
+        "accepted": 524,
+        "accepted-no-battle-effect": 406
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 128,
-      "numerator": 116,
-      "percent": "90.6%"
+      "denominator": 130,
+      "numerator": 118,
+      "percent": "90.8%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 128,
-      "numerator": 128,
+      "denominator": 130,
+      "numerator": 130,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 187,
-      "numerator": 150,
-      "percent": "80.2%"
+      "denominator": 189,
+      "numerator": 152,
+      "percent": "80.4%"
     },
     "strictFinalSupport": {
       "denominator": 340,
@@ -8382,13 +8384,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 303,
-      "numerator": 189,
-      "percent": "62.4%"
+      "denominator": 305,
+      "numerator": 191,
+      "percent": "62.6%"
     },
     "strictTargetClosure": {
-      "denominator": 303,
-      "numerator": 303,
+      "denominator": 305,
+      "numerator": 305,
       "percent": "100%"
     }
   },
@@ -8420,92 +8422,6 @@
       }
     ],
     "noMatrixSrdPressure": [
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future generic start-battle Initiative roll-mode owner plus character-battle selected class-feature admission owner",
-              "reason": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Barbarian Feral Instinct",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "level-7",
-            "nextAction": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
-            "rowId": "srd521:classes:level-7:class-feature-grant:barbarian_feral_instinct",
-            "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "class feature",
-            "concept": "Barbarian Feral Instinct",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes:level-7:class-feature-grant:barbarian_feral_instinct",
-            "levelBand": "level-7",
-            "nextAction": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 301,
-              "lineStart": 298,
-              "path": ".references/srd-5.2.1/classes.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "unitId": "barbarian_feral_instinct"
-      },
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "kind": "resource-option-rider-boundary",
-              "owner": "future battle-runtime Rage activation rider owner plus existing movement, path, and Opportunity Attack validation owners",
-              "reason": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Barbarian Instinctive Pounce",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "level-7",
-            "nextAction": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
-            "rowId": "srd521:classes:level-7:class-feature-grant:barbarian_instinctive_pounce",
-            "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "class feature",
-            "concept": "Barbarian Instinctive Pounce",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes:level-7:class-feature-grant:barbarian_instinctive_pounce",
-            "levelBand": "level-7",
-            "nextAction": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 305,
-              "lineStart": 302,
-              "path": ".references/srd-5.2.1/classes.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "unitId": "barbarian_instinctive_pounce"
-      },
       {
         "inventoryAccounting": [
           {
@@ -14423,9 +14339,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 187,
-        "numerator": 150,
-        "percent": "80.2%"
+        "denominator": 189,
+        "numerator": 152,
+        "percent": "80.4%"
       }
     },
     "units": [
@@ -14721,6 +14637,28 @@
                 "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
               }
             ],
+            "profileId": "unit-feature.passive-initiative-roll-mode",
+            "profileKind": "passive",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "barbarian_feral_instinct"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.attack-damage-rider",
             "profileKind": "persistent-effect",
             "qntOwners": [
@@ -14730,6 +14668,28 @@
           }
         ],
         "unitId": "barbarian_frenzy"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.ongoing-feature-activation-movement-rider",
+            "profileKind": "bonus-action",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "barbarian_instinctive_pounce"
       },
       {
         "joinStatus": "mapped-open",
@@ -19883,18 +19843,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 214,
-      "numerator": 214,
+      "denominator": 216,
+      "numerator": 216,
       "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 23,
-      "witness-present": 191
+      "witness-present": 193
     },
     "rowsByStatus": {
       "not-applicable": 23,
       "not-required": 89,
-      "witness-present": 191
+      "witness-present": 193
     }
   },
   "sourceArtifacts": {
@@ -20415,8 +20375,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 7",
         "metrics": {
-          "denominator": 74,
-          "numerator": 74,
+          "denominator": 76,
+          "numerator": 76,
           "percent": "100%"
         },
         "rows": [
@@ -20482,6 +20442,24 @@
             "sourceRecordPath": "packages/surface/content/barbarian_fast_movement.json",
             "status": "installed",
             "unitId": "barbarian_fast_movement"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-7",
+            "sourceRecordPath": "packages/surface/content/barbarian_feral_instinct.json",
+            "status": "installed",
+            "unitId": "barbarian_feral_instinct"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-7",
+            "sourceRecordPath": "packages/surface/content/barbarian_instinctive_pounce.json",
+            "status": "installed",
+            "unitId": "barbarian_instinctive_pounce"
           },
           {
             "kind": "class_feature",
@@ -21088,7 +21066,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 74
+          "installed": 76
         }
       },
       {
@@ -21179,8 +21157,8 @@
       }
     ],
     "metrics": {
-      "denominator": 122,
-      "numerator": 122,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -21190,7 +21168,7 @@
     "candidateUnitIdsBeforeExclusions": 353,
     "groupsByClaimTag": {
       "profile-subset-supported": 25,
-      "supported-profile": 189,
+      "supported-profile": 191,
       "unsupported-profile": 89
     },
     "groupsByStatus": {
@@ -21199,9 +21177,9 @@
       "closed-companion-control-boundary": 4,
       "closed-outside-battle-runtime-boundary": 38,
       "closed-runtime-detached-table-adjudication": 58,
-      "supported-profile": 189
+      "supported-profile": 191
     },
     "nonSupportedFrontier": 114,
-    "strictDenominator": 303
+    "strictDenominator": 305
   }
 }
