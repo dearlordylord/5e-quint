@@ -455,14 +455,23 @@ function executeQualityMilestone(
   const exitCode =
     emergencyCheckId !== undefined
       ? 137
-      : outcomes.some((outcome) => outcome.status === "FAIL")
+      : outcomes.some((outcome) => outcome.status !== "PASS")
         ? 1
         : 0;
   return { outcomes, exitCode };
 }
 
 function runQualityMilestone() {
-  const result = executeQualityMilestone(QUALITY_MILESTONE_PLAN);
+  const args = process.argv.slice(3);
+  assert(
+    args.length === 0 || (args.length === 1 && args[0] === "--collect-all"),
+    "Usage: quality:milestone [--collect-all]",
+  );
+  const result = executeQualityMilestone(
+    qualityMilestonePlan.qualityMilestonePlan({
+      collectAll: args.length === 1,
+    }),
+  );
   process.exitCode = result.exitCode;
 }
 
@@ -972,13 +981,24 @@ function selfTest() {
     run(process.execPath, [
       "--test",
       join(ROOT, "scripts/verification-deadline-policy.test.mjs"),
+      join(ROOT, "scripts/affected-typecheck.test.mjs"),
     ]).status,
     0,
-    "Shared deadline policy self-tests must pass.",
+    "Shared deadline and affected-package selection self-tests must pass.",
   );
   checkInventory();
   const rootPackage = JSON.parse(
     readFileSync(join(ROOT, "package.json"), "utf8"),
+  );
+  assert.equal(
+    rootPackage.scripts["typecheck:affected"],
+    ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh node scripts/affected-typecheck.mjs",
+    "The affected-package typecheck must own the broad workspace lock.",
+  );
+  assert.equal(
+    rootPackage.scripts["check:affected-typecheck"],
+    ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh node scripts/affected-typecheck.integration.mjs",
+    "The typecheck boundary fixture must own the broad workspace lock.",
   );
   assert.equal(
     rootPackage.scripts.quality,
@@ -1084,7 +1104,15 @@ function selfTest() {
     "run",
     "coverage:body",
   ]);
-  assert.deepEqual(QUALITY_MILESTONE_PLAN.at(-1).prerequisites, ["build"]);
+  assert.deepEqual(
+    QUALITY_MILESTONE_PLAN.at(-1).prerequisites,
+    QUALITY_MILESTONE_PLAN.slice(0, -1).map(({ id }) => id),
+  );
+  assert.deepEqual(
+    qualityMilestonePlan.qualityMilestonePlan({ collectAll: true }).at(-1)
+      .prerequisites,
+    ["build"],
+  );
   assert.deepEqual(
     QUALITY_MILESTONE_PLAN.find(({ id }) => id === "deployment-lifecycle")
       .prerequisites,
@@ -1101,6 +1129,95 @@ function selfTest() {
     args: [id],
     prerequisites,
   });
+  for (const failedGate of [
+    "typecheck",
+    "authored-id-dispatch",
+    "stat-block-execution-reconciliation",
+  ]) {
+    for (const collectAll of [false, true]) {
+      const calls = [];
+      let clock = 0n;
+      const result = executeQualityMilestone(
+        qualityMilestonePlan.qualityMilestonePlan({ collectAll }),
+        {
+          execute: (check) => {
+            calls.push(check.id);
+            clock += check.id === "coverage" ? 10_000_000_000n : 1_000_000n;
+            return { status: check.id === failedGate ? 1 : 0, signal: null };
+          },
+          now: () => clock,
+          write: () => {},
+        },
+      );
+      assert.equal(calls.includes("coverage"), collectAll);
+      assert.equal(result.exitCode, 1);
+      assert.equal(
+        result.outcomes.at(-1).status,
+        collectAll ? "PASS" : "BLOCKED",
+      );
+      if (!collectAll)
+        assert.deepEqual(result.outcomes.at(-1).blockedBy, [failedGate]);
+      assert.equal(
+        result.outcomes.at(-1).durationMilliseconds,
+        collectAll ? 10_000 : 0,
+      );
+    }
+  }
+  const earlyFailureMeasurements = [true, false].map((collectAll) => {
+    const calls = [];
+    const startedAt = process.hrtime.bigint();
+    const result = executeQualityMilestone(
+      qualityMilestonePlan.qualityMilestonePlan({ collectAll }),
+      {
+        execute: (check) => {
+          calls.push(check.id);
+          if (check.id === "coverage") {
+            return spawnSync(
+              process.execPath,
+              ["-e", "setTimeout(() => {}, 100)"],
+              { encoding: "utf8" },
+            );
+          }
+          return { status: check.id === "typecheck" ? 1 : 0, signal: null };
+        },
+        write: () => {},
+      },
+    );
+    assert.equal(result.exitCode, 1);
+    return {
+      collectAll,
+      coverageInvocations: calls.filter((id) => id === "coverage").length,
+      elapsedMilliseconds: elapsedMilliseconds(
+        startedAt,
+        process.hrtime.bigint(),
+      ),
+    };
+  });
+  assert.deepEqual(
+    earlyFailureMeasurements.map(
+      ({ coverageInvocations }) => coverageInvocations,
+    ),
+    [1, 0],
+  );
+  process.stdout.write(
+    `Controlled early-failure fixture: ${JSON.stringify(earlyFailureMeasurements)}\n`,
+  );
+
+  const successfulCalls = [];
+  const successfulMilestone = executeQualityMilestone(QUALITY_MILESTONE_PLAN, {
+    execute: (check) => {
+      successfulCalls.push(check.id);
+      return { status: 0, signal: null };
+    },
+    now: () => 0n,
+    write: () => {},
+  });
+  assert.deepEqual(
+    successfulCalls,
+    QUALITY_MILESTONE_PLAN.map(({ id }) => id),
+  );
+  assert.equal(successfulMilestone.exitCode, 0);
+
   const collectingPlan = [
     fixtureCheck("failure"),
     fixtureCheck("dependent", ["failure"]),

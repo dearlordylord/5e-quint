@@ -419,6 +419,61 @@ runtime packages own executable semantics and parity tests.
 - `content/<slug>.json` — compiled authored JSON consumed by package code.
 - `content/<slug>.trace.md` — regenerable trace output.
 
+## Coverage resource study (#591)
+
+On 2026-10-08, two baseline runs used Surface sources at
+`5a1a8e3d412d3fd5e65e6bd41d64e3fc195d4536` in an isolated Linux checkout
+with frozen pnpm dependencies. Each run invoked the public
+`pnpm coverage:diagnose --package surface` command, serially under its existing
+broad lock. Baseline and candidate runs retained one threaded worker, all
+56 files / 783 tests, coverage ownership, and all existing thresholds.
+
+| Candidate                                            | Execution seconds (two runs) | Peak process-tree RSS (GiB) | User + system CPU seconds | Host busy fraction |
+| ---------------------------------------------------- | ---------------------------- | --------------------------- | ------------------------- | ------------------ |
+| Baseline                                             | 540.36, 559.36               | 4.90, 5.45                  | 740.76, 660.02            | 30.7%, 34.7%       |
+| Shared module cache, isolated mocking test           | 535.08, 534.50               | 8.74, 9.55                  | 627.20, 621.87            | 24.5%, 25.6%       |
+| Publication JSON Schema generation in its own module | 526.34, 533.98               | 8.81, 8.75                  | 617.65, 626.92            | 21.2%, 21.3%       |
+
+Execution time excludes lock queue time: baseline queues were 1908.929 and
+3.517 seconds; candidate queues were 0.015–0.019 seconds. CPU totals include
+queue work, so the first baseline CPU total is not a clean execution comparison.
+RSS is the maximum sum of resident sizes across the command's descendant
+process tree, sampled from Linux `/proc` every 0.25 seconds; it includes shared
+pages more than once and may miss shorter peaks. CPU totals use child resource
+usage; host busy fraction uses `/proc/stat` over the admitted execution interval.
+The host remained shared: its one-minute load ranged from 7.20–9.93 around the
+second baseline, versus 4.51–8.06 around the module-separation runs. Lower
+candidate contention prevents attributing these timing differences to code alone.
+The local study artifacts (logs, measurements, rejected patches, and sampler)
+are in `.artifacts/surface-coverage-profile/`.
+
+Baseline variation was 19.00 seconds and 0.55 GiB. Cache sharing saved
+5.28–24.85 seconds (0.98–4.44%) against the baseline range but added
+3.29–4.65 GiB (60–95%). Module separation saved 6.38–33.02 seconds
+(1.18–5.90%) but added 3.30–3.91 GiB (61–80%). Neither candidate demonstrated
+a safe improvement under comparable contention; both were rejected. Original
+file isolation and schema ownership remain in place. No concurrency, heap limit,
+coverage exclusion, threshold, or required gate was changed.
+
+The baseline Vitest breakdown attributed 500.07–515.46 seconds to test bodies
+and 30.82–33.94 seconds to imports, with 2.04–2.25 seconds of transform work.
+The public command finished only 1.59–1.93 seconds after Vitest's reported
+complete duration; this bounds additional wrapper/reporting cost, but does not
+separate remapping already included inside Vitest. The nested role-traversal
+subprocess reported 11.31–17.40 seconds, within the parent test-body total.
+Process observations put the largest CPU total in the main Vitest process;
+threaded workers share that process, so this is not per-test attribution.
+These observations identify test execution as the dominant measured wall cost;
+repeated module initialization is a smaller contributor and was not established
+as the cause of the memory peak.
+
+The next focused study should collect Vitest's JSON per-file/test timings and a
+CPU profile on the unchanged baseline, including the publication-schema and
+Stat Block property-test bodies. Correlate process-tree memory peaks with test
+phases and the nested subprocess before changing schema construction or fixture
+lifetimes. Repeat the proposed change with baseline runs interleaved under
+similar host contention, preserving the same test inventory and coverage gates.
+
 ## Related docs
 
 - [`docs/mushroom-playbook/AUTHORING.md`](../../docs/mushroom-playbook/AUTHORING.md) — public/private authoring and publication boundary.

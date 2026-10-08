@@ -9,7 +9,7 @@ function check(id, args, prerequisites = []) {
   });
 }
 
-const QUALITY_MILESTONE_PLAN = Object.freeze([
+const PRE_COVERAGE_CHECKS = Object.freeze([
   check("build", ["run", "build:turbo"]),
   check(
     "deployment-lifecycle",
@@ -104,7 +104,18 @@ const QUALITY_MILESTONE_PLAN = Object.freeze([
   check("duplication", ["duplication"]),
   check("circular", ["circular"]),
   check("typecheck", ["run", "typecheck:turbo"]),
-  check("coverage", ["run", "coverage:body"], ["build"]),
 ]);
 
-module.exports = { QUALITY_MILESTONE_PLAN };
+function qualityMilestonePlan({ collectAll = false } = {}) {
+  return Object.freeze([
+    ...PRE_COVERAGE_CHECKS,
+    check(
+      "coverage",
+      ["run", "coverage:body"],
+      collectAll ? ["build"] : PRE_COVERAGE_CHECKS.map(({ id }) => id),
+    ),
+  ]);
+}
+
+const QUALITY_MILESTONE_PLAN = qualityMilestonePlan();
+module.exports = { QUALITY_MILESTONE_PLAN, qualityMilestonePlan };

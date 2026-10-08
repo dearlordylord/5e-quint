@@ -13,6 +13,31 @@ validate. Retain `git status` checks that enforce clean-worktree admission.
 Ignored local RAW corpus discovery remains governed by the local-passage workflow
 in [AGENTS.md](../../AGENTS.md).
 
+## Pre-integration TypeScript Check
+
+Before declaring implementation ready for integration, run
+`pnpm typecheck:affected --base <base-revision>` from the checkout. The base
+must precede the implementation changes; the default is `HEAD` for uncommitted
+work. The public command acquires the broad verification lock, runs each
+selected package's public typecheck serially, and includes changed test files.
+Package ownership comes from pnpm's workspace inventory; transitive consumers
+come from their package dependency declarations. Changes outside a known
+package select all workspace packages.
+
+The emitted JSON evidence includes the base, checked revision, input SHA-256,
+package scope, elapsed time, and result. A passing result requires unchanged
+inputs during execution. Changed inputs invalidate that evidence; rerun before
+handoff. This scoped check does not replace the final integrated milestone.
+
+## Milestone Failure Policy
+
+`pnpm quality:milestone` collects prerequisite failures and blocks production
+coverage unless every preceding required gate passes. The summary names the
+blocking gates and reports failure. Use `pnpm quality:milestone --collect-all`
+explicitly for diagnostic collection: coverage then requires only a successful
+build, while failures still make the command fail. Either mode stops launching
+stages after SIGKILL or exit 137 and retains existing descendant cleanup.
+
 ## Deadline Policy
 
 The shared verification wrappers and stage owners use
