@@ -196,6 +196,48 @@ function nextRound(state: BattleState) {
 }
 
 describe("Barbarian level 7 real-catalog SDK handoff", () => {
+  test("Initiative admission reports missing selected content before rolling", () => {
+    const { build } = barbarianSession(7);
+    expect(
+      characterBattleInitiativeRollMode({
+        build: {
+          ...build,
+          features: [
+            ...build.features,
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: unitId("barbarian_primal_knowledge"),
+              unitId: unitId("synthetic:missing-initiative-selection"),
+            },
+          ],
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        message: expect.stringContaining("Unknown Character Build Unit"),
+      },
+    });
+  });
+  test("Initiative admission reports a non-class progression source before rolling", () => {
+    const { build } = barbarianSession(7);
+    expect(
+      characterBattleInitiativeRollMode({
+        build: {
+          ...build,
+          progression: {
+            ...build.progression,
+            startingClass: classUnitId(unitId("weapon_longsword")),
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { message: "Expected class Unit: weapon_longsword" },
+    });
+  });
   test("Feral Instinct grants Initiative Advantage at level 7", () => {
     const { actorId, session } = barbarianSession(7);
     expect(requiredInitiativeRollModeForCombatant(session.state, actorId)).toBe(
