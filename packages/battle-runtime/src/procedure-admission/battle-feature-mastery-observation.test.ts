@@ -37,7 +37,9 @@ const EXPECTED_OBSERVED_ROOT_IDS = [
   "barbarian_danger_sense",
   "barbarian_extra_attack",
   "barbarian_fast_movement",
+  "barbarian_feral_instinct",
   "barbarian_frenzy",
+  "barbarian_instinctive_pounce",
   "barbarian_retaliation",
   "bard_bardic_inspiration",
   "bard_cutting_words",
@@ -104,8 +106,15 @@ const EXPECTED_OBSERVED_ROOT_IDS = [
   "wizard_potent_cantrip",
 ] as const;
 
+const EXPECTED_SOURCE_FACT_ONLY_ROOT_IDS = [
+  "species_dragonborn_breath_weapon",
+  "species_dragonborn_damage_resistance",
+] as const;
+
 const EXPECTED_CONTEXTUAL_OR_SUPPORT_ONLY_ROOT_IDS = [
   "barbarian_brutal_strike",
+  "barbarian_feral_instinct",
+  "barbarian_instinctive_pounce",
   "druid_wild_companion",
   "fighter_improved_critical",
   "fighter_tactical_master",
@@ -155,7 +164,7 @@ function minimumOwningClassContext(unit: AuthoredUnitSource) {
 }
 
 describe("Battle feature and mastery support observations", () => {
-  test("reproduces the exact 70 observed roots without double-counting source-fact variants", () => {
+  test("reproduces the exact observed roots without double-counting source-fact variants", () => {
     const baseObserved = new Set<string>();
     const sourceFactObserved = new Set<string>();
 
@@ -181,15 +190,15 @@ describe("Battle feature and mastery support observations", () => {
     }
 
     const observed = new Set([...baseObserved, ...sourceFactObserved]);
-    expect(baseObserved.size).toBe(68);
+    expect(baseObserved.size).toBe(
+      EXPECTED_OBSERVED_ROOT_IDS.length -
+        EXPECTED_SOURCE_FACT_ONLY_ROOT_IDS.length,
+    );
     expect(
       [...sourceFactObserved].filter((id) => !baseObserved.has(id)).sort(),
-    ).toEqual([
-      "species_dragonborn_breath_weapon",
-      "species_dragonborn_damage_resistance",
-    ]);
+    ).toEqual([...EXPECTED_SOURCE_FACT_ONLY_ROOT_IDS]);
     expect([...observed].sort()).toEqual([...EXPECTED_OBSERVED_ROOT_IDS]);
-    expect(observed.size).toBe(70);
+    expect(observed.size).toBe(EXPECTED_OBSERVED_ROOT_IDS.length);
   });
 
   test("keeps contextual and support-only overlap separate from admission evidence", () => {

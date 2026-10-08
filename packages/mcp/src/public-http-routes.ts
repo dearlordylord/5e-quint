@@ -131,10 +131,7 @@ async function handleMcpGetRoute(
   // server stream must be declined before allocating a transport keepalive.
   await writePublicHttpResponse(
     input.outgoing,
-    new Response("Method not allowed", {
-      status: 405,
-      headers: { Allow: "POST" },
-    }),
+    new Response(null, { status: 405, headers: { Allow: "POST" } }),
   );
   return { status: 405, outcome: "rejected" };
 }

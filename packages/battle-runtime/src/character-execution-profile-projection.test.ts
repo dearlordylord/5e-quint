@@ -131,6 +131,10 @@ const UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
 ] as const satisfies ReadonlyArray<UnitFeatureProjectionFailure>;
 const UNIT_SUPPORT_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
   {
+    unitId: unitId("barbarian_instinctive_pounce"),
+    kind: "ongoingFeatureActivationMovementRider",
+  },
+  {
     unitId: unitId("fighter_tactical_shift"),
     kind: "bonusActionHealingMovementRider",
   },

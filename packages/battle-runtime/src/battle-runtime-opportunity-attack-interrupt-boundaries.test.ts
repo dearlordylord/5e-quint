@@ -224,6 +224,12 @@ function retaliationBoundarySession(
     ...(input.includeCriticalMovement === true ? [remarkableAthlete] : []),
     ...(input.includeWeaponDamageDiceChoice === true ? [savageAttacker] : []),
   ];
+  const classLevels = [
+    { className: "barbarian" as const, level: classLevel(10) },
+    ...(input.includeCriticalMovement === true
+      ? [{ className: "fighter" as const, level: classLevel(3) }]
+      : []),
+  ];
   return startBattleSessionRight({
     battleId: battleId("battle-opportunity-attack-interrupt-boundaries"),
     combatants: [
@@ -231,18 +237,17 @@ function retaliationBoundarySession(
         combatantId: fighterId,
         displayName: "Synthetic Berserker",
         initiative: 20,
-        classLevels: [{ className: "barbarian", level: 10 }],
+        classLevels,
         resources: [rageResource()],
         unitFeatures: [
-          characterBattleFeatureInitForTest(retaliation, [
-            { className: "barbarian", level: classLevel(10) },
-          ]),
+          characterBattleFeatureInitForTest(retaliation, classLevels),
           characterBattleFeatureInitForTest(halflingLuck),
           ...(input.includeCriticalMovement === true
             ? [
-                characterBattleFeatureInitForTest(remarkableAthlete, [
-                  { className: "fighter", level: classLevel(3) },
-                ]),
+                characterBattleFeatureInitForTest(
+                  remarkableAthlete,
+                  classLevels,
+                ),
               ]
             : []),
         ],
