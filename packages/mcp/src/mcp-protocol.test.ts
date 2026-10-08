@@ -1981,10 +1981,11 @@ describe("MCP protocol server", () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { playSessions, server } = createDndMcpProtocolServer();
-    const client = new Client({
-      name: "battle-round-trip-protocol-client",
-      version: "0.1.0",
-    });
+    const schemaValidator = new AjvJsonSchemaValidator();
+    const client = new Client(
+      { name: "battle-round-trip-protocol-client", version: "0.1.0" },
+      { jsonSchemaValidator: schemaValidator },
+    );
     const firstCharacterId = characterId("character:protocol-gh324-first");
     const secondCharacterId = characterId("character:protocol-gh324-second");
     try {
@@ -2003,10 +2004,10 @@ describe("MCP protocol server", () => {
       ) {
         throw new Error("Expected start_battle and end_battle output schemas.");
       }
-      const validateStartOutput = new AjvJsonSchemaValidator().getValidator(
+      const validateStartOutput = schemaValidator.getValidator(
         ajvJsonSchema(startBattleTool.outputSchema),
       );
-      const validateEndOutput = new AjvJsonSchemaValidator().getValidator(
+      const validateEndOutput = schemaValidator.getValidator(
         ajvJsonSchema(endBattleTool.outputSchema),
       );
       const playSessionId = await createPlaySession(client);
