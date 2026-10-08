@@ -12,7 +12,6 @@ import {
   requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
-  resolveBattleSubject,
   resolveBattleInterrupt,
   startBattleSessionRight,
   supportedBattleUnitRef,
@@ -24,6 +23,7 @@ import {
   type BattleState,
 } from "./battle-runtime.test-support.ts";
 import {
+  resolveBattleSubject,
   opportunityAttackExecutionCandidates,
   snapshotBattle,
   requiredInitiativeRollModeForCombatant,

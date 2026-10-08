@@ -3244,7 +3244,7 @@ export function attackRollFill(
 export function unitFeatureDecisionFill(
   hole: BattleHole,
   value: Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>["value"],
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "unitFeatureDecision" }> {
   if (hole.kind !== "unitFeatureDecision") {
     throw new Error("Expected unitFeatureDecision hole.");
   }

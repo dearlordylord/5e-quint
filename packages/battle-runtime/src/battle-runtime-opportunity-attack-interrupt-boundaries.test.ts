@@ -229,7 +229,7 @@ function retaliationBoundarySession(
     ...(input.includeCriticalMovement === true
       ? [{ className: "fighter" as const, level: classLevel(3) }]
       : []),
-  ];
+  ] satisfies NonNullable<Parameters<typeof characterSeed>[0]["classLevels"]>;
   return startBattleSessionRight({
     battleId: battleId("battle-opportunity-attack-interrupt-boundaries"),
     combatants: [
