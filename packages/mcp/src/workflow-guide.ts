@@ -22,13 +22,13 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       "Call discover_battle_acts and copy a returned subject exactly.",
       "For every ordinary Holes frontier, read envelope.frontier.pendingProcedure as the canonical procedure awaiting the returned holes. A subjectResolution procedure is replay-root work; a turnBoundary procedure identifies the ending actor, incoming source turn, and either outgoing End Turn, start-turn occurrence ordering, or the exact start-turn occurrence request.",
       toolSurface === "chatgpt"
-        ? "Select an Act through its named tool with subject and no fill, even when it has initialHoles. The returned pending transaction owns that operation; supply one ordinary fact at a time through answer_battle_hole with fill and no subject. For an attack target hole, copy actorId and the complete branch-specific selection from hole.attack into the attackTargetDistance fact."
+        ? "Select an Act through its named tool with subject and no fill, even when it has initialHoles. The returned pending transaction owns that operation; supply one ordinary fact at a time through provide_battle_input with fill and no subject. For an attack target hole, copy actorId and the complete branch-specific selection from hole.attack into the attackTargetDistance fact."
         : `If an act has initialHoles, call ${fillOperation} with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved. For an attack target hole, copy actorId from hole.attack.actorId and copy the complete branch-specific selection from hole.attack.selection into the attackTargetDistance fact.`,
       "Ranged Spell Attacks use one canonical spell range, not separate normal/long bands: provide the exact caster-to-target distance and keep it at or below the returned rangeFeet. A separate rangedSpellAttackEnemyProximity fact records any adjacent visible, non-Incapacitated enemy that imposes Disadvantage, regardless of the selected target.",
       `If an act has no holes, call ${resolveOperation} with the typed subject.`,
       "Call end_turn only when no Battle continuation inputs are pending.",
       toolSurface === "chatgpt"
-        ? "If end_turn asks for a Death Saving Throw hole, answer it through answer_battle_hole with fill and no subject before taking other Battle actions."
+        ? "If end_turn asks for a Death Saving Throw hole, answer it through provide_battle_input with fill and no subject before taking other Battle actions."
         : `If end_turn asks for a Death Saving Throw hole, copy envelope.frontier.replaySubject into the next ${fillOperation} request as its subject and fill that pending replay subject before taking other battle actions.`,
       "Call end_battle only when no Battle continuation inputs are pending, then list_characters for durable HP, zero-HP lifecycle, and Spell Slot handoff.",
       `Call ${characterQuery} with one returned characterId and a discriminated query variant to inspect existing Character Sheet projections; it returns typed rejection while that character is in Battle and admits only ritual Spell Invocation inspection outside Battle.`,
@@ -83,10 +83,10 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       `On BATTLE_ACT_REQUIRES_HOLES, use ${fillOperation} instead of ${resolveOperation}.`,
       toolSurface === "chatgpt"
-        ? "On any ordinary pending-fill response, preserve the returned holes and supply one current fact through answer_battle_hole with fill and no subject. Select each Reaction through its named tool with an interruptDecision fill, no subject, and choice.fills: []; answer its returned ordinary holes through answer_battle_hole."
+        ? "On any ordinary pending-fill response, preserve the returned holes and supply one current fact through provide_battle_input with fill and no subject. Select each Reaction through its named tool with an interruptDecision fill, no subject, and choice.fills: []; answer its returned ordinary holes through provide_battle_input."
         : "On any ordinary pending-fill response, preserve envelope.frontier.pendingProcedure with the replaySubject and holes while resubmitting the complete accepted Fill prefix.",
       toolSurface === "chatgpt"
-        ? "On pending-fill errors, rediscover the current hole and retry answer_battle_hole with fill and no subject; the retained transaction owns the subject."
+        ? "On pending-fill errors, rediscover the current hole and retry provide_battle_input with fill and no subject; the retained transaction owns the subject."
         : `On pending-fill errors, copy envelope.frontier.replaySubject into the next ${fillOperation} request as its subject, then continue filling it until the result resolves.`,
       `Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through ${characterMutation}; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply strictly increasing cumulativeRestedTicks segments and its final cumulative segment in the same call.`,
     ],
@@ -108,7 +108,7 @@ function workflowTools(surface: McpToolSurface) {
       characterQuery: "the named query tool (such as query_spell_access)",
       lifecycle:
         "apply_initiative_swap, finalize_initial_initiative_setup, add_combatant, or remove_combatant",
-      fillOperation: "answer_battle_hole, with fill and without subject",
+      fillOperation: "provide_battle_input, with fill and without subject",
       resolveOperation:
         "the owning named tool from chatGptBattleOperations, omitting fill",
     })),

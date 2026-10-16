@@ -1,18 +1,22 @@
 {
   "kind": "independentStaticForwardTest",
   "evaluator": "Codex independent subagent",
-  "evaluatorTask": "/root/skill_forward_evaluation",
+  "evaluatorTask": "/root/metadata_requirements",
   "installedChatGptEvidence": false,
   "status": "passed",
-  "skillSourceDigest": "04436b5f220d270219db3c673d97733e70f4397bedcb5bbdf9fce0a880cc1110",
+  "skillSourceDigest": "48c151575186395d5bc03802466583ba1dd1ea7bcad8bea6bf8396ef5351aab9",
   "skillActivationInventoryDigest": "f42848a7cc0d0b7ab9dca058f06c49a49b95becda49463536fd516b19ad3d219",
-  "evaluationScope": "Source-only forward evaluation of the five inventory requests against an immutable Skill/UI metadata snapshot and the actual 126-tool names/descriptions. Expected activations and previous evaluation results were withheld from the evaluator. No MCP execution or installed-ChatGPT observation was performed.",
+  "evaluationScope": "Source-only independent forward evaluation of five prompts against the changed Skill/UI metadata and actual 126 advertised tool names/descriptions. Expected activations and the prior evaluation were withheld. A packet missing session tools was corrected and all cases re-evaluated. No MCP execution or installed-ChatGPT observation was performed.",
   "cases": [
     {
       "id": "skill-direct",
       "activation": "activate",
-      "toolIntents": ["describe_mcp_workflow", "list_catalog_units"],
-      "result": "I’ll use 5.5e SRD Oracle to retrieve the installed character options and present them by kind. The installed catalog shows what is present; your character’s creation choices determine what is currently legal for that build.",
+      "toolIntents": [
+        "describe_mcp_workflow",
+        "list_catalog_units",
+        "inspect_catalog_unit"
+      ],
+      "result": "I’ll check the installed SRD catalog and show you its character options.",
       "outcome": "metExpectation"
     },
     {
@@ -23,47 +27,44 @@
         "create_play_session",
         "create_character_draft"
       ],
-      "result": "I’ll use 5.5e SRD Oracle to start your character and retrieve its supported choices. I’ll present the available independent decisions together so you can answer them in one reply.",
+      "result": "I’ll start an SRD character draft and show you the supported choices available now.",
       "outcome": "metExpectation"
     },
     {
       "id": "skill-continuation",
       "activation": "activate",
       "toolIntents": ["read_play_session", "discover_creation_holes"],
-      "result": "I’ll resume the same character in 5.5e SRD Oracle and check what remains to choose. Then I’ll show the currently available decisions together.",
+      "result": "I’ll reopen the same character draft and gather the choices you still need to make.",
       "outcome": "metExpectation"
     },
     {
       "id": "skill-unrelated-dnd",
       "activation": "doNotActivate",
       "toolIntents": [],
-      "result": "D&D emerged from tabletop miniature wargaming in the 1970s. Players took the roles of individual adventurers, while a referee described the world and resolved their actions. Exploration, negotiation, and improvised solutions became central parts of play alongside combat.\n\nThe hobby spread through home groups, clubs, conventions, and published adventures. Successive editions changed its rules and brought in new generations of players. Online play and streamed games later widened its audience. Its enduring appeal is creating a shared story through player decisions and dice.",
+      "result": "D&D began in the 1970s by combining miniature wargaming with playing individual fantasy characters. It grew through home groups, published adventures, conventions, and later online communities and streamed games.",
       "outcome": "metExpectation"
     },
     {
       "id": "skill-authoring-boundary",
       "activation": "activate",
       "toolIntents": [],
-      "result": "No—this MCP uses only its installed redistributable SRD catalogs. It does not offer an import path for your custom executable monster to use in battle.",
+      "result": "This MCP uses only its installed redistributable SRD catalogs. It cannot import your custom executable monster for battle.",
       "outcome": "metExpectation"
     }
   ],
   "observations": [
-    "Installed catalog browsing is distinct from legal character-creation choices. Direct requests use catalog discovery; character-making requests start a Play Session and draft.",
-    "Tool intentions are sequential plans, not executed operations. The snapshot contains no tool responses, argument schemas, catalog contents, session handles, or creation options. Proposed responses describe the immediate continuation without claiming completion.",
-    "Catalog inspection is conditional on returned ids needing authored detail; only ids returned by discovery would be inspected.",
-    "Character draft creation depends on successful Play Session creation and its returned handle. The workflow guide supplies argument patterns. OAuth challenges initiate account linking without requesting credentials in conversation.",
-    "Continuation begins with read_play_session using the retained handle. No actual handle was supplied in the static snapshot; detailed creation-hole discovery is conditional on the session summary and retained draft identity.",
-    "Creation results supply independent meaningful choices to present together. Forced single-option choices are applied automatically and reported. Options and fills cannot be fabricated.",
-    "Reporting now covers returned results and state after every operation, with envelope-specific reporting for Play Session operations. Discovery results do not require a Play Session envelope.",
-    "The authored-content response establishes this MCP admission boundary, not every possible interface to an underlying engine.",
-    "No contradictions affecting these requests were observed. Actual runtime correctness, OAuth, persistence, and returned routing cannot be evaluated from these source files alone."
+    "Inspect returned catalog ids only as needed; catalog presence does not establish legal creation choices.",
+    "Retain returned Play Session and draft identities. Hosted stateful calls may require OAuth before creation succeeds.",
+    "Present independent current choices together and invent no options.",
+    "Continuation reuses the preceding workflow and handle; detailed creation discovery is conditional on the session summary. Do not replace an inaccessible journey silently.",
+    "General hobby history does not activate the Skill. The authored-content boundary is supplied by the Skill itself.",
+    "Static tool intentions are plans, not executed operations. Runtime correctness, OAuth, persistence, and returned routing remain outside this evaluation."
   ],
   "externalEvidenceStillRequired": {
     "issue": 328,
     "scope": "Installed ChatGPT developer-mode activation, connection, and complete workflow evidence."
   },
   "findingsApplied": [
-    "Restrict envelope-specific reporting to Play Session operations; report ordinary returned results for discovery tools."
+    "Rename the ordinary battle continuation tool to provide_battle_input consistently in Skill and advertised workflow."
   ]
 }

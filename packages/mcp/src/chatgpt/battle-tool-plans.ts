@@ -17,16 +17,17 @@ export const CHATGPT_BATTLE_TOOLS = {
   begin_flurry: {
     family: "battleActions",
     description:
-      "Spend the admitted resource to grant the Flurry attack sequence; individual strikes use attack.",
+      "Use when the active combatant chooses its available Flurry of Blows option. Start the extra unarmed-strike sequence; make each offered strike separately with attack.",
   },
   compelled_drop: {
     family: "battleActions",
-    description: "Fulfil an admitted compulsion to drop held objects.",
+    description:
+      "Use when a combatant must drop what it is holding because of an active game effect. Apply that combatant's available compelled-drop action.",
   },
   compelled_grovel: {
     family: "battleActions",
     description:
-      "Fulfil an admitted compulsion to become Prone and end the turn as required.",
+      "Use when an active game effect requires a combatant to fall Prone and end its turn. Start the offered compelled-grovel action.",
   },
   dash: {
     family: "battleActions",
@@ -36,7 +37,7 @@ export const CHATGPT_BATTLE_TOOLS = {
   decline_reaction: {
     family: "reactions",
     description:
-      "Decline the current responder Reaction offer without executing a nested operation.",
+      "Use when the player declines the Reaction currently offered to a combatant. Continue the interrupted game action without spending that Reaction.",
   },
   discover_battle_acts: {
     family: "battleReads",
@@ -50,7 +51,7 @@ export const CHATGPT_BATTLE_TOOLS = {
   disperse_spell_area: {
     family: "events",
     description:
-      "Report the qualifying environmental dispersal of an existing supported spell area.",
+      "Use when the table reports an environmental event that ends an existing spell area. Record the offered event and update the affected game effect.",
   },
   dodge: {
     family: "battleActions",
@@ -64,7 +65,7 @@ export const CHATGPT_BATTLE_TOOLS = {
   end_turn: {
     family: "battleActions",
     description:
-      "End the active turn, including its declared turn-boundary continuations.",
+      "Use when the player ends the active combatant's turn. Advance turn-end effects and request any required rolls or Reaction decisions before moving to the next turn.",
   },
   escape_grapple: {
     family: "battleActions",
@@ -82,12 +83,12 @@ export const CHATGPT_BATTLE_TOOLS = {
   focus_dash_and_disengage: {
     family: "battleActions",
     description:
-      "Spend the admitted focus resource to Dash and Disengage together.",
+      "Use when a combatant chooses its available focus-powered Dash and Disengage option. Start that combined movement action and apply its resource cost.",
   },
   focus_disengage_and_dodge: {
     family: "battleActions",
     description:
-      "Spend the admitted focus resource to Disengage and Dodge together.",
+      "Use when a combatant chooses its available focus-powered Disengage and Dodge option. Start that combined defensive action and apply its resource cost.",
   },
   grapple: {
     family: "battleActions",
@@ -109,7 +110,8 @@ export const CHATGPT_BATTLE_TOOLS = {
   },
   multiattack: {
     family: "battleActions",
-    description: "Resolve an admitted stat-block Multiattack sequence.",
+    description:
+      "Use when an installed monster chooses its available Multiattack action. Start the configured attack sequence and request the targets and rolls needed to complete it.",
   },
   read_battle_state: {
     family: "battleReads",
@@ -119,7 +121,7 @@ export const CHATGPT_BATTLE_TOOLS = {
   ready_action: {
     family: "battleActions",
     description:
-      "Prepare an admitted action, attack, or movement response to a described trigger; preparation does not execute the selected response.",
+      "Use when a combatant prepares an available action or movement for a future trigger. Record the chosen response and trigger, then wait for that trigger before releasing the response.",
   },
   reduce_ability_check: {
     family: "reactions",
@@ -148,7 +150,8 @@ export const CHATGPT_BATTLE_TOOLS = {
   },
   release_grapple: {
     family: "battleActions",
-    description: "Release a grapple held by the actor.",
+    description:
+      "Use when a combatant voluntarily releases a creature it is grappling. Update the selected grapple in the saved battle.",
   },
   remove_combatant: {
     family: "battleLifecycle",
@@ -158,37 +161,37 @@ export const CHATGPT_BATTLE_TOOLS = {
   report_area_departure: {
     family: "events",
     description:
-      "Report departure from an admitted retained spell area and apply its declared exit effects.",
+      "Use when the table reports that a creature left an existing spell area. Record the departure and process the exit effects offered by the game engine.",
   },
   report_area_removal: {
     family: "events",
     description:
-      "Report removal of an admitted area and settle its affected escape binding.",
+      "Use when the table reports that an existing spell area was removed. Update any condition or escape effect tied to that area.",
   },
   report_condition_attempt: {
     family: "events",
     description:
-      "Report an incoming condition attempt against a creature protected by the retained effect.",
+      "Use when an effect tries to impose a condition on a creature with an active protective effect. Record the offered attempt so the engine can check that protection.",
   },
   report_creature_fall: {
     family: "events",
     description:
-      "Report a creature fall and open the admitted falling-creature Reaction window. Supply reactionSpellTargetFacts on the initial report, using [] when the table confirms no qualifying target facts.",
+      "Use when the table reports that a creature starts falling. Record the fall and offer eligible Reactions. Supply reactionSpellTargetFacts from the table, using [] when no qualifying targets exist.",
   },
   report_linked_defense_separation: {
     family: "events",
     description:
-      "Report separation invalidating an admitted retained linked-defense effect.",
+      "Use when the table reports that linked creatures have separated enough to end their shared defensive effect. Record the offered separation event.",
   },
   report_possession_attempt: {
     family: "events",
     description:
-      "Report an incoming possession attempt against a creature protected by the retained effect.",
+      "Use when an effect tries to possess a creature with active protection against possession. Record the offered attempt so the engine can check that protection.",
   },
   report_ready_trigger: {
     family: "events",
     description:
-      "Report that a held readied response trigger occurred; release remains a separately typed operation.",
+      "Use when the table confirms that a prepared action's trigger occurred. Record the trigger and offer the eligible readied response.",
   },
   search: {
     family: "battleActions",
@@ -210,7 +213,8 @@ export const CHATGPT_BATTLE_TOOLS = {
   },
   stand_up: {
     family: "battleActions",
-    description: "Spend the admitted movement to stand from Prone.",
+    description:
+      "Use when the active combatant chooses to stand from Prone. Apply the movement cost and update its condition in the saved battle.",
   },
   start_battle: {
     family: "battleLifecycle",

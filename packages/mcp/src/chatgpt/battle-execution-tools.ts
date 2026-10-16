@@ -4,7 +4,7 @@ import {
   battlePendingTransactionViewForSession,
   type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
-import { Match, Result } from "effect";
+import { Result } from "effect";
 import type { McpPlaySessionRoot } from "../composition-root.ts";
 import { battleToolNames } from "../battle-tool-input.ts";
 import {
@@ -29,26 +29,6 @@ import {
 } from "./battle-execution-schema.ts";
 import type { ChatGptExecutionTool } from "./stateful-tool.ts";
 
-function battleOperationInstructions(name: ChatGptBattleOperationToolName) {
-  return Match.value(CHATGPT_TOOL_PLAN[name].family).pipe(
-    Match.when(
-      "reactions",
-      () =>
-        "Select the current interruptDecision with choice.fills: [] and no subject. The pending transaction owns the parent. Answer subsequent ordinary holes through answer_battle_hole; select nested Reactions through their own named tools.",
-    ),
-    Match.whenOr(
-      "battleActions",
-      "spells",
-      "features",
-      "events",
-      "companions",
-      () =>
-        "Select an Act by copying its current subject, without fill. The operation opens any initial holes; answer ordinary holes through answer_battle_hole. To select a Reaction, supply only its interruptDecision fill with choice.fills: [], without a subject. The pending transaction owns the parent.",
-    ),
-    Match.exhaustive,
-  );
-}
-
 export function defineChatGptBattleTool<
   const Name extends ChatGptBattleOperationToolName,
 >(
@@ -56,12 +36,13 @@ export function defineChatGptBattleTool<
 ): ChatGptExecutionTool & {
   readonly definition: ProtocolToolDefinition & { readonly name: Name };
 } {
+  const inputSchema = chatGptBattleExecutionInputSchema(name);
   return {
     definition: {
       name,
       title: name.replaceAll("_", " "),
-      description: `${CHATGPT_TOOL_PLAN[name].description} ${battleOperationInstructions(name)}`,
-      inputSchema: chatGptBattleExecutionInputSchema(name),
+      description: `${CHATGPT_TOOL_PLAN[name].description} ${inputSchema.description}`,
+      inputSchema,
       annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     },
     handle(root: McpPlaySessionRoot, input: unknown) {

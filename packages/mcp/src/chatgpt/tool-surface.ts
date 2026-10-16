@@ -39,7 +39,7 @@ function retainedTool<const Name extends ChatGptToolName>(
 }
 
 export const CHATGPT_EXECUTION_TOOLS = {
-  answer_battle_hole: chatGptBattleHoleTool,
+  provide_battle_input: chatGptBattleHoleTool,
   ...CHATGPT_CHARACTER_EXECUTION_TOOLS,
   ...CHATGPT_LIFECYCLE_EXECUTION_TOOLS,
   ...CHATGPT_BATTLE_EXECUTION_TOOLS,
@@ -75,7 +75,7 @@ export const CHATGPT_EXECUTION_TOOLS = {
   ),
   discover_battle_acts: retainedTool(
     battleToolDefinitionsByName.discover_battle_acts,
-    "Read the current Battle checkpoint, frontier and available acts. The response's chatGptBattleOperations field lists named tools for each subject or Reaction choice. Select an Act with its named tool and subject, then supply ordinary facts through answer_battle_hole. Select a Reaction with its named tool and interruptDecision fill, without a subject and with choice.fills: []. Finish the current continuation before choosing another act.",
+    "Read the current Battle checkpoint, frontier and available acts. The response's chatGptBattleOperations field lists named tools for each subject or Reaction choice. Select an Act with its named tool and subject, then supply ordinary facts through provide_battle_input. Select a Reaction with its named tool and interruptDecision fill, without a subject and with choice.fills: []. Finish the current continuation before choosing another act.",
   ),
   describe_mcp_workflow: retainedTool(
     contentToolDefinitionsByName.describe_mcp_workflow,

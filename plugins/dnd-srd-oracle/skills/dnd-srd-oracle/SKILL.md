@@ -34,7 +34,7 @@ changes and keep the returned occupancy and settlement projections authoritative
 For Battle Acts, use `chatGptBattleOperations` when the response supplies it to
 select the named operation for the current subject or Reaction. Copy the current
 subject into its named Act tool, without a fill, to select it and open any holes.
-Answer ordinary holes through `answer_battle_hole` with a fill and no subject.
+Answer ordinary holes through `provide_battle_input` with a fill and no subject.
 Select each Reaction through its named operation with an `interruptDecision`
 fill, no subject, and `choice.fills: []`. The pending transaction owns the parent.
 

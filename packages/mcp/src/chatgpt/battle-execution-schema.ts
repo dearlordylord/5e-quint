@@ -91,7 +91,7 @@ const ReactionSelectionArgsSchema = BattleFillArgsSchema.pipe(
         args.fill.value.choice.fills.length === 0),
     {
       message:
-        "Select a Reaction with choice.fills: [], then answer its ordinary holes through answer_battle_hole.",
+        "Select a Reaction with choice.fills: [], then answer its ordinary holes through provide_battle_input.",
     },
   ),
 );
@@ -113,7 +113,7 @@ export const ChatGptBattleHoleArgsSchema = BattleFillArgsSchema.pipe(
     } => args.fill.kind !== "interruptDecision",
     {
       message:
-        "answer_battle_hole supplies ordinary facts only; select Reactions through their named tools.",
+        "provide_battle_input supplies ordinary facts only; select Reactions through their named tools.",
     },
   ),
 );
@@ -146,7 +146,7 @@ function generatedRecord(value: unknown): McpOutputSchema {
 const accounting: ChatGptExposureAccounting = CHATGPT_OPERATION_EXPOSURE;
 export function chatGptBattleExecutionInputSchema(
   tool: ChatGptToolName,
-): McpObjectInputSchema {
+): McpObjectInputSchema & { readonly description: string } {
   const subjectCarriers = Object.entries(accounting.battleSubjects)
     .filter(([, exposure]) => chatGptToolsForExposure(exposure).includes(tool))
     .map(([key]) => key);
@@ -176,11 +176,26 @@ export function chatGptBattleExecutionInputSchema(
           modifierKinds,
           declineAllowed: tool === "decline_reaction",
         });
-  return battleSelectionInputSchema(
-    initialSchema,
-    reactionSchema,
-    tool === "report_creature_fall",
-  );
+  const instructions = [
+    "Requires an active battle in the selected Play Session. Use only a matching option returned by discover_battle_acts or the current battle response.",
+    ...(initialSchema === null
+      ? []
+      : ["To start the offered action or event, copy its subject; omit fill."]),
+    ...(reactionSchema === null
+      ? []
+      : [
+          "For an offered Reaction, supply an interruptDecision fill for the current request and selected choice; omit subject and use choice.fills: [] when resolving a choice.",
+        ]),
+    "Returns the updated saved battle or a request for the next choice, target fact, dice result, or Reaction. Supply requested facts with provide_battle_input; complete the pending action before starting another.",
+  ];
+  return {
+    ...battleSelectionInputSchema(
+      initialSchema,
+      reactionSchema,
+      tool === "report_creature_fall",
+    ),
+    description: instructions.join(" "),
+  };
 }
 
 function battleSelectionInputSchema(

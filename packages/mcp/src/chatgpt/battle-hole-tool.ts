@@ -13,9 +13,9 @@ import type { ChatGptExecutionTool } from "./stateful-tool.ts";
 
 export const chatGptBattleHoleTool = {
   definition: {
-    name: "answer_battle_hole",
-    title: "Answer Battle hole",
-    description: CHATGPT_TOOL_PLAN.answer_battle_hole.description,
+    name: "provide_battle_input",
+    title: "Provide requested battle input",
+    description: CHATGPT_TOOL_PLAN.provide_battle_input.description,
     inputSchema: chatGptBattleHoleInputSchema(),
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   },
@@ -23,7 +23,7 @@ export const chatGptBattleHoleTool = {
     const decoded = decodeToolArgs(
       ChatGptBattleHoleArgsSchema,
       input,
-      "answer_battle_hole",
+      "provide_battle_input",
     );
     if (Result.isFailure(decoded)) return decoded.failure;
     const battle = root.sessionStore.battleState;
@@ -34,7 +34,7 @@ export const chatGptBattleHoleTool = {
     const transaction = root.sessionStore.getPendingBattleTransaction();
     if (transaction === null)
       return errorContent(
-        "Select a named Battle operation before answering a hole.",
+        "Start an offered battle action before providing its requested input.",
         { code: "BATTLE_CONTINUATION_REQUIRED" },
       );
     const pending = battlePendingTransactionViewForSession(

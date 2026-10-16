@@ -25,7 +25,9 @@ export type {
   ChatGptExposureAccounting,
 } from "./operation-exposure.ts";
 
-export const CHATGPT_ORDINARY_BATTLE_CONTINUATION = tool("answer_battle_hole");
+export const CHATGPT_ORDINARY_BATTLE_CONTINUATION = tool(
+  "provide_battle_input",
+);
 
 // A ChatGPT-specific exposure plan. This module does not register MCP tools.
 // The ordinary MCP continues to use its existing definitions and handlers.

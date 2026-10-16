@@ -63,7 +63,7 @@ describe("ChatGPT tool surface", () => {
     const attack = CHATGPT_EXECUTION_TOOLS.attack.handle(root, {
       subject: fighterAttackSubject(otherBattle.state),
     });
-    const answer = CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+    const answer = CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
       fill: {
         kind: "rolledDice",
         holeId: "synthetic-hole",
@@ -267,7 +267,7 @@ describe("ChatGPT tool surface", () => {
     ).toMatchObject({ result: { tag: "needsHoles" } });
     expect(
       jsonContentPayload(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           fill: readyDeclarationFillForTest(
             declaration,
             "the goblin moves",
@@ -314,14 +314,14 @@ describe("ChatGPT tool surface", () => {
     const pendingReaction = root.sessionStore.snapshot();
     expect(
       JSON.stringify(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           fill: reactionFill,
         }),
       ),
     ).toContain("INVALID_ARGUMENTS");
     expect(
       JSON.stringify(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           fill: {
             kind: "rolledDice",
             holeId: "synthetic-not-current",
@@ -368,11 +368,11 @@ describe("ChatGPT tool surface", () => {
     if (hole?.kind !== "movement") throw new Error("Expected a movement hole.");
     expect(chatGptBattleGuidance(root)).toMatchObject({
       kind: "ordinaryContinuation",
-      routing: { kind: "available", tools: ["answer_battle_hole"] },
+      routing: { kind: "available", tools: ["provide_battle_input"] },
     });
     expect(
       jsonContentPayload(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           fill: movementFill(hole, {
             movementCostFeet: 5,
             provokedOpportunityAttacks: [],
@@ -431,6 +431,24 @@ describe("ChatGPT tool surface", () => {
       ).toBe(true);
       expect(validator({ fill }).valid).toBe(false);
     }
+  });
+
+  it("describes only the invocation branches each Battle tool accepts", () => {
+    const action = CHATGPT_EXECUTION_TOOLS.heal_self.definition;
+    const reaction = CHATGPT_EXECUTION_TOOLS.decline_reaction.definition;
+    const both = CHATGPT_EXECUTION_TOOLS.attack.definition;
+    expect(action.inputSchema.properties).toHaveProperty("subject");
+    expect(action.inputSchema.properties).not.toHaveProperty("fill");
+    expect(action.description).toContain("subject");
+    expect(action.description).not.toContain("interruptDecision");
+    expect(reaction.inputSchema.properties).not.toHaveProperty("subject");
+    expect(reaction.inputSchema.properties).toHaveProperty("fill");
+    expect(reaction.description).toContain("interruptDecision");
+    expect(reaction.description).not.toContain("copy its subject");
+    expect(both.inputSchema.properties).toHaveProperty("subject");
+    expect(both.inputSchema.properties).toHaveProperty("fill");
+    expect(both.description).toContain("subject");
+    expect(both.description).toContain("interruptDecision");
   });
 
   it("advertises the complete static 126-tool contract with annotations", () => {
@@ -640,7 +658,7 @@ describe("ChatGPT tool surface", () => {
     expect(root.sessionStore.snapshot()).toEqual(before);
     expect(
       JSON.stringify(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, { fill }),
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, { fill }),
       ),
     ).toContain("BATTLE_CONTINUATION_REQUIRED");
     expect(root.sessionStore.snapshot()).toEqual(before);
@@ -657,7 +675,7 @@ describe("ChatGPT tool surface", () => {
     ).toContain("INVALID_ARGUMENTS");
     expect(
       JSON.stringify(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           subject,
           fill,
         }),
@@ -665,14 +683,14 @@ describe("ChatGPT tool surface", () => {
     ).toContain("INVALID_ARGUMENTS");
     expect(
       JSON.stringify(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           fill: { ...fill, holeId: "synthetic-stale-target" },
         }),
       ),
     ).toContain("BATTLE_FILL_HOLE_MISMATCH");
     expect(
       JSON.stringify(
-        CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
           fill: {
             kind: "attackRoll",
             holeId: fill.holeId,
@@ -685,7 +703,7 @@ describe("ChatGPT tool surface", () => {
       ),
     ).toContain("BATTLE_FILL_KIND_MISMATCH");
     expect(root.sessionStore.snapshot()).toEqual(selected);
-    const correct = CHATGPT_EXECUTION_TOOLS.answer_battle_hole.handle(root, {
+    const correct = CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
       fill,
     });
     expect(JSON.stringify(correct)).toContain("needsHoles");
@@ -693,7 +711,7 @@ describe("ChatGPT tool surface", () => {
     expect(chatGptBattleGuidance(root)).toMatchObject({
       kind: "ordinaryContinuation",
       subject,
-      routing: { kind: "available", tools: ["answer_battle_hole"] },
+      routing: { kind: "available", tools: ["provide_battle_input"] },
     });
     const after = root.sessionStore.snapshot();
     expect(

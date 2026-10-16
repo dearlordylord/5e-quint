@@ -31,11 +31,11 @@ describe("submission candidate evidence", () => {
     expect(cases.map((entry) => entry.tool)).toEqual([
       "discover_battle_acts",
       "attack",
-      "answer_battle_hole",
-      "answer_battle_hole",
-      "answer_battle_hole",
+      "provide_battle_input",
+      "provide_battle_input",
+      "provide_battle_input",
       "decline_reaction",
-      "answer_battle_hole",
+      "provide_battle_input",
     ]);
     expect(cases).toHaveLength(7);
     const regular = await submissionBattleRepresentativeResults();

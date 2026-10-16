@@ -160,7 +160,7 @@ describe("recoverable Play Session protocol", () => {
           arguments: { playSessionId, subject },
         });
         await callStructuredTool(chatgpt.client, {
-          name: "answer_battle_hole",
+          name: "provide_battle_input",
           arguments: {
             playSessionId,
             fill: attackTargetFill(subject, "synthetic-second"),
@@ -196,11 +196,11 @@ describe("recoverable Play Session protocol", () => {
         expect(read).toMatchObject({
           chatGptBattleOperations: {
             kind: "ordinaryContinuation",
-            routing: { kind: "available", tools: ["answer_battle_hole"] },
+            routing: { kind: "available", tools: ["provide_battle_input"] },
           },
         });
         const resumed = await callStructuredTool(connection.client, {
-          name: "answer_battle_hole",
+          name: "provide_battle_input",
           arguments: { playSessionId, fill: attackRollFill(10, 5) },
         });
         expect(operationResult(resumed)).toMatchObject({
@@ -231,7 +231,7 @@ describe("recoverable Play Session protocol", () => {
           );
           expect(row?.operations_json).toEqual(
             expect.stringContaining(
-              '"toolSurface":"chatgpt","name":"answer_battle_hole"',
+              '"toolSurface":"chatgpt","name":"provide_battle_input"',
             ),
           );
         } finally {

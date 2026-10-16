@@ -39,7 +39,7 @@ export const BATTLE_CONSUMER_TOOL_NAMES = [
   "discover_battle_acts",
   "fill_battle_hole",
   "attack",
-  "answer_battle_hole",
+  "provide_battle_input",
   "decline_reaction",
 ] as const;
 type BattleConsumerToolName = (typeof BATTLE_CONSUMER_TOOL_NAMES)[number];
@@ -83,7 +83,7 @@ export async function productionBattleConsumerSeam(
   });
   const ordinaryTool = Match.value(toolSurface).pipe(
     Match.when("regular", () => "fill_battle_hole" as const),
-    Match.when("chatgpt", () => "answer_battle_hole" as const),
+    Match.when("chatgpt", () => "provide_battle_input" as const),
     Match.exhaustive,
   );
   const reactionTool = Match.value(toolSurface).pipe(

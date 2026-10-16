@@ -1,8 +1,8 @@
 export const CHATGPT_CONTEXT_TOOLS = {
-  answer_battle_hole: {
+  provide_battle_input: {
     family: "battleFacts",
     description:
-      "Submit one table fact for an ordinary hole of the current pending Battle transaction. The transaction owns the subject; this tool cannot select an Act or Reaction. Copy a current holeId and supply its typed fact. Select Reactions through their named operation tools.",
+      "Use when the battle is waiting for a player choice, target fact, or dice result after an action has started. Copy the requested holeId and submit one matching fill. Return the updated battle or its next input request. Choose offered Reactions through their named tools.",
   },
   create_character_draft: {
     family: "creation",

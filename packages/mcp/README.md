@@ -201,12 +201,12 @@ Battle results and `read_play_session` include the typed
 choices carry `routing`: an available named-tool list or an explicit unavailable
 issue. Select an Act with its named tool and canonical subject, without `fill`;
 the tool opens any initial holes as a pending transaction. Supply ordinary
-facts through `answer_battle_hole`, with `fill` and no subject. The runtime-owned
+facts through `provide_battle_input`, with `fill` and no subject. The runtime-owned
 transaction supplies the subject and rejects stale or foreign-session facts.
 Select each Reaction through its own named operation, including
 `decline_reaction`, with an `interruptDecision` fill, no subject, and an empty
 `choice.fills` array. The transaction owns the parent; subsequent ordinary holes
-also use `answer_battle_hole`. That tool cannot select an Act or Reaction.
+also use `provide_battle_input`. That tool cannot select an Act or Reaction.
 Regular MCP retains its existing fill-first and inline Reaction answer contracts.
 Initial `report_creature_fall` calls require `reactionSpellTargetFacts`, including
 an explicit `[]` when the table confirms no qualifying target facts. That field
@@ -466,7 +466,7 @@ The generated report lists every named tool and its execution selections.
 between a tool name and its concrete execution selectors.
 `chatGptToolAcceptsSelection` supplies a guard for typed selection consumers;
 reference gateways must first resolve to a concrete procedure or retained action.
-Ordinary continuation inputs route to `answer_battle_hole`, which derives the
+Ordinary continuation inputs route to `provide_battle_input`, which derives the
 selected subject from the pending transaction. Nested Reaction choices use the
 explicit tool that owns that operation. Engine admission,
 ownership, timing and resource checks remain necessary. The selection contract is
