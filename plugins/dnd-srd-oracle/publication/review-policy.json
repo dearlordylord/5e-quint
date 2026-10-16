@@ -102,7 +102,14 @@
         "unarmedStrikeProcedureRef",
         "weaponObjectId",
         "endingActorId",
-        "defenderId"
+        "defenderId",
+        "invocationRef",
+        "activeEffectRef",
+        "activeEffectSourceProcedureRef",
+        "componentWeaponObjectId",
+        "sourceHeldLightProcedureRef",
+        "sourceHeldObjectProcedureRef",
+        "sourceManifestationProcedureRef"
       ],
       "directions": ["output"],
       "classification": "workflowCorrelationIdentifier",
@@ -110,7 +117,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "e3de4ea1a46fcb53cee0b5c7e65a043c9eba4947234cbb4e9a78cfa12ee3efdb"
+      "scopeDigest": "466d57927f387732f0e980b01e7a4f9ff49cdd8b010c16b4d6aa7325f72f83c9"
     },
     {
       "schemaOwners": [
@@ -192,7 +199,8 @@
         "readiedMovementActorId",
         "readiedActorId",
         "formExecutionRef",
-        "weaponItemId"
+        "weaponItemId",
+        "invocationRef"
       ],
       "directions": ["input"],
       "classification": "workflowCorrelationIdentifier",
@@ -200,7 +208,7 @@
       "recipients": ["service runtime"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "b502f6528547c3f2f9b44fb7c8c7b30e64a4a3b628bafab20136f7223bb75f32"
+      "scopeDigest": "6999556b0f1546fa3f80f2992d7cdc5b7ed3c7dcc66e01771b502c43b649e2ec"
     },
     {
       "schemaOwners": [
