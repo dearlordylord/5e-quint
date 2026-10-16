@@ -39,18 +39,18 @@ export const characterToolDefinitionsByName = {
   },
   [characterToolNames.discoverCreationHoles]: {
     name: characterToolNames.discoverCreationHoles,
-    title: "Discover Creation Holes",
+    title: "Show Character Creation Choices",
     description:
-      "Return the current supported fillable creation holes, draft revision, and finalization status for a stored character draft. Every returned choice option is admitted by this server's active execution support profile.",
+      "Show the unanswered choices for an existing character draft, including allowed options, draft revision, and readiness to finalize. Use when creating or resuming a character; retain the returned holeId and optionIds when applying choices.",
     inputSchema: draftIdInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   [characterToolNames.fillCreationHoles]: {
     name: characterToolNames.fillCreationHoles,
-    title: "Fill Creation Holes",
+    title: "Apply Character Creation Choices",
     description:
-      "Submit an atomic batch of creation fills for a stored draft using option ids returned by its current holes. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
+      "Apply the player's choices to an existing character draft using the holeId and optionIds returned for its current unanswered choices and the expected draft revision. Save the complete batch together and return the updated draft, or return validation issues and leave the draft unchanged.",
     inputSchema: fillCreationHolesInputSchema,
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),
