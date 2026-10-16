@@ -110,6 +110,7 @@ async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTar
     }
     closeRepository = () => repository.success.close();
     const server = createDndMcpHttpServer({
+      toolSurface: "chatgpt",
       hostname: "127.0.0.1",
       port: 9876,
       playSessionRepository: repository.success,

@@ -5,9 +5,11 @@ import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv
 import { Result } from "effect";
 
 import { requireJsonSchema } from "../../test-support/json-schema.ts";
+import { MCP_TOOL_SURFACES } from "../mcp-tool-surface.ts";
 import { decodePlaySessionId, type PlaySessionId } from "../play-session.ts";
 import {
   playSessionToolDefinitions,
+  playSessionToolDefinitionForSurface,
   playSessionToolNames,
   type PlaySessionToolName,
 } from "../play-session-tool-contract.ts";
@@ -175,11 +177,17 @@ function validateCanonicalToolResult(
   if (definition === undefined) {
     throw new Error(`Missing canonical tool definition for ${toolName}.`);
   }
-  const validator = new AjvJsonSchemaValidator().getValidator(
-    requireJsonSchema(definition.outputSchema, `${toolName} outputSchema`),
+  const valid = MCP_TOOL_SURFACES.some(
+    (toolSurface) =>
+      new AjvJsonSchemaValidator().getValidator(
+        requireJsonSchema(
+          playSessionToolDefinitionForSurface(definition, toolSurface)
+            .outputSchema,
+          `${toolName} ${toolSurface} outputSchema`,
+        ),
+      )(value).valid,
   );
-  const validation = validator(value);
-  if (!validation.valid) {
+  if (!valid) {
     throw new Error(`${toolName} returned a noncanonical result.`);
   }
   return jsonObject(value, `${toolName} result`);
