@@ -49,7 +49,7 @@ describe("end-user MCP vertical", () => {
       "cc:draft:draft.alignment",
     ]);
 
-    callTool(root, "fill_creation_holes", {
+    callTool(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision: 0,
       fills: [
@@ -70,7 +70,9 @@ describe("end-user MCP vertical", () => {
       ],
     });
 
-    const choices = callTool(root, "discover_creation_holes", { draftId });
+    const choices = callTool(root, "get_character_creation_choices", {
+      draftId,
+    });
     expect(holeIds(choices)).toEqual([
       unitHoleId("class_fighter", "class_skill_proficiency_choice"),
       unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
@@ -81,7 +83,7 @@ describe("end-user MCP vertical", () => {
       unitHoleId("background_soldier", "background_equipment_choice"),
     ]);
 
-    callTool(root, "fill_creation_holes", {
+    callTool(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision: 1,
       fills: [
@@ -119,7 +121,7 @@ describe("end-user MCP vertical", () => {
       ],
     });
 
-    callTool(root, "fill_creation_holes", {
+    callTool(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision: 2,
       fills: [
@@ -132,7 +134,7 @@ describe("end-user MCP vertical", () => {
       ],
     });
 
-    callTool(root, "fill_creation_holes", {
+    callTool(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision: 3,
       fills: [
@@ -369,7 +371,9 @@ describe("end-user MCP vertical", () => {
       build: null,
     });
 
-    const recovery = callTool(root, "discover_creation_holes", { draftId });
+    const recovery = callTool(root, "get_character_creation_choices", {
+      draftId,
+    });
     const preparedHole = requireCreationChoiceHole(
       recovery.holes,
       unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
@@ -384,7 +388,7 @@ describe("end-user MCP vertical", () => {
       expect.arrayContaining([expect.objectContaining({ optionId: "shield" })]),
     );
 
-    const invalidRepair = callTool(root, "fill_creation_holes", {
+    const invalidRepair = callTool(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision: 4,
       fills: [
@@ -403,7 +407,7 @@ describe("end-user MCP vertical", () => {
     });
     expect(invalidRepair.storedDraft).toMatchObject({ draftId, revision: 4 });
 
-    const repaired = callTool(root, "fill_creation_holes", {
+    const repaired = callTool(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision: 4,
       fills: [
@@ -1438,7 +1442,7 @@ function createAndFinalizeFighterTwo(
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
-  const classHoles = callTool(root, "fill_creation_holes", {
+  const classHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 0,
     fills: [
@@ -1482,7 +1486,7 @@ function createAndFinalizeFighterTwo(
       ),
     ],
   });
-  const equipmentHoles = callTool(root, "fill_creation_holes", {
+  const equipmentHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -1526,7 +1530,7 @@ function createAndFinalizeFighterTwo(
       ),
     ],
   });
-  const loadoutHoles = callTool(root, "fill_creation_holes", {
+  const loadoutHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -1539,7 +1543,7 @@ function createAndFinalizeFighterTwo(
       ),
     ],
   });
-  callTool(root, "fill_creation_holes", {
+  callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -1568,7 +1572,7 @@ function createAndFinalizeElfWizardTwo(
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
-  const classHoles = callTool(root, "fill_creation_holes", {
+  const classHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 0,
     fills: [
@@ -1612,7 +1616,7 @@ function createAndFinalizeElfWizardTwo(
       ),
     ],
   });
-  const equipmentHoles = callTool(root, "fill_creation_holes", {
+  const equipmentHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -1672,7 +1676,7 @@ function createAndFinalizeElfWizardTwo(
       ),
     ],
   });
-  const loadoutHoles = callTool(root, "fill_creation_holes", {
+  const loadoutHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -1685,7 +1689,7 @@ function createAndFinalizeElfWizardTwo(
       ),
     ],
   });
-  const scholarHoles = callTool(root, "fill_creation_holes", {
+  const scholarHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -1701,7 +1705,7 @@ function createAndFinalizeElfWizardTwo(
       ),
     ],
   });
-  callTool(root, "fill_creation_holes", {
+  callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 4,
     fills: [
@@ -1726,7 +1730,7 @@ function createWizardOneThroughLoadout(
   options: WizardOneCreationOptions = {},
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
-  const classHoles = callTool(root, "fill_creation_holes", {
+  const classHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 0,
     fills: [
@@ -1770,7 +1774,7 @@ function createWizardOneThroughLoadout(
       ),
     ],
   });
-  const equipmentHoles = callTool(root, "fill_creation_holes", {
+  const equipmentHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -1831,7 +1835,7 @@ function createWizardOneThroughLoadout(
       ),
     ],
   });
-  const loadoutHoles = callTool(root, "fill_creation_holes", {
+  const loadoutHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -1844,7 +1848,7 @@ function createWizardOneThroughLoadout(
       ),
     ],
   });
-  return callTool(root, "fill_creation_holes", {
+  return callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -1875,7 +1879,7 @@ function createAndFinalizeBardOne(
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
-  const classHoles = callTool(root, "fill_creation_holes", {
+  const classHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 0,
     fills: [
@@ -1919,7 +1923,7 @@ function createAndFinalizeBardOne(
       ),
     ],
   });
-  const equipmentHoles = callTool(root, "fill_creation_holes", {
+  const equipmentHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -1973,7 +1977,7 @@ function createAndFinalizeBardOne(
       ),
     ],
   });
-  const loadoutHoles = callTool(root, "fill_creation_holes", {
+  const loadoutHoles = callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -1986,7 +1990,7 @@ function createAndFinalizeBardOne(
       ),
     ],
   });
-  callTool(root, "fill_creation_holes", {
+  callTool(root, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [

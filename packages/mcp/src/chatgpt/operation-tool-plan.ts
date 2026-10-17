@@ -42,11 +42,11 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     delete_saved_play_session: tool("delete_saved_play_session"),
     describe_mcp_workflow: tool("describe_mcp_workflow"),
     discover_battle_acts: tool("discover_battle_acts"),
-    discover_creation_holes: tool("discover_creation_holes"),
+    get_character_creation_choices: tool("get_character_creation_choices"),
     end_battle: tool("end_battle"),
     end_turn: tool("end_turn"),
     fill_battle_hole: refine("battleContinuations"),
-    fill_creation_holes: tool("fill_creation_holes"),
+    apply_character_creation_choices: tool("apply_character_creation_choices"),
     finalize_character: tool("finalize_character"),
     inspect_catalog_unit: tool("inspect_catalog_unit"),
     inspect_character_session: tool("inspect_character_session"),
@@ -282,8 +282,8 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     removeCombatant: tool("remove_combatant"),
   },
   creationInputs: {
-    abilityScores: tool("fill_creation_holes"),
-    choice: tool("fill_creation_holes"),
+    abilityScores: tool("apply_character_creation_choices"),
+    choice: tool("apply_character_creation_choices"),
   },
 } as const satisfies ChatGptExposureAccounting;
 

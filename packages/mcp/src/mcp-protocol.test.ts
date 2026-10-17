@@ -524,7 +524,9 @@ describe("MCP protocol server", () => {
         });
         expect(Array.isArray(firstMutation.unresolvedInputs)).toBe(true);
         expect(firstMutation.unresolvedInputs).not.toEqual([]);
-        expect(firstMutation.nextOperations).toContain("fill_creation_holes");
+        expect(firstMutation.nextOperations).toContain(
+          "apply_character_creation_choices",
+        );
 
         const secondMutation = await callStructuredTool(client, {
           name: "create_character_draft",
@@ -548,7 +550,7 @@ describe("MCP protocol server", () => {
             result: { tag: "playSessionResumed", playSessionId: first },
           },
           projection: { draftIds: ["draft:first-isolated-session"] },
-          nextOperations: ["discover_creation_holes"],
+          nextOperations: ["get_character_creation_choices"],
         });
         expect(resumedFirst.nextOperations).not.toContain("finalize_character");
 
@@ -2753,7 +2755,7 @@ describe("MCP protocol server", () => {
       }
 
       const ambiguous = await callStructuredTool(client, {
-        name: "fill_creation_holes",
+        name: "apply_character_creation_choices",
         arguments: {
           playSessionId,
           draftId,
@@ -2782,13 +2784,13 @@ describe("MCP protocol server", () => {
       expect(ambiguous.unresolvedInputs).not.toEqual([]);
       expect(ambiguous.nextOperations).toEqual(
         expect.arrayContaining([
-          "fill_creation_holes",
-          "discover_creation_holes",
+          "apply_character_creation_choices",
+          "get_character_creation_choices",
         ]),
       );
 
       const progressed = await callStructuredTool(client, {
-        name: "fill_creation_holes",
+        name: "apply_character_creation_choices",
         arguments: {
           playSessionId,
           draftId,
@@ -2806,7 +2808,7 @@ describe("MCP protocol server", () => {
         operation: { result: { storedDraft: { revision: 1 } } },
       });
       const discovered = await callStructuredTool(client, {
-        name: "discover_creation_holes",
+        name: "get_character_creation_choices",
         arguments: { playSessionId, draftId },
       });
       const currentHoles = arrayField(operationResult(discovered), "holes");
@@ -2834,7 +2836,7 @@ describe("MCP protocol server", () => {
         optionIds: [currentOption.optionId],
       };
       const stale = await callStructuredTool(client, {
-        name: "fill_creation_holes",
+        name: "apply_character_creation_choices",
         arguments: {
           playSessionId,
           draftId,
@@ -2858,7 +2860,7 @@ describe("MCP protocol server", () => {
       const staleFillResult = objectField(operationResult(stale), "result");
       expect(arrayField(staleFillResult, "holes")).toEqual(currentHoles);
       const retried = await callStructuredTool(client, {
-        name: "fill_creation_holes",
+        name: "apply_character_creation_choices",
         arguments: {
           playSessionId,
           draftId,

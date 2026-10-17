@@ -67,8 +67,8 @@ const CreateCharacterDraftArgsSchema = Schema.Struct({
 
 export const characterToolNames = {
   createCharacterDraft: "create_character_draft",
-  discoverCreationHoles: "discover_creation_holes",
-  fillCreationHoles: "fill_creation_holes",
+  discoverCreationHoles: "get_character_creation_choices",
+  fillCreationHoles: "apply_character_creation_choices",
   finalizeCharacter: "finalize_character",
   applyCharacterSessionOperation: "apply_character_session_operation",
   listCharacters: "list_characters",

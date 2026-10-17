@@ -2,6 +2,10 @@
 
 ## 0.2.0 — unreleased
 
+- Rename the MCP character-choice tools to `get_character_creation_choices` and
+  `apply_character_creation_choices`; update workflow instructions and display
+  names without changing character-creation behavior.
+
 - Support level-7 Barbarian Feral Instinct and Instinctive Pounce through character
   creation and battle handoff. Query selected Initiative Advantage before rolling;
   entering Rage can optionally move half current Speed through ordinary movement,

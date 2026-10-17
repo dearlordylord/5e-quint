@@ -21,7 +21,7 @@ Sessions need no sign-in and last only for that server process. Use
 select a saved session. Treat `delete_saved_play_session` as immediate and
 permanent.
 
-For a character-creation continuation, use `read_play_session` first. If its summary does not contain the detailed remaining choices, call `discover_creation_holes` with the retained draft identity before asking the user to choose.
+For a character-creation continuation, use `read_play_session` first. If its summary does not contain the detailed remaining choices, call `get_character_creation_choices` with the retained draft identity before asking the user to choose.
 
 Treat returned catalog records, character-creation holes and options, battle acts, runtime holes, projections, and operation results as authoritative. Copy their identifiers and typed inputs exactly. Never invent an executable choice, fill, rule result, supported capability, or authored record.
 

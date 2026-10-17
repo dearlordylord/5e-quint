@@ -2355,8 +2355,8 @@ describe("MCP server route", () => {
   test("registers final user-facing character tool names", () => {
     expect(characterToolDefinitions.map((tool) => tool.name)).toEqual([
       "create_character_draft",
-      "discover_creation_holes",
-      "fill_creation_holes",
+      "get_character_creation_choices",
+      "apply_character_creation_choices",
       "finalize_character",
       "apply_character_session_operation",
       "list_characters",
@@ -2769,7 +2769,7 @@ describe("MCP server route", () => {
 
   test("documents progression fills as atomic profiles in the MCP input schema", () => {
     const fillTool = characterToolDefinitions.find(
-      (tool) => tool.name === "fill_creation_holes",
+      (tool) => tool.name === "apply_character_creation_choices",
     );
     expect(fillTool).toBeDefined();
     const schemaText = JSON.stringify(fillTool?.inputSchema);
@@ -9346,7 +9346,7 @@ describe("MCP server route", () => {
     fillThroughTool(root, draftId, 0, initialManifestFills());
 
     const discovered = readPayload(
-      handleToolCall(root, "discover_creation_holes", {
+      handleToolCall(root, "get_character_creation_choices", {
         draftId,
       }),
     );
@@ -9369,8 +9369,11 @@ describe("MCP server route", () => {
     const draftId = "draft:mcp-missing-draft";
 
     for (const [name, args] of [
-      ["discover_creation_holes", { draftId }],
-      ["fill_creation_holes", { draftId, expectedRevision: 0, fills: [] }],
+      ["get_character_creation_choices", { draftId }],
+      [
+        "apply_character_creation_choices",
+        { draftId, expectedRevision: 0, fills: [] },
+      ],
       ["finalize_character", { draftId }],
     ] as const) {
       expect(readPayload(handleToolCall(root, name, args))).toMatchObject({
@@ -9391,7 +9394,7 @@ describe("MCP server route", () => {
     expect(before).toBeDefined();
 
     const rejected = readPayload(
-      handleToolCall(root, "fill_creation_holes", {
+      handleToolCall(root, "apply_character_creation_choices", {
         draftId,
         expectedRevision: 0,
         fills: [
@@ -9417,14 +9420,14 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.size).toBe(0);
   });
 
-  test("fill_creation_holes reports every malformed fill input", () => {
+  test("apply_character_creation_choices reports every malformed fill input", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-tool-malformed-fills";
     readPayload(handleToolCall(root, "create_character_draft", { draftId }));
     const before = root.sessionStore.drafts.get(characterDraftId(draftId));
 
     const rejected = readPayload(
-      handleToolCall(root, "fill_creation_holes", {
+      handleToolCall(root, "apply_character_creation_choices", {
         draftId,
         expectedRevision: 0,
         fills: [
@@ -11559,7 +11562,7 @@ function fillThroughTool(
   fills: readonly CreationFill[],
 ) {
   return readPayload(
-    handleToolCall(root, "fill_creation_holes", {
+    handleToolCall(root, "apply_character_creation_choices", {
       draftId,
       expectedRevision,
       fills,
@@ -11585,7 +11588,7 @@ function createAndFinalizeManifestFighterThroughTools(
 
   fillThroughTool(root, draftId, 0, initialManifestFills());
   const discoveredChoices = readPayload(
-    handleToolCall(root, "discover_creation_holes", { draftId }),
+    handleToolCall(root, "get_character_creation_choices", { draftId }),
   );
   expect(
     discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
@@ -11660,7 +11663,7 @@ function createAndFinalizePaladinCriminalThroughTools(
     ),
   );
   const discoveredChoices = readPayload(
-    handleToolCall(root, "discover_creation_holes", { draftId }),
+    handleToolCall(root, "get_character_creation_choices", { draftId }),
   );
   expect(
     discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
@@ -11668,7 +11671,7 @@ function createAndFinalizePaladinCriminalThroughTools(
 
   fillThroughTool(root, draftId, 1, paladinCriminalChoiceFills());
   const discoveredPurchase = readPayload(
-    handleToolCall(root, "discover_creation_holes", { draftId }),
+    handleToolCall(root, "get_character_creation_choices", { draftId }),
   );
   expect(
     discoveredPurchase.holes.map((hole: CreationHole) => hole.holeId),
@@ -11676,7 +11679,7 @@ function createAndFinalizePaladinCriminalThroughTools(
 
   fillThroughTool(root, draftId, 2, manifestPurchaseFills("class_paladin"));
   const discoveredLoadout = readPayload(
-    handleToolCall(root, "discover_creation_holes", { draftId }),
+    handleToolCall(root, "get_character_creation_choices", { draftId }),
   );
   expect(
     discoveredLoadout.holes.map((hole: CreationHole) => hole.holeId),

@@ -7,7 +7,7 @@ describe("character creation fill tool input", () => {
   test("reports arguments rejected by the boundary schema", () => {
     expect(
       Result.isFailure(
-        decodeFillCreationHolesArgs(null, "fill_creation_holes"),
+        decodeFillCreationHolesArgs(null, "apply_character_creation_choices"),
       ),
     ).toBe(true);
   });

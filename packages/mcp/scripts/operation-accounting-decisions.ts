@@ -124,9 +124,9 @@ export const OPERATION_ACCOUNTING = {
       at("packages/mcp/src/battle-tools.ts", "handleBattleToolCall"),
       REASONS.publicEntry,
     ),
-    discover_creation_holes: account(
+    get_character_creation_choices: account(
       "operation",
-      "discover_creation_holes",
+      "get_character_creation_choices",
       at("packages/mcp/src/character-tools.ts", "handleCharacterToolCall"),
       REASONS.publicEntry,
     ),
@@ -148,9 +148,9 @@ export const OPERATION_ACCOUNTING = {
       at("packages/mcp/src/battle-tools.ts", "handleBattleToolCall"),
       REASONS.publicEntry,
     ),
-    fill_creation_holes: account(
+    apply_character_creation_choices: account(
       "operation",
-      "fill_creation_holes",
+      "apply_character_creation_choices",
       at("packages/mcp/src/character-tools.ts", "handleCharacterToolCall"),
       REASONS.publicEntry,
     ),

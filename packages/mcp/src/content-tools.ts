@@ -299,7 +299,7 @@ export function handleContentToolCall(
         unitsByKind: groupUnitsByKind(services.unitLibrary.listUnits()),
         naturalLanguagePolicy:
           "Map user wording to returned Unit names and ids only when the intent is unambiguous. If a user says 'warrior', ask whether they mean Fighter before filling class_fighter.",
-        next: "Use create_character_draft and discover_creation_holes for the authoritative holeId, optionId, and cardinality values before filling a draft.",
+        next: "Use create_character_draft and get_character_creation_choices for the authoritative holeId, optionId, and cardinality values before filling a draft.",
       }),
     ),
     Match.when({ name: contentToolNames.inspectCatalogUnit }, ({ args }) =>

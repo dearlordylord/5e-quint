@@ -116,7 +116,7 @@
         "destructive_justification": "Adds a draft without deleting or overwriting an existing finalized character."
       }
     },
-    "discover_creation_holes": {
+    "get_character_creation_choices": {
       "annotations": {
         "readOnlyHint": true,
         "openWorldHint": false,
@@ -128,7 +128,7 @@
         "destructive_justification": "Does not delete, overwrite, or mutate the character draft."
       }
     },
-    "fill_creation_holes": {
+    "apply_character_creation_choices": {
       "annotations": {
         "readOnlyHint": false,
         "openWorldHint": false,
@@ -334,7 +334,7 @@
       "description": "Create an authenticated character while pausing for meaningful supported choices.",
       "user_prompt": "Help me create an SRD character, pausing when I have meaningful choices.",
       "file_attachment_urls": null,
-      "tools_triggered": "create_play_session, create_character_draft, discover_creation_holes, fill_creation_holes, finalize_character",
+      "tools_triggered": "create_play_session, create_character_draft, get_character_creation_choices, apply_character_creation_choices, finalize_character",
       "expected_output": "The current supported character choices and, after those choices are completed, a finalized character without invented options.",
       "expected_output_url": null
     },

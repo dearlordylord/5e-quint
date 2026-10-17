@@ -32,13 +32,13 @@
       "leafIssue": 318,
       "mcpSurface": [
         "create_character_draft",
-        "discover_creation_holes",
-        "fill_creation_holes",
+        "get_character_creation_choices",
+        "apply_character_creation_choices",
         "finalize_character"
       ],
       "modelVisibleProjection": [
         {
-          "toolName": "discover_creation_holes",
+          "toolName": "get_character_creation_choices",
           "pathSegments": ["operation", "result", "holes"]
         },
         {

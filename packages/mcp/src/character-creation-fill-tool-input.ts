@@ -115,7 +115,7 @@ export const FillCreationHolesArgsSchema = Schema.Struct({
   fills: Schema.Array(CreationFillArgsSchema).pipe(
     Schema.annotate({
       description:
-        "Atomic batch of current creation-hole fills. Copy holeId and optionIds from discover_creation_holes or the prior tool response.",
+        "Atomic batch of current creation-hole fills. Copy holeId and optionIds from get_character_creation_choices or the prior tool response.",
     }),
   ),
 });

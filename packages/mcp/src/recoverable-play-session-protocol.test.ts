@@ -276,7 +276,7 @@ describe("recoverable Play Session protocol", () => {
       });
 
       const discovered = await callStructuredTool(connection.client, {
-        name: "discover_creation_holes",
+        name: "get_character_creation_choices",
         arguments: { playSessionId, draftId },
       });
       expect(operationResult(discovered)).toMatchObject({
@@ -742,7 +742,7 @@ describe("recoverable Play Session protocol", () => {
     }
 
     await callStructuredTool(firstConnection.client, {
-      name: "fill_creation_holes",
+      name: "apply_character_creation_choices",
       arguments: {
         playSessionId,
         draftId,
@@ -773,7 +773,7 @@ describe("recoverable Play Session protocol", () => {
       });
 
       const discovered = await callStructuredTool(recoveredConnection.client, {
-        name: "discover_creation_holes",
+        name: "get_character_creation_choices",
         arguments: { playSessionId, draftId },
       });
       expect(operationResult(discovered)).toMatchObject({
@@ -821,7 +821,7 @@ describe("recoverable Play Session protocol", () => {
       throw new Error("Expected a Character Progression option.");
     }
     await callStructuredTool(firstClient, {
-      name: "fill_creation_holes",
+      name: "apply_character_creation_choices",
       arguments: {
         playSessionId,
         draftId,
@@ -855,7 +855,7 @@ describe("recoverable Play Session protocol", () => {
         projection: { draftIds: [draftId] },
       });
       const discovered = await callStructuredTool(recoveredClient, {
-        name: "discover_creation_holes",
+        name: "get_character_creation_choices",
         arguments: { playSessionId, draftId },
       });
       expect(operationResult(discovered)).toMatchObject({
@@ -903,7 +903,7 @@ describe("recoverable Play Session protocol", () => {
         throw new Error("Expected two Character Progression options.");
       }
       const operation = (optionId: string) => ({
-        name: "fill_creation_holes",
+        name: "apply_character_creation_choices",
         arguments: {
           playSessionId,
           draftId,
@@ -937,7 +937,7 @@ describe("recoverable Play Session protocol", () => {
       ).toEqual(["accepted", "rejected"]);
 
       const recovered = await callStructuredTool(firstConnection.client, {
-        name: "discover_creation_holes",
+        name: "get_character_creation_choices",
         arguments: { playSessionId, draftId },
       });
       expect(operationResult(recovered)).toMatchObject({
@@ -1099,7 +1099,7 @@ describe("recoverable Play Session protocol", () => {
         "UPDATE play_sessions SET revision = 1, operations_json = ? WHERE play_session_id = ?",
       )
       .run(
-        JSON.stringify([{ name: "discover_creation_holes", args: {} }]),
+        JSON.stringify([{ name: "get_character_creation_choices", args: {} }]),
         playSessionId,
       );
     database.close();

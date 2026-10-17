@@ -32,7 +32,7 @@ export const characterToolDefinitionsByName = {
     name: characterToolNames.createCharacterDraft,
     title: "Create Character Draft",
     description:
-      "Begin creating a character in this Play Session by storing a new draft and returning its draftId, unanswered creation choices, revision, and finalization status. Continue with fill_creation_holes, then finalize_character when ready; use discover_creation_holes to resume an existing draft. Omitting draftId creates a new draft on each call; an id already used by a draft or finalized character is rejected.",
+      "Begin creating a character in this Play Session by storing a new draft and returning its draftId, unanswered creation choices, revision, and finalization status. Continue with apply_character_creation_choices, then finalize_character when ready; use get_character_creation_choices to resume an existing draft. Omitting draftId creates a new draft on each call; an id already used by a draft or finalized character is rejected.",
     inputSchema: createCharacterDraftInputSchema,
     annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),

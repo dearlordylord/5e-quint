@@ -13,7 +13,7 @@ export function workflowGuide(toolSurface: McpToolSurface) {
     lifecycle: [
       "Call list_catalog_units for catalog ids or create_character_draft to discover currently legal character choices.",
       "Call create_character_draft, then fill only holeIds and optionIds returned in holes. The draft.progression.initial choice is the whole Character Progression profile: starting class plus any post-start advancement entries.",
-      "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
+      "After every accepted apply_character_creation_choices call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
       `After finalization, call ${characterMutation} with setEquipmentLoadout to select or clear owned armor, shield, or weapon references before start_battle; pass references from finalization.build.equipment.owned, omit a slot to retain it, and use null to clear it. Standard finalization stores weapon references in the main slot; passing that main:<unitId> reference as offHandWeapon is the canonical off-hand workflow, and the adapter rekeys it to off:<unitId> before validation. Armor and shield references must retain their own slots.`,
       "Call list_stat_blocks for Stat Block ids and inspect each summary's fixed or alternative Size. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
@@ -91,7 +91,7 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       `Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through ${characterMutation}; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply strictly increasing cumulativeRestedTicks segments and its final cumulative segment in the same call.`,
     ],
     limits: [
-      `Use discover_creation_holes, list_characters, inspect_character_session, ${characterQuery}, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.`,
+      `Use get_character_creation_choices, list_characters, inspect_character_session, ${characterQuery}, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.`,
       "Character creation exposes one draft.progression.initial fill for a progression derived from the runtime's contiguous class-level capabilities; MCP does not expose a later level-1 class-entry fill.",
       "roll_dice is an optional independent raw-face sampler: it returns bounded groups from the declared DRDice semantic profiles, and each call advances the Play Session's dice sequence. It does not derive modifiers or outcomes, inspect or auto-fill Battle holes, or retain Battle history; calculations must use canonical returned facts.",
       "Character Session queries do not persist derived facts, expose generic out-of-Battle casting, maintain a spell ledger, or add search, pagination, indexing, or recommendation infrastructure.",

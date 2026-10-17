@@ -33,7 +33,7 @@ retain its handle for subsequent stateful calls. Hosted stateful play requires
 OAuth; local stdio play is process-lifetime and requires no credential.
 
 For character creation, the agent calls `create_character_draft`, presents the
-returned choices, submits `fill_creation_holes`, and repeats discovery until
+returned choices, submits `apply_character_creation_choices`, and repeats discovery until
 `finalize_character` succeeds. The player's answers determine the choices;
 the runtime checks them.
 
@@ -230,7 +230,7 @@ it stores no workflow state.
 | Intent                   | Tools / contract                                                                                                        |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | Browse installed content | `list_catalog_units`, `list_stat_blocks`, `inspect_catalog_unit`; stateless, no Play Session required                   |
-| Build a character        | `create_character_draft`, `discover_creation_holes`, `fill_creation_holes`, `finalize_character`                        |
+| Build a character        | `create_character_draft`, `get_character_creation_choices`, `apply_character_creation_choices`, `finalize_character`    |
 | Read characters          | `list_characters`, `inspect_character_session`, `query_character_session`                                               |
 | Change a sheet           | `apply_character_session_operation` delegates supported advancement, rest, calendar, companion, and resource operations |
 

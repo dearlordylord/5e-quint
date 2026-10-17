@@ -46,11 +46,11 @@ export const CHATGPT_EXECUTION_TOOLS = {
   create_character_draft: retainedTool(
     characterToolDefinitionsByName.create_character_draft,
   ),
-  discover_creation_holes: retainedTool(
-    characterToolDefinitionsByName.discover_creation_holes,
+  get_character_creation_choices: retainedTool(
+    characterToolDefinitionsByName.get_character_creation_choices,
   ),
-  fill_creation_holes: retainedTool(
-    characterToolDefinitionsByName.fill_creation_holes,
+  apply_character_creation_choices: retainedTool(
+    characterToolDefinitionsByName.apply_character_creation_choices,
   ),
   finalize_character: retainedTool(
     characterToolDefinitionsByName.finalize_character,

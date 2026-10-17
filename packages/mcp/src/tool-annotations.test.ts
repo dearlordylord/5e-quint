@@ -25,8 +25,9 @@ const expectedAnnotations = {
   inspect_catalog_unit: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   create_character_draft:
     NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  discover_creation_holes: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  fill_creation_holes: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  get_character_creation_choices: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  apply_character_creation_choices:
+    DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   finalize_character: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   apply_character_session_operation:
     DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -55,8 +56,8 @@ const expectedTitles = {
   list_catalog_units: "List Catalog Units",
   inspect_catalog_unit: "Inspect Catalog Unit",
   create_character_draft: "Create Character Draft",
-  discover_creation_holes: "Show Character Creation Choices",
-  fill_creation_holes: "Apply Character Creation Choices",
+  get_character_creation_choices: "Show Character Creation Choices",
+  apply_character_creation_choices: "Apply Character Creation Choices",
   finalize_character: "Finalize Character",
   apply_character_session_operation: "Apply Character Operation",
   list_characters: "List Characters",

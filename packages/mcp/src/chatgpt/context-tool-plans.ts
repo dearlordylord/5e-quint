@@ -24,15 +24,15 @@ export const CHATGPT_CONTEXT_TOOLS = {
     description:
       "Retain the existing describe_mcp_workflow operation and its current input contract.",
   },
-  discover_creation_holes: {
+  get_character_creation_choices: {
     family: "creation",
     description:
-      "Retain the existing discover_creation_holes operation and its current input contract.",
+      "Retain the existing get_character_creation_choices operation and its current input contract.",
   },
-  fill_creation_holes: {
+  apply_character_creation_choices: {
     family: "creation",
     description:
-      "Retain the existing fill_creation_holes operation and its current input contract.",
+      "Retain the existing apply_character_creation_choices operation and its current input contract.",
   },
   finalize_character: {
     family: "creation",

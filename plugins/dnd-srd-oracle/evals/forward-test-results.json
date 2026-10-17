@@ -4,9 +4,9 @@
   "evaluatorTask": "/root/metadata_requirements",
   "installedChatGptEvidence": false,
   "status": "passed",
-  "skillSourceDigest": "48c151575186395d5bc03802466583ba1dd1ea7bcad8bea6bf8396ef5351aab9",
+  "skillSourceDigest": "dea14aa6697bdca28d5d2e55b453e4830c8c27be57bd847cfbf263b810b30f7d",
   "skillActivationInventoryDigest": "f42848a7cc0d0b7ab9dca058f06c49a49b95becda49463536fd516b19ad3d219",
-  "evaluationScope": "Source-only independent forward evaluation of five prompts against the changed Skill/UI metadata and actual 126 advertised tool names/descriptions. Expected activations and the prior evaluation were withheld. A packet missing session tools was corrected and all cases re-evaluated. No MCP execution or installed-ChatGPT observation was performed.",
+  "evaluationScope": "Independent source-only re-evaluation after two character-choice wire renames, using the changed Skill, UI metadata, all 126 actual advertised tool names/descriptions, and five prompts. The evaluator had prior context; this was not a fresh blinded trial. No MCP execution or installed-ChatGPT observation was performed.",
   "cases": [
     {
       "id": "skill-direct",
@@ -33,15 +33,15 @@
     {
       "id": "skill-continuation",
       "activation": "activate",
-      "toolIntents": ["read_play_session", "discover_creation_holes"],
-      "result": "I’ll reopen the same character draft and gather the choices you still need to make.",
+      "toolIntents": ["read_play_session", "get_character_creation_choices"],
+      "result": "I’ll reopen the same character draft and show you what remains to choose.",
       "outcome": "metExpectation"
     },
     {
       "id": "skill-unrelated-dnd",
       "activation": "doNotActivate",
       "toolIntents": [],
-      "result": "D&D began in the 1970s by combining miniature wargaming with playing individual fantasy characters. It grew through home groups, published adventures, conventions, and later online communities and streamed games.",
+      "result": "D&D grew from 1970s miniature wargaming into a hobby centered on playing individual fantasy characters, shared adventures, and collaborative storytelling.",
       "outcome": "metExpectation"
     },
     {
@@ -65,6 +65,7 @@
     "scope": "Installed ChatGPT developer-mode activation, connection, and complete workflow evidence."
   },
   "findingsApplied": [
-    "Rename the ordinary battle continuation tool to provide_battle_input consistently in Skill and advertised workflow."
+    "Use provide_battle_input consistently for ordinary battle continuation.",
+    "Use get_character_creation_choices and apply_character_creation_choices consistently for current character choices; retain actual holeId and optionIds from returned schemas."
   ]
 }

@@ -60,8 +60,8 @@ const expectedTools = [
   "inspect_catalog_unit",
   "create_character_draft",
   "apply_character_session_operation",
-  "discover_creation_holes",
-  "fill_creation_holes",
+  "get_character_creation_choices",
+  "apply_character_creation_choices",
   "finalize_character",
   "list_characters",
   "inspect_character_session",
@@ -233,7 +233,7 @@ const agentConversationScenarios = [
     agentReads:
       "No tool accepts natural language character goals. The agent can call list_catalog_units and see Fighter as class_fighter, but the workflow guide says MCP does not own synonym lists.",
     agentDecision:
-      "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills progression, background, species, ability scores, languages, alignment, class/background choices, equipment purchase, and loadout using optionIds returned by discover_creation_holes.",
+      "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills progression, background, species, ability scores, languages, alignment, class/background choices, equipment purchase, and loadout using optionIds returned by get_character_creation_choices.",
     executableCoverage: "createAndFinalizeFighterTwo",
     insufficiency:
       "The ambiguity is now explicit: a cold agent knows it should ask before mapping 'warrior' to Fighter.",
@@ -256,7 +256,7 @@ const agentConversationScenarios = [
     name: "Create the baseline character",
     userSays: "Create the Orc Soldier Fighter we support.",
     agentReads:
-      "create_character_draft returns initial holes and finalization status. discover_creation_holes returns concrete holeId and optionId values after each accepted batch.",
+      "create_character_draft returns initial holes and finalization status. get_character_creation_choices returns concrete holeId and optionId values after each accepted batch.",
     agentDecision:
       "It fills only currently returned holes, tracks expectedRevision from the draft, and calls finalize_character only after finalization reports ready or no holes remain.",
     executableCoverage: "verifyBaselineVertical",
@@ -553,9 +553,12 @@ export async function verifyToolContract(
   }
 
   const fillCreationHoles = listed.tools.find(
-    (tool) => tool.name === "fill_creation_holes",
+    (tool) => tool.name === "apply_character_creation_choices",
   );
-  assert.ok(fillCreationHoles, "fill_creation_holes tool must be registered");
+  assert.ok(
+    fillCreationHoles,
+    "apply_character_creation_choices tool must be registered",
+  );
   const creationSchemaText = JSON.stringify(fillCreationHoles.inputSchema);
   assert.match(creationSchemaText, /anyOf|oneOf/);
   assert.match(creationSchemaText, /abilityScores/);
@@ -688,7 +691,7 @@ export async function createBaselineCharacterSession(
     "cc:draft:draft.alignment",
   ]);
 
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 0,
     fills: [
@@ -709,7 +712,7 @@ export async function createBaselineCharacterSession(
     ],
   });
 
-  const choices = await callTool(client, "discover_creation_holes", {
+  const choices = await callTool(client, "get_character_creation_choices", {
     draftId,
   });
   assert.deepEqual(holeIds(choices), [
@@ -722,7 +725,7 @@ export async function createBaselineCharacterSession(
     unitHoleId("background_soldier", "background_equipment_choice"),
   ]);
 
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -759,7 +762,7 @@ export async function createBaselineCharacterSession(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -771,7 +774,7 @@ export async function createBaselineCharacterSession(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -1222,7 +1225,7 @@ export async function verifyRuntimeAssignedDraftReplay(
 ): Promise<{ readonly draftId: string }> {
   const created = await callTool(client, "create_character_draft", {});
   const draftId = parseString(get(created, "draft.draftId"), "draft.draftId");
-  const discovered = await callTool(client, "discover_creation_holes", {
+  const discovered = await callTool(client, "get_character_creation_choices", {
     draftId,
   });
   assert.equal(get(discovered, "draft.draftId"), draftId);
@@ -2662,7 +2665,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
       cha: 12,
     },
   );
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -2699,7 +2702,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -2711,7 +2714,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -2765,7 +2768,7 @@ async function createAndFinalizeElfWizardTwoWithSpells(
       cha: 12,
     },
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -2806,7 +2809,7 @@ async function createAndFinalizeElfWizardTwoWithSpells(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -2818,7 +2821,7 @@ async function createAndFinalizeElfWizardTwoWithSpells(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -2829,7 +2832,7 @@ async function createAndFinalizeElfWizardTwoWithSpells(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 4,
     fills: [
@@ -2861,7 +2864,7 @@ async function createAndFinalizeElfWizardThree(
     },
   });
 
-  const choices = await callTool(client, "discover_creation_holes", {
+  const choices = await callTool(client, "get_character_creation_choices", {
     draftId,
   });
   assert.ok(
@@ -2880,7 +2883,7 @@ async function createAndFinalizeElfWizardThree(
     ),
   );
 
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 1,
     fills: [
@@ -2942,7 +2945,7 @@ async function createAndFinalizeElfWizardThree(
 
   const evocationSavantChoices = await callTool(
     client,
-    "discover_creation_holes",
+    "get_character_creation_choices",
     { draftId },
   );
   assert.ok(
@@ -2950,7 +2953,7 @@ async function createAndFinalizeElfWizardThree(
       unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
     ),
   );
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 2,
     fills: [
@@ -2961,7 +2964,7 @@ async function createAndFinalizeElfWizardThree(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -2973,7 +2976,7 @@ async function createAndFinalizeElfWizardThree(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 4,
     fills: [
@@ -2984,7 +2987,7 @@ async function createAndFinalizeElfWizardThree(
       ),
     ],
   });
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 5,
     fills: [
@@ -3100,55 +3103,63 @@ async function createAndFinalizeOrcRogueSixWithExpertise(
   draftId: string,
 ) {
   const created = await callTool(client, "create_character_draft", { draftId });
-  const initialFill = await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: returnedDraftRevision(created),
-    fills: [
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.progression.initial",
-        levelSixRogueProgressionOptionId,
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.background",
-        "background_soldier",
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.species",
-        "species_orc",
-      ),
-      abilityScoresFillFromReturnedHole(
-        created,
-        "cc:draft:draft.abilityScoreGeneration",
-        {
-          str: 8,
-          dex: 15,
-          con: 14,
-          int: 12,
-          wis: 10,
-          cha: 13,
-        },
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.languages",
-        "Dwarvish",
-        "Goblin",
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.alignment",
-        "lawful_good",
-      ),
-    ],
-  });
+  const initialFill = await callTool(
+    client,
+    "apply_character_creation_choices",
+    {
+      draftId,
+      expectedRevision: returnedDraftRevision(created),
+      fills: [
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.progression.initial",
+          levelSixRogueProgressionOptionId,
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.background",
+          "background_soldier",
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.species",
+          "species_orc",
+        ),
+        abilityScoresFillFromReturnedHole(
+          created,
+          "cc:draft:draft.abilityScoreGeneration",
+          {
+            str: 8,
+            dex: 15,
+            con: 14,
+            int: 12,
+            wis: 10,
+            cha: 13,
+          },
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.languages",
+          "Dwarvish",
+          "Goblin",
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.alignment",
+          "lawful_good",
+        ),
+      ],
+    },
+  );
   const afterInitialRevision = acceptedFillDraftRevision(initialFill);
 
-  const classChoices = await callTool(client, "discover_creation_holes", {
-    draftId,
-  });
+  const classChoices = await callTool(
+    client,
+    "get_character_creation_choices",
+    {
+      draftId,
+    },
+  );
   assert.equal(returnedDraftRevision(classChoices), afterInitialRevision);
   assert.deepEqual(holeIds(classChoices), [
     unitHoleId("class_rogue", "class_skill_proficiency_choice"),
@@ -3165,7 +3176,7 @@ async function createAndFinalizeOrcRogueSixWithExpertise(
     unitHoleId("background_soldier", "background_equipment_choice"),
   ]);
 
-  const classFill = await callTool(client, "fill_creation_holes", {
+  const classFill = await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: returnedDraftRevision(classChoices),
     fills: [
@@ -3221,9 +3232,13 @@ async function createAndFinalizeOrcRogueSixWithExpertise(
   });
   const afterClassRevision = acceptedFillDraftRevision(classFill);
 
-  const featureChoices = await callTool(client, "discover_creation_holes", {
-    draftId,
-  });
+  const featureChoices = await callTool(
+    client,
+    "get_character_creation_choices",
+    {
+      draftId,
+    },
+  );
   assert.equal(returnedDraftRevision(featureChoices), afterClassRevision);
   assert.deepEqual(holeIds(featureChoices), [
     unitHoleId("rogue_expertise", "class_feature_proficiency_choice"),
@@ -3234,54 +3249,66 @@ async function createAndFinalizeOrcRogueSixWithExpertise(
     unitHoleId("class_rogue", "equipment_purchase"),
   ]);
 
-  const featureFill = await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: returnedDraftRevision(featureChoices),
-    fills: [
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId("rogue_expertise", "class_feature_proficiency_choice"),
-        ...levelSixRogueExpertiseSkills,
-      ),
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId(
-          "rogue_ability_score_improvement_l4",
-          "class_feature_ability_score_increase_choice",
+  const featureFill = await callTool(
+    client,
+    "apply_character_creation_choices",
+    {
+      draftId,
+      expectedRevision: returnedDraftRevision(featureChoices),
+      fills: [
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId("rogue_expertise", "class_feature_proficiency_choice"),
+          ...levelSixRogueExpertiseSkills,
         ),
-        "ability_score:dex:+2:max20",
-      ),
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId("class_rogue", "equipment_purchase"),
-        "weapon_quarterstaff",
-      ),
-    ],
-  });
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId(
+            "rogue_ability_score_improvement_l4",
+            "class_feature_ability_score_increase_choice",
+          ),
+          "ability_score:dex:+2:max20",
+        ),
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId("class_rogue", "equipment_purchase"),
+          "weapon_quarterstaff",
+        ),
+      ],
+    },
+  );
   const afterFeatureRevision = acceptedFillDraftRevision(featureFill);
 
-  const loadoutChoices = await callTool(client, "discover_creation_holes", {
-    draftId,
-  });
+  const loadoutChoices = await callTool(
+    client,
+    "get_character_creation_choices",
+    {
+      draftId,
+    },
+  );
   assert.equal(returnedDraftRevision(loadoutChoices), afterFeatureRevision);
   assert.deepEqual(holeIds(loadoutChoices), [
     loadoutHoleId("weapon_quarterstaff", "weapon"),
   ]);
 
-  const loadoutFill = await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: returnedDraftRevision(loadoutChoices),
-    fills: [
-      choiceFillFromReturnedHole(
-        loadoutChoices,
-        loadoutHoleId("weapon_quarterstaff", "weapon"),
-        "wielded_one_handed",
-      ),
-    ],
-  });
+  const loadoutFill = await callTool(
+    client,
+    "apply_character_creation_choices",
+    {
+      draftId,
+      expectedRevision: returnedDraftRevision(loadoutChoices),
+      fills: [
+        choiceFillFromReturnedHole(
+          loadoutChoices,
+          loadoutHoleId("weapon_quarterstaff", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    },
+  );
   const afterLoadoutRevision = acceptedFillDraftRevision(loadoutFill);
 
-  const complete = await callTool(client, "discover_creation_holes", {
+  const complete = await callTool(client, "get_character_creation_choices", {
     draftId,
   });
   assert.equal(returnedDraftRevision(complete), afterLoadoutRevision);
@@ -3294,7 +3321,7 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
   draftId: string,
 ) {
   const created = await callTool(client, "create_character_draft", { draftId });
-  let current = await callTool(client, "fill_creation_holes", {
+  let current = await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: returnedDraftRevision(created),
     fills: creationFillsForReturnedHoles(
@@ -3305,13 +3332,13 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
   assert.equal(get(current, "result.tag"), "accepted");
 
   for (let pass = 0; pass < 12; pass += 1) {
-    const holes = await callTool(client, "discover_creation_holes", {
+    const holes = await callTool(client, "get_character_creation_choices", {
       draftId,
     });
     if (holeIds(holes).length === 0) {
       return callTool(client, "finalize_character", { draftId });
     }
-    current = await callTool(client, "fill_creation_holes", {
+    current = await callTool(client, "apply_character_creation_choices", {
       draftId,
       expectedRevision: returnedDraftRevision(holes),
       fills: creationFillsForReturnedHoles(
@@ -3334,7 +3361,7 @@ async function createAndFinalizeOrcFighterTenChampion(
   draftId: string,
 ) {
   const created = await callTool(client, "create_character_draft", { draftId });
-  let current = await callTool(client, "fill_creation_holes", {
+  let current = await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: returnedDraftRevision(created),
     fills: creationFillsForReturnedHoles(
@@ -3345,13 +3372,13 @@ async function createAndFinalizeOrcFighterTenChampion(
   assert.equal(get(current, "result.tag"), "accepted");
 
   for (let pass = 0; pass < 12; pass += 1) {
-    const holes = await callTool(client, "discover_creation_holes", {
+    const holes = await callTool(client, "get_character_creation_choices", {
       draftId,
     });
     if (holeIds(holes).length === 0) {
       return callTool(client, "finalize_character", { draftId });
     }
-    current = await callTool(client, "fill_creation_holes", {
+    current = await callTool(client, "apply_character_creation_choices", {
       draftId,
       expectedRevision: returnedDraftRevision(holes),
       fills: creationFillsForReturnedHoles(
@@ -3380,56 +3407,64 @@ async function createAndFinalizeElfSoldierWizardWithAsi(
 ) {
   const created = await callTool(client, "create_character_draft", { draftId });
   const createdRevision = returnedDraftRevision(created);
-  const initialFill = await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: createdRevision,
-    fills: [
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.progression.initial",
-        input.progressionOptionId,
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.background",
-        "background_soldier",
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.species",
-        "species_elf",
-      ),
-      {
-        kind: "abilityScores",
-        holeId: "cc:draft:draft.abilityScoreGeneration",
-        method: "standardArray",
-        value: {
-          str: 8,
-          dex: 14,
-          con: 13,
-          int: 15,
-          wis: 10,
-          cha: 12,
+  const initialFill = await callTool(
+    client,
+    "apply_character_creation_choices",
+    {
+      draftId,
+      expectedRevision: createdRevision,
+      fills: [
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.progression.initial",
+          input.progressionOptionId,
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.background",
+          "background_soldier",
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.species",
+          "species_elf",
+        ),
+        {
+          kind: "abilityScores",
+          holeId: "cc:draft:draft.abilityScoreGeneration",
+          method: "standardArray",
+          value: {
+            str: 8,
+            dex: 14,
+            con: 13,
+            int: 15,
+            wis: 10,
+            cha: 12,
+          },
         },
-      },
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.languages",
-        "Dwarvish",
-        "Goblin",
-      ),
-      choiceFillFromReturnedHole(
-        created,
-        "cc:draft:draft.alignment",
-        "lawful_good",
-      ),
-    ],
-  });
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.languages",
+          "Dwarvish",
+          "Goblin",
+        ),
+        choiceFillFromReturnedHole(
+          created,
+          "cc:draft:draft.alignment",
+          "lawful_good",
+        ),
+      ],
+    },
+  );
   const afterInitialRevision = acceptedFillDraftRevision(initialFill);
 
-  const classChoices = await callTool(client, "discover_creation_holes", {
-    draftId,
-  });
+  const classChoices = await callTool(
+    client,
+    "get_character_creation_choices",
+    {
+      draftId,
+    },
+  );
   assert.equal(returnedDraftRevision(classChoices), afterInitialRevision);
   assert.deepEqual(holeIds(classChoices), [
     unitHoleId("class_wizard", "class_skill_proficiency_choice"),
@@ -3447,7 +3482,7 @@ async function createAndFinalizeElfSoldierWizardWithAsi(
     unitHoleId("background_soldier", "background_equipment_choice"),
   ]);
 
-  const classFill = await callTool(client, "fill_creation_holes", {
+  const classFill = await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: returnedDraftRevision(classChoices),
     fills: [
@@ -3512,9 +3547,13 @@ async function createAndFinalizeElfSoldierWizardWithAsi(
   });
   const afterClassRevision = acceptedFillDraftRevision(classFill);
 
-  const featureChoices = await callTool(client, "discover_creation_holes", {
-    draftId,
-  });
+  const featureChoices = await callTool(
+    client,
+    "get_character_creation_choices",
+    {
+      draftId,
+    },
+  );
   assert.equal(returnedDraftRevision(featureChoices), afterClassRevision);
   assert.deepEqual(holeIds(featureChoices), [
     unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
@@ -3525,67 +3564,79 @@ async function createAndFinalizeElfSoldierWizardWithAsi(
     ),
     unitHoleId("class_wizard", "equipment_purchase"),
   ]);
-  const featureFill = await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: returnedDraftRevision(featureChoices),
-    fills: [
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
-        "arcana",
-      ),
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
-        "continual_flame",
-        "darkness",
-      ),
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId(
-          "wizard_ability_score_improvement_l4",
-          "class_feature_ability_score_increase_choice",
+  const featureFill = await callTool(
+    client,
+    "apply_character_creation_choices",
+    {
+      draftId,
+      expectedRevision: returnedDraftRevision(featureChoices),
+      fills: [
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
+          "arcana",
         ),
-        "ability_score:int:+2:max20",
-      ),
-      choiceFillFromReturnedHole(
-        featureChoices,
-        unitHoleId("class_wizard", "equipment_purchase"),
-        "weapon_longsword",
-        "weapon_dagger",
-        "equipment_shield",
-      ),
-    ],
-  });
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
+          "continual_flame",
+          "darkness",
+        ),
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId(
+            "wizard_ability_score_improvement_l4",
+            "class_feature_ability_score_increase_choice",
+          ),
+          "ability_score:int:+2:max20",
+        ),
+        choiceFillFromReturnedHole(
+          featureChoices,
+          unitHoleId("class_wizard", "equipment_purchase"),
+          "weapon_longsword",
+          "weapon_dagger",
+          "equipment_shield",
+        ),
+      ],
+    },
+  );
   const afterFeatureRevision = acceptedFillDraftRevision(featureFill);
 
-  const loadoutChoices = await callTool(client, "discover_creation_holes", {
-    draftId,
-  });
+  const loadoutChoices = await callTool(
+    client,
+    "get_character_creation_choices",
+    {
+      draftId,
+    },
+  );
   assert.equal(returnedDraftRevision(loadoutChoices), afterFeatureRevision);
   assert.deepEqual(holeIds(loadoutChoices), [
     loadoutHoleId("equipment_shield", "shield"),
     loadoutHoleId("weapon_longsword", "weapon"),
   ]);
-  const loadoutFill = await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: returnedDraftRevision(loadoutChoices),
-    fills: [
-      choiceFillFromReturnedHole(
-        loadoutChoices,
-        loadoutHoleId("equipment_shield", "shield"),
-        "wielded",
-      ),
-      choiceFillFromReturnedHole(
-        loadoutChoices,
-        loadoutHoleId("weapon_longsword", "weapon"),
-        "wielded_one_handed",
-      ),
-    ],
-  });
+  const loadoutFill = await callTool(
+    client,
+    "apply_character_creation_choices",
+    {
+      draftId,
+      expectedRevision: returnedDraftRevision(loadoutChoices),
+      fills: [
+        choiceFillFromReturnedHole(
+          loadoutChoices,
+          loadoutHoleId("equipment_shield", "shield"),
+          "wielded",
+        ),
+        choiceFillFromReturnedHole(
+          loadoutChoices,
+          loadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    },
+  );
   const afterLoadoutRevision = acceptedFillDraftRevision(loadoutFill);
 
-  const complete = await callTool(client, "discover_creation_holes", {
+  const complete = await callTool(client, "get_character_creation_choices", {
     draftId,
   });
   assert.equal(returnedDraftRevision(complete), afterLoadoutRevision);
@@ -3892,7 +3943,7 @@ async function fillBaseCharacter(
     readonly abilityScores: JsonObject;
   },
 ) {
-  await callTool(client, "fill_creation_holes", {
+  await callTool(client, "apply_character_creation_choices", {
     draftId,
     expectedRevision: 0,
     fills: [
