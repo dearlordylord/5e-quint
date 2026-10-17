@@ -16,6 +16,9 @@ jobs:
     name: Resource-bounded workspace quality
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      GOMEMLIMIT: 8GiB
+      GOGC: "75"
 
     steps:
       - name: Check out repository

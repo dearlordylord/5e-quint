@@ -34,6 +34,9 @@ jobs:
     name: Raw Swarm deterministic lane
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      GOMEMLIMIT: 8GiB
+      GOGC: "75"
 
     steps:
       - name: Check out repository
