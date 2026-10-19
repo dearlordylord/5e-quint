@@ -1,5 +1,13 @@
 import { Result, Schema } from "effect";
 import { spellProcedureExecutionSchema } from "./battle-reducer/spell-procedure-profiles/execution-profile.ts";
+import { spellSlotLevel } from "@dnd/shared/types";
+import { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleCreatureState,
+} from "./battle-state-execution.ts";
+import type { CharacterSpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import { saveGatedDamageProfile } from "./battle-reducer/spell-procedure-profiles/save-gated-damage.ts";
 import { SaveGatedDamageInvocationSchema } from "./battle-reducer/spell-procedure-profiles/save-gated-damage.ts";
 import { spellProcedureExecutionFor } from "./battle-reducer/spell-procedure-profiles/execution-registry.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
@@ -8,7 +16,12 @@ import {
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
-import { thunderwaveUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  burningHandsUnitId,
+  sacredFlameUnitId,
+  spellCasterId,
+  thunderwaveUnitId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   spellAdmissionSource,
   spellRecord,
@@ -49,6 +62,47 @@ describe("spell procedure execution schema constraint", () => {
     expect(encoded.amount).toBe("42");
     expect(encoded).toEqual(input);
   });
+
+  test.each([sacredFlameUnitId, burningHandsUnitId])(
+    "omits absent optional facts from the admitted %s execution projection",
+    (spellId) => {
+      const source = spellAdmissionSource(spellRecord(spellId));
+      const admission = saveGatedDamageProfile.admitMechanics(source);
+      if (admission.tag !== "supported") {
+        throw new Error("Expected supported save-gated damage mechanics.");
+      }
+      const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+        spellCasterId,
+      );
+      if (!isSpellAdmissionActor(actor)) {
+        throw new Error("Expected a spellcasting character fixture.");
+      }
+      const invocations = admission.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(source),
+        {
+          actor,
+          castingSource: source.castingSource,
+          kind: "character",
+          battle: undefined,
+          spellCastOptions: [
+            { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+          ],
+        },
+      );
+      expect(invocations).toHaveLength(1);
+      const invocation = invocations[0];
+      if (invocation === undefined)
+        throw new Error("Expected an admitted invocation.");
+      const execution = spellProcedureExecution(invocation);
+      expect(execution).not.toHaveProperty("postSaveAreaEffect");
+      const decoded = Schema.decodeUnknownSync(SaveGatedDamageInvocationSchema)(
+        execution,
+      );
+      expect(
+        Schema.encodeSync(SaveGatedDamageInvocationSchema)(decoded),
+      ).toEqual(execution);
+    },
+  );
 
   test("round-trips save-gated spell optional execution facts", () => {
     const session = spellBattle({
@@ -131,3 +185,12 @@ describe("spell procedure execution schema constraint", () => {
     ).toEqual(withoutOptional);
   });
 });
+
+function isSpellAdmissionActor(
+  actor: BattleCreatureState | undefined,
+): actor is CharacterSpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
+}

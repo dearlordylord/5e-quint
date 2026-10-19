@@ -1139,7 +1139,7 @@ export type SaveGatedDamageClassCantripSpellProcedureExecution =
     readonly failedSaveAbilityChoices: readonly Ability[] | null;
     readonly failedSaveConditionEffects: readonly SpellFailedSaveConditionEffect[];
     readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
-    readonly postSaveAreaEffect?: SpellPostSaveAreaEffect | undefined;
+    readonly postSaveAreaEffect?: SpellPostSaveAreaEffect;
     readonly procedure: "saveGatedDamage";
     readonly rangeFeet: MovementFeet;
     readonly resource: CantripSpellInvocationResource;
@@ -1167,7 +1167,7 @@ export type SaveGatedDamagePreparedSpellProcedureExecution =
     readonly failedSaveAbilityChoices: readonly Ability[] | null;
     readonly failedSaveConditionEffects: readonly SpellFailedSaveConditionEffect[];
     readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
-    readonly postSaveAreaEffect?: SpellPostSaveAreaEffect | undefined;
+    readonly postSaveAreaEffect?: SpellPostSaveAreaEffect;
     readonly procedure: "saveGatedDamage";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;

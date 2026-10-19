@@ -604,7 +604,9 @@ export function spellProcedureExecution(
             failedSaveAbilityChoices: value.failedSaveAbilityChoices,
             failedSaveConditionEffects: value.failedSaveConditionEffects,
             failedSavePostDamageRiders: value.failedSavePostDamageRiders,
-            postSaveAreaEffect: value.postSaveAreaEffect,
+            ...(value.postSaveAreaEffect === undefined
+              ? {}
+              : { postSaveAreaEffect: value.postSaveAreaEffect }),
             procedure: value.procedure,
             rangeFeet: value.rangeFeet,
             saveRollModeRule: value.saveRollModeRule,
@@ -621,7 +623,9 @@ export function spellProcedureExecution(
             failedSaveAbilityChoices: value.failedSaveAbilityChoices,
             failedSaveConditionEffects: value.failedSaveConditionEffects,
             failedSavePostDamageRiders: value.failedSavePostDamageRiders,
-            postSaveAreaEffect: value.postSaveAreaEffect,
+            ...(value.postSaveAreaEffect === undefined
+              ? {}
+              : { postSaveAreaEffect: value.postSaveAreaEffect }),
             procedure: value.procedure,
             rangeFeet: value.rangeFeet,
             saveRollModeRule: value.saveRollModeRule,
