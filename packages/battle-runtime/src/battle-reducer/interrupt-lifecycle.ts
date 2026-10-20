@@ -2,7 +2,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 import { optionalProperty } from "../optional-property.ts";
-import { Match } from "effect";
+import { Match, Schema } from "effect";
+import { BattleFillSchema } from "./battle-codecs.ts";
 import { sameBattleSubject } from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
@@ -439,7 +440,18 @@ export function resolveActiveInterruptProcedure(input: {
   );
   const continuationResolution = {
     ...input.resolution,
-    fills: [...continuationDistanceFills, ...input.resolution.fills],
+    // The transaction owner may already carry the initial spatial fill in its
+    // replay vector. Retain it exactly once; duplicate submitted fills still
+    // reach native validation unchanged.
+    fills: [
+      ...continuationDistanceFills.filter(
+        (retained) =>
+          !input.resolution.fills.some((submitted) =>
+            Schema.toEquivalence(BattleFillSchema)(retained, submitted),
+          ),
+      ),
+      ...input.resolution.fills,
+    ],
   };
   const interruptResult = input.execution.resolveSubject({
     input: continuationResolution,
