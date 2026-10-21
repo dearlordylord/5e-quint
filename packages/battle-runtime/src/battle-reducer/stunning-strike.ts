@@ -102,7 +102,7 @@ export function resolveStunningStrikeAfterHit(input: {
   if (input.decision === undefined) {
     return {
       tag: "needsHoles",
-      holes: [stunningStrikeDecisionHole()],
+      holes: [stunningStrikeDecisionHole(hit)],
     };
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -195,12 +195,15 @@ function resolveStunningStrikeAttempt(
   };
 }
 
-function stunningStrikeDecisionHole(): BattleUnitFeatureDecisionHole {
+function stunningStrikeDecisionHole(
+  hit: StunningStrikeHit,
+): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
     holeId: STUNNING_STRIKE_DECISION_HOLE_ID,
     holeInstanceKey: STUNNING_STRIKE_DECISION_HOLE_INSTANCE,
     label: "Stunning Strike",
+    participants: { actorId: hit.actorId, targetIds: [hit.targetId] },
     choices: STUNNING_STRIKE_CHOICES,
   };
 }

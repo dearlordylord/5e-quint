@@ -6425,6 +6425,11 @@ export type BattleUnitFeatureDecisionHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "unitFeatureDecision";
   readonly label: string;
+  /** Omitted when the decision owner does not project resolved participants. */
+  readonly participants?: {
+    readonly actorId: CombatantId;
+    readonly targetIds: ReadonlyNonEmptyArray<CombatantId>;
+  };
   readonly choices:
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]

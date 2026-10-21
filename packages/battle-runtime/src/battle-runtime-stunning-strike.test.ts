@@ -67,6 +67,7 @@ describe("battle runtime: Stunning Strike", () => {
         kind: "unitFeatureDecision",
         label: "Stunning Strike",
         choices: ["attempt", "decline"],
+        participants: { actorId: fighterId, targetIds: [goblinId] },
       });
     }
   });
