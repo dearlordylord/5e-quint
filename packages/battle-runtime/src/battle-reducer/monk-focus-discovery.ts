@@ -198,6 +198,14 @@ export function heightenedPatientDefenseTemporaryHitPointsDiceExpr(
   };
 }
 
+export function monkFocusFlurryOfBlowsStrikeCount(
+  focus: MonkFocusResourceFact,
+): 2 | 3 {
+  return monkHasHeightenedFocus(focus.actor)
+    ? 3
+    : focus.execution.flurryOfBlows.strikeCount;
+}
+
 export function monkHasHeightenedFocus(
   actor: CharacterBattleCreatureState,
 ): boolean {

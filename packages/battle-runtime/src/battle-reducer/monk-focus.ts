@@ -45,6 +45,7 @@ import {
   heightenedStepOfTheWindCarryHole,
   isMonkFocusFlurryOfBlowsActionResource,
   monkFocusResourceForActor,
+  monkFocusFlurryOfBlowsStrikeCount,
   monkHasHeightenedFocus,
 } from "./monk-focus-discovery.ts";
 import type { MonkFocusResourceFact } from "./monk-focus-discovery.ts";
@@ -387,14 +388,6 @@ function stateWithHeightenedPatientDefenseTemporaryHitPoints(
       applyTemporaryHitPoints(actor, rolledDiceTotal(roll.value)),
     ),
   };
-}
-
-function monkFocusFlurryOfBlowsStrikeCount(
-  focus: MonkFocusResourceFact,
-): 2 | 3 {
-  return monkHasHeightenedFocus(focus.actor)
-    ? 3
-    : focus.execution.flurryOfBlows.strikeCount;
 }
 
 type StepOfTheWindFocusResolutionInput = Omit<

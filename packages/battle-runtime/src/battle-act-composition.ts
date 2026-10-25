@@ -1,3 +1,7 @@
+import {
+  monkFocusResourceForActor,
+  monkFocusFlurryOfBlowsStrikeCount,
+} from "./battle-reducer/monk-focus-discovery.ts";
 import { admittedSpellInvocationCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import type {
   BattleActDiscoveryCandidate,
@@ -967,10 +971,16 @@ function procedurePresentationJoin(
   };
   if (subject.tag === "monkFocusOption") {
     if (subject.option === "flurryOfBlows") {
+      const focus = monkFocusResourceForActor(
+        state,
+        subject.actorId,
+        procedureRef,
+      );
+      if (focus === null) return undefined;
+      const count = monkFocusFlurryOfBlowsStrikeCount(focus);
       return {
         label: `${name}: Flurry of Blows`,
-        summary:
-          "Spend 1 Focus Point and a Bonus Action to make Unarmed Strikes.",
+        summary: `Spend 1 Focus Point and a Bonus Action to gain ${count} follow-up Unarmed Strike actions. Each strike is resolved separately.`,
         presentation,
       };
     }
