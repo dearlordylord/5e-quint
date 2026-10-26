@@ -732,6 +732,8 @@ export {
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
   battlePendingTransactionReplaySessionForSession,
+  battlePendingTransactionReplayContextCompatibility,
+  type BattlePendingTransactionReplayContextCompatibility,
   battlePendingTransactionEnvelopeForSession,
   type BattlePendingTransaction,
   type BattlePendingTransactionEnvelopeSessionView,

@@ -446,8 +446,8 @@ export function battlePendingTransactionView(
 
 /**
  * Validate and project a transaction for the exact runtime session that will
- * be stored with its next frontier. This is the only public session/token
- * check; callers cannot inspect or reconstruct the transaction's parent.
+ * be stored with its next frontier. Callers cannot inspect or reconstruct
+ * the transaction's parent.
  */
 export function battlePendingTransactionViewForSession(
   transaction: BattlePendingTransaction,
@@ -477,6 +477,113 @@ export function battlePendingTransactionReplaySessionForSession(
   return data.value.currentSession === session
     ? { tag: "valid", replaySession: data.value.baseSession }
     : { tag: "transactionSessionMismatch" };
+}
+
+type BattlePendingTransactionPrivateReplayContext = Omit<
+  BattlePendingTransactionData,
+  keyof BattlePendingTransactionView | "transaction"
+>;
+
+export type BattlePendingTransactionReplayContextCompatibility =
+  | { readonly tag: "compatible" }
+  | {
+      readonly tag: "foreignTransaction" | "transactionSessionMismatch";
+      readonly side: "left" | "right";
+    }
+  | {
+      readonly tag: "incompatible";
+      readonly field: keyof BattlePendingTransactionPrivateReplayContext;
+    };
+
+const privateReplayContextComparators = {
+  baseSession: (left, right) =>
+    left.baseSession === right.baseSession ? null : "baseSession",
+  currentSession: (left, right) =>
+    left.currentSession === right.currentSession ? null : "currentSession",
+  completion: (left, right) => {
+    const completion = left.completion;
+    const same = Match.value(completion).pipe(
+      Match.when(
+        { kind: "standaloneClose" },
+        () => right.completion.kind === "standaloneClose",
+      ),
+      Match.when(
+        { kind: "replaySubject" },
+        (owned) =>
+          right.completion.kind === "replaySubject" &&
+          owned.parent === right.completion.parent,
+      ),
+      Match.when(
+        { kind: "refreshParentFrontier" },
+        (owned) =>
+          right.completion.kind === "refreshParentFrontier" &&
+          owned.parent === right.completion.parent,
+      ),
+      Match.exhaustive,
+    );
+    return same ? null : "completion";
+  },
+  checkpointOwnership: (left, right) => {
+    const same = Match.value(left.checkpointOwnership).pipe(
+      Match.when(
+        { tag: "ordinaryFrontier" },
+        () => right.checkpointOwnership.tag === "ordinaryFrontier",
+      ),
+      Match.when({ tag: "interruptFrontier" }, (owned) => {
+        const other = right.checkpointOwnership;
+        return (
+          other.tag === "interruptFrontier" &&
+          owned.checkpoint === other.checkpoint &&
+          owned.ancestors.length === other.ancestors.length &&
+          owned.ancestors.every(
+            (identity, index) => identity === other.ancestors[index],
+          )
+        );
+      }),
+      Match.exhaustive,
+    );
+    return same ? null : "checkpointOwnership";
+  },
+} satisfies {
+  readonly [Field in keyof BattlePendingTransactionPrivateReplayContext]: (
+    left: BattlePendingTransactionPrivateReplayContext,
+    right: BattlePendingTransactionPrivateReplayContext,
+  ) => keyof BattlePendingTransactionPrivateReplayContext | null;
+};
+
+/**
+ * Compare only private replay ownership after validating each token/session pair.
+ * Callers must separately compare the complete public views and adapter evidence.
+ * Compatibility neither transfers token authority nor establishes future equality.
+ */
+export function battlePendingTransactionReplayContextCompatibility(input: {
+  readonly left: {
+    readonly transaction: BattlePendingTransaction;
+    readonly session: BattleRuntimeSession;
+  };
+  readonly right: {
+    readonly transaction: BattlePendingTransaction;
+    readonly session: BattleRuntimeSession;
+  };
+}): BattlePendingTransactionReplayContextCompatibility {
+  const left = lookupBattleRuntimeTransaction(input.left.transaction);
+  if (Option.isNone(left) || left.value.transaction !== input.left.transaction)
+    return { tag: "foreignTransaction", side: "left" };
+  const right = lookupBattleRuntimeTransaction(input.right.transaction);
+  if (
+    Option.isNone(right) ||
+    right.value.transaction !== input.right.transaction
+  )
+    return { tag: "foreignTransaction", side: "right" };
+  if (left.value.currentSession !== input.left.session)
+    return { tag: "transactionSessionMismatch", side: "left" };
+  if (right.value.currentSession !== input.right.session)
+    return { tag: "transactionSessionMismatch", side: "right" };
+  for (const compare of Object.values(privateReplayContextComparators)) {
+    const field = compare(left.value, right.value);
+    if (field !== null) return { tag: "incompatible", field };
+  }
+  return { tag: "compatible" };
 }
 
 /**

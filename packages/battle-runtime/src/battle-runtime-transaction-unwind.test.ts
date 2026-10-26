@@ -15,6 +15,7 @@ import {
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
   battlePendingTransactionReplaySessionForSession,
+  battlePendingTransactionReplayContextCompatibility,
   settleCreatureFallsRuntimeTransaction,
   settleBattleRuntimeTransaction,
   type BattlePendingTransaction,
@@ -300,6 +301,72 @@ describe("battle runtime transaction completion unwind", () => {
     ).toEqual({ tag: "transactionSessionMismatch" });
   });
 
+  test("compares private ownership only after validating both exact sessions", () => {
+    const session = readyMovementSession();
+    const subject = moveSubjectFor(session, goblinId);
+    const open = () =>
+      requireNeedsHoles(
+        settleBattleRuntimeTransaction({
+          session,
+          transaction: null,
+          operation: { kind: "ordinarySubject", subject, fills: [] },
+        }),
+        "movement owner",
+      );
+    const first = open();
+    const second = open();
+    const left = {
+      transaction: first.transaction,
+      session: first.resolution.session,
+    };
+    const right = {
+      transaction: second.transaction,
+      session: second.resolution.session,
+    };
+    expect(first.transaction).not.toBe(second.transaction);
+    expect(
+      battlePendingTransactionReplayContextCompatibility({ left, right }),
+    ).toEqual({ tag: "compatible" });
+    expect(
+      battlePendingTransactionReplayContextCompatibility({ left, right: left }),
+    ).toEqual({ tag: "compatible" });
+    const differentSession = battleRuntimeSessionWithState(
+      left.session,
+      left.session.state,
+    );
+    expect(differentSession.state).toBe(left.session.state);
+    const other = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: differentSession,
+        transaction: null,
+        operation: { kind: "ordinarySubject", subject, fills: [] },
+      }),
+      "distinct session owner",
+    );
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left,
+        right: {
+          transaction: other.transaction,
+          session: other.resolution.session,
+        },
+      }),
+    ).toEqual({ tag: "incompatible", field: "baseSession" });
+
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left: { ...left, session: differentSession },
+        right,
+      }),
+    ).toEqual({ tag: "transactionSessionMismatch", side: "left" });
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left,
+        right: { ...right, session: differentSession },
+      }),
+    ).toEqual({ tag: "transactionSessionMismatch", side: "right" });
+  });
+
   test("settles a resolved runtime command without a pending transaction", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-transaction-resolved-command"),
@@ -335,6 +402,37 @@ describe("battle runtime transaction completion unwind", () => {
     // The token constructor is private; this boundary test models a token
     // supplied by a different runtime owner.
     const foreignToken = Object.freeze({}) as BattlePendingTransaction;
+
+    const owner = readyMovementSession();
+    const pending = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: owner,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject: moveSubjectFor(owner, goblinId),
+          fills: [],
+        },
+      }),
+      "movement owner",
+    );
+    const valid = {
+      transaction: pending.transaction,
+      session: pending.resolution.session,
+    };
+    const foreign = { transaction: foreignToken, session: owner };
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left: foreign,
+        right: valid,
+      }),
+    ).toEqual({ tag: "foreignTransaction", side: "left" });
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left: valid,
+        right: foreign,
+      }),
+    ).toEqual({ tag: "foreignTransaction", side: "right" });
 
     expect(Option.isNone(battlePendingTransactionView(foreignToken))).toBe(
       true,
