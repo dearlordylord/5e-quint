@@ -70,6 +70,36 @@ function syntheticStatBlockProcedureRef(
 }
 
 describe("battle act composition presentations", () => {
+  test.each([
+    { level: 2, count: 2 },
+    { level: 10, count: 3 },
+  ])(
+    "describes granted follow-up strikes at monk level $level",
+    ({ level, count }) => {
+      const session = startBattleSessionRight({
+        battleId: battleId(`battle-act-follow-up-${level}`),
+        combatants: [
+          characterSeed({
+            combatantId: fighterId,
+            initiative: 20,
+            attack: null,
+            classLevels: [{ className: "monk", level }],
+            resources: [monksFocusResource({ usesRemaining: 2 })],
+          }),
+          statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+        ],
+      });
+      const activation = discoverBattleActs(session).find(
+        (act) =>
+          act.subject.tag === "monkFocusOption" &&
+          act.subject.option === "flurryOfBlows",
+      );
+      expect(activation?.summary).toBe(
+        `Spend 1 Focus Point and a Bonus Action to gain ${count} follow-up Unarmed Strike actions. Each strike is resolved separately.`,
+      );
+    },
+  );
+
   test("projects ordinary intrinsic acts and spell presentation helpers", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-act-composition-projections"),
