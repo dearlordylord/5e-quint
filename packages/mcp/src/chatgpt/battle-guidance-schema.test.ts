@@ -171,6 +171,7 @@ describe("ChatGPT Battle guidance contract", () => {
       }),
     )(reaction.toolResult).structuredContent.chatGptBattleOperations;
     expect(guidance.kind).toBe("reactionDecision");
+    expect(guidance).toHaveProperty("readyCalls");
     if (guidance.kind !== "reactionDecision")
       throw new Error("Expected Reaction navigation.");
     expect(guidance.choices.map((entry) => entry.selection)).toEqual(
