@@ -5,6 +5,7 @@ import {
   requireJsonSchema,
 } from "../../test-support/json-schema.ts";
 import { mcpOutputJsonSchema } from "../schema-codec.ts";
+import { ReadyBattleInterruptCallSchema } from "./battle-interrupt-call-guidance.ts";
 import { errorContent } from "../tool-content.ts";
 import { productionBattleConsumerSeam } from "../../test-support/cross-boundary-battle.ts";
 import {
@@ -20,6 +21,70 @@ const subject = {
 const routing = { kind: "available", tools: ["dodge"] } as const;
 
 describe("ChatGPT Battle guidance contract", () => {
+  it("correlates decline tools with decline decisions and excludes calls needing new rolls", () => {
+    const validate = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(
+        mcpOutputJsonSchema(ReadyBattleInterruptCallSchema),
+        "ready Reaction call",
+      ),
+    );
+    const decline = { kind: "decline", responderId: "synthetic-responder" };
+    const resolve = {
+      kind: "resolve",
+      responderId: "synthetic-responder",
+      choice: { kind: "releaseReadiedMovement", fills: [] },
+    };
+    for (const [tool, value, accepted] of [
+      ["decline_reaction", decline, true],
+      ["move", resolve, true],
+      ["decline_reaction", resolve, false],
+      ["move", decline, false],
+      [
+        "reduce_attack_roll",
+        {
+          ...resolve,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            procedureRef: "synthetic-procedure",
+            modifierKind: "attackRollReduction",
+            fills: [],
+          },
+        },
+        false,
+      ],
+      [
+        "move",
+        {
+          ...resolve,
+          choice: {
+            ...resolve.choice,
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: "synthetic-roll",
+                value: [{ results: [3] }],
+              },
+            ],
+          },
+        },
+        false,
+      ],
+    ] as const) {
+      const call = {
+        tool,
+        arguments: {
+          fill: { kind: "interruptDecision", holeId: "synthetic-hole", value },
+        },
+      };
+      expect(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(ReadyBattleInterruptCallSchema)(call),
+        ),
+      ).toBe(accepted);
+      expect(validate(call).valid).toBe(accepted);
+    }
+  });
+
   it("preserves phase, subject and routing constraints in its published schema", () => {
     const validate = createDraft2020JsonSchemaValidator().getValidator(
       requireJsonSchema(
@@ -60,11 +125,13 @@ describe("ChatGPT Battle guidance contract", () => {
       {
         kind: "reactionDecision",
         declineTool: "decline_reaction",
+        readyCalls: [],
         choices: [],
       },
       {
         kind: "reactionDecision",
         declineTool: "decline_reaction",
+        readyCalls: [],
         choices: [
           {
             selection: {
@@ -124,11 +191,13 @@ describe("ChatGPT Battle guidance contract", () => {
       {
         kind: "reactionDecision",
         declineTool: "decline_reaction",
+        readyCalls: [],
         choices: [{ selection: { kind: "synthetic-choice" }, routing }],
       },
       {
         kind: "reactionDecision",
         declineTool: "decline_reaction",
+        readyCalls: [],
         choices: [
           {
             selection: {

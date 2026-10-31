@@ -206,10 +206,18 @@ the tool opens any initial holes as a pending transaction. Supply ordinary
 facts through `provide_battle_input`, with `fill` and no subject. The runtime-owned
 transaction supplies the subject and rejects stale or foreign-session facts.
 Select each Reaction through its own named operation, including
-`decline_reaction`, with an `interruptDecision` fill and no subject. A
+`decline_reaction`, with an `interruptDecision` fill and no subject. Reaction
+guidance includes freshly derived interrupt-decision `readyCalls` for every eligible decline and
+routed nested selection executable without new table facts. Copy the chosen
+entry's `arguments` unchanged and add only the already selected `playSessionId`
+transport envelope. A decline has no choice or `choice.fills`. These calls are
+not persisted and do not authorize automatic retry or decline. After a rejected
+or stale call, use `read_battle_state` and choose from the current frontier.
+Modifier choices remain in `choices` and the canonical frontier even when they
+are absent from `readyCalls`; omission does not mean unsupported. A
 `reactionRollOrDamageReduction` choice includes its requested reduction
 `rolledDice` fill in `choice.fills`, or `[]` when it requests no roll. Other
-Reaction choices require an empty `choice.fills` array. The transaction owns the
+interrupt choices require an empty `choice.fills` array. The transaction owns the
 parent; subsequent ordinary holes also use `provide_battle_input`. That tool
 cannot select an Act or Reaction.
 Regular MCP retains its existing fill-first and inline Reaction answer contracts.

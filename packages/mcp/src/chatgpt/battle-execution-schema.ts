@@ -194,8 +194,17 @@ export function chatGptBattleExecutionInputSchema(
       : ["To start the offered action or event, copy its subject; omit fill."]),
     ...(reactionSchema === null
       ? []
+      : tool === "decline_reaction"
+        ? [
+            'To decline an offered Reaction, copy its readyCalls entry for the chosen eligible responder. Supply its interruptDecision fill with value: { kind: "decline", responderId }; omit subject. A decline has no choice or choice.fills.',
+          ]
+        : [
+            "For an offered Reaction, supply an interruptDecision fill for the current request and selected choice; omit subject. A reactionRollOrDamageReduction choice includes its one requested rolledDice fill from the canonical frontier choice.initialHoles, or [] when no roll is requested. Other interrupt choices require choice.fills: []; answer their later ordinary holes through provide_battle_input.",
+          ]),
+    ...(reactionSchema === null
+      ? []
       : [
-          "For an offered Reaction, supply an interruptDecision fill for the current request and selected choice; omit subject. A reactionRollOrDamageReduction choice includes its one requested rolledDice fill, or [] when no roll is requested. Other Reaction choices require choice.fills: []; answer their later ordinary holes through provide_battle_input.",
+          "readyCalls contains only choices executable without new table facts. Copy the selected entry arguments and add only the selected playSessionId. Omitted choices remain available through the frontier and their requested initialHoles. After rejected or stale arguments, read_battle_state and choose from its current frontier; do not automatically retry or decline.",
         ]),
     "Returns the updated saved battle or a request for the next choice, target fact, dice result, or Reaction. Supply requested facts with provide_battle_input; complete the pending action before starting another.",
   ];

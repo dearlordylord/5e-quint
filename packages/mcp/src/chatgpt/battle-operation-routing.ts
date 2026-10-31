@@ -8,6 +8,10 @@ import { creatureSpellProcedure } from "@dnd/battle-runtime";
 import { errorContent } from "../tool-content.ts";
 import type { ToolError } from "../schema-codec.ts";
 import type { ChatGptExposure } from "./operation-exposure.ts";
+import {
+  isChatGptInterruptResolutionToolName,
+  type ChatGptBattleOperationToolName,
+} from "./protocol-operation.ts";
 import { CHATGPT_OPERATION_EXPOSURE } from "./operation-tool-plan.ts";
 
 type ToolExposure = Extract<ChatGptExposure, { readonly kind: "tools" }>;
@@ -255,6 +259,38 @@ function unitSupportProcedureExposure(
   );
 }
 
+type ResolutionTool = Exclude<
+  ChatGptBattleOperationToolName,
+  "decline_reaction"
+>;
+type ResolutionToolExposure = Omit<ToolExposure, "tools"> & {
+  readonly tools: readonly [ResolutionTool, ...ResolutionTool[]];
+};
+function isResolutionExposure(
+  exposure: ToolExposure,
+): exposure is ResolutionToolExposure {
+  return exposure.tools.every(isChatGptInterruptResolutionToolName);
+}
+function resolutionExposure(
+  route: Result.Result<ToolExposure, ToolError>,
+  subject: BattleSubject,
+): Result.Result<ResolutionToolExposure, ToolError> {
+  return Result.flatMap(route, (exposure) =>
+    isResolutionExposure(exposure)
+      ? Result.succeed(exposure)
+      : unexposedSubject(subject),
+  );
+}
+export function chatGptInterruptDecisionExposure(
+  state: BattleState,
+  subject: BattleSubject,
+  decision: Extract<BattleInterruptDecision, { readonly kind: "resolve" }>,
+): Result.Result<ResolutionToolExposure, ToolError>;
+export function chatGptInterruptDecisionExposure(
+  state: BattleState,
+  subject: BattleSubject,
+  decision: BattleInterruptDecision,
+): Result.Result<ToolExposure, ToolError>;
 export function chatGptInterruptDecisionExposure(
   state: BattleState,
   subject: BattleSubject,
@@ -268,14 +304,20 @@ export function chatGptInterruptDecisionExposure(
   if (choice.kind === "releaseReadiedAction") {
     const response = state.readiedResponses.get(decision.responderId)?.response;
     return response?.kind === "action"
-      ? chatGptBattleSubjectExposure(state, response.subject)
+      ? resolutionExposure(
+          chatGptBattleSubjectExposure(state, response.subject),
+          subject,
+        )
       : unexposedSubject(subject);
   }
   if (choice.kind === "reactionRollOrDamageReduction") {
-    return Result.succeed(
-      CHATGPT_OPERATION_EXPOSURE.reactionModifiers[choice.modifierKind],
+    return resolutionExposure(
+      Result.succeed(
+        CHATGPT_OPERATION_EXPOSURE.reactionModifiers[choice.modifierKind],
+      ),
+      subject,
     );
   }
   const exposure = CHATGPT_OPERATION_EXPOSURE.interruptSelections[choice.kind];
-  return finishExposure(state, subject, exposure);
+  return resolutionExposure(finishExposure(state, subject, exposure), subject);
 }

@@ -5104,8 +5104,8 @@ const BattleMovementFillValueSchema = Schema.Union([
   BattleBrutalStrikeForcefulBlowMovementValueSchema,
 ]);
 
-export const BattleInterruptDecisionFillSchema = Schema.suspend(() =>
-  Schema.Struct({
+export function battleInterruptDecisionFillSchema() {
+  return Schema.Struct({
     kind: Schema.Literal("interruptDecision"),
     holeId: BattleHoleIdSchema,
     value: Schema.Union([
@@ -5177,7 +5177,11 @@ export const BattleInterruptDecisionFillSchema = Schema.suspend(() =>
   }).annotate({
     identifier: "BattleInterruptDecisionFill",
     parseOptions: { onExcessProperty: "error" },
-  }),
+  });
+}
+
+export const BattleInterruptDecisionFillSchema = Schema.suspend(
+  battleInterruptDecisionFillSchema,
 ).annotate({ identifier: "BattleInterruptDecisionFill" });
 
 export const BattleFillSchema: Schema.Codec<

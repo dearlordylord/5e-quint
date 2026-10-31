@@ -24,6 +24,7 @@ import {
 import { createMcpPlaySessionRoot } from "../composition-root.ts";
 import { BattleResolutionOutputSchema } from "../battle-tool-output.ts";
 import { jsonContentPayload } from "../tool-content.ts";
+import { chatGptBattleGuidance } from "./battle-guidance.ts";
 import { CHATGPT_EXECUTION_TOOLS } from "./tool-surface.ts";
 import { ChatGptBattleExecutionArgsSchema } from "./battle-execution-schema.ts";
 import {
@@ -156,6 +157,18 @@ describe("ChatGPT atomic Reaction modifier input", () => {
       unit.id,
       "attackRollReduction",
     );
+    const guidance = chatGptBattleGuidance(root);
+    expect(guidance.kind).toBe("reactionDecision");
+    if (guidance.kind !== "reactionDecision")
+      throw new Error("Expected Reaction guidance.");
+    expect(
+      guidance.choices.some(
+        (entry) => entry.selection.kind === "reactionModifier",
+      ),
+    ).toBe(true);
+    expect(guidance.readyCalls.map((call) => call.tool)).toEqual([
+      "decline_reaction",
+    ]);
     const roll = choice.initialHoles.find((hole) => hole.kind === "rolledDice");
     if (roll === undefined) throw new Error("Expected a reduction roll.");
     const input = {

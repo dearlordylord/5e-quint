@@ -3,6 +3,7 @@ import {
   BattleInterruptProcedureChoiceSchema,
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
+import { ReadyBattleInterruptCallSchema } from "./battle-interrupt-call-guidance.ts";
 import { CHATGPT_TOOL_NAMES } from "./protocol-operation.ts";
 import type { ChatGptToolName } from "./tool-catalog.ts";
 import { BattleActionCancellationGuidanceSchema } from "../battle-action-cancellation-guidance.ts";
@@ -70,6 +71,7 @@ export const ChatGptBattleGuidanceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("reactionDecision"),
     declineTool: Schema.Literal("decline_reaction"),
+    readyCalls: Schema.Array(ReadyBattleInterruptCallSchema),
     choices: Schema.Array(
       Schema.Struct({
         selection: ChatGptReactionSelectionSchema,

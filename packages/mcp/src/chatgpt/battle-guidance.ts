@@ -15,6 +15,7 @@ import { battleActionCancellationGuidance } from "../battle-action-cancellation-
 import { battleAreaInputGuidance } from "./battle-area-input-guidance.ts";
 import type { McpPlaySessionRoot } from "../composition-root.ts";
 import { battleMechanicsEnvelopeForSession } from "../battle-tool-payloads.ts";
+import { readyBattleInterruptCalls } from "./battle-interrupt-call-guidance.ts";
 import { chatGptBattleSubjectExposure } from "./battle-operation-routing.ts";
 import {
   CHATGPT_OPERATION_EXPOSURE,
@@ -115,6 +116,7 @@ export function chatGptBattleGuidance(
     Match.when({ kind: "interruptDecision" }, (frontier) => ({
       kind: "reactionDecision" as const,
       declineTool: "decline_reaction" as const,
+      readyCalls: readyBattleInterruptCalls(battle.session.state, frontier),
       choices: frontier.choices.map(
         ({ initialHoles: _initialHoles, ...selection }) => ({
           selection,

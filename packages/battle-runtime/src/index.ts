@@ -143,6 +143,7 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 export {
   BattleActPresentationSchema,
   BattleInterruptDecisionFillSchema,
+  battleInterruptDecisionFillSchema,
   BattleCheckpointFrontierEnvelopeSchema,
   BattleFallingCreatureMitigationTriggerFactSchema,
   BattleInterruptProcedureChoiceSchema,

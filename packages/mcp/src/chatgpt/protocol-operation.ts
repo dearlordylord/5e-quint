@@ -3,7 +3,11 @@ import {
   PLAY_SESSION_OPERATION_NAMES,
   type PlaySessionOperationName,
 } from "../play-session-tool-names.ts";
-import { CHATGPT_TOOL_PLAN, type ChatGptToolName } from "./tool-catalog.ts";
+import {
+  CHATGPT_TOOL_PLAN,
+  type ChatGptToolName,
+  type ChatGptToolFamily,
+} from "./tool-catalog.ts";
 
 type NamesOutsideFamilies<Families extends string> = {
   [Name in ChatGptToolName]: (typeof CHATGPT_TOOL_PLAN)[Name]["family"] extends Families
@@ -13,17 +17,30 @@ type NamesOutsideFamilies<Families extends string> = {
 export type ChatGptStatefulToolName = NamesOutsideFamilies<
   "sessions" | "catalog"
 >;
+const BATTLE_OPERATION_TOOL_FAMILIES = [
+  "battleActions",
+  "spells",
+  "features",
+  "events",
+  "reactions",
+  "companions",
+] as const satisfies readonly ChatGptToolFamily[];
 export type ChatGptBattleOperationToolName = Exclude<
   ChatGptToolName,
-  NamesOutsideFamilies<
-    | "battleActions"
-    | "spells"
-    | "features"
-    | "events"
-    | "reactions"
-    | "companions"
-  >
+  NamesOutsideFamilies<(typeof BATTLE_OPERATION_TOOL_FAMILIES)[number]>
 >;
+export function isChatGptBattleOperationToolName(
+  name: ChatGptToolName,
+): name is ChatGptBattleOperationToolName {
+  return BATTLE_OPERATION_TOOL_FAMILIES.some(
+    (family) => family === CHATGPT_TOOL_PLAN[name].family,
+  );
+}
+export function isChatGptInterruptResolutionToolName(
+  name: ChatGptToolName,
+): name is Exclude<ChatGptBattleOperationToolName, "decline_reaction"> {
+  return name !== "decline_reaction" && isChatGptBattleOperationToolName(name);
+}
 export type ChatGptStateOperationName = Exclude<
   ChatGptStatefulToolName,
   "roll_dice"

@@ -450,10 +450,22 @@ describe("ChatGPT tool surface", () => {
     expect(reaction.inputSchema.properties).toHaveProperty("fill");
     expect(reaction.description).toContain("interruptDecision");
     expect(reaction.description).not.toContain("copy its subject");
+    expect(reaction.description).toContain(
+      "A decline has no choice or choice.fills",
+    );
+    expect(reaction.description).not.toContain(
+      "current request and selected choice",
+    );
+    expect(reaction.description).toContain("read_battle_state");
+    expect(reaction.description).toContain(
+      "do not automatically retry or decline",
+    );
     expect(both.inputSchema.properties).toHaveProperty("subject");
     expect(both.inputSchema.properties).toHaveProperty("fill");
     expect(both.description).toContain("subject");
     expect(both.description).toContain("interruptDecision");
+    expect(both.description).toContain("choice.initialHoles");
+    expect(both.description).toContain("choice.fills: []");
   });
 
   it("advertises the complete static 127-tool contract with annotations", () => {
