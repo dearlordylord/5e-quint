@@ -21,6 +21,7 @@ import {
   settleCharacterSessionsFromBattle,
 } from "./battle-handoff.ts";
 import {
+  BattleActionCancelledOutputSchema,
   BattleSessionOutputSchema,
   EndBattleOutputSchema,
   SelectStatBlockOutputSchema,
@@ -111,6 +112,40 @@ export function handleBattleToolCall(
         statBlockCatalog: root.battleStatBlockExecutionCatalog,
       });
       return storedBattleTransactionContent(root, state.success, result);
+    }),
+    Match.when({ name: battleToolNames.cancelBattleAction }, (matched) => {
+      const state = root.sessionStore.battleState;
+      if (state.tag !== "activeBattle")
+        return errorContent("This operation requires an active Battle.", {
+          code: "NO_ACTIVE_BATTLE",
+        });
+      const cancelled = root.sessionStore.cancelPendingBattleAction(
+        state.session,
+        root.sessionStore.getPendingBattleTransaction(),
+        matched.args.expectedSelectionId,
+      );
+      if (Result.isFailure(cancelled)) {
+        const issue = cancelled.failure;
+        if (issue.tag !== "battleActionCancellationUnavailable")
+          return battleStateTransitionErrorContent(issue);
+        const payload = battleSessionPayload(root, state.session);
+        if (Result.isFailure(payload))
+          return battlePresentationIssueContent(payload.failure);
+        return errorContent(
+          "This Battle continuation cannot be cancelled. Complete its current input request; committed effects and accepted inputs are preserved.",
+          {
+            code: "BATTLE_ACTION_CANCELLATION_UNAVAILABLE",
+            reason: issue.reason,
+            ...payload.success,
+          },
+        );
+      }
+      publishAdminProjectionBestEffort(root);
+      return schemaJsonContent(BattleActionCancelledOutputSchema, {
+        tag: "battleActionCancelled",
+        cancelledSelectionId: matched.args.expectedSelectionId,
+        next: { tool: "read_battle_state" },
+      });
     }),
     Match.when({ name: battleToolNames.endBattle }, () => {
       const state = activeBattleWithoutPendingFills(

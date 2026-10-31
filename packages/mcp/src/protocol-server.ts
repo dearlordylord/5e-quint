@@ -271,7 +271,7 @@ export function createDndMcpProtocolServer(
     {
       capabilities: { tools: {} },
       instructions:
-        "Create or retain a Play Session handle and pass it to every stateful operation. Copy current identifiers, subjects, holes, and options from results; do not invent executable mechanics. After stale-state failures, rediscover from the returned projection. If a Play Session is unavailable, create a new one and follow its restoration guidance.",
+        "Create or retain a Play Session handle and pass it to every stateful operation. Copy current identifiers, subjects, holes, and options from results; do not invent executable mechanics. Select attacks from returned presentation and copy the complete subject, including its damage selection. Use the returned Battle checkpoint for HP, resources, and applied effects. A needsHoles result leaves a procedure unfinished. Report only changes already in its checkpoint. Answer the current fact request, using empty collections only for table-confirmed absence. Correct rejected inputs and retry the current request. Use cancel_battle_action only when returned availability permits it and respect a refusal. If recovery remains blocked, report the saved checkpoint and missing input. Raw dice rolls and external simulations do not update saved Battle state. Build map HP and events from returned state. Label table-supplied positions separately. After stale-state failures, rediscover from the returned projection. If a Play Session is unavailable, create a new one and follow its restoration guidance.",
     },
   );
 

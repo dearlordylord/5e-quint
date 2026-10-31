@@ -2,6 +2,15 @@
 
 ## 0.2.0 — unreleased
 
+- Expose the required spell-area input shape and explicit object facts in Battle
+  requests. Retain invalid requests for correction, and add safe cancellation of
+  unanswered action selections without reverting committed effects.
+- Admit requested reduction dice with named MCP Reaction modifiers while keeping
+  other Reactions on their staged input workflow. Clarify checkpoint-based Battle
+  narration and map status.
+- Preserve bounded tool names and rejection diagnostics through Play Session
+  responses without logging arguments, session identifiers, or result prose.
+
 - Rename the MCP character-choice tools to `get_character_creation_choices` and
   `apply_character_creation_choices`; update workflow instructions and display
   names without changing character-creation behavior.

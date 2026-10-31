@@ -8,7 +8,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
+import { CancelBattleActionArgsSchema } from "./battle-action-selection-id.ts";
 import { afterEach, describe, expect, test } from "vitest";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 
@@ -76,6 +77,119 @@ afterEach(async () => {
 });
 
 describe("recoverable Play Session protocol", () => {
+  test(
+    "retains the original cancellation identity after recovering an unanswered selection",
+    async () => {
+      const directory = await mkdtemp(join(tmpdir(), "dnd-cancel-identity-"));
+      temporaryDirectories.push(directory);
+      const databasePath = join(directory, "play-sessions.sqlite");
+      const selected = await (async () => {
+        const repository = openRepository(databasePath);
+        const connection = await connectClient(repository, "chatgpt");
+        try {
+          const created = await callStructuredTool(connection.client, {
+            name: "create_play_session",
+            arguments: {},
+          });
+          const playSessionId = stringField(created, "playSessionId");
+          const started = await callStructuredTool(connection.client, {
+            name: "start_battle",
+            arguments: {
+              playSessionId,
+              battleId: "synthetic-cancellation-recovery",
+              initiativeMode: "direct",
+              companionAdmissions: [],
+              initialCombatants: [
+                {
+                  kind: "statBlock",
+                  statBlockId: "stat_block_goblin_warrior",
+                  combatantId: "synthetic-first",
+                  initiative: 20,
+                  ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+                  admissionSource: { kind: "encounterParticipant" },
+                },
+                {
+                  kind: "statBlock",
+                  statBlockId: "stat_block_goblin_warrior",
+                  combatantId: "synthetic-second",
+                  initiative: 10,
+                  ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+                  admissionSource: { kind: "encounterParticipant" },
+                },
+              ],
+            },
+          });
+          const subject = attackSubjectFromActs(
+            operationResult(started),
+            "synthetic-first",
+            "Scimitar",
+          );
+          const first = await callStructuredTool(connection.client, {
+            name: "attack",
+            arguments: { playSessionId, subject },
+          });
+          const firstCancellation = cancellationArguments(first);
+          await callStructuredTool(connection.client, {
+            name: "cancel_battle_action",
+            arguments: { playSessionId, ...firstCancellation },
+          });
+          const second = await callStructuredTool(connection.client, {
+            name: "attack",
+            arguments: { playSessionId, subject },
+          });
+          return {
+            playSessionId,
+            cancellation: cancellationArguments(second),
+            firstCancellation,
+          };
+        } finally {
+          await connection.close();
+          repository.close();
+        }
+      })();
+      const repository = openRepository(databasePath);
+      const connection = await connectClient(repository, "chatgpt");
+      try {
+        const read = await callStructuredTool(connection.client, {
+          name: "read_play_session",
+          arguments: { playSessionId: selected.playSessionId },
+        });
+        expect(cancellationArguments(read)).toEqual(selected.cancellation);
+        const stale = await connection.client.callTool({
+          name: "cancel_battle_action",
+          arguments: {
+            playSessionId: selected.playSessionId,
+            ...selected.firstCancellation,
+          },
+        });
+        expect(stale.isError).toBe(true);
+        expect(JSON.stringify(stale)).toContain("staleSelection");
+        const cancelled = await callStructuredTool(connection.client, {
+          name: "cancel_battle_action",
+          arguments: {
+            playSessionId: selected.playSessionId,
+            ...selected.cancellation,
+          },
+        });
+        expect(operationResult(cancelled)).toMatchObject({
+          tag: "battleActionCancelled",
+          next: { tool: "read_battle_state" },
+        });
+        const refreshed = await callStructuredTool(connection.client, {
+          name: "read_battle_state",
+          arguments: { playSessionId: selected.playSessionId },
+        });
+        expect(operationResult(refreshed)).toMatchObject({
+          envelope: { frontier: { kind: "acts" } },
+        });
+      } finally {
+        await connection.close();
+        repository.close();
+      }
+    },
+    TEST_TIMEOUT,
+  );
+
   test(
     "replays mixed regular and ChatGPT commands with overlapping tool names",
     async () => {
@@ -155,6 +269,38 @@ describe("recoverable Play Session protocol", () => {
           "synthetic-first",
           "Scimitar",
         );
+        const selected = await callStructuredTool(chatgpt.client, {
+          name: "attack",
+          arguments: { playSessionId, subject },
+        });
+        const regularState = await callStructuredTool(regular.client, {
+          name: "read_battle_state",
+          arguments: { playSessionId },
+        });
+        const cancellation = Schema.decodeUnknownSync(
+          Schema.Struct({
+            actionCancellation: Schema.Struct({
+              kind: Schema.Literal("available"),
+              arguments: CancelBattleActionArgsSchema,
+            }),
+          }),
+        )(operationResult(regularState)).actionCancellation.arguments;
+        expect(cancellation).toEqual(cancellationArguments(selected));
+        const cancelled = await callStructuredTool(regular.client, {
+          name: "cancel_battle_action",
+          arguments: { playSessionId, ...cancellation },
+        });
+        expect(operationResult(cancelled)).toMatchObject({
+          tag: "battleActionCancelled",
+          next: { tool: "read_battle_state" },
+        });
+        const refreshed = await callStructuredTool(regular.client, {
+          name: "read_battle_state",
+          arguments: { playSessionId: playSessionId },
+        });
+        expect(operationResult(refreshed)).toMatchObject({
+          envelope: { frontier: { kind: "acts" } },
+        });
         await callStructuredTool(chatgpt.client, {
           name: "attack",
           arguments: { playSessionId, subject },
@@ -184,7 +330,7 @@ describe("recoverable Play Session protocol", () => {
         },
       };
       try {
-        expect((await connection.client.listTools()).tools).toHaveLength(126);
+        expect((await connection.client.listTools()).tools).toHaveLength(127);
         const read = await callStructuredTool(connection.client, {
           name: "read_play_session",
           arguments: { playSessionId },
@@ -217,6 +363,11 @@ describe("recoverable Play Session protocol", () => {
           expect(row?.operations_json).toEqual(
             expect.stringContaining(
               '"toolSurface":"chatgpt","name":"set_equipment_loadout"',
+            ),
+          );
+          expect(row?.operations_json).toEqual(
+            expect.stringContaining(
+              '"name":"cancel_battle_action","args":{"expectedSelectionId":',
             ),
           );
           expect(row?.operations_json).toEqual(
@@ -1700,4 +1851,18 @@ function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function cancellationArguments(result: unknown) {
+  return Schema.decodeUnknownSync(
+    Schema.Struct({
+      chatGptBattleOperations: Schema.Struct({
+        kind: Schema.Literal("ordinaryContinuation"),
+        cancellation: Schema.Struct({
+          kind: Schema.Literal("available"),
+          arguments: CancelBattleActionArgsSchema,
+        }),
+      }),
+    }),
+  )(result).chatGptBattleOperations.cancellation.arguments;
 }

@@ -5,7 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Result, Effect, Schema } from "effect";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { decodePrincipalId } from "./play-session-access.ts";
 import {
@@ -242,6 +242,73 @@ describe("public HTTP boundary", () => {
       await client.close().catch(() => undefined);
       await close(server);
       repository.close();
+    }
+  });
+
+  test("logs a named tool rejection without retaining session IDs or arguments", async () => {
+    const repository = openRepository();
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+      toolSurface: "chatgpt",
+      oauth: fakeOAuth(),
+      operations: {
+        environment: "development",
+        release: "synthetic-diagnostic-test",
+        publisherName: publisherName("Synthetic Publisher"),
+        metricsBearerToken: "private-metrics-token",
+      },
+    });
+    const endpoint = await listen(server);
+    const client = new Client({ name: "diagnostic-http", version: "0.1.0" });
+    const transport: Omit<StreamableHTTPClientTransport, "sessionId"> =
+      new StreamableHTTPClientTransport(endpoint, {
+        requestInit: { headers: { authorization: "Bearer valid-token" } },
+      });
+    const stderr = vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation(() => true);
+    try {
+      await client.connect(transport);
+      const created = await client.callTool({
+        name: "create_play_session",
+        arguments: {},
+      });
+      const { playSessionId } = Schema.decodeUnknownSync(
+        Schema.Struct({ playSessionId: Schema.String }),
+      )(created.structuredContent);
+      const privateArgument = "private-attack-argument-should-not-log";
+      const rejected = await client.callTool({
+        name: "attack",
+        arguments: { playSessionId, subject: { tag: privateArgument } },
+      });
+      expect(rejected.isError).toBe(true);
+      const metrics = await fetch(new URL("/metrics", endpoint), {
+        headers: { authorization: "Bearer private-metrics-token" },
+      });
+      expect(await metrics.text()).toContain(
+        'outcome="rejected",tool="attack",code="INVALID_ARGUMENTS",reason="unspecified"',
+      );
+      const observed = stderr.mock.calls
+        .map(([chunk]) => String(chunk))
+        .join("");
+      expect(observed).toContain('"toolName":"attack"');
+      expect(observed).toContain(
+        '"diagnostic":{"code":"INVALID_ARGUMENTS","reason":"unspecified"}',
+      );
+      for (const privateValue of [
+        playSessionId,
+        privateArgument,
+        "playSessionId",
+        "arguments",
+        "private-metrics-token",
+      ]) {
+        expect(observed).not.toContain(privateValue);
+      }
+    } finally {
+      await client.close().catch(() => undefined);
+      await close(server);
+      repository.close();
+      stderr.mockRestore();
     }
   });
 

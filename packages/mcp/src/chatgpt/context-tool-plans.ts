@@ -1,4 +1,9 @@
 export const CHATGPT_CONTEXT_TOOLS = {
+  cancel_battle_action: {
+    family: "battleFacts",
+    description:
+      "Cancel a selected, unanswered Battle action before input or checkpoint progress is committed. The Battle checkpoint and turn stay unchanged. On success, call read_battle_state for available actions. If cancellation is unavailable, complete the returned current input request.",
+  },
   provide_battle_input: {
     family: "battleFacts",
     description:

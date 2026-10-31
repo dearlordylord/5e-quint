@@ -1,7 +1,10 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
-import { Schema } from "effect";
+import { BATTLE_INVALID_REASON_CODES } from "@dnd/battle-runtime";
+import { Result, Schema } from "effect";
 
+import { BattleResolutionOutputSchema } from "./battle-tool-output.ts";
+import { CHATGPT_TOOL_NAMES } from "./chatgpt/protocol-operation.ts";
 import { PLAY_SESSION_NEXT_OPERATION_NAMES } from "./play-session-tool-names.ts";
 import type { PublicMcpOperatorDataHandling } from "./public-operator-data-handling.ts";
 
@@ -59,6 +62,7 @@ export type PublicMcpDiagnosticCode =
   (typeof PUBLIC_MCP_DIAGNOSTIC_CODES)[number];
 
 export const PUBLIC_MCP_DIAGNOSTIC_REASONS = [
+  ...BATTLE_INVALID_REASON_CODES,
   "closed",
   "concurrentWriteConflict",
   "invalidStoredRecord",
@@ -81,11 +85,16 @@ export type PublicMcpRequestObservation = {
   readonly status: number;
   readonly durationMilliseconds: number;
   readonly outcome: PublicMcpRequestOutcome;
-  readonly toolName?: string;
+  readonly toolName?: PublicMcpToolName;
   readonly diagnostic?: PublicMcpDiagnostic;
 };
 
-const knownToolNames = new Set<string>(PLAY_SESSION_NEXT_OPERATION_NAMES);
+const publicMcpToolNames = [
+  ...PLAY_SESSION_NEXT_OPERATION_NAMES,
+  ...CHATGPT_TOOL_NAMES,
+] as const;
+export type PublicMcpToolName = (typeof publicMcpToolNames)[number];
+const knownToolNames = new Set<string>(publicMcpToolNames);
 const requestCounts = new Map<string, number>();
 let requestCount = 0;
 let requestDurationMilliseconds = 0;
@@ -115,7 +124,7 @@ function publicMcpRequestMetricKey(input: {
   readonly method: PublicMcpHttpMethod;
   readonly status: number;
   readonly outcome: PublicMcpRequestOutcome;
-  readonly toolName?: string;
+  readonly toolName?: PublicMcpToolName;
   readonly diagnostic?: PublicMcpDiagnostic;
 }): string {
   return [
@@ -186,7 +195,7 @@ export function publicMcpMetrics(): string {
 
 export async function publicMcpToolName(
   request: Request,
-): Promise<string | undefined> {
+): Promise<PublicMcpToolName | undefined> {
   try {
     const body: unknown = await request.clone().json();
     if (
@@ -197,9 +206,7 @@ export async function publicMcpToolName(
       return undefined;
     }
     const name = body.params.name;
-    return typeof name === "string" && knownToolNames.has(name)
-      ? name
-      : undefined;
+    return isPublicMcpToolName(name) ? name : undefined;
   } catch {
     return undefined;
   }
@@ -213,13 +220,13 @@ export async function publicMcpOutcome(response: Response): Promise<{
   if (response.status >= 400) return { outcome: "rejected" };
   const body = await response.clone().text();
   const parsed = parseJson(body);
-  const errorResult = mcpErrorResult(parsed);
+  const result = mcpToolResult(parsed);
   const diagnostic =
-    errorResult === undefined ? undefined : responseDiagnostic(errorResult);
+    result === undefined ? undefined : responseDiagnostic(result);
   const outcome =
     diagnostic?.code === "PLAY_SESSION_LIMIT_EXCEEDED"
       ? "limited"
-      : errorResult !== undefined
+      : diagnostic !== undefined
         ? "rejected"
         : "accepted";
   return { outcome, ...(diagnostic === undefined ? {} : { diagnostic }) };
@@ -278,22 +285,14 @@ function parseJson(body: string): unknown {
   }
 }
 
-function mcpErrorResult(value: unknown): Record<string, unknown> | undefined {
-  if (
-    !isObject(value) ||
-    !isObject(value.result) ||
-    value.result.isError !== true
-  ) {
-    return undefined;
-  }
-  return value.result;
-}
-
 function responseDiagnostic(
   result: Record<string, unknown>,
-): PublicMcpDiagnostic {
-  const structured = result.structuredContent;
-  const details = isObject(structured) ? structured.details : undefined;
+): PublicMcpDiagnostic | undefined {
+  const payload = operationDiagnosticPayload(result);
+  const battle = battleRejectionDiagnostic(payload);
+  if (battle !== undefined) return battle;
+  if (result.isError !== true) return undefined;
+  const details = isObject(payload) ? payload.details : undefined;
   const code = isObject(details) ? details.code : undefined;
   const reason = isObject(details) ? details.reason : undefined;
   return {
@@ -302,10 +301,63 @@ function responseDiagnostic(
   };
 }
 
+function mcpToolResult(value: unknown): Record<string, unknown> | undefined {
+  return isObject(value) && isObject(value.result) ? value.result : undefined;
+}
+
+function battleRejectionDiagnostic(
+  payload: unknown,
+): PublicMcpDiagnostic | undefined {
+  if (
+    isObject(payload) &&
+    isObject(payload.result) &&
+    payload.result.tag === "invalid"
+  ) {
+    const battle = Schema.decodeUnknownResult(BattleResolutionOutputSchema)(
+      payload,
+    );
+    if (Result.isSuccess(battle) && battle.success.result.tag === "invalid") {
+      return { code: "TOOL_REJECTED", reason: battle.success.result.reason };
+    }
+  }
+  return undefined;
+}
+
+function operationDiagnosticPayload(result: Record<string, unknown>): unknown {
+  const payload = Object.hasOwn(result, "structuredContent")
+    ? result.structuredContent
+    : result.isError === true
+      ? singleErrorContentPayload(result.content)
+      : undefined;
+  const operation =
+    isObject(payload) &&
+    payload.tag === "playSessionAvailable" &&
+    isObject(payload.operation)
+      ? payload.operation.result
+      : payload;
+  return isObject(operation) && isObject(operation.battleEnvelope)
+    ? operation.result
+    : operation;
+}
+
+function singleErrorContentPayload(content: unknown): unknown {
+  if (!Array.isArray(content) || content.length !== 1) return undefined;
+  const block: unknown = content[0];
+  return isObject(block) &&
+    block.type === "text" &&
+    typeof block.text === "string"
+    ? parseJson(block.text)
+    : undefined;
+}
+
 function isPublicMcpDiagnosticCode(
   value: unknown,
 ): value is PublicMcpDiagnosticCode {
   return PUBLIC_MCP_DIAGNOSTIC_CODES.some((code) => code === value);
+}
+
+function isPublicMcpToolName(value: unknown): value is PublicMcpToolName {
+  return typeof value === "string" && knownToolNames.has(value);
 }
 
 function isPublicMcpDiagnosticReason(

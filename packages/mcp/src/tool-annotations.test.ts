@@ -42,6 +42,8 @@ const expectedAnnotations = {
   fill_battle_hole: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   resolve_battle_act: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   end_turn: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  cancel_battle_action:
+    DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   end_battle: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   roll_dice: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
 } as const;
@@ -71,6 +73,7 @@ const expectedTitles = {
   fill_battle_hole: "Fill Battle Hole",
   resolve_battle_act: "Resolve Battle Act",
   end_turn: "End Turn",
+  cancel_battle_action: "Cancel unanswered Battle action",
   end_battle: "End Battle",
   roll_dice: "Roll Dice",
 } as const;

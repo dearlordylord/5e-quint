@@ -2581,6 +2581,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 3,
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toMatchObject({
+      outcomeTargeting: "area",
+      areaInput: { kind: "pointOriginSphereSaveDamageArea" },
+    });
     const saveFill = fireballSavingThrowOutcomeFill(
       savingThrow,
       [
@@ -2800,6 +2804,100 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         "object-igniting spherical burst requires caller-supplied object ignition area facts.",
     });
   });
+  test("fireball rejects the reported four-target area fragment and accepts explicit empty ignition facts", () => {
+    const targetIds = ["g1", "g2", "g3", "g4"].map(combatantId);
+    const session = spellBattle({
+      preparedSpells: [spellRecord(fireballUnitId)],
+      casterClassLevels: [{ className: "wizard", level: 5 }],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: targetIds,
+      extraTargetHp: 50,
+      extraTargetMaxHp: 50,
+    });
+    const act = spellAct({
+      session,
+      spellId: fireballUnitId,
+      slotLevel: 3,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const area = {
+      originAnchorId: combatantId("g1"),
+      affectedTargetIds: targetIds,
+    };
+    const saveFill = savingThrowOutcomeFill(
+      savingThrow,
+      targetIds.map((targetId) => ({
+        targetId,
+        succeeded: false,
+        withoutRoll: true as const,
+      })),
+    );
+    const checkpoint = snapshotBattle(session.state);
+    expect(
+      checkpoint.combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toMatchObject({
+      spellcasting: {
+        spellSlots: [{ spellLevel: 3, count: 1, expended: 0 }],
+      },
+    });
+    const rejected = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [{ ...saveFill, value: { ...saveFill.value, area } }],
+    });
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "object-igniting spherical burst requires caller-supplied object ignition area facts.",
+      snapshot: checkpoint,
+    });
+    expect(snapshotBattle(session.state)).toEqual(checkpoint);
+    const correctedFill: typeof saveFill = {
+      ...saveFill,
+      value: {
+        ...saveFill.value,
+        area: {
+          ...area,
+          kind: "pointOriginSphereSaveDamageArea",
+          objectIgnitionFacts: [],
+        },
+      },
+    };
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [correctedFill],
+      }),
+      "rolledDice",
+    );
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        correctedFill,
+        damageRollFillWithGroups(damageRoll, [[4, 4, 4, 4, 4, 4, 4, 4]]),
+      ],
+    });
+    expect(resolved.tag).toBe("resolved");
+    if (resolved.tag !== "resolved")
+      throw new Error("Expected the corrected Fireball to resolve.");
+    expect(resolved.objectIgnitions).toBeUndefined();
+    expect(
+      snapshotBattle(resolved.state).combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toMatchObject({
+      spellcasting: {
+        spellSlots: [{ spellLevel: 3, count: 1, expended: 1 }],
+      },
+    });
+    for (const targetId of targetIds)
+      expect(Number(requireCombatant(resolved.state, targetId).hp)).toBe(18);
+  });
   test("shatter is admitted as point-origin Sphere save damage", () => {
     const spell = spellRecord(shatterUnitId);
     const state = spellBattle({
@@ -2892,6 +2990,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 2,
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toMatchObject({
+      outcomeTargeting: "area",
+      areaInput: { kind: "pointOriginSphereObjectDamageArea" },
+    });
     const saveFill = shatterSavingThrowOutcomeFill(
       savingThrow,
       [

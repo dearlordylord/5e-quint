@@ -94,9 +94,10 @@ export function battleFillInputSchemaForOperation(
           const choiceProperties = choice.properties;
           if (!schemaObject(choiceProperties))
             throw new Error("Generated Reaction choice must declare fields.");
-          const modifiers = admittedKinds.includes(
+          const modifierChoice = admittedKinds.includes(
             "reactionRollOrDamageReduction",
-          )
+          );
+          const modifiers = modifierChoice
             ? {
                 modifierKind: {
                   ...schemaField(choice, "modifierKind"),
@@ -115,7 +116,17 @@ export function battleFillInputSchemaForOperation(
                 ...choiceProperties,
                 kind: { ...schemaField(choice, "kind"), enum: admittedKinds },
                 ...modifiers,
-                fills: { ...fillsSchema, items: false, maxItems: 0 },
+                fills: modifierChoice
+                  ? {
+                      ...fillsSchema,
+                      items: {
+                        anyOf: ordinary.filter((fill) =>
+                          kindIs(fill, "rolledDice", definitions),
+                        ),
+                      },
+                      maxItems: 1,
+                    }
+                  : { ...fillsSchema, items: false, maxItems: 0 },
               },
             },
           ];

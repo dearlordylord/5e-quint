@@ -2467,6 +2467,7 @@ describe("MCP server route", () => {
       "fill_battle_hole",
       "resolve_battle_act",
       "end_turn",
+      "cancel_battle_action",
       "end_battle",
     ]);
   });

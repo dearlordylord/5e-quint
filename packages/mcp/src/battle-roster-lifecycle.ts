@@ -1,3 +1,4 @@
+import { battleActionCancellationGuidance } from "./battle-action-cancellation-guidance.ts";
 import {
   battlePresentedCheckpointFrontierEnvelope,
   type BattleRuntimeSession,
@@ -162,6 +163,10 @@ function commitBattleLifecycleTransition(input: {
   return schemaJsonContent(BattleLifecycleOutputSchema, {
     result: input.result,
     envelope: presentation.success,
+    actionCancellation: battleActionCancellationGuidance(
+      input.root,
+      committed.success,
+    ),
     session: { ...input.root.sessionStore.snapshot(), battleState },
   });
 }

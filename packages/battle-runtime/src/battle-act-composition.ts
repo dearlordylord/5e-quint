@@ -903,28 +903,7 @@ function procedurePresentationJoin(
   }
   if (!isCharacterBattleCreatureState(actor)) return undefined;
   if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
-    const form = actor.origin.druidWildShapeAvailableForms?.find(
-      (candidate) => candidate.execution.scopeRef === subject.formExecutionRef,
-    );
-    const unit = unitForProcedureRef(
-      actor,
-      context,
-      procedureRef,
-      DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-    );
-    if (form === undefined || unit === undefined) return undefined;
-    const formPresentation = druidWildShapeFormPresentationForScope(
-      context,
-      actor.combatantId,
-      form.execution.scopeRef,
-    );
-    return druidWildShapeFormPresentationJoin(
-      procedureRef,
-      subject,
-      form,
-      unit,
-      formPresentation,
-    );
+    return druidWildShapeFormPresentationJoin(actor, context, subject);
   }
   if (
     subject.tag === "bonusActionStandardAction" &&
@@ -1052,23 +1031,30 @@ function druidWildShapeFormPresentationForScope(
     ?.druidWildShapeFormPresentations?.get(scopeRef);
 }
 
-type CharacterWildShapeFormAdmission = NonNullable<
-  Extract<
-    CharacterBattleCreatureState["origin"],
-    { readonly kind: "character" }
-  >["druidWildShapeAvailableForms"]
->[number];
-
 function druidWildShapeFormPresentationJoin(
-  procedureRef: BattleProcedureExecutionRef,
+  actor: CharacterBattleCreatureState,
+  context: BattleRuntimeContext,
   subject: Extract<
     CharacterProcedureBattleSubject,
     { readonly tag: "druidWildShape"; readonly action: "assumeForm" }
   >,
-  form: CharacterWildShapeFormAdmission,
-  unit: BattleUnitRef["unit"],
-  formPresentation: BattleStatBlockPresentationSource | undefined,
 ): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
+  const procedureRef = subject.procedureRef;
+  const form = actor.origin.druidWildShapeAvailableForms?.find(
+    (candidate) => candidate.execution.scopeRef === subject.formExecutionRef,
+  );
+  const unit = unitForProcedureRef(
+    actor,
+    context,
+    procedureRef,
+    DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  );
+  if (form === undefined || unit === undefined) return undefined;
+  const formPresentation = druidWildShapeFormPresentationForScope(
+    context,
+    actor.combatantId,
+    form.execution.scopeRef,
+  );
   if (formPresentation === undefined) return undefined;
   const label = `${battleUnitPresentationName(unit)}: ${formPresentation.displayName}`;
   return {

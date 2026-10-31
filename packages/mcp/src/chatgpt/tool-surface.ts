@@ -67,6 +67,9 @@ export const CHATGPT_EXECUTION_TOOLS = {
     "Start a Battle from finalized characters and SRD Stat Blocks. Supply Initiative scores for every combatant and a size when the Stat Block exposes alternatives. Choose initialSetup to keep Initiative setup open; continue with apply_initiative_swap and finalize_initial_initiative_setup.",
   ),
   end_battle: retainedTool(battleToolDefinitionsByName.end_battle),
+  cancel_battle_action: retainedTool(
+    battleToolDefinitionsByName.cancel_battle_action,
+  ),
   select_stat_block: retainedTool(
     battleToolDefinitionsByName.select_stat_block,
   ),
@@ -75,7 +78,7 @@ export const CHATGPT_EXECUTION_TOOLS = {
   ),
   discover_battle_acts: retainedTool(
     battleToolDefinitionsByName.discover_battle_acts,
-    "Read the current Battle checkpoint, frontier and available acts. The response's chatGptBattleOperations field lists named tools for each subject or Reaction choice. Select an Act with its named tool and subject, then supply ordinary facts through provide_battle_input. Select a Reaction with its named tool and interruptDecision fill, without a subject and with choice.fills: []. Finish the current continuation before choosing another act.",
+    "Read the current Battle checkpoint, frontier and available acts. The response's chatGptBattleOperations field lists named tools for each subject or Reaction choice. Select an Act with its named tool and subject, then supply ordinary facts through provide_battle_input. Select a Reaction with its named tool and interruptDecision fill, without a subject. A reactionRollOrDamageReduction choice includes its requested reduction roll in choice.fills; other choices use choice.fills: [] and request later ordinary inputs. Finish the current continuation before choosing another act.",
   ),
   describe_mcp_workflow: retainedTool(
     contentToolDefinitionsByName.describe_mcp_workflow,
@@ -114,7 +117,20 @@ export function shareToolDefinitionsForSurface(
   surface: McpToolSurface,
 ): readonly ProtocolToolDefinition[] {
   return Match.value(surface).pipe(
-    Match.when("regular", () => definitions),
+    Match.when("regular", () =>
+      definitions.map(
+        (definition): ProtocolToolDefinition => ({
+          ...definition,
+          ...(definition.outputSchema === undefined
+            ? {}
+            : {
+                outputSchema: shareToolSchemaDefinitions(
+                  definition.outputSchema,
+                ),
+              }),
+        }),
+      ),
+    ),
     Match.when("chatgpt", () =>
       definitions.map(
         (definition): ProtocolToolDefinition => ({

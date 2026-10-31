@@ -19,12 +19,13 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       "Call list_stat_blocks for Stat Block ids and inspect each summary's fixed or alternative Size. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
       "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks and must pass size when the summary exposes alternatives.",
       `Use ${lifecycle} with applyInitiativeSwap or finalizeInitialInitiativeSetup during initial setup; while a Battle is active, use addCombatant or removeCombatant to change the roster. Add only an available Character Session or an installed Stat Block projection, and retry typed recovery with battleAndCharacterSessionsUnchanged when a transition is rejected.`,
-      "Call discover_battle_acts and copy a returned subject exactly.",
+      "Call discover_battle_acts and copy a returned subject exactly. For an attack presentation, use presentation.name and the returned damage selection to distinguish attacks with the same generic label; retain the complete subject, including statBlockDamageSelection.",
       "For every ordinary Holes frontier, read envelope.frontier.pendingProcedure as the canonical procedure awaiting the returned holes. A subjectResolution procedure is replay-root work; a turnBoundary procedure identifies the ending actor, incoming source turn, and either outgoing End Turn, start-turn occurrence ordering, or the exact start-turn occurrence request.",
       toolSurface === "chatgpt"
         ? "Select an Act through its named tool with subject and no fill, even when it has initialHoles. The returned pending transaction owns that operation; supply one ordinary fact at a time through provide_battle_input with fill and no subject. For an attack target hole, copy actorId and the complete branch-specific selection from hole.attack into the attackTargetDistance fact."
         : `If an act has initialHoles, call ${fillOperation} with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved. For an attack target hole, copy actorId from hole.attack.actorId and copy the complete branch-specific selection from hole.attack.selection into the attackTargetDistance fact.`,
       "Ranged Spell Attacks use one canonical spell range, not separate normal/long bands: provide the exact caster-to-target distance and keep it at or below the returned rangeFeet. A separate rangedSpellAttackEnemyProximity fact records any adjacent visible, non-Incapacitated enemy that imposes Disadvantage, regardless of the selected target.",
+      "For a saving-throw area request, use its returned areaInput requirement to choose the value.area branch. Supply every requested table fact. An explicitly empty object-facts array answers that no objects are being reported in the area; an omitted array is not that answer.",
       `If an act has no holes, call ${resolveOperation} with the typed subject.`,
       "Call end_turn only when no Battle continuation inputs are pending.",
       toolSurface === "chatgpt"
@@ -66,6 +67,8 @@ export function workflowGuide(toolSurface: McpToolSurface) {
         '{"kind":"attackRoll","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"total":16,"d20TestRoll":{"tag":"single","naturalD20":14}}}',
       savingThrowOutcomeFill:
         '{"kind":"savingThrowOutcome","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false}]}}',
+      savingThrowAreaFacts:
+        "The savingThrowOutcomeFill example shows ordinary area membership only. Follow the current hole's areaInput requirement for specialized areas. Copy the required area kind and provide its object, push, or persistent-area facts. Use an empty requested collection only when the table confirms there are no facts to report.",
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
       characterSessionOperations: `${characterMutation} accepts atomic completeShortRest, interruptShortRest, completeLongRest, composed interruptLongRest histories with strictly increasing cumulativeRestedTicks boundaries and a final cumulative resumed segment, and passCalendarTime operations.`,
@@ -81,9 +84,10 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       "On UNKNOWN_* errors, rediscover current sessions, holes, Stat Blocks, or battle acts.",
       "On revision errors, read storedDraft.revision and retry against the current draft.",
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
+      "Use cancel_battle_action to withdraw a selected, unanswered player Act when actionCancellation or chatGptBattleOperations.cancellation allows it. Copy its arguments, including expectedSelectionId, so a delayed call cannot cancel a later selection. Cancellation preserves the checkpoint and cannot undo accepted inputs, Reactions, event reports, or turn-boundary work. If cancellation is refused, continue the retained request.",
       `On BATTLE_ACT_REQUIRES_HOLES, use ${fillOperation} instead of ${resolveOperation}.`,
       toolSurface === "chatgpt"
-        ? "On any ordinary pending-fill response, preserve the returned holes and supply one current fact through provide_battle_input with fill and no subject. Select each Reaction through its named tool with an interruptDecision fill, no subject, and choice.fills: []; answer its returned ordinary holes through provide_battle_input."
+        ? "On any ordinary pending-fill response, preserve the returned holes and supply one current fact through provide_battle_input with fill and no subject. Select a Reaction through its named tool with an interruptDecision fill and no subject. A reactionRollOrDamageReduction choice includes its requested rolledDice fill in choice.fills, or [] when no roll is requested. Other Reaction choices use choice.fills: []; answer their returned ordinary holes through provide_battle_input."
         : "On any ordinary pending-fill response, preserve envelope.frontier.pendingProcedure with the replaySubject and holes while resubmitting the complete accepted Fill prefix.",
       toolSurface === "chatgpt"
         ? "On pending-fill errors, rediscover the current hole and retry provide_battle_input with fill and no subject; the retained transaction owns the subject."
@@ -94,6 +98,7 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       `Use get_character_creation_choices, list_characters, inspect_character_session, ${characterQuery}, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.`,
       "Character creation exposes one draft.progression.initial fill for a progression derived from the runtime's contiguous class-level capabilities; MCP does not expose a later level-1 class-entry fill.",
       "roll_dice is an optional independent raw-face sampler: it returns bounded groups from the declared DRDice semantic profiles, and each call advances the Play Session's dice sequence. It does not derive modifiers or outcomes, inspect or auto-fill Battle holes, or retain Battle history; calculations must use canonical returned facts.",
+      "Treat the returned Battle checkpoint as the source of applied HP, resources, and effects. A pending request is not proof that its proposed outcome occurred. Build map status from that checkpoint and keep table-supplied positions distinct. External narration or raw dice do not update the saved Battle.",
       "Character Session queries do not persist derived facts, expose generic out-of-Battle casting, maintain a spell ledger, or add search, pagination, indexing, or recommendation infrastructure.",
       "Revival workflows beyond the typed zero-HP character closeout remain unsupported.",
     ],

@@ -21,6 +21,11 @@ import {
 import type { BattleResolutionResultPayload } from "./battle-tool-output.ts";
 import { errorContent } from "./tool-content.ts";
 
+import {
+  battleActionCancellationGuidance,
+  type BattleActionCancellationGuidance,
+} from "./battle-action-cancellation-guidance.ts";
+
 type BattleSessionPayload =
   | {
       readonly envelope: null;
@@ -43,6 +48,7 @@ type BattleSessionPayload =
   | {
       readonly envelope: BattlePresentedCheckpointFrontierEnvelope;
       readonly session: McpActiveSessionSnapshot;
+      readonly actionCancellation: BattleActionCancellationGuidance;
     };
 
 export function unknownStatBlockContent(statBlockId: string, error: unknown) {
@@ -97,6 +103,7 @@ export function battleSessionPayload(
     (envelope) => ({
       envelope,
       session: { ...sessionSummary, battleState },
+      actionCancellation: battleActionCancellationGuidance(root, session),
     }),
   );
 }
@@ -147,6 +154,10 @@ export function battleResolutionPayload(
         result: battleResolutionResultPayload(result),
         envelope,
         session,
+        actionCancellation: battleActionCancellationGuidance(
+          root,
+          result.session,
+        ),
       };
     }
     if (result.tag === "needsHoles") {
@@ -154,12 +165,20 @@ export function battleResolutionPayload(
         result: battleResolutionResultPayload(result),
         envelope,
         session,
+        actionCancellation: battleActionCancellationGuidance(
+          root,
+          result.session,
+        ),
       };
     }
     return {
       result: battleResolutionResultPayload(result),
       envelope,
       session,
+      actionCancellation: battleActionCancellationGuidance(
+        root,
+        result.session,
+      ),
     };
   });
 }

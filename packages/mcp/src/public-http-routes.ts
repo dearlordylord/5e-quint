@@ -25,6 +25,7 @@ import {
   publicMcpOutcome,
   publicMcpToolName,
   type PublicMcpDiagnostic,
+  type PublicMcpToolName,
   type PublicMcpRequestOutcome,
   type PublicMcpServiceOperations,
 } from "./public-service-operations.ts";
@@ -45,7 +46,7 @@ export type PublicHttpRequestInput = {
 export type PublicHttpRequestObservation = {
   readonly status: number;
   readonly outcome: PublicMcpRequestOutcome;
-  readonly toolName?: string;
+  readonly toolName?: PublicMcpToolName;
   readonly diagnostic?: PublicMcpDiagnostic;
 };
 

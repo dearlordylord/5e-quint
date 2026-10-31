@@ -2,8 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 import { optionalProperty } from "../optional-property.ts";
-import { Match, Schema } from "effect";
-import { BattleFillSchema } from "./battle-codecs.ts";
+import { Equal, Match } from "effect";
 import { sameBattleSubject } from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
@@ -447,7 +446,7 @@ export function resolveActiveInterruptProcedure(input: {
       ...continuationDistanceFills.filter(
         (retained) =>
           !input.resolution.fills.some((submitted) =>
-            Schema.toEquivalence(BattleFillSchema)(retained, submitted),
+            Equal.equals(retained, submitted),
           ),
       ),
       ...input.resolution.fills,

@@ -152,7 +152,7 @@ describe("ChatGPT tool surface", () => {
     ).toMatchObject({ result: { tag: "resolved" } });
   });
 
-  it("restricts Reaction modifiers and selects them before supplying any hole answers", () => {
+  it("restricts Reaction modifiers to their single atomic reduction roll", () => {
     const validate = createDraft2020JsonSchemaValidator().getValidator(
       requireJsonSchema(
         CHATGPT_EXECUTION_TOOLS.reduce_attack_roll.definition.inputSchema,
@@ -202,6 +202,11 @@ describe("ChatGPT tool surface", () => {
           kind: "rolledDice",
           holeId: "synthetic-roll",
           value: [{ results: [5] }],
+        },
+        {
+          kind: "rolledDice",
+          holeId: "synthetic-second-roll",
+          value: [{ results: [4] }],
         },
       ],
     ]) {
@@ -451,7 +456,7 @@ describe("ChatGPT tool surface", () => {
     expect(both.description).toContain("interruptDecision");
   });
 
-  it("advertises the complete static 126-tool contract with annotations", () => {
+  it("advertises the complete static 127-tool contract with annotations", () => {
     const definitions = buildAdvertisedToolDefinitions(
       chatGptExecutionToolDefinitions,
       "hosted",
@@ -460,7 +465,7 @@ describe("ChatGPT tool surface", () => {
     expect(definitions.map((tool) => tool.name).sort()).toEqual(
       Object.keys(CHATGPT_TOOL_PLAN).sort(),
     );
-    expect(definitions).toHaveLength(126);
+    expect(definitions).toHaveLength(127);
     const validator = createDraft2020JsonSchemaValidator();
     for (const tool of definitions) {
       expect(
@@ -492,7 +497,7 @@ describe("ChatGPT tool surface", () => {
         }),
       );
     }
-    expect(buildAdvertisedToolDefinitions()).toHaveLength(26);
+    expect(buildAdvertisedToolDefinitions()).toHaveLength(27);
   });
 
   it("reviews the named surface with canonical routed and codec inputs", () => {
@@ -543,8 +548,8 @@ describe("ChatGPT tool surface", () => {
     expect(codec({ ...query, query: { kind: "spellAccess" } }).valid).toBe(
       false,
     );
-    expect(buildCanonicalToolDefinitions()).toHaveLength(26);
-    expect(buildCanonicalCodecToolDefinitions()).toHaveLength(26);
+    expect(buildCanonicalToolDefinitions()).toHaveLength(27);
+    expect(buildCanonicalCodecToolDefinitions()).toHaveLength(27);
   });
 
   it("fits the repository's ChatGPT app-version tool catalog budget", () => {

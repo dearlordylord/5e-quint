@@ -1,6 +1,7 @@
 import { type BattleId, type BattleRuntimeSession } from "@dnd/battle-runtime";
 import { Match, Result } from "effect";
 
+import { battleActionCancellationGuidance } from "./battle-action-cancellation-guidance.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
@@ -67,6 +68,10 @@ export function commitActiveBattleStart(input: {
       }
       return schemaJsonContent(StartBattleOutputSchema, {
         envelope,
+        actionCancellation: battleActionCancellationGuidance(
+          input.root,
+          input.session,
+        ),
         session: { ...mcpSessionSummary(session), battleState },
       });
     },

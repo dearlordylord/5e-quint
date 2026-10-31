@@ -33,11 +33,23 @@ describe("ChatGPT Battle guidance contract", () => {
         kind: "initialInitiativeSetup",
         tools: INITIAL_INITIATIVE_GUIDANCE_TOOLS,
       },
-      { kind: "acts", acts: [{ subject, routing }] },
-      { kind: "ordinaryContinuation", subject, routing },
+      { kind: "acts", acts: [{ subject, routing, areaInputs: [] }] },
       {
         kind: "ordinaryContinuation",
         subject,
+        routing,
+        cancellation: {
+          kind: "available",
+          tool: "cancel_battle_action",
+          arguments: { expectedSelectionId: "battle-action-selection:1" },
+        },
+        areaInputs: [],
+      },
+      {
+        kind: "ordinaryContinuation",
+        subject,
+        cancellation: { kind: "unavailable", reason: "acceptedInput" },
+        areaInputs: [],
         routing: {
           kind: "unavailable",
           issue: errorContent("Synthetic unavailable operation", {

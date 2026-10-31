@@ -128,6 +128,10 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
     });
     const act = spellAct({ session: state, spellId: thunderwaveUnitId });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toMatchObject({
+      outcomeTargeting: "area",
+      areaInput: { kind: "selfOriginCubePushArea" },
+    });
     const damageRoll = requireResultHole(
       resolveBattleSubject({
         state: state.state,

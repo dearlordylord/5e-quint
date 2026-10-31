@@ -109,7 +109,9 @@
         "componentWeaponObjectId",
         "sourceHeldLightProcedureRef",
         "sourceHeldObjectProcedureRef",
-        "sourceManifestationProcedureRef"
+        "sourceManifestationProcedureRef",
+        "expectedSelectionId",
+        "cancelledSelectionId"
       ],
       "directions": ["output"],
       "classification": "workflowCorrelationIdentifier",
@@ -117,7 +119,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "e7460eb96823a3700c0f382151e8749e012a292e4136af9937b72428ac1cd7b0"
+      "scopeDigest": "77986c5b750840144750c82646fa170bb2f343929a7d5b1f3e6356cde28d439d"
     },
     {
       "schemaOwners": [
@@ -200,7 +202,8 @@
         "readiedActorId",
         "formExecutionRef",
         "weaponItemId",
-        "invocationRef"
+        "invocationRef",
+        "expectedSelectionId"
       ],
       "directions": ["input"],
       "classification": "workflowCorrelationIdentifier",
@@ -208,7 +211,7 @@
       "recipients": ["service runtime"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "a593226c787993f90330ab4965cf5fc2c128027a0df8de5eeeab03a3e5481eb0"
+      "scopeDigest": "b0bc33ded8cbd48d70be16d0a2e74d702936bf5d083bc9cf763a59530f5a2b0d"
     },
     {
       "schemaOwners": [
@@ -236,7 +239,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "dd5fb4066f27c1d855cb6ab8974f48385f2e99182932687e0f94a0d3d66649f3"
+      "scopeDigest": "bb11dc33fd975bc5ee60e43538512675c71f97100ac8bda12383bdc13deb50aa"
     },
     {
       "schemaOwners": [
@@ -268,7 +271,7 @@
       "recipients": ["service runtime"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "2a5032419262e503df837bd3283780e5af5289561e8aeafdce63416d4caf5af3"
+      "scopeDigest": "3ebdcd20361f50476c8914b414fbfa1e944f19b8dc5ba7e02ba9d12f5bd4e658"
     },
     {
       "schemaOwners": ["error", "message"],
@@ -278,7 +281,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "not retained as a separate record",
       "privacyAnchor": "request-observations",
-      "scopeDigest": "93a40b08be8a4ccd729f0f0d703bc4bcba689a0c15ea68513bae7f22a059f4f3"
+      "scopeDigest": "c68e8ace77afd0a735b817ec425f391667666dfd0aece2b1bb254ffc93cacadd"
     },
     {
       "schemaOwners": ["expiresAt"],
@@ -288,7 +291,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "63b197f6a3c7937cc4b66e42c55e375b9f68b0933399d90708bcfebf000b9523"
+      "scopeDigest": "5593530976e3d86f324321b2e94ea13ff79583ef07ac783a4eae687cd60b91a0"
     },
     {
       "schemaOwners": [
@@ -321,7 +324,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "949dbb1f4625f9b716a9a8a2f5d9caea37e39a2679f42cb21c65225f42cd8ab8"
+      "scopeDigest": "595825e54379a4dff264c8cb2efc48ac1f233cd1bf30ef378da9948f8a201e32"
     },
     {
       "schemaOwners": [
@@ -344,7 +347,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "not retained as a separate record",
       "privacyAnchor": "request-observations",
-      "scopeDigest": "a7ceb980b06864f6f54cc77317dd52efe5df8b5b1d9b6abca2d9da28849f08b0"
+      "scopeDigest": "5cdc0cb713c68acc3243f5a2ad6115e1d15044be1e4eef25030abd5d1dfe3cb5"
     },
     {
       "schemaOwners": ["readiedSpellCasterId"],
@@ -354,7 +357,17 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "d196c106fc817564dccb7d1ed35872cf418ebba300f1577369485c6773d8f8ed"
+      "scopeDigest": "a48aeb11e928b7cb399e125e7fa744f0d066054006a93c2fd44f2b0224328d55"
+    },
+    {
+      "schemaOwners": ["valuePath"],
+      "directions": ["output"],
+      "classification": "workflowCorrelationIdentifier",
+      "userGoal": "Locate the exact requested area value within a Battle fill using the service-generated literal fill.value.area.",
+      "recipients": ["OpenAI model", "connected user"],
+      "retentionOwner": "not retained as a separate record",
+      "privacyAnchor": "play-session-data",
+      "scopeDigest": "e8740310712572066e008a842d5d0e1719f964663e112895402428c4101aa51f"
     }
   ],
   "opaqueNodeDecisions": [
@@ -409,14 +422,28 @@
       "directions": ["output"],
       "evidence": "representativeResult",
       "owner": "packages/mcp/src/submission-candidate-evidence.ts",
-      "scopeDigest": "41397844f74e8f797139b85d6f2761172afc250d06bb35678930d4d7cf5ac036"
+      "scopeDigest": "df9647f3fe3dcc9f8c261f47a2d3f63a2436463a977568a23c04a082480c2b76"
     },
     {
       "schemaOwners": ["$root", "occurrence"],
       "directions": ["output"],
       "evidence": "canonicalCodec",
       "owner": "packages/mcp/src/play-session-tool-schema.ts",
-      "scopeDigest": "271ea828b41edf8bb62bd7cb1a44d7e701a94eb345f8403cb61c50478697972c"
+      "scopeDigest": "8115d1bfa637f673e2d90d9550550e3eefd345878b418a199df8db50c90238f1"
+    },
+    {
+      "schemaOwners": ["areaInput"],
+      "directions": ["output"],
+      "evidence": "representativeResult",
+      "owner": "packages/mcp/src/chatgpt/battle-area-input-guidance.test.ts",
+      "scopeDigest": "59de80ac28ab220c2d82f9202a6ab8492740f04e68eeeb072c99ddaf901d03fa"
+    },
+    {
+      "schemaOwners": ["areaSchema"],
+      "directions": ["output"],
+      "evidence": "representativeResult",
+      "owner": "packages/mcp/src/chatgpt/battle-area-input-guidance.test.ts",
+      "scopeDigest": "91cc56ccb7b597cff6b73585366f37031dc65c940c79f5819a4b0af11c1d1031"
     }
   ],
   "dataHandlingDisclosures": [
@@ -528,7 +555,7 @@
       "implementationEvidence": {
         "tag": "scopedHumanReview",
         "scope": "packages/mcp/src/public-service-operations.ts",
-        "sourceDigest": "e1742b2f8a478dbe81671e21512d2c6b33c39d7ce5c4230105fdb7418379070e"
+        "sourceDigest": "29bee30e3ab923d66a6f5f7b58e27ce78bb5dbdb74be73feb59ce1a92e844d5f"
       },
       "privacyAnchor": "request-observations",
       "privacyEvidence": {

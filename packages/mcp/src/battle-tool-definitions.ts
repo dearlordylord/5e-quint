@@ -1,5 +1,6 @@
 import {
   BATTLE_TOOL_NAMES,
+  cancelBattleActionInputSchema,
   battleToolNames,
   discoverBattleActsInputSchema,
   endBattleInputSchema,
@@ -11,6 +12,7 @@ import {
   type BattleToolName,
 } from "./battle-tool-input.ts";
 import {
+  BattleActionCancelledOutputSchema,
   BattleResolutionOutputSchema,
   BattleLifecycleOutputSchema,
   BattleSessionOutputSchema,
@@ -129,6 +131,15 @@ export const battleToolDefinitionsByName = {
       BattleResolutionOutputSchema,
       BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
     ),
+  },
+  [battleToolNames.cancelBattleAction]: {
+    name: battleToolNames.cancelBattleAction,
+    title: "Cancel unanswered Battle action",
+    description:
+      "Cancel a selected Battle action before any input has been accepted or checkpoint progress committed. Preserve the exact Battle checkpoint and turn. Answered actions, runtime event reports, and Reaction continuations must be completed instead. On success, read_battle_state returns the refreshed actions. A rejection preserves the current continuation and explains why cancellation is unavailable.",
+    inputSchema: cancelBattleActionInputSchema,
+    annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    outputSchema: mcpOutputJsonSchema(BattleActionCancelledOutputSchema),
   },
   [battleToolNames.endBattle]: {
     name: battleToolNames.endBattle,

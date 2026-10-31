@@ -5,6 +5,8 @@ import {
 import { Schema } from "effect";
 import { CHATGPT_TOOL_NAMES } from "./protocol-operation.ts";
 import type { ChatGptToolName } from "./tool-catalog.ts";
+import { BattleActionCancellationGuidanceSchema } from "../battle-action-cancellation-guidance.ts";
+import { BattleAreaInputGuidanceSchema } from "./battle-area-input-guidance.ts";
 
 export const INITIAL_INITIATIVE_GUIDANCE_TOOLS = [
   "apply_initiative_swap",
@@ -54,11 +56,14 @@ export const ChatGptBattleGuidanceSchema = Schema.Union([
       Schema.Struct({
         subject: BattleSubjectSchema,
         routing: RoutingSchema,
+        areaInputs: Schema.Array(BattleAreaInputGuidanceSchema),
       }),
     ),
   }),
   Schema.Struct({
     kind: Schema.Literal("ordinaryContinuation"),
+    areaInputs: Schema.Array(BattleAreaInputGuidanceSchema),
+    cancellation: BattleActionCancellationGuidanceSchema,
     subject: BattleSubjectSchema,
     routing: RoutingSchema,
   }),

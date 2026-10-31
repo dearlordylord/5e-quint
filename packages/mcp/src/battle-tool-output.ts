@@ -18,6 +18,15 @@ import {
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
 
+import { BattleActionSelectionIdSchema } from "./battle-action-selection-id.ts";
+import { BattleActionCancellationGuidanceSchema } from "./battle-action-cancellation-guidance.ts";
+
+export const BattleActionCancelledOutputSchema = Schema.Struct({
+  tag: Schema.Literal("battleActionCancelled"),
+  cancelledSelectionId: BattleActionSelectionIdSchema,
+  next: Schema.Struct({ tool: Schema.Literal("read_battle_state") }),
+});
+
 const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 const BattleResolutionResolvedResultSchema = Schema.Struct({
@@ -80,6 +89,7 @@ const BattleNeedsHolesPresentationEnvelopeSchema =
 const BattleActivePresentationBranchSchema = Schema.Struct({
   envelope: BattlePresentationEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
+  actionCancellation: BattleActionCancellationGuidanceSchema,
 }).pipe(
   Schema.check(
     Schema.makeFilter(battleEnvelopeMatchesActiveSession, {
@@ -149,6 +159,7 @@ const BattleLifecycleActiveOutputSchema = Schema.Struct({
   result: BattleLifecycleResultSchema,
   envelope: BattlePresentationEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
+  actionCancellation: BattleActionCancellationGuidanceSchema,
 }).pipe(
   Schema.check(
     Schema.makeFilter(
@@ -176,6 +187,7 @@ export const BattleResolutionOutputSchema = Schema.toCodecIso(
       result: BattleResolutionResolvedResultSchema,
       envelope: BattleResolvedPresentationEnvelopeSchema,
       session: McpActiveSessionSnapshotSchema,
+      actionCancellation: BattleActionCancellationGuidanceSchema,
     }).pipe(
       Schema.check(
         Schema.makeFilter(
@@ -192,6 +204,7 @@ export const BattleResolutionOutputSchema = Schema.toCodecIso(
       result: BattleResolutionNeedsHolesResultSchema,
       envelope: BattleNeedsHolesPresentationEnvelopeSchema,
       session: McpActiveSessionSnapshotSchema,
+      actionCancellation: BattleActionCancellationGuidanceSchema,
     }).pipe(
       Schema.check(
         Schema.makeFilter(
@@ -208,6 +221,7 @@ export const BattleResolutionOutputSchema = Schema.toCodecIso(
       result: BattleResolutionInvalidResultSchema,
       envelope: BattlePresentationEnvelopeSchema,
       session: McpActiveSessionSnapshotSchema,
+      actionCancellation: BattleActionCancellationGuidanceSchema,
     }).pipe(
       Schema.check(
         Schema.makeFilter(

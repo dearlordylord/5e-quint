@@ -91,7 +91,9 @@ closed with the OAuth challenge and never creates durable anonymous state.
 ## Recovery and persistence
 
 HTTP persists tenure, format version, random-stream configuration, revision, and
-ordered successful reconstructive commands. Each operation reconstructs a root,
+ordered reconstructive commands, including gameplay inputs rejected by the runtime.
+The checkpoint determines applied effects; a stored command alone does not.
+Each operation reconstructs a root,
 applies the command, and commits against the expected revision; conflicts reload
 and retry. Disable Admin Mirror publication during reconstruction, then publish
 committed projections. Never persist derived summaries or another dice cursor.
@@ -173,7 +175,7 @@ and incident procedures live in the
 
 ### ChatGPT plugin surface
 
-Set `DND_MCP_TOOL_SURFACE=chatgpt` on the HTTP host to expose the 126 named
+Set `DND_MCP_TOOL_SURFACE=chatgpt` on the HTTP host to expose the 127 named
 ChatGPT tools. The default is `regular`; stdio continues to expose the regular
 MCP contract. Choose the surface for the host, rather than per model request.
 The two surfaces use the same catalogs, Play Session ownership, reducers,
@@ -204,10 +206,35 @@ the tool opens any initial holes as a pending transaction. Supply ordinary
 facts through `provide_battle_input`, with `fill` and no subject. The runtime-owned
 transaction supplies the subject and rejects stale or foreign-session facts.
 Select each Reaction through its own named operation, including
-`decline_reaction`, with an `interruptDecision` fill, no subject, and an empty
-`choice.fills` array. The transaction owns the parent; subsequent ordinary holes
-also use `provide_battle_input`. That tool cannot select an Act or Reaction.
+`decline_reaction`, with an `interruptDecision` fill and no subject. A
+`reactionRollOrDamageReduction` choice includes its requested reduction
+`rolledDice` fill in `choice.fills`, or `[]` when it requests no roll. Other
+Reaction choices require an empty `choice.fills` array. The transaction owns the
+parent; subsequent ordinary holes also use `provide_battle_input`. That tool
+cannot select an Act or Reaction.
 Regular MCP retains its existing fill-first and inline Reaction answer contracts.
+Saving-throw area holes expose `areaInput`, derived from the executing procedure,
+to identify the required area facts. Specialized object-facts arrays are explicit
+table answers. An empty array reports no objects; omission does not supply that
+answer. ChatGPT continuation guidance includes the matching canonical area schema.
+
+`cancel_battle_action` withdraws an unanswered player Act only when the runtime
+proves that no inputs or checkpoint progress have been accepted. ChatGPT guidance
+returns its availability and tool name, or a reason cancellation is unavailable.
+Active Battle outputs expose the same `actionCancellation` contract for regular
+clients. Copy its `arguments.expectedSelectionId` into the cancellation call.
+Selection identities survive reconstruction and reject delayed calls for an
+earlier selection, including when the same Act is selected again.
+The operation preserves the exact checkpoint. It refuses event reports,
+turn-boundary work, nested procedures, and continuations with accepted inputs or
+committed Reactions. Correct and retry those continuations through their returned
+input requests. Successful cancellation is retained in saved command history, so
+reconstruction does not restore the cancelled selection.
+
+The checkpoint owns applied HP, resources, and effects. Pending requests describe
+unfinished work and may coexist with already committed Reactions. Raw dice and
+external narration do not apply Battle results. A client map must distinguish
+table-supplied positions from runtime facts and display checkpoint HP and effects.
 Initial `report_creature_fall` calls require `reactionSpellTargetFacts`, including
 an explicit `[]` when the table confirms no qualifying target facts. That field
 is absent on other operations.
@@ -486,7 +513,7 @@ remains the default. Generated reports are evidence, not a second configuration
 source.
 
 The submission fast gate scans the hosted ChatGPT definitions and their canonical
-codec owners. Candidate evidence fingerprints the same 126-tool host and exercises
+codec owners. Candidate evidence fingerprints the same 127-tool host and exercises
 named Battle attacks and Reaction decisions. Canonical output review derives from
 execution/replay grammar owners even where an advertised output schema is omitted;
 it does not add those review schemas to tool discovery. The shared pending-procedure

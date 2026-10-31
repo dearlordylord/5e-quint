@@ -129,6 +129,81 @@ export type BattlePendingTransactionEnvelopeSessionView =
   | { readonly tag: "foreignTransaction" }
   | { readonly tag: "transactionSessionMismatch" };
 
+export const BATTLE_ACTION_CANCELLATION_UNAVAILABLE_REASONS = [
+  "noPendingTransaction",
+  "foreignTransaction",
+  "transactionSessionMismatch",
+  "runtimeProcedure",
+  "nestedProcedure",
+  "interruptDecision",
+  "checkpointProgress",
+  "acceptedInput",
+] as const;
+export type BattleActionCancellationUnavailableReason =
+  (typeof BATTLE_ACTION_CANCELLATION_UNAVAILABLE_REASONS)[number];
+export type BattleActionCancellation =
+  | { readonly kind: "available" }
+  | {
+      readonly kind: "unavailable";
+      readonly reason: BattleActionCancellationUnavailableReason;
+    };
+
+export function battlePendingActionCancellationForSession(
+  transaction: BattlePendingTransaction | null,
+  session: BattleRuntimeSession,
+): BattleActionCancellation {
+  if (transaction === null)
+    return { kind: "unavailable", reason: "noPendingTransaction" };
+  const lookup = lookupBattleRuntimeTransaction(transaction);
+  if (Option.isNone(lookup))
+    return { kind: "unavailable", reason: "foreignTransaction" };
+  const pending = lookup.value;
+  if (pending.currentSession !== session)
+    return { kind: "unavailable", reason: "transactionSessionMismatch" };
+  return unansweredActionCancellation(pending);
+}
+
+function unansweredActionCancellation(
+  pending: BattlePendingTransactionData,
+): BattleActionCancellation {
+  return Match.value(pending.completion).pipe(
+    Match.when(
+      { kind: "standaloneClose" },
+      (): BattleActionCancellation => ({
+        kind: "unavailable",
+        reason: "nestedProcedure",
+      }),
+    ),
+    Match.when(
+      { kind: "refreshParentFrontier" },
+      (): BattleActionCancellation => ({
+        kind: "unavailable",
+        reason: "nestedProcedure",
+      }),
+    ),
+    Match.when(
+      { kind: "replaySubject" },
+      ({ parent }): BattleActionCancellation => {
+        if (parent !== null)
+          return { kind: "unavailable", reason: "nestedProcedure" };
+        if (pending.subject.tag === "runtimeCommand")
+          return { kind: "unavailable", reason: "runtimeProcedure" };
+        if (
+          pending.frontier.kind !== "ordinaryHoles" ||
+          pending.checkpointOwnership.tag !== "ordinaryFrontier"
+        )
+          return { kind: "unavailable", reason: "interruptDecision" };
+        if (pending.baseSession !== pending.currentSession)
+          return { kind: "unavailable", reason: "checkpointProgress" };
+        if (pending.fills.length > 0)
+          return { kind: "unavailable", reason: "acceptedInput" };
+        return { kind: "available" };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
 type BattlePendingTransactionData = {
   /** The token that owns this canonical data record. */
   readonly transaction: BattlePendingTransaction;
@@ -567,14 +642,9 @@ export function battlePendingTransactionReplayContextCompatibility(input: {
   };
 }): BattlePendingTransactionReplayContextCompatibility {
   const left = lookupBattleRuntimeTransaction(input.left.transaction);
-  if (Option.isNone(left) || left.value.transaction !== input.left.transaction)
-    return { tag: "foreignTransaction", side: "left" };
+  if (Option.isNone(left)) return { tag: "foreignTransaction", side: "left" };
   const right = lookupBattleRuntimeTransaction(input.right.transaction);
-  if (
-    Option.isNone(right) ||
-    right.value.transaction !== input.right.transaction
-  )
-    return { tag: "foreignTransaction", side: "right" };
+  if (Option.isNone(right)) return { tag: "foreignTransaction", side: "right" };
   if (left.value.currentSession !== input.left.session)
     return { tag: "transactionSessionMismatch", side: "left" };
   if (right.value.currentSession !== input.right.session)

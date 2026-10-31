@@ -75,6 +75,7 @@ const expectedTools = [
   "resolve_battle_act",
   "end_turn",
   "end_battle",
+  "cancel_battle_action",
   "roll_dice",
 ] as const;
 
@@ -1953,6 +1954,31 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
     "savingThrowOutcome",
   );
 
+  const incompleteArea = await callTool(client, "fill_battle_hole", {
+    subject: fireballAct.subject,
+    fill: {
+      kind: "savingThrowOutcome",
+      holeId: savingThrowHole.holeId,
+      value: {
+        area: {
+          originAnchorId: "sphinx",
+          affectedTargetIds: ["sphinx"],
+        },
+        outcomes: [{ targetId: "sphinx", succeeded: false, withoutRoll: true }],
+      },
+    },
+  });
+  assert.equal(get(incompleteArea, "result.tag"), "invalid");
+  assert.equal(get(incompleteArea, "result.reason"), "invalidFill");
+  assert.deepEqual(
+    wizardSpellSlotsFor(incompleteArea, levelFiveWizardFireballCombatantId),
+    levelFiveWizardUnexpendedSpellSlots,
+  );
+  const retriedState = await callTool(client, "read_battle_state", {});
+  const retriedHole = resultHole(retriedState, "savingThrowOutcome");
+  const areaKind = get(retriedHole, "areaInput.kind");
+  assert.equal(areaKind, "pointOriginSphereSaveDamageArea");
+
   const afterSavingThrow = await callTool(client, "fill_battle_hole", {
     subject: fireballAct.subject,
     fill: {
@@ -1960,7 +1986,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
       holeId: savingThrowHole.holeId,
       value: {
         area: {
-          kind: "pointOriginSphereSaveDamageArea",
+          kind: areaKind,
           originAnchorId: "sphinx",
           affectedTargetIds: ["sphinx"],
           objectIgnitionFacts: [],

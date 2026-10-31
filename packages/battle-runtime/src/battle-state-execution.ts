@@ -6345,13 +6345,19 @@ export type BattleSavingThrowFlatBonusProjection = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly bonus: number;
 };
+export type BattleSpellAreaInputRequest = {
+  readonly kind:
+    | "areaMembership"
+    | "stagedConditionAreaMembership"
+    | NonNullable<BattleSpellAreaChoice["kind"]>;
+};
+
 export type BattleSpellSavingThrowOutcomeHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
-  readonly outcomeTargeting: "singleTarget" | "targetList" | "area";
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly areaChoices: readonly BattleSpellAreaChoice[];
@@ -6359,7 +6365,16 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
-};
+} & (
+  | {
+      readonly outcomeTargeting: "singleTarget" | "targetList";
+      readonly areaInput?: never;
+    }
+  | {
+      readonly outcomeTargeting: "area";
+      readonly areaInput: BattleSpellAreaInputRequest;
+    }
+);
 export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;

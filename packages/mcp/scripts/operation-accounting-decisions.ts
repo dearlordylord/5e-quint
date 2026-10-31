@@ -130,6 +130,12 @@ export const OPERATION_ACCOUNTING = {
       at("packages/mcp/src/character-tools.ts", "handleCharacterToolCall"),
       REASONS.publicEntry,
     ),
+    cancel_battle_action: account(
+      "operation",
+      "cancel_battle_action",
+      at("packages/mcp/src/battle-tools.ts", "handleBattleToolCall"),
+      REASONS.publicEntry,
+    ),
     end_battle: account(
       "operation",
       "end_battle",

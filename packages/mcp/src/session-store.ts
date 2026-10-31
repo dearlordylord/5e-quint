@@ -12,8 +12,6 @@ import type {
 import {
   applyInitiativeSwap,
   battleStateInitIssueMessage,
-  battlePendingTransactionViewForSession,
-  battleRuntimeSessionDescendsFrom,
   finishInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
 import {
@@ -30,6 +28,16 @@ import type {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Result, Match, Option } from "effect";
+import { type BattleActionSelectionId } from "./battle-action-selection-id.ts";
+import {
+  createBattleActionSelectionStore,
+  type McpPendingBattleSelection,
+  type McpBattleActionCancellationIssue,
+} from "./battle-action-selection-store.ts";
+export type {
+  McpPendingBattleSelection,
+  McpBattleActionCancellationIssue,
+} from "./battle-action-selection-store.ts";
 import type { SrdStatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { createBattleRosterTransitionPlanner } from "./battle-roster-session-store.ts";
@@ -40,7 +48,13 @@ import type {
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 import { createCharacterSessionRegistry } from "./character-session-registry.ts";
-import { invalidBattleStateTransition } from "./session-store-state-transition.ts";
+import {
+  invalidBattleStateTransition,
+  activeBattleSessionTransition,
+  validateBattleResultSessionLineage,
+  validateExpectedActiveBattleSession,
+  validatePendingBattleTransactionSession,
+} from "./session-store-state-transition.ts";
 import {
   commitBattleEndTransition,
   commitBattleStartTransition,
@@ -82,6 +96,11 @@ export type McpSessionStore = {
   storeActiveBattle(
     session: BattleRuntimeSession,
   ): Result.Result<void, McpBattleStateTransitionIssue>;
+  cancelPendingBattleAction(
+    expectedSession: BattleRuntimeSession,
+    expectedTransaction: BattlePendingTransaction | null,
+    expectedSelectionId: BattleActionSelectionId,
+  ): Result.Result<void, McpBattleActionCancellationIssue>;
   storeBattleTransactionResult(
     expectedSession: BattleRuntimeSession,
     result: BattleRuntimeTransactionResult,
@@ -122,6 +141,7 @@ export type McpSessionStore = {
     McpBattleStateTransitionIssue
   >;
   getPendingBattleTransaction(): BattlePendingTransaction | null;
+  getPendingBattleSelection(): McpPendingBattleSelection | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): SrdStatBlockRecord | null;
   selectStatBlock(
@@ -179,7 +199,7 @@ export function createMcpSessionStore(input: {
     storeIdentity,
   });
   let selectedStatBlockId: StatBlockId | null = null;
-  let pendingBattleTransaction: BattlePendingTransaction | null = null;
+  const actionSelection = createBattleActionSelectionStore();
   let battleState: McpBattleState = { tag: "none" };
 
   function planActiveBattleRosterTransition(
@@ -209,53 +229,18 @@ export function createMcpSessionStore(input: {
     return battleRosterPlanner.plan(
       operation,
       battleState.session,
-      pendingBattleTransaction,
+      actionSelection.transaction,
     );
   }
 
   function storeActiveBattleSession(
     session: BattleRuntimeSession,
   ): Result.Result<void, McpBattleStateTransitionIssue> {
-    if (battleState.tag === "initialInitiativeSetup") {
-      return invalidBattleStateTransition(battleState.tag, "activeBattle");
-    }
-    if (
-      battleState.tag === "activeBattle" &&
-      session.state.battleId !== battleState.session.state.battleId
-    ) {
-      return Result.fail({
-        tag: "battleStateBattleOwnershipConflict",
-        expectedBattleId: battleState.session.state.battleId,
-        actualBattleId: session.state.battleId,
-      });
-    }
-    battleState = { tag: "activeBattle", session };
-    pendingBattleTransaction = null;
+    const transition = activeBattleSessionTransition(battleState, session);
+    if (Result.isFailure(transition)) return Result.fail(transition.failure);
+    battleState = transition.success;
+    actionSelection.clear();
     return Result.succeed(undefined);
-  }
-
-  function requireExpectedActiveBattleSession(
-    expectedSession: BattleRuntimeSession,
-  ): Result.Result<void, McpBattleStateTransitionIssue> {
-    return battleState.tag === "activeBattle" &&
-      battleState.session === expectedSession
-      ? Result.succeed(undefined)
-      : Result.fail({
-          tag: "battleStateSessionChanged",
-          battleId: expectedSession.state.battleId,
-        });
-  }
-
-  function requireResultSessionDescendant(
-    expectedSession: BattleRuntimeSession,
-    resultSession: BattleRuntimeSession,
-  ): Result.Result<void, McpBattleStateTransitionIssue> {
-    return battleRuntimeSessionDescendsFrom(resultSession, expectedSession)
-      ? Result.succeed(undefined)
-      : Result.fail({
-          tag: "battleStateSessionChanged",
-          battleId: expectedSession.state.battleId,
-        });
   }
 
   function storePending(
@@ -263,25 +248,18 @@ export function createMcpSessionStore(input: {
     session: BattleRuntimeSession,
     transaction: BattlePendingTransaction,
   ): Result.Result<void, McpBattleStateTransitionIssue> {
-    const current = requireExpectedActiveBattleSession(expected);
+    const current = validateExpectedActiveBattleSession(battleState, expected);
     if (Result.isFailure(current)) return current;
-    const lineage = requireResultSessionDescendant(expected, session);
+    const lineage = validateBattleResultSessionLineage(expected, session);
     if (Result.isFailure(lineage)) return lineage;
-    const transactionCheck = battlePendingTransactionViewForSession(
+    const transactionCheck = validatePendingBattleTransactionSession(
       transaction,
       session,
     );
-    if (transactionCheck.tag !== "valid") {
-      return Result.fail({
-        tag: "battleStatePendingTransactionInvalid",
-        battleId: session.state.battleId,
-        reason: transactionCheck.tag,
-      });
-    }
-    const stored = storeActiveBattleSession(session);
-    if (Result.isFailure(stored)) return stored;
-    pendingBattleTransaction = transaction;
-    return Result.succeed(undefined);
+    if (Result.isFailure(transactionCheck)) return transactionCheck;
+    return actionSelection.commitContinuation(transaction, () =>
+      storeActiveBattleSession(session),
+    );
   }
 
   const store: McpSessionStore = {
@@ -302,7 +280,7 @@ export function createMcpSessionStore(input: {
       });
       if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = committed.success;
-      pendingBattleTransaction = null;
+      actionSelection.clear();
       return Result.succeed(undefined);
     },
     commitBattleEnd({ battleSession, characterSettlements }) {
@@ -314,11 +292,27 @@ export function createMcpSessionStore(input: {
       });
       if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = committed.success;
-      pendingBattleTransaction = null;
+      actionSelection.clear();
       return Result.succeed(undefined);
     },
     storeActiveBattle(session) {
       return storeActiveBattleSession(session);
+    },
+    cancelPendingBattleAction(
+      expectedSession,
+      expectedTransaction,
+      expectedSelectionId,
+    ) {
+      const current = validateExpectedActiveBattleSession(
+        battleState,
+        expectedSession,
+      );
+      if (Result.isFailure(current)) return current;
+      return actionSelection.cancel(
+        expectedSession,
+        expectedTransaction,
+        expectedSelectionId,
+      );
     },
     storeBattleTransactionResult(expectedSession, result) {
       return Match.value(result).pipe(
@@ -329,9 +323,12 @@ export function createMcpSessionStore(input: {
         ),
         Match.when({ tag: "defect" }, () => Result.succeed(undefined)),
         Match.when({ tag: "settled" }, ({ session }) => {
-          const current = requireExpectedActiveBattleSession(expectedSession);
+          const current = validateExpectedActiveBattleSession(
+            battleState,
+            expectedSession,
+          );
           if (Result.isFailure(current)) return current;
-          const lineage = requireResultSessionDescendant(
+          const lineage = validateBattleResultSessionLineage(
             expectedSession,
             session,
           );
@@ -352,11 +349,11 @@ export function createMcpSessionStore(input: {
       const committed = battleRosterPlanner.commit(
         plan,
         battleState.session,
-        pendingBattleTransaction,
+        actionSelection.transaction,
       );
       if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = { tag: "activeBattle", session: committed.success };
-      pendingBattleTransaction = null;
+      actionSelection.clear();
       return committed;
     },
     storeInitialInitiativeSetup(setup) {
@@ -367,7 +364,7 @@ export function createMcpSessionStore(input: {
         );
       }
       battleState = { tag: "initialInitiativeSetup", setup };
-      pendingBattleTransaction = null;
+      actionSelection.clear();
       return Result.succeed(undefined);
     },
     applyInitialInitiativeSwap(input) {
@@ -395,11 +392,14 @@ export function createMcpSessionStore(input: {
       }
       const session = finishInitialInitiativeSetup(battleState.setup);
       battleState = { tag: "activeBattle", session };
-      pendingBattleTransaction = null;
+      actionSelection.clear();
       return Result.succeed(session);
     },
     getPendingBattleTransaction(): BattlePendingTransaction | null {
-      return pendingBattleTransaction;
+      return actionSelection.transaction;
+    },
+    getPendingBattleSelection() {
+      return actionSelection.selection;
     },
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;

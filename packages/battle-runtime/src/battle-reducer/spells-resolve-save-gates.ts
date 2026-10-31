@@ -1516,16 +1516,13 @@ export function resolveSaveGateDamageSpellAct(input: {
     failedTargetIds: failedTargets,
     invocation: input.invocation,
   });
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (postSaveAreaEffectValidation !== null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       postSaveAreaEffectValidation,
     );
   }
-  /* v8 ignore stop -- @preserve */
 
   const selectedTargetIds = savingThrowValidation.success.outcomes.map(
     (outcome) => outcome.targetId,
@@ -3854,11 +3851,9 @@ function validatePostSaveAreaEffect(input: {
 function validateObjectIgnitingSphericalBurstAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed Fireball area fill: discovery supplies Fireball-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (area === undefined || area.kind !== "pointOriginSphereSaveDamageArea") {
     return "object-igniting spherical burst requires caller-supplied object ignition area facts.";
   }
-  /* v8 ignore stop -- @preserve */
   const objectIds = new Set<string>();
   for (const fact of area.objectIgnitionFacts) {
     /* v8 ignore start -- @preserve -- Malformed Fireball object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */

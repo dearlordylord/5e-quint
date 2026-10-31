@@ -11,6 +11,8 @@ import {
 import { Match, Result, type Schema } from "effect";
 import { errorContent } from "../tool-content.ts";
 import type { ToolError } from "../schema-codec.ts";
+import { battleActionCancellationGuidance } from "../battle-action-cancellation-guidance.ts";
+import { battleAreaInputGuidance } from "./battle-area-input-guidance.ts";
 import type { McpPlaySessionRoot } from "../composition-root.ts";
 import { battleMechanicsEnvelopeForSession } from "../battle-tool-payloads.ts";
 import { chatGptBattleSubjectExposure } from "./battle-operation-routing.ts";
@@ -80,6 +82,7 @@ export function chatGptBattleGuidance(
         return {
           subject: act.subject,
           routing: operationRouting(route),
+          areaInputs: act.initialHoles.flatMap(battleAreaInputGuidance),
         };
       }),
     })),
@@ -103,6 +106,8 @@ export function chatGptBattleGuidance(
             );
       return {
         kind: "ordinaryContinuation" as const,
+        areaInputs: frontier.holes.flatMap(battleAreaInputGuidance),
+        cancellation: battleActionCancellationGuidance(root, battle.session),
         subject: frontier.replaySubject,
         routing: operationRouting(route),
       };
@@ -130,9 +135,12 @@ export function chatGptBattleGuidanceTools(
     Match.when({ kind: "acts" }, (value) =>
       value.acts.flatMap((act) => routingTools(act.routing)),
     ),
-    Match.when({ kind: "ordinaryContinuation" }, (value) =>
-      routingTools(value.routing),
-    ),
+    Match.when({ kind: "ordinaryContinuation" }, (value) => [
+      ...routingTools(value.routing),
+      ...(value.cancellation.kind === "available"
+        ? [value.cancellation.tool]
+        : []),
+    ]),
     Match.when({ kind: "reactionDecision" }, (value) => [
       value.declineTool,
       ...value.choices.flatMap((choice) => routingTools(choice.routing)),

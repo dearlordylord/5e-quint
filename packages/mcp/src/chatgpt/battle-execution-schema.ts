@@ -55,7 +55,13 @@ type ReactionSelectionChoice = {
   [Kind in InterruptChoice["kind"]]: Omit<
     Extract<InterruptChoice, { readonly kind: Kind }>,
     "fills"
-  > & { readonly fills: readonly [] };
+  > & {
+    readonly fills: Kind extends "reactionRollOrDamageReduction"
+      ?
+          | readonly []
+          | readonly [Extract<BattleFill, { readonly kind: "rolledDice" }>]
+      : readonly [];
+  };
 }[InterruptChoice["kind"]];
 type ReactionSelectionFill = Omit<
   Extract<BattleFill, { readonly kind: "interruptDecision" }>,
@@ -88,10 +94,15 @@ const ReactionSelectionArgsSchema = BattleFillArgsSchema.pipe(
     (args): args is { readonly fill: ReactionSelectionFill } =>
       args.fill.kind === "interruptDecision" &&
       (args.fill.value.kind === "decline" ||
-        args.fill.value.choice.fills.length === 0),
+        (args.fill.value.choice.kind === "reactionRollOrDamageReduction"
+          ? args.fill.value.choice.fills.length <= 1 &&
+            args.fill.value.choice.fills.every(
+              (fill) => fill.kind === "rolledDice",
+            )
+          : args.fill.value.choice.fills.length === 0)),
     {
       message:
-        "Select a Reaction with choice.fills: [], then answer its ordinary holes through provide_battle_input.",
+        "For a Reaction modifier, include its requested reduction roll in choice.fills, or [] when no roll is requested. Select other Reactions with choice.fills: [], then answer their ordinary holes through provide_battle_input.",
     },
   ),
 );
@@ -184,7 +195,7 @@ export function chatGptBattleExecutionInputSchema(
     ...(reactionSchema === null
       ? []
       : [
-          "For an offered Reaction, supply an interruptDecision fill for the current request and selected choice; omit subject and use choice.fills: [] when resolving a choice.",
+          "For an offered Reaction, supply an interruptDecision fill for the current request and selected choice; omit subject. A reactionRollOrDamageReduction choice includes its one requested rolledDice fill, or [] when no roll is requested. Other Reaction choices require choice.fills: []; answer their later ordinary holes through provide_battle_input.",
         ]),
     "Returns the updated saved battle or a request for the next choice, target fact, dice result, or Reaction. Supply requested facts with provide_battle_input; complete the pending action before starting another.",
   ];

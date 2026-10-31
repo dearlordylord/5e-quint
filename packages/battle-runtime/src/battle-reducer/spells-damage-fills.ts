@@ -90,6 +90,7 @@ import {
   type BattleSpellConditionChoiceHole,
   type BattleSpellHealingRollHole,
   type BattleSpellSavingThrowOutcomeHole,
+  type BattleSpellAreaInputRequest,
   type BattleSpellSkillChoiceHole,
   type BattleSpellTargetAbilityChoicesHole,
   type BattleTemporaryAbilityCheckRollModeActiveEffectCountHole,
@@ -1142,13 +1143,15 @@ export function spellSavingThrowOutcomeHole(
           : `Spell ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
     })(),
     sourceProcedureRef: invocation.sourceProcedureRef,
-    outcomeTargeting:
-      targeting.kind === "singleCombatant" ||
-      targeting.kind === "singleCreatureOrObject"
-        ? "singleTarget"
-        : targeting.kind === "targetList"
-          ? "targetList"
-          : "area",
+    ...(targeting.kind === "singleCombatant" ||
+    targeting.kind === "singleCreatureOrObject"
+      ? { outcomeTargeting: "singleTarget" as const }
+      : targeting.kind === "targetList"
+        ? { outcomeTargeting: "targetList" as const }
+        : {
+            outcomeTargeting: "area" as const,
+            areaInput: spellSavingThrowAreaInput(invocation),
+          }),
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       actorId,
@@ -1188,6 +1191,65 @@ export function spellSavingThrowOutcomeHole(
     ),
     targetFlatBonuses: savingThrowFlatBonusProjections(state, ability),
   };
+}
+
+function spellSavingThrowAreaInput(
+  invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2],
+): BattleSpellAreaInputRequest {
+  const areaMembership = (): BattleSpellAreaInputRequest => ({
+    kind: "areaMembership",
+  });
+  return Match.value(invocation).pipe(
+    Match.discriminatorsExhaustive("procedure")({
+      saveGatedDamage: (damage) =>
+        damage.postSaveAreaEffect === undefined
+          ? areaMembership()
+          : Match.value(damage.postSaveAreaEffect).pipe(
+              Match.discriminatorsExhaustive("kind")({
+                areaObjectIgnition: () => ({
+                  kind: "pointOriginSphereSaveDamageArea" as const,
+                }),
+                areaObjectDamage: () => ({
+                  kind: "pointOriginSphereObjectDamageArea" as const,
+                }),
+                selfOriginCubePush: () => ({
+                  kind: "selfOriginCubePushArea" as const,
+                }),
+              }),
+            ),
+      saveGatedAttackRollAdvantage: (advantage) =>
+        advantage.effect.kind === "saveGatedTargetProjection"
+          ? { kind: "saveGatedTargetProjectionArea" as const }
+          : areaMembership(),
+      saveGatedAreaControl: () => ({
+        kind: "saveGatedAreaControlArea" as const,
+      }),
+      saveGatedTurnConstraintBundle: () => ({
+        kind: "saveGatedTurnConstraintBundleArea" as const,
+      }),
+      persistentAreaSaveCondition: () => ({
+        kind: "persistentAreaSaveConditionArea" as const,
+      }),
+      directionalPersistentArea: () => ({
+        kind: "directionalPersistentAreaArea" as const,
+      }),
+      stagedSaveCondition: () => ({
+        kind: "stagedConditionAreaMembership" as const,
+      }),
+      attackBurstSaveDamage: areaMembership,
+      abilityD20TestRollModeSaveGate: areaMembership,
+      afterHitSaveGatedCondition: areaMembership,
+      rollModifier: areaMembership,
+      creatureSizeIncrease: areaMembership,
+      creatureSizeDecrease: areaMembership,
+      controlledVerticalSuspension: areaMembership,
+      saveGatedCondition: areaMembership,
+      saveGatedConditionImmunity: areaMembership,
+      spellCastInterruptionReaction: areaMembership,
+      saveGatedConditionWithRepeat: areaMembership,
+      compelledNextTurnBehavior: areaMembership,
+    }),
+  );
 }
 
 function heightenedRollModeProjection(

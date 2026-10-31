@@ -1,3 +1,4 @@
+import { battleActionCancellationGuidance } from "./battle-action-cancellation-guidance.ts";
 import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -137,6 +138,10 @@ function finalizeSetup(root: McpPlaySessionRoot) {
       }
       return schemaJsonContent(BattleLifecycleOutputSchema, {
         envelope: envelope.success,
+        actionCancellation: battleActionCancellationGuidance(
+          root,
+          state.session,
+        ),
         session: {
           ...mcpSessionSummary(root.sessionStore.snapshot()),
           battleState,

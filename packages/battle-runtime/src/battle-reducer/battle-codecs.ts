@@ -369,7 +369,7 @@ export const ActiveOngoingFeatureOccurrenceSnapshotSchema = Schema.Union([
   }),
 ]);
 
-const BattleHoleIdSchema = NonEmptyTrimmedStringSchema.pipe(
+export const BattleHoleIdSchema = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("HoleId"),
 );
 const BattleHoleInstanceKeySchema = NonEmptyTrimmedStringSchema.pipe(
@@ -617,13 +617,13 @@ const BattleObjectDamageDispositionSchema = Schema.Union([
   }),
 ]);
 
-const BattleSpellAreaChoiceSchema = Schema.Union([
-  Schema.Struct({
-    ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.optionalKey(Schema.Never),
-    areaId: Schema.optionalKey(Schema.Never),
-    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
-  }),
+export const BattleSpellAreaMembershipChoiceSchema = Schema.Struct({
+  ...BattleSpellAreaChoiceBaseSchema,
+  kind: Schema.optionalKey(Schema.Never),
+  areaId: Schema.optionalKey(Schema.Never),
+  stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
+});
+export const BattleSpellStagedConditionAreaMembershipChoiceSchema =
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.optionalKey(Schema.Never),
@@ -631,7 +631,11 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
     stagedConditionAutomaticSuccessFacts: Schema.NonEmptyArray(
       BattleStagedConditionAutomaticSuccessFactSchema,
     ),
-  }),
+  });
+
+export const BattleSpellAreaChoiceSchema = Schema.Union([
+  BattleSpellAreaMembershipChoiceSchema,
+  BattleSpellStagedConditionAreaMembershipChoiceSchema,
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("saveGatedTargetProjectionArea"),
@@ -740,6 +744,15 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
     stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
 ]);
+
+const BattleSpellAreaInputRequestSchema = Schema.Struct({
+  kind: Schema.Union([
+    Schema.Literals(["areaMembership", "stagedConditionAreaMembership"]),
+    ...BattleSpellAreaChoiceSchema.members.flatMap((member) =>
+      "literal" in member.fields.kind ? [member.fields.kind] : [],
+    ),
+  ]),
+});
 
 const BattleObjectIgnitionDispositionSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("flammableUnattended") }),
@@ -2220,6 +2233,20 @@ const AdditionalStructuralMechanicalHolePayloadMembers = [
   ),
 ] as const;
 
+const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
+  ...BattleHoleBaseFieldsSchema,
+  kind: Schema.Literal("savingThrowOutcome"),
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  ability: AbilitySchema,
+  dc: DcSourceSchema,
+  areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
+  targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+  targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  relationshipFactRequest: Schema.optionalKey(
+    BattleSavingThrowRelationshipFactRequestSchema,
+  ),
+} as const;
+
 const BattleHolePayloadMembers = [
   BattleInterruptDecisionHolePayloadMember,
   pairedBattleHoleMember({
@@ -3142,20 +3169,17 @@ const BattleHolePayloadMembers = [
   ),
   pairedBattleHoleMemberWithFields(
     {
-      ...BattleHoleBaseFieldsSchema,
-      kind: Schema.Literal("savingThrowOutcome"),
-      outcomeTargeting: Schema.Literals(["singleTarget", "targetList", "area"]),
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      ability: AbilitySchema,
-      dc: DcSourceSchema,
-      areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
-      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-      targetFlatBonuses: Schema.Array(
-        BattleSavingThrowFlatBonusProjectionSchema,
-      ),
-      relationshipFactRequest: Schema.optionalKey(
-        BattleSavingThrowRelationshipFactRequestSchema,
-      ),
+      ...BattleSpellSavingThrowOutcomeHoleFieldsSchema,
+      outcomeTargeting: Schema.Literals(["singleTarget", "targetList"]),
+      areaInput: Schema.optionalKey(Schema.Never),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleSpellSavingThrowOutcomeHoleFieldsSchema,
+      outcomeTargeting: Schema.Literal("area"),
+      areaInput: BattleSpellAreaInputRequestSchema,
     },
     D20TestNaturalOneRerollHoleOptionsFields,
   ),

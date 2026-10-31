@@ -44,6 +44,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     discover_battle_acts: tool("discover_battle_acts"),
     get_character_creation_choices: tool("get_character_creation_choices"),
     end_battle: tool("end_battle"),
+    cancel_battle_action: tool("cancel_battle_action"),
     end_turn: tool("end_turn"),
     fill_battle_hole: refine("battleContinuations"),
     apply_character_creation_choices: tool("apply_character_creation_choices"),

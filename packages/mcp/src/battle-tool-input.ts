@@ -30,6 +30,8 @@ import {
   type BattleLifecycleToolInput,
 } from "./battle-lifecycle-tool-input.ts";
 
+import { CancelBattleActionArgsSchema } from "./battle-action-selection-id.ts";
+
 const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.annotate({
@@ -90,6 +92,9 @@ export const resolveBattleActInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   },
 );
 export const endTurnInputSchema = mcpObjectJsonSchema(EndTurnArgsSchema);
+export const cancelBattleActionInputSchema = mcpObjectJsonSchema(
+  CancelBattleActionArgsSchema,
+);
 export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
 export const battleToolNames = {
@@ -102,6 +107,7 @@ export const battleToolNames = {
   resolveBattleAct: "resolve_battle_act",
   endTurn: "end_turn",
   endBattle: "end_battle",
+  cancelBattleAction: "cancel_battle_action",
 } as const;
 export const BATTLE_TOOL_NAMES = [
   battleToolNames.selectStatBlock,
@@ -113,6 +119,7 @@ export const BATTLE_TOOL_NAMES = [
   battleToolNames.resolveBattleAct,
   battleToolNames.endTurn,
   battleToolNames.endBattle,
+  battleToolNames.cancelBattleAction,
 ] as const;
 export type BattleToolName = (typeof BATTLE_TOOL_NAMES)[number];
 
@@ -137,6 +144,10 @@ type ResolveBattleActToolInput = {
 type EmptyToolInput = Record<string, never>;
 
 export type BattleToolCall =
+  | {
+      readonly name: typeof battleToolNames.cancelBattleAction;
+      readonly args: typeof CancelBattleActionArgsSchema.Type;
+    }
   | {
       readonly name: typeof battleToolNames.selectStatBlock;
       readonly args: SelectStatBlockToolInput;
@@ -232,6 +243,16 @@ export function decodeBattleToolCall(input: {
         name: battleToolNames.endTurn,
         args,
       })),
+    ),
+    Match.when(battleToolNames.cancelBattleAction, () =>
+      Result.map(
+        decodeBattleToolArgs(
+          CancelBattleActionArgsSchema,
+          input.args,
+          battleToolNames.cancelBattleAction,
+        ),
+        (args) => ({ name: battleToolNames.cancelBattleAction, args }),
+      ),
     ),
     Match.when(battleToolNames.endBattle, () =>
       Result.map(

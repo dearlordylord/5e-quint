@@ -11,6 +11,7 @@ import {
 import { characterToolNames } from "./character-tool-input.ts";
 import { diceToolNames } from "./dice-tool-input.ts";
 import {
+  BattleActionCancelledOutputSchema,
   BattlePresentationEnvelopeSchema,
   BattleLifecycleOutputSchema,
   BattleResolutionOutputSchema,
@@ -72,6 +73,14 @@ export function unresolvedInputsFrom(
     Match.when(battleToolNames.battleLifecycle, () =>
       battleLifecycleUnresolvedInputs(value),
     ),
+    Match.when(battleToolNames.cancelBattleAction, () => {
+      const decoded = Schema.decodeUnknownResult(
+        BattleActionCancelledOutputSchema,
+      )(value);
+      return Result.isFailure(decoded)
+        ? operationProjectionIssue(decoded.failure)
+        : Result.succeed([]);
+    }),
     Match.when(battleToolNames.readBattleState, () =>
       battleSessionUnresolvedInputs(value),
     ),

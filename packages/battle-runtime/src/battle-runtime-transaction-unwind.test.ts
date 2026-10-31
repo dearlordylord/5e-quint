@@ -11,6 +11,7 @@ import {
 
 import {
   admitBattleRuntimeTransactionOperation,
+  battlePendingActionCancellationForSession,
   battlePendingTransactionEnvelopeForSession,
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
@@ -620,6 +621,22 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "standalone Ready trigger report",
     );
+    expect(
+      battlePendingActionCancellationForSession(
+        report.transaction,
+        report.resolution.session,
+      ),
+    ).toEqual({ kind: "unavailable", reason: "nestedProcedure" });
+    const owner = {
+      transaction: report.transaction,
+      session: report.resolution.session,
+    };
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left: owner,
+        right: owner,
+      }),
+    ).toEqual({ tag: "compatible" });
     expect(report.frontier.kind).toBe("interruptDecision");
 
     const settled = settledByDeclining(report, fighterId);
@@ -988,6 +1005,22 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "Ready Dodge report",
     );
+    expect(
+      battlePendingActionCancellationForSession(
+        report.transaction,
+        report.resolution.session,
+      ),
+    ).toEqual({ kind: "unavailable", reason: "nestedProcedure" });
+    const owner = {
+      transaction: report.transaction,
+      session: report.resolution.session,
+    };
+    expect(
+      battlePendingTransactionReplayContextCompatibility({
+        left: owner,
+        right: owner,
+      }),
+    ).toEqual({ tag: "compatible" });
     const settled = settleBattleRuntimeTransaction({
       session: report.resolution.session,
       transaction: report.transaction,
@@ -1105,6 +1138,12 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "readied movement release",
     );
+    expect(
+      battlePendingActionCancellationForSession(
+        released.transaction,
+        released.resolution.session,
+      ),
+    ).toEqual({ kind: "unavailable", reason: "nestedProcedure" });
     const nestedMovement = movementWithoutOpportunityAttacks(
       requireHole(released, "movement"),
     );

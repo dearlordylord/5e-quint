@@ -10,6 +10,7 @@ import {
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { battleActionCancellationGuidance } from "./battle-action-cancellation-guidance.ts";
 import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
 import {
   BattleResolutionOutputSchema,
@@ -193,6 +194,7 @@ describe("MCP session wire projections", () => {
       Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
         envelope: envelope.success,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: {
           ...mcpSessionSummary(root.sessionStore.snapshot()),
           battleState: {
@@ -256,6 +258,7 @@ describe("MCP session wire projections", () => {
     expect(
       Schema.decodeUnknownResult(BattleSessionOutputSchema)({
         envelope: null,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
@@ -263,6 +266,7 @@ describe("MCP session wire projections", () => {
       Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "needsHoles" },
         envelope: presented.success,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
@@ -291,6 +295,7 @@ describe("MCP session wire projections", () => {
       Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
         envelope: presentedHoles.success,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
@@ -302,6 +307,7 @@ describe("MCP session wire projections", () => {
           message: "Retry the current frontier.",
         },
         envelope: presented.success,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toSatisfy((result) => Result.isSuccess(result));
@@ -313,6 +319,7 @@ describe("MCP session wire projections", () => {
           message: "Retry the current frontier.",
         },
         envelope: presented.success,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
@@ -327,6 +334,7 @@ describe("MCP session wire projections", () => {
     expect(
       Schema.decodeUnknownResult(BattleSessionOutputSchema)({
         envelope: forgedBattleIdEnvelope,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
@@ -334,6 +342,7 @@ describe("MCP session wire projections", () => {
       Schema.decodeUnknownResult(AdminSessionProjectionSchema)({
         battle: forgedBattleIdEnvelope,
         characters: [],
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
@@ -349,6 +358,7 @@ describe("MCP session wire projections", () => {
       Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
         envelope: forgedActorEnvelope,
+        actionCancellation: battleActionCancellationGuidance(root, session),
         session: activeSession,
       }),
     ).toEqual(Result.fail(expect.anything()));
