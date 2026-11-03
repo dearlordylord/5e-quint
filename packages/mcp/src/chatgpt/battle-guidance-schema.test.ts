@@ -109,12 +109,14 @@ describe("ChatGPT Battle guidance contract", () => {
           arguments: { expectedSelectionId: "battle-action-selection:1" },
         },
         areaInputs: [],
+        movementInputs: [],
       },
       {
         kind: "ordinaryContinuation",
         subject,
         cancellation: { kind: "unavailable", reason: "acceptedInput" },
         areaInputs: [],
+        movementInputs: [],
         routing: {
           kind: "unavailable",
           issue: errorContent("Synthetic unavailable operation", {

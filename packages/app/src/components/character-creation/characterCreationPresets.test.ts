@@ -1,8 +1,8 @@
 import {
-  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
-  PHASE1_WEAPON_SHORTSWORD_UNIT_ID
+  PHASE1_WEAPON_SPEAR_UNIT_ID
 } from "@dnd/character-creation-runtime"
 import { describe, expect, it } from "vitest"
 
@@ -22,8 +22,8 @@ describe("character creation presets", () => {
 
     expect(selectedWeaponMasteryUnitIds).toEqual([
       PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-      PHASE1_WEAPON_DAGGER_UNIT_ID,
-      PHASE1_WEAPON_SHORTSWORD_UNIT_ID
+      PHASE1_WEAPON_SPEAR_UNIT_ID,
+      PHASE1_WEAPON_FLAIL_UNIT_ID
     ])
   })
 })

@@ -17,6 +17,7 @@ import {
   GNOMISH_LINEAGE_CHOICE_KEY,
   GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  PHASE1_WEAPON_MASTERY_UNIT_IDS,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
@@ -122,26 +123,52 @@ const speciesReachabilityOptions: Readonly<
   Record<string, SpeciesReachabilityChoiceOptions>
 > = SPECIES_REACHABILITY_OPTIONS;
 
-// Weapon Mastery options whose battle-side mastery Units are admitted; the
-// census parks mastery_graze/nick/vex, so the default first-supported fill
-// could pick a battle-unsupported weapon.
-const FIGHTER_WEAPON_MASTERY_PREFERENCE = {
-  [testUnitChoiceSourceKey(
-    authoredUnitId("fighter_weapon_mastery"),
-    WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
-  )]: [
-    creationChoiceOptionId("weapon_longsword"),
-    creationChoiceOptionId("weapon_spear"),
-    creationChoiceOptionId("weapon_flail"),
-  ],
-} satisfies PreferredSupportedFillOptionIdsBySource;
-
 type ReachabilityFailure = {
   readonly speciesUnitId: UnitRecord["id"];
   readonly failingUnitId: UnitRecord["id"];
   readonly message: string;
 };
 describe("creation → battle admission reachability join", () => {
+  test.each(PHASE1_WEAPON_MASTERY_UNIT_IDS)(
+    "creation mastery %s reaches Battle admission",
+    (weaponUnitId) => {
+      const selectedWeapons = [
+        weaponUnitId,
+        ...PHASE1_WEAPON_MASTERY_UNIT_IDS.filter((id) => id !== weaponUnitId),
+      ].slice(0, 3);
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:mastery-reachability-${weaponUnitId}`,
+        unitLibrary,
+        progression: testProgression(
+          unitLibrary,
+          PHASE1_CLASS_FIGHTER_UNIT_ID,
+          1,
+        ),
+        fixtureOptionIds: manifestFixtureOptionIds,
+        preferredOptionIdsBySource: {
+          [testUnitChoiceSourceKey(
+            authoredUnitId("fighter_weapon_mastery"),
+            WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+          )]: selectedWeapons.map(creationChoiceOptionId),
+        },
+      });
+      const finalized = finalizeCharacterDraft({ draft, unitLibrary });
+      if (finalized.tag !== "ready") {
+        throw new Error(
+          `Mastery build must finalize: ${JSON.stringify(finalized)}`,
+        );
+      }
+      expect(
+        characterBattleSupportAdmission(
+          finalized.build,
+          unitLibrary,
+          undefined,
+          FIGHTER_ONE_CLASS_LEVELS,
+        ),
+      ).toMatchObject({ _tag: "Success" });
+    },
+  );
+
   test("every manifest species finalizes to a build battle admission accepts", () => {
     const failures: ReachabilityFailure[] = [];
 
@@ -163,7 +190,6 @@ describe("creation → battle admission reachability join", () => {
         speciesUnitId,
         fixtureOptionIds: manifestFixtureOptionIds,
         preferredOptionIdsBySource: {
-          ...FIGHTER_WEAPON_MASTERY_PREFERENCE,
           ...options.preferredOptionIdsBySource,
         },
         requirePreferredOptionForSource: (source) =>
