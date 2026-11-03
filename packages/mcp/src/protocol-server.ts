@@ -259,6 +259,79 @@ export function createDndMcpProtocolServer(
     requestIdentity.tag === "localProcess" ? "localProcess" : "hosted",
     toolSurface,
   );
+  return createProtocolServerHost({
+    applicationServices,
+    protocolDefinitions,
+    options,
+    requestIdentity,
+    toolSurface,
+  });
+}
+
+export type HostedMcpProtocolHostFactory = (
+  identity: RecoverableMcpProtocolServerOptions["requestIdentity"],
+) => McpProtocolServerHost<PlaySessionAccessFailure>;
+
+export function createHostedMcpProtocolHostFactory({
+  applicationServices,
+  playSessionRepository,
+  toolSurface,
+}: {
+  readonly applicationServices: McpApplicationServices;
+  readonly playSessionRepository: PlaySessionRepository;
+  readonly toolSurface: McpToolSurface;
+}): HostedMcpProtocolHostFactory {
+  // This owned wire snapshot excludes canonical schema symbols. Canonical
+  // conversion continues to use the original definitions in its own owner.
+  const protocolDefinitions = structuredClone(
+    buildAdvertisedToolDefinitions(
+      toolSurface === "chatgpt"
+        ? chatGptExecutionToolDefinitions
+        : toolDefinitions,
+      "hosted",
+      toolSurface,
+    ),
+  );
+  freezeAdvertisedMetadata(protocolDefinitions);
+  return (requestIdentity) =>
+    createProtocolServerHost({
+      applicationServices,
+      protocolDefinitions,
+      options: {
+        playSessionRepository,
+        requestIdentity,
+      },
+      requestIdentity,
+      toolSurface,
+    });
+}
+
+function freezeAdvertisedMetadata(value: object): void {
+  Object.freeze(value);
+  for (const child of Object.values(value)) {
+    if (
+      typeof child === "object" &&
+      child !== null &&
+      !Object.isFrozen(child)
+    ) {
+      freezeAdvertisedMetadata(child);
+    }
+  }
+}
+
+function createProtocolServerHost({
+  applicationServices,
+  protocolDefinitions,
+  options,
+  requestIdentity,
+  toolSurface,
+}: {
+  readonly applicationServices: McpApplicationServices;
+  readonly protocolDefinitions: readonly ProtocolToolDefinition[];
+  readonly options: McpProtocolServerOptions;
+  readonly requestIdentity: PlaySessionRequestIdentity;
+  readonly toolSurface: McpToolSurface;
+}): McpProtocolServerHost<PlaySessionAccessFailure> {
   const advertisedToolNames = new Set(
     protocolDefinitions.map((definition) => definition.name),
   );

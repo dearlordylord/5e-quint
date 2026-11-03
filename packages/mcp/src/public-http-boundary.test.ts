@@ -19,6 +19,64 @@ import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import type { SavedSessionAuthorizationService } from "./saved-session-authorization/service.ts";
 
 describe("public HTTP boundary", () => {
+  test("preserves malformed, initialization, notification and tool response statuses", async () => {
+    const repository = openRepository();
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+    });
+    const endpoint = await listen(server);
+    const post = (body: string) =>
+      fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+        },
+        body,
+      });
+    try {
+      const malformed = await post("{");
+      expect(malformed.status).toBe(400);
+      await malformed.body?.cancel();
+      const initialized = await post(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: {
+            protocolVersion: "2025-03-26",
+            capabilities: {},
+            clientInfo: { name: "status-parity", version: "0.1.0" },
+          },
+        }),
+      );
+      expect(initialized.status).toBe(200);
+      await initialized.body?.cancel();
+      const notification = await post(
+        JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }),
+      );
+      expect(notification.status).toBe(202);
+      await notification.body?.cancel();
+      const tool = await post(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 2,
+          method: "tools/call",
+          params: { name: "describe_mcp_workflow", arguments: {} },
+        }),
+      );
+      expect(tool.status).toBe(200);
+      expect(await tool.json()).toMatchObject({
+        jsonrpc: "2.0",
+        id: 2,
+        result: { content: expect.any(Array) },
+      });
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
   test.each(["application/json", "text/event-stream"])(
     "rejects MCP GET with %s before opening a server stream",
     async (accept) => {
