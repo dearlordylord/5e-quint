@@ -4,7 +4,7 @@ export function jsonContent(payload: unknown) {
     content: [
       {
         type: "text" as const,
-        text: JSON.stringify(serializablePayload, null, 2),
+        text: JSON.stringify(serializablePayload),
       },
     ] as const,
   };
