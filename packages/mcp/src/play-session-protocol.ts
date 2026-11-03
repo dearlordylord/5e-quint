@@ -7,19 +7,11 @@ import { Result, Schema } from "effect";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import { type PlaySessionCaller } from "./play-session-access.ts";
-import {
-  characterToolNames,
-  type CharacterToolName,
-} from "./character-tool-input.ts";
-import {
-  decodeDiceToolCall,
-  diceToolNames,
-  type DiceToolName,
-} from "./dice-tool-input.ts";
+import { type CharacterToolName } from "./character-tool-input.ts";
+import { type DiceToolName } from "./dice-tool-input.ts";
 import {
   decodePlaySessionId,
   type PlaySessionAccessFailure,
-  type PlaySessionCommand,
   type PlaySessionId,
   type PlaySessionRegistry,
 } from "./play-session.ts";
@@ -35,7 +27,11 @@ import {
   recoverableOperationResult,
   unavailablePlaySessionEnvelope,
 } from "./play-session-envelope.ts";
-import { createdCharacterDraftId } from "./play-session-command.ts";
+import {
+  retainedPlaySessionCommand,
+  creationCommandChangedState,
+  PLAY_SESSION_COMMAND_ADMISSION_VERSION,
+} from "./play-session-command.ts";
 import {
   battleSessionPayload,
   battlePresentationIssueContent,
@@ -246,17 +242,23 @@ export async function handlePlaySessionOperation(
       };
     },
     {
-      commandFor: (operation) =>
-        retainedPlaySessionCommand(
+      commandFor: (operation) => ({
+        ...retainedPlaySessionCommand(
           input,
           routed.success.operationArgs,
           operation.operationContent,
         ),
+        admissionVersion: PLAY_SESSION_COMMAND_ADMISSION_VERSION,
+      }),
       retain: (operation) =>
         input.recordOperation &&
         operation.commandRetention === "retain" &&
         isToolContent(operation.operationContent) &&
-        operation.operationContent.isError !== true,
+        operation.operationContent.isError !== true &&
+        creationCommandChangedState(
+          input.operationName,
+          operation.operationContent,
+        ),
       succeeded: (operation) =>
         isToolContent(operation.operationContent) &&
         operation.operationContent.isError !== true,
@@ -303,40 +305,6 @@ function readBattleEnvelopeForRoot(root: McpPlaySessionRoot) {
         ? null
         : Schema.encodeSync(BattlePresentationEnvelopeSchema)(payload.envelope),
   );
-}
-
-function retainedPlaySessionCommand(
-  input:
-    | {
-        readonly toolSurface?: never;
-        readonly operationName:
-          | CharacterToolName
-          | BattleToolName
-          | DiceToolName;
-      }
-    | {
-        readonly toolSurface: "chatgpt";
-        readonly operationName: ChatGptStatefulToolName;
-      },
-  args: Readonly<Record<string, unknown>>,
-  operationContent: unknown,
-): PlaySessionCommand {
-  if (input.operationName === characterToolNames.createCharacterDraft) {
-    const draftId = createdCharacterDraftId(operationContent);
-    return { name: input.operationName, args: { ...args, draftId } };
-  }
-  if (input.operationName === diceToolNames.rollDice) {
-    const decoded = decodeDiceToolCall({ name: input.operationName, args });
-    if (Result.isFailure(decoded)) {
-      throw new Error(
-        "A retained successful dice operation no longer decodes as its command.",
-      );
-    }
-    return { name: input.operationName, args: decoded.success.args };
-  }
-  return input.toolSurface === "chatgpt"
-    ? { toolSurface: "chatgpt", name: input.operationName, args }
-    : { name: input.operationName, args };
 }
 
 type RoutedArgs = {

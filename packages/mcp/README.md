@@ -98,6 +98,25 @@ applies the command, and commits against the expected revision; conflicts reload
 and retry. Disable Admin Mirror publication during reconstruction, then publish
 committed projections. Never persist derived summaries or another dice cursor.
 
+[Creation replay admission](src/recoverable-creation-admission.ts) owns the bounded
+format-3 compatibility policy for commands recorded before creation mastery
+admission was narrowed. Unmarked commands retain the formerly admitted Dagger
+and Shortsword mastery selections through the same typed creation handlers;
+the seven original mastery choices are frozen independently of the live list.
+New commands carry admission version 2 and use the live profile. Future changes
+to mastery admission require another command admission version. This is an
+explicit historical support-admission boundary, not name-based Battle dispatch.
+Recovery shares reconstructed state but returns the live profile before a new
+operation. Existing records and selected identities are not rewritten, and Battle
+still rejects unsupported mastery execution. Rejected creation fills and
+non-ready finalization attempts do not change state and are no longer retained;
+rejected gameplay inputs keep their existing retention behavior. Unknown command
+admission versions are rejected by the persisted schema. This policy covers the
+known format-3 narrowing, not arbitrary future support changes. Unmarked
+commands written during a release that already narrowed support cannot encode
+whether that release accepted a selection; they require deployment evidence
+rather than an inferred history.
+
 DRDice recovery retains the Seed, Dice Group Semantic Profile, PRNG Sequence
 Profile, and State Schema Identity. Incompatible databases are retained in
 `retired_unowned_play_sessions_v1` or `retired_effect_random_play_sessions_v2`;

@@ -1,3 +1,4 @@
+import type { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
 import type { ChatGptStateOperationName } from "./chatgpt/protocol-operation.ts";
 import { randomUUID } from "node:crypto";
 
@@ -123,7 +124,9 @@ export type SavedPlaySessionSummary = {
   readonly tenure: Extract<PlaySessionTenureProjection, { tag: "saved" }>;
 };
 
-export type PlaySessionCommand =
+export type PlaySessionCommand = {
+  readonly admissionVersion?: typeof PLAY_SESSION_COMMAND_ADMISSION_VERSION;
+} & (
   | {
       readonly toolSurface?: never;
       readonly name: CharacterToolName | BattleToolName;
@@ -138,7 +141,8 @@ export type PlaySessionCommand =
       readonly toolSurface: "chatgpt";
       readonly name: ChatGptStateOperationName;
       readonly args: Readonly<Record<string, unknown>>;
-    };
+    }
+);
 
 export type PlaySessionCommandRetention<A> = {
   readonly commandFor: (result: A) => PlaySessionCommand;
