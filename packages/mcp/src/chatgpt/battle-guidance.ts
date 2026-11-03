@@ -8,6 +8,7 @@ import {
   battlePendingTransactionReplaySessionForSession,
   type BattleState,
   type BattleHole,
+  type BattleSubject,
 } from "@dnd/battle-runtime";
 import { Match, Result, type Schema } from "effect";
 import { errorContent } from "../tool-content.ts";
@@ -62,9 +63,16 @@ function routingTools(
   );
 }
 
-export function battleMovementInputGuidance(hole: BattleHole) {
+export function battleMovementInputGuidance(
+  subject: BattleSubject,
+  hole: BattleHole,
+) {
   if (
+    subject.tag !== "runtimeCommand" ||
+    (subject.command !== "move" &&
+      subject.command !== "releaseReadiedMovement") ||
     hole.kind !== "movement" ||
+    hole.brutalStrikeForcefulBlow !== undefined ||
     hole.movementBudgetFeet < 5 ||
     !hole.speedKinds.some(
       (speed) => speed.kind === "walk" && speed.movementBudgetFeet >= 5,
@@ -137,7 +145,9 @@ export function chatGptBattleGuidance(
       return {
         kind: "ordinaryContinuation" as const,
         areaInputs: frontier.holes.flatMap(battleAreaInputGuidance),
-        movementInputs: frontier.holes.flatMap(battleMovementInputGuidance),
+        movementInputs: frontier.holes.flatMap((hole) =>
+          battleMovementInputGuidance(frontier.replaySubject, hole),
+        ),
         cancellation: battleActionCancellationGuidance(root, battle.session),
         subject: frontier.replaySubject,
         routing: operationRouting(route),

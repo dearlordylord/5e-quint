@@ -2,7 +2,11 @@ import { CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES } from "../../test-support/tool
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Result, Schema } from "effect";
-import { BattleFillSchema, BattleHoleSchema } from "@dnd/battle-runtime";
+import {
+  BattleFillSchema,
+  BattleHoleSchema,
+  BattleSubjectSchema,
+} from "@dnd/battle-runtime";
 import { describe, expect, it } from "vitest";
 import {
   createDraft2020JsonSchemaValidator,
@@ -30,6 +34,7 @@ import {
   targetFill,
   goblinId,
   battleProcedureExecutionRefForTest,
+  battleEffectExecutionRefForTest,
 } from "../../../battle-runtime/src/battle-runtime.test-support.ts";
 
 import {
@@ -392,16 +397,44 @@ describe("ChatGPT tool surface", () => {
     const movementHole = (changes: object) =>
       Schema.decodeUnknownSync(BattleHoleSchema)({ ...hole, ...changes });
     expect(
-      battleMovementInputGuidance(movementHole({ speedKinds: [] })),
-    ).toEqual([]);
-    expect(
-      battleMovementInputGuidance(movementHole({ movementBudgetFeet: 4 })),
+      battleMovementInputGuidance(
+        selected.envelope.frontier.replaySubject,
+        movementHole({ speedKinds: [] }),
+      ),
     ).toEqual([]);
     expect(
       battleMovementInputGuidance(
+        selected.envelope.frontier.replaySubject,
+        movementHole({ movementBudgetFeet: 4 }),
+      ),
+    ).toEqual([]);
+    expect(
+      battleMovementInputGuidance(
+        selected.envelope.frontier.replaySubject,
         movementHole({ speedKinds: [{ kind: "walk", movementBudgetFeet: 4 }] }),
       ),
     ).toEqual([]);
+    const subject = selected.envelope.frontier.replaySubject;
+    const constrainedHole = movementHole({
+      brutalStrikeForcefulBlow: {
+        kind: "brutalStrikeForcefulBlowStraightTowardTarget",
+        targetId: fighterId,
+      },
+    });
+    expect(battleMovementInputGuidance(subject, constrainedHole)).toEqual([]);
+    for (const command of [
+      "executeCompelledApproach",
+      "executeCompelledFlee",
+      "fixedCostMovementReplacement",
+    ]) {
+      const constrainedSubject = Schema.decodeUnknownSync(BattleSubjectSchema)({
+        tag: "runtimeCommand",
+        command,
+        actorId: fighterId,
+        effectRef: battleEffectExecutionRefForTest("synthetic-movement"),
+      });
+      expect(battleMovementInputGuidance(constrainedSubject, hole)).toEqual([]);
+    }
     expect(
       jsonContentPayload(
         CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
