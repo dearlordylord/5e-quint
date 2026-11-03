@@ -97,6 +97,7 @@ const EXPECTED_OBSERVED_ROOT_IDS = [
   "rogue_uncanny_dodge",
   "species_dragonborn_breath_weapon",
   "species_dragonborn_damage_resistance",
+  "species_gnome_gnomish_cunning",
   "species_goliath_powerful_build",
   "species_halfling_brave",
   "species_halfling_luck",

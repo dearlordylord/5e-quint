@@ -1,3 +1,4 @@
+import { passiveSavingThrowRollModeDisposition } from "../unit-feature-execution-constants.ts";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { Ability, Condition } from "@dnd/shared/types";
 import type {
@@ -304,21 +305,22 @@ function passiveSavingThrowRollModeDispositionForTarget(
   if (target.origin.kind !== "character") return null;
 
   const targetIncapacitated = isIncapacitated(target.conditions);
+  let suppressed = false;
   for (const { procedure } of characterUnitProcedureBindings(
     target.origin.execution,
   )) {
     if (procedure.kind !== "unitFeature") continue;
     if (procedure.execution.kind !== "passiveSavingThrowRollMode") continue;
-    const savingThrow = procedure.execution.savingThrow;
-    if (savingThrow.scope.kind === "condition") {
-      if (savingThrow.scope.condition === condition) return "projected";
-      continue;
-    }
-    if (savingThrow.scope.ability !== ability) continue;
-    if (savingThrow.scope.suppressedByCondition !== "incapacitated") continue;
-    return targetIncapacitated ? "suppressed" : "projected";
+    const disposition = passiveSavingThrowRollModeDisposition(
+      procedure.execution.savingThrow,
+      ability,
+      condition,
+      targetIncapacitated,
+    );
+    if (disposition === "projected") return "projected";
+    suppressed ||= disposition === "suppressed";
   }
-  return null;
+  return suppressed ? "suppressed" : null;
 }
 
 function passiveSavingThrowEndTurnRouteContext(

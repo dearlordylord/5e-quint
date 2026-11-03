@@ -5005,26 +5005,52 @@ export function passiveSavingThrowRollModeProfileForUnit(
     };
   }
   if (
-    unit.kind === "species_trait" &&
-    saveAbilityFilter !== null &&
-    sameStringSet(saveAbilityFilter, []) &&
-    suppressor === undefined &&
-    extraSuppressors.length === 0
+    unit.kind !== "species_trait" ||
+    suppressor !== undefined ||
+    extraSuppressors.length !== 0
   ) {
-    const condition = passiveConditionSavingThrowRollModeCondition(
-      effect.conditionFilter,
-    );
-    return condition === null
-      ? null
-      : {
-          mode: "advantage",
-          scope: {
-            kind: "condition",
-            condition,
-          },
-        };
+    return null;
   }
-  return null;
+  return unsuppressedSpeciesSavingThrowRollModeProfile(
+    saveAbilityFilter,
+    effect.conditionFilter,
+  );
+}
+
+function unsuppressedSpeciesSavingThrowRollModeProfile(
+  saveAbilityFilter: readonly Ability[] | null,
+  conditionFilter: Extract<
+    EffectAtom,
+    { readonly kind: "modify_roll_advantage" }
+  >["conditionFilter"],
+): Extract<
+  PassiveSavingThrowRollModeProfile,
+  { readonly scope: { readonly kind: "savingThrowAbilities" | "condition" } }
+> | null {
+  const [firstSaveAbility, ...remainingSaveAbilities] = saveAbilityFilter ?? [];
+  if (firstSaveAbility !== undefined && conditionFilter === undefined) {
+    return {
+      mode: "advantage",
+      scope: {
+        kind: "savingThrowAbilities",
+        abilities: [firstSaveAbility, ...remainingSaveAbilities],
+      },
+    };
+  }
+  if (saveAbilityFilter === null || !sameStringSet(saveAbilityFilter, [])) {
+    return null;
+  }
+  const condition =
+    passiveConditionSavingThrowRollModeCondition(conditionFilter);
+  return condition === null
+    ? null
+    : {
+        mode: "advantage",
+        scope: {
+          kind: "condition",
+          condition,
+        },
+      };
 }
 
 function passiveConditionSavingThrowRollModeCondition(

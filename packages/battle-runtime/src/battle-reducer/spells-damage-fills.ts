@@ -37,7 +37,7 @@ import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import { type Condition, type DieRollResult } from "@dnd/shared/types";
 import type { Ability, DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import type { PassiveSavingThrowRollModeProfile } from "../unit-feature-execution-constants.ts";
+import { passiveSavingThrowRollModeDisposition } from "../unit-feature-execution-constants.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
   spellBurstDamageExpression,
@@ -1715,12 +1715,12 @@ function passiveSavingThrowRollModeProjection(
     ({ procedure }) =>
       procedure.kind === "unitFeature" &&
       procedure.execution.kind === "passiveSavingThrowRollMode" &&
-      passiveSavingThrowRollModeScopeMatches(
+      passiveSavingThrowRollModeDisposition(
         procedure.execution.savingThrow,
         ability,
         condition,
         isIncapacitated(target.conditions),
-      ),
+      ) === "projected",
   );
   const execution =
     binding?.procedure.kind === "unitFeature"
@@ -1732,22 +1732,6 @@ function passiveSavingThrowRollModeProjection(
         targetId,
         rollMode: execution.savingThrow.mode,
       };
-}
-
-function passiveSavingThrowRollModeScopeMatches(
-  profile: PassiveSavingThrowRollModeProfile,
-  ability: Ability,
-  condition: Condition | undefined,
-  targetIncapacitated: boolean,
-): boolean {
-  if (profile.scope.kind === "savingThrowAbility") {
-    return (
-      profile.scope.ability === ability &&
-      profile.scope.suppressedByCondition === "incapacitated" &&
-      !targetIncapacitated
-    );
-  }
-  return profile.scope.condition === condition;
 }
 
 export function validateSpellDamageFill(

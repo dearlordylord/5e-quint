@@ -201,6 +201,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -377,6 +381,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -550,6 +558,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -726,6 +738,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -902,6 +918,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -1073,6 +1093,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
@@ -1244,6 +1268,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
@@ -1415,6 +1443,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.attack-damage-rider",
@@ -1590,6 +1622,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.innate-sorcery-activation",
@@ -1796,6 +1832,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -1972,6 +2012,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -2145,6 +2189,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.passive-saving-throw-roll-mode",
@@ -2316,6 +2364,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -2487,6 +2539,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.first-attack-roll-reckless-advantage",
@@ -2663,6 +2719,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -2839,6 +2899,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
@@ -3010,6 +3074,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.action-surge-resource",
@@ -3181,6 +3249,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
@@ -3352,6 +3424,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.failed-ability-check-resource-boost",
@@ -3523,6 +3599,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
@@ -3694,6 +3774,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.passive-speed-bonus",
@@ -3865,6 +3949,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.alternate-action-cost",
@@ -4036,6 +4124,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.attack-damage-rider",
@@ -4211,6 +4303,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
             }
           ],
           "profileId": "unit-feature.innate-sorcery-activation",

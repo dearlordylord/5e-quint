@@ -1,3 +1,4 @@
+import { Match } from "effect";
 export const LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE =
   "lightExtraAttackDamageAbilityModifier";
 export const DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID =
@@ -195,6 +196,13 @@ export type PassiveSavingThrowRollModeProfile =
   | {
       readonly mode: "advantage";
       readonly scope: {
+        readonly kind: "savingThrowAbilities";
+        readonly abilities: readonly [Ability, ...Ability[]];
+      };
+    }
+  | {
+      readonly mode: "advantage";
+      readonly scope: {
         readonly kind: "savingThrowAbility";
         readonly ability: "dex";
         readonly suppressedByCondition: "incapacitated";
@@ -207,6 +215,29 @@ export type PassiveSavingThrowRollModeProfile =
         readonly condition: "poisoned" | "frightened";
       };
     };
+export function passiveSavingThrowRollModeDisposition(
+  profile: PassiveSavingThrowRollModeProfile,
+  ability: Ability,
+  condition: Condition | undefined,
+  targetIncapacitated: boolean,
+): "projected" | "suppressed" | null {
+  return Match.value(profile.scope).pipe(
+    Match.when({ kind: "savingThrowAbilities" }, ({ abilities }) =>
+      abilities.includes(ability) ? "projected" : null,
+    ),
+    Match.when({ kind: "savingThrowAbility" }, (scope) =>
+      scope.ability !== ability
+        ? null
+        : targetIncapacitated
+          ? "suppressed"
+          : "projected",
+    ),
+    Match.when({ kind: "condition" }, (scope) =>
+      scope.condition === condition ? "projected" : null,
+    ),
+    Match.exhaustive,
+  );
+}
 export const BRUTAL_STRIKE_SUPPORT_PROFILE = "brutalStrike";
 export const BRUTAL_STRIKE_ROLL_DECISION_CHOICES = ["use", "decline"] as const;
 export type BrutalStrikeRollDecisionChoice =

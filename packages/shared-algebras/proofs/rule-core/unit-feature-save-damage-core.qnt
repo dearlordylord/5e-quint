@@ -10,6 +10,7 @@ module unitFeatureSaveDamageCore {
   // - classes.md: Danger Sense.
   // - classes.md and classes.md: Evasion.
   // - .references/srd-5.2.1/character-origins.md:172 Dwarven Resilience.
+  // - .references/srd-5.2.1/character-origins.md:245 Gnomish Cunning.
   // - .references/srd-5.2.1/character-origins.md:276 Goliath Powerful Build.
   // - playing-the-game.md: Saving Throws and Damage.
   // - rules-glossary.md: Saving Throw and Incapacitated.
@@ -30,6 +31,10 @@ module unitFeatureSaveDamageCore {
   type PassiveSavingThrowRollModeProfile =
     | DexterityNotIncapacitatedSavingThrowAdvantageProfile
     | PoisonedConditionSavingThrowAdvantageProfile
+    | SavingThrowAbilitiesAdvantageProfile({
+        ability: SavingThrowAbilityFact,
+        additionalAbilities: Set[SavingThrowAbilityFact],
+      })
 
   type PassiveAbilityCheckRollMode =
     | NormalAbilityCheckMode
@@ -115,6 +120,11 @@ module unitFeatureSaveDamageCore {
           AdvantageSavingThrowMode
         else
           NormalSavingThrowMode
+      | SavingThrowAbilitiesAdvantageProfile(abilities) =>
+        if (
+          facts.savingThrowAbility == abilities.ability or
+          abilities.additionalAbilities.contains(facts.savingThrowAbility)
+        ) AdvantageSavingThrowMode else NormalSavingThrowMode
     }
 
   pure def passiveAbilityCheckRollMode(

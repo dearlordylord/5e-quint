@@ -62,8 +62,8 @@
       "value": 449
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 242,
-      "numerator": 234,
+      "denominator": 243,
+      "numerator": 235,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
@@ -92,9 +92,9 @@
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 228,
-      "numerator": 186,
-      "percent": "81.6%"
+      "denominator": 229,
+      "numerator": 187,
+      "percent": "81.7%"
     },
     "runtimeMappingCoverage": {
       "denominator": 170,
@@ -107,14 +107,14 @@
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 205,
+      "denominator": 206,
       "numerator": 201,
-      "percent": "98%"
+      "percent": "97.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 399,
-      "numerator": 242,
-      "percent": "60.7%"
+      "numerator": 243,
+      "percent": "60.9%"
     }
   },
   "metricSemantics": [
@@ -12028,9 +12028,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 228,
-          "numerator": 186,
-          "percent": "81.6%"
+          "denominator": 229,
+          "numerator": 187,
+          "percent": "81.7%"
         }
       },
       "units": [
@@ -17813,6 +17813,28 @@
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 }
               ],
+              "profileId": "unit-feature.passive-saving-throw-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_gnome_gnomish_cunning"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.passive-ability-check-roll-mode",
               "profileKind": "passive",
               "qntOwners": [
@@ -18402,7 +18424,7 @@
       "evidenceTag": "selected-identity-replay"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 5,
+    "rowCount": 6,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -18488,6 +18510,23 @@
           "tag": "supported-profile"
         },
         "unitId": "mastery_slow"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-replay evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.passive-saving-throw-roll-mode"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "species_gnome_gnomish_cunning"
       }
     ]
   },
@@ -36298,19 +36337,71 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future passive saving-throw ability-filter roll-mode owner",
-          "reason": "The Surface shape carries the exact saveAbilityFilter source fact. Battle admission must promote that typed fact through a narrowed support profile before reducers consume it."
-        },
-        "reason": "Gnomish Cunning is authored as passive Advantage on Intelligence, Wisdom, and Charisma Saving Throws, but the promoted passive-saving-throw roll-mode profile currently admits condition-scoped Poisoned saves rather than an arbitrary save ability filter.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.passive-saving-throw-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives unsuppressed Saving Throw Advantage from the parsed passive saveAbilityFilter without dispatching on authored identity.",
+          "Battle runtime projects Advantage on Intelligence, Wisdom, and Charisma Saving Throws, including while Incapacitated, and leaves Strength, Dexterity, and Constitution Saving Throws unchanged."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "GNOME-GNOMISH-CUNNING"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE",
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+          ],
+          "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
       "unitId": "species_gnome_gnomish_cunning"
     },

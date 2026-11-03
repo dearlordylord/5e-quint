@@ -75,6 +75,32 @@ module unitFeatureSaveDamageCoreExamples {
     }
   }
 
+  run test_gnomish_cunning_grants_only_mental_saving_throw_advantage_even_when_incapacitated = {
+    val mentalAbilities = Set(
+      IntelligenceSavingThrowFact, WisdomSavingThrowFact, CharismaSavingThrowFact
+    )
+    val physicalAbilities = Set(
+      StrengthSavingThrowFact, DexteritySavingThrowFact, ConstitutionSavingThrowFact
+    )
+    val profile = SavingThrowAbilitiesAdvantageProfile({
+      ability: IntelligenceSavingThrowFact,
+      additionalAbilities: Set(WisdomSavingThrowFact, CharismaSavingThrowFact),
+    })
+    assert(Set(true, false).forall(incapacitated =>
+      Set(NoSavingThrowConditionFact, PoisonedSavingThrowConditionFact).forall(condition =>
+        mentalAbilities.union(physicalAbilities).forall(ability =>
+          passiveSavingThrowRollMode({
+            profile: profile,
+            savingThrowAbility: ability,
+            savingThrowCondition: condition,
+            incapacitated: incapacitated,
+          }) == (if (mentalAbilities.contains(ability))
+            AdvantageSavingThrowMode else NormalSavingThrowMode)
+        )
+      )
+    ))
+  }
+
   run test_powerful_build_grants_ability_check_advantage_to_end_grappled_only = {
     all {
       assert(passiveAbilityCheckRollMode({

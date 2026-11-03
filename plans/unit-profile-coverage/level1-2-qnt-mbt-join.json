@@ -509,6 +509,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -606,6 +610,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -703,6 +711,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -913,6 +925,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -1010,6 +1026,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3412,6 +3432,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3563,6 +3587,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3660,6 +3688,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -6283,6 +6315,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -6412,6 +6448,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -8199,6 +8239,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -8323,6 +8367,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -9504,6 +9552,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",

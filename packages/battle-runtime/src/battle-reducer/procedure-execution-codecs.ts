@@ -357,6 +357,13 @@ export const PassiveSavingThrowRollModeProcedureExecutionSchema = Schema.Struct(
       Schema.Struct({
         mode: Schema.Literal("advantage"),
         scope: Schema.Struct({
+          kind: Schema.Literal("savingThrowAbilities"),
+          abilities: Schema.NonEmptyArray(AbilitySchema),
+        }),
+      }),
+      Schema.Struct({
+        mode: Schema.Literal("advantage"),
+        scope: Schema.Struct({
           kind: Schema.Literal("savingThrowAbility"),
           ability: Schema.Literal("dex"),
           suppressedByCondition: Schema.Literal("incapacitated"),

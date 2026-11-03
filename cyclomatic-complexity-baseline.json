@@ -278,8 +278,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/passive-projection-routes.ts": {
       "module/binding:passiveProjectionRouteForDiscoveredAct": 10,
-      "module/binding:passiveProjectionRouteForResolution": 17,
-      "module/binding:passiveSavingThrowRollModeDispositionForTarget": 10
+      "module/binding:passiveProjectionRouteForResolution": 17
     },
     "packages/battle-runtime/src/battle-reducer/persistent-spatial-spell-procedures.ts": {
       "module/binding:resolveDirectionalPersistentAreaDirectionChangeCommand": 12,
@@ -645,7 +644,7 @@
       "module/binding:passiveAbilityCheckRollModeProfileForUnit": 25,
       "module/binding:passiveArmorClassBonusProfileForUnit": 10,
       "module/binding:passiveRangedAttackRollBonusProfileForUnit": 11,
-      "module/binding:passiveSavingThrowRollModeProfileForUnit": 40,
+      "module/binding:passiveSavingThrowRollModeProfileForUnit": 37,
       "module/binding:passiveSpeedBonusConditionForEquipmentPredicate": 9,
       "module/binding:passiveSpeedBonusProfileForPassiveMechanics": 9,
       "module/binding:passiveSpeedKindGrantsForPassiveMechanics": 12,

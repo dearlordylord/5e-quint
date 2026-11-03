@@ -69,12 +69,6 @@ const KNOWN_ADMISSION_FAILURES = [
     claimTag: "unsupported-profile",
     message: "Unsupported battle Weapon Mastery Unit hook: mastery_vex.",
   },
-  {
-    unitId: unitId("species_gnome_gnomish_cunning"),
-    claimTag: "unsupported-profile",
-    message:
-      "Unsupported battle passive Saving Throw roll-mode Unit hook: species_gnome_gnomish_cunning.",
-  },
 ] as const satisfies ReadonlyArray<KnownAdmissionFailure>;
 
 describe("unit support admission census", () => {

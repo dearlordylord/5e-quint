@@ -47,10 +47,7 @@ import { characterBattleSupportAdmission } from "./battle-support-profiles.ts";
  * names the exact failing trait Unit rather than only the build. A species
  * with new mandatory creation choices fails loudly in
  * `SPECIES_REACHABILITY_OPTIONS` until its entry is added — also the gate
- * working. Known failures carry a structured `claimTag` citing the Unit's row
- * in plans/unit-profile-coverage/unit-claims.jsonl (the parked checker join
- * consumes them); gnome/gnomish_cunning is the day-one entry and leaves when
- * its #529 modeling task lands.
+ * working.
  */
 const catalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -144,26 +141,6 @@ type ReachabilityFailure = {
   readonly failingUnitId: UnitRecord["id"];
   readonly message: string;
 };
-type KnownReachabilityFailure = ReachabilityFailure & {
-  // Tier 3's parked coverage-checker join consumes this citation metadata;
-  // runtime equality below intentionally compares only observed failures.
-  readonly claimTag:
-    | "not-applicable"
-    | "profile-subset-supported"
-    | "supported-profile"
-    | "unsupported-profile";
-};
-
-const KNOWN_REACHABILITY_FAILURES = [
-  {
-    speciesUnitId: authoredUnitId("species_gnome"),
-    failingUnitId: authoredUnitId("species_gnome_gnomish_cunning"),
-    claimTag: "unsupported-profile",
-    message:
-      "Unsupported battle passive Saving Throw roll-mode Unit hook: species_gnome_gnomish_cunning.",
-  },
-] as const satisfies ReadonlyArray<KnownReachabilityFailure>;
-
 describe("creation → battle admission reachability join", () => {
   test("every manifest species finalizes to a build battle admission accepts", () => {
     const failures: ReachabilityFailure[] = [];
@@ -250,27 +227,7 @@ describe("creation → battle admission reachability join", () => {
       }
     }
 
-    expect(
-      failures
-        .filter(
-          (failure, index, all) =>
-            all.findIndex(
-              (candidate) =>
-                candidate.speciesUnitId === failure.speciesUnitId &&
-                candidate.failingUnitId === failure.failingUnitId &&
-                candidate.message === failure.message,
-            ) === index,
-        )
-        .sort(compareReachabilityFailures),
-    ).toEqual(
-      KNOWN_REACHABILITY_FAILURES.map(
-        ({ speciesUnitId, failingUnitId, message }) => ({
-          speciesUnitId,
-          failingUnitId,
-          message,
-        }),
-      ).sort(compareReachabilityFailures),
-    );
+    expect(failures).toEqual([]);
   });
 });
 
@@ -290,15 +247,5 @@ function failingUnitIdFromIssueMessage(
   }
   throw new Error(
     `Battle admission issue did not identify an emitted Unit ref: ${message}`,
-  );
-}
-
-function compareReachabilityFailures(
-  left: ReachabilityFailure,
-  right: ReachabilityFailure,
-): number {
-  return (
-    left.speciesUnitId.localeCompare(right.speciesUnitId) ||
-    left.failingUnitId.localeCompare(right.failingUnitId)
   );
 }

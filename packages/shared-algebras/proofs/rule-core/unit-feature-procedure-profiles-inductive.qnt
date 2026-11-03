@@ -484,7 +484,10 @@ module unitFeatureProcedureProfilesInductive {
     nondet savingThrowAbility = Set(
       StrengthSavingThrowFact,
       DexteritySavingThrowFact,
-      ConstitutionSavingThrowFact
+      ConstitutionSavingThrowFact,
+      IntelligenceSavingThrowFact,
+      WisdomSavingThrowFact,
+      CharismaSavingThrowFact
     ).oneOf()
     nondet savingThrowCondition = Set(
       NoSavingThrowConditionFact,
@@ -492,7 +495,11 @@ module unitFeatureProcedureProfilesInductive {
     ).oneOf()
     nondet profile = Set(
       DexterityNotIncapacitatedSavingThrowAdvantageProfile,
-      PoisonedConditionSavingThrowAdvantageProfile
+      PoisonedConditionSavingThrowAdvantageProfile,
+      SavingThrowAbilitiesAdvantageProfile({
+        ability: IntelligenceSavingThrowFact,
+        additionalAbilities: Set(WisdomSavingThrowFact, CharismaSavingThrowFact),
+      })
     ).oneOf()
     val mode = passiveSavingThrowRollMode({
       profile: profile,

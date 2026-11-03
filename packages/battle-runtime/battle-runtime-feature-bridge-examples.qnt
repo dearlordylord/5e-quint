@@ -126,6 +126,25 @@ module battleRuntimeFeatureBridgeExamples {
     }
   }
 
+  run test_ability_filtered_saving_throw_projection_preserves_unsuppressed_scope = {
+    val profile = SavingThrowAbilitiesAdvantageProfile({
+      ability: IntelligenceSavingThrowFact,
+      additionalAbilities: Set(WisdomSavingThrowFact, CharismaSavingThrowFact),
+    })
+    all {
+      assert(Set(IntelligenceSavingThrowFact, WisdomSavingThrowFact, CharismaSavingThrowFact)
+        .forall(ability => Set(true, false).forall(incapacitated =>
+          battleRuntimePassiveSavingThrowRollMode(
+            profile, ability, NoSavingThrowConditionFact, incapacitated
+          ) == AdvantageSavingThrowMode
+        ))),
+      assert(Set(StrengthSavingThrowFact, DexteritySavingThrowFact, ConstitutionSavingThrowFact)
+        .forall(ability => battleRuntimePassiveSavingThrowRollMode(
+          profile, ability, NoSavingThrowConditionFact, false
+        ) == NormalSavingThrowMode)),
+    }
+  }
+
   run test_passive_ability_check_roll_mode_runtime_projection_uses_feature_profile = {
     all {
       assert(battleRuntimePassiveAbilityCheckRollMode(
