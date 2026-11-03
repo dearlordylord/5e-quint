@@ -1121,17 +1121,13 @@ describe("recoverable Play Session protocol", () => {
       expect(failed.content).toEqual([
         {
           type: "text",
-          text: JSON.stringify(
-            {
-              error: "Play Session storage is unavailable.",
-              details: {
-                code: "PLAY_SESSION_STORAGE_FAILURE",
-                reason: "closed",
-              },
+          text: JSON.stringify({
+            error: "Play Session storage is unavailable.",
+            details: {
+              code: "PLAY_SESSION_STORAGE_FAILURE",
+              reason: "closed",
             },
-            null,
-            2,
-          ),
+          }),
         },
       ]);
       expect(failed.structuredContent).toBeUndefined();

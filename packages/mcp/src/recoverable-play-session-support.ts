@@ -1,5 +1,7 @@
+import { formatThreeCreationReplayProfile } from "./recoverable-creation-admission.ts";
 import { CHATGPT_EXECUTION_TOOLS } from "./chatgpt/tool-surface.ts";
-import { Result } from "effect";
+import { Result, Match } from "effect";
+import { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
 
 import {
   publishAdminProjectionBestEffort,
@@ -46,11 +48,25 @@ export function rootFromRecord(
     adminMirrorSessionId(record.playSessionId),
     record.diceReplay.seed,
   );
+  const historicalRoot = {
+    ...root,
+    characterCreationSupportProfile: formatThreeCreationReplayProfile(
+      root.characterCreationSupportProfile,
+    ),
+  };
   for (const operation of record.operations) {
+    const operationRoot = Match.value(operation.admissionVersion).pipe(
+      Match.when(undefined, () => historicalRoot),
+      Match.when(PLAY_SESSION_COMMAND_ADMISSION_VERSION, () => root),
+      Match.exhaustive,
+    );
     const replayed =
       operation.toolSurface === "chatgpt"
-        ? CHATGPT_EXECUTION_TOOLS[operation.name].handle(root, operation.args)
-        : handleToolCall(root, operation.name, operation.args);
+        ? CHATGPT_EXECUTION_TOOLS[operation.name].handle(
+            operationRoot,
+            operation.args,
+          )
+        : handleToolCall(operationRoot, operation.name, operation.args);
     if ("isError" in replayed && replayed.isError === true) {
       return Result.fail({
         tag: "playSessionRepositoryIssue",

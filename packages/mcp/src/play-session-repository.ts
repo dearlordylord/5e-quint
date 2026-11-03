@@ -1,3 +1,4 @@
+import { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
 import { CHATGPT_STATE_OPERATION_NAMES } from "./chatgpt/protocol-operation.ts";
 import { Result, Schema } from "effect";
 
@@ -29,16 +30,25 @@ const RecoverableStateOperationNameSchema = Schema.Literals([
 const RecoverablePlaySessionOperationsSchema = Schema.Array(
   Schema.Union([
     Schema.Struct({
+      admissionVersion: Schema.optionalKey(
+        Schema.Literal(PLAY_SESSION_COMMAND_ADMISSION_VERSION),
+      ),
       toolSurface: Schema.Literal("chatgpt"),
       name: Schema.Literals(CHATGPT_STATE_OPERATION_NAMES),
       args: Schema.JsonObject,
     }),
     Schema.Struct({
+      admissionVersion: Schema.optionalKey(
+        Schema.Literal(PLAY_SESSION_COMMAND_ADMISSION_VERSION),
+      ),
       toolSurface: Schema.optionalKey(Schema.Never),
       name: RecoverableStateOperationNameSchema,
       args: Schema.JsonObject,
     }),
     Schema.Struct({
+      admissionVersion: Schema.optionalKey(
+        Schema.Literal(PLAY_SESSION_COMMAND_ADMISSION_VERSION),
+      ),
       toolSurface: Schema.optionalKey(Schema.Never),
       name: Schema.Literal(diceToolNames.rollDice),
       args: RollDiceArgsSchema,
