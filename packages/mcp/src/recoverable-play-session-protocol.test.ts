@@ -1267,9 +1267,9 @@ describe("recoverable Play Session protocol", () => {
         throw new Error("Expected a typed stored-record failure response.");
       }
       expect(failed.content[0].type).toBe("text");
-      expect(failed.content[0].text).toEqual(
-        expect.stringContaining('"reason": "invalidStoredRecord"'),
-      );
+      expect(JSON.parse(String(failed.content[0].text))).toMatchObject({
+        details: { reason: "invalidStoredRecord" },
+      });
       expect(failed.structuredContent).toBeUndefined();
     } finally {
       await recoveredConnection.close();

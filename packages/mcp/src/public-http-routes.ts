@@ -1,12 +1,9 @@
-import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { type IncomingMessage, type ServerResponse } from "node:http";
 
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Result } from "effect";
 
-import type { McpApplicationServices } from "./composition-root.ts";
-import { createDndMcpProtocolServer } from "./protocol-server.ts";
-import type { PlaySessionRepository } from "./recoverable-play-session.ts";
+import type { HostedMcpProtocolHostFactory } from "./protocol-server.ts";
 import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-repository.ts";
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import type { PlaySessionRequestIdentity } from "./play-session-protocol.ts";
@@ -33,12 +30,10 @@ import {
 export const PUBLIC_MCP_MAX_REQUEST_BYTES = 1_048_576;
 
 export type PublicHttpRequestInput = {
-  readonly toolSurface?: McpToolSurface;
   readonly incoming: IncomingMessage;
   readonly outgoing: ServerResponse;
   readonly hostname: string;
-  readonly applicationServices: McpApplicationServices;
-  readonly playSessionRepository: PlaySessionRepository;
+  readonly createRequestHost: HostedMcpProtocolHostFactory;
   readonly oauth?: PublicMcpOAuth;
   readonly operations: PublicMcpServiceOperations;
 };
@@ -309,15 +304,7 @@ async function handleMcpRoute(
     );
     return { status: 401, outcome: "rejected" };
   }
-  const host = createDndMcpProtocolServer(
-    input.applicationServices,
-    undefined,
-    {
-      playSessionRepository: input.playSessionRepository,
-      toolSurface: input.toolSurface ?? "regular",
-      requestIdentity: identity.success,
-    },
-  );
+  const host = input.createRequestHost(identity.success);
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
   });

@@ -7,6 +7,7 @@ import {
   createMcpApplicationServices,
   type McpApplicationServices,
 } from "./composition-root.ts";
+import { createHostedMcpProtocolHostFactory } from "./protocol-server.ts";
 import type { PlaySessionRepository } from "./recoverable-play-session.ts";
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import {
@@ -68,6 +69,11 @@ export function createDndMcpHttpServer(input: {
 }): DndMcpHttpServer {
   const applicationServices =
     input.applicationServices ?? createMcpApplicationServices();
+  const createRequestHost = createHostedMcpProtocolHostFactory({
+    applicationServices,
+    playSessionRepository: input.playSessionRepository,
+    toolSurface: input.toolSurface ?? "regular",
+  });
   const hostname = input.hostname ?? "127.0.0.1";
   const port = input.port ?? 0;
   const operations = input.operations ?? {
@@ -95,9 +101,7 @@ export function createDndMcpHttpServer(input: {
       incoming,
       outgoing,
       hostname,
-      applicationServices,
-      playSessionRepository: input.playSessionRepository,
-      toolSurface: input.toolSurface ?? "regular",
+      createRequestHost,
       ...(input.oauth === undefined ? {} : { oauth: input.oauth }),
       operations,
     }).catch(() => {
