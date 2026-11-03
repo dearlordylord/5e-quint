@@ -9517,6 +9517,39 @@ describe("MCP server route", () => {
     expect(root.sessionStore.drafts.has(draft.draftId)).toBe(true);
   });
 
+  test("skips replayed draft identities when allocating a draft", () => {
+    const root = createMcpPlaySessionRoot();
+    const generated = createCharacterDraft({ unitLibrary: root.unitLibrary });
+    const generatedId = String(generated.draftId);
+    expect(generatedId).toMatch(/^cc:draft:\d+$/);
+    const ordinal = Number(generatedId.split(":").at(-1));
+    expect(Number.isSafeInteger(ordinal)).toBe(true);
+    const finalizedId = `cc:draft:${ordinal + 1}`;
+    const activeId = `cc:draft:${ordinal + 2}`;
+    readPayload(
+      handleToolCall(root, "create_character_draft", { draftId: finalizedId }),
+    );
+    fillThroughTool(root, finalizedId, 0, initialManifestFills());
+    fillThroughTool(root, finalizedId, 1, manifestChoiceFills());
+    fillThroughTool(root, finalizedId, 2, manifestPurchaseFills());
+    fillThroughTool(root, finalizedId, 3, manifestLoadoutFills());
+    readPayload(
+      handleToolCall(root, "finalize_character", { draftId: finalizedId }),
+    );
+    readPayload(
+      handleToolCall(root, "create_character_draft", { draftId: activeId }),
+    );
+    const allocated = readPayload(
+      handleToolCall(root, "create_character_draft", {}),
+    );
+    expect(allocated.draft.draftId).not.toBe(finalizedId);
+    expect(allocated.draft.draftId).not.toBe(activeId);
+    expect(root.sessionStore.characters.has(testCharacterId(finalizedId))).toBe(
+      true,
+    );
+    expect(root.sessionStore.drafts.has(characterDraftId(activeId))).toBe(true);
+  });
+
   test("rejects reused draft ids for active drafts and finalized character sessions", () => {
     const root = createMcpPlaySessionRoot();
     const activeDraftId = "draft:mcp-tool-duplicate-active";

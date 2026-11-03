@@ -1,5 +1,4 @@
 import {
-  createCharacterDraft,
   fillCreationHoles,
   finalizeCharacterDraft,
   type CharacterDraftId,
@@ -32,6 +31,7 @@ import {
 } from "./character-session-query.ts";
 import { characterSessionArmorClassProjectionForOutput } from "./character-session-query-output.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
+import { createDraftForSession } from "./character-draft-allocation.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   CHARACTER_TOOL_NAMES,
@@ -83,12 +83,7 @@ export function handleCharacterToolCall(
 ): CharacterToolResult {
   return Match.value(call).pipe(
     Match.when({ name: characterToolNames.createCharacterDraft }, (matched) => {
-      const draft = createCharacterDraft({
-        unitLibrary: root.unitLibrary,
-        ...(matched.args.draftId == null
-          ? {}
-          : { draftId: matched.args.draftId }),
-      });
+      const draft = createDraftForSession(root, matched.args.draftId);
       if (root.sessionStore.drafts.has(draft.draftId)) {
         return duplicateDraftIdContent(draft.draftId, "activeDraft");
       }
