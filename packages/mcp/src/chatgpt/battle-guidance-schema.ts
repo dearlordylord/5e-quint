@@ -1,4 +1,5 @@
 import {
+  BattleHoleIdSchema,
   BattleSubjectSchema,
   BattleInterruptProcedureChoiceSchema,
 } from "@dnd/battle-runtime";
@@ -64,6 +65,20 @@ export const ChatGptBattleGuidanceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("ordinaryContinuation"),
     areaInputs: Schema.Array(BattleAreaInputGuidanceSchema),
+    movementInputs: Schema.Array(
+      Schema.Struct({
+        example: Schema.Struct({
+          kind: Schema.Literal("movement"),
+          holeId: BattleHoleIdSchema,
+          value: Schema.Struct({
+            speedKind: Schema.Literal("walk"),
+            movementCostFeet: Schema.Literal(5),
+            provokedOpportunityAttacks: Schema.Tuple([]),
+          }),
+        }),
+        instructions: Schema.Array(Schema.String),
+      }),
+    ),
     cancellation: BattleActionCancellationGuidanceSchema,
     subject: BattleSubjectSchema,
     routing: RoutingSchema,

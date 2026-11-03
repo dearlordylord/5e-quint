@@ -7,6 +7,7 @@ export type { ChatGptBattleGuidance } from "./battle-guidance-schema.ts";
 import {
   battlePendingTransactionReplaySessionForSession,
   type BattleState,
+  type BattleHole,
 } from "@dnd/battle-runtime";
 import { Match, Result, type Schema } from "effect";
 import { errorContent } from "../tool-content.ts";
@@ -61,6 +62,34 @@ function routingTools(
   );
 }
 
+export function battleMovementInputGuidance(hole: BattleHole) {
+  if (
+    hole.kind !== "movement" ||
+    hole.movementBudgetFeet < 5 ||
+    !hole.speedKinds.some(
+      (speed) => speed.kind === "walk" && speed.movementBudgetFeet >= 5,
+    )
+  )
+    return [];
+  return [
+    {
+      example: {
+        kind: "movement",
+        holeId: hole.holeId,
+        value: {
+          speedKind: "walk",
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [],
+        },
+      },
+      instructions: [
+        "Submit example as fill to provide_battle_input for a 5-foot walk only when the table confirms its movement cost is 5 feet and no opportunity attacks are provoked.",
+        "Report the table's provoked opportunity attacks; use [] only when the table confirms none are provoked. Adjust speedKind and movementCostFeet for the actual movement, including terrain.",
+      ],
+    },
+  ] as const;
+}
+
 export function chatGptBattleGuidance(
   root: McpPlaySessionRoot,
 ): ChatGptBattleGuidance {
@@ -108,6 +137,7 @@ export function chatGptBattleGuidance(
       return {
         kind: "ordinaryContinuation" as const,
         areaInputs: frontier.holes.flatMap(battleAreaInputGuidance),
+        movementInputs: frontier.holes.flatMap(battleMovementInputGuidance),
         cancellation: battleActionCancellationGuidance(root, battle.session),
         subject: frontier.replaySubject,
         routing: operationRouting(route),

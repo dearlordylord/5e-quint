@@ -2,7 +2,7 @@ import { CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES } from "../../test-support/tool
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Result, Schema } from "effect";
-import { BattleFillSchema } from "@dnd/battle-runtime";
+import { BattleFillSchema, BattleHoleSchema } from "@dnd/battle-runtime";
 import { describe, expect, it } from "vitest";
 import {
   createDraft2020JsonSchemaValidator,
@@ -32,7 +32,10 @@ import {
   battleProcedureExecutionRefForTest,
 } from "../../../battle-runtime/src/battle-runtime.test-support.ts";
 
-import { chatGptBattleGuidance } from "./battle-guidance.ts";
+import {
+  battleMovementInputGuidance,
+  chatGptBattleGuidance,
+} from "./battle-guidance.ts";
 import { jsonContentPayload } from "../tool-content.ts";
 import { BattleResolutionOutputSchema } from "../battle-tool-output.ts";
 import { resolveBattleActInputSchema } from "../battle-tool-input.ts";
@@ -41,7 +44,6 @@ import {
   fighterId,
   findAct,
   readyDeclarationFillForTest,
-  movementFill,
 } from "../../../battle-runtime/src/battle-runtime.test-support.ts";
 
 const PlaySessionHandleSchema = Schema.Struct({ playSessionId: Schema.String });
@@ -371,17 +373,39 @@ describe("ChatGPT tool surface", () => {
       (candidate) => candidate.kind === "movement",
     );
     if (hole?.kind !== "movement") throw new Error("Expected a movement hole.");
-    expect(chatGptBattleGuidance(root)).toMatchObject({
+    const guidance = chatGptBattleGuidance(root);
+    expect(guidance).toMatchObject({
       kind: "ordinaryContinuation",
       routing: { kind: "available", tools: ["provide_battle_input"] },
     });
+    if (guidance.kind !== "ordinaryContinuation")
+      throw new Error("Expected movement guidance.");
+    const movement = guidance.movementInputs[0];
+    if (movement === undefined) throw new Error("Expected a movement example.");
+    expect(movement.instructions.join(" ")).toContain("table confirms none");
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(movement.example),
+    ).toMatchObject({
+      kind: "movement",
+      holeId: hole.holeId,
+    });
+    const movementHole = (changes: object) =>
+      Schema.decodeUnknownSync(BattleHoleSchema)({ ...hole, ...changes });
+    expect(
+      battleMovementInputGuidance(movementHole({ speedKinds: [] })),
+    ).toEqual([]);
+    expect(
+      battleMovementInputGuidance(movementHole({ movementBudgetFeet: 4 })),
+    ).toEqual([]);
+    expect(
+      battleMovementInputGuidance(
+        movementHole({ speedKinds: [{ kind: "walk", movementBudgetFeet: 4 }] }),
+      ),
+    ).toEqual([]);
     expect(
       jsonContentPayload(
         CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
-          fill: movementFill(hole, {
-            movementCostFeet: 5,
-            provokedOpportunityAttacks: [],
-          }),
+          fill: movement.example,
         }),
       ),
     ).toMatchObject({
