@@ -198,8 +198,6 @@ export const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
   authoredUnitId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
-  authoredUnitId(PHASE1_WEAPON_DAGGER_UNIT_ID),
-  authoredUnitId(PHASE1_WEAPON_SHORTSWORD_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_SPEAR_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_GREATAXE_UNIT_ID),
