@@ -158,6 +158,7 @@ export {
 } from "./battle-reducer/battle-codecs.ts";
 
 export { interruptChoiceResponderId } from "./battle-state-execution.ts";
+export { ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY } from "./battle-reducer/spells-damage-fills.ts";
 
 export {
   spellActiveEffectExecutionRef,
@@ -537,6 +538,7 @@ export {
   type BattleSpellConditionChoiceHole,
   type BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   type BattleSpellDamageRollHole,
+  type BattleAllocatedSpellDamageRollHole,
   type BattleDamageTypeChoiceHole,
   type BattleSpellHealingRollHole,
   type BattleSpellEffectEarlyEnd,

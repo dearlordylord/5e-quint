@@ -98,7 +98,19 @@ describe("ChatGPT Battle guidance contract", () => {
         kind: "initialInitiativeSetup",
         tools: INITIAL_INITIATIVE_GUIDANCE_TOOLS,
       },
-      { kind: "acts", acts: [{ subject, routing, areaInputs: [] }] },
+      {
+        kind: "acts",
+        acts: [
+          {
+            kind: "ready",
+            label: "Dodge",
+            summary: "Use Dodge.",
+            readyCalls: [
+              { tool: "dodge", arguments: { actKey: "act:" + "a".repeat(32) } },
+            ],
+          },
+        ],
+      },
       {
         kind: "ordinaryContinuation",
         subject,
@@ -108,14 +120,14 @@ describe("ChatGPT Battle guidance contract", () => {
           tool: "cancel_battle_action",
           arguments: { expectedSelectionId: "battle-action-selection:1" },
         },
-        areaInputs: [],
+        inputs: [],
         movementInputs: [],
       },
       {
         kind: "ordinaryContinuation",
         subject,
         cancellation: { kind: "unavailable", reason: "acceptedInput" },
-        areaInputs: [],
+        inputs: [],
         movementInputs: [],
         routing: {
           kind: "unavailable",

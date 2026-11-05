@@ -1424,7 +1424,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       value: {
         area: {
           kind: "pointOriginSphereObjectDamageArea",
-          originAnchorId: spellTargetId,
+          originAnchor: { kind: "combatant", combatantId: spellTargetId },
           affectedTargetIds: [spellCasterId],
           nonmagicalUnattendedObjectDamageFacts: [
             {

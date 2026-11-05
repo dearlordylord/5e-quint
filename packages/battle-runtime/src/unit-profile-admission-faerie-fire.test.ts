@@ -266,7 +266,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       spellId: burningHandsUnitId,
       area: {
         kind: "pointOriginSphereSaveDamageArea",
-        originAnchorId: spellCasterId,
+        originAnchor: { kind: "combatant", combatantId: spellCasterId },
         affectedTargetIds: [spellTargetId],
       },
       message:
@@ -277,7 +277,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       spellId: burningHandsUnitId,
       area: {
         kind: "pointOriginSphereObjectDamageArea",
-        originAnchorId: spellCasterId,
+        originAnchor: { kind: "combatant", combatantId: spellCasterId },
         affectedTargetIds: [spellTargetId],
       },
       message:

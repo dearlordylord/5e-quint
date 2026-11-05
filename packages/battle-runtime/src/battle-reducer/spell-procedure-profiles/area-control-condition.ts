@@ -934,6 +934,7 @@ function invalidStoredGlyphAreaCenterResult(input: {
   }
   if (
     "area" in input.savingThrowOutcomes &&
+    "originAnchorId" in input.savingThrowOutcomes.area &&
     input.savingThrowOutcomes.area.originAnchorId ===
       input.storedGlyphRelease.selfOriginAreaAnchorId
   ) {

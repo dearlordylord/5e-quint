@@ -7,7 +7,7 @@ import { Result, Schema } from "effect";
 import reviewPolicyJson from "../../../plugins/dnd-srd-oracle/publication/review-policy.json" with { type: "json" };
 import {
   buildAdvertisedToolDefinitions,
-  buildCanonicalCodecToolDefinitions,
+  buildCanonicalToolDefinitions,
 } from "../src/protocol-server.ts";
 import { publicPublisherSiteResponse } from "../src/public-publisher-site.ts";
 import { PublicMcpPublisherNameSchema } from "../src/public-service-operations.ts";
@@ -50,7 +50,7 @@ if (Result.isFailure(decodedPolicy)) {
       "hosted",
       "chatgpt",
     );
-    const canonicalDefinitions = buildCanonicalCodecToolDefinitions(
+    const canonicalDefinitions = buildCanonicalToolDefinitions(
       chatGptExecutionToolDefinitions,
       "hosted",
       "chatgpt",

@@ -103,8 +103,9 @@ format-3 compatibility policy for commands recorded before creation mastery
 admission was narrowed. Unmarked commands retain the formerly admitted Dagger
 and Shortsword mastery selections through the same typed creation handlers;
 the seven original mastery choices are frozen independently of the live list.
-New commands carry admission version 2 and use the live profile. Future changes
-to mastery admission require another command admission version. This is an
+Commands with admission versions 2 and 3 use the live creation profile. New
+commands carry version 3. Future changes to mastery admission require another
+command admission version. This is an
 explicit historical support-admission boundary, not name-based Battle dispatch.
 Recovery shares reconstructed state but returns the live profile before a new
 operation. Existing records and selected identities are not rewritten, and Battle
@@ -116,6 +117,18 @@ known format-3 narrowing, not arbitrary future support changes. Unmarked
 commands written during a release that already narrowed support cannot encode
 whether that release accepted a selection; they require deployment evidence
 rather than an inferred history.
+
+[Stored battle input migration](src/stored-battle-input-migration.ts) owns the
+transition to command admission version 3 for point-origin inputs. On read, version-2 and unmarked stored
+sphere inputs convert their combatant `originAnchorId` to the typed
+`originAnchor` without changing the chosen center, outcomes, or dice history.
+New public sphere inputs require the typed origin, including
+`{ kind: "tableSelectedPoint" }` for a point chosen by the table's geometry.
+New writes use storage format 4, so the deployment rollback guard blocks older
+format-3 images from reading version-3 commands. Format-3 rows remain readable;
+their next committed change or guest-save promotion atomically writes the
+normalized history with format 4. Repository loads alone do not rewrite a row. Conflicting
+or malformed historical origins are rejected.
 
 DRDice recovery retains the Seed, Dice Group Semantic Profile, PRNG Sequence
 Profile, and State Schema Identity. Incompatible databases are retained in
@@ -218,10 +231,14 @@ and remove primitive types already implied by that literal. Contradictory type
 constraints, instance data, descriptions, and reference scopes remain intact.
 
 Battle results and `read_play_session` include the typed
-`chatGptBattleOperations` field in structured content and its matching JSON text. Its acts, ordinary continuation, and Reaction
-choices carry `routing`: an available named-tool list or an explicit unavailable
-issue. Select an Act with its named tool and canonical subject, without `fill`;
-the tool opens any initial holes as a pending transaction. Supply ordinary
+`chatGptBattleOperations` field in structured content and its matching JSON text. Its available Acts carry a label and executable `readyCalls`. Copy the chosen
+call's `arguments` unchanged and add only the selected `playSessionId`; the tool
+opens any initial holes as a pending transaction. Each initial call contains a short opaque `actKey`, resolved against the owned
+Play Session’s current choices. Canonical execution references stay inside the
+server and retained command history. An Act requiring additional table facts
+instead identifies its `requiredArguments`; unavailable Acts expose an issue.
+Ordinary continuation and Reaction choices carry `routing` with an available
+named-tool list or an explicit unavailable issue. Supply ordinary
 facts through `provide_battle_input`, with `fill` and no subject. The runtime-owned
 transaction supplies the subject and rejects stale or foreign-session facts.
 Select each Reaction through its own named operation, including
@@ -281,12 +298,12 @@ it stores no workflow state.
 
 ### Catalog and character
 
-| Intent                   | Tools / contract                                                                                                        |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Browse installed content | `list_catalog_units`, `list_stat_blocks`, `inspect_catalog_unit`; stateless, no Play Session required                   |
-| Build a character        | `create_character_draft`, `get_character_creation_choices`, `apply_character_creation_choices`, `finalize_character`    |
-| Read characters          | `list_characters`, `inspect_character_session`, `query_character_session`                                               |
-| Change a sheet           | `apply_character_session_operation` delegates supported advancement, rest, calendar, companion, and resource operations |
+| Intent                   | Tools / contract                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Browse installed content | `list_catalog_units`, `inspect_catalog_unit`, `list_stat_blocks`, `inspect_stat_block`; stateless, no Play Session required |
+| Build a character        | `create_character_draft`, `get_character_creation_choices`, `apply_character_creation_choices`, `finalize_character`        |
+| Read characters          | `list_characters`, `inspect_character_session`, `query_character_session`                                                   |
+| Change a sheet           | `apply_character_session_operation` delegates supported advancement, rest, calendar, companion, and resource operations     |
 
 Catalog presence does not imply executable support. Legal choices come from
 runtime discovery; no presets or direct draft patches. Accepted fills replace
@@ -336,6 +353,16 @@ Specialized contracts:
   validate all affected sessions before any multi-recipient commit.
 - [Resource operations](src/character-session-resource-operation.ts) delegate
   expenditure/conversion to sheet reducers without a second resource store.
+
+`list_stat_blocks` searches installed names or ids with an optional `query`
+substring. It returns at most 20 encounter-selection entries by default; `limit`
+can request up to 50. Entries include Challenge Rating, Size, creature type, AC,
+HP, and Initiative. Reuse the same query with `offset: nextOffset` until
+`nextOffset` is `null`; `total` counts all matches. An empty `statBlocks` array
+with `total: 0` is a completed search with no match. Use `inspect_stat_block` to
+read one returned record's attacks, procedures, and defenses without a Play
+Session. Unit details use `inspect_catalog_unit` with an id from
+`list_catalog_units`.
 
 ### Battle
 
@@ -391,6 +418,13 @@ Effect Schema codecs own input parsing and output encoding. Responses provide
 both `structuredContent` and encoded text. Generated JSON Schema derives from
 those codecs; do not author a parallel result model.
 
+Successful `operation.result` keeps the operation's own shape in every Battle
+phase: `roll_dice` always returns `operation.result.groups`. A pending Battle
+does not wrap an unrelated success or attach a full checkpoint to it.
+`unresolvedInputs[].source` identifies either `operationResult` with a path
+relative to that result, or `pendingBattle` with inputs derived from the
+canonical pending frontier. Error results retain their Battle recovery context.
+
 Output schemas use content-addressed identities and shared `$defs`.
 Capacity-rich outputs derive their facts from runtime projections; storage schemas
 must not accept those capacities as independent state. Character-tool outputs
@@ -422,6 +456,67 @@ pnpm --filter @dnd/mcp test
 Local transport/parity tests do not establish live HTTPS deployment health.
 Use the staging smoke in [Run the server](#run-the-server) for that evidence.
 
+### Autonomous dialogue checks
+
+Run the opt-in model scenario from the repository root with an
+`OPENAI_API_KEY` already in the environment:
+
+```sh
+pnpm --filter @dnd/mcp eval:dialogue --case wizard-fireball-battle --out /tmp/dnd-wizard-check --code-interpreter true
+```
+
+The [evaluation inventory](../../plugins/dnd-srd-oracle/evals/evaluation-inventory.json)
+owns the prompt. The client exposes the canonical ChatGPT MCP tools to a fresh
+API model, retains exact calls and responses, and independently reads isolated
+SQLite-backed game state. Python computes geometry; a local live viewer renders
+actual game state with the supplied geometry. The run directory must be new.
+API, turn, call, and time limits stop incomplete runs without claiming success.
+
+This produces `apiFunctionBridge` evidence. It does not certify native remote
+MCP ingestion, OAuth, or the installed ChatGPT widget host. API access is not
+required by ordinary tests or release checks. Run the offline mechanical, dice, geometry, and native adapter
+controls with `pnpm --filter @dnd/mcp check:dialogue-evaluator`.
+
+`verdict-reviewed.json` separates mechanical completion, rejected calls, sampled
+dice provenance, and live visual evidence. `--resume` clones a prior safe
+checkpoint for diagnosis; fresh conversations qualify a final candidate.
+
+The dialogue runner also supports an existing Codex CLI ChatGPT login on macOS:
+
+```sh
+pnpm --filter @dnd/mcp eval:dialogue --client codex --case wizard-fireball-battle --out /tmp/dnd-wizard-codex-check --max-calls 150 --timeout 2400
+```
+
+This backend exposes the complete canonical ChatGPT MCP surface through native
+stdio and records its actual tool inventory. It uses sandboxed local Python for
+geometry and a local live viewer. Its evidence is labeled `codingAgentMcp`; it
+does not certify an installed ChatGPT widget or native Code Interpreter. The
+child process receives no `OPENAI_API_KEY` and uses the CLI's existing login.
+Python can read its math directory and system runtime libraries, with filesystem
+metadata and the root directory listing available for runtime startup. Other
+file contents, network access, and writes outside the math directory are denied.
+A model shell command or another non-Oracle execution tool makes the run
+nonaccepting.
+
+The Codex backend starts fresh games and enforces call and wall-clock budgets;
+the CLI manages its own context and turn count. Raw CLI events, MCP messages,
+canonical observations, computed files, live frames and source hashes accompany
+the verdict. Both client backends return success only for a clean scenario; the
+wizard battle also requires verified intermediate live visualization artifacts.
+Mechanical completion remains separately reported. If living opponents remain,
+the Codex client can start a separate, tool-free reviewer for at most 180 seconds
+within the remaining run budget. It judges voluntary retreat and nonpursuit from
+hash-bound archived evidence and the original task; deterministic checks bind every citation to accepted
+movement, participant identity, event order, and the same settled battle. An
+uncertain review cannot establish completion. This semantic judgment is reported
+separately from deterministic knockout evidence and never overrides dice, tool
+rejection, source, or visualization checks. Ordinary offline controls never invoke
+this reviewer.
+
+The API client shown above remains available with its own API key, native Code
+Interpreter and explicit context compaction. Its automated logical-end check
+requires knockout evidence; it does not use the Codex cessation reviewer.
+
 ## npm distribution
 
 The stdio entrypoint is packaged as `@dearlordylord/dnd-mcp` in the same
@@ -435,8 +530,7 @@ Run `pnpm --filter @dnd/mcp check:operation-accounting`. The script derives
 finite operation domains from the types consumed by execution, checks exhaustive
 [decisions](scripts/operation-accounting-decisions.ts), resolves implemented
 function owners, verifies canonical spell profile callbacks, and compares public
-entry points with the actual hosted/local tool builder. It also runs before
-`check:submission-fast`. A new member requires an explicit decision; there is no
+entry points with the actual hosted/local tool builder. This analysis is an opt-in diagnostic. A new member requires an explicit decision; there is no
 fallback bucket or snapshot regeneration step.
 
 Generate a complete report when needed:
@@ -540,7 +634,7 @@ remains the default. Generated reports are evidence, not a second configuration
 source.
 
 The submission fast gate scans the hosted ChatGPT definitions and their canonical
-codec owners. Candidate evidence fingerprints the same 127-tool host and exercises
+codec owners. Candidate evidence fingerprints the same canonical host and exercises
 named Battle attacks and Reaction decisions. Canonical output review derives from
 execution/replay grammar owners even where an advertised output schema is omitted;
 it does not add those review schemas to tool discovery. The shared pending-procedure

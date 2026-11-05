@@ -34,9 +34,11 @@ describe("schema-codec boundary", () => {
     expect(Result.isFailure(decoded)).toBe(true);
     if (Result.isSuccess(decoded)) return;
     expect(decoded.failure.isError).toBe(true);
-    expect(decoded.failure.content[0]?.text).toContain(
-      '"error": "demo expects valid arguments."',
-    );
+    expect(
+      JSON.parse(decoded.failure.content[0]?.text ?? "null"),
+    ).toMatchObject({
+      error: "demo expects valid arguments.",
+    });
   });
 
   test("encodes transformation-bearing values through the original schema", () => {

@@ -29,7 +29,11 @@ import {
   type UnresolvedInputGroup,
 } from "./play-session-operation-projection.ts";
 import { nextOperationsFrom } from "./play-session-next-operations.ts";
-import { battleSessionPayload } from "./battle-tool-payloads.ts";
+import {
+  battleSessionPayload,
+  battlePresentationEnvelopeForSession,
+} from "./battle-tool-payloads.ts";
+import type { OperationResultPath } from "./unresolved-input-source.ts";
 
 export type PlaySessionProtocolResult = {
   readonly content: readonly [
@@ -47,15 +51,10 @@ export function recoverableOperationResult(
   isError: boolean,
 ): unknown {
   if (
+    !isError ||
     root.sessionStore.getPendingBattleTransaction() === null ||
     root.sessionStore.battleState.tag !== "activeBattle"
   ) {
-    return operationResult;
-  }
-  // Battle operations already publish their canonical envelope. Preserve that
-  // operation shape; unrelated successful operations need an explicit
-  // recovery wrapper so the continuation is visible on the same result.
-  if (!isError && hasBattleEnvelope(operationResult)) {
     return operationResult;
   }
   const battle = battleSessionPayload(
@@ -87,6 +86,39 @@ export function recoverableOperationResult(
   };
 }
 
+export function pendingBattleUnresolvedInputs(
+  root: McpPlaySessionRoot,
+  operationResult: unknown,
+  isError: boolean,
+):
+  | Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue>
+  | undefined {
+  if (
+    isError ||
+    hasBattleEnvelope(operationResult) ||
+    root.sessionStore.getPendingBattleTransaction() === null ||
+    root.sessionStore.battleState.tag !== "activeBattle"
+  )
+    return undefined;
+  const battle = battlePresentationEnvelopeForSession(
+    root,
+    root.sessionStore.battleState.session,
+  );
+  if (Result.isFailure(battle))
+    return Result.fail({
+      tag: "operationProjectionDecodeIssue",
+      message: JSON.stringify(battle.failure),
+    });
+  return Result.map(
+    unresolvedInputsFromBattleEnvelope(battle.success),
+    (groups) =>
+      groups.map((group) => ({
+        ...group,
+        source: { kind: "pendingBattle" as const },
+      })),
+  );
+}
+
 function hasBattleEnvelope(value: unknown): boolean {
   if (!isJsonObject(value)) return false;
   return (
@@ -101,6 +133,10 @@ export function availablePlaySessionEnvelope(input: {
   readonly playSessionId: PlaySessionId;
   readonly operationName: PlaySessionExecutionOperationName;
   readonly operationResult: unknown;
+  readonly continuationInputs?: Result.Result<
+    readonly UnresolvedInputGroup[],
+    OperationProjectionIssue
+  >;
   readonly projection: McpSessionSnapshot;
   readonly tenure: PlaySessionTenureProjection;
   readonly hasAvailableCharacterSession?: boolean;
@@ -176,6 +212,10 @@ export function unavailablePlaySessionEnvelope(
 function unresolvedInputsForEnvelope(input: {
   readonly operationName: PlaySessionExecutionOperationName;
   readonly operationResult: unknown;
+  readonly continuationInputs?: Result.Result<
+    readonly UnresolvedInputGroup[],
+    OperationProjectionIssue
+  >;
   readonly isError?: boolean;
 }): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const battleEnvelope = embeddedBattleEnvelope(input.operationResult);
@@ -185,6 +225,7 @@ function unresolvedInputsForEnvelope(input: {
       battleEnvelope.path,
     );
   }
+  if (input.continuationInputs !== undefined) return input.continuationInputs;
   if (input.isError === true) return Result.succeed([]);
   return unresolvedInputsFrom(
     playSessionProjectionOperationName(input.operationName),
@@ -194,7 +235,7 @@ function unresolvedInputsForEnvelope(input: {
 
 function embeddedBattleEnvelope(
   value: unknown,
-): { readonly value: unknown; readonly path: string } | undefined {
+): { readonly value: unknown; readonly path: OperationResultPath } | undefined {
   if (!isJsonObject(value)) return undefined;
   if (value.battleEnvelope !== undefined && value.battleEnvelope !== null) {
     return { value: value.battleEnvelope, path: "$.battleEnvelope" };

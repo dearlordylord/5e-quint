@@ -1,3 +1,4 @@
+import { combatantAnchoredAreaOriginIs } from "./spell-area-origin.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.ongoing-feature-activation-movement-rider
 import { resolveOngoingFeatureActivationMovement } from "./ongoing-feature-activation-movement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
@@ -2331,7 +2332,7 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
   /* v8 ignore stop -- @preserve */
   const area = input.savingThrows.value.area;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (area.originAnchorId !== input.actorId) {
+  if (!combatantAnchoredAreaOriginIs(area, input.actorId)) {
     /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",

@@ -61,6 +61,7 @@ import {
 } from "./targeting-save-interdiction.ts";
 import {
   applyPreparedSlotSpellDamage,
+  allocatedSpellDamageDice,
   repeatedDamageAllocationNegatedForTarget,
   spellDamageHole,
   spellTargetAllocationHole,
@@ -314,6 +315,10 @@ export function resolvePreparedSlotSpellAct(input: {
     }
   }
 
+  const allocatedDamageDice = allocatedSpellDamageDice(
+    targetAllocation.allocations,
+    input.invocation.damage.expr,
+  );
   if (input.fillSet.damageRoll == null) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fillSet.sourceDamageRollPenaltyRolls.length > 0) {
@@ -325,16 +330,13 @@ export function resolvePreparedSlotSpellAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellDamageHole(input.invocation),
+      { ...spellDamageHole(input.invocation), allocatedDamageDice },
     ]);
   }
   const damageRoll = input.fillSet.damageRoll;
   const damageValidation =
     validateSpellDamageFill(damageRoll, input.invocation, false) ??
-    validatePreparedSlotSpellDamageGroups(
-      damageRoll,
-      targetAllocation.allocations,
-    );
+    validatePreparedSlotSpellDamageGroups(damageRoll, allocatedDamageDice);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", damageValidation);

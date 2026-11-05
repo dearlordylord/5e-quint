@@ -1,5 +1,5 @@
 import { battleFillInputSchemaForOperation } from "./battle-fill-input-schema.ts";
-import { battleSubjectInputSchemaForCarriers } from "./battle-subject-input-schema.ts";
+import { BattleActKeySchema } from "./battle-act-selection.ts";
 import {
   BattleSubjectSchema,
   BattleFillSchema,
@@ -106,6 +106,17 @@ const ReactionSelectionArgsSchema = BattleFillArgsSchema.pipe(
     },
   ),
 );
+export const ChatGptBattlePublicInitialArgsSchema = Schema.Struct({
+  actKey: BattleActKeySchema,
+  reactionSpellTargetFacts: Schema.optionalKey(
+    Schema.Array(BattleFallingCreatureMitigationTriggerFactSchema),
+  ),
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
+export const ChatGptBattlePublicArgsSchema = Schema.Union([
+  ChatGptBattlePublicInitialArgsSchema,
+  ReactionSelectionArgsSchema,
+]);
+
 export const ChatGptBattleExecutionArgsSchema = Schema.Union([
   InitialSelectionSchema,
   ReactionSelectionArgsSchema,
@@ -161,17 +172,10 @@ export function chatGptBattleExecutionInputSchema(
   const subjectCarriers = Object.entries(accounting.battleSubjects)
     .filter(([, exposure]) => chatGptToolsForExposure(exposure).includes(tool))
     .map(([key]) => key);
-  const standardActions = Object.entries(accounting.statBlockBonusActions)
-    .filter(([, exposure]) => chatGptToolsForExposure(exposure).includes(tool))
-    .map(([key]) => key);
   const initialSchema =
     subjectCarriers.length === 0
       ? null
-      : battleSubjectInputSchemaForCarriers(
-          selectionSchema,
-          subjectCarriers,
-          standardActions,
-        );
+      : mcpObjectJsonSchema(Schema.Struct({ actKey: BattleActKeySchema }));
   const reactionChoices = Object.entries(accounting.interruptSelections)
     .filter(([, exposure]) => chatGptToolsForExposure(exposure).includes(tool))
     .map(([key]) => key);
@@ -191,7 +195,9 @@ export function chatGptBattleExecutionInputSchema(
     "Requires an active battle in the selected Play Session. Use only a matching option returned by discover_battle_acts or the current battle response.",
     ...(initialSchema === null
       ? []
-      : ["To start the offered action or event, copy its subject; omit fill."]),
+      : [
+          "To start an offered Act, copy the chosen readyCalls entry arguments unchanged and add only the selected playSessionId; omit fill. Never reconstruct an execution reference. When tableFactsRequired is returned, copy its arguments and supply its requiredArguments from table facts.",
+        ]),
     ...(reactionSchema === null
       ? []
       : tool === "decline_reaction"
@@ -219,7 +225,7 @@ export function chatGptBattleExecutionInputSchema(
 }
 
 function battleSelectionInputSchema(
-  initialSchema: ReturnType<typeof battleSubjectInputSchemaForCarriers> | null,
+  initialSchema: McpObjectInputSchema | null,
   reactionSchema: ReturnType<typeof battleFillInputSchemaForOperation> | null,
   fallReport: boolean,
 ): McpObjectInputSchema {
@@ -229,7 +235,7 @@ function battleSelectionInputSchema(
     properties: {
       ...(initialSchema === null
         ? {}
-        : { subject: initialSchema.properties.subject }),
+        : { actKey: generatedRecord(initialSchema.properties).actKey }),
       ...(fallReport
         ? {
             reactionSpellTargetFacts: generatedRecord(
@@ -250,7 +256,7 @@ function battleSelectionInputSchema(
             : [
                 {
                   required: [
-                    "subject",
+                    "actKey",
                     ...(fallReport ? ["reactionSpellTargetFacts"] : []),
                   ],
                   properties: { fill: false },
@@ -262,7 +268,7 @@ function battleSelectionInputSchema(
                 {
                   required: ["fill"],
                   properties: {
-                    subject: false,
+                    actKey: false,
                     reactionSpellTargetFacts: false,
                   },
                 },

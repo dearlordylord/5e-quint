@@ -1,6 +1,7 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
+  SrdStatBlockRecordSchema,
   decodeCreatureImmunityDeclarationSync,
   decodeStatBlockRecordSync,
 } from "@dnd/surface/surface/schema";
@@ -26,6 +27,7 @@ const CatalogUnitListSchema = Schema.Struct({
 
 const StatBlockListSchema = Schema.Struct({
   statBlocks: Schema.Array(Schema.Struct({ statBlockId: Schema.String })),
+  nextOffset: Schema.NullOr(Schema.Number),
 });
 const StatBlockSummaryListSchema = Schema.Struct({
   statBlocks: Schema.Array(
@@ -138,7 +140,7 @@ describe("MCP Stat Block summaries", () => {
     for (const size of ["medium", "small"] as const) {
       const root = createMcpPlaySessionRoot();
       const listed = Schema.decodeUnknownSync(StatBlockSummaryListSchema)(
-        payload(handleToolCall(root, "list_stat_blocks", {})),
+        payload(handleToolCall(root, "list_stat_blocks", { query: "Bandit" })),
       );
       const bandit = listed.statBlocks.find(
         (summary) => summary.statBlockId === "stat_block_bandit",
@@ -211,9 +213,17 @@ describe("MCP installed SRD catalog tools", () => {
     const units = Schema.decodeUnknownSync(CatalogUnitListSchema)(
       payload(handleToolCall(root, "list_catalog_units", {})),
     );
-    const statBlocks = Schema.decodeUnknownSync(StatBlockListSchema)(
-      payload(handleToolCall(root, "list_stat_blocks", {})),
-    );
+    const statBlockIds: string[] = [];
+    let offset: number | null = 0;
+    do {
+      const page = Schema.decodeUnknownSync(StatBlockListSchema)(
+        payload(handleToolCall(root, "list_stat_blocks", { offset })),
+      );
+      statBlockIds.push(
+        ...page.statBlocks.map(({ statBlockId }) => statBlockId),
+      );
+      offset = page.nextOffset;
+    } while (offset !== null);
 
     expect(
       Object.values(units.unitsByKind)
@@ -221,9 +231,9 @@ describe("MCP installed SRD catalog tools", () => {
         .map(({ id }) => id)
         .sort(),
     ).toEqual(srdUnitCollection.units.map(({ id }) => id).sort());
-    expect(
-      statBlocks.statBlocks.map(({ statBlockId }) => statBlockId).sort(),
-    ).toEqual(srdStatBlockCollection.statBlocks.map(({ id }) => id).sort());
+    expect(statBlockIds.sort()).toEqual(
+      srdStatBlockCollection.statBlocks.map(({ id }) => id).sort(),
+    );
   });
 
   test("inspects one canonical installed Unit without claiming executability", () => {
@@ -379,5 +389,47 @@ describe("MCP installed SRD catalog tools", () => {
     expect(minimalSpell).not.toHaveProperty("count");
     expect(minimalSpell).not.toHaveProperty("castAtLevel");
     expect(minimalSpell).not.toHaveProperty("restriction");
+  });
+});
+
+describe("read-only Stat Block inspection", () => {
+  test("reads the canonical record without selecting it and rejects Unit ids", () => {
+    const root = createMcpPlaySessionRoot();
+    const before = root.sessionStore.snapshot();
+    const statBlock = srdStatBlockCollection.statBlocks[0];
+    if (statBlock === undefined)
+      throw new Error("Expected installed Stat Block");
+    const detail = Schema.decodeUnknownSync(
+      Schema.Struct({
+        statBlockRecordJson: Schema.fromJsonString(SrdStatBlockRecordSchema),
+      }),
+    )(
+      payload(
+        handleToolCall(root, "inspect_stat_block", {
+          statBlockId: statBlock.id,
+        }),
+      ),
+    );
+    expect(detail.statBlockRecordJson).toEqual(statBlock);
+    expect(root.sessionStore.snapshot()).toEqual(before);
+    expect(
+      payload(
+        handleToolCall(root, "inspect_stat_block", { statBlockId: "message" }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "UNKNOWN_STAT_BLOCK",
+        recovery: expect.stringContaining("list_stat_blocks"),
+      },
+    });
+    expect(
+      payload(
+        handleToolCall(root, "inspect_catalog_unit", { unitId: statBlock.id }),
+      ),
+    ).toMatchObject({ details: { code: "UNKNOWN_CATALOG_UNIT" } });
+    expect(
+      contentToolDefinitions.find((tool) => tool.name === "inspect_stat_block")
+        ?.annotations.readOnlyHint,
+    ).toBe(true);
   });
 });

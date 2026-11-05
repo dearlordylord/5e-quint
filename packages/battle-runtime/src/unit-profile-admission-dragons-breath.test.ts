@@ -1129,6 +1129,32 @@ describe("Dragon's Breath initial cast admission", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
+    expect(
+      resolveBattleSubject({
+        state: endedCasterTurn.state,
+        subject: exhaleAct.subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              area: {
+                kind: "pointOriginSphereSaveDamageArea",
+                originAnchor: { kind: "combatant", combatantId: spellTargetId },
+                affectedTargetIds: [],
+                objectIgnitionFacts: [],
+              },
+              outcomes: [],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Granted area Save damage Cone must originate from the exhaling creature.",
+    });
+
     const emptyCone = resolveBattleSubject({
       state: endedCasterTurn.state,
       subject: exhaleAct.subject,

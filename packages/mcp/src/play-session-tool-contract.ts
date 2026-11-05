@@ -1,3 +1,4 @@
+import { savedPlaySessionSummarySchema } from "./play-session-creation-schema.ts";
 import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { playSessionLifecycleOutputSchema as lifecycleSchemaForSurface } from "./play-session-tool-schema.ts";
 import type { ChatGptStatefulToolName } from "./chatgpt/protocol-operation.ts";
@@ -16,7 +17,6 @@ import {
   playSessionLifecycleOutputSchema,
   playSessionOperationOutputSchema,
   playSessionRoutedInputSchema,
-  savedPlaySessionSummarySchema,
 } from "./play-session-tool-schema.ts";
 import {
   PLAY_SESSION_TOOL_NAMES,

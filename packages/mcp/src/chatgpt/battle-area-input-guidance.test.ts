@@ -8,6 +8,11 @@ import {
   type BattleSpellAreaInputRequest,
   type BattleSpellSavingThrowOutcomeHole,
 } from "@dnd/battle-runtime";
+import {
+  BattleInputGuidanceSchema,
+  battleInputGuidance,
+} from "./battle-input-guidance.ts";
+import { battleAreaInputInstructions } from "./battle-area-input-instructions.ts";
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   holeId,
@@ -19,10 +24,6 @@ import {
   createDraft2020JsonSchemaValidator,
   requireJsonSchema,
 } from "../../test-support/json-schema.ts";
-import {
-  BattleAreaInputGuidanceSchema,
-  battleAreaInputGuidance,
-} from "./battle-area-input-guidance.ts";
 
 const actorId = combatantId("synthetic-area-caster");
 const sourceProcedureRef = battleProcedureExecutionRef(
@@ -51,18 +52,38 @@ function areaHole(
   return { ...holeBase, outcomeTargeting: "area", areaInput: { kind } };
 }
 function guidanceFor(kind: BattleSpellAreaInputRequest["kind"]) {
-  const [guidance] = battleAreaInputGuidance(areaHole(kind));
+  const [guidance] = battleInputGuidance(areaHole(kind));
   if (guidance === undefined) throw new Error("Expected area guidance.");
   return guidance;
 }
 function validateArea(kind: BattleSpellAreaInputRequest["kind"]) {
-  return createDraft2020JsonSchemaValidator().getValidator(
-    requireJsonSchema(guidanceFor(kind).areaSchema, "Area guidance"),
+  const validate = createDraft2020JsonSchemaValidator().getValidator(
+    requireJsonSchema(guidanceFor(kind).fillSchema, "Current area fill"),
   );
+  return (area: unknown) =>
+    validate({
+      kind: "savingThrowOutcome",
+      holeId: holeBase.holeId,
+      value: {
+        area,
+        outcomes: [
+          {
+            targetId: "synthetic-area-target",
+            succeeded: false,
+            d20TestRoll: { tag: "single", naturalD20: 6 },
+          },
+        ],
+      },
+    });
 }
 const areaBase = {
   originAnchorId: actorId,
   affectedTargetIds: ["synthetic-area-target"],
+};
+
+const pointAreaBase = {
+  originAnchor: { kind: "tableSelectedPoint" },
+  affectedTargetIds: areaBase.affectedTargetIds,
 };
 
 describe("Battle area input guidance", () => {
@@ -71,27 +92,20 @@ describe("Battle area input guidance", () => {
     const validate = validateArea("pointOriginSphereSaveDamageArea");
     expect(guidance).toMatchObject({
       holeId: holeBase.holeId,
-      valuePath: "fill.value.area",
-      areaSchema: {
-        required: expect.arrayContaining([
-          "originAnchorId",
-          "affectedTargetIds",
-          "kind",
-          "objectIgnitionFacts",
-        ]),
-      },
+      valuePath: "fill",
     });
     expect(guidance.instructions.join(" ")).toContain(
       "objectIgnitionFacts: []",
     );
     expect(guidance.instructions.join(" ")).toContain("table confirms");
-    expect(validate(areaBase).valid).toBe(false);
+    expect(validate(pointAreaBase).valid).toBe(false);
     expect(
-      validate({ ...areaBase, kind: "pointOriginSphereSaveDamageArea" }).valid,
+      validate({ ...pointAreaBase, kind: "pointOriginSphereSaveDamageArea" })
+        .valid,
     ).toBe(false);
     expect(
       validate({
-        ...areaBase,
+        ...pointAreaBase,
         kind: "pointOriginSphereSaveDamageArea",
         objectIgnitionFacts: [],
       }).valid,
@@ -103,7 +117,7 @@ describe("Battle area input guidance", () => {
     ]) {
       expect(
         validate({
-          ...areaBase,
+          ...pointAreaBase,
           kind: "pointOriginSphereSaveDamageArea",
           objectIgnitionFacts: [
             { objectId: "synthetic-area-object", disposition: { kind } },
@@ -113,7 +127,7 @@ describe("Battle area input guidance", () => {
     }
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(BattleAreaInputGuidanceSchema)(guidance),
+        Schema.decodeUnknownResult(BattleInputGuidanceSchema)(guidance),
       ),
     ).toBe(true);
   });
@@ -122,26 +136,29 @@ describe("Battle area input guidance", () => {
     const objectDamage = validateArea("pointOriginSphereObjectDamageArea");
     expect(
       objectDamage({
-        ...areaBase,
+        ...pointAreaBase,
         kind: "pointOriginSphereObjectDamageArea",
         nonmagicalUnattendedObjectDamageFacts: [],
       }).valid,
     ).toBe(true);
     expect(
       objectDamage({
-        ...areaBase,
+        ...pointAreaBase,
         kind: "pointOriginSphereSaveDamageArea",
         objectIgnitionFacts: [],
       }).valid,
     ).toBe(false);
-    const push = guidanceFor("selfOriginCubePushArea");
-    expect(push.areaSchema.required).toEqual(
-      expect.arrayContaining([
-        "creaturePushes",
-        "unsecuredObjectPushes",
-        "audibleBoom",
-      ]),
+    const push = validateArea("selfOriginCubePushArea");
+    expect(push({ ...areaBase, kind: "selfOriginCubePushArea" }).valid).toBe(
+      false,
     );
+    expect(
+      push({
+        ...pointAreaBase,
+        kind: "pointOriginSphereObjectDamageArea",
+        nonmagicalUnattendedObjectDamageFacts: [],
+      }).valid,
+    ).toBe(false);
   });
 
   it("keeps basic area membership separate from staged-condition evidence", () => {
@@ -156,6 +173,40 @@ describe("Battle area input guidance", () => {
     expect(
       validateArea("stagedConditionAreaMembership")(stagedArea).valid,
     ).toBe(true);
+  });
+
+  it("keeps the complete fill contract specific to the requested area membership", () => {
+    const fill = {
+      kind: "savingThrowOutcome",
+      holeId: holeBase.holeId,
+      value: {
+        area: {
+          ...areaBase,
+          stagedConditionAutomaticSuccessFacts: [
+            { kind: "doesNotSleep", targetId: areaBase.affectedTargetIds[0] },
+          ],
+        },
+        outcomes: [
+          {
+            targetId: areaBase.affectedTargetIds[0],
+            succeeded: true,
+            d20TestRoll: { tag: "single", naturalD20: 18 },
+          },
+        ],
+      },
+    };
+    for (const [kind, accepted] of [
+      ["areaMembership", false],
+      ["stagedConditionAreaMembership", true],
+    ] as const) {
+      const input = battleInputGuidance(areaHole(kind))[0];
+      if (input === undefined)
+        throw new Error("Expected current fill guidance.");
+      const validate = createDraft2020JsonSchemaValidator().getValidator(
+        requireJsonSchema(input.fillSchema, "area fill"),
+      );
+      expect(validate(fill).valid).toBe(accepted);
+    }
   });
 
   it("rejects single-target requests with area requirements and areas without requirements", () => {
@@ -178,6 +229,6 @@ describe("Battle area input guidance", () => {
       ...holeBase,
       outcomeTargeting: "singleTarget",
     } as const satisfies BattleSpellSavingThrowOutcomeHole;
-    expect(battleAreaInputGuidance(singleTarget)).toEqual([]);
+    expect(battleAreaInputInstructions(singleTarget)).toEqual([]);
   });
 });

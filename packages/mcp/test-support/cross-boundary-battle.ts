@@ -1,3 +1,4 @@
+import { ChatGptBattleGuidanceSchema } from "../src/chatgpt/battle-guidance-schema.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { characterDraftId } from "@dnd/character-creation-runtime";
@@ -172,9 +173,23 @@ export async function productionBattleConsumerSeam(
       "Scimitar",
     );
     if (toolSurface === "chatgpt") {
+      const guidance = Schema.decodeUnknownSync(
+        Schema.Struct({
+          structuredContent: Schema.Struct({
+            chatGptBattleOperations: ChatGptBattleGuidanceSchema,
+          }),
+        }),
+      )(discoveredResponse).structuredContent.chatGptBattleOperations;
+      if (guidance.kind !== "acts")
+        throw new Error("Expected current Act calls.");
+      const offered = guidance.acts.find(
+        (act) => act.kind === "ready" && act.summary.includes("Scimitar"),
+      );
+      if (offered?.kind !== "ready")
+        throw new Error("Expected current Scimitar call.");
       const selectedResponse = await call(client, "attack", {
         playSessionId,
-        subject: attackSubject,
+        ...offered.readyCalls[0].arguments,
       });
       const selectedOperationResult = operationResult(selectedResponse);
       const selected = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(

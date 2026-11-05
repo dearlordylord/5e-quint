@@ -17,7 +17,7 @@ import {
 } from "../battle-tool-output.ts";
 import { createMcpPlaySessionRoot } from "../composition-root.ts";
 import { jsonContentPayload } from "../tool-content.ts";
-import { chatGptBattleGuidance } from "./battle-guidance.ts";
+import { chatGptBattleGuidance } from "../../test-support/chatgpt-battle-guidance.ts";
 import { CHATGPT_EXECUTION_TOOLS } from "./tool-surface.ts";
 
 const areaCases = [
@@ -85,7 +85,11 @@ describe("ChatGPT spell area recovery", () => {
       if (hole?.kind !== "savingThrowOutcome")
         throw new Error("Expected a Saving Throw outcome hole.");
       const outcomes = [
-        { targetId: spellTargetId, succeeded: false, withoutRoll: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          d20TestRoll: { tag: "single", naturalD20: 6 },
+        },
       ];
       const commonArea = {
         originAnchorId: spellTargetId,
@@ -112,7 +116,7 @@ describe("ChatGPT spell area recovery", () => {
       const guidance = chatGptBattleGuidance(root);
       if (guidance.kind !== "ordinaryContinuation")
         throw new Error("Expected the retained spell continuation.");
-      const areaRequest = guidance.areaInputs.find(
+      const areaRequest = guidance.inputs.find(
         (request) => request.holeId === hole.holeId,
       );
       expect(areaRequest).toBeDefined();
@@ -120,20 +124,47 @@ describe("ChatGPT spell area recovery", () => {
         throw new Error("Expected an actionable area input contract.");
       if (!("areaInput" in hole) || hole.areaInput === undefined)
         throw new Error("Expected the spell's canonical area requirement.");
-      expect(areaRequest.valuePath).toBe("fill.value.area");
+      expect(areaRequest.valuePath).toBe("fill");
       expect(areaRequest.instructions.join(" ")).toContain(
         "objectIgnitionFacts: []",
       );
       const validateArea = createDraft2020JsonSchemaValidator().getValidator(
-        requireJsonSchema(areaRequest.areaSchema, "requested spell area"),
+        requireJsonSchema(areaRequest.fillSchema, "requested spell fill"),
       );
-      expect(validateArea(commonArea).valid).toBe(false);
+      expect(
+        validateArea({
+          kind: hole.kind,
+          holeId: hole.holeId,
+          value: { area: commonArea, outcomes },
+        }).valid,
+      ).toBe(false);
       const area = {
-        ...commonArea,
+        originAnchor: { kind: "tableSelectedPoint" },
+        affectedTargetIds: commonArea.affectedTargetIds,
         kind: hole.areaInput.kind,
         objectIgnitionFacts,
       };
-      expect(validateArea(area).valid).toBe(true);
+      const completeFill = {
+        kind: hole.kind,
+        holeId: hole.holeId,
+        value: { area, outcomes },
+      };
+      expect(validateArea(completeFill).valid).toBe(true);
+      expect(
+        validateArea({ ...completeFill, holeId: "foreign-hole" }).valid,
+      ).toBe(false);
+      expect(
+        validateArea({
+          ...completeFill,
+          value: {
+            area,
+            outcomes: [{ targetId: spellTargetId, succeeded: false }],
+          },
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateArea({ ...completeFill, relationshipFacts: [] }).valid,
+      ).toBe(false);
       const afterSavingThrow = Schema.decodeUnknownSync(
         BattleResolutionOutputSchema,
       )(

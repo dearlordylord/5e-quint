@@ -25,6 +25,7 @@ import type { PlaySessionRequestIdentity } from "./play-session-request-identity
 import {
   availablePlaySessionEnvelope,
   recoverableOperationResult,
+  pendingBattleUnresolvedInputs,
   unavailablePlaySessionEnvelope,
 } from "./play-session-envelope.ts";
 import {
@@ -119,7 +120,10 @@ export async function handleReadPlaySession(
       const battleEnvelope = readBattleEnvelopeForRoot(root);
       const navigation =
         toolSurface === "chatgpt"
-          ? { kind: "chatgpt" as const, battle: chatGptBattleGuidance(root) }
+          ? {
+              kind: "chatgpt" as const,
+              battle: chatGptBattleGuidance(root, routed.success.playSessionId),
+            }
           : { kind: "regular" as const };
       if (Result.isFailure(battleEnvelope)) {
         const operationContent = battlePresentationIssueContent(
@@ -182,14 +186,17 @@ export async function handlePlaySessionOperation(
     readonly handle: (
       root: McpPlaySessionRoot,
       args: unknown,
+      playSessionId: PlaySessionId,
     ) =>
       | {
           readonly content: unknown;
           readonly commandRetention: "retain" | "skip";
+          readonly retainedArguments?: Readonly<Record<string, unknown>>;
         }
       | Promise<{
           readonly content: unknown;
           readonly commandRetention: "retain" | "skip";
+          readonly retainedArguments?: Readonly<Record<string, unknown>>;
         }>;
   } & (
     | {
@@ -216,7 +223,11 @@ export async function handlePlaySessionOperation(
     routed.success.playSessionId,
     routed.success.caller,
     async (root) => {
-      const execution = await input.handle(root, routed.success.operationArgs);
+      const execution = await input.handle(
+        root,
+        routed.success.operationArgs,
+        routed.success.playSessionId,
+      );
       const operationContent = execution.content;
       const operationResult = isToolContent(operationContent)
         ? "structuredContent" in operationContent
@@ -226,6 +237,13 @@ export async function handlePlaySessionOperation(
       return {
         operationContent,
         commandRetention: execution.commandRetention,
+        retainedArguments:
+          execution.retainedArguments ?? routed.success.operationArgs,
+        continuationInputs: pendingBattleUnresolvedInputs(
+          root,
+          operationResult,
+          isToolContent(operationContent) && operationContent.isError === true,
+        ),
         operationResult: recoverableOperationResult(
           root,
           operationResult,
@@ -234,7 +252,13 @@ export async function handlePlaySessionOperation(
         projection: root.sessionStore.snapshot(),
         navigation:
           input.toolSurface === "chatgpt"
-            ? { kind: "chatgpt" as const, battle: chatGptBattleGuidance(root) }
+            ? {
+                kind: "chatgpt" as const,
+                battle: chatGptBattleGuidance(
+                  root,
+                  routed.success.playSessionId,
+                ),
+              }
             : { kind: "regular" as const },
         hasAvailableCharacterSession: Array.from(
           root.sessionStore.characters.entries(),
@@ -245,7 +269,7 @@ export async function handlePlaySessionOperation(
       commandFor: (operation) => ({
         ...retainedPlaySessionCommand(
           input,
-          routed.success.operationArgs,
+          operation.retainedArguments,
           operation.operationContent,
         ),
         admissionVersion: PLAY_SESSION_COMMAND_ADMISSION_VERSION,
@@ -286,6 +310,9 @@ export async function handlePlaySessionOperation(
     ...(result.success.value.navigation.kind === "chatgpt"
       ? { chatGptNavigation: result.success.value.navigation.battle }
       : {}),
+    ...(result.success.value.continuationInputs === undefined
+      ? {}
+      : { continuationInputs: result.success.value.continuationInputs }),
     operationResult: result.success.value.operationResult,
     projection: result.success.value.projection,
     hasAvailableCharacterSession:

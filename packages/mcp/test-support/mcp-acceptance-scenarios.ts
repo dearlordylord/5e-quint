@@ -43,6 +43,10 @@ const CatalogUnitListProtocolSchema = Schema.Struct({
     Schema.Array(Schema.Struct({ id: Schema.String })),
   ),
 });
+const StatBlockCatalogPageProtocolSchema = Schema.Struct({
+  statBlocks: Schema.Array(Schema.Struct({ statBlockId: Schema.String })),
+  nextOffset: Schema.NullOr(Schema.Number),
+});
 const CatalogUnitDetailProtocolSchema = Schema.Struct({
   unitRecordJson: Schema.String,
 });
@@ -652,10 +656,15 @@ export async function verifyToolContract(
     srdUnitCollection.units.find(({ id }) => id === "magic_missile"),
   );
 
-  const statBlocks = await callTool(client, "list_stat_blocks", {});
-  const statBlockIds = (
-    get(statBlocks, "statBlocks") as Array<{ statBlockId: string }>
-  ).map((statBlock) => statBlock.statBlockId);
+  const statBlockIds: string[] = [];
+  let offset: number | null = 0;
+  do {
+    const page = Schema.decodeUnknownSync(StatBlockCatalogPageProtocolSchema)(
+      await callTool(client, "list_stat_blocks", { offset }),
+    );
+    statBlockIds.push(...page.statBlocks.map(({ statBlockId }) => statBlockId));
+    offset = page.nextOffset;
+  } while (offset !== null);
   assert.ok(statBlockIds.includes("stat_block_goblin_warrior"));
   assert.ok(statBlockIds.includes("stat_block_skeleton"));
   assert.deepEqual(
@@ -1987,7 +1996,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
       value: {
         area: {
           kind: areaKind,
-          originAnchorId: "sphinx",
+          originAnchor: { kind: "combatant", combatantId: "sphinx" },
           affectedTargetIds: ["sphinx"],
           objectIgnitionFacts: [],
         },

@@ -2860,8 +2860,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       value: {
         ...saveFill.value,
         area: {
-          ...area,
           kind: "pointOriginSphereSaveDamageArea",
+          originAnchor: { kind: "combatant", combatantId: area.originAnchorId },
+          affectedTargetIds: area.affectedTargetIds,
           objectIgnitionFacts: [],
         },
       },
@@ -3153,7 +3154,7 @@ function fireballSavingThrowOutcomeFill(
     value: {
       area: {
         kind: "pointOriginSphereSaveDamageArea",
-        originAnchorId: spellCasterId,
+        originAnchor: { kind: "combatant", combatantId: spellCasterId },
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts,
       },
@@ -3180,7 +3181,7 @@ function shatterSavingThrowOutcomeFill(
     value: {
       area: {
         kind: "pointOriginSphereObjectDamageArea",
-        originAnchorId: spellCasterId,
+        originAnchor: { kind: "combatant", combatantId: spellCasterId },
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         nonmagicalUnattendedObjectDamageFacts,
       },

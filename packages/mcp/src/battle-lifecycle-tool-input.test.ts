@@ -11,13 +11,11 @@ describe("battle lifecycle tool input", () => {
 
     expect(Result.isFailure(decoded)).toBe(true);
     if (Result.isSuccess(decoded)) return;
-    expect(decoded.failure).toMatchObject({
-      isError: true,
-      content: [
-        {
-          text: expect.stringContaining('"code": "INVALID_ARGUMENTS"'),
-        },
-      ],
+    expect(decoded.failure.isError).toBe(true);
+    expect(
+      JSON.parse(decoded.failure.content[0]?.text ?? "null"),
+    ).toMatchObject({
+      details: { code: "INVALID_ARGUMENTS" },
     });
   });
 });

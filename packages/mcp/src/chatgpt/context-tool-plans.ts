@@ -44,6 +44,11 @@ export const CHATGPT_CONTEXT_TOOLS = {
     description:
       "Retain the existing finalize_character operation and its current input contract.",
   },
+  inspect_stat_block: {
+    family: "catalog",
+    description:
+      "Read the canonical installed SRD Stat Block without changing a Play Session.",
+  },
   inspect_catalog_unit: {
     family: "catalog",
     description:

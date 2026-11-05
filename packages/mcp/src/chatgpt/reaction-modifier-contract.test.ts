@@ -24,7 +24,7 @@ import {
 import { createMcpPlaySessionRoot } from "../composition-root.ts";
 import { BattleResolutionOutputSchema } from "../battle-tool-output.ts";
 import { jsonContentPayload } from "../tool-content.ts";
-import { chatGptBattleGuidance } from "./battle-guidance.ts";
+import { chatGptBattleGuidance } from "../../test-support/chatgpt-battle-guidance.ts";
 import { CHATGPT_EXECUTION_TOOLS } from "./tool-surface.ts";
 import { ChatGptBattleExecutionArgsSchema } from "./battle-execution-schema.ts";
 import {

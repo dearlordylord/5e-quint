@@ -1,5 +1,6 @@
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import fc from "fast-check";
+import { DieRollResult } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -23,6 +24,7 @@ import {
   spellSavingThrowOutcomeHole,
   spellSavingThrowAbility,
   validatePreparedSlotSpellDamageGroups,
+  allocatedSpellDamageDice,
   validateSpellBurstDamageFill,
   validateSpellHealingFill,
 } from "./battle-reducer/spells-damage-fills.ts";
@@ -1768,10 +1770,13 @@ describe("battle fill protocol boundary owners", () => {
         spatialFacts: [],
       }),
     ).toBe(session.state);
-    const allocation = [
-      { targetId: goblinId, count: 2 },
-      { targetId: fighterId, count: 1 },
-    ] as const;
+    const allocation = allocatedSpellDamageDice(
+      [
+        { targetId: goblinId, count: 2 },
+        { targetId: fighterId, count: 1 },
+      ],
+      { dieSize: 4 },
+    );
     const fill = damageRollFillWithGroups(
       { kind: "rolledDice", holeId: holeId("boundary-repeated-damage") },
       [[1, 2], [3]],
@@ -1811,6 +1816,17 @@ describe("battle fill protocol boundary owners", () => {
         optionId: "poison" as const,
       },
     };
+    const unsupportedReroll: Extract<
+      BattleFill,
+      { readonly kind: "rolledDice" }
+    > = {
+      ...fill,
+      spellDamageReroll: {
+        kind: "reroll",
+        effectKind: "damage_dice_reroll",
+        dice: [{ original: DieRollResult(1), replacement: DieRollResult(4) }],
+      },
+    };
     expect(validatePreparedSlotSpellDamageGroups(fill, allocation)).toBeNull();
     expect(
       validatePreparedSlotSpellDamageGroups(unsupportedDieFloor, allocation),
@@ -1820,6 +1836,34 @@ describe("battle fill protocol boundary owners", () => {
     expect(
       validatePreparedSlotSpellDamageGroups(
         unsupportedAbilityModifier,
+        allocation,
+      ),
+    ).toBe(
+      "Attack damage ability modifier choices are not available for this damage-roll owner.",
+    );
+    expect(
+      validatePreparedSlotSpellDamageGroups(unsupportedReroll, allocation),
+    ).toBe(
+      "Empowered Spell damage rerolls are not available for this damage-roll owner.",
+    );
+    expect(
+      validatePreparedSlotSpellDamageGroups(
+        {
+          ...unsupportedReroll,
+          ...unsupportedAbilityModifier,
+          ...unsupportedDieFloor,
+        },
+        allocation,
+      ),
+    ).toBe(
+      "Attack damage die floor choices are not available for this damage-roll owner.",
+    );
+    expect(
+      validatePreparedSlotSpellDamageGroups(
+        {
+          ...unsupportedReroll,
+          ...unsupportedAbilityModifier,
+        },
         allocation,
       ),
     ).toBe(

@@ -166,6 +166,12 @@ export const OPERATION_ACCOUNTING = {
       at("packages/mcp/src/character-tools.ts", "handleCharacterToolCall"),
       REASONS.publicEntry,
     ),
+    inspect_stat_block: account(
+      "operation",
+      "inspect_stat_block",
+      at("packages/mcp/src/content-tools.ts", "handleContentToolCall"),
+      REASONS.publicEntry,
+    ),
     inspect_catalog_unit: account(
       "operation",
       "inspect_catalog_unit",

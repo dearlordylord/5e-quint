@@ -51,7 +51,6 @@
         "draftIds",
         "characterIds",
         "selectedStatBlockId",
-        "sourcePath",
         "statBlockId",
         "choiceKey",
         "draftId",
@@ -111,7 +110,8 @@
         "sourceHeldObjectProcedureRef",
         "sourceManifestationProcedureRef",
         "expectedSelectionId",
-        "cancelledSelectionId"
+        "cancelledSelectionId",
+        "actKey"
       ],
       "directions": ["output"],
       "classification": "workflowCorrelationIdentifier",
@@ -119,7 +119,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "566eaca51121c1f763fc81a8dd5e310490116471a36995e0f7d75f46cb21b5b4"
+      "scopeDigest": "e25ba8825a9671677a4c92d8bf56cb8b1b22df82c5759d75d0211c7d661b2f97"
     },
     {
       "schemaOwners": [
@@ -194,16 +194,9 @@
         "affectedObjectIds",
         "objectIds",
         "choiceKey",
-        "focusProcedureRef",
         "responderId",
-        "sourceEffectRef",
-        "effectOwnerId",
-        "readiedMovementActorId",
-        "readiedActorId",
-        "formExecutionRef",
-        "weaponItemId",
-        "invocationRef",
-        "expectedSelectionId"
+        "expectedSelectionId",
+        "actKey"
       ],
       "directions": ["input"],
       "classification": "workflowCorrelationIdentifier",
@@ -211,7 +204,7 @@
       "recipients": ["service runtime"],
       "retentionOwner": "canonical catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "b0bc33ded8cbd48d70be16d0a2e74d702936bf5d083bc9cf763a59530f5a2b0d"
+      "scopeDigest": "49318bd085a245b79fd7a32da352f17d8eef70b763590dd7d5cfb5c68072230c"
     },
     {
       "schemaOwners": [
@@ -239,7 +232,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "4dcf8b0008171389bccf7350319bc0ca050701d5d36fb8ad2f22947eba8cb262"
+      "scopeDigest": "081c87db9b05a6dc7b9f88984813c8b9fc3b514f63561e85c7141b6c60c1407c"
     },
     {
       "schemaOwners": [
@@ -281,7 +274,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "not retained as a separate record",
       "privacyAnchor": "request-observations",
-      "scopeDigest": "c895a7a3e4650d56112be01194eab52e9713db70b6ae8e81f47571724b32efea"
+      "scopeDigest": "1029d28b615f046e8d7b54f41b1f2987305ca35e461e06524b6767b9ac628e5b"
     },
     {
       "schemaOwners": ["expiresAt"],
@@ -291,7 +284,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "6b9fd6971935cff5e6c9087873e95d50471a98776e19478288e310b26acfecc2"
+      "scopeDigest": "b0bb06cdfd34cb48850e036131b3c4b032773af594797f565025404ee1b97290"
     },
     {
       "schemaOwners": [
@@ -302,21 +295,18 @@
         "naturalLanguagePolicy",
         "name",
         "creatureType",
-        "provenanceKind",
-        "provenanceSection",
         "next",
         "unitRecordJson",
         "areaLabel",
-        "attackName",
-        "attackType",
-        "description",
         "destroyedBy",
         "limitGroup",
         "newKind",
         "password",
         "scope",
         "sound",
-        "untilEndedBy"
+        "untilEndedBy",
+        "instructions",
+        "statBlockRecordJson"
       ],
       "directions": ["output"],
       "classification": "unconstrainedText",
@@ -324,20 +314,17 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "redistributable SRD catalog or Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "fad7bbcd5f324bff6de5e2852e87932c27a52f54ed0fc8bd5a12b1fbfeaf5527"
+      "scopeDigest": "fa039002ca05566d75e2352f1bf2a55d274901153b749034c7785a58a25bd969"
     },
     {
-      "schemaOwners": [
-        "activatedOngoingFeatureProcedureRef",
-        "readiedSpellCasterId"
-      ],
+      "schemaOwners": ["activatedOngoingFeatureProcedureRef"],
       "directions": ["input"],
       "classification": "authoredContentIdentifier",
-      "userGoal": "Identify the runtime procedure or fictional spell caster offered by the current Battle frontier; these fields carry runtime references despite the name-based scanner classification.",
+      "userGoal": "Identify the runtime procedure offered by the current Battle frontier; this field carries a runtime procedure reference despite the name-based scanner classification.",
       "recipients": ["service runtime"],
       "retentionOwner": "Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "90de4704bafa3c0dc2d1530effa6d2867be63715a5455f9d81fb33c37e6f78a2"
+      "scopeDigest": "0b8eec9efd27148aef94dbb1e3fdb0825f39316a5ff6ff2a612164caa108c8a8"
     },
     {
       "schemaOwners": ["text"],
@@ -347,7 +334,7 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "not retained as a separate record",
       "privacyAnchor": "request-observations",
-      "scopeDigest": "0ea57182d1753325f12622af383b8a4a17dba976925333d7b00c219dcfe73011"
+      "scopeDigest": "b3ef668807b06d7c7c263c2dfe7e3733dec34a7874ee993c5258e8da3185ad40"
     },
     {
       "schemaOwners": ["readiedSpellCasterId"],
@@ -357,17 +344,17 @@
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "Play Session state",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "84e3be2cb6b666291c6c2977f321486d35f05d28563f867e0fb40acfa50a5caf"
+      "scopeDigest": "e0af0d659d2390ef7d05609946214955ce7cf00d0e58130a8a9175e5d950a03f"
     },
     {
       "schemaOwners": ["valuePath"],
       "directions": ["output"],
       "classification": "workflowCorrelationIdentifier",
-      "userGoal": "Locate the exact requested area value within a Battle fill using the service-generated literal fill.value.area.",
+      "userGoal": "Locate the complete requested Battle fill using the service-generated literal fill; its per-request fillSchema identifies the admitted fields.",
       "recipients": ["OpenAI model", "connected user"],
       "retentionOwner": "not retained as a separate record",
       "privacyAnchor": "play-session-data",
-      "scopeDigest": "e8740310712572066e008a842d5d0e1719f964663e112895402428c4101aa51f"
+      "scopeDigest": "2259f32269a5f059c9f6d910f7804573ac13d491e8eab83ef860154e5d512aad"
     }
   ],
   "opaqueNodeDecisions": [
@@ -415,35 +402,41 @@
         "turnConstraintEndTurnSave",
         "sourceTurn",
         "choice",
-        "attacks",
         "companion",
         "state"
       ],
       "directions": ["output"],
       "evidence": "representativeResult",
       "owner": "packages/mcp/src/submission-candidate-evidence.ts",
-      "scopeDigest": "1ba8569ebdc10573ecc793bed14d8edfe0ea2975edf65afb261268b3bed88b7b"
+      "scopeDigest": "498bb74c2b0eb61abe780cbc98622788967015e2005145c3ea5840ce481fdad1"
     },
     {
       "schemaOwners": ["$root", "occurrence"],
       "directions": ["output"],
       "evidence": "canonicalCodec",
       "owner": "packages/mcp/src/play-session-tool-schema.ts",
-      "scopeDigest": "bb69bc381de1e10f98ca534fd725bdc34d6ae4dd1f4a7a26cf3a802f57d43f4e"
+      "scopeDigest": "c046137a1eef3c0e9843d4cf8c1ed17da84f2c848283ed144e304321823889f6"
     },
     {
       "schemaOwners": ["areaInput"],
       "directions": ["output"],
       "evidence": "representativeResult",
       "owner": "packages/mcp/src/chatgpt/battle-area-input-guidance.test.ts",
-      "scopeDigest": "61a20efc867a86dfb28fe4fe4685f5f58d6e1df43803c34c83765a7685f091ec"
+      "scopeDigest": "381bf712e833bca869b07f95ca645374f9a480aca68a2e1f8e514965b8dda476"
     },
     {
-      "schemaOwners": ["areaSchema"],
+      "schemaOwners": ["fillSchema"],
       "directions": ["output"],
       "evidence": "representativeResult",
       "owner": "packages/mcp/src/chatgpt/battle-area-input-guidance.test.ts",
-      "scopeDigest": "91cc56ccb7b597cff6b73585366f37031dc65c940c79f5819a4b0af11c1d1031"
+      "scopeDigest": "f97500e893b57fbf24b116b71e5a1260690ef5b9db805e1fb2f79e825f0c89cf"
+    },
+    {
+      "schemaOwners": ["allocatedDamageDice"],
+      "directions": ["output"],
+      "evidence": "canonicalCodec",
+      "owner": "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+      "scopeDigest": "ea5736c34b1ae3902daba3eff2958617448014294363cce2f967355c655c69ab"
     }
   ],
   "dataHandlingDisclosures": [
@@ -469,7 +462,7 @@
       "implementationOwner": "packages/mcp/src/sqlite-play-session-repository.ts",
       "implementationEvidence": {
         "tag": "canonicalInventory",
-        "digest": "54976c46169a1dea812d378a31abb04dd5bb3adaf6626482310a5b7eb9da0286"
+        "digest": "5034c38ca2b9063eb7e77afe38975ca888199338b57f9b23d00d8468e3c7fa00"
       },
       "privacyAnchor": "play-session-data",
       "privacyEvidence": {
@@ -523,7 +516,7 @@
       "implementationEvidence": {
         "tag": "scopedHumanReview",
         "scope": "Play Session rate-limit repository, SQLite actions, and window policy",
-        "sourceDigest": "ef271798d17bd923e0b71bf0677eb236c869919668b5bc3fec8daec5b2539645"
+        "sourceDigest": "c3c33603a7f9529217ec2c3d11e6c61fdab9f46613934ac388559af60ce4a5d9"
       },
       "privacyAnchor": "rate-limit-capacity",
       "privacyEvidence": {

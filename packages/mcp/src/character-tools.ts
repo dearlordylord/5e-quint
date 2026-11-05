@@ -1,3 +1,4 @@
+import { creationInputGuidance } from "./character-creation-fill-tool-input.ts";
 import {
   fillCreationHoles,
   finalizeCharacterDraft,
@@ -154,6 +155,7 @@ export function handleCharacterToolCall(
 
       return schemaJsonContent(FillCreationHolesOutputSchema, {
         result: projection.value,
+        creationInputs: creationInputGuidance(projection.value.holes),
         storedDraft: result.tag === "accepted" ? result.draft : draft,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
@@ -206,6 +208,9 @@ export function handleCharacterToolCall(
       return schemaJsonContent(FinalizeCharacterOutputSchema, {
         draftId,
         finalization: projection.value,
+        creationInputs: creationInputGuidance(
+          projection.value.tag === "incomplete" ? projection.value.holes : [],
+        ),
         build: finalization.tag === "ready" ? finalization.build : null,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });

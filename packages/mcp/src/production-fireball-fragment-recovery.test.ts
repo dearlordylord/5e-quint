@@ -24,13 +24,18 @@ import { PlaySessionIdSchema } from "./play-session.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
+import { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
 
 const reportedIncompleteArea = {
   originAnchorId: "g1",
   affectedTargetIds: ["g1", "g2", "g3", "g4"],
 };
 const representativeOutcomes = reportedIncompleteArea.affectedTargetIds.map(
-  (targetId) => ({ targetId, succeeded: false, withoutRoll: true }),
+  (targetId) => ({
+    targetId,
+    succeeded: false,
+    d20TestRoll: { tag: "single", naturalD20: 6 },
+  }),
 );
 const BattleReadSchema = Schema.Struct({
   operation: Schema.Struct({ result: BattleSessionOutputSchema }),
@@ -156,15 +161,28 @@ test(
           );
           if (fireball === undefined)
             throw new Error("Expected prepared Fireball.");
+          const guidance = started.chatGptBattleOperations;
+          if (guidance.kind !== "acts")
+            throw new Error("Expected current Act calls.");
+          const fireballCall = guidance.acts
+            .flatMap((act) =>
+              act.kind === "ready" && act.label === "Fireball"
+                ? act.readyCalls
+                : [],
+            )
+            .find((call) => call.tool === "cast_spell");
+          if (fireballCall === undefined)
+            throw new Error("Expected a ready Fireball call.");
           const selected = Schema.decodeUnknownSync(BattleExecutionSchema)(
             await encounter.call("cast_spell", {
               playSessionId,
-              subject: fireball.subject,
+              ...fireballCall.arguments,
             }),
           );
           const spellFrontier = selected.operation.result.envelope.frontier;
           if (spellFrontier.kind !== "holes")
             throw new Error("Expected spell input.");
+          expect(spellFrontier.replaySubject).toEqual(fireball.subject);
           const saveHole = spellFrontier.holes.find(
             (hole) => hole.kind === "savingThrowOutcome",
           );
@@ -195,14 +213,27 @@ test(
           const after = retainedRecord(repository, retainedId);
           expect(after.operations).toHaveLength(before.operations.length + 1);
           expect(after.operations.at(-1)).toEqual({
+            admissionVersion: PLAY_SESSION_COMMAND_ADMISSION_VERSION,
             toolSurface: "chatgpt",
             name: "provide_battle_input",
             args: { fill: incompleteFill },
           });
-          await encounter.call("roll_dice", {
+          const rolled = await encounter.call("roll_dice", {
             playSessionId,
             groups: [{ dice: 8, dieSize: 6 }],
           });
+          expect(rolled).toMatchObject({
+            chatGptBattleOperations: { kind: "ordinaryContinuation" },
+            nextOperations: expect.arrayContaining([
+              "provide_battle_input",
+              "read_battle_state",
+            ]),
+          });
+          const rolledNavigation = Schema.decodeUnknownSync(
+            Schema.Struct({ nextOperations: Schema.Array(Schema.String) }),
+          )(rolled).nextOperations;
+          expect(rolledNavigation).not.toContain("end_battle");
+          expect(rolledNavigation).not.toContain("discover_battle_acts");
           await encounter.call("roll_dice", {
             playSessionId,
             groups: [{ dice: 8, dieSize: 6 }],
@@ -235,7 +266,7 @@ test(
         const guidance = read.chatGptBattleOperations;
         if (guidance.kind !== "ordinaryContinuation")
           throw new Error("Expected spell continuation.");
-        const request = guidance.areaInputs.find(
+        const request = guidance.inputs.find(
           (area) => area.holeId === suspended.saveHole.holeId,
         );
         expect(request?.instructions.join(" ")).toContain(
@@ -252,7 +283,8 @@ test(
               holeId: suspended.saveHole.holeId,
               value: {
                 area: {
-                  ...reportedIncompleteArea,
+                  originAnchor: { kind: "tableSelectedPoint" },
+                  affectedTargetIds: reportedIncompleteArea.affectedTargetIds,
                   kind: "pointOriginSphereSaveDamageArea",
                   objectIgnitionFacts: [],
                 },

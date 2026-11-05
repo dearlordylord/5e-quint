@@ -7376,7 +7376,7 @@ describe("character creation finalization", () => {
           "weapon_mastery_options",
         )]: [
           creationChoiceOptionId("weapon_longsword"),
-          creationChoiceOptionId("weapon_dagger"),
+          creationChoiceOptionId("weapon_flail"),
         ],
       },
     });
@@ -7394,7 +7394,7 @@ describe("character creation finalization", () => {
         featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
         selectedWeaponUnitIds: [
           authoredUnitId("weapon_longsword"),
-          authoredUnitId("weapon_dagger"),
+          authoredUnitId("weapon_flail"),
           authoredUnitId("weapon_spear"),
         ],
       }),
@@ -7414,7 +7414,7 @@ describe("character creation finalization", () => {
         result,
         authoredUnitId("barbarian_weapon_mastery"),
       ),
-    ).toEqual(["weapon_longsword", "weapon_dagger", "weapon_spear"]);
+    ).toEqual(["weapon_longsword", "weapon_flail", "weapon_spear"]);
   });
 
   test("rejects replacing Fighting Style with the already-selected feat", () => {
@@ -8165,7 +8165,7 @@ describe("character creation finalization", () => {
             "weapon_longsword",
             "weapon_spear",
             "weapon_flail",
-            "weapon_shortsword",
+            "weapon_quarterstaff",
           ),
           selectedUnitChoice(
             "class_fighter",
@@ -8547,7 +8547,7 @@ describe("character creation finalization", () => {
             "weapon_longsword",
             "weapon_spear",
             "weapon_flail",
-            "weapon_shortsword",
+            "weapon_quarterstaff",
           ),
           selectedUnitChoice(
             "class_fighter",
@@ -8650,7 +8650,7 @@ describe("character creation finalization", () => {
             "weapon_longsword",
             "weapon_spear",
             "weapon_flail",
-            "weapon_shortsword",
+            "weapon_quarterstaff",
           ),
           selectedUnitChoice(
             "class_fighter",

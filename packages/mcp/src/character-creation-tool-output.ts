@@ -1,3 +1,4 @@
+import { creationInputGuidance } from "./character-creation-fill-tool-input.ts";
 import type {
   CharacterDraft,
   CharacterDraftId,
@@ -19,6 +20,7 @@ export function creationDraftPayload(
 ) {
   return {
     draft,
+    creationInputs: creationInputGuidance(projection.holes),
     holes: projection.holes,
     finalization: projection.finalization,
     session: mcpSessionSummary(root.sessionStore.snapshot()),

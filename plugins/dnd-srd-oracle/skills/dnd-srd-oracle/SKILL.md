@@ -32,12 +32,13 @@ Battle, use the exposed add/remove-combatant operations for supported roster
 changes and keep the returned occupancy and settlement projections authoritative.
 
 For Battle Acts, use `chatGptBattleOperations` when the response supplies it to
-select the named operation for the current subject or Reaction. Copy the current
-subject into its named Act tool, without a fill, to select it and open any holes.
-When `presentation.kind` is `attack`, show `presentation.name` and distinguish
-the returned damage selections. Copy the complete subject, including
-`statBlockDamageSelection` when present. An attack name alone does not identify
-an executable option.
+select the current Act or Reaction. For an Act marked `ready`, choose its labeled
+`readyCalls` entry, copy its `arguments` unchanged, and add the selected
+`playSessionId` to open its pending inputs. Copy the opaque `actKey` exactly; the server resolves the current selection.
+For `tableFactsRequired`, copy its arguments and supply its `requiredArguments`
+from the table. When `presentation.kind` is `attack`, show `presentation.name`
+and distinguish the returned damage selections; the ready call already retains
+the complete selection.
 Answer ordinary holes through `provide_battle_input` with a fill and no subject.
 Select a Reaction through its named operation with an `interruptDecision` fill
 and no subject. For a `reactionRollOrDamageReduction` choice, include the
@@ -46,8 +47,13 @@ use `[]` when it requests no roll. Other Reaction choices use `choice.fills: []`
 and request any later ordinary inputs through `provide_battle_input`.
 The pending transaction owns the parent.
 
-Use the current hole's fact request to construct its answer. For an area request,
-follow its `areaInput` kind and the returned `areaInputs` schema for `fill.value.area`.
+Use the current hole's fact request and its matching
+`chatGptBattleOperations.inputs[].fillSchema` to construct the complete fill.
+Copy its pinned kind and holeId, and supply only fields admitted by that request.
+For a point-origin Sphere, `originAnchor: { kind: "tableSelectedPoint" }`
+represents the point chosen by the table's geometry; use a combatant anchor only
+when the table chose that combatant's position. A rolled Saving Throw includes
+its actual `d20TestRoll`; `withoutRoll` applies only when no roll was required.
 Supply an explicit
 empty collection only when the table confirms there are no requested facts to
 report. After a rejected fill, correct the input and retry the returned hole.

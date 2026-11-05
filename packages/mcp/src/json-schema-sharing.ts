@@ -381,3 +381,39 @@ export function mapSchemaChildren(
     }),
   );
 }
+
+export function isJsonSchemaObject(value: unknown): value is McpOutputSchema {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+export function jsonSchemaRecord(value: unknown): McpOutputSchema {
+  if (!isJsonSchemaObject(value))
+    throw new Error("Canonical JSON schemas must declare object fields.");
+  return value;
+}
+export function jsonSchemaAlternatives(
+  schema: McpOutputSchema,
+  definitions: McpOutputSchema,
+): readonly McpOutputSchema[] {
+  const resolved = resolveLocalSchemaReference(schema, definitions);
+  return Array.isArray(resolved.anyOf)
+    ? resolved.anyOf.flatMap((branch) =>
+        jsonSchemaAlternatives(jsonSchemaRecord(branch), definitions),
+      )
+    : [resolved];
+}
+export function jsonSchemaHasKind(
+  schema: McpOutputSchema,
+  kind: string,
+  definitions: McpOutputSchema,
+): boolean {
+  const properties = jsonSchemaRecord(schema.properties);
+  if (!isJsonSchemaObject(properties.kind)) return false;
+  const discriminant = resolveLocalSchemaReference(
+    properties.kind,
+    definitions,
+  );
+  return (
+    discriminant.const === kind ||
+    (Array.isArray(discriminant.enum) && discriminant.enum.includes(kind))
+  );
+}

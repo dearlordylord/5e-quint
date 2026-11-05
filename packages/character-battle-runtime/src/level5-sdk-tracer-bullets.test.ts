@@ -3425,7 +3425,7 @@ function fireballSavingThrowOutcomeFill(input: {
     value: {
       area: {
         kind: "pointOriginSphereSaveDamageArea",
-        originAnchorId: input.casterId,
+        originAnchor: { kind: "combatant", combatantId: input.casterId },
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: input.objectIgnitionFacts,
       },

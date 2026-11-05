@@ -1922,7 +1922,7 @@ describe("battle runtime: Sleep", () => {
     ).toBe(true);
   });
 
-  test("Sleep rejects duplicate or unselected non-sleeper facts", () => {
+  test("Sleep rejects incomplete or contradictory Sphere outcome evidence", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-non-sleeper-validation"),
       combatants: [
@@ -2012,6 +2012,41 @@ describe("battle runtime: Sleep", () => {
       message:
         "hit-point-budget condition non-sleeper facts must not duplicate targets.",
     });
+    const outcome = {
+      targetId: goblinId,
+      succeeded: false,
+      withoutRoll: true as const,
+    };
+    for (const [outcomes, message] of [
+      [
+        [],
+        "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.",
+      ],
+      [
+        [outcome, outcome],
+        "hit-point-budget condition Saving Throw outcomes must not duplicate targets.",
+      ],
+    ] as const) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            {
+              kind: "savingThrowOutcome",
+              holeId: savingThrows.holeId,
+              value: {
+                area: {
+                  originAnchorId: wizardId,
+                  affectedTargetIds: [goblinId],
+                },
+                outcomes,
+              },
+            },
+          ],
+        }),
+      ).toMatchObject({ tag: "invalid", message });
+    }
   });
 
   test("Sleep cannot be readied through direct reducer input", () => {

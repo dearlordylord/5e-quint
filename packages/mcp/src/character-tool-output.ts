@@ -1,3 +1,4 @@
+import { CreationInputGuidanceSchema } from "./creation-input-guidance-schema.ts";
 import {
   ABILITY_SCORE_GENERATION_DRAFT_PATH,
   CHARACTER_DRAFT_CHOICE_PATHS,
@@ -279,17 +280,20 @@ const CreationFillResultSchema = Schema.Union([
 ]);
 
 export const CreationDraftOutputSchema = Schema.Struct({
+  creationInputs: Schema.Array(CreationInputGuidanceSchema),
   draft: JsonObjectSchema,
   holes: Schema.Array(CreationHoleSchema),
   finalization: CreationFinalizationSchema,
   session: McpSessionSummarySchema,
 });
 export const FillCreationHolesOutputSchema = Schema.Struct({
+  creationInputs: Schema.Array(CreationInputGuidanceSchema),
   result: CreationFillResultSchema,
   storedDraft: JsonObjectSchema,
   session: McpSessionSummarySchema,
 });
 export const FinalizeCharacterOutputSchema = Schema.Struct({
+  creationInputs: Schema.Array(CreationInputGuidanceSchema),
   draftId: Schema.String,
   finalization: CreationFinalizationSchema,
   build: Schema.Union([JsonObjectSchema, Schema.Null]),

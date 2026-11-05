@@ -1769,13 +1769,21 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome" && "area" in fill.value,
   );
-  if (
-    areaSave !== undefined &&
-    "area" in areaSave.value &&
-    "originAnchorId" in areaSave.value.area &&
-    areaSave.value.area.originAnchorId !== input.witness.triggeringCreatureId
-  ) {
-    return "areaCenterMismatch";
+  if (areaSave !== undefined && "area" in areaSave.value) {
+    const area = areaSave.value.area;
+    const centeredOnTrigger =
+      "originAnchor" in area
+        ? Match.value(area.originAnchor).pipe(
+            Match.when(
+              { kind: "combatant" },
+              (anchor) =>
+                anchor.combatantId === input.witness.triggeringCreatureId,
+            ),
+            Match.when({ kind: "tableSelectedPoint" }, () => false),
+            Match.exhaustive,
+          )
+        : area.originAnchorId === input.witness.triggeringCreatureId;
+    if (!centeredOnTrigger) return "areaCenterMismatch";
   }
   return null;
 }

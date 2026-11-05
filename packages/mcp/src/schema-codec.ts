@@ -205,6 +205,18 @@ export function mcpModelOutputJsonSchema<A, I>(
   return identified;
 }
 
+export function withCanonicalMcpOutputSchema(
+  modelSchema: McpOutputSchema,
+  canonicalSchema: McpOutputSchema,
+): McpOutputSchema {
+  const bound = { ...modelSchema };
+  Object.defineProperty(bound, CANONICAL_OUTPUT_SCHEMA, {
+    value: canonicalSchema,
+    enumerable: false,
+  });
+  return bound;
+}
+
 export function canonicalMcpOutputSchema(
   schema: McpOutputSchema,
 ): McpOutputSchema {

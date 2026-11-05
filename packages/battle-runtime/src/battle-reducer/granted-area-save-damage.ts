@@ -1,3 +1,4 @@
+import { combatantAnchoredAreaOriginIs } from "./spell-area-origin.ts";
 // Granted area Save damage target-granted Magic action.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
@@ -720,7 +721,7 @@ function validateGrantedAreaSaveDamageActionSavingThrowFill(
     return "Granted area Save damage requires 15-foot Cone area facts.";
   }
   const area = fill.value.area;
-  if (area.originAnchorId !== actorId) {
+  if (!combatantAnchoredAreaOriginIs(area, actorId)) {
     return "Granted area Save damage Cone must originate from the exhaling creature.";
   }
   const areaValidation = validateGrantedAreaSaveDamageActionArea(state, area);
@@ -747,7 +748,10 @@ function validateGrantedAreaSaveDamageActionSavingThrowFill(
 /* v8 ignore start -- @preserve -- Malformed area-witness validator: the Granted area Save damage Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
 function validateGrantedAreaSaveDamageActionArea(
   state: BattleState,
-  area: BattleSpellAreaChoice,
+  area: Extract<
+    BattleSpellAreaChoice,
+    { readonly originAnchorId: CombatantId }
+  >,
 ): string | null {
   if (!state.combatants.has(area.originAnchorId)) {
     return "Granted area Save damage Cone origin must be a combatant in this battle.";

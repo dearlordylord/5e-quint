@@ -1,4 +1,3 @@
-import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { discoverBattleActCandidates, endTurn } from "@dnd/battle-runtime";
 import {
   longCastingBattle,
@@ -7,8 +6,8 @@ import {
   advance,
   resolved,
 } from "../../../battle-runtime/src/long-casting-lifecycle.test-support.ts";
-import { chatGptBattleExecutionInputSchema } from "./battle-execution-schema.ts";
-import { Result } from "effect";
+import { ChatGptBattleExecutionArgsSchema } from "./battle-execution-schema.ts";
+import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import type { BattleSubject } from "@dnd/battle-runtime";
 import {
@@ -24,9 +23,6 @@ import { chatGptBattleSubjectExposure } from "./battle-operation-routing.ts";
 
 describe("ChatGPT Battle operation ownership", () => {
   it("routes admitted Stat Block casts and long casting progress through cast_spell", () => {
-    const validate = new AjvJsonSchemaValidator().getValidator(
-      chatGptBattleExecutionInputSchema("cast_spell"),
-    );
     for (const bonusSection of [false, true]) {
       const session = longCastingBattle({
         time: { kind: "action" },
@@ -44,7 +40,13 @@ describe("ChatGPT Battle operation ownership", () => {
       if (Result.isFailure(exposure))
         throw new Error("Expected public cast route.");
       expect(exposure.success.tools).toEqual(["cast_spell"]);
-      expect(validate({ subject: act.subject }).valid).toBe(true);
+      expect(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(ChatGptBattleExecutionArgsSchema)({
+            subject: act.subject,
+          }),
+        ),
+      ).toBe(true);
     }
     const initial = longCastingBattle().state;
     const start = castingAction(initial);
@@ -61,7 +63,13 @@ describe("ChatGPT Battle operation ownership", () => {
       if (Result.isFailure(exposure))
         throw new Error("Expected public long cast route.");
       expect(exposure.success.tools).toEqual(["cast_spell"]);
-      expect(validate({ subject: act.subject }).valid).toBe(true);
+      expect(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(ChatGptBattleExecutionArgsSchema)({
+            subject: act.subject,
+          }),
+        ),
+      ).toBe(true);
     }
   });
   it("rejects missing procedure bindings and unavailable readied responses", () => {

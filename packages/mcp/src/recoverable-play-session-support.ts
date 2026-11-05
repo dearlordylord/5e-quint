@@ -57,6 +57,7 @@ export function rootFromRecord(
   for (const operation of record.operations) {
     const operationRoot = Match.value(operation.admissionVersion).pipe(
       Match.when(undefined, () => historicalRoot),
+      Match.when(2, () => root),
       Match.when(PLAY_SESSION_COMMAND_ADMISSION_VERSION, () => root),
       Match.exhaustive,
     );

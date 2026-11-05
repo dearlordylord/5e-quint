@@ -78,10 +78,13 @@ export const CHATGPT_EXECUTION_TOOLS = {
   ),
   discover_battle_acts: retainedTool(
     battleToolDefinitionsByName.discover_battle_acts,
-    "Read the current Battle checkpoint, frontier and available acts. The response's chatGptBattleOperations field lists named tools for each subject or Reaction choice. Select an Act with its named tool and subject, then supply ordinary facts through provide_battle_input. Select a Reaction with its named tool and interruptDecision fill, without a subject. A reactionRollOrDamageReduction choice includes its requested reduction roll in choice.fills; other choices use choice.fills: [] and request later ordinary inputs. Finish the current continuation before choosing another act.",
+    "Read the current Battle checkpoint, frontier and available acts. The response's chatGptBattleOperations field provides labeled Act readyCalls. Copy a chosen ready call's arguments unchanged and add only the selected playSessionId. A tableFactsRequired Act instead supplies its arguments and requiredArguments for table input. Then supply ordinary facts through provide_battle_input. Select a Reaction with its named tool and interruptDecision fill, without a subject. A reactionRollOrDamageReduction choice includes its requested reduction roll in choice.fills; other choices use choice.fills: [] and request later ordinary inputs. Finish the current continuation before choosing another act.",
   ),
   describe_mcp_workflow: retainedTool(
     contentToolDefinitionsByName.describe_mcp_workflow,
+  ),
+  inspect_stat_block: retainedTool(
+    contentToolDefinitionsByName.inspect_stat_block,
   ),
   inspect_catalog_unit: retainedTool(
     contentToolDefinitionsByName.inspect_catalog_unit,

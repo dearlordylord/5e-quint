@@ -143,7 +143,10 @@ describe("Play Session operation projection", () => {
     expect(Result.isSuccess(unresolved)).toBe(true);
     if (Result.isFailure(unresolved)) return;
     expect(unresolved.success.length).toBeGreaterThan(0);
-    expect(unresolved.success[0]?.sourcePath).toBe("$.holes");
+    expect(unresolved.success[0]?.source).toEqual({
+      kind: "operationResult",
+      path: "$.holes",
+    });
     expect(
       nextOperationsFrom(
         characterToolNames.createCharacterDraft,
@@ -190,7 +193,11 @@ describe("Play Session operation projection", () => {
     expect(Result.isSuccess(unresolved)).toBe(true);
     if (Result.isFailure(unresolved)) return;
     expect(unresolved.success.length).toBeGreaterThan(0);
-    expect(unresolved.success[0]?.sourcePath).toMatch(
+    const source = unresolved.success[0]?.source;
+    expect(source?.kind).toBe("operationResult");
+    if (source?.kind !== "operationResult")
+      throw new Error("Expected operation result input source");
+    expect(source.path).toMatch(
       /^\$\.envelope\.frontier\.acts\[\d+\]\.initialHoles$/u,
     );
     expect(

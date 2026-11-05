@@ -41,7 +41,7 @@ export const characterToolDefinitionsByName = {
     name: characterToolNames.discoverCreationHoles,
     title: "Show Character Creation Choices",
     description:
-      "Show the unanswered choices for an existing character draft, including allowed options, draft revision, and readiness to finalize. Use when creating or resuming a character; retain the returned holeId and optionIds when applying choices.",
+      "Show the unanswered choices for an existing character draft, including allowed options, draft revision, and readiness to finalize. Use when creating or resuming a character; follow creationInputs[].fillSchema and preserve kind and holeId and supply the matching variant fields when applying choices.",
     inputSchema: draftIdInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
@@ -50,7 +50,7 @@ export const characterToolDefinitionsByName = {
     name: characterToolNames.fillCreationHoles,
     title: "Apply Character Creation Choices",
     description:
-      "Apply the player's choices to an existing character draft using the holeId and optionIds returned for its current unanswered choices and the expected draft revision. Save the complete batch together and return the updated draft, or return validation issues and leave the draft unchanged.",
+      "Apply the player's choices to an existing character draft using creationInputs[].fillSchema, preserving kind and holeId and supplying the matching variant fields for its current unanswered choices and the expected draft revision. Save the complete batch together and return the updated draft, or return validation issues and leave the draft unchanged.",
     inputSchema: fillCreationHolesInputSchema,
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),

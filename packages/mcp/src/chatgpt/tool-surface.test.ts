@@ -40,7 +40,7 @@ import {
 import {
   battleMovementInputGuidance,
   chatGptBattleGuidance,
-} from "./battle-guidance.ts";
+} from "../../test-support/chatgpt-battle-guidance.ts";
 import { jsonContentPayload } from "../tool-content.ts";
 import { BattleResolutionOutputSchema } from "../battle-tool-output.ts";
 import { resolveBattleActInputSchema } from "../battle-tool-input.ts";
@@ -106,7 +106,10 @@ describe("ChatGPT tool surface", () => {
       [{ subject, fill }, false],
       [{ subject, fill, reactionSpellTargetFacts: [] }, false],
     ] as const) {
-      expect(validate(input).valid).toBe(accepted);
+      const { subject: _subject, ...tableFacts } = input;
+      expect(
+        validate({ actKey: "act:" + "a".repeat(32), ...tableFacts }).valid,
+      ).toBe(accepted);
       expect(
         Result.isSuccess(
           Schema.decodeUnknownResult(ChatGptBattleExecutionArgsSchema, {
@@ -499,9 +502,9 @@ describe("ChatGPT tool surface", () => {
     const action = CHATGPT_EXECUTION_TOOLS.heal_self.definition;
     const reaction = CHATGPT_EXECUTION_TOOLS.decline_reaction.definition;
     const both = CHATGPT_EXECUTION_TOOLS.attack.definition;
-    expect(action.inputSchema.properties).toHaveProperty("subject");
+    expect(action.inputSchema.properties).toHaveProperty("actKey");
     expect(action.inputSchema.properties).not.toHaveProperty("fill");
-    expect(action.description).toContain("subject");
+    expect(action.description).toContain("readyCalls");
     expect(action.description).not.toContain("interruptDecision");
     expect(reaction.inputSchema.properties).not.toHaveProperty("subject");
     expect(reaction.inputSchema.properties).toHaveProperty("fill");
@@ -517,7 +520,7 @@ describe("ChatGPT tool surface", () => {
     expect(reaction.description).toContain(
       "do not automatically retry or decline",
     );
-    expect(both.inputSchema.properties).toHaveProperty("subject");
+    expect(both.inputSchema.properties).toHaveProperty("actKey");
     expect(both.inputSchema.properties).toHaveProperty("fill");
     expect(both.description).toContain("subject");
     expect(both.description).toContain("interruptDecision");
@@ -525,7 +528,7 @@ describe("ChatGPT tool surface", () => {
     expect(both.description).toContain("choice.fills: []");
   });
 
-  it("advertises the complete static 127-tool contract with annotations", () => {
+  it("advertises the complete planned tool contract with annotations", () => {
     const definitions = buildAdvertisedToolDefinitions(
       chatGptExecutionToolDefinitions,
       "hosted",
@@ -534,7 +537,7 @@ describe("ChatGPT tool surface", () => {
     expect(definitions.map((tool) => tool.name).sort()).toEqual(
       Object.keys(CHATGPT_TOOL_PLAN).sort(),
     );
-    expect(definitions).toHaveLength(127);
+    expect(definitions).toHaveLength(Object.keys(CHATGPT_TOOL_PLAN).length);
     const validator = createDraft2020JsonSchemaValidator();
     for (const tool of definitions) {
       expect(
@@ -566,7 +569,14 @@ describe("ChatGPT tool surface", () => {
         }),
       );
     }
-    expect(buildAdvertisedToolDefinitions()).toHaveLength(27);
+    const inspector = definitions.find(
+      (tool) => tool.name === "inspect_stat_block",
+    );
+    expect(inspector?.annotations.readOnlyHint).toBe(true);
+    expect(inspector?.inputSchema.properties).toHaveProperty("statBlockId");
+    expect(inspector?.inputSchema.properties).not.toHaveProperty(
+      "playSessionId",
+    );
   });
 
   it("reviews the named surface with canonical routed and codec inputs", () => {
@@ -617,8 +627,19 @@ describe("ChatGPT tool surface", () => {
     expect(codec({ ...query, query: { kind: "spellAccess" } }).valid).toBe(
       false,
     );
-    expect(buildCanonicalToolDefinitions()).toHaveLength(27);
-    expect(buildCanonicalCodecToolDefinitions()).toHaveLength(27);
+    const advertisedNames = buildAdvertisedToolDefinitions()
+      .map((tool) => tool.name)
+      .sort();
+    expect(
+      buildCanonicalToolDefinitions()
+        .map((tool) => tool.name)
+        .sort(),
+    ).toEqual(advertisedNames);
+    expect(
+      buildCanonicalCodecToolDefinitions()
+        .map((tool) => tool.name)
+        .sort(),
+    ).toEqual(advertisedNames);
   });
 
   it("fits the repository's ChatGPT app-version tool catalog budget", () => {
@@ -717,9 +738,9 @@ describe("ChatGPT tool surface", () => {
     if (guidance.kind !== "acts") throw new Error("Expected discovered acts.");
     expect(guidance.acts.length).toBeGreaterThan(0);
     for (const act of guidance.acts) {
-      expect(act.routing.kind).toBe("available");
-      if (act.routing.kind === "available")
-        expect(act.routing.tools.length).toBeGreaterThan(0);
+      expect(act.kind).toBe("ready");
+      if (act.kind === "ready")
+        expect(act.readyCalls.length).toBeGreaterThan(0);
     }
     const subject = fighterAttackSubject(session.state);
     const fill = targetFill(
@@ -796,79 +817,34 @@ describe("ChatGPT tool surface", () => {
     expect(root.sessionStore.snapshot()).toEqual(after);
   });
 
-  it("publishes schema constraints that distinguish attack from unrelated actions", () => {
-    const validate = createDraft2020JsonSchemaValidator().getValidator(
-      requireJsonSchema(
-        CHATGPT_EXECUTION_TOOLS.attack.definition.inputSchema,
-        "attack input",
-      ),
-    );
-    expect(
-      validate({
-        subject: { tag: "action", action: "dodge", actorId: "synthetic-actor" },
-      }).valid,
-    ).toBe(false);
-    const session = startBattleSessionRight({
-      battleId: battleId("synthetic-attack-schema"),
-      combatants: [
-        characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    });
-    expect(
-      validate({ subject: fighterAttackSubject(session.state) }).valid,
-    ).toBe(true);
-  });
-  it("preserves canonical mode fields and narrows multi-valued operation discriminants", () => {
-    const validator = (
-      name: "cast_spell" | "ready_spell" | "dismiss_companion" | "disengage",
-    ) =>
-      createDraft2020JsonSchemaValidator().getValidator(
+  it("publishes opaque Act keys and rejects canonical subjects at the public boundary", () => {
+    for (const name of [
+      "attack",
+      "cast_spell",
+      "ready_spell",
+      "dismiss_companion",
+      "disengage",
+    ] as const) {
+      const validate = createDraft2020JsonSchemaValidator().getValidator(
         requireJsonSchema(
           CHATGPT_EXECUTION_TOOLS[name].definition.inputSchema,
           name,
         ),
       );
-    const cast = {
-      tag: "actionSpell",
-      actorId: "synthetic-caster",
-      procedureRef: "synthetic-procedure",
-      mode: { tag: "cast" },
-    };
-    expect(validator("cast_spell")({ subject: cast }).valid).toBe(true);
-    expect(validator("ready_spell")({ subject: cast }).valid).toBe(false);
-    const disengage = validator("disengage");
-    const bonusOption = {
-      tag: "bonusAction",
-      action: "statBlockActionOption",
-      actorId: "synthetic-actor",
-      procedureRef: "synthetic-procedure",
-    };
-    expect(
-      disengage({ subject: { ...bonusOption, standardAction: "disengage" } })
-        .valid,
-    ).toBe(true);
-    expect(
-      disengage({ subject: { ...bonusOption, standardAction: "hide" } }).valid,
-    ).toBe(false);
-    const dismiss = validator("dismiss_companion");
-    expect(
-      dismiss({
-        subject: {
-          tag: "companionLifecycle",
-          actorId: "synthetic-actor",
-          action: "permanentlyDismiss",
-        },
-      }).valid,
-    ).toBe(true);
-    expect(
-      dismiss({
-        subject: {
-          tag: "companionLifecycle",
-          actorId: "synthetic-actor",
-          action: "reappear",
-        },
-      }).valid,
-    ).toBe(false);
+      expect(validate({ actKey: "act:" + "a".repeat(32) }).valid).toBe(true);
+      expect(validate({ actKey: "invented" }).valid).toBe(false);
+      expect(
+        validate({
+          subject: {
+            tag: "action",
+            action: "dodge",
+            actorId: "synthetic-actor",
+          },
+        }).valid,
+      ).toBe(false);
+      expect(
+        validate({ actKey: "act:" + "a".repeat(32), subject: {} }).valid,
+      ).toBe(false);
+    }
   });
 });

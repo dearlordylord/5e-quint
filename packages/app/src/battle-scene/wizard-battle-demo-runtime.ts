@@ -12,6 +12,7 @@ import {
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleSavingThrowOutcome,
+  type BattleSpellAreaOriginAnchor,
   type BattleSubject,
   type CombatantId,
   discoverBattleActs,
@@ -191,7 +192,7 @@ export function counterspellSavingThrowOutcomeFill(
 export function fireballSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   input: {
-    readonly originAnchorId: CombatantId
+    readonly originAnchor: BattleSpellAreaOriginAnchor
     readonly objectId: BattleObjectId
     readonly outcomes: ReadonlyArray<BattleSavingThrowOutcome>
   }
@@ -202,7 +203,7 @@ export function fireballSavingThrowOutcomeFill(
     value: {
       area: {
         kind: "pointOriginSphereSaveDamageArea",
-        originAnchorId: input.originAnchorId,
+        originAnchor: input.originAnchor,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: [
           {
@@ -219,7 +220,7 @@ export function fireballSavingThrowOutcomeFill(
 export function shatterSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   input: {
-    readonly originAnchorId: CombatantId
+    readonly originAnchor: BattleSpellAreaOriginAnchor
     readonly outcomes: ReadonlyArray<BattleSavingThrowOutcome>
     readonly nonmagicalUnattendedObjectDamageFacts: ReadonlyArray<{
       readonly objectId: BattleObjectId
@@ -233,7 +234,7 @@ export function shatterSavingThrowOutcomeFill(
     value: {
       area: {
         kind: "pointOriginSphereObjectDamageArea",
-        originAnchorId: input.originAnchorId,
+        originAnchor: input.originAnchor,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         nonmagicalUnattendedObjectDamageFacts: input.nonmagicalUnattendedObjectDamageFacts
       },

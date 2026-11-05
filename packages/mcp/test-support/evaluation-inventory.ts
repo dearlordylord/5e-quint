@@ -133,6 +133,12 @@ export const EvaluationInventorySchema = Schema.Struct({
   mcpToolSelection: Schema.Array(McpEvaluationCaseSchema),
   skillActivation: Schema.Array(SkillEvaluationCaseSchema),
   completeWorkflow: Schema.NonEmptyArray(CompleteWorkflowEvaluationCaseSchema),
+  autonomousDialogue: Schema.NonEmptyArray(
+    Schema.Struct({
+      ...McpEvaluationCaseBase,
+      expectation: Schema.Literal("wizardBattle"),
+    }),
+  ),
   submissionReview: Schema.NonEmptyArray(SubmissionReviewEvaluationCaseSchema),
 });
 

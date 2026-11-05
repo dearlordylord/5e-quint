@@ -91,19 +91,16 @@ describe("MCP protocol server", () => {
         arguments: {},
       });
       expect(hiddenCall.isError).toBe(true);
-      expect(hiddenCall.content).toEqual([
-        {
-          type: "text",
-          text: JSON.stringify(
-            {
-              error:
-                "Tool is not advertised by this MCP server: create_character_draft",
-            },
-            null,
-            2,
-          ),
-        },
-      ]);
+      expect(hiddenCall.content).toHaveLength(1);
+      assert.ok(Array.isArray(hiddenCall.content));
+      const hiddenContent: unknown = hiddenCall.content[0];
+      assert.ok(isJsonObject(hiddenContent));
+      assert.equal(hiddenContent.type, "text");
+      assert.ok(typeof hiddenContent.text === "string");
+      expect(JSON.parse(hiddenContent.text)).toEqual({
+        error:
+          "Tool is not advertised by this MCP server: create_character_draft",
+      });
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
@@ -1804,7 +1801,10 @@ describe("MCP protocol server", () => {
           restoration: { tag: "retained" },
           unresolvedInputs: [
             {
-              sourcePath: "$.details.battleEnvelope.frontier.holes",
+              source: {
+                kind: "operationResult",
+                path: "$.details.battleEnvelope.frontier.holes",
+              },
               inputs: [expect.objectContaining({ kind: "attackRoll" })],
             },
           ],
@@ -1816,14 +1816,20 @@ describe("MCP protocol server", () => {
         });
         expect(resumed.unresolvedInputs).toMatchObject([
           {
-            sourcePath: "$.battleEnvelope.frontier.holes",
+            source: {
+              kind: "operationResult",
+              path: "$.battleEnvelope.frontier.holes",
+            },
             inputs: [expect.objectContaining({ kind: "attackRoll" })],
           },
         ]);
         expect(resumed).toMatchObject({
           unresolvedInputs: [
             {
-              sourcePath: "$.battleEnvelope.frontier.holes",
+              source: {
+                kind: "operationResult",
+                path: "$.battleEnvelope.frontier.holes",
+              },
               inputs: [expect.objectContaining({ kind: "attackRoll" })],
             },
           ],

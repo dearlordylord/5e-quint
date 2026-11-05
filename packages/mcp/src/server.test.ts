@@ -2597,22 +2597,21 @@ describe("MCP server route", () => {
       root.unitLibrary.requireUnit("magic_missile"),
     );
 
-    const statBlocks = readPayload(
-      handleToolCall(root, "list_stat_blocks", {}),
+    const statBlocks = ["Goblin Warrior", "Skeleton", "Owl"].flatMap(
+      (query) =>
+        readPayload(handleToolCall(root, "list_stat_blocks", { query }))
+          .statBlocks,
     );
-    expect(statBlocks.statBlocks).toEqual(
+    expect(statBlocks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           statBlockId: "stat_block_goblin_warrior",
           name: "Goblin Warrior",
-          attacks: expect.arrayContaining([
-            expect.objectContaining({ attackName: "Scimitar" }),
-          ]),
+          challengeRating: 0.25,
         }),
         expect.objectContaining({
           statBlockId: "stat_block_skeleton",
           name: "Skeleton",
-          damageVulnerabilities: ["bludgeoning"],
         }),
         expect.objectContaining({
           statBlockId: "stat_block_owl",

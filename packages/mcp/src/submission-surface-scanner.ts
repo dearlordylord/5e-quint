@@ -1,5 +1,5 @@
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
-import { visitSchemaChildren } from "./json-schema-sharing.ts";
+import { rootedCanonicalOwnership } from "./submission-schema-ownership.ts";
 import type { SubmissionReviewPolicy } from "./submission-gate-policy.ts";
 import {
   observationDigest,
@@ -29,11 +29,6 @@ export type SubmissionResultReviewScope = {
   >;
 };
 
-const canonicalResolvedOwnerPathsCache = new WeakMap<
-  object,
-  ReadonlySet<string>
->();
-
 export function scanPublicToolSurface(
   definitions: readonly ProtocolToolDefinition[],
   policy: SubmissionReviewPolicy,
@@ -53,7 +48,12 @@ export function scanPublicToolSurface(
   );
   observeDefinitions(definitions, true, policy, risks, openNodes, issues);
   issues.push(
-    ...canonicalOpenNodeIssues(openNodes, policy, canonicalDefinitions),
+    ...canonicalOpenNodeIssues(
+      openNodes,
+      policy,
+      definitions,
+      canonicalDefinitions,
+    ),
   );
   issues.push(...unreviewedRiskIssues(risks, policy));
   issues.push(...riskDecisionIssues(risks, policy));
@@ -137,6 +137,7 @@ function definitionMetadataIssues(
 function canonicalOpenNodeIssues(
   openNodes: ReadonlyMap<string, ObservedOpenNode>,
   policy: SubmissionReviewPolicy,
+  advertisedDefinitions: readonly ProtocolToolDefinition[],
   definitions: readonly ProtocolToolDefinition[],
 ): readonly SubmissionSurfaceIssue[] {
   return Array.from(openNodes.values()).flatMap((node) => {
@@ -146,7 +147,7 @@ function canonicalOpenNodeIssues(
         candidate.schemaOwners.includes(node.schemaOwner),
     );
     return decision?.evidence === "canonicalCodec" &&
-      !canonicalNodeResolves(node, definitions)
+      !canonicalNodeResolves(node, advertisedDefinitions, definitions)
       ? [
           {
             code: "OPEN_SCHEMA_NODE" as const,
@@ -328,60 +329,27 @@ export function resultReviewScopeKey(
 
 function canonicalNodeResolves(
   node: ObservedOpenNode,
-  definitions: readonly ProtocolToolDefinition[],
+  advertisedDefinitions: readonly ProtocolToolDefinition[],
+  canonicalDefinitions: readonly ProtocolToolDefinition[],
 ): boolean {
-  const definition = definitions.find(
-    (candidate) => candidate.name === node.tool,
+  const advertised = advertisedDefinitions.find(
+    (definition) => definition.name === node.tool,
   );
-  if (definition === undefined) return false;
-  const schema =
+  const canonical = canonicalDefinitions.find(
+    (definition) => definition.name === node.tool,
+  );
+  if (advertised === undefined || canonical === undefined) return false;
+  const source =
     node.direction === "input"
-      ? definition.inputSchema
-      : definition.outputSchema;
-  if (schema === undefined) return false;
-  return canonicalResolvedOwnerPaths(schema).has(schemaOwnerPathAt(node.path));
-}
-
-function canonicalResolvedOwnerPaths(
-  schema: Readonly<Record<string, unknown>>,
-): ReadonlySet<string> {
-  const cached = canonicalResolvedOwnerPathsCache.get(schema);
-  if (cached !== undefined) return cached;
-  const paths = new Set<string>();
-  const referencedOwners = new Set<string>();
-  const collect = (
-    value: Readonly<Record<string, unknown>>,
-    prefix: readonly string[],
-  ): void => {
-    visitSchemaChildren(value, (node, segments) => {
-      const path = `/${[...prefix, ...segments].map(escapePointer).join("/")}`;
-      const owner = schemaOwnerPathAt(path);
-      if (isResolvedCanonicalOwner(node)) paths.add(owner);
-      if (typeof node.$ref !== "string" || !node.$ref.startsWith("#/")) return;
-      const referenceOwner = `${node.$ref}:${owner}`;
-      if (referencedOwners.has(referenceOwner)) return;
-      referencedOwners.add(referenceOwner);
-      const target = node.$ref
-        .slice(2)
-        .split("/")
-        .reduce<unknown>(
-          (value, key) =>
-            isJsonObject(value) ? value[unescapePointer(key)] : undefined,
-          schema,
-        );
-      if (isJsonObject(target)) collect(target, [...prefix, ...segments]);
-    });
-  };
-  collect(schema, []);
-  canonicalResolvedOwnerPathsCache.set(schema, paths);
-  return paths;
-}
-
-function schemaOwnerPathAt(path: string): string {
-  return Array.from(path.matchAll(/\/properties\/([^/]+)/gu))
-    .map((match) => unescapePointer(match[1] ?? ""))
-    .slice(-2)
-    .join("/");
+      ? advertised.inputSchema
+      : advertised.outputSchema;
+  const target =
+    node.direction === "input" ? canonical.inputSchema : canonical.outputSchema;
+  return (
+    source !== undefined &&
+    target !== undefined &&
+    rootedCanonicalOwnership(source, target).get(node.path) === true
+  );
 }
 
 function metadataIssue(tool: string, message: string): SubmissionSurfaceIssue {
@@ -404,18 +372,4 @@ function unescapePointer(value: string): string {
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isResolvedCanonicalOwner(value: unknown): boolean {
-  return (
-    isJsonObject(value) &&
-    !(
-      value.type === "object" &&
-      !isJsonObject(value.properties) &&
-      value.$ref === undefined &&
-      value.anyOf === undefined &&
-      value.oneOf === undefined &&
-      value.allOf === undefined
-    )
-  );
 }

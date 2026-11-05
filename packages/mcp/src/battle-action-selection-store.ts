@@ -25,10 +25,19 @@ export type McpBattleActionCancellationIssue =
         | "staleSelection";
     };
 
+function selectionIdForOrdinal(ordinal: bigint): BattleActionSelectionId {
+  return Schema.decodeUnknownSync(BattleActionSelectionIdSchema)(
+    `battle-action-selection:${ordinal}`,
+  );
+}
+
 export function createBattleActionSelectionStore() {
   let selection: McpPendingBattleSelection | null = null;
   let ordinal = 0n;
   return {
+    get nextSelectionId(): BattleActionSelectionId {
+      return selectionIdForOrdinal(ordinal + 1n);
+    },
     get selection() {
       return selection;
     },
@@ -47,10 +56,7 @@ export function createBattleActionSelectionStore() {
       if (Result.isFailure(committed)) return committed;
       if (previous === null) ordinal += 1n;
       const selectionId =
-        previous?.selectionId ??
-        Schema.decodeUnknownSync(BattleActionSelectionIdSchema)(
-          `battle-action-selection:${ordinal}`,
-        );
+        previous?.selectionId ?? selectionIdForOrdinal(ordinal);
       selection = { transaction, selectionId };
       return Result.succeed(undefined);
     },

@@ -1,3 +1,7 @@
+import { isDeepStrictEqual } from "node:util";
+import { ChatGptBattleGuidanceSchema } from "./chatgpt/battle-guidance-schema.ts";
+import { CHATGPT_TOOL_PLAN } from "./chatgpt/operation-tool-plan.ts";
+import { BattleSessionOutputSchema } from "./battle-tool-output.ts";
 import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -330,7 +334,11 @@ describe("recoverable Play Session protocol", () => {
         },
       };
       try {
-        expect((await connection.client.listTools()).tools).toHaveLength(127);
+        expect(
+          (await connection.client.listTools()).tools
+            .map((tool) => tool.name)
+            .sort(),
+        ).toEqual(Object.keys(CHATGPT_TOOL_PLAN).sort());
         const read = await callStructuredTool(connection.client, {
           name: "read_play_session",
           arguments: { playSessionId },
@@ -360,6 +368,12 @@ describe("recoverable Play Session protocol", () => {
               "SELECT operations_json FROM play_sessions WHERE play_session_id = ?",
             )
             .get(playSessionId);
+          expect(row?.operations_json).not.toEqual(
+            expect.stringContaining('"actKey"'),
+          );
+          expect(row?.operations_json).toEqual(
+            expect.stringContaining('"subject"'),
+          );
           expect(row?.operations_json).toEqual(
             expect.stringContaining(
               '"toolSurface":"chatgpt","name":"set_equipment_loadout"',
@@ -718,7 +732,10 @@ describe("recoverable Play Session protocol", () => {
       expect(resumed.unresolvedInputs).toEqual(
         expect.arrayContaining([
           {
-            sourcePath: "$.battleEnvelope.frontier.decisionHole",
+            source: {
+              kind: "operationResult",
+              path: "$.battleEnvelope.frontier.decisionHole",
+            },
             inputs: [expect.objectContaining({ kind: "interruptDecision" })],
           },
         ]),
@@ -1513,23 +1530,19 @@ describe("recoverable Play Session protocol", () => {
       expect(rolled).toMatchObject({
         operation: {
           result: {
-            result: { groups: expect.any(Array) },
-            battleEnvelope: { frontier: { kind: "holes" } },
+            groups: expect.any(Array),
           },
         },
         unresolvedInputs: [
           {
-            sourcePath: "$.battleEnvelope.frontier.holes",
+            source: { kind: "pendingBattle" },
             inputs: expect.any(Array),
           },
         ],
         nextOperations: expect.arrayContaining(["fill_battle_hole"]),
       });
       const rolledOperation = operationResult(rolled);
-      const rolledGroups = arrayField(
-        objectField(rolledOperation, "result"),
-        "groups",
-      );
+      const rolledGroups = arrayField(rolledOperation, "groups");
       const rolledGroup = rolledGroups[0];
       if (!isJsonObject(rolledGroup)) {
         throw new Error("Expected the server-correlated damage roll.");
@@ -1756,12 +1769,17 @@ async function callStructuredTool(
     readonly arguments: Record<string, unknown>;
   },
 ): Promise<Readonly<Record<string, unknown>>> {
+  const publicArguments = await currentPublicActArguments(
+    client,
+    input.name,
+    input.arguments,
+  );
   const result = await client.callTool({
     ...input,
     arguments: await acceptancePlaySessionRoutedArgs(
       client,
       input.name,
-      input.arguments,
+      publicArguments,
     ),
   });
   expect(result.isError, `${input.name}: ${JSON.stringify(result)}`).not.toBe(
@@ -1861,4 +1879,56 @@ function cancellationArguments(result: unknown) {
       }),
     }),
   )(result).chatGptBattleOperations.cancellation.arguments;
+}
+
+async function currentPublicActArguments(
+  client: Client,
+  name: string,
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  if (!("subject" in args)) return args;
+  const definition = (await client.listTools()).tools.find(
+    (tool) => tool.name === name,
+  );
+  if (
+    !definition?.inputSchema.properties ||
+    !("actKey" in definition.inputSchema.properties)
+  )
+    return args;
+  const read = await client.callTool({
+    name: "read_battle_state",
+    arguments: await acceptancePlaySessionRoutedArgs(
+      client,
+      "read_battle_state",
+      { playSessionId: args.playSessionId },
+    ),
+  });
+  if (!isJsonObject(read.structuredContent))
+    throw new Error("Expected owned Battle response");
+  const state = Schema.decodeUnknownSync(BattleSessionOutputSchema)(
+    operationResult(read.structuredContent),
+  );
+  const guidance = Schema.decodeUnknownSync(
+    Schema.Struct({ chatGptBattleOperations: ChatGptBattleGuidanceSchema }),
+  )(read.structuredContent).chatGptBattleOperations;
+  if (state.envelope?.frontier.kind !== "acts" || guidance.kind !== "acts")
+    throw new Error("Expected current Act choices");
+  const index = state.envelope.frontier.acts.findIndex((act) =>
+    isDeepStrictEqual(act.subject, args.subject),
+  );
+  const canonical = state.envelope.frontier.acts[index];
+  const offered = guidance.acts[index];
+  if (
+    !canonical ||
+    offered?.kind !== "ready" ||
+    offered.label !== canonical.label ||
+    offered.summary !== canonical.summary
+  )
+    throw new Error(
+      "Expected canonical presented Act and its corresponding ready call",
+    );
+  const call = offered.readyCalls.find((call) => call.tool === name);
+  if (!call) throw new Error("Expected matching named Act call");
+  const { subject: _subject, ...transport } = args;
+  return { ...transport, ...call.arguments };
 }

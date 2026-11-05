@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
   canonicalMcpOutputSchema,
+  withCanonicalMcpOutputSchema,
   decodeToolArgs,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
@@ -36,6 +37,25 @@ describe("MCP output JSON Schema identity", () => {
     expect(
       Result.isFailure(decodeToolArgs(codec, { count: 12 }, "transform_test")),
     ).toBe(true);
+  });
+
+  test("binds composed canonical output without publishing it or changing shared model schemas", () => {
+    const model = { type: "object" };
+    const canonical = {
+      type: "object",
+      properties: { first: { type: "string" } },
+    };
+    const other = {
+      type: "object",
+      properties: { second: { type: "integer" } },
+    };
+    const first = withCanonicalMcpOutputSchema(model, canonical);
+    const second = withCanonicalMcpOutputSchema(model, other);
+    expect(JSON.stringify(first)).toBe(JSON.stringify(model));
+    expect(JSON.stringify(second)).toBe(JSON.stringify(model));
+    expect(canonicalMcpOutputSchema(first)).toBe(canonical);
+    expect(canonicalMcpOutputSchema(second)).toBe(other);
+    expect(canonicalMcpOutputSchema(model)).toBe(model);
   });
 
   test("reuses one generated schema per Effect Schema codec", () => {

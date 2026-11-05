@@ -1,3 +1,6 @@
+import { Result } from "effect";
+import { isChatGptBattleOperationToolName } from "./protocol-operation.ts";
+import { resolvePublicBattleSelection } from "./battle-public-selection.ts";
 import {
   handlePlaySessionOperation,
   type PlaySessionRequestIdentity,
@@ -34,12 +37,31 @@ export function handleChatGptStatefulToolRequest(input: {
     recordOperation: definition.annotations.readOnlyHint !== true,
     args: input.args,
     identity: input.requestIdentity,
-    handle: (root, args) =>
-      input.name === "roll_dice"
-        ? executeStatefulToolCall(root, input.name, args)
-        : {
-            content: CHATGPT_EXECUTION_TOOLS[input.name].handle(root, args),
-            commandRetention: "retain",
-          },
+    handle: (root, args, playSessionId) => {
+      if (input.name === "roll_dice")
+        return executeStatefulToolCall(root, input.name, args);
+      if (isChatGptBattleOperationToolName(input.name)) {
+        const resolved = resolvePublicBattleSelection(
+          root,
+          playSessionId,
+          input.name,
+          args,
+        );
+        return Result.isFailure(resolved)
+          ? { content: resolved.failure, commandRetention: "skip" as const }
+          : {
+              content: CHATGPT_EXECUTION_TOOLS[input.name].handle(
+                root,
+                resolved.success,
+              ),
+              commandRetention: "retain" as const,
+              retainedArguments: resolved.success,
+            };
+      }
+      return {
+        content: CHATGPT_EXECUTION_TOOLS[input.name].handle(root, args),
+        commandRetention: "retain" as const,
+      };
+    },
   });
 }

@@ -631,6 +631,31 @@ describe("Dragonborn Breath Weapon runtime", () => {
       "rolledDice",
     );
 
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          {
+            ...savingThrowFill,
+            value: {
+              outcomes: savingThrowFill.value.outcomes,
+              area: {
+                kind: "pointOriginSphereSaveDamageArea",
+                originAnchor: { kind: "combatant", combatantId: spellCasterId },
+                affectedTargetIds: [spellTargetId],
+                objectIgnitionFacts: [],
+              },
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Area damage replacement must originate from the acting creature.",
+    });
+
     const invalidSavingThrowFill = breathWeaponSavingThrowFill(
       savingThrowHole,
       [

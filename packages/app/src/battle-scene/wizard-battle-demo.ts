@@ -1066,7 +1066,7 @@ function savingThrowFillForPlan(
   )
   if (plan.spell.kind === "fireball") {
     return fireballSavingThrowOutcomeFill(savingThrow, {
-      originAnchorId: plan.casterId,
+      originAnchor: { kind: "tableSelectedPoint" },
       objectId: dryTapestryId,
       outcomes
     })
@@ -1074,7 +1074,7 @@ function savingThrowFillForPlan(
   const shatterSpell: Extract<AreaSpellDefinition, { readonly kind: "shatter" }> = plan.spell
   void shatterSpell
   return shatterSavingThrowOutcomeFill(savingThrow, {
-    originAnchorId: plan.casterId,
+    originAnchor: { kind: "tableSelectedPoint" },
     nonmagicalUnattendedObjectDamageFacts: [],
     outcomes
   })

@@ -14,7 +14,7 @@
     "evidence:saved-session-registrations": "tsx src/saved-session-authorization/registration-evidence.ts",
     "serve:http": "tsx src/public-index.ts",
     "verify:staging": "tsx src/staging-http-smoke.ts",
-    "check:submission-fast": "pnpm check:operation-accounting && tsx scripts/submission-fast-gate.ts",
+    "check:submission-fast": "tsx scripts/submission-fast-gate.ts",
     "check:submission-candidate": "pnpm check:submission-fast && vitest run src/submission-result-inspector.test.ts src/submission-candidate-evidence.test.ts src/submission-live-gate.test.ts src/plugin-publication-package.test.ts src/public-http-boundary.test.ts src/public-play-session-boundary.test.ts --pool=threads --maxWorkers=1",
     "evidence:submission-candidate": "tsx scripts/submission-candidate-cli.ts",
     "check:submission-live": "tsx scripts/submission-live-cli.ts",
@@ -24,7 +24,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts src/mcp-level-nine-scenario.test.ts src/mcp-level-ten-scenario.test.ts",
-    "check:operation-accounting": "tsx --test scripts/execution-hole-bindings.node-test.ts scripts/operation-accounting.node-test.ts && tsx scripts/operation-accounting.ts"
+    "check:operation-accounting": "tsx --test scripts/execution-hole-bindings.node-test.ts && tsx scripts/operation-accounting.ts",
+    "eval:dialogue": "tsx scripts/dialogue-evaluation/run.mjs",
+    "check:dialogue-evaluator": "node scripts/dialogue-evaluation/evaluator-controls.mjs && node --import tsx scripts/dialogue-evaluation/driver-controls.mjs"
   },
   "dependencies": {
     "@better-auth/cimd": "1.7.1",

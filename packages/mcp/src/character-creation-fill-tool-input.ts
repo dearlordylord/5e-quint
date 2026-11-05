@@ -8,14 +8,17 @@ import {
   parseCreationHoleId,
   type CharacterDraftId,
   type CreationFill,
+  type CreationHole,
+  choiceCardinalityBounds,
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
 import { traverseValidation } from "@dnd/shared/validation";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
   decodeToolArgs,
+  mcpObjectJsonSchema,
   type ToolError,
   type ToolInputResult,
 } from "./schema-codec.ts";
@@ -115,10 +118,49 @@ export const FillCreationHolesArgsSchema = Schema.Struct({
   fills: Schema.Array(CreationFillArgsSchema).pipe(
     Schema.annotate({
       description:
-        "Atomic batch of current creation-hole fills. Copy holeId and optionIds from get_character_creation_choices or the prior tool response.",
+        "Atomic batch of current creation-hole fills. Follow creationInputs[].fillSchema returned by discovery or the prior response: preserve kind and holeId; choice fills use optionIds, abilityScores fills use method and value.",
     }),
   ),
 });
+
+export function creationInputGuidance(holes: readonly CreationHole[]) {
+  return holes.map((hole) => {
+    const fillSchema = Match.value(hole).pipe(
+      Match.when({ kind: "choice" }, (choice) => {
+        const bounds = choiceCardinalityBounds(choice.cardinality);
+        return mcpObjectJsonSchema(
+          Schema.Struct({
+            ...ChoiceCreationFillArgsSchema.fields,
+            holeId: Schema.Literal(choice.holeId),
+            optionIds: Schema.Array(
+              Schema.Literals(choice.options.map((option) => option.optionId)),
+            ).check(
+              Schema.isMinLength(bounds.min),
+              Schema.isMaxLength(bounds.max),
+              Schema.isUnique(),
+            ),
+          }),
+        );
+      }),
+      Match.when({ kind: "abilityScores" }, (abilityScores) =>
+        mcpObjectJsonSchema(
+          Schema.Struct({
+            ...AbilityScoreCreationFillArgsSchema.fields,
+            holeId: Schema.Literal(abilityScores.holeId),
+            method: Schema.Literals(abilityScores.methods),
+          }),
+        ),
+      ),
+      Match.exhaustive,
+    );
+    return {
+      holeId: hole.holeId,
+      fillSchema,
+      instructions:
+        "Submit one complete fill matching fillSchema in apply_character_creation_choices.fills. Preserve kind and holeId; use the current draft revision as expectedRevision.",
+    };
+  });
+}
 
 type FillCreationHolesArgs = Schema.Schema.Type<
   typeof FillCreationHolesArgsSchema

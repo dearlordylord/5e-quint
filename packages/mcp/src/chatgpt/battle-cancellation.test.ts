@@ -18,7 +18,7 @@ import {
 import { createMcpPlaySessionRoot } from "../composition-root.ts";
 import { handleToolCall } from "../server.ts";
 import { CHATGPT_EXECUTION_TOOLS } from "./tool-surface.ts";
-import { chatGptBattleGuidance } from "./battle-guidance.ts";
+import { chatGptBattleGuidance } from "../../test-support/chatgpt-battle-guidance.ts";
 
 function selectedAttack() {
   const root = createMcpPlaySessionRoot();

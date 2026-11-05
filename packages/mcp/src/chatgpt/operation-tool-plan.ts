@@ -49,6 +49,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     fill_battle_hole: refine("battleContinuations"),
     apply_character_creation_choices: tool("apply_character_creation_choices"),
     finalize_character: tool("finalize_character"),
+    inspect_stat_block: tool("inspect_stat_block"),
     inspect_catalog_unit: tool("inspect_catalog_unit"),
     inspect_character_session: tool("inspect_character_session"),
     list_catalog_units: tool("list_catalog_units"),

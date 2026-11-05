@@ -1,49 +1,8 @@
-import {
-  BattleHoleIdSchema,
-  BattleSpellAreaChoiceSchema,
-  BattleSpellAreaMembershipChoiceSchema,
-  BattleSpellStagedConditionAreaMembershipChoiceSchema,
-  type BattleHole,
-  type BattleSpellAreaInputRequest,
+import type {
+  BattleHole,
+  BattleSpellAreaInputRequest,
 } from "@dnd/battle-runtime";
-import { Match, Schema } from "effect";
-import { mcpOutputJsonSchema, type McpOutputSchema } from "../schema-codec.ts";
-
-export const BattleAreaInputGuidanceSchema = Schema.Struct({
-  holeId: BattleHoleIdSchema,
-  valuePath: Schema.Literal("fill.value.area"),
-  areaSchema: Schema.Record(Schema.String, Schema.Unknown),
-  instructions: Schema.Array(Schema.String),
-});
-
-export type BattleAreaInputGuidance = typeof BattleAreaInputGuidanceSchema.Type;
-
-function areaInputSchema(
-  request: BattleSpellAreaInputRequest,
-): McpOutputSchema {
-  if (request.kind === "areaMembership")
-    return mcpOutputJsonSchema(BattleSpellAreaMembershipChoiceSchema);
-  if (request.kind === "stagedConditionAreaMembership")
-    return mcpOutputJsonSchema(
-      Schema.Union([
-        BattleSpellAreaMembershipChoiceSchema,
-        BattleSpellStagedConditionAreaMembershipChoiceSchema,
-      ]),
-    );
-  const schema = BattleSpellAreaChoiceSchema.members.find(
-    (member) =>
-      "literal" in member.fields.kind &&
-      member.fields.kind.literal === request.kind,
-  );
-  if (schema === undefined)
-    throw new Error(
-      "The canonical area codec must contain its requested area kind.",
-    );
-  return mcpOutputJsonSchema<
-    typeof BattleSpellAreaChoiceSchema.Type,
-    typeof BattleSpellAreaChoiceSchema.Encoded
-  >(schema);
-}
+import { Match } from "effect";
 
 function areaInputInstructions(
   request: BattleSpellAreaInputRequest,
@@ -56,16 +15,16 @@ function areaInputInstructions(
       "Supply originAnchorId and affectedTargetIds. Omit area.kind. Include stagedConditionAutomaticSuccessFacts only for selected creatures the table confirms do not sleep.",
     ]),
     Match.when("pointOriginSphereSaveDamageArea", () => [
-      "Set area.kind to pointOriginSphereSaveDamageArea. Supply originAnchorId, affectedTargetIds, and objectIgnitionFacts.",
+      'Set area.kind to pointOriginSphereSaveDamageArea. Supply originAnchor, affectedTargetIds, and objectIgnitionFacts. Use originAnchor: { kind: "tableSelectedPoint" } for the table-computed point, or { kind: "combatant", combatantId } only when the origin is an existing combatant. Do not invent a combatant id for a free point.',
       "Report each object in the area once with its objectId and disposition. flammableUnattended objects start burning; notFlammable and wornOrCarried objects do not.",
       "Use objectIgnitionFacts: [] only when the table confirms there are no objects in the area to report. Omitting the field does not mean an empty area.",
     ]),
     Match.when("pointOriginSphereObjectDamageArea", () => [
-      "Set area.kind to pointOriginSphereObjectDamageArea. Supply originAnchorId, affectedTargetIds, and nonmagicalUnattendedObjectDamageFacts.",
+      'Set area.kind to pointOriginSphereObjectDamageArea. Supply originAnchor, affectedTargetIds, and nonmagicalUnattendedObjectDamageFacts. Use originAnchor: { kind: "tableSelectedPoint" } for the table-computed point, or { kind: "combatant", combatantId } for an existing combatant.',
       "Report each affected nonmagical unattended object once with its objectId and damage disposition. Use an explicit [] only when the table confirms there are no such affected objects.",
     ]),
     Match.when("selfOriginCubePushArea", () => [
-      "Set area.kind to selfOriginCubePushArea. Supply originAnchorId, affectedTargetIds, creaturePushes, unsecuredObjectPushes, and audibleBoom as required by areaSchema.",
+      "Set area.kind to selfOriginCubePushArea. Supply originAnchorId, affectedTargetIds, creaturePushes, unsecuredObjectPushes, and audibleBoom as required by the complete fillSchema.",
       "Report a creature push disposition for each failed-save target and each unsecured object entirely within the area. An empty object list is an explicit table confirmation that there are no such objects.",
     ]),
     Match.when("saveGatedTargetProjectionArea", () => [
@@ -81,27 +40,20 @@ function areaInputInstructions(
       "Set area.kind to persistentAreaSaveConditionArea. Supply originAnchorId, affectedTargetIds, and the table's areaId for this persistent area.",
     ]),
     Match.when("directionalPersistentAreaArea", () => [
-      "Set area.kind to directionalPersistentAreaArea. Supply originAnchorId, affectedTargetIds, areaId, directionId, and creaturePushes as required by areaSchema.",
+      "Set area.kind to directionalPersistentAreaArea. Supply originAnchorId, affectedTargetIds, areaId, directionId, and creaturePushes as required by the complete fillSchema.",
     ]),
     Match.exhaustive,
   );
 }
 
-export function battleAreaInputGuidance(
+export function battleAreaInputInstructions(
   hole: BattleHole,
-): readonly BattleAreaInputGuidance[] {
+): readonly string[] {
   if (
     hole.kind !== "savingThrowOutcome" ||
     !("areaInput" in hole) ||
     hole.areaInput === undefined
   )
     return [];
-  return [
-    {
-      holeId: hole.holeId,
-      valuePath: "fill.value.area",
-      areaSchema: areaInputSchema(hole.areaInput),
-      instructions: areaInputInstructions(hole.areaInput),
-    },
-  ];
+  return areaInputInstructions(hole.areaInput);
 }

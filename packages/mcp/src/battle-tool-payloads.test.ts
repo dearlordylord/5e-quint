@@ -46,13 +46,10 @@ describe("battle tool payload boundaries", () => {
         envelope: null,
       },
     });
-    expect(noStoredBattleContent()).toMatchObject({
-      isError: true,
-      content: [
-        {
-          text: expect.stringContaining('"code": "NO_BATTLE_SESSION"'),
-        },
-      ],
+    const noSession = noStoredBattleContent();
+    expect(noSession.isError).toBe(true);
+    expect(readToolPayload(noSession)).toMatchObject({
+      details: { code: "NO_BATTLE_SESSION" },
     });
   });
 
@@ -170,44 +167,42 @@ describe("battle tool payload boundaries", () => {
       combatantId: combatantId("synthetic-missing-presentation"),
     } as const;
     const content = battlePresentationIssueContent([issue]);
-    expect(content).toMatchObject({
-      isError: true,
-      content: [
-        {
-          text: expect.stringContaining(
-            '"code": "BATTLE_PRESENTATION_INCOMPLETE"',
-          ),
-        },
-      ],
+    expect(content.isError).toBe(true);
+    expect(readToolPayload(content)).toMatchObject({
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
   });
 
   test("preserves Error and non-Error boundary diagnostics", () => {
     expect(
-      unknownStatBlockContent("stat_block_missing", new Error("missing")),
-    ).toMatchObject({
-      content: [{ text: expect.stringContaining('"message": "missing"') }],
-    });
-    expect(
-      unknownStatBlockContent("stat_block_missing", "missing text"),
-    ).toMatchObject({
-      content: [{ text: expect.stringContaining('"message": "missing text"') }],
-    });
-    expect(
-      pendingBattleFillsContent(
-        {
-          subject: {
-            tag: "runtimeCommand",
-            actorId: combatantId("pending-actor"),
-            command: "endTurn",
-          },
-        },
-        "Pending",
+      readToolPayload(
+        unknownStatBlockContent("stat_block_missing", new Error("missing")),
       ),
     ).toMatchObject({
-      content: [
-        { text: expect.stringContaining('"code": "BATTLE_FILLS_PENDING"') },
-      ],
+      details: { message: "missing" },
+    });
+    expect(
+      readToolPayload(
+        unknownStatBlockContent("stat_block_missing", "missing text"),
+      ),
+    ).toMatchObject({
+      details: { message: "missing text" },
+    });
+    expect(
+      readToolPayload(
+        pendingBattleFillsContent(
+          {
+            subject: {
+              tag: "runtimeCommand",
+              actorId: combatantId("pending-actor"),
+              command: "endTurn",
+            },
+          },
+          "Pending",
+        ),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILLS_PENDING" },
     });
   });
 

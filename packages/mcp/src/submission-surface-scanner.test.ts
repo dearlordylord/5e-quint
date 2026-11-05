@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import type { McpObjectInputSchema } from "./schema-codec.ts";
 import type { SubmissionReviewPolicy } from "./submission-gate-policy.ts";
 import { scanPublicToolSurface } from "./submission-surface-scanner.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
@@ -130,6 +131,323 @@ describe("submission surface scanner", () => {
     );
   });
 
+  test("retains rooted field ownership when the advertised model merges object variants", () => {
+    const advertised = toolWithInputProperty("request", {
+      type: "object",
+      properties: { occurrence: { type: "object" } },
+    });
+    const branch = (occurrence: Readonly<Record<string, unknown>>) => ({
+      type: "object",
+      properties: { occurrence },
+    });
+    const canonical = (second: Readonly<Record<string, unknown>>) =>
+      toolWithInputProperty("request", {
+        anyOf: [
+          branch(closedOccurrence),
+          branch(second),
+          {
+            type: "object",
+            properties: { unrelated: { type: "integer" } },
+            additionalProperties: false,
+          },
+        ],
+      });
+    expect(ownershipIssues(advertised, canonical(closedOccurrence))).toEqual(
+      [],
+    );
+    expect(
+      ownershipIssues(advertised, canonical({ type: "object" })),
+    ).not.toEqual([]);
+    expect(
+      ownershipIssues(
+        advertised,
+        toolWithInputProperty("request", { not: branch(closedOccurrence) }),
+      ),
+    ).not.toEqual([]);
+    expect(
+      ownershipIssues(
+        advertised,
+        toolWithInputProperty("request", {
+          anyOf: [branch(closedOccurrence), {}],
+        }),
+      ),
+    ).not.toEqual([]);
+  });
+
+  test("requires closed object keys in every canonical alternative", () => {
+    const advertised = toolWithInputProperty("request", {
+      type: "object",
+      properties: { occurrence: { type: "object" } },
+    });
+    for (const extra of [
+      {},
+      { additionalProperties: true },
+      { additionalProperties: {} },
+    ]) {
+      const open = {
+        type: "object",
+        properties: { amount: { type: "integer" } },
+        ...extra,
+      };
+      expect(
+        ownershipIssues(
+          advertised,
+          toolWithInputProperty("request", {
+            type: "object",
+            properties: { occurrence: open },
+          }),
+        ),
+      ).not.toEqual([]);
+      expect(
+        ownershipIssues(
+          advertised,
+          toolWithInputProperty("request", {
+            type: "object",
+            properties: { occurrence: { anyOf: [closedOccurrence, open] } },
+          }),
+        ),
+      ).not.toEqual([]);
+    }
+    for (const occurrence of [
+      { type: "object", additionalProperties: false },
+      {
+        allOf: [
+          closedOccurrence,
+          { type: "object", properties: { amount: { minimum: 0 } } },
+        ],
+      },
+    ]) {
+      expect(
+        ownershipIssues(
+          advertised,
+          toolWithInputProperty("request", {
+            type: "object",
+            properties: { occurrence },
+          }),
+        ),
+      ).toEqual([]);
+    }
+  });
+
+  test("does not use a different outer type or unknown schema as closed object proof", () => {
+    const advertised = toolWithInputProperty("request", {
+      type: "object",
+      properties: { occurrence: { type: "object" } },
+    });
+    for (const occurrence of [
+      { type: "integer" },
+      { const: "synthetic-scalar", additionalProperties: false },
+      { enum: ["synthetic-scalar"], additionalProperties: false },
+      {},
+      { anyOf: [closedOccurrence, {}] },
+    ]) {
+      expect(
+        ownershipIssues(
+          advertised,
+          toolWithInputProperty("request", {
+            type: "object",
+            properties: { occurrence },
+          }),
+        ),
+      ).not.toEqual([]);
+    }
+  });
+
+  test("requires routed output proof at the same root and direction", () => {
+    const output = (
+      occurrence: Readonly<Record<string, unknown>>,
+    ): McpObjectInputSchema => ({
+      type: "object",
+      properties: {
+        operation: {
+          type: "object",
+          properties: {
+            result: { type: "object", properties: { occurrence } },
+          },
+        },
+      },
+    });
+    const advertised = {
+      ...ownershipTool({ type: "object", properties: {} }),
+      outputSchema: output({ type: "object" }),
+    };
+    const policy: SubmissionReviewPolicy = {
+      ...emptyPolicy,
+      opaqueNodeDecisions: [
+        {
+          schemaOwners: ["occurrence"],
+          directions: ["output"],
+          evidence: "canonicalCodec",
+          owner: "Synthetic routed codec",
+          scopeDigest: "0".repeat(64),
+        },
+      ],
+    };
+    const issues = (canonical: ProtocolToolDefinition) =>
+      scanPublicToolSurface([advertised], policy, [canonical]).filter(
+        (issue) => issue.code === "OPEN_SCHEMA_NODE",
+      );
+    expect(
+      issues({ ...advertised, outputSchema: output(closedOccurrence) }),
+    ).toEqual([]);
+    expect(
+      issues({
+        ...advertised,
+        outputSchema: {
+          type: "object",
+          properties: { occurrence: closedOccurrence },
+        },
+      }),
+    ).not.toEqual([]);
+    expect(
+      issues({ ...advertised, inputSchema: output(closedOccurrence) }),
+    ).not.toEqual([]);
+    expect(
+      issues({
+        ...advertised,
+        name: "another_tool",
+        outputSchema: output(closedOccurrence),
+      }),
+    ).not.toEqual([]);
+  });
+
+  test("resolves a hoisted advertised owner at its rooted callsite", () => {
+    const advertised = ownershipTool({
+      type: "object",
+      properties: { request: { $ref: "#/$defs/Request" } },
+      $defs: {
+        Request: {
+          type: "object",
+          properties: { occurrence: { type: "object" } },
+        },
+      },
+    });
+    const canonical = ownershipTool({
+      type: "object",
+      properties: {
+        request: {
+          type: "object",
+          properties: { occurrence: closedOccurrence },
+        },
+      },
+    });
+    expect(ownershipIssues(advertised, canonical)).toEqual([]);
+  });
+
+  test.each([false, true])(
+    "rejects unrelated or unreachable same-suffix proof (unreachable=%s)",
+    (unreachable) => {
+      const advertised = ownershipTool({
+        type: "object",
+        properties: {
+          approved: {
+            type: "object",
+            properties: {
+              request: {
+                type: "object",
+                properties: { occurrence: { type: "object" } },
+              },
+            },
+          },
+        },
+      });
+      const unrelated = {
+        type: "object",
+        properties: {
+          request: {
+            type: "object",
+            properties: { occurrence: closedOccurrence },
+          },
+        },
+      };
+      const canonical = ownershipTool(
+        unreachable
+          ? { ...advertised.inputSchema, $defs: { Unused: unrelated } }
+          : { type: "object", properties: { unrelated } },
+      );
+      expect(ownershipIssues(advertised, canonical)).not.toEqual([]);
+    },
+  );
+
+  test("requires every rooted use of a shared alias to have canonical proof", () => {
+    const advertised = ownershipTool({
+      type: "object",
+      properties: {
+        first: { $ref: "#/$defs/Alias" },
+        second: { $ref: "#/$defs/Alias" },
+      },
+      $defs: {
+        Alias: { $ref: "#/$defs/Request" },
+        Request: {
+          type: "object",
+          properties: { occurrence: { type: "object" } },
+        },
+      },
+    });
+    const branch = {
+      type: "object",
+      properties: { occurrence: closedOccurrence },
+    };
+    expect(
+      ownershipIssues(
+        advertised,
+        ownershipTool({
+          type: "object",
+          properties: { first: branch, second: branch },
+        }),
+      ),
+    ).toEqual([]);
+    expect(
+      ownershipIssues(
+        advertised,
+        ownershipTool({
+          type: "object",
+          properties: {
+            first: branch,
+            second: {
+              type: "object",
+              properties: { occurrence: { type: "object" } },
+            },
+          },
+        }),
+      ),
+    ).not.toEqual([]);
+  });
+
+  test("terminates rooted recursion in both documents without dropping the owner", () => {
+    const recursive = (occurrence: Readonly<Record<string, unknown>>) =>
+      ownershipTool({
+        type: "object",
+        properties: { occurrence, nested: { $ref: "#" } },
+        additionalProperties: false,
+      });
+    expect(
+      ownershipIssues(
+        recursive({ type: "object" }),
+        recursive(closedOccurrence),
+      ),
+    ).toEqual([]);
+  });
+
+  test("does not turn a broken or reference-only cyclic canonical alias into proof", () => {
+    const advertised = toolWithInputProperty("request", {
+      type: "object",
+      properties: { occurrence: { type: "object" } },
+    });
+    for (const reference of [
+      "#/$defs/Missing",
+      "#/$defs/Cycle",
+      "https://schema.invalid/unknown",
+    ]) {
+      const canonical = ownershipTool({
+        type: "object",
+        properties: { request: { $ref: reference } },
+        $defs: { Cycle: { $ref: "#/$defs/Cycle" } },
+      });
+      expect(ownershipIssues(advertised, canonical)).not.toEqual([]);
+    }
+  });
+
   test("retains canonical ownership through recursive local references", () => {
     const advertised = toolWithInputProperty("request", {
       type: "object",
@@ -163,6 +481,7 @@ describe("submission surface scanner", () => {
           Occurrence: {
             type: "object",
             properties: { amount: { type: "integer" } },
+            additionalProperties: false,
           },
         },
       },
@@ -413,4 +732,40 @@ function toolWithInputProperty(
       openWorldHint: false,
     },
   };
+}
+
+const closedOccurrence = {
+  type: "object",
+  properties: { amount: { type: "integer" } },
+  required: ["amount"],
+  additionalProperties: false,
+};
+function ownershipTool(
+  inputSchema: Readonly<Record<string, unknown>>,
+): ProtocolToolDefinition {
+  return {
+    ...toolWithInputProperty("request", {}),
+    inputSchema: { ...inputSchema, type: "object" },
+  };
+}
+function ownershipIssues(
+  advertised: ProtocolToolDefinition,
+  canonical: ProtocolToolDefinition,
+) {
+  return scanPublicToolSurface(
+    [advertised],
+    {
+      ...emptyPolicy,
+      opaqueNodeDecisions: [
+        {
+          schemaOwners: ["occurrence"],
+          directions: ["input"],
+          evidence: "canonicalCodec",
+          owner: "Synthetic closed occurrence",
+          scopeDigest: "0".repeat(64),
+        },
+      ],
+    },
+    [canonical],
+  ).filter((issue) => issue.code === "OPEN_SCHEMA_NODE");
 }

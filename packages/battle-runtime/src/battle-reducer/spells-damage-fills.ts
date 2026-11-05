@@ -72,6 +72,8 @@ import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-p
 import {
   attackDamageAbilityModifierChoiceUnsupportedIssue,
   attackDamageDieFloorChoiceUnsupportedIssue,
+  ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+  ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
@@ -85,6 +87,7 @@ import {
   type BattleSpellAttackRollHole,
   type BattleSpellAbilityChoiceHole,
   type BattleSpellDamageRollHole,
+  type BattleAllocatedSpellDamageRollHole,
   type BattleDamageTypeChoiceHole,
   type BattleExecutableSpellInvocation,
   type BattleSpellConditionChoiceHole,
@@ -113,7 +116,10 @@ import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
-import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import {
+  spellDamageRerollUnsupportedIssue,
+  EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+} from "./spell-reroll-issues.ts";
 import {
   characterUnitProcedureBindings,
   type UnitFeatureProcedureExecution,
@@ -2030,36 +2036,65 @@ export function validateSpellBurstDamageFill(
   });
 }
 
+export const ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY = [
+  {
+    field: "attackDamageDieFloorChoice",
+    message:
+      ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+  },
+  {
+    field: "attackDamageAbilityModifierChoice",
+    message:
+      ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+  },
+  {
+    field: "spellDamageReroll",
+    message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+  },
+] as const satisfies readonly {
+  readonly field: keyof Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly message: string;
+}[];
+
 export function validatePreparedSlotSpellDamageGroups(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  allocations: readonly BattleSpellTargetAllocation[],
+  request: BattleAllocatedSpellDamageRollHole["allocatedDamageDice"],
 ): string | null {
-  const attackDamageChoiceIssue = attackDamageChoiceUnsupportedIssue(fill);
-  /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: prepared-slot discovery does not offer attack-only damage choices. */
-  if (attackDamageChoiceIssue !== null) {
-    return attackDamageChoiceIssue;
-  }
-  /* v8 ignore stop -- @preserve */
-  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
-  /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: prepared-slot allocation does not offer whole-roll spell rerolls. */
-  if (spellDamageRerollIssue !== null) {
-    return spellDamageRerollIssue;
+  const unsupportedChoice =
+    ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY.find(
+      ({ field }) => fill[field] !== undefined,
+    );
+  /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: allocation discovery offers neither attack-only damage choices nor whole-roll spell rerolls. */
+  if (unsupportedChoice !== undefined) {
+    return unsupportedChoice.message;
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: discovery publishes exactly one damage group for each admitted target allocation. */
-  if (fill.value.length !== allocations.length) {
+  if (fill.value.length !== request.groups.length) {
     return "Repeated spell damage dice groups must match the target allocation entries.";
   }
   /* v8 ignore stop -- @preserve */
-  const mismatched = allocations.find(
-    (allocation, index) =>
-      fill.value[index]?.results.length !== allocation.count,
+  const mismatched = request.groups.find(
+    (group, index) => fill.value[index]?.results.length !== group.dice,
   );
   /* v8 ignore start -- @preserve -- Malformed repeated-damage group: each allocation count fixes the number of dice in its corresponding dense group. */
   return mismatched === undefined
     ? null
     : "Each repeated spell damage dice group must match that target's allocated effect count.";
   /* v8 ignore stop -- @preserve */
+}
+
+export function allocatedSpellDamageDice(
+  allocations: readonly BattleSpellTargetAllocation[],
+  damage: Pick<DiceExpr, "dieSize">,
+): BattleAllocatedSpellDamageRollHole["allocatedDamageDice"] {
+  return {
+    groups: allocations.map(({ targetId, count }) => ({
+      targetId,
+      dice: count,
+      dieSize: damage.dieSize,
+    })),
+  };
 }
 
 function attackDamageChoiceUnsupportedIssue(

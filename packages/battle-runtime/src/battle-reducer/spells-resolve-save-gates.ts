@@ -1,3 +1,7 @@
+import {
+  admitSpellAreaOrigin,
+  spellAreaOriginMatchesCombatant,
+} from "./spell-area-origin.ts";
 import type { SpellProcedureResolutionInput } from "./spell-procedure-profiles/resolution-contract.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -3607,16 +3611,16 @@ export function resolveSavingThrowOutcomes(
       );
     }
   }
-  if (!state.combatants.has(value.area.originAnchorId)) {
-    return Result.fail(
-      "Save-gate spell area origin anchor must be a combatant in this battle.",
-    );
-  }
+  const origin = admitSpellAreaOrigin(state, value.area);
+  if (Result.isFailure(origin)) return Result.fail(origin.failure);
   if (
     (targeting.kind === "selfOriginCone" ||
       targeting.kind === "selfOriginCube" ||
       targeting.kind === "selfOriginLine") &&
-    value.area.originAnchorId !== (options.selfOriginAreaAnchorId ?? actorId)
+    !spellAreaOriginMatchesCombatant(
+      origin.success,
+      options.selfOriginAreaAnchorId ?? actorId,
+    )
   ) {
     return Result.fail(
       targeting.kind === "selfOriginCone"
@@ -3628,7 +3632,7 @@ export function resolveSavingThrowOutcomes(
   }
   if (
     targeting.kind === "primaryTargetOriginEmanation" &&
-    value.area.originAnchorId !== targetId
+    !spellAreaOriginMatchesCombatant(origin.success, targetId)
   ) {
     return Result.fail(
       "attack-burst damage burst area must originate from the primary target.",
@@ -4051,7 +4055,10 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
     );
   }
   const area = input.value.area;
-  if (!input.state.combatants.has(area.originAnchorId)) {
+  if (
+    !("originAnchorId" in area) ||
+    !input.state.combatants.has(area.originAnchorId)
+  ) {
     return Result.fail(
       "hit-point-budget condition point-origin Sphere origin anchor must be a combatant in this battle.",
     );
@@ -4133,16 +4140,7 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
       "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.",
     );
   }
-  if (
-    nonAutomaticTargetIds.every((targetId) => outcomeTargetIds.has(targetId))
-  ) {
-    return Result.succeed({ ...input.value, area: area });
-  }
-  /* v8 ignore start -- @preserve -- The preceding subset, uniqueness, and equal-cardinality checks prove that every non-automatic target is present. */
-  return Result.fail(
-    "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.",
-  );
-  /* v8 ignore stop -- @preserve */
+  return Result.succeed({ ...input.value, area });
 }
 
 function validatePersistentAreaSaveConditionSavingThrowOutcomes(input: {

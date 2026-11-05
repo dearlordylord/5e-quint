@@ -691,8 +691,9 @@ export const BattleSpellAreaChoiceSchema = Schema.Union([
     stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
-    ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("pointOriginSphereSaveDamageArea"),
+    originAnchor: BattleSpellAreaOriginAnchorSchema,
+    affectedTargetIds: BattleSpellAreaChoiceBaseSchema.affectedTargetIds,
     objectIgnitionFacts: Schema.Array(
       Schema.Struct({
         objectId: BattleObjectId,
@@ -713,8 +714,9 @@ export const BattleSpellAreaChoiceSchema = Schema.Union([
     stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
-    ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("pointOriginSphereObjectDamageArea"),
+    originAnchor: BattleSpellAreaOriginAnchorSchema,
+    affectedTargetIds: BattleSpellAreaChoiceBaseSchema.affectedTargetIds,
     nonmagicalUnattendedObjectDamageFacts: Schema.Array(
       Schema.Struct({
         objectId: BattleObjectId,
@@ -2646,12 +2648,28 @@ const BattleHolePayloadMembers = [
       kind: Schema.Literal("rolledDice"),
       critical: Schema.Boolean,
       sourceProcedureRef: BattleProcedureExecutionRef,
+      allocatedDamageDice: Schema.optionalKey(Schema.Never),
       spellMarkedDamageRiders: Schema.optionalKey(
         Schema.Array(SpellMarkedDamageRiderSchema),
       ),
     },
     SpellDamageRerollHoleOptionsFields,
   ),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    critical: Schema.Boolean,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    allocatedDamageDice: Schema.Struct({
+      groups: Schema.Array(
+        Schema.Struct({
+          targetId: CombatantId,
+          dice: PositiveIntegerSchema,
+          dieSize: PositiveIntegerSchema,
+        }),
+      ),
+    }),
+  }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("rolledDice"),
@@ -3674,154 +3692,9 @@ const BattleNonEmptyRolledDiceGroupSchema = Schema.Struct({
   results: Schema.NonEmptyArray(BattleDieRollResultSchema),
 });
 
-type BattleSpellAreaChoiceEncoded = {
-  readonly originAnchorId: string;
-  readonly affectedTargetIds: readonly string[];
-} & (
-  | {
-      readonly kind?: never;
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind?: never;
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts: readonly [
-        {
-          readonly kind: "doesNotSleep";
-          readonly targetId: string;
-        },
-        ...{
-          readonly kind: "doesNotSleep";
-          readonly targetId: string;
-        }[],
-      ];
-    }
-  | {
-      readonly kind: "saveGatedTargetProjectionArea";
-      readonly affectedObjectIds: readonly string[];
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "saveGatedAreaControlArea";
-      readonly cubeSideFeet: 30;
-      readonly affectedCreatureWitnesses: readonly {
-        readonly targetId: string;
-        readonly inCube: true;
-        readonly canSeePattern: true;
-      }[];
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "saveGatedTurnConstraintBundleArea";
-      readonly cubeSideFeet: 40;
-      readonly affectedCreatureWitnesses: readonly {
-        readonly targetId: string;
-        readonly inCube: true;
-        readonly chosenByCaster: true;
-      }[];
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "persistentAreaSaveConditionArea";
-      readonly areaId: string;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "directionalPersistentAreaArea";
-      readonly areaId: string;
-      readonly directionId: string;
-      readonly creaturePushes: readonly {
-        readonly targetId: string;
-        readonly disposition:
-          | {
-              readonly kind: "pushed";
-              readonly distanceFeet: number;
-              readonly destinationId: string;
-              readonly provokesOpportunityAttacks: false;
-            }
-          | {
-              readonly kind: "blocked";
-              readonly distanceFeet: number;
-              readonly reason: "blocked" | "noLegalDestination";
-              readonly provokesOpportunityAttacks: false;
-            };
-      }[];
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "pointOriginSphereSaveDamageArea";
-      readonly objectIgnitionFacts: readonly {
-        readonly objectId: string;
-        readonly disposition:
-          | { readonly kind: "flammableUnattended" }
-          | { readonly kind: "notFlammable" }
-          | { readonly kind: "wornOrCarried" };
-      }[];
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "pointOriginSphereObjectDamageArea";
-      readonly nonmagicalUnattendedObjectDamageFacts: readonly {
-        readonly objectId: string;
-        readonly disposition:
-          | { readonly kind: "hitPoints"; readonly hitPoints: number }
-          | {
-              readonly kind: "hitPointsWithDamageThreshold";
-              readonly hitPoints: number;
-              readonly damageThreshold: number;
-            }
-          | { readonly kind: "tableResolved" };
-      }[];
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-  | {
-      readonly kind: "selfOriginCubePushArea";
-      readonly creaturePushes: readonly {
-        readonly targetId: string;
-        readonly disposition:
-          | {
-              readonly kind: "pushed";
-              readonly distanceFeet: number;
-              readonly destinationId: string;
-              readonly provokesOpportunityAttacks: false;
-            }
-          | {
-              readonly kind: "blocked";
-              readonly distanceFeet: number;
-              readonly reason: "blocked" | "noLegalDestination";
-              readonly provokesOpportunityAttacks: false;
-            };
-      }[];
-      readonly unsecuredObjectPushes: readonly {
-        readonly objectId: string;
-        readonly disposition:
-          | {
-              readonly kind: "pushed";
-              readonly distanceFeet: number;
-              readonly destinationId: string;
-              readonly provokesOpportunityAttacks: false;
-            }
-          | {
-              readonly kind: "blocked";
-              readonly distanceFeet: number;
-              readonly reason: "blocked" | "noLegalDestination";
-              readonly provokesOpportunityAttacks: false;
-            };
-      }[];
-      readonly audibleBoom: {
-        readonly sound: "thunderous boom";
-        readonly audibleRadiusFeet: number;
-      };
-      readonly areaId?: never;
-      readonly stagedConditionAutomaticSuccessFacts?: never;
-    }
-);
+type BattleSpellAreaChoiceEncoded = Schema.Codec.Encoded<
+  typeof BattleSpellAreaChoiceSchema
+>;
 
 type BattleD20TestRollEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestRollSchema

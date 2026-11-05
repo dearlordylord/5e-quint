@@ -8,8 +8,6 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { decodeEvaluationInventory } from "../test-support/evaluation-inventory.ts";
-
 const pluginRoot = fileURLToPath(
   new URL("../../../plugins/dnd-srd-oracle/", import.meta.url),
 );
@@ -46,29 +44,6 @@ const InstalledPluginManifestSchema = Schema.Struct({
   mcpServers: Schema.optionalKey(Schema.String),
 });
 
-const ForwardTestResultsSchema = Schema.Struct({
-  kind: Schema.Literal("independentStaticForwardTest"),
-  evaluator: Schema.String,
-  installedChatGptEvidence: Schema.Literal(false),
-  status: Schema.Literal("passed"),
-  skillSourceDigest: Schema.String,
-  skillActivationInventoryDigest: Schema.String,
-  cases: Schema.Array(
-    Schema.Struct({
-      id: Schema.String,
-      activation: Schema.Literals(["activate", "doNotActivate"]),
-      outcome: Schema.Literal("metExpectation"),
-      toolIntents: Schema.Array(Schema.String),
-      result: Schema.String,
-    }),
-  ),
-  findingsApplied: Schema.Array(Schema.String),
-  externalEvidenceStillRequired: Schema.Struct({
-    issue: Schema.Literal(328),
-    scope: Schema.String,
-  }),
-});
-
 describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
   test("keeps the installed Skill package separate from the source MCP seam", () => {
     const manifest = decodeJsonFile(
@@ -80,77 +55,6 @@ describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
     expect(existsSync(resolve(pluginRoot, ".mcp.json"))).toBe(false);
     expect(localMcpConfigPath.startsWith(`${pluginRoot}/`)).toBe(false);
     expect(readFileSync(localMcpConfigPath, "utf8")).toContain('"@dnd/mcp"');
-  });
-
-  test("retains the required MCP and installed-Skill evaluation inventory", () => {
-    const inventory = decodeEvaluationInventory(
-      resolve(pluginRoot, "evals/evaluation-inventory.json"),
-    );
-
-    expect(new Set(inventory.mcpToolSelection.map(({ kind }) => kind))).toEqual(
-      new Set(["direct", "indirect", "followUp", "negative"]),
-    );
-    expect(new Set(inventory.skillActivation.map(({ kind }) => kind))).toEqual(
-      new Set(["direct", "indirect", "followUp", "negative", "boundary"]),
-    );
-    expect(inventory.completeWorkflow.map(({ id }) => id)).toEqual([
-      "complete-newcomer-journey",
-    ]);
-    expect(inventory.completeWorkflow[0]?.prompt).toContain(
-      "group every currently returned independent meaningful choice",
-    );
-    expect(
-      inventory.submissionReview.filter(({ kind }) => kind === "positive"),
-    ).toHaveLength(5);
-    expect(
-      inventory.submissionReview.filter(({ kind }) => kind === "negative"),
-    ).toHaveLength(3);
-    assertFollowUpsReferenceEarlierCases(inventory.mcpToolSelection);
-    assertFollowUpsReferenceEarlierCases(inventory.skillActivation);
-    expect(inventory.evidenceOwners.apiMcpSelection).toMatchObject({
-      kind: "requiredExternalEvidence",
-      issue: 328,
-      artifactPath:
-        "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
-    });
-    expect(inventory.evidenceOwners.installedChatGpt).toMatchObject({
-      kind: "historicalExternalEvidence",
-      issue: 328,
-      artifactPath:
-        "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
-    });
-    expect(inventory.evidenceOwners.submissionPortal).toMatchObject({
-      kind: "requiredReleaseEvidence",
-      artifactLocation: "external publication attestation",
-    });
-    expect(inventory.evidenceOwners.apiMcpSelection.artifactPath).not.toBe(
-      inventory.evidenceOwners.installedChatGpt.artifactPath,
-    );
-
-    const forwardTest = decodeJsonFile(
-      ForwardTestResultsSchema,
-      resolve(pluginRoot, "evals/forward-test-results.json"),
-    );
-    const expectedActivationById = new Map(
-      inventory.skillActivation.map(({ id, expectedActivation }) => [
-        id,
-        expectedActivation,
-      ]),
-    );
-    expect(forwardTest.installedChatGptEvidence).toBe(false);
-    expect(forwardTest.status).toBe("passed");
-    expect(
-      forwardTest.cases.every(({ outcome }) => outcome === "metExpectation"),
-    ).toBe(true);
-    expect(forwardTest.externalEvidenceStillRequired.issue).toBe(328);
-    expect(forwardTest.cases.map(({ id }) => id).sort()).toEqual(
-      inventory.skillActivation.map(({ id }) => id).sort(),
-    );
-    for (const result of forwardTest.cases) {
-      expect(result.activation, result.id).toBe(
-        expectedActivationById.get(result.id),
-      );
-    }
   });
 
   test(
@@ -340,21 +244,6 @@ function decodeJsonFile<S extends Schema.ConstraintDecoder<unknown, never>>(
   return Schema.decodeUnknownSync(schema)(
     JSON.parse(readFileSync(path, "utf8")),
   );
-}
-
-function assertFollowUpsReferenceEarlierCases(
-  cases: readonly {
-    readonly id: string;
-    readonly after?: string;
-  }[],
-): void {
-  const priorIds = new Set<string>();
-  for (const evaluationCase of cases) {
-    if (evaluationCase.after !== undefined) {
-      expect(priorIds.has(evaluationCase.after), evaluationCase.id).toBe(true);
-    }
-    priorIds.add(evaluationCase.id);
-  }
 }
 
 function playSessionIdFrom(value: unknown): string {

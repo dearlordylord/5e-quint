@@ -5,9 +5,6 @@ import type {
 import type {
   BattlePendingTransaction,
   BattleRuntimeSession,
-  BattleRuntimeTransactionResult,
-  InitialInitiativeSetup,
-  InitiativeSwapCandidateWitness,
 } from "@dnd/battle-runtime";
 import {
   applyInitiativeSwap,
@@ -28,12 +25,7 @@ import type {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Result, Match, Option } from "effect";
-import { type BattleActionSelectionId } from "./battle-action-selection-id.ts";
-import {
-  createBattleActionSelectionStore,
-  type McpPendingBattleSelection,
-  type McpBattleActionCancellationIssue,
-} from "./battle-action-selection-store.ts";
+import { createBattleActionSelectionStore } from "./battle-action-selection-store.ts";
 export type {
   McpPendingBattleSelection,
   McpBattleActionCancellationIssue,
@@ -42,7 +34,6 @@ import type { SrdStatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { createBattleRosterTransitionPlanner } from "./battle-roster-session-store.ts";
 import type {
-  ActiveBattleRosterTransitionPlan,
   ActiveBattleRosterTransitionPreview,
   McpBattleRosterOperation,
   McpBattleRosterTransitionIssue,
@@ -59,16 +50,14 @@ import {
   commitBattleEndTransition,
   commitBattleStartTransition,
 } from "./battle-session-store-commit.ts";
-import type { BattleCharacterSessionSettlement } from "./battle-handoff.ts";
 import type {
   AvailableCharacterSession,
   AvailableCharacterSessionInput,
-  CharacterSessionRegistry,
   CharacterSessionIssue,
-  McpBattleTransactionStorageIssue,
   McpBattleState,
   McpBattleStateTransitionIssue,
   McpSessionSnapshot,
+  McpSessionStore,
 } from "./session-store-types.ts";
 
 export type {
@@ -78,77 +67,6 @@ export type {
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 export type * from "./session-store-types.ts";
-
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
-export type McpSessionStore = {
-  readonly drafts: Map<CharacterDraftId, CharacterDraft>;
-  readonly characters: CharacterSessionRegistry;
-  readonly battleState: McpBattleState;
-  readonly battleSession: BattleRuntimeSession | null;
-  commitBattleStart(input: {
-    readonly nextBattleState: Exclude<McpBattleState, { readonly tag: "none" }>;
-    readonly characterSessions: readonly AvailableCharacterSession[];
-  }): Result.Result<void, McpBattleStateTransitionIssue>;
-  commitBattleEnd(input: {
-    readonly battleSession: BattleRuntimeSession;
-    readonly characterSettlements: readonly BattleCharacterSessionSettlement[];
-  }): Result.Result<void, McpBattleStateTransitionIssue>;
-  storeActiveBattle(
-    session: BattleRuntimeSession,
-  ): Result.Result<void, McpBattleStateTransitionIssue>;
-  cancelPendingBattleAction(
-    expectedSession: BattleRuntimeSession,
-    expectedTransaction: BattlePendingTransaction | null,
-    expectedSelectionId: BattleActionSelectionId,
-  ): Result.Result<void, McpBattleActionCancellationIssue>;
-  storeBattleTransactionResult(
-    expectedSession: BattleRuntimeSession,
-    result: BattleRuntimeTransactionResult,
-  ): Result.Result<
-    void,
-    McpBattleStateTransitionIssue | McpBattleTransactionStorageIssue
-  >;
-  planActiveBattleRosterTransition(
-    operation: Extract<McpBattleRosterOperation, { readonly kind: "remove" }>,
-  ): Result.Result<
-    Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "remove" }>,
-    McpBattleRosterTransitionIssue
-  >;
-  planActiveBattleRosterTransition(
-    operation: Extract<
-      McpBattleRosterOperation,
-      { readonly kind: "addCharacter" | "addStatBlock" }
-    >,
-  ): Result.Result<
-    Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "add" }>,
-    McpBattleRosterTransitionIssue
-  >;
-  commitActiveBattleRosterTransition(
-    plan: ActiveBattleRosterTransitionPlan,
-  ): Result.Result<BattleRuntimeSession, McpBattleRosterTransitionIssue>;
-  storeInitialInitiativeSetup(
-    setup: InitialInitiativeSetup,
-  ): Result.Result<void, McpBattleStateTransitionIssue>;
-  applyInitialInitiativeSwap(input: {
-    readonly sourceId: Parameters<typeof applyInitiativeSwap>[0]["sourceId"];
-    readonly candidateId: Parameters<
-      typeof applyInitiativeSwap
-    >[0]["candidateId"];
-    readonly candidateWitness: InitiativeSwapCandidateWitness;
-  }): Result.Result<void, McpBattleStateTransitionIssue>;
-  finalizeInitialInitiativeSetup(): Result.Result<
-    BattleRuntimeSession,
-    McpBattleStateTransitionIssue
-  >;
-  getPendingBattleTransaction(): BattlePendingTransaction | null;
-  getPendingBattleSelection(): McpPendingBattleSelection | null;
-  clearSelectedStatBlock(): void;
-  getSelectedStatBlock(): SrdStatBlockRecord | null;
-  selectStatBlock(
-    statBlockId: StatBlockId,
-  ): Result.Result<SrdStatBlockRecord, CharacterSessionIssue>;
-  snapshot(): McpSessionSnapshot;
-};
 
 export function availableCharacterSession(
   input: AvailableCharacterSessionInput,
@@ -184,6 +102,7 @@ export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
   return characterSheetId(`character:${encodeURIComponent(String(draftId))}`);
 }
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export function createMcpSessionStore(input: {
   readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
@@ -267,6 +186,9 @@ export function createMcpSessionStore(input: {
     characters,
     get battleState() {
       return battleState;
+    },
+    get nextBattleActionSelectionId() {
+      return actionSelection.nextSelectionId;
     },
     get battleSession(): BattleRuntimeSession | null {
       return battleState.tag === "activeBattle" ? battleState.session : null;

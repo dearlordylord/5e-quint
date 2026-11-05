@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 193,
+    "total": 194,
     "bySubject": {
-      "battle-hole-family": 96,
+      "battle-hole-family": 97,
       "battle-fill-kind": 57,
       "battle-subject-kind": 40
     },
     "byClassification": {
-      "semantic-frontier": 150,
+      "semantic-frontier": 151,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 43,
       "unsupported-dead-branch": 0
@@ -6653,6 +6653,20 @@
       "holeKind": "rolledDice",
       "id": "BattleSpellDamageRollHole",
       "reason": "Spell damage rolls feed attack, save, chained, after-hit, weapon-hosted, linked, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, shared HP damage, and specialized spell damage joins are covered by dedicated obligations.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleAllocatedSpellDamageRollHole",
+      "reason": "Allocated spell damage rolls preserve admitted target allocation order and per-target dice cardinality. This family exposes the existing direct-damage fill request as structured data; the direct-damage procedure, shared HP, by-type reduction, and zero-Hit-Point disposition obligations continue to own resolution.",
       "subject": "battle-hole-family"
     },
     {

@@ -101,6 +101,7 @@ function createSqlitePlaySessionRepository(
   const commit = database.prepare(`
     UPDATE play_sessions
     SET revision = revision + 1,
+      format_version = ?,
       operations_json = ?,
       tenure_kind = ?,
       guest_access_grant_digest = ?,
@@ -111,6 +112,8 @@ function createSqlitePlaySessionRepository(
   const save = database.prepare(`
     UPDATE play_sessions
     SET revision = revision + 1,
+      format_version = ?,
+      operations_json = ?,
       tenure_kind = 'saved',
       guest_access_grant_digest = NULL,
       principal_id = ?,
@@ -222,6 +225,7 @@ function createSqlitePlaySessionRepository(
       if (closed) return Result.fail(closedRepositoryIssue());
       try {
         const result = commit.run(
+          record.formatVersion,
           JSON.stringify(
             change.operation === undefined
               ? record.operations

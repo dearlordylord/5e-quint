@@ -16,7 +16,7 @@ export const diceToolDefinitionsByName = {
     name: diceToolNames.rollDice,
     title: "Roll Dice",
     description:
-      "Sample an ordered, non-empty batch of structured dice groups with deterministic non-cryptographic DRDice and return visible raw faces. Each call advances the Play Session's dice sequence. This independent sampler never reads Battle Holes, derives modifiers or outcomes, or fills a Hole; copy its faces into an ordinary typed fill only when the current runtime Hole supplies the required facts.",
+      "Sample an ordered, non-empty batch of structured dice groups with deterministic non-cryptographic DRDice and return visible raw faces. Every successful call is a new draw advancing the Play Session's dice sequence; another call does not inspect, retry, or replace an earlier draw. Preserve returned face order for the declared test instead of drawing again; reroll only when the applicable game rule calls for it. This independent sampler never reads Battle Holes, derives modifiers or outcomes, or fills a Hole; copy its faces into an ordinary typed fill only when the current runtime Hole supplies the required facts.",
     inputSchema: rollDiceInputSchema,
     annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(RollDiceOutputSchema),

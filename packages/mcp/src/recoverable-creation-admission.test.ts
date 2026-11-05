@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { creationCommandChangedState } from "./play-session-command.ts";
+import {
+  creationCommandChangedState,
+  PLAY_SESSION_COMMAND_ADMISSION_VERSION,
+} from "./play-session-command.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -269,7 +272,7 @@ test("reopens historical mastery builds without admitting new unsupported choice
         beforeRejected.success.record.operations,
       );
       expect(afterRejected.success.record.operations.at(-1)).toMatchObject({
-        admissionVersion: 2,
+        admissionVersion: PLAY_SESSION_COMMAND_ADMISSION_VERSION,
       });
       const battleArgs = (draftId: CharacterDraftId) => ({
         battleId: "battle:recovery",

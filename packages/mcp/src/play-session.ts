@@ -1,4 +1,4 @@
-import type { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
+import type { PlaySessionCommandAdmissionVersion } from "./play-session-command.ts";
 import type { ChatGptStateOperationName } from "./chatgpt/protocol-operation.ts";
 import { randomUUID } from "node:crypto";
 
@@ -125,7 +125,7 @@ export type SavedPlaySessionSummary = {
 };
 
 export type PlaySessionCommand = {
-  readonly admissionVersion?: typeof PLAY_SESSION_COMMAND_ADMISSION_VERSION;
+  readonly admissionVersion?: PlaySessionCommandAdmissionVersion;
 } & (
   | {
       readonly toolSurface?: never;

@@ -102,6 +102,8 @@ export function runSave(
   input: SaveInput,
 ): Result.Result<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue> {
   const result = input.save.run(
+    input.record.formatVersion,
+    JSON.stringify(input.record.operations),
     input.tenure.principalId,
     input.tenure.lastActivityAtMs,
     input.record.playSessionId,

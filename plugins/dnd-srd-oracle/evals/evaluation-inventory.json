@@ -163,5 +163,12 @@
       "expectedBehavior": "Do not create or mutate a Play Session without authorization; explain that catalog browsing remains available and surface standard MCP OAuth only if the user proceeds.",
       "expectedResultShape": "No created-session claim or credential field; an OAuth authorization challenge or a clear authentication requirement."
     }
+  ],
+  "autonomousDialogue": [
+    {
+      "id": "wizard-fireball-battle",
+      "expectation": "wizardBattle",
+      "prompt": "Make a level-5 wizard with Fireball and put them into a battle against four Goblin Warriors and one wolf.\n- Try to make the battle balanced, but trust the random rolls and accept any outcome.\n- Make reasonable decisions for all sides without asking me.\n- Make interesting geometry and tactics. Calculate the geometry programmatically and keep the layout consistent as creatures move.\n- Visualise the battle process programmatically with an updateable widget or visual artifact during the battle itself so I can see it.\n- Move the battle to its logical end.\nUse the Oracle for all core game mechanics and rules. Do not make up rules or replace the engine with your own combat simulator. Report what actually happened."
+    }
   ]
 }

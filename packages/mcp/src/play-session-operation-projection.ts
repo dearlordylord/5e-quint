@@ -1,3 +1,8 @@
+import {
+  operationResultInputSource,
+  type UnresolvedInputSource,
+  type OperationResultPath,
+} from "./unresolved-input-source.ts";
 import { Result, Match, Schema } from "effect";
 
 import { battleToolNames } from "./battle-tool-input.ts";
@@ -23,7 +28,7 @@ import type { PlaySessionOperationName } from "./play-session-tool-contract.ts";
 import { PlaySessionIdSchema } from "./play-session.ts";
 
 export type UnresolvedInputGroup = {
-  readonly sourcePath: string;
+  readonly source: UnresolvedInputSource;
   readonly inputs: readonly unknown[];
 };
 
@@ -106,7 +111,7 @@ export function unresolvedInputsFrom(
 
 export function unresolvedInputsFromBattleEnvelope(
   value: unknown,
-  envelopePath = "$.envelope",
+  envelopePath: OperationResultPath = "$.envelope",
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const decoded = Schema.decodeUnknownResult(BattlePresentationEnvelopeSchema)(
     value,
@@ -234,7 +239,7 @@ function battlePresentationUnresolvedInputsFrom(
           };
     } | null;
   },
-  envelopePath = "$.envelope",
+  envelopePath: OperationResultPath = "$.envelope",
 ): readonly UnresolvedInputGroup[] {
   if (value.envelope === null) return [];
   const frontier = value.envelope.frontier;
@@ -251,7 +256,9 @@ function battlePresentationUnresolvedInputsFrom(
   }
   return [
     {
-      sourcePath: `${envelopePath}.frontier.decisionHole`,
+      source: operationResultInputSource(
+        `${envelopePath}.frontier.decisionHole`,
+      ),
       inputs: [frontier.decisionHole],
     },
   ];
@@ -292,7 +299,7 @@ function readPlaySessionUnresolvedInputs(
 
 function finalizationHoleGroup(
   finalization: Schema.Schema.Type<typeof CreationFinalizationSchema>,
-  sourcePath = "$.finalization.holes",
+  sourcePath: OperationResultPath = "$.finalization.holes",
 ): readonly UnresolvedInputGroup[] {
   return finalization.tag === "incomplete"
     ? nonEmptyInputGroup(sourcePath, finalization.holes)
@@ -300,10 +307,12 @@ function finalizationHoleGroup(
 }
 
 function nonEmptyInputGroup(
-  sourcePath: string,
+  sourcePath: OperationResultPath,
   inputs: readonly unknown[],
 ): readonly UnresolvedInputGroup[] {
-  return inputs.length === 0 ? [] : [{ sourcePath, inputs }];
+  return inputs.length === 0
+    ? []
+    : [{ source: operationResultInputSource(sourcePath), inputs }];
 }
 
 function operationProjectionIssue(error: {

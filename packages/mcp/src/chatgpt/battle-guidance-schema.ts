@@ -1,3 +1,4 @@
+import { BattleActKeySchema } from "./battle-act-selection.ts";
 import {
   BattleHoleIdSchema,
   BattleSubjectSchema,
@@ -8,7 +9,7 @@ import { ReadyBattleInterruptCallSchema } from "./battle-interrupt-call-guidance
 import { CHATGPT_TOOL_NAMES } from "./protocol-operation.ts";
 import type { ChatGptToolName } from "./tool-catalog.ts";
 import { BattleActionCancellationGuidanceSchema } from "../battle-action-cancellation-guidance.ts";
-import { BattleAreaInputGuidanceSchema } from "./battle-area-input-guidance.ts";
+import { BattleInputGuidanceSchema } from "./battle-input-guidance.ts";
 
 export const INITIAL_INITIATIVE_GUIDANCE_TOOLS = [
   "apply_initiative_swap",
@@ -55,16 +56,41 @@ export const ChatGptBattleGuidanceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("acts"),
     acts: Schema.Array(
-      Schema.Struct({
-        subject: BattleSubjectSchema,
-        routing: RoutingSchema,
-        areaInputs: Schema.Array(BattleAreaInputGuidanceSchema),
-      }),
+      Schema.Union([
+        Schema.Struct({
+          kind: Schema.Literal("ready"),
+          label: Schema.String,
+          summary: Schema.String,
+          readyCalls: Schema.NonEmptyArray(
+            Schema.Struct({
+              tool: Schema.Literals(CHATGPT_TOOL_NAMES),
+              arguments: Schema.Struct({ actKey: BattleActKeySchema }),
+            }),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("tableFactsRequired"),
+          label: Schema.String,
+          summary: Schema.String,
+          arguments: Schema.Struct({ actKey: BattleActKeySchema }),
+          routing: RoutingSchema.members[0],
+          requiredArguments: Schema.Tuple([
+            Schema.Literal("reactionSpellTargetFacts"),
+          ]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("unavailable"),
+          label: Schema.String,
+          summary: Schema.String,
+          subject: BattleSubjectSchema,
+          issue: RoutingSchema.members[1].fields.issue,
+        }),
+      ]),
     ),
   }),
   Schema.Struct({
     kind: Schema.Literal("ordinaryContinuation"),
-    areaInputs: Schema.Array(BattleAreaInputGuidanceSchema),
+    inputs: Schema.Array(BattleInputGuidanceSchema),
     movementInputs: Schema.Array(
       Schema.Struct({
         example: Schema.Struct({

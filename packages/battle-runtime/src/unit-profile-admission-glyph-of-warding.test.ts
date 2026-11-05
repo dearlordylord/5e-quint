@@ -3911,6 +3911,46 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(
       battleProcedureExecutionRefForSpellHoleForTest(savingThrow),
     ).toBeDefined();
+    for (const originAnchor of [
+      { kind: "tableSelectedPoint" },
+      { kind: "combatant", combatantId: spellCasterId },
+    ] as const) {
+      expect(
+        releaseGlyphStoredSpell({
+          executionRegistry,
+          state,
+          profile: requireGlyphStoredSpellProfile(),
+          witness: storedAreaReleaseWitness({
+            effectRef: glyphEffectRef(state),
+            originAnchorId: spellTargetId,
+            fills: [
+              {
+                kind: "savingThrowOutcome",
+                holeId: savingThrow.holeId,
+                value: {
+                  area: {
+                    kind: "pointOriginSphereSaveDamageArea",
+                    originAnchor,
+                    affectedTargetIds: [spellTargetId],
+                    objectIgnitionFacts: [],
+                  },
+                  outcomes: [
+                    {
+                      targetId: spellTargetId,
+                      succeeded: false,
+                      withoutRoll: true,
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        }),
+      ).toMatchObject({
+        tag: "invalidWitness",
+        reason: "areaCenterMismatch",
+      });
+    }
   });
 
   test("explosive-rune release uses area witnesses, chosen damage type, slot scaling, save half damage, and cleanup", () => {
@@ -6133,7 +6173,7 @@ function fireballGlyphSavingThrowOutcomeFill(
     value: {
       area: {
         kind: "pointOriginSphereSaveDamageArea",
-        originAnchorId: spellTargetId,
+        originAnchor: { kind: "combatant", combatantId: spellTargetId },
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts,
       },

@@ -23,7 +23,13 @@ import {
 import type { PlaySessionExecutionOperationName } from "./chatgpt/protocol-operation.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 
-export const PLAY_SESSION_COMMAND_ADMISSION_VERSION = 2 as const;
+export const PLAY_SESSION_COMMAND_ADMISSION_VERSION = 3 as const;
+export const PLAY_SESSION_COMMAND_ADMISSION_VERSIONS = [
+  2,
+  PLAY_SESSION_COMMAND_ADMISSION_VERSION,
+] as const;
+export type PlaySessionCommandAdmissionVersion =
+  (typeof PLAY_SESSION_COMMAND_ADMISSION_VERSIONS)[number];
 
 const CREATION_FILL_CHANGED_STATE = {
   accepted: true,
@@ -52,26 +58,31 @@ export function creationCommandChangedState(
     name !== characterToolNames.finalizeCharacter
   )
     return true;
-  if (isToolContent(content) && isJsonObject(content.structuredContent)) {
-    const payload = content.structuredContent;
-    const outcome =
-      name === characterToolNames.fillCreationHoles
-        ? payload.result
-        : payload.finalization;
-    const states =
-      name === characterToolNames.fillCreationHoles
-        ? CREATION_FILL_CHANGED_STATE
-        : CREATION_FINALIZATION_CHANGED_STATE;
-    if (isJsonObject(outcome)) {
-      const matched = Object.entries(states).find(
-        ([tag]) => tag === outcome.tag,
-      );
-      if (matched !== undefined) return matched[1];
-    }
-  }
+  const outcomeTag = structuredCreationOutcomeTag(
+    content,
+    name === characterToolNames.fillCreationHoles ? "result" : "finalization",
+  );
+  const states =
+    name === characterToolNames.fillCreationHoles
+      ? CREATION_FILL_CHANGED_STATE
+      : CREATION_FINALIZATION_CHANGED_STATE;
+  const matched = Object.entries(states).find(([tag]) => tag === outcomeTag);
+  if (matched !== undefined) return matched[1];
   throw new Error(
     "A successful creation command returned an unknown retention outcome.",
   );
+}
+
+function structuredCreationOutcomeTag(
+  content: unknown,
+  field: "result" | "finalization",
+): string | undefined {
+  if (!isToolContent(content) || !isJsonObject(content.structuredContent))
+    return undefined;
+  const outcome = content.structuredContent[field];
+  return isJsonObject(outcome) && typeof outcome.tag === "string"
+    ? outcome.tag
+    : undefined;
 }
 
 function createdCharacterDraftId(operationContent: unknown): CharacterDraftId {

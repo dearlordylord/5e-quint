@@ -62,7 +62,12 @@ export function buildCanonicalToolDefinitions(
 ): readonly ProtocolToolDefinition[] {
   return applyTransportSecurity(
     [
-      ...playSessionDefinitionsForTransport(playSessionTransport, toolSurface),
+      ...playSessionDefinitionsForTransport(
+        playSessionTransport,
+        toolSurface,
+      ).map((definition) =>
+        canonicalToolDefinitionForSurface(definition, toolSurface),
+      ),
       ...definitions.map((definition) => {
         const canonicalDefinition = canonicalToolDefinitionForSurface(
           definition,
@@ -74,9 +79,12 @@ export function buildCanonicalToolDefinitions(
         );
         return statefulName === undefined
           ? canonicalDefinition
-          : statefulPlaySessionToolDefinition(
-              canonicalDefinition,
-              statefulName,
+          : canonicalToolDefinitionForSurface(
+              statefulPlaySessionToolDefinition(
+                canonicalDefinition,
+                statefulName,
+                toolSurface,
+              ),
               toolSurface,
             );
       }),

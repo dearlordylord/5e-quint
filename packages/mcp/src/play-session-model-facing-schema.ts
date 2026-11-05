@@ -1,4 +1,5 @@
-import type { McpOutputSchema } from "./schema-codec.ts";
+import { mcpOutputJsonSchema, type McpOutputSchema } from "./schema-codec.ts";
+import { UnresolvedInputSourceSchema } from "./unresolved-input-source.ts";
 
 const ModelFacingUnresolvedInputSchema = {
   type: "object",
@@ -26,13 +27,13 @@ export function modelFacingUnresolvedInputsSchema(): McpOutputSchema {
     items: {
       type: "object",
       properties: {
-        sourcePath: { type: "string" },
+        source: mcpOutputJsonSchema(UnresolvedInputSourceSchema),
         inputs: {
           type: "array",
           items: ModelFacingUnresolvedInputSchema,
         },
       },
-      required: ["sourcePath", "inputs"],
+      required: ["source", "inputs"],
       additionalProperties: false,
     },
   };

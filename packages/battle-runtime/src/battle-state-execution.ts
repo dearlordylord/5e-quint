@@ -5491,15 +5491,28 @@ export type BattleDamageRollHole = Extract<
   readonly attackDamageDieFloorChoiceProcedureRefs?: AttackDamageDieFloorChoiceProcedureRefs;
   readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
 };
-export type BattleSpellDamageRollHole = Extract<
+type BattleSpellDamageRollContext = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly critical: boolean;
+};
+export type BattleSpellDamageRollHole = BattleSpellDamageRollContext & {
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
   readonly spellDamageRerolls?: readonly BattleSpellDamageRerollOption[];
+  readonly allocatedDamageDice?: never;
 };
+export type BattleAllocatedSpellDamageRollHole =
+  BattleSpellDamageRollContext & {
+    readonly allocatedDamageDice: {
+      readonly groups: readonly {
+        readonly targetId: CombatantId;
+        readonly dice: number;
+        readonly dieSize: number;
+      }[];
+    };
+  };
 export type BattleGrantedAreaSaveDamageActionDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6268,10 +6281,23 @@ export type BattleSavingThrowOutcomeValue =
   | BattleUnitFeatureSavingThrowOutcomeValue;
 export type SaveDamageResult = "none" | "half" | "full";
 export type BattleSpellAreaChoice = {
-  readonly originAnchorId: CombatantId;
   readonly affectedTargetIds: readonly CombatantId[];
-} & BattleSpellAreaChoiceKind;
-type BattleSpellAreaChoiceKind =
+} & (
+  | {
+      readonly kind: "pointOriginSphereSaveDamageArea";
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
+      readonly objectIgnitionFacts: readonly BattleAreaDamageObjectIgnitionFact[];
+    }
+  | {
+      readonly kind: "pointOriginSphereObjectDamageArea";
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
+      readonly nonmagicalUnattendedObjectDamageFacts: readonly BattleAreaDamageNonmagicalUnattendedObjectDamageFact[];
+    }
+  | ({
+      readonly originAnchorId: CombatantId;
+    } & BattleCombatantOriginAreaChoiceKind)
+);
+type BattleCombatantOriginAreaChoiceKind =
   | {
       readonly kind?: never;
       readonly stagedConditionAutomaticSuccessFacts?: never;
@@ -6300,14 +6326,6 @@ type BattleSpellAreaChoiceKind =
   | {
       readonly kind: "persistentAreaSaveConditionArea";
       readonly areaId: BattleAreaId;
-    }
-  | {
-      readonly kind: "pointOriginSphereSaveDamageArea";
-      readonly objectIgnitionFacts: readonly BattleAreaDamageObjectIgnitionFact[];
-    }
-  | {
-      readonly kind: "pointOriginSphereObjectDamageArea";
-      readonly nonmagicalUnattendedObjectDamageFacts: readonly BattleAreaDamageNonmagicalUnattendedObjectDamageFact[];
     }
   | {
       readonly kind: "selfOriginCubePushArea";
@@ -6813,6 +6831,7 @@ export type BattleHole =
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
+  | BattleAllocatedSpellDamageRollHole
   | BattleGrantedAreaSaveDamageActionDamageRollHole
   | BattleGlyphExplosiveRuneDamageRollHole
   | BattleSpellDamageReductionRollHole

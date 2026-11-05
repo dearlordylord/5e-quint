@@ -11,22 +11,26 @@ export function workflowGuide(toolSurface: McpToolSurface) {
   } = workflowTools(toolSurface);
   return {
     lifecycle: [
-      "Call list_catalog_units for catalog ids or create_character_draft to discover currently legal character choices.",
-      "Call create_character_draft, then fill only holeIds and optionIds returned in holes. The draft.progression.initial choice is the whole Character Progression profile: starting class plus any post-start advancement entries.",
+      "Call list_catalog_units for Unit ids (inspect_catalog_unit reads Unit details), list_stat_blocks for Stat Block ids (inspect_stat_block reads combat details), or create_character_draft to discover currently legal character choices.",
+      "Call create_character_draft, then follow creationInputs[].fillSchema, preserving kind and holeId; choice fills select optionIds from holes, while abilityScores fills provide method and value. The draft.progression.initial choice is the whole Character Progression profile: starting class plus any post-start advancement entries.",
       "After every accepted apply_character_creation_choices call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
       `After finalization, call ${characterMutation} with setEquipmentLoadout to select or clear owned armor, shield, or weapon references before start_battle; pass references from finalization.build.equipment.owned, omit a slot to retain it, and use null to clear it. Standard finalization stores weapon references in the main slot; passing that main:<unitId> reference as offHandWeapon is the canonical off-hand workflow, and the adapter rekeys it to off:<unitId> before validation. Armor and shield references must retain their own slots.`,
-      "Call list_stat_blocks for Stat Block ids and inspect each summary's fixed or alternative Size. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
+      "Call list_stat_blocks for Stat Block ids and inspect each summary's fixed or alternative Size. inspect_stat_block reads complete details without changing a Play Session; start_battle Stat Block combatants carry their own statBlockId.",
       "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks and must pass size when the summary exposes alternatives.",
       `Use ${lifecycle} with applyInitiativeSwap or finalizeInitialInitiativeSetup during initial setup; while a Battle is active, use addCombatant or removeCombatant to change the roster. Add only an available Character Session or an installed Stat Block projection, and retry typed recovery with battleAndCharacterSessionsUnchanged when a transition is rejected.`,
-      "Call discover_battle_acts and copy a returned subject exactly. For an attack presentation, use presentation.name and the returned damage selection to distinguish attacks with the same generic label; retain the complete subject, including statBlockDamageSelection.",
+      toolSurface === "chatgpt"
+        ? "Call discover_battle_acts and select a labeled chatGptBattleOperations.acts readyCalls entry. Copy its arguments unchanged and add only the selected playSessionId. A tableFactsRequired Act instead identifies the additional requiredArguments to supply from the table."
+        : "Call discover_battle_acts and copy a returned subject exactly. For an attack presentation, use presentation.name and the returned damage selection to distinguish attacks with the same generic label; retain the complete subject, including statBlockDamageSelection.",
       "For every ordinary Holes frontier, read envelope.frontier.pendingProcedure as the canonical procedure awaiting the returned holes. A subjectResolution procedure is replay-root work; a turnBoundary procedure identifies the ending actor, incoming source turn, and either outgoing End Turn, start-turn occurrence ordering, or the exact start-turn occurrence request.",
       toolSurface === "chatgpt"
-        ? "Select an Act through its named tool with subject and no fill, even when it has initialHoles. The returned pending transaction owns that operation; supply one ordinary fact at a time through provide_battle_input with fill and no subject. For an attack target hole, copy actorId and the complete branch-specific selection from hole.attack into the attackTargetDistance fact."
+        ? "Select an Act through its readyCalls entry with copied arguments, even when it has initialHoles. The returned pending transaction owns that operation; supply one ordinary fact at a time through provide_battle_input with fill and no subject. For an attack target hole, copy actorId and the complete branch-specific selection from hole.attack into the attackTargetDistance fact."
         : `If an act has initialHoles, call ${fillOperation} with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved. For an attack target hole, copy actorId from hole.attack.actorId and copy the complete branch-specific selection from hole.attack.selection into the attackTargetDistance fact.`,
       "Ranged Spell Attacks use one canonical spell range, not separate normal/long bands: provide the exact caster-to-target distance and keep it at or below the returned rangeFeet. A separate rangedSpellAttackEnemyProximity fact records any adjacent visible, non-Incapacitated enemy that imposes Disadvantage, regardless of the selected target.",
       "For a saving-throw area request, use its returned areaInput requirement to choose the value.area branch. Supply every requested table fact. An explicitly empty object-facts array answers that no objects are being reported in the area; an omitted array is not that answer.",
-      `If an act has no holes, call ${resolveOperation} with the typed subject.`,
+      toolSurface === "chatgpt"
+        ? "An Act ready call also selects an offered Act with no holes; the engine resolves it directly."
+        : `If an act has no holes, call ${resolveOperation} with the typed subject.`,
       "Call end_turn only when no Battle continuation inputs are pending.",
       toolSurface === "chatgpt"
         ? "If end_turn asks for a Death Saving Throw hole, answer it through provide_battle_input with fill and no subject before taking other Battle actions."
@@ -66,9 +70,9 @@ export function workflowGuide(toolSurface: McpToolSurface) {
       attackRollFill:
         '{"kind":"attackRoll","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"total":16,"d20TestRoll":{"tag":"single","naturalD20":14}}}',
       savingThrowOutcomeFill:
-        '{"kind":"savingThrowOutcome","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false}]}}',
+        '{"kind":"savingThrowOutcome","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false,"d20TestRoll":{"tag":"single","naturalD20":6}}]}}',
       savingThrowAreaFacts:
-        "The savingThrowOutcomeFill example shows ordinary area membership only. Follow the current hole's areaInput requirement for specialized areas. Copy the required area kind and provide its object, push, or persistent-area facts. Use an empty requested collection only when the table confirms there are no facts to report.",
+        "Read chatGptBattleOperations.inputs for the complete fillSchema for each current input. The savingThrowOutcomeFill example includes a rolled save and shows ordinary area membership only. Follow the current hole's areaInput requirement for specialized areas. Copy the required area kind and provide its object, push, or persistent-area facts. Use an empty requested collection only when the table confirms there are no facts to report.",
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
       characterSessionOperations: `${characterMutation} accepts atomic completeShortRest, interruptShortRest, completeLongRest, composed interruptLongRest histories with strictly increasing cumulativeRestedTicks boundaries and a final cumulative resumed segment, and passCalendarTime operations.`,
@@ -83,7 +87,9 @@ export function workflowGuide(toolSurface: McpToolSurface) {
     recovery: [
       "On UNKNOWN_* errors, rediscover current sessions, holes, Stat Blocks, or battle acts.",
       "On revision errors, read storedDraft.revision and retry against the current draft.",
-      "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
+      toolSurface === "chatgpt"
+        ? "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and choose a current readyCalls entry."
+        : "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       "Use cancel_battle_action to withdraw a selected, unanswered player Act when actionCancellation or chatGptBattleOperations.cancellation allows it. Copy its arguments, including expectedSelectionId, so a delayed call cannot cancel a later selection. Cancellation preserves the checkpoint and cannot undo accepted inputs, Reactions, event reports, or turn-boundary work. If cancellation is refused, continue the retained request.",
       `On BATTLE_ACT_REQUIRES_HOLES, use ${fillOperation} instead of ${resolveOperation}.`,
       toolSurface === "chatgpt"

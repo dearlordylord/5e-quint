@@ -1,3 +1,5 @@
+import { battleActSelections } from "./battle-act-selection.ts";
+import type { PlaySessionId } from "../play-session.ts";
 import {
   INITIAL_INITIATIVE_GUIDANCE_TOOLS,
   type ChatGptReactionSelectionSchema,
@@ -6,6 +8,7 @@ import {
 export type { ChatGptBattleGuidance } from "./battle-guidance-schema.ts";
 import {
   battlePendingTransactionReplaySessionForSession,
+  presentBattleActs,
   type BattleState,
   type BattleHole,
   type BattleSubject,
@@ -14,7 +17,7 @@ import { Match, Result, type Schema } from "effect";
 import { errorContent } from "../tool-content.ts";
 import type { ToolError } from "../schema-codec.ts";
 import { battleActionCancellationGuidance } from "../battle-action-cancellation-guidance.ts";
-import { battleAreaInputGuidance } from "./battle-area-input-guidance.ts";
+import { battleInputGuidance } from "./battle-input-guidance.ts";
 import type { McpPlaySessionRoot } from "../composition-root.ts";
 import { battleMechanicsEnvelopeForSession } from "../battle-tool-payloads.ts";
 import { readyBattleInterruptCalls } from "./battle-interrupt-call-guidance.ts";
@@ -100,6 +103,7 @@ export function battleMovementInputGuidance(
 
 export function chatGptBattleGuidance(
   root: McpPlaySessionRoot,
+  playSessionId: PlaySessionId,
 ): ChatGptBattleGuidance {
   const battle = root.sessionStore.battleState;
   if (battle.tag === "none") return { kind: "noBattle" } as const;
@@ -109,18 +113,55 @@ export function chatGptBattleGuidance(
       tools: INITIAL_INITIATIVE_GUIDANCE_TOOLS,
     } as const;
   const envelope = battleMechanicsEnvelopeForSession(root, battle.session);
+  const selections = battleActSelections(root, playSessionId);
   return Match.value(envelope.frontier).pipe(
     Match.when({ kind: "acts" }, (frontier) => ({
       kind: "acts" as const,
-      acts: frontier.acts.map((act) => {
+      acts: presentBattleActs(battle.session, frontier.acts).map((act) => {
+        const selection = selections.find(
+          (candidate) =>
+            JSON.stringify(candidate.subject) === JSON.stringify(act.subject),
+        );
+        if (selection === undefined)
+          throw new Error(
+            "Presented Act must retain its canonical frontier selection.",
+          );
         const route = chatGptBattleSubjectExposure(
           battle.session.state,
           act.subject,
         );
+        if (Result.isFailure(route))
+          return {
+            kind: "unavailable" as const,
+            label: act.label,
+            summary: act.summary,
+            subject: act.subject,
+            issue: route.failure,
+          };
+        if (
+          act.subject.tag === "runtimeCommand" &&
+          act.subject.command === "creatureFalls"
+        )
+          return {
+            kind: "tableFactsRequired" as const,
+            label: act.label,
+            summary: act.summary,
+            arguments: { actKey: selection.actKey },
+            routing: { kind: "available" as const, tools: route.success.tools },
+            requiredArguments: ["reactionSpellTargetFacts"] as const,
+          };
+        const [firstTool, ...otherTools] = route.success.tools;
         return {
-          subject: act.subject,
-          routing: operationRouting(route),
-          areaInputs: act.initialHoles.flatMap(battleAreaInputGuidance),
+          kind: "ready" as const,
+          label: act.label,
+          summary: act.summary,
+          readyCalls: [
+            { tool: firstTool, arguments: { actKey: selection.actKey } },
+            ...otherTools.map((tool) => ({
+              tool,
+              arguments: { actKey: selection.actKey },
+            })),
+          ] as const,
         };
       }),
     })),
@@ -144,7 +185,7 @@ export function chatGptBattleGuidance(
             );
       return {
         kind: "ordinaryContinuation" as const,
-        areaInputs: frontier.holes.flatMap(battleAreaInputGuidance),
+        inputs: frontier.holes.flatMap(battleInputGuidance),
         movementInputs: frontier.holes.flatMap((hole) =>
           battleMovementInputGuidance(frontier.replaySubject, hole),
         ),
@@ -175,7 +216,18 @@ export function chatGptBattleGuidanceTools(
     Match.when({ kind: "noBattle" }, () => []),
     Match.when({ kind: "initialInitiativeSetup" }, (value) => value.tools),
     Match.when({ kind: "acts" }, (value) =>
-      value.acts.flatMap((act) => routingTools(act.routing)),
+      value.acts.flatMap((act) =>
+        Match.value(act).pipe(
+          Match.when({ kind: "ready" }, (value) =>
+            value.readyCalls.map((call) => call.tool),
+          ),
+          Match.when({ kind: "tableFactsRequired" }, (value) =>
+            routingTools(value.routing),
+          ),
+          Match.when({ kind: "unavailable" }, () => []),
+          Match.exhaustive,
+        ),
+      ),
     ),
     Match.when({ kind: "ordinaryContinuation" }, (value) => [
       ...routingTools(value.routing),

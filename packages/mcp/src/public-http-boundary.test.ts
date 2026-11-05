@@ -16,6 +16,7 @@ import type { PublicMcpOAuth } from "./public-oauth.ts";
 import { AuthorizationServerOriginSchema } from "./public-origin.ts";
 import { PublicMcpPublisherNameSchema } from "./public-service-operations.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
+import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-repository.ts";
 import type { SavedSessionAuthorizationService } from "./saved-session-authorization/service.ts";
 
 describe("public HTTP boundary", () => {
@@ -237,7 +238,7 @@ describe("public HTTP boundary", () => {
         environment: "staging",
         release: "git:0123456789abcdef",
         publisher: "Verified Publisher",
-        storageFormatVersion: 3,
+        storageFormatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
       });
       const challenge = await fetch(
         new URL("/.well-known/openai-apps-challenge", endpoint),
