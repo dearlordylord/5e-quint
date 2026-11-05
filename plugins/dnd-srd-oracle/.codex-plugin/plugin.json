@@ -1,6 +1,6 @@
 {
   "name": "dnd-srd-oracle",
-  "version": "0.1.0+codex.20260825215243",
+  "version": "1.0.7",
   "description": "Create 5.5e SRD characters and simulate rule-faithful battles through the SRD runtime.",
   "author": {
     "name": "5e Quint developers",
@@ -17,7 +17,7 @@
     "longDescription": "Provides one focused conversation Skill for the existing SRD MCP runtime, covering redistributable catalog exploration, character creation, and rule-faithful battle play.",
     "developerName": "5e Quint developers",
     "category": "Lifestyle",
-    "capabilities": ["Interactive"],
+    "capabilities": [],
     "defaultPrompt": [
       "Show me the SRD character options I can use.",
       "Help me create an SRD character in a saved Play Session.",

@@ -188,6 +188,17 @@ describe("public plugin publication package", () => {
     const manifest = JSON.parse(
       await readFile(join(output, ".codex-plugin/plugin.json"), "utf8"),
     );
+    const source = await readJson("publication/submission-source.json");
+    if (!isRecord(source) || !isRecord(source.listing)) {
+      throw new Error("Publication listing is invalid.");
+    }
+    expect(manifest.description).toBe(source.listing.longDescription);
+    expect(manifest.interface).toMatchObject({
+      displayName: source.listing.name,
+      shortDescription: source.listing.shortDescription,
+      longDescription: source.listing.longDescription,
+      category: source.listing.category,
+    });
     expect(manifest.author.name).toBe("Verified Publisher");
     expect(manifest.mcpServers).toBeUndefined();
     expect(manifest.apps).toBeUndefined();

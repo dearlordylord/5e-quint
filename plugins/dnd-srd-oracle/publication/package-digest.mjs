@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, realpath } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,7 +35,7 @@ async function packageFiles(directory) {
 const invokedPath = process.argv[1];
 if (
   invokedPath !== undefined &&
-  resolve(invokedPath) === fileURLToPath(import.meta.url)
+  (await realpath(invokedPath)) === fileURLToPath(import.meta.url)
 ) {
   const directory = process.argv[2];
   if (directory === undefined || process.argv.length !== 3) {

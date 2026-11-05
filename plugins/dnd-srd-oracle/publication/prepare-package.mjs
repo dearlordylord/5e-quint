@@ -108,10 +108,15 @@ const endpoints = Object.fromEntries(
 );
 const preparedManifest = {
   ...manifest,
+  description: source.listing.longDescription,
   author: { ...manifest.author, name: publisher, url: endpoints.website },
   homepage: endpoints.website,
   interface: {
     ...manifest.interface,
+    displayName: source.listing.name,
+    shortDescription: source.listing.shortDescription,
+    longDescription: source.listing.longDescription,
+    category: source.listing.category,
     developerName: publisher,
     websiteURL: endpoints.website,
     privacyPolicyURL: endpoints.privacy,
