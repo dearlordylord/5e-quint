@@ -170,7 +170,12 @@ export async function buildDistribution() {
     );
     const result = spawnSync(
       process.execPath,
-      [resolve(dirname(nativePackage), "bin/tsc"), "-p", configPath],
+      [
+        resolve(dirname(nativePackage), "bin/tsc"),
+        "--singleThreaded",
+        "-p",
+        configPath,
+      ],
       {
         cwd: root,
         stdio: "inherit",
