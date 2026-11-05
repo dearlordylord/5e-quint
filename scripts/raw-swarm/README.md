@@ -4,6 +4,14 @@ Raw Swarm is an evidence-producing external-consumer workflow for finding
 gaps in the public D&D adjudicator SDK. Raw Swarm does not turn catalogue
 membership into a RAW-coverage or player-correctness claim.
 
+## Testing methods
+
+Use direct SDK or MCP agents for consumer exploration, or use
+[ChatGPT prompt testing](CHATGPT_PROMPT_TESTING.md) to test the installed plugin
+through real conversations with different stories. These are two testing methods,
+separate from the execution lanes below. Local agent evidence does not certify
+installed ChatGPT behavior.
+
 ## Execution lanes
 
 Raw Swarm has three operational lanes. Choose the lane before running a
@@ -23,7 +31,8 @@ the Codex CLI is not authenticated. Model work uses one of three repository
 model-lane locks; catalogue-writing operations additionally use the canonical
 one-at-a-time authoring protocol. Each durable campaign's operator assigns
 distinct worktrees and Evidence Sets to its configured lanes.
-The public commands are the only supported model entrypoints: they perform
+The public commands are the only supported entrypoints for repository Raw Swarm
+model operations: they perform
 the lock, credential, revision, and configuration checks before handing off a
 guarded process. Direct model scripts reject invocation without that handoff.
 
