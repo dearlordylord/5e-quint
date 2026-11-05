@@ -6,6 +6,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { attackDamageDiceRequest } from "./battle-reducer/attack-damage-dice-request.ts";
 import {
   attackExecutionSelectionForOption,
   boundAttackExecutionSelectionMatchesOption,
@@ -2193,17 +2194,25 @@ describe("Stat Block execution references", () => {
         }),
       ),
     ).toThrow();
+    const unboundDamageChoice = {
+      kind: "rolledDice",
+      holeId: "battle:test:unbound-damage-choice",
+      holeInstanceKey: "battle:test:unbound-damage-choice",
+      label: "Synthetic damage",
+      attack: decodedStatBlockAttack,
+      critical: false,
+      damageDice: attackDamageDiceRequest({
+        attack: decodedStatBlockAttack,
+        critical: false,
+      }),
+      weaponDamageDiceRollChoiceProcedureRefs: [unboundProcedureRef],
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleHoleSchema)(unboundDamageChoice),
+    ).not.toThrow();
     expect(() =>
       Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
-        snapshotWithAttackInitialHole({
-          kind: "rolledDice",
-          holeId: "battle:test:unbound-damage-choice",
-          holeInstanceKey: "battle:test:unbound-damage-choice",
-          label: "Synthetic damage",
-          attack: decodedStatBlockAttack,
-          critical: false,
-          weaponDamageDiceRollChoiceProcedureRefs: [unboundProcedureRef],
-        }),
+        snapshotWithAttackInitialHole(unboundDamageChoice),
       ),
     ).toThrow();
     expect(() =>
