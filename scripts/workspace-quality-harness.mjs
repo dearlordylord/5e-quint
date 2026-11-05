@@ -15,6 +15,7 @@ import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 import {
   verificationInputs,
+  verificationRuntime,
   readReceipt,
   writeReceipt,
   receiptCoversSourceCheck,
@@ -546,7 +547,8 @@ function inspectQualityReceipt(args) {
     "Usage: quality:receipt --receipt <file> --checks <comma-separated ids>",
   );
   const receipt = readReceipt(resolve(args[1]));
-  const fingerprint = verificationInputs(ROOT);
+  const environment = verificationRuntime();
+  const fingerprint = verificationInputs(ROOT, receipt?.runtime ?? environment);
   const checks = selectedRepairPlan(args[3].split(","));
   const valid = checks.every((check) =>
     receiptCoversSourceCheck(receipt, fingerprint, check),
@@ -555,6 +557,11 @@ function inspectQualityReceipt(args) {
     JSON.stringify({
       scope: checks.map(({ id }) => id),
       sourceEvidenceCurrent: valid,
+      executionEnvironmentMatches:
+        receipt !== null &&
+        Object.entries(environment).every(
+          ([key, value]) => receipt.runtime[key] === value,
+        ),
       artifactPreconditionsVerified: false,
       acceptance: false,
     }) + "\n",
@@ -1066,6 +1073,7 @@ function selfTest() {
   const workflowControls = run(process.execPath, [
     "--test",
     "scripts/verification-workflow.test.mjs",
+    "scripts/linux-verification/runner.test.mjs",
   ]);
   assert.equal(
     workflowControls.status,
@@ -1108,7 +1116,7 @@ function selfTest() {
   );
   assert.equal(
     rootPackage.scripts["smoke:deployment-lifecycle"],
-    "pnpm run build && . scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run smoke:deployment-lifecycle:body",
+    "sh scripts/verification-platform.sh sh -c 'pnpm run build && . scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run smoke:deployment-lifecycle:body'",
     "Standalone consumer verification must own the broad workspace lock.",
   );
   assert.equal(
@@ -1688,24 +1696,31 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
-  const command = process.argv[2];
-  if (command === "--self-test") selfTest();
-  else if (command === "--deadline-self-test") deadlineSelfTest();
-  else if (command === "inventory") checkInventory();
-  else if (command === "circular") checkCircularDependencies();
-  else if (command === "complexity") await checkCyclomaticComplexity(false);
-  else if (command === "complexity:prune")
-    await checkCyclomaticComplexity(true);
-  else if (command === "duplication") checkDuplication();
-  else if (command === "coverage") checkCoverage();
-  else if (command === "coverage:diagnose")
-    runCoverageDiagnostic(process.argv.slice(3));
-  else if (command === "milestone") runQualityMilestone();
-  else if (command === "repair") runQualityRepair(process.argv.slice(3));
-  else if (command === "receipt") inspectQualityReceipt(process.argv.slice(3));
-  else {
-    throw new Error(
-      "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone|repair --checks <ids>|receipt --receipt <file> --checks <ids>",
-    );
+  try {
+    const command = process.argv[2];
+    if (command === "--self-test") selfTest();
+    else if (command === "--deadline-self-test") deadlineSelfTest();
+    else if (command === "inventory") checkInventory();
+    else if (command === "circular") checkCircularDependencies();
+    else if (command === "complexity") await checkCyclomaticComplexity(false);
+    else if (command === "complexity:prune")
+      await checkCyclomaticComplexity(true);
+    else if (command === "duplication") checkDuplication();
+    else if (command === "coverage") checkCoverage();
+    else if (command === "coverage:diagnose")
+      runCoverageDiagnostic(process.argv.slice(3));
+    else if (command === "milestone") runQualityMilestone();
+    else if (command === "repair") runQualityRepair(process.argv.slice(3));
+    else if (command === "receipt")
+      inspectQualityReceipt(process.argv.slice(3));
+    else {
+      throw new Error(
+        "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone|repair --checks <ids>|receipt --receipt <file> --checks <ids>",
+      );
+    }
+  } catch (error) {
+    if (error?.exitCode !== 137) throw error;
+    console.error(error.stack);
+    process.exitCode = 137;
   }
 }

@@ -143,5 +143,12 @@ function main() {
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
-)
-  main();
+) {
+  try {
+    main();
+  } catch (error) {
+    if (error?.exitCode !== 137) throw error;
+    console.error(error.stack);
+    process.exitCode = 137;
+  }
+}

@@ -77,6 +77,11 @@ full milestone. Build/test caches may reuse artifacts within that run.
 
 ## Milestone Failure Policy
 
+On macOS, public lock-taking commands and Linux-only self-tests automatically
+use the isolated [Linux verification runner](../../scripts/linux-verification/README.md).
+Docker must be running. Linux execution and existing acceptance gates remain
+unchanged; runner evidence and generated outputs stay in a per-job directory.
+
 `pnpm quality:milestone` stops launching checks after the first failure. Source
 inventory checks precede build and expensive integration checks; all existing
 gates remain required. Use `pnpm quality:milestone --collect-all` for diagnostic
@@ -90,11 +95,15 @@ Milestone and repair runs print a receipt path under `.scratch/verification/`.
 Each receipt records commands, outcomes, and the Git-visible source fingerprint
 before and after execution. Concurrent source edits invalidate the run. The
 fingerprint includes tracked and unignored untracked files, except untracked
-`.audit/` and `.artifacts/` evidence; it also includes HEAD, Node and platform.
+`.audit/` and `.artifacts/` evidence and untracked macOS AppleDouble files; it also
+includes HEAD, Node and platform.
 `pnpm quality:receipt --receipt <file> --checks <ids>` checks whether that source
 evidence still covers the named checks. It does not certify generated artifacts,
 installed dependencies, external inputs, or milestone acceptance; it never skips
 execution. Verify those preconditions separately before reusing local evidence.
+Receipt version 2 retains the checked execution environment. Source inspection
+can use that recorded environment on a different host and separately reports
+whether the inspecting environment matches; it does not imply a local execution.
 
 ### Dialogue Repair And Qualification
 

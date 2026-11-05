@@ -27,6 +27,12 @@ with_resource_lock_owner() {
     return 64
   fi
 
+  if [ "$(uname -s)" = Darwin ]; then
+    verification_repository_root="$(git rev-parse --show-toplevel)" || return $?
+    node "$verification_repository_root/scripts/linux-verification/run.mjs" --owner-wrapper --owner-pid "$$" "$@"
+    return $?
+  fi
+
   establish_resource_lock_owner || return $?
   "$@"
 }

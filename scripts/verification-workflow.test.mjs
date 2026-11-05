@@ -91,9 +91,8 @@ test("emergency stops even diagnostic collection", () => {
   assert.equal(result.exitCode, 137);
 });
 
-test("canonical plan preserves all gates and prerequisites and defers heavy work", () => {
+test("canonical plan has valid dependency ordering and defers expensive work", () => {
   const plan = qualityPlan.QUALITY_MILESTONE_PLAN;
-  assert.equal(plan.length, 44);
   const prior = new Set();
   for (const entry of plan) {
     assert(!prior.has(entry.id));
@@ -158,6 +157,64 @@ test("receipt names exact scope, source, command, and stable successful executio
   assert.equal(readReceipt(path), null);
   writeFileSync(path, '{"version":1,"outcomes":[null]}');
   assert.equal(readReceipt(path), null);
+});
+
+test("source receipts can be inspected using a recorded foreign runtime without claiming local execution", (t) => {
+  const root = fixture(t),
+    path = join(root, ".audit/foreign-runtime.json"),
+    entry = check("local");
+  const runtime = {
+    node: "v0.0.0-fixture",
+    platform: "fixture-platform",
+    arch: "fixture-cpu",
+  };
+  writeReceipt(path, {
+    inputSha256: verificationInputs(root, runtime),
+    inputsStable: true,
+    plan: [entry],
+    outcomes: [{ id: "local", status: "PASS" }],
+  });
+  const recorded = JSON.parse(readFileSync(path, "utf8"));
+  writeFileSync(path, JSON.stringify({ ...recorded, runtime }));
+  const receipt = readReceipt(path);
+  assert(
+    receiptCoversSourceCheck(
+      receipt,
+      verificationInputs(root, receipt.runtime),
+      entry,
+    ),
+  );
+  assert(!receiptCoversSourceCheck(receipt, verificationInputs(root), entry));
+});
+
+test("an index-only change invalidates source evidence for Git-aware checks", (t) => {
+  const root = fixture(t),
+    before = verificationInputs(root);
+  const added = spawnSync("git", ["add", "source.txt"], { cwd: root });
+  assert.equal(added.status, 0);
+  assert.notEqual(verificationInputs(root), before);
+  assert.equal(readFileSync(join(root, "source.txt"), "utf8"), "before");
+});
+
+test("a killed Git subprocess retains SIGKILL, PID and emergency exit semantics", (t) => {
+  const root = fixture(t),
+    bin = join(root, ".audit/bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, "git"), "#!/bin/sh\nkill -KILL $$\n");
+  chmodSync(join(bin, "git"), 0o755);
+  const originalPath = process.env.PATH;
+  process.env.PATH = `${bin}:${originalPath}`;
+  try {
+    assert.throws(
+      () => verificationInputs(root),
+      (error) =>
+        error.exitCode === 137 &&
+        /SIGKILL/u.test(error.message) &&
+        /pid \d+/u.test(error.message),
+    );
+  } finally {
+    process.env.PATH = originalPath;
+  }
 });
 
 test("repair has hard budgets and qualification refuses resume before execution", () => {

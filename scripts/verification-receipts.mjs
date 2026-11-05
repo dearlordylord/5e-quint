@@ -1,17 +1,41 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, resolve } from "node:path";
+const RECEIPT_VERSION = 2;
+export function verificationRuntime() {
+  return {
+    node: process.version,
+    platform: process.platform,
+    arch: process.arch,
+  };
+}
 
 function git(root, args) {
   const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
-  if (result.status !== 0) throw new Error(result.stderr || "Git failed");
+  if (result.status !== 0) {
+    const reason = result.signal
+      ? `signal ${result.signal}`
+      : `exit ${result.status}`;
+    const error = new Error(
+      `git ${args.join(" ")} failed (${reason}, pid ${result.pid}): ${result.stderr || result.error?.message || "no diagnostic output"}`,
+    );
+    error.exitCode =
+      result.signal === "SIGKILL" || result.status === 137 ? 137 : 1;
+    throw error;
+  }
   return result.stdout;
 }
 
 // Tracked files always participate, even under an evidence directory.
-// Untracked evidence is output, not source. All other unignored files participate.
-export function verificationInputs(root) {
+// Untracked evidence and macOS AppleDouble metadata are outputs, not source.
+export function verificationSourceFiles(root) {
   const tracked = git(root, ["ls-files", "-z", "--cached"])
     .split("\0")
     .filter(Boolean);
@@ -22,21 +46,44 @@ export function verificationInputs(root) {
     "--exclude-standard",
   ])
     .split("\0")
-    .filter((file) => file && !/^(\.audit|\.artifacts)\//u.test(file));
-  const files = [...new Set([...tracked, ...untracked])].sort();
+    .filter(
+      (file) =>
+        file &&
+        !/^(\.audit|\.artifacts)\//u.test(file) &&
+        !/(^|\/)\._[^/]*$/u.test(file),
+    );
+  return [...new Set([...tracked, ...untracked])].sort();
+}
+
+export function verificationIndex(root) {
+  return git(root, ["ls-files", "--stage", "-z"]);
+}
+
+export function verificationInputs(root, runtime = verificationRuntime()) {
+  const files = verificationSourceFiles(root);
   const hash = createHash("sha256");
   hash.update(
     JSON.stringify({
-      node: process.version,
-      platform: process.platform,
-      arch: process.arch,
+      node: runtime.node,
+      platform: runtime.platform,
+      arch: runtime.arch,
       revision: git(root, ["rev-parse", "HEAD"]).trim(),
+      index: verificationIndex(root),
     }),
   );
   for (const file of files) {
     hash.update(`${file}\0`);
     try {
-      hash.update(`mode:${lstatSync(resolve(root, file)).mode}\0`);
+      const stat = lstatSync(resolve(root, file));
+      if (stat.isSymbolicLink()) {
+        hash.update(`link:${readlinkSync(resolve(root, file))}\0`);
+        continue;
+      }
+      if (!stat.isFile())
+        throw new Error(
+          `Verification source is not a regular file or symlink: ${file}`,
+        );
+      hash.update(`mode:${stat.mode}\0`);
       const bytes = readFileSync(resolve(root, file));
       hash.update(`present:${bytes.length}\0`);
       hash.update(bytes);
@@ -51,7 +98,10 @@ export function verificationInputs(root) {
 export function readReceipt(path) {
   try {
     const value = JSON.parse(readFileSync(path, "utf8"));
-    return value?.version === 1 &&
+    return value?.version === RECEIPT_VERSION &&
+      typeof value.runtime?.node === "string" &&
+      typeof value.runtime?.platform === "string" &&
+      typeof value.runtime?.arch === "string" &&
       typeof value.inputSha256 === "string" &&
       typeof value.inputsStable === "boolean" &&
       Array.isArray(value.plan) &&
@@ -84,7 +134,11 @@ export function writeReceipt(path, receipt) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(
     path,
-    JSON.stringify({ version: 1, ...receipt }, null, 2) + "\n",
+    JSON.stringify(
+      { ...receipt, version: RECEIPT_VERSION, runtime: verificationRuntime() },
+      null,
+      2,
+    ) + "\n",
   );
 }
 
