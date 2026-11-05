@@ -111,6 +111,23 @@ boundary validation. Remove it only when the algorithm handles all formerly
 excluded cases. If a function checks a domain fact, require it in the input,
 return its narrowed evidence, or genuinely handle the entire wider type.
 
+## MCP Context Cost
+
+- Review the actual serialized `tools/list` payload as model context, including
+  descriptions, input/output schemas, and every referenced definition. Internal
+  type completeness is not a reason to expose the whole engine to the caller.
+- For definition changes, report before/after JSON byte sizes for each changed
+  tool's input and output schemas and for the complete tool inventory. Inspect
+  the largest definitions for relevance, not just their compressed size.
+- Expose the arguments and results needed to use that operation. Keep full
+  internal codecs for execution validation; return detailed choice schemas when
+  the current interaction needs them. Flag unrelated state machines, giant
+  unions, repeated boilerplate, and definitions copied across tools. A dice
+  sampler must not carry every possible Battle action and occurrence.
+- Shortened names, `$ref` factoring, and minified JSON do not justify irrelevant
+  context. Reductions must preserve actionable input contracts and runtime
+  validation rather than replacing meaningful fields with opaque blobs.
+
 ## Fixes, Tests, And Hygiene
 
 - Review a fix against the original domain invariant, including lifecycle,
