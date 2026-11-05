@@ -1,17 +1,17 @@
 {
   "kind": "independentStaticForwardTest",
   "evaluator": "Codex independent review agent",
-  "evaluatorTask": "/root/status_publication_review",
-  "reviewedAt": "2026-11-05T04:46:13.274Z",
+  "evaluatorTask": "/root/current_skill_disclosure_review",
+  "reviewedAt": "2026-11-04T21:48:38.748219+00:00",
   "installedChatGptEvidence": false,
   "humanReviewAttestation": false,
   "operatorAttestation": false,
   "modelActivationObserved": false,
   "toolExecutionObserved": false,
   "status": "passed",
-  "skillSourceDigest": "88499b25ef3910df9e98a4dd4228ab7166888ec8a32eaf744fad6fd5a9b9105c",
+  "skillSourceDigest": "c293d69ae35265b12fd3259a370a19bd3de0d13ed6194c49cf424058e2cb8f91",
   "skillActivationInventoryDigest": "f42848a7cc0d0b7ab9dca058f06c49a49b95becda49463536fd516b19ad3d219",
-  "evaluationScope": "Independent static review of the shortened current Skill, prior Skill, current workflow guide, and five activation inventory cases. Reviewer inherited prior task context and read existing expectations; this is not blinded or empirical model activation. No tools were executed for gameplay, no OAuth or storage behavior was observed, and no human/operator or installed ChatGPT behavior is certified. Subsequent independent static delta review covers the conditional live-visualization instruction: initial frame before combat resolution and visible updates from arriving checkpoints. The five activation predictions are unchanged; this delta was not empirically exercised and certifies no installed visualization behavior.",
+  "evaluationScope": "Independent static prediction against the supplied current Skill and five activation prompts. Predictions were written to independent-predictions.json before reading expected-SEPARATE.json or the previous forward-test artifact. The agent inherited task context, so this is not a fully blinded trial. No API model activation, tool execution, OAuth, persistence, human/operator attestation, or installed ChatGPT behavior was observed.",
   "caseCount": 5,
   "matchedExpectations": 5,
   "cases": [
@@ -19,9 +19,9 @@
       "id": "skill-direct",
       "activation": "activate",
       "toolIntents": ["describe_mcp_workflow", "list_catalog_units"],
-      "result": "Static prediction: The explicit Oracle catalog request fits the installed SRD catalog scope; read the workflow guide and use catalog discovery rather than treating catalog presence as legal draft choices.",
+      "result": "Static prediction: browse installed character catalog through the connection guide and catalog discovery; catalog presence alone does not prove a legal draft choice.",
       "outcome": "metExpectation",
-      "independentReason": "The explicit Oracle catalog request fits the installed SRD catalog scope; read the workflow guide and use catalog discovery rather than treating catalog presence as legal draft choices."
+      "independentReason": "The user explicitly names 5.5e SRD Oracle and requests its installed character catalog. The Skill owns catalog discovery."
     },
     {
       "id": "skill-natural",
@@ -31,43 +31,42 @@
         "create_play_session",
         "create_character_draft"
       ],
-      "result": "Static prediction: Creating a rules-supported SRD character fits the character workflow; read the guide, create a Play Session and draft, and follow returned legal choices.",
+      "result": "Static prediction: use the Oracle character workflow, establish a new Play Session and draft for legal character choices, and request detailed choices when the response lacks them. Hosted stateful play requires standard MCP OAuth, not credentials in chat.",
       "outcome": "metExpectation",
-      "independentReason": "Creating a rules-supported SRD character fits the character workflow; read the guide, create a Play Session and draft, and follow returned legal choices."
+      "independentReason": "A rules-supported SRD character and its available choices are the Skill's character-creation scope. Browse catalog presence separately from runtime-legal draft choices."
     },
     {
       "id": "skill-continuation",
       "activation": "activate",
       "toolIntents": ["read_play_session", "get_character_creation_choices"],
-      "result": "Static prediction: The continuation refers to the same journey; read_play_session and fetch detailed creation choices if its summary is insufficient, without silently replacing it.",
+      "result": "Static prediction: read the same retained Play Session and fetch detailed remaining character choices if necessary; do not silently create a replacement journey.",
       "outcome": "metExpectation",
-      "independentReason": "The continuation refers to the same journey; read_play_session and fetch detailed creation choices if its summary is insufficient, without silently replacing it."
+      "independentReason": "This continues the preceding character journey. The Skill directs reading the retained Play Session and then detailed character choices, without silently starting another character."
     },
     {
       "id": "skill-unrelated-dnd",
       "activation": "doNotActivate",
       "toolIntents": [],
-      "result": "Static prediction: General hobby history is explicitly excluded from the Skill description; no engine tools are needed.",
+      "result": "Static prediction: answer hobby history without activating this engine-workflow Skill.",
       "outcome": "metExpectation",
-      "independentReason": "General hobby history is explicitly excluded from the Skill description; no engine tools are needed."
+      "independentReason": "A hobby-history overview is general D&D history, explicitly excluded from this engine-workflow Skill."
     },
     {
       "id": "skill-authoring-boundary",
       "activation": "activate",
       "toolIntents": [],
-      "result": "Static prediction: The engine capability-boundary request is explicitly included. Explain the installed-content/engine-support limit without inventing an import path; a stateful tool is unnecessary.",
+      "result": "Static prediction: activate the capability-boundary guidance and explain that executable custom monsters are not admitted by this installed-SRD-only engine; do not invent an import operation.",
       "outcome": "metExpectation",
-      "independentReason": "The engine capability-boundary request is explicitly included. Explain the installed-content/engine-support limit without inventing an import path; a stateful tool is unnecessary."
+      "independentReason": "The user asks whether this particular SRD engine can execute authored content. Capability-boundary questions are included, and the Skill requires explaining the installed-catalog-only limit without inventing an import path."
     }
   ],
   "observations": [
-    "The shortened Skill retains catalog/character/battle/capability scope and excludes general D&D rules, history and lore.",
-    "It requires describe_mcp_workflow once per connection, then current legal choices, returned arguments, input schemas and recovery; detailed execution conventions remain in that guide and current responses.",
-    "It retains same-journey recovery, OAuth credential boundaries, explicit saved-session choice, permanent deletion warning, batching independent character choices and honoring user delegation.",
-    "It retains pending-versus-applied outcome semantics, actual rolls, checkpoint-owned HP/resources/effects and table-geometry distinction.",
-    "The changed instruction to report in game terms removes unnecessary protocol narration while preserving progress and unresolved-input disclosure.",
-    "These are static source-based predictions with inherited prior context and visible expected cases; no model activation, tool execution, OAuth, persistence or installed-product behavior was observed.",
-    "When live visualization is requested, the Skill now instructs the agent to show an initial frame before combat resolution and update the visible widget from checkpoints. This is a conditional agent instruction, not a claim that Oracle provides a widget or that an installed attempt passed."
+    "The Skill description explicitly includes installed catalog discovery, new or continued SRD character workflows, battle workflows, and engine capability-boundary questions. It explicitly excludes general D&D history and lore.",
+    "The current Skill directs initial ready Act calls through copied readyCalls arguments containing an opaque actKey; the server resolves the current selection.",
+    "Ordinary Battle answers use the current hole fact request and matching chatGptBattleOperations.inputs[].fillSchema, with pinned kind and holeId and only admitted fields.",
+    "The point-origin Sphere instructions distinguish tableSelectedPoint from a combatant-position anchor, require actual d20TestRoll for a rolled Saving Throw, and reserve explicit empty collections for confirmed absence.",
+    "Checkpoint and applied outcomes remain authoritative for HP, resources, narration and map displays; external positions and proposed geometry remain table facts.",
+    "These are static source-based predictions. No actual tool selection, generated tool inventory count, MCP calls, OAuth flow, storage transition, or installed-product behavior was certified by this review."
   ],
   "externalEvidenceStillRequired": {
     "issue": 328,

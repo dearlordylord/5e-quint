@@ -2,7 +2,7 @@
   "listing": {
     "name": "5.5e SRD Oracle",
     "shortDescription": "Create characters & battle",
-    "longDescription": "Create D&D 5.5e SRD characters and play battles using a rules engine. Browse the included SRD options and continue your saved games.",
+    "longDescription": "Explore the redistributable 5.5e SRD catalog, create and continue characters, and play rule-faithful battles. Catalog browsing needs no account; standard MCP OAuth protects every persistent Play Session.",
     "category": "Entertainment",
     "supportPath": "/support",
     "privacyPath": "/privacy",
@@ -12,7 +12,7 @@
   "mcp": {
     "connectionType": "universal",
     "path": "/mcp",
-    "authentication": "mixed",
+    "authentication": "oauth",
     "authenticationRationale": "Catalog browsing is anonymous. Creating, reading, changing, listing, or deleting a persistent Play Session requires standard MCP OAuth with the play-sessions scope.",
     "contentSecurityPolicy": {
       "connectDomains": [],
@@ -39,6 +39,6 @@
     "submission-unsupported-authored-content",
     "submission-stateful-without-oauth"
   ],
-  "releaseNotes": "Fix Battle input guidance, including Fireball saving throws. Reduce tool-schema context and simplify the agent instructions.",
+  "releaseNotes": "Public SRD catalog browsing remains anonymous; every character and battle Play Session now requires OAuth and is saved from creation, with explicit listing and deletion controls.",
   "contentBoundary": "Redistributable SRD and visibly synthetic content only; no PHB+ authored identity or protected expression."
 }
