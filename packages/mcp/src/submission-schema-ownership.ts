@@ -47,30 +47,13 @@ export function rootedCanonicalOwnership(
     const from = resolveAliases(source, sourceNode);
     if (from === undefined) return;
     const candidates = variants(targetNodes);
-    const key = JSON.stringify(
-      candidates.map((node) => node?.path ?? null).sort(),
-    );
-    const seen = visited.get(from) ?? new Set<string>();
-    if (seen.has(key)) return;
-    seen.add(key);
-    visited.set(from, seen);
-    ownership.set(
-      from.path,
-      (ownership.get(from.path) ?? true) && hasObjectOwner(target, targetNodes),
-    );
+    if (!markComparisonVisited(visited, from, candidates)) return;
+    retainOwnership(ownership, from.path, target, targetNodes);
     for (const [edge, child] of from.children) {
       if (isPositiveApplicator(edge)) {
         compare(child, targetNodes);
       } else if (isDataEdge(edge)) {
-        const matches = candidates.flatMap((node) =>
-          node === undefined
-            ? [undefined]
-            : node.children.has(edge)
-              ? [node.children.get(edge)]
-              : allowsUnknownData(node)
-                ? [undefined]
-                : [],
-        );
+        const matches = candidates.flatMap((node) => dataChildren(node, edge));
         compare(child, matches.length === 0 ? [undefined] : matches);
       }
     }
@@ -82,6 +65,33 @@ export function rootedCanonicalOwnership(
   targets.set(canonical, ownership);
   ownershipCache.set(advertised, targets);
   return ownership;
+}
+
+function markComparisonVisited(
+  visited: Map<SchemaNode, Set<string>>,
+  source: SchemaNode,
+  candidates: readonly (SchemaNode | undefined)[],
+): boolean {
+  const key = JSON.stringify(
+    candidates.map((node) => node?.path ?? null).sort(),
+  );
+  const seen = visited.get(source) ?? new Set<string>();
+  if (seen.has(key)) return false;
+  seen.add(key);
+  visited.set(source, seen);
+  return true;
+}
+
+function retainOwnership(
+  ownership: Map<string, boolean>,
+  path: string,
+  graph: SchemaGraph,
+  candidates: readonly (SchemaNode | undefined)[],
+): void {
+  ownership.set(
+    path,
+    (ownership.get(path) ?? true) && hasObjectOwner(graph, candidates),
+  );
 }
 
 function schemaGraph(schema: McpOutputSchema): SchemaGraph {
@@ -178,24 +188,32 @@ function allowsUnknownData(node: SchemaNode): boolean {
     ? node.value.additionalProperties !== false
     : node.value.type === undefined || node.value.type === "array";
 }
+function dataChildren(
+  node: SchemaNode | undefined,
+  edge: string,
+): readonly (SchemaNode | undefined)[] {
+  if (node === undefined) return [undefined];
+  if (node.children.has(edge)) return [node.children.get(edge)];
+  return allowsUnknownData(node) ? [undefined] : [];
+}
+function isObjectValue(value: unknown): boolean {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function resolveCandidate(
+  graph: SchemaGraph,
+  candidate: SchemaNode | undefined,
+): SchemaNode | undefined {
+  return candidate === undefined ? undefined : resolveAliases(graph, candidate);
+}
 function canContainObject(
   graph: SchemaGraph,
   candidate: SchemaNode | undefined,
 ): boolean {
-  const node =
-    candidate === undefined ? undefined : resolveAliases(graph, candidate);
+  const node = resolveCandidate(graph, candidate);
   if (node === undefined) return true;
-  if ("const" in node.value)
-    return (
-      typeof node.value.const === "object" &&
-      node.value.const !== null &&
-      !Array.isArray(node.value.const)
-    );
+  if ("const" in node.value) return isObjectValue(node.value.const);
   if (Array.isArray(node.value.enum))
-    return node.value.enum.some(
-      (value) =>
-        typeof value === "object" && value !== null && !Array.isArray(value),
-    );
+    return node.value.enum.some(isObjectValue);
   const type = node.value.type;
   return (
     type === undefined ||
@@ -211,21 +229,15 @@ function hasObjectOwner(
     candidate: SchemaNode | undefined,
     ancestors: ReadonlySet<SchemaNode>,
   ): boolean => {
-    const node =
-      candidate === undefined ? undefined : resolveAliases(graph, candidate);
-    if (
-      node === undefined ||
-      ancestors.has(node) ||
-      !canContainObject(graph, node)
-    )
-      return false;
+    const node = resolveCandidate(graph, candidate);
+    if (node === undefined || ancestors.has(node)) return false;
+    if (!canContainObject(graph, node)) return false;
     if (node.value.additionalProperties === false) return true;
     const visited = new Set([...ancestors, node]);
     const intersections = [...node.children]
       .filter(([edge]) => edge.startsWith("/allOf/"))
       .map(([, child]) => child);
     if (
-      intersections.length > 0 &&
       intersections.every((child) => canContainObject(graph, child)) &&
       intersections.some((child) => closed(child, visited))
     )
