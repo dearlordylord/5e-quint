@@ -10,7 +10,7 @@
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --singleThreaded",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src && prettier --check src && jscpd src",

@@ -365,11 +365,3 @@ function metadataIssue(tool: string, message: string): SubmissionSurfaceIssue {
 function escapePointer(value: string): string {
   return value.replaceAll("~", "~0").replaceAll("/", "~1");
 }
-
-function unescapePointer(value: string): string {
-  return value.replaceAll("~1", "/").replaceAll("~0", "~");
-}
-
-function isJsonObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}

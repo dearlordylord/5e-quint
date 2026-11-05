@@ -1,7 +1,6 @@
 {
   "include": ["**/*.ts"],
   "compilerOptions": {
-    "checkers": 1,
     "target": "ES2022",
     "module": "ESNext",
     "lib": ["ES2022"],

@@ -23,7 +23,7 @@
     "check-distribution": "tsx scripts/check-distribution.ts",
     "check:distribution": "pnpm run check-distribution",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit --singleThreaded"
   },
   "dependencies": {
     "@effect/platform-node": "4.0.0-rc.112",

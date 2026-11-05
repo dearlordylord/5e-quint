@@ -2,7 +2,6 @@ import type { BattleHole } from "@dnd/battle-runtime";
 import { Match } from "effect";
 import {
   resolveLocalSchemaReference,
-  isJsonSchemaObject as schemaObject,
   jsonSchemaRecord as record,
   jsonSchemaAlternatives as alternatives,
   jsonSchemaHasKind as hasKind,
