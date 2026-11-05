@@ -22,7 +22,11 @@ const run = (command, args, options = {}) =>
 try {
   mkdirSync(join(fixture, "scripts"));
   mkdirSync(join(fixture, "packages/core"), { recursive: true });
-  for (const file of ["affected-typecheck.mjs", "assert-resource-lock.sh"])
+  for (const file of [
+    "affected-typecheck.mjs",
+    "verification-receipts.mjs",
+    "assert-resource-lock.sh",
+  ])
     copyFileSync(join(root, "scripts", file), join(fixture, "scripts", file));
   writeFileSync(join(fixture, ".gitignore"), "node_modules\n");
   writeFileSync(

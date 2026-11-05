@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { verificationInputs } from "./verification-receipts.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 
@@ -36,32 +36,6 @@ export function typecheckExitCode(result, inputsStable) {
   return result.status === 0 && inputsStable ? 0 : 1;
 }
 
-function inputs() {
-  const files = capture("git", [
-    "ls-files",
-    "-z",
-    "--cached",
-    "--others",
-    "--exclude-standard",
-  ])
-    .split("\0")
-    .filter(Boolean)
-    .sort();
-  const hash = createHash("sha256");
-  hash.update(capture("git", ["rev-parse", "HEAD"]).trim());
-  for (const file of files) {
-    hash.update(`${file}\0`);
-    try {
-      hash.update(readFileSync(resolve(ROOT, file)));
-    } catch (error) {
-      if (error.code !== "ENOENT") throw error;
-      hash.update("deleted");
-    }
-    hash.update("\0");
-  }
-  return hash.digest("hex");
-}
-
 function main() {
   const lock = spawnSync("bash", ["scripts/assert-resource-lock.sh", "broad"], {
     cwd: ROOT,
@@ -83,7 +57,7 @@ function main() {
     "--end-of-options",
     `${args[1] ?? "HEAD"}^{commit}`,
   ]).trim();
-  const fingerprint = inputs();
+  const fingerprint = verificationInputs(ROOT);
   const packages = JSON.parse(
     capture("pnpm", ["list", "--recursive", "--depth", "-1", "--json"]),
   )
@@ -144,7 +118,7 @@ function main() {
           ],
           { cwd: ROOT, stdio: "inherit" },
         );
-  const stable = fingerprint === inputs();
+  const stable = fingerprint === verificationInputs(ROOT);
   const exitCode = typecheckExitCode(result, stable);
   const execution =
     result.error !== undefined

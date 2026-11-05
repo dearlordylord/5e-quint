@@ -11,6 +11,14 @@ import {
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
+import { randomUUID } from "node:crypto";
+import {
+  verificationInputs,
+  readReceipt,
+  writeReceipt,
+  receiptCoversSourceCheck,
+} from "./verification-receipts.mjs";
 import {
   CYCLOMATIC_COMPLEXITY_THRESHOLD,
   CYCLOMATIC_COMPLEXITY_VARIANT,
@@ -395,9 +403,10 @@ function executeQualityMilestoneCheck(check, execute) {
   }
 }
 
-function executeQualityMilestone(
+export function executeQualityMilestone(
   plan,
   {
+    collectAll = false,
     execute = (check) => run(check.command, check.args, { stage: check.id }),
     now = () => process.hrtime.bigint(),
     write = (message) => process.stdout.write(message),
@@ -407,6 +416,7 @@ function executeQualityMilestone(
   const outcomes = [];
   const outcomesById = new Map();
   let emergencyCheckId;
+  let stoppedBy;
   const recordOutcome = (outcome) => {
     outcomes.push(outcome);
     outcomesById.set(outcome.id, outcome);
@@ -415,11 +425,11 @@ function executeQualityMilestone(
 
   for (const check of plan) {
     const blockedBy =
-      emergencyCheckId === undefined
+      (emergencyCheckId ?? stoppedBy) === undefined
         ? check.prerequisites.filter(
             (prerequisite) => outcomesById.get(prerequisite)?.status !== "PASS",
           )
-        : [emergencyCheckId];
+        : [emergencyCheckId ?? stoppedBy];
     if (blockedBy.length > 0) {
       const outcome = {
         status: "BLOCKED",
@@ -445,6 +455,7 @@ function executeQualityMilestone(
             failure: failureDescription(result),
           };
     recordOutcome(outcome);
+    if (outcome.status === "FAIL" && !collectAll) stoppedBy = check.id;
     if (result.status === 137 || result.signal === "SIGKILL") {
       emergencyCheckId = check.id;
     }
@@ -467,12 +478,88 @@ function runQualityMilestone() {
     args.length === 0 || (args.length === 1 && args[0] === "--collect-all"),
     "Usage: quality:milestone [--collect-all]",
   );
-  const result = executeQualityMilestone(
-    qualityMilestonePlan.qualityMilestonePlan({
-      collectAll: args.length === 1,
-    }),
+  const collectAll = args.length === 1;
+  runRecordedChecks(qualityMilestonePlan.qualityMilestonePlan({ collectAll }), {
+    mode: collectAll ? "diagnostic" : "milestone",
+    collectAll,
+  });
+}
+
+function selectedRepairPlan(ids) {
+  assert(
+    ids.length > 0 && ids.every((id) => id !== "coverage"),
+    "Use coverage:diagnose for coverage repair; name pre-coverage check ids.",
   );
-  process.exitCode = result.exitCode;
+  const wanted = new Set(ids);
+  for (const id of wanted) {
+    const check = QUALITY_MILESTONE_PLAN.find((entry) => entry.id === id);
+    assert(check, `Unknown quality check: ${id}`);
+    for (const prerequisite of check.prerequisites) wanted.add(prerequisite);
+  }
+  return QUALITY_MILESTONE_PLAN.filter((check) => wanted.has(check.id));
+}
+
+function runRecordedChecks(plan, { mode, collectAll = false }) {
+  const inputSha256 = verificationInputs(ROOT);
+  const result = executeQualityMilestone(plan, { collectAll });
+  const inputsStable =
+    result.exitCode !== 137 && verificationInputs(ROOT) === inputSha256;
+  const path = join(
+    ROOT,
+    ".scratch/verification",
+    `${mode}-${randomUUID()}.json`,
+  );
+  writeReceipt(path, {
+    mode,
+    inputSha256,
+    inputsStable,
+    inputVerification:
+      result.exitCode === 137 ? "emergencyStopped" : "compared",
+    plan,
+    ...result,
+    createdAt: new Date().toISOString(),
+  });
+  if (result.exitCode === 137)
+    process.stderr.write(
+      "Emergency exit; input stability was not checked. Stop verification and inspect the resource failure.\n",
+    );
+  else if (!inputsStable)
+    process.stderr.write(
+      "Source changed during verification; receipt is invalid.\n",
+    );
+  process.stdout.write(`Verification receipt: ${path}\n`);
+  process.exitCode =
+    result.exitCode === 137 ? 137 : inputsStable ? result.exitCode : 1;
+}
+
+function runQualityRepair(args) {
+  assert(
+    args.length === 2 && args[0] === "--checks",
+    "Usage: quality:repair --checks <comma-separated milestone ids>",
+  );
+  runRecordedChecks(selectedRepairPlan(args[1].split(",")), { mode: "repair" });
+}
+
+function inspectQualityReceipt(args) {
+  assert(
+    args.length === 4 && args[0] === "--receipt" && args[2] === "--checks",
+    "Usage: quality:receipt --receipt <file> --checks <comma-separated ids>",
+  );
+  const receipt = readReceipt(resolve(args[1]));
+  const fingerprint = verificationInputs(ROOT);
+  const checks = selectedRepairPlan(args[3].split(","));
+  const valid = checks.every((check) =>
+    receiptCoversSourceCheck(receipt, fingerprint, check),
+  );
+  process.stdout.write(
+    JSON.stringify({
+      scope: checks.map(({ id }) => id),
+      sourceEvidenceCurrent: valid,
+      artifactPreconditionsVerified: false,
+      acceptance: false,
+    }) + "\n",
+  );
+  process.exitCode = valid ? 0 : 1;
 }
 
 function checkCircularDependencies() {
@@ -945,7 +1032,7 @@ function deadlineSelfTest() {
         check("dependent-fixture", "process.exit(99)", ["deadline-fixture"]),
         check("after-cleanup-fixture", afterCleanup),
       ],
-      { write: (message) => messages.push(message) },
+      { collectAll: true, write: (message) => messages.push(message) },
     );
     assert.deepEqual(
       result.outcomes.map((outcome) => outcome.status),
@@ -976,6 +1063,15 @@ function deadlineSelfTest() {
 }
 
 function selfTest() {
+  const workflowControls = run(process.execPath, [
+    "--test",
+    "scripts/verification-workflow.test.mjs",
+  ]);
+  assert.equal(
+    workflowControls.status,
+    0,
+    "Verification workflow controls failed",
+  );
   deadlineSelfTest();
   assert.equal(
     run(process.execPath, [
@@ -1140,6 +1236,7 @@ function selfTest() {
       const result = executeQualityMilestone(
         qualityMilestonePlan.qualityMilestonePlan({ collectAll }),
         {
+          collectAll,
           execute: (check) => {
             calls.push(check.id);
             clock += check.id === "coverage" ? 10_000_000_000n : 1_000_000n;
@@ -1169,6 +1266,7 @@ function selfTest() {
     const result = executeQualityMilestone(
       qualityMilestonePlan.qualityMilestonePlan({ collectAll }),
       {
+        collectAll,
         execute: (check) => {
           calls.push(check.id);
           if (check.id === "coverage") {
@@ -1229,6 +1327,7 @@ function selfTest() {
   let collectingOutput = "";
   let collectingClock = 0n;
   const collectingResult = executeQualityMilestone(collectingPlan, {
+    collectAll: true,
     execute: (check) => {
       collectingCalls.push(check.id);
       return {
@@ -1299,7 +1398,7 @@ function selfTest() {
   );
   assert.deepEqual(
     spawnFailureResult.outcomes.map((outcome) => outcome.status),
-    ["FAIL", "PASS"],
+    ["FAIL", "BLOCKED"],
   );
   assert.match(spawnFailureResult.outcomes[0].failure, /synthetic spawn/);
 
@@ -1316,7 +1415,7 @@ function selfTest() {
   );
   assert.deepEqual(
     signalFailureResult.outcomes.map((outcome) => outcome.status),
-    ["FAIL", "PASS"],
+    ["FAIL", "BLOCKED"],
   );
   assert.equal(signalFailureResult.outcomes[0].failure, "signal SIGTERM");
   assert.equal(signalFailureResult.exitCode, 1);
@@ -1585,20 +1684,28 @@ function selfTest() {
   );
 }
 
-const command = process.argv[2];
-if (command === "--self-test") selfTest();
-else if (command === "--deadline-self-test") deadlineSelfTest();
-else if (command === "inventory") checkInventory();
-else if (command === "circular") checkCircularDependencies();
-else if (command === "complexity") await checkCyclomaticComplexity(false);
-else if (command === "complexity:prune") await checkCyclomaticComplexity(true);
-else if (command === "duplication") checkDuplication();
-else if (command === "coverage") checkCoverage();
-else if (command === "coverage:diagnose")
-  runCoverageDiagnostic(process.argv.slice(3));
-else if (command === "milestone") runQualityMilestone();
-else {
-  throw new Error(
-    "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone",
-  );
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
+  const command = process.argv[2];
+  if (command === "--self-test") selfTest();
+  else if (command === "--deadline-self-test") deadlineSelfTest();
+  else if (command === "inventory") checkInventory();
+  else if (command === "circular") checkCircularDependencies();
+  else if (command === "complexity") await checkCyclomaticComplexity(false);
+  else if (command === "complexity:prune")
+    await checkCyclomaticComplexity(true);
+  else if (command === "duplication") checkDuplication();
+  else if (command === "coverage") checkCoverage();
+  else if (command === "coverage:diagnose")
+    runCoverageDiagnostic(process.argv.slice(3));
+  else if (command === "milestone") runQualityMilestone();
+  else if (command === "repair") runQualityRepair(process.argv.slice(3));
+  else if (command === "receipt") inspectQualityReceipt(process.argv.slice(3));
+  else {
+    throw new Error(
+      "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone|repair --checks <ids>|receipt --receipt <file> --checks <ids>",
+    );
+  }
 }

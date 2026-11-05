@@ -77,12 +77,58 @@ full milestone. Build/test caches may reuse artifacts within that run.
 
 ## Milestone Failure Policy
 
-`pnpm quality:milestone` collects prerequisite failures and blocks production
-coverage unless every preceding required gate passes. The summary names the
-blocking gates and reports failure. Use `pnpm quality:milestone --collect-all`
-explicitly for diagnostic collection: coverage then requires only a successful
-build, while failures still make the command fail. Either mode stops launching
-stages after SIGKILL or exit 137 and retains existing descendant cleanup.
+`pnpm quality:milestone` stops launching checks after the first failure. Source
+inventory checks precede build and expensive integration checks; all existing
+gates remain required. Use `pnpm quality:milestone --collect-all` for diagnostic
+collection: independent checks continue, and coverage requires a successful
+build. Any failed or blocked check still fails the command. Both modes stop
+after SIGKILL or exit 137 and retain existing descendant cleanup.
+
+Use `pnpm quality:repair --checks <comma-separated milestone ids>` for a scoped
+rerun with prerequisite closure. Coverage repair still uses `coverage:diagnose`.
+Milestone and repair runs print a receipt path under `.scratch/verification/`.
+Each receipt records commands, outcomes, and the Git-visible source fingerprint
+before and after execution. Concurrent source edits invalidate the run. The
+fingerprint includes tracked and unignored untracked files, except untracked
+`.audit/` and `.artifacts/` evidence; it also includes HEAD, Node and platform.
+`pnpm quality:receipt --receipt <file> --checks <ids>` checks whether that source
+evidence still covers the named checks. It does not certify generated artifacts,
+installed dependencies, external inputs, or milestone acceptance; it never skips
+execution. Verify those preconditions separately before reusing local evidence.
+
+### Dialogue Repair And Qualification
+
+The workflow in `scripts/dialogue-workflow.mjs` uses the canonical MCP dialogue
+driver and its evaluator. It requires that driver's checkout to be integrated;
+`--repo <checkout>` can select an isolated checkout with the driver available.
+
+- `pnpm dialogue:repair --out <fresh-dir> --case <case-id>` runs a diagnostic
+  probe, capped at 12 calls, 8 turns and 180 seconds. The API driver supports
+  `--resume <prior-dir> --resume-note <changed-boundaries>` instead of repeating
+  setup. Its existing checkpoint/database safety checks remain authoritative.
+- `pnpm dialogue:qualify --out <fresh-dir> --case <case-id>` first runs the public
+  milestone, then starts a fresh dialogue. Resume and tool allowlists are
+  refused. Both gates must pass on unchanged source. This certifies only the
+  selected driver's evidence scope, not installed ChatGPT behavior.
+
+Both modes accept the driver's `--prompt <file> --expect <expectation>` in place
+of a case and `--client codex` for a fresh coding-agent probe. Codex does not
+support resume or a turn budget; repair still caps calls and elapsed time.
+Keep output outside source inputs, for example under `.scratch/` or `/tmp/`.
+Rejected calls produce `failure-evidence/`: original request/response, observed
+before/after state, preceding calls (including dice), and hashed copies of
+available schema/history artifacts. The saved checkpoint is the end-of-run
+checkpoint, not a pre-call SQLite snapshot. Repair never emits acceptance;
+`workflow-verdict.json` states the mode and evidence scope explicitly.
+Its `probe` result grades only newly executed calls, so historical rejections do
+not permanently fail a repaired continuation. A healthy probe requires at least
+one new call, no new canonical rejections, stable inputs and no infrastructure
+failure. Reaching the diagnostic budget can be healthy; it does not establish
+scenario completion, which is recorded separately as `scenarioClean`.
+
+The existing inventory self-test runs `check:verification-workflow` controls
+(about one second locally): they catch continued expensive work after failure,
+stale receipts, resumed acceptance and model calls after a failed milestone.
 
 ## Deadline Policy
 
