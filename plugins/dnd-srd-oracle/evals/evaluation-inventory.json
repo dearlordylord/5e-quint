@@ -102,7 +102,8 @@
       "prompt": "What redistributable SRD character options can I use here?",
       "fixture": "Fresh conversation with the published plugin enabled; no authentication.",
       "expectedBehavior": "Activate the Skill and browse the installed catalog without requesting sign-in.",
-      "expectedResultShape": "A grounded summary of list_catalog_units results with selectable installed record identities."
+      "expectedResultShape": "A grounded summary of list_catalog_units results with selectable installed record identities.",
+      "toolsTriggered": "list_catalog_units"
     },
     {
       "id": "submission-create-character",
@@ -110,7 +111,8 @@
       "prompt": "Help me create an SRD character, pausing when I have meaningful choices.",
       "fixture": "Fresh conversation with the published plugin enabled and a reviewer account that can complete standard MCP OAuth.",
       "expectedBehavior": "Complete standard MCP OAuth, create an account-owned Play Session, and follow only returned creation holes and options.",
-      "expectedResultShape": "Grouped current character choices with no invented option, credential, or internal authorization field."
+      "expectedResultShape": "Grouped current character choices with no invented option, credential, or internal authorization field.",
+      "toolsTriggered": "create_play_session, create_character_draft"
     },
     {
       "id": "submission-resume-session",
@@ -118,7 +120,8 @@
       "prompt": "Continue the character we were making in my saved session.",
       "fixture": "Follow-up turn after submission-create-character for the same authenticated principal, with the prior Play Session handle available to the agent.",
       "expectedBehavior": "Read the same owned Play Session and continue from its current projection rather than creating or selecting another session.",
-      "expectedResultShape": "The resumed session's current character projection and relevant next operations or choices."
+      "expectedResultShape": "The resumed session's current character projection and relevant next operations or choices.",
+      "toolsTriggered": "read_play_session"
     },
     {
       "id": "submission-play-battle",
@@ -126,7 +129,8 @@
       "prompt": "Start a battle for my completed character against an installed SRD opponent and show me my legal actions.",
       "fixture": "An authenticated Play Session containing one finalized supported Character Session.",
       "expectedBehavior": "Use an installed SRD stat block, start the battle in the same Play Session, and surface only returned Battle Acts and Runtime Holes.",
-      "expectedResultShape": "A battle projection with current combatants, phase, and grounded legal actions or pending inputs."
+      "expectedResultShape": "A battle projection with current combatants, phase, and grounded legal actions or pending inputs.",
+      "toolsTriggered": "start_battle"
     },
     {
       "id": "submission-create-and-list",
@@ -134,7 +138,8 @@
       "prompt": "Start a new Play Session, then show me my saved sessions.",
       "fixture": "A standard MCP OAuth principal authorized for the play-sessions scope.",
       "expectedBehavior": "Use create_play_session once, then list_saved_play_sessions for the same principal.",
-      "expectedResultShape": "An owned saved-session listing containing the new Play Session identity and no credential or internal authorization field."
+      "expectedResultShape": "An owned saved-session listing containing the new Play Session identity and no credential or internal authorization field.",
+      "toolsTriggered": "create_play_session, list_saved_play_sessions"
     },
     {
       "id": "submission-unrelated-history",

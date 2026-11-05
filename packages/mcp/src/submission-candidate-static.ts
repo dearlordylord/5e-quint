@@ -31,15 +31,25 @@ const submissionSourceJson: unknown = JSON.parse(
   ),
 );
 
-const SubmissionReviewCaseSchema = Schema.Struct({
+const submissionReviewCaseFields = {
   id: Schema.String,
-  kind: Schema.Literals(["positive", "negative"]),
   prompt: Schema.String,
   fixture: Schema.String,
-  rejectionRationale: Schema.optionalKey(Schema.String),
   expectedBehavior: Schema.String,
   expectedResultShape: Schema.String,
-});
+};
+const SubmissionReviewCaseSchema = Schema.Union([
+  Schema.Struct({
+    ...submissionReviewCaseFields,
+    kind: Schema.Literal("positive"),
+    toolsTriggered: Schema.String.check(Schema.isNonEmpty()),
+  }),
+  Schema.Struct({
+    ...submissionReviewCaseFields,
+    kind: Schema.Literal("negative"),
+    rejectionRationale: Schema.String,
+  }),
+]);
 const SkillActivationCaseSchema = Schema.Struct({
   id: Schema.String,
   kind: Schema.Literals([

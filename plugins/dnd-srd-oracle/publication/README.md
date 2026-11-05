@@ -224,25 +224,20 @@ duplicated, renamed, incorrectly classified, or incorrectly sourced cases fail
 the gate.
 
 Do not put credentials or tokens in this file; its closed shape has no field for
-them. Provision review credentials only in the secure portal field. Preparation
+them. Provision review credentials only in the secure portal field. The final live gate
 fails unless the identity name exactly matches `DND_MCP_PUBLISHER_NAME`, both
 portal statuses are attested, the verified domain exactly matches the live
 production origin, and reviewer access needs no MFA.
 
-In the MCP tab's advanced OAuth settings, leave the read-only **Supported
-scopes** display alone. Set **Default scope override** to `play-sessions`,
-**Always requested scopes** to `openid email`, and **OIDC enabled** on.
-Record the resulting requested scope set, `openid email play-sessions`, in
-`reviewerAccess.oauthScopes`; confirm it during a fresh authorization attempt.
-The final live gate requires exactly the authorization service's canonical
-ChatGPT scope set; missing or additional scopes fail that gate. The package
-builder emits the required set as `mcp.oauthScopes` in
-`portal-submission.json`. The resource permission `play-sessions` alone does
-not authorize OpenID user-info: a client that requests only that permission
-can exchange a token successfully and then fail to connect at user-info with
-HTTP 400 `invalid_scope`. Keep tool permission scopes distinct from this
-client sign-in scope set. After saving the overrides, reconnect so the
-client receives a newly consented token, then scan tools again.
+The generated `.mcp.json` declares mixed anonymous/OAuth access, DCR, OIDC,
+and the canonical requested scopes, `openid email play-sessions`. These settings
+come from the package, not an advanced settings editor in the connection panel.
+After uploading, inspect the saved settings under **MCPs**, reconnect, and confirm
+the requested scopes during authorization. Existing client registration can lock
+changes; do not assume an upload replaced it. Record the observed scopes in
+`reviewerAccess.oauthScopes` for the final live gate. The resource permission
+`play-sessions` alone does not authorize OpenID user-info. Keep tool permission
+scopes distinct from the client sign-in scope set.
 
 The enterprise domain-restriction warning concerns verified real email claims.
 Saved Session Vaults use synthetic identities with `email_verified: false`;

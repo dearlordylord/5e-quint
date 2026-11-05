@@ -157,6 +157,20 @@ describe("public plugin publication package", () => {
       throw new Error("Publication listing is invalid.");
     }
     expect(manifest.description).toBe(source.listing.longDescription);
+    expect(manifest.extensions["com.openai"].publication.release_notes).toBe(
+      source.releaseNotes,
+    );
+    expect(
+      manifest.extensions["com.openai"].review.test_cases.positive,
+    ).toHaveLength(5);
+    expect(
+      manifest.extensions["com.openai"].review.test_cases.negative,
+    ).toHaveLength(3);
+    for (const entry of manifest.extensions["com.openai"].review.test_cases
+      .positive) {
+      expect(entry.tools_triggered).toEqual(expect.any(String));
+      expect(entry.tools_triggered.trim()).not.toBe("");
+    }
     expect(manifest.interface).toMatchObject({
       displayName: source.listing.name,
       shortDescription: source.listing.shortDescription,
@@ -172,6 +186,16 @@ describe("public plugin publication package", () => {
         "dnd-srd-oracle": {
           type: "http",
           url: "https://oracle.publisher.dev/mcp",
+          extensions: {
+            "com.openai": {
+              auth: {
+                type: "mixed",
+                client: { mode: "dcr" },
+                defaultScopes: ["openid", "email", "play-sessions"],
+                oidcEnabled: true,
+              },
+            },
+          },
         },
       },
     });
@@ -182,6 +206,7 @@ describe("public plugin publication package", () => {
     expect(manifest.interface).toMatchObject({
       developerName: "Verified Publisher",
       websiteURL: "https://oracle.publisher.dev/",
+      supportURL: "https://oracle.publisher.dev/support",
       privacyPolicyURL: "https://oracle.publisher.dev/privacy",
       termsOfServiceURL: "https://oracle.publisher.dev/terms",
     });

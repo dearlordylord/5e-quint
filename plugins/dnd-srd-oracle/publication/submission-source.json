@@ -12,7 +12,7 @@
   "mcp": {
     "connectionType": "universal",
     "path": "/mcp",
-    "authentication": "oauth",
+    "authentication": "mixed",
     "authenticationRationale": "Catalog browsing is anonymous. Creating, reading, changing, listing, or deleting a persistent Play Session requires standard MCP OAuth with the play-sessions scope.",
     "contentSecurityPolicy": {
       "connectDomains": [],

@@ -92,6 +92,36 @@ const preparedManifest = {
   author: { ...manifest.author, name: publisher, url: endpoints.website },
   homepage: endpoints.website,
   mcpServers: "./.mcp.json",
+  extensions: {
+    "com.openai": {
+      review: {
+        test_cases: Object.fromEntries(
+          ["positive", "negative"].map((kind) => [
+            kind,
+            selectedCases
+              .filter((entry) => entry.kind === kind)
+              .map((entry) => ({
+                description: entry.id
+                  .replace("submission-", "")
+                  .replaceAll("-", " "),
+                prompt: entry.prompt,
+                ...(entry.kind === "positive"
+                  ? { tools_triggered: entry.toolsTriggered }
+                  : {}),
+                expected_behavior: [
+                  entry.fixture,
+                  entry.expectedBehavior,
+                  entry.expectedResultShape,
+                ].join("\n"),
+              })),
+          ]),
+        ),
+        demo_recording_url: sameOriginEndpoint("/plugin-demo.mp4", origin),
+        commerce: false,
+      },
+      publication: { release_notes: source.releaseNotes },
+    },
+  },
   interface: {
     ...manifest.interface,
     displayName: source.listing.name,
@@ -100,6 +130,7 @@ const preparedManifest = {
     category: source.listing.category,
     developerName: publisher,
     websiteURL: endpoints.website,
+    supportURL: endpoints.support,
     privacyPolicyURL: endpoints.privacy,
     termsOfServiceURL: endpoints.terms,
   },
@@ -110,7 +141,20 @@ await writeJson(
 );
 await writeJson(join(outputDirectory, ".mcp.json"), {
   mcpServers: {
-    "dnd-srd-oracle": { type: "http", url: endpoints.mcp },
+    "dnd-srd-oracle": {
+      type: "http",
+      url: endpoints.mcp,
+      extensions: {
+        "com.openai": {
+          auth: {
+            type: source.mcp.authentication,
+            client: { mode: "dcr" },
+            defaultScopes: CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
+            oidcEnabled: true,
+          },
+        },
+      },
+    },
   },
 });
 await writeJson(join(outputDirectory, "portal-submission.json"), {
@@ -363,7 +407,7 @@ function decodeSubmissionSource(value) {
       path: nonEmptyString(mcp.path, "mcp.path"),
       authentication: literal(
         mcp.authentication,
-        "oauth",
+        "mixed",
         "mcp.authentication",
       ),
       authenticationRationale: nonEmptyString(
@@ -418,7 +462,9 @@ function decodeSubmissionReviewCases(value) {
     const decoded = exactStringRecord(
       record,
       label,
-      record.kind === "negative" ? [...common, "rejectionRationale"] : common,
+      record.kind === "negative"
+        ? [...common, "rejectionRationale"]
+        : [...common, "toolsTriggered"],
     );
     return decoded;
   });
