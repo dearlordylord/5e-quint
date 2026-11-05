@@ -31,6 +31,11 @@ commands remain unchanged. For local CLI and API dialogue checks, use the
    rolls, or an implementation checklist. Record preceding turns if the task
    follows catalog browsing or another setup conversation.
 
+After inserting a prompt, inspect the actual composer text before sending.
+If it differs, or another person changes the shared browser, stop UI actions
+and preserve their draft. A successful paste call does not prove that the
+intended prompt reached the composer.
+
 Use the session's supported computer-use tools for browser interaction. Refresh
 accessibility state after actions and derive element references from that state.
 Use screenshots when accessibility text cannot establish the visual result.
