@@ -1,3 +1,5 @@
+import type { BattleHole } from "@dnd/battle-runtime";
+import { Option } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { DiceExpr } from "@dnd/surface/surface/types";
 import {
@@ -46,7 +48,7 @@ export function diceGroupsValue<
   };
 }
 
-export function attackRollValue(
+function attackRollValue(
   schema: McpOutputSchema,
   mode: AttackRollMode,
   definitions: McpOutputSchema,
@@ -100,4 +102,38 @@ export function attackRollValue(
     ...value,
     properties: { ...properties, d20TestRoll: { anyOf: rolls } },
   };
+}
+
+type FixedAttackRollHole = Extract<
+  BattleHole,
+  { readonly kind: "attackRoll" }
+> & {
+  readonly rollMode: AttackRollMode;
+};
+function hasFixedAttackRollMode(hole: BattleHole): hole is FixedAttackRollHole {
+  return (
+    hole.kind === "attackRoll" &&
+    hole.rollMode !== undefined &&
+    !(
+      "ongoingFeatureActivations" in hole &&
+      hole.ongoingFeatureActivations?.length
+    )
+  );
+}
+export function requestedDiceValue(
+  schema: McpOutputSchema,
+  hole: BattleHole,
+  definitions: McpOutputSchema,
+): Option.Option<McpOutputSchema> {
+  if (hasFixedAttackRollMode(hole))
+    return Option.some(attackRollValue(schema, hole.rollMode, definitions));
+  if (
+    hole.kind === "rolledDice" &&
+    "damageDice" in hole &&
+    hole.damageDice.kind === "fixed"
+  )
+    return Option.some(
+      diceGroupsValue(schema, hole.damageDice.groups, definitions),
+    );
+  return Option.none();
 }

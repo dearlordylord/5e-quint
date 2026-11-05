@@ -5,7 +5,7 @@ import {
   type BattleHole,
   type BattleAllocatedSpellDamageRollHole,
 } from "@dnd/battle-runtime";
-import { Schema } from "effect";
+import { Match, Option, Schema } from "effect";
 import {
   isJsonSchemaObject as schemaObject,
   jsonSchemaRecord as record,
@@ -19,7 +19,7 @@ import {
   type McpOutputSchema,
 } from "../schema-codec.ts";
 import {
-  attackRollValue,
+  requestedDiceValue,
   diceGroupsValue,
 } from "./battle-dice-input-schema.ts";
 import { battleAreaInputInstructions } from "./battle-area-input-instructions.ts";
@@ -45,21 +45,8 @@ function requestedValue(
   hole: BattleHole,
   definitions: McpOutputSchema,
 ): McpOutputSchema {
-  if (
-    hole.kind === "attackRoll" &&
-    hole.rollMode !== undefined &&
-    !(
-      "ongoingFeatureActivations" in hole &&
-      hole.ongoingFeatureActivations?.length
-    )
-  )
-    return attackRollValue(schema, hole.rollMode, definitions);
-  if (
-    hole.kind === "rolledDice" &&
-    "damageDice" in hole &&
-    hole.damageDice.kind === "fixed"
-  )
-    return diceGroupsValue(schema, hole.damageDice.groups, definitions);
+  const dice = requestedDiceValue(schema, hole, definitions);
+  if (Option.isSome(dice)) return dice.value;
   if (isAllocatedSpellDamageRollHole(hole))
     return allocatedDamageDiceValue(
       schema,
@@ -112,6 +99,69 @@ function allocatedDamageDiceValue(
     definitions,
     ({ targetId }) => `Damage dice for allocated target ${targetId}.`,
   );
+}
+
+function attackDiceInstructions(hole: BattleHole): readonly string[] {
+  if (hole.kind !== "attackRoll" || hole.rollMode === undefined) return [];
+  return [
+    `The current attack roll mode is ${hole.rollMode}. Normal uses one natural d20; advantage/disadvantage uses two ordered natural d20 faces with that rollMode. Include the total after the attack bonus. Optional feature activations can change the mode; choose them before rolling.`,
+  ];
+}
+function damageDiceInstructions(hole: BattleHole): readonly string[] {
+  if (hole.kind !== "rolledDice" || !("damageDice" in hole)) return [];
+  return Match.value(hole.damageDice).pipe(
+    Match.when({ kind: "fixed" }, () => [
+      "Use exactly damageDice.groups in order as the groups for roll_dice, then return each group's natural faces in value[].results. These counts already include critical-hit doubling and required damage riders: do not double them again or add modifiers to faces.",
+      "If a fill is rejected, repair it using the existing sampled faces; inspect the current request before drawing any missing dice. A rejected fill is not permission to reroll the pending damage.",
+    ]),
+    Match.when({ kind: "selectionDependent" }, () => [
+      "Choose optional damage riders and Cunning Strike when constructing this same fill, then roll their corresponding damage groups using the current attack details. Submit the choices and dice together; this choice-dependent request has no fixed groups. Critical-hit doubling applies once.",
+    ]),
+    Match.exhaustive,
+  );
+}
+function candidateDiceInstructions(hole: BattleHole): readonly string[] {
+  if (
+    hole.kind !== "rolledDice" ||
+    !("weaponDamageDiceRollChoiceProcedureRefs" in hole) ||
+    hole.weaponDamageDiceRollChoiceProcedureRefs === undefined
+  )
+    return [];
+  return [
+    "If selecting the offered weapon damage dice-roll choice, supply its two candidate rolls and selected candidate together. The extra candidate rolls apply to the base weapon component; return the selected candidate as that component's value group and retain both candidates' actual faces.",
+  ];
+}
+
+function contextualInputInstructions(
+  hole: BattleHole,
+  context: {
+    readonly distanceFirst: boolean;
+    readonly requestedRelationship: boolean;
+  },
+): readonly string[] {
+  const { distanceFirst, requestedRelationship } = context;
+  return [
+    ...(!distanceFirst
+      ? []
+      : [
+          "For this attack target fill, put its required attackTargetDistance witness first in spatialFacts; optional table context may follow. This is the displayed fill format, not an order of game events. Compute distanceFeet from the actual layout.",
+        ]),
+    ...(requestedRelationship
+      ? []
+      : [
+          "Omit relationshipFacts: this input does not request relationship facts.",
+        ]),
+    ...(hole.kind === "savingThrowOutcome"
+      ? [
+          "For every rolled Saving Throw, include d20TestRoll with the actual natural d20 result and succeeded after the target's modifiers. withoutRoll: true is only for a rules-supported outcome that required no roll; it is not a replacement for missing roll data.",
+        ]
+      : []),
+    ...(isAllocatedSpellDamageRollHole(hole)
+      ? [
+          "Supply exactly one dice group per allocatedDamageDice.groups entry, in its target allocation order. Each group's results must contain that entry's dice count with natural faces from 1 through dieSize. A batched dice sample may be split into these groups without changing or rerolling its faces.",
+        ]
+      : []),
+  ];
 }
 
 export function battleInputGuidance(hole: BattleHole) {
@@ -173,48 +223,13 @@ export function battleInputGuidance(hole: BattleHole) {
       }),
       instructions: [
         "Submit one complete fill matching fillSchema to provide_battle_input. Preserve its kind and holeId. Supply only fields admitted by this request; do not copy optional facts from another action.",
-        ...(!distanceFirst
-          ? []
-          : [
-              "For this attack target fill, put its required attackTargetDistance witness first in spatialFacts; optional table context may follow. This is the displayed fill format, not an order of game events. Compute distanceFeet from the actual layout.",
-            ]),
-        ...(requestedRelationship
-          ? []
-          : [
-              "Omit relationshipFacts: this input does not request relationship facts.",
-            ]),
-        ...(hole.kind === "savingThrowOutcome"
-          ? [
-              "For every rolled Saving Throw, include d20TestRoll with the actual natural d20 result and succeeded after the target's modifiers. withoutRoll: true is only for a rules-supported outcome that required no roll; it is not a replacement for missing roll data.",
-            ]
-          : []),
-        ...(allocatedDamageDice !== undefined
-          ? [
-              "Supply exactly one dice group per allocatedDamageDice.groups entry, in its target allocation order. Each group's results must contain that entry's dice count with natural faces from 1 through dieSize. A batched dice sample may be split into these groups without changing or rerolling its faces.",
-            ]
-          : []),
-        ...(hole.kind === "attackRoll" && hole.rollMode !== undefined
-          ? [
-              `The current attack roll mode is ${hole.rollMode}. Normal uses one natural d20; advantage/disadvantage uses two ordered natural d20 faces with that rollMode. Include the total after the attack bonus. Optional feature activations can change the mode; choose them before rolling.`,
-            ]
-          : []),
-        ...(hole.kind === "rolledDice" && "damageDice" in hole
-          ? hole.damageDice.kind === "fixed"
-            ? [
-                "Use exactly damageDice.groups in order as the groups for roll_dice, then return each group's natural faces in value[].results. These counts already include critical-hit doubling and required damage riders: do not double them again or add modifiers to faces.",
-                "If a fill is rejected, repair it using the existing sampled faces; inspect the current request before drawing any missing dice. A rejected fill is not permission to reroll the pending damage.",
-              ]
-            : [
-                "Choose optional damage riders and Cunning Strike when constructing this same fill, then roll their corresponding damage groups using the current attack details. Submit the choices and dice together; this choice-dependent request has no fixed groups. Critical-hit doubling applies once.",
-              ]
-          : []),
-        ...(hole.kind === "rolledDice" &&
-        "weaponDamageDiceRollChoiceProcedureRefs" in hole &&
-        hole.weaponDamageDiceRollChoiceProcedureRefs !== undefined
-          ? [
-              "If selecting the offered weapon damage dice-roll choice, supply its two candidate rolls and selected candidate together. The extra candidate rolls apply to the base weapon component; return the selected candidate as that component's value group and retain both candidates' actual faces.",
-            ]
-          : []),
+        ...contextualInputInstructions(hole, {
+          distanceFirst,
+          requestedRelationship,
+        }),
+        ...attackDiceInstructions(hole),
+        ...damageDiceInstructions(hole),
+        ...candidateDiceInstructions(hole),
         ...battleAreaInputInstructions(hole),
       ],
     },

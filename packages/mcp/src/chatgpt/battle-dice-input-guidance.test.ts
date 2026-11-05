@@ -172,7 +172,12 @@ describe("current Battle dice input", () => {
       optional: true,
       damage: { dice: 1, dieSize: 6, damageType: "fire" },
     } as const;
-    const hole = attackDamageHole(attack, true, hit, [rider]);
+    const candidateRef = battleProcedureExecutionRefForTest(
+      "synthetic-candidate-rolls",
+    );
+    const hole = attackDamageHole(attack, true, hit, [rider], [], [], 0, [
+      candidateRef,
+    ]);
     expect(hole.damageDice.kind).toBe("selectionDependent");
     const validate = validatorFor(hole);
     expect(
@@ -180,6 +185,11 @@ describe("current Battle dice input", () => {
         kind: "rolledDice",
         holeId: hole.holeId,
         selectedAttackDamageRiderProcedureRefs: [rider.procedureRef],
+        weaponDamageDiceRollChoice: {
+          procedureRef: candidateRef,
+          selection: "first",
+          candidates: [{ results: [6, 1] }, { results: [2, 2] }],
+        },
         value: [{ results: [6, 1] }, { results: [2, 3] }],
       }).valid,
     ).toBe(true);
