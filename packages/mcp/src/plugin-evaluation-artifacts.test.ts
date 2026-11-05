@@ -908,7 +908,7 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
   });
 
   test(
-    "cross-validates MCP refs, inventory cases, scenario ids, and projection contracts",
+    "cross-validates MCP refs, inventory cases, and executable scenario ids",
     async () => {
       const matrix = decodeCapabilityMatrix(
         resolve(evalRoot, "capability-matrix.json"),
@@ -979,53 +979,17 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
         await server.connect(serverTransport);
         await client.connect(clientTransport);
         const tools = await client.listTools();
-        const toolByName = new Map(
-          tools.tools.map((tool) => [
-            tool.name,
-            { name: tool.name, outputSchema: tool.outputSchema },
-          ]),
-        );
-        const missingProjections: string[] = [];
+        const toolNames = new Set(tools.tools.map((tool) => tool.name));
         for (const row of matrix.rows) {
+          for (const toolName of row.mcpSurface) {
+            expect(toolNames.has(toolName), `${row.id}: ${toolName}`).toBe(
+              true,
+            );
+          }
           for (const projection of row.modelVisibleProjection) {
-            if (
-              !validateModelVisibleProjection(
-                projection,
-                row.mcpSurface,
-                toolByName,
-              )
-            ) {
-              missingProjections.push(
-                `${row.id}: ${projection.toolName}.${projection.pathSegments.join(".")}`,
-              );
-            }
+            expect(row.mcpSurface, row.id).toContain(projection.toolName);
           }
         }
-        expect(missingProjections).toEqual([]);
-        expect(
-          validateModelVisibleProjection(
-            {
-              toolName: "read_battle_state",
-              pathSegments: ["snapshot", "notReal"],
-            },
-            ["read_battle_state"],
-            toolByName,
-          ),
-        ).toBe(false);
-        expect(
-          validateModelVisibleProjection(
-            { toolName: "read_battle_state", pathSegments: ["currentActorId"] },
-            ["read_battle_state"],
-            toolByName,
-          ),
-        ).toBe(false);
-        expect(
-          validateModelVisibleProjection(
-            { toolName: "start_battle", pathSegments: ["snapshot"] },
-            ["read_battle_state"],
-            toolByName,
-          ),
-        ).toBe(false);
       } finally {
         await Promise.allSettled([client.close(), server.close()]);
       }
@@ -1373,95 +1337,6 @@ function decodeApiMcpSelectionEvidence(
   return Schema.decodeUnknownSync(ApiMcpSelectionEvidenceSchema, {
     onExcessProperty: "error",
   })(value);
-}
-
-function validateModelVisibleProjection(
-  projection: {
-    readonly toolName: string;
-    readonly pathSegments: readonly string[];
-  },
-  mcpSurface: readonly string[],
-  toolByName: ReadonlyMap<
-    string,
-    { readonly name: string; readonly outputSchema?: unknown }
-  >,
-): boolean {
-  if (!mcpSurface.includes(projection.toolName)) return false;
-  const tool = toolByName.get(projection.toolName);
-  return (
-    tool !== undefined &&
-    tool.name === projection.toolName &&
-    tool.outputSchema !== undefined &&
-    schemaHasProjectionPath(tool.outputSchema, projection.pathSegments)
-  );
-}
-
-function schemaHasProjectionPath(
-  schema: unknown,
-  pathSegments: readonly string[],
-): boolean {
-  const root = isRecord(schema) ? schema : {};
-  return schemaContainsPath(root, pathSegments, root, new Set(), 0);
-}
-
-function schemaContainsPath(
-  schema: unknown,
-  segments: readonly string[],
-  root: Readonly<Record<string, unknown>>,
-  visited: Set<string>,
-  depth: number,
-): boolean {
-  if (segments.length === 0) return true;
-  if (depth > 100 || !isRecord(schema)) return false;
-
-  const reference = schema["$ref"];
-  if (typeof reference === "string") {
-    if (visited.has(reference)) return false;
-    const definitionName = reference.startsWith("#/$defs/")
-      ? reference.slice("#/$defs/".length)
-      : undefined;
-    const definitions = isRecord(root["$defs"]) ? root["$defs"] : undefined;
-    const definition =
-      definitionName === undefined ? undefined : definitions?.[definitionName];
-    if (definition === undefined) return false;
-    const nextVisited = new Set(visited);
-    nextVisited.add(reference);
-    return schemaContainsPath(
-      definition,
-      segments,
-      root,
-      nextVisited,
-      depth + 1,
-    );
-  }
-
-  for (const combinator of ["anyOf", "oneOf", "allOf"] as const) {
-    const branches = schema[combinator];
-    if (
-      Array.isArray(branches) &&
-      branches.some((branch) =>
-        schemaContainsPath(branch, segments, root, visited, depth + 1),
-      )
-    ) {
-      return true;
-    }
-  }
-
-  const [segment, ...remaining] = segments;
-  if (segment === "[]") {
-    return schemaContainsPath(
-      schema.items,
-      remaining,
-      root,
-      visited,
-      depth + 1,
-    );
-  }
-  const properties = isRecord(schema.properties) ? schema.properties : {};
-  const property = properties[segment];
-  return property === undefined
-    ? false
-    : schemaContainsPath(property, remaining, root, visited, depth + 1);
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

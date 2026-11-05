@@ -211,12 +211,6 @@ describe("structured MCP bulk dice roller", () => {
         "groups",
         "playSessionId",
       ]);
-      if (definition?.outputSchema === undefined) {
-        throw new Error("roll_dice omitted outputSchema");
-      }
-      const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        ajvJsonSchema(definition.outputSchema),
-      );
 
       const created = await client.callTool({
         name: "create_play_session",
@@ -237,7 +231,6 @@ describe("structured MCP bulk dice roller", () => {
         },
       });
       expect(valid.isError, JSON.stringify(valid)).not.toBe(true);
-      expect(validateOutput(valid.structuredContent).valid).toBe(true);
 
       const repeated = await client.callTool({
         name: "roll_dice",

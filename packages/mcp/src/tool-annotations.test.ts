@@ -23,6 +23,7 @@ const expectedAnnotations = {
   list_stat_blocks: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   list_catalog_units: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   inspect_catalog_unit: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  inspect_stat_block: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   create_character_draft:
     NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   get_character_creation_choices: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -57,6 +58,7 @@ const expectedTitles = {
   list_stat_blocks: "List Stat Blocks",
   list_catalog_units: "List Catalog Units",
   inspect_catalog_unit: "Inspect Catalog Unit",
+  inspect_stat_block: "Inspect Stat Block",
   create_character_draft: "Create Character Draft",
   get_character_creation_choices: "Show Character Creation Choices",
   apply_character_creation_choices: "Apply Character Creation Choices",

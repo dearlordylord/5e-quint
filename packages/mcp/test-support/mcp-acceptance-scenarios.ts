@@ -2,7 +2,6 @@ import { movementFeet } from "@dnd/shared/types";
 import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
@@ -33,7 +32,6 @@ import {
 } from "./battle-act-labels.ts";
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 import { battleToolWireArgs } from "./battle-tool-wire-args.ts";
-import { requireJsonSchema } from "./json-schema.ts";
 
 export type JsonObject = Record<string, unknown>;
 
@@ -62,6 +60,7 @@ const expectedTools = [
   "list_stat_blocks",
   "list_catalog_units",
   "inspect_catalog_unit",
+  "inspect_stat_block",
   "create_character_draft",
   "apply_character_session_operation",
   "get_character_creation_choices",
@@ -216,7 +215,7 @@ const agentConversationScenarios = [
       "It first calls describe_mcp_workflow, list_catalog_units, or list_stat_blocks as needed, then treats returned holes and battle subjects as the source of truth for sequencing.",
     executableCoverage: "verifyToolContract",
     insufficiency:
-      "This is now discoverable through MCP. Every tool exposes codec-derived inputSchema and outputSchema, and responses include structuredContent.",
+      "Tools publish codec-derived input schemas and return structuredContent.",
   },
   {
     id: "complete-newcomer-journey",
@@ -382,7 +381,7 @@ const agentConversationScenarios = [
     executableCoverage:
       "verifyToolContract, verifyBaselineVertical, verifyWidthVertical",
     insufficiency:
-      "The schema now describes initialCombatants, characterId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for characterId result rows.",
+      "The input schema describes initialCombatants, characterId, statBlockId, and combatantId entries; list_characters returns characterId result rows.",
   },
   {
     id: "take-turns-and-resolve-attacks",
@@ -456,7 +455,7 @@ const agentConversationScenarios = [
     executableCoverage:
       "callTool, holeIds, actionLabels, combatantHp, wizardSpellSlots",
     insufficiency:
-      "describe_mcp_workflow documents these result paths, and the runtime tools expose outputSchema plus structuredContent for machine readers.",
+      "describe_mcp_workflow documents these result paths, and runtime tools return structuredContent for machine readers.",
   },
   {
     id: "distinguish-known-good-acceptance",
@@ -485,78 +484,16 @@ export async function verifyToolContract(
   );
   for (const tool of listed.tools) {
     assert.ok(tool.inputSchema, `${tool.name} must expose inputSchema`);
-    assert.ok(tool.outputSchema, `${tool.name} must expose outputSchema`);
   }
 
   const startBattle = listed.tools.find((tool) => tool.name === "start_battle");
   assert.ok(startBattle, "start_battle tool must be registered");
   const schemaText = JSON.stringify(startBattle.inputSchema);
-  const startBattleOutputSchemaText = JSON.stringify(startBattle.outputSchema);
   assert.match(schemaText, /initialCombatants/);
   assert.match(schemaText, /characterSession/);
   assert.match(schemaText, /statBlockId/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
-  assert.match(startBattleOutputSchemaText, /battleState/);
-  assert.match(startBattleOutputSchemaText, /initialInitiativeSetup/);
-  assert.match(startBattleOutputSchemaText, /activeBattle/);
-  assert.doesNotMatch(
-    startBattleOutputSchemaText,
-    /"const":"none"/,
-    "start_battle must not advertise an empty-battle success branch",
-  );
-  assert.match(startBattleOutputSchemaText, /checkpoint/);
-  assert.match(startBattleOutputSchemaText, /session/);
-
-  const validateStartBattleOutput = new AjvJsonSchemaValidator().getValidator(
-    requireJsonSchema(startBattle.outputSchema, "start_battle outputSchema"),
-  );
-  const emptyStartBattleProjection = {
-    envelope: null,
-    session: {
-      draftIds: [],
-      characterIds: [],
-      selectedStatBlockId: null,
-      battleState: { tag: "none" },
-    },
-  };
-  for (const battleState of [
-    {
-      tag: "initialInitiativeSetup",
-      battleId: "battle:contract",
-      combatants: [],
-    },
-  ] as const) {
-    const operationResult = {
-      ...emptyStartBattleProjection,
-      session: { ...emptyStartBattleProjection.session, battleState },
-    };
-    const envelope = {
-      tag: "playSessionAvailable",
-      playSessionId: "play-session:00000000-0000-4000-8000-000000000000",
-      operation: { name: "start_battle", result: operationResult },
-      projection: operationResult.session,
-      tenure: {
-        tag: "ephemeral",
-        persistence: "processLifetime",
-      },
-      unresolvedInputs: [],
-      nextOperations: ["battle_lifecycle", "read_battle_state"],
-      restoration: { tag: "retained" },
-    };
-    const validation = validateStartBattleOutput(envelope);
-    assert.equal(
-      validation.valid,
-      true,
-      `start_battle output must accept battleState ${battleState.tag}: ${JSON.stringify(validation)}`,
-    );
-    assert.equal(
-      validateStartBattleOutput({ ...envelope, battleState }).valid,
-      false,
-      `model-facing output must reject parallel battleState for ${battleState.tag}`,
-    );
-  }
-
   const fillCreationHoles = listed.tools.find(
     (tool) => tool.name === "apply_character_creation_choices",
   );
@@ -588,9 +525,6 @@ export async function verifyToolContract(
   const characterSessionQuerySchemaText = JSON.stringify(
     characterSessionQuery.inputSchema,
   );
-  const characterSessionQueryOutputSchemaText = JSON.stringify(
-    characterSessionQuery.outputSchema,
-  );
   assert.match(characterSessionQuerySchemaText, /abilityCheckAbility/);
   assert.match(characterSessionQuerySchemaText, /spellInvocation/);
   assert.match(characterSessionQuerySchemaText, /ritual/);
@@ -599,8 +533,6 @@ export async function verifyToolContract(
     characterSessionQuerySchemaText,
     /search|pagination|index|recommendation/,
   );
-  assert.match(characterSessionQueryOutputSchemaText, /abilityCheckAbility/);
-  assert.match(characterSessionQueryOutputSchemaText, /spellInvocation/);
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",

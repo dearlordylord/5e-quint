@@ -2349,6 +2349,7 @@ describe("MCP server route", () => {
       "list_stat_blocks",
       "list_catalog_units",
       "inspect_catalog_unit",
+      "inspect_stat_block",
     ]);
   });
 
@@ -2508,13 +2509,6 @@ describe("MCP server route", () => {
     expect(
       Buffer.byteLength(JSON.stringify(advertisedDefinitions), "utf8"),
     ).toBeLessThan(CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES);
-    const readPlaySession = advertisedDefinitions.find(
-      (tool) => tool.name === "read_play_session",
-    );
-    const readPlaySessionSchema = JSON.stringify(readPlaySession?.outputSchema);
-    expect(readPlaySessionSchema).not.toContain('"pendingBattleHoles"');
-    expect(readPlaySessionSchema).toContain('"holeId"');
-    expect(readPlaySessionSchema).toContain('"holeInstanceKey"');
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
