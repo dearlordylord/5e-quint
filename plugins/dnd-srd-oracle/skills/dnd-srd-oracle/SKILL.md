@@ -29,7 +29,9 @@ outcomes as pending until the engine applies them. Accept actual rolls and
 applied outcomes.
 
 For narration and visualizations, take HP, resources, and effects from returned
-checkpoints. Calculate table geometry separately and supply the requested
+checkpoints. When the user requests live visualization, show an initial frame
+before resolving combat and update the visible widget as checkpoints arrive.
+Calculate table geometry separately and supply the requested
 spatial facts; distinguish proposed positions and areas from applied effects.
 Complete the requested encounter to its logical conclusion, or explain the
 specific unresolved input without claiming completion.

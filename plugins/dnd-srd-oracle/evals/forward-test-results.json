@@ -2,16 +2,16 @@
   "kind": "independentStaticForwardTest",
   "evaluator": "Codex independent review agent",
   "evaluatorTask": "/root/status_publication_review",
-  "reviewedAt": "2026-11-05T04:31:57.170Z",
+  "reviewedAt": "2026-11-05T04:46:13.274Z",
   "installedChatGptEvidence": false,
   "humanReviewAttestation": false,
   "operatorAttestation": false,
   "modelActivationObserved": false,
   "toolExecutionObserved": false,
   "status": "passed",
-  "skillSourceDigest": "8d2d8fbbb4e03f0bc3f640b9ae2f05b11b20f768f359401dd12e9a8ae9b74da9",
+  "skillSourceDigest": "88499b25ef3910df9e98a4dd4228ab7166888ec8a32eaf744fad6fd5a9b9105c",
   "skillActivationInventoryDigest": "f42848a7cc0d0b7ab9dca058f06c49a49b95becda49463536fd516b19ad3d219",
-  "evaluationScope": "Independent static review of the shortened current Skill, prior Skill, current workflow guide, and five activation inventory cases. Reviewer inherited prior task context and read existing expectations; this is not blinded or empirical model activation. No tools were executed for gameplay, no OAuth or storage behavior was observed, and no human/operator or installed ChatGPT behavior is certified.",
+  "evaluationScope": "Independent static review of the shortened current Skill, prior Skill, current workflow guide, and five activation inventory cases. Reviewer inherited prior task context and read existing expectations; this is not blinded or empirical model activation. No tools were executed for gameplay, no OAuth or storage behavior was observed, and no human/operator or installed ChatGPT behavior is certified. Subsequent independent static delta review covers the conditional live-visualization instruction: initial frame before combat resolution and visible updates from arriving checkpoints. The five activation predictions are unchanged; this delta was not empirically exercised and certifies no installed visualization behavior.",
   "caseCount": 5,
   "matchedExpectations": 5,
   "cases": [
@@ -66,7 +66,8 @@
     "It retains same-journey recovery, OAuth credential boundaries, explicit saved-session choice, permanent deletion warning, batching independent character choices and honoring user delegation.",
     "It retains pending-versus-applied outcome semantics, actual rolls, checkpoint-owned HP/resources/effects and table-geometry distinction.",
     "The changed instruction to report in game terms removes unnecessary protocol narration while preserving progress and unresolved-input disclosure.",
-    "These are static source-based predictions with inherited prior context and visible expected cases; no model activation, tool execution, OAuth, persistence or installed-product behavior was observed."
+    "These are static source-based predictions with inherited prior context and visible expected cases; no model activation, tool execution, OAuth, persistence or installed-product behavior was observed.",
+    "When live visualization is requested, the Skill now instructs the agent to show an initial frame before combat resolution and update the visible widget from checkpoints. This is a conditional agent instruction, not a claim that Oracle provides a widget or that an installed attempt passed."
   ],
   "externalEvidenceStillRequired": {
     "issue": 328,
