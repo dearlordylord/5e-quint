@@ -22,7 +22,9 @@ commands remain unchanged. For local CLI and API dialogue checks, use the
    as unknown. Do not certify a local candidate through an older installation.
 3. Set a wall-clock budget and a maximum number of user follow-ups. These are
    campaign limits, not new library acceptance gates. Start with one conversation
-   at a time. Parallel browser attempts need independent tabs and one UI writer.
+   at a time. A one-shot task has zero user or supervisor follow-ups: delegate
+   its choices in the initial prompt and require its logical end in that turn.
+   Parallel browser attempts need independent tabs and one UI writer.
 4. Open the plugin page and select **Try in chat**, or select the plugin in a
    fresh conversation. Inspect the composer before typing. Preserve existing
    user drafts. Starter text may already be inserted; record the text actually
@@ -55,10 +57,10 @@ Suggested prompts:
   Choose tactics for both sides, accept the dice, calculate the geometry
   programmatically, show a live battlefield widget, and finish the battle.
   Use the Oracle for rules and mechanics."
-- "Help me build an SRD character. Present the meaningful choices together
-  and wait for my decisions."
-- "Continue the character from this conversation, show what remains to choose,
-  and keep the same saved game."
+- "Create an SRD character. Choose the build, resolve the remaining choices,
+  finalize the character, and show the result without asking me to choose."
+- "Continue the character from this conversation in the same saved game.
+  Make the remaining build decisions yourself, finalize it, and show the result."
 - "Make a small melee skirmish around a narrow bridge. Run both sides fairly,
   calculate distances, accept casualties, and finish the encounter."
 - "Can this Oracle run a custom monster I wrote? Explain what it supports."
