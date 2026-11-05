@@ -7,8 +7,7 @@ runtime and public pages remain provider-neutral: the production origin serves
 The checked-in development package intentionally contains no production MCP
 dependency reference. That keeps local stdio and Secure MCP Tunnel development
 usable and prevents a placeholder domain or unverified publisher identity from
-being presented as real. Once the HTTPS MCP endpoint is deployed and verified,
-and the portal identity, domain, and reviewer-access facts are resolved, build
+being presented as real. Once the HTTPS MCP endpoint is deployed and verified, build
 the exact package for the **With MCP** draft from the same production facts used
 by deployment:
 
@@ -55,14 +54,12 @@ later step:
      .artifacts/dnd-srd-oracle/submission-candidate.json
    ```
 
-3. Create the external publication attestation with the identity, reviewer,
-   domain, requirements-review, and operator-data facts shown below. Do not add
-   `portalScan` or `submissionTests` yet. Prepare the immutable upload package:
+3. Prepare the immutable upload package from the verified deployment. Portal
+   attestations belong to the final submission gate, not package creation:
 
    ```sh
    node plugins/dnd-srd-oracle/publication/prepare-package.mjs \
      --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
-     --publication-attestation /secure/dnd-oracle/publication-attestation.json \
      --output .artifacts/dnd-srd-oracle-public
    ```
 
@@ -78,7 +75,10 @@ later step:
    Do not repeat those automated checks manually or describe them as installed
    ChatGPT observations. Save reviewable evidence references outside Git; never
    put credentials or user content in the attestation.
-5. Verify the existing hosted review recording at
+5. Record the verified identity, domain, reviewer access, requirements review,
+   and operator-data facts in the external publication attestation shown below.
+   Keep these observations outside the immutable package. Verify the existing
+   hosted review recording at
    `https://dnd-oracle.apps.loskutoff.com/plugin-demo.mp4`, and add
    `demoRecording`, `portalScan`, and `submissionTests` to
    `submissionEvidence`. Copy the
@@ -122,12 +122,13 @@ LICENSE, and NOTICE; emits the public URLs; and writes
 rationale, availability proposal, release notes, and the canonical five
 positive and three negative review cases. Directory submissions use **With
 MCP** and submit the production MCP server directly; the package intentionally
-contains no `.app.json` reference to an existing local or workspace integration.
+contains a direct HTTPS `.mcp.json` connection and no `.app.json` reference to
+an existing local or workspace integration.
 
 The attestation is an external, non-secret handoff artifact and must not be
 committed. Identity, domain, and reviewer-access statuses record facts already
 completed in the OpenAI portal; text in this file cannot make them true. Before
-package preparation its shape is:
+the final live submission gate its shape is:
 
 ```json
 {
@@ -233,9 +234,9 @@ scopes** display alone. Set **Default scope override** to `play-sessions`,
 **Always requested scopes** to `openid email`, and **OIDC enabled** on.
 Record the resulting requested scope set, `openid email play-sessions`, in
 `reviewerAccess.oauthScopes`; confirm it during a fresh authorization attempt.
-The package builder requires exactly the authorization service's canonical
-ChatGPT scope set; missing or additional scopes fail preparation. It emits the
-required set as `mcp.oauthScopes` in
+The final live gate requires exactly the authorization service's canonical
+ChatGPT scope set; missing or additional scopes fail that gate. The package
+builder emits the required set as `mcp.oauthScopes` in
 `portal-submission.json`. The resource permission `play-sessions` alone does
 not authorize OpenID user-info: a client that requests only that permission
 can exchange a token successfully and then fail to connect at user-info with

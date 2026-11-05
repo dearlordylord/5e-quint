@@ -10,7 +10,9 @@ origin="$1"
 expected_release="$2"
 expected_environment="$3"
 
-curl --fail --silent --show-error "$origin/health" | jq -e '.status == "ok"' >/dev/null
+curl --fail --silent --show-error --retry 20 --retry-delay 1 \
+  --retry-connrefused --retry-max-time 60 --connect-timeout 5 --max-time 10 \
+  "$origin/health" | jq -e '.status == "ok"' >/dev/null
 curl --fail --silent --show-error "$origin/version" | jq -e --arg release "$expected_release" --arg environment "$expected_environment" --arg publisher "$DND_MCP_PUBLISHER_NAME" '.release == $release and .environment == $environment and .publisher == $publisher' >/dev/null
 for publisher_path in / /support /privacy /terms; do
   curl --fail --silent --show-error "$origin$publisher_path" >/dev/null

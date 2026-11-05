@@ -251,7 +251,8 @@ repository's local marketplace. The manifest intentionally has no
 `mcpServers` entry: a checkout-relative `pnpm` command cannot survive an
 installed plugin's cache location. The MCP connection and installed Skill are
 therefore enabled together in the conversation but evaluated as distinct
-evidence.
+evidence. The production package builder instead adds a direct HTTPS MCP
+connection using the verified origin; see the [publication procedure](publication/README.md).
 
 From the repository root, validate the package and Skill without adding Python
 dependencies to the workspace. These commands require `uv` and the built-in

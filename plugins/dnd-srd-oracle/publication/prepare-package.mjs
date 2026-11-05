@@ -25,27 +25,7 @@ const deployment = decodeDeploymentAttestation(
 );
 const origin = productionOrigin(deployment.origin);
 const publisher = configuredPublisher(deployment.publisherName);
-const publicationAttestation = decodePublicationAttestation(
-  await readJson(
-    resolve(
-      requiredValue(
-        options.publicationAttestation,
-        "--publication-attestation",
-      ),
-    ),
-  ),
-);
 await verifySourceRelease(deployment.release);
-if (publicationAttestation.publisherIdentity.name !== publisher) {
-  throw new Error(
-    "Attested publisher identity must exactly match DND_MCP_PUBLISHER_NAME",
-  );
-}
-if (publicationAttestation.domainVerification.origin !== deployment.origin) {
-  throw new Error(
-    "Portal-verified domain must exactly match the live production origin",
-  );
-}
 const outputDirectory = resolve(requiredValue(options.output, "--output"));
 await requireEmptyOutput(outputDirectory);
 
@@ -111,6 +91,7 @@ const preparedManifest = {
   description: source.listing.longDescription,
   author: { ...manifest.author, name: publisher, url: endpoints.website },
   homepage: endpoints.website,
+  mcpServers: "./.mcp.json",
   interface: {
     ...manifest.interface,
     displayName: source.listing.name,
@@ -127,6 +108,11 @@ await writeJson(
   join(outputDirectory, ".codex-plugin/plugin.json"),
   preparedManifest,
 );
+await writeJson(join(outputDirectory, ".mcp.json"), {
+  mcpServers: {
+    "dnd-srd-oracle": { type: "http", url: endpoints.mcp },
+  },
+});
 await writeJson(join(outputDirectory, "portal-submission.json"), {
   deployment: {
     origin: deployment.origin,
@@ -134,10 +120,6 @@ await writeJson(join(outputDirectory, "portal-submission.json"), {
     candidateFingerprint: deployment.candidateFingerprint,
     verifiedAt: deployment.verifiedAt,
   },
-  publisherIdentity: publicationAttestation.publisherIdentity,
-  reviewerAccess: publicationAttestation.reviewerAccess,
-  domainVerification: publicationAttestation.domainVerification,
-  submissionPreparation: publicationAttestation.submissionEvidence,
   listing: {
     ...source.listing,
     websiteURL: endpoints.website,
@@ -172,7 +154,6 @@ function parseOptions(args) {
   const parsed = {};
   const optionKeyByName = {
     "--deployment-attestation": "deploymentAttestation",
-    "--publication-attestation": "publicationAttestation",
     "--output": "output",
   };
   for (let index = 0; index < args.length; index += 2) {
@@ -180,210 +161,12 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!(name in optionKeyByName) || value === undefined) {
       throw new Error(
-        "usage: prepare-package.mjs --deployment-attestation FILE --publication-attestation FILE --output DIRECTORY",
+        "usage: prepare-package.mjs --deployment-attestation FILE --output DIRECTORY",
       );
     }
     parsed[optionKeyByName[name]] = value;
   }
   return parsed;
-}
-
-function decodePublicationAttestation(value) {
-  const attestation = exactRecord(value, "publication attestation", [
-    "publisherIdentity",
-    "reviewerAccess",
-    "domainVerification",
-    "submissionEvidence",
-  ]);
-  const publisherIdentity = exactRecord(
-    attestation.publisherIdentity,
-    "publisherIdentity",
-    ["status", "name", "verifiedAt", "attestedBy"],
-  );
-  const reviewerAccess = exactRecord(
-    attestation.reviewerAccess,
-    "reviewerAccess",
-    ["status", "mfaRequired", "oauthScopes", "attestedAt", "attestedBy"],
-  );
-  const domainVerification = exactRecord(
-    attestation.domainVerification,
-    "domainVerification",
-    ["status", "origin", "verifiedAt", "attestedBy"],
-  );
-  const submissionEvidence = decodeSubmissionEvidence(
-    attestation.submissionEvidence,
-  );
-  return {
-    publisherIdentity: {
-      status: literal(
-        publisherIdentity.status,
-        "verifiedInOpenAiPortal",
-        "publisherIdentity.status",
-      ),
-      name: nonEmptyString(publisherIdentity.name, "publisherIdentity.name"),
-      verifiedAt: isoTimestamp(
-        publisherIdentity.verifiedAt,
-        "publisherIdentity.verifiedAt",
-      ),
-      attestedBy: nonEmptyString(
-        publisherIdentity.attestedBy,
-        "publisherIdentity.attestedBy",
-      ),
-    },
-    reviewerAccess: {
-      oauthScopes: decodeReviewerScopes(reviewerAccess.oauthScopes),
-      status: literal(
-        reviewerAccess.status,
-        "provisionedInOpenAiPortal",
-        "reviewerAccess.status",
-      ),
-      mfaRequired: literal(
-        reviewerAccess.mfaRequired,
-        false,
-        "reviewerAccess.mfaRequired",
-      ),
-      attestedAt: isoTimestamp(
-        reviewerAccess.attestedAt,
-        "reviewerAccess.attestedAt",
-      ),
-      attestedBy: nonEmptyString(
-        reviewerAccess.attestedBy,
-        "reviewerAccess.attestedBy",
-      ),
-    },
-    domainVerification: {
-      status: literal(
-        domainVerification.status,
-        "verifiedInOpenAiPortal",
-        "domainVerification.status",
-      ),
-      origin: nonEmptyString(
-        domainVerification.origin,
-        "domainVerification.origin",
-      ),
-      verifiedAt: isoTimestamp(
-        domainVerification.verifiedAt,
-        "domainVerification.verifiedAt",
-      ),
-      attestedBy: nonEmptyString(
-        domainVerification.attestedBy,
-        "domainVerification.attestedBy",
-      ),
-    },
-    submissionEvidence,
-  };
-}
-
-function decodeSubmissionEvidence(value) {
-  const record = recordValue(value, "submissionEvidence");
-  const unexpected = Object.keys(record).filter(
-    (name) =>
-      ![
-        "requirementsReview",
-        "operatorDataHandling",
-        "demoRecording",
-        "portalScan",
-        "submissionTests",
-      ].includes(name),
-  );
-  if (unexpected.length > 0) {
-    throw new Error(
-      `submissionEvidence has unexpected keys: ${unexpected.join(", ")}`,
-    );
-  }
-  const gate = exactRecord(
-    {
-      requirementsReview: record.requirementsReview,
-      operatorDataHandling: record.operatorDataHandling,
-    },
-    "submissionEvidence preparation facts",
-    ["requirementsReview", "operatorDataHandling"],
-  );
-  const requirements = exactRecord(
-    gate.requirementsReview,
-    "submissionEvidence.requirementsReview",
-    ["officialUrls", "reviewedAt", "reviewedBy", "changes"],
-  );
-  const officialUrls = distinctStringArray(
-    requirements.officialUrls,
-    "submissionEvidence.requirementsReview.officialUrls",
-  );
-  for (const requiredUrl of [
-    "https://developers.openai.com/plugins/deploy/app-review",
-    "https://developers.openai.com/plugins/deploy/submission",
-    "https://developers.openai.com/plugins/deploy/submission-errors",
-  ]) {
-    if (!officialUrls.includes(requiredUrl)) {
-      throw new Error(`requirementsReview must include ${requiredUrl}`);
-    }
-  }
-  const reviewedAt = isoTimestamp(
-    requirements.reviewedAt,
-    "submissionEvidence.requirementsReview.reviewedAt",
-  );
-  if (
-    Date.now() - Date.parse(reviewedAt) > 7 * DAY_MS ||
-    Date.parse(reviewedAt) > Date.now()
-  ) {
-    throw new Error("requirementsReview must be no more than seven days old");
-  }
-  if (!Array.isArray(requirements.changes)) {
-    throw new Error(
-      "submissionEvidence.requirementsReview.changes must be an array",
-    );
-  }
-  const changes = requirements.changes.map((entry, index) =>
-    exactStringRecord(
-      entry,
-      `submissionEvidence.requirementsReview.changes[${index}]`,
-      ["requirement", "disposition"],
-    ),
-  );
-  const handling = exactRecord(
-    gate.operatorDataHandling,
-    "submissionEvidence.operatorDataHandling",
-    [
-      "hostingRecipients",
-      "stderrRetention",
-      "ingressAccessLogRetention",
-      "budgetMonitoring",
-      "alertRecipient",
-      "attestedAt",
-      "attestedBy",
-    ],
-  );
-  const operatorDataHandling = decodeOperatorDataHandling(
-    {
-      hostingRecipients: handling.hostingRecipients,
-      stderrRetention: handling.stderrRetention,
-      ingressAccessLogRetention: handling.ingressAccessLogRetention,
-      budgetMonitoring: handling.budgetMonitoring,
-      alertRecipient: handling.alertRecipient,
-    },
-    "submissionEvidence.operatorDataHandling",
-  );
-  return {
-    requirementsReview: {
-      officialUrls,
-      reviewedAt,
-      reviewedBy: nonEmptyString(
-        requirements.reviewedBy,
-        "submissionEvidence.requirementsReview.reviewedBy",
-      ),
-      changes,
-    },
-    operatorDataHandling: {
-      ...operatorDataHandling,
-      attestedAt: isoTimestamp(
-        handling.attestedAt,
-        "submissionEvidence.operatorDataHandling.attestedAt",
-      ),
-      attestedBy: nonEmptyString(
-        handling.attestedBy,
-        "submissionEvidence.operatorDataHandling.attestedBy",
-      ),
-    },
-  };
 }
 
 function decodeOperatorDataHandling(value, label) {
@@ -427,21 +210,6 @@ function decodeOperatorDataHandling(value, label) {
     budgetMonitoring,
     alertRecipient,
   };
-}
-
-function decodeReviewerScopes(value) {
-  const scopes = distinctStringArray(
-    nonEmptyString(value, "reviewerAccess.oauthScopes").split(/\s+/u),
-    "reviewerAccess.oauthScopes",
-  );
-  if (
-    scopes.length !== CHATGPT_SAVED_SESSION_OAUTH_SCOPES.length ||
-    !CHATGPT_SAVED_SESSION_OAUTH_SCOPES.every((scope) => scopes.includes(scope))
-  )
-    throw new Error(
-      "reviewerAccess.oauthScopes must contain exactly the ChatGPT identity and Play Session scopes",
-    );
-  return CHATGPT_SAVED_SESSION_OAUTH_SCOPES.join(" ");
 }
 
 function decodeDeploymentAttestation(value) {

@@ -61,36 +61,6 @@ afterEach(async () => {
 });
 
 describe("public plugin publication package", () => {
-  test.each([
-    "play-sessions",
-    "openid play-sessions",
-    "openid email play-sessions admin",
-    "openid email play-sessions offline_access",
-  ])("rejects portal scopes %s before packaging", async (oauthScopes) => {
-    const directory = await mkdtemp(join(tmpdir(), "dnd-scope-rejection-"));
-    generatedDirectories.push(directory);
-    const deployment = await writeDeploymentAttestation(
-      directory,
-      "oracle.publisher.dev",
-      await repositoryRelease(),
-    );
-    const publication = await writePublicationAttestation(
-      directory,
-      oauthScopes,
-    );
-    await expect(
-      execFileAsync(process.execPath, [
-        join(pluginRoot, "publication/prepare-package.mjs"),
-        "--deployment-attestation",
-        deployment,
-        "--publication-attestation",
-        publication,
-        "--output",
-        join(directory, "package"),
-      ]),
-    ).rejects.toThrow("reviewerAccess.oauthScopes");
-  });
-
   test("owns five positive and three negative portal review cases", async () => {
     const source = await readJson("publication/submission-source.json");
     const inventory = await readJson("evals/evaluation-inventory.json");
@@ -161,16 +131,10 @@ describe("public plugin publication package", () => {
       "oracle.publisher.dev",
       release,
     );
-    const publicationAttestation = await writePublicationAttestation(
-      temporaryDirectory,
-      "openid email play-sessions",
-    );
     const prepared = await execFileAsync(process.execPath, [
       join(pluginRoot, "publication/prepare-package.mjs"),
       "--deployment-attestation",
       deploymentAttestation,
-      "--publication-attestation",
-      publicationAttestation,
       "--output",
       output,
     ]);
@@ -200,7 +164,17 @@ describe("public plugin publication package", () => {
       category: source.listing.category,
     });
     expect(manifest.author.name).toBe("Verified Publisher");
-    expect(manifest.mcpServers).toBeUndefined();
+    expect(manifest.mcpServers).toBe("./.mcp.json");
+    expect(
+      JSON.parse(await readFile(join(output, ".mcp.json"), "utf8")),
+    ).toEqual({
+      mcpServers: {
+        "dnd-srd-oracle": {
+          type: "http",
+          url: "https://oracle.publisher.dev/mcp",
+        },
+      },
+    });
     expect(manifest.apps).toBeUndefined();
     await expect(readFile(join(output, ".app.json"), "utf8")).rejects.toThrow(
       "ENOENT",
@@ -243,22 +217,10 @@ describe("public plugin publication package", () => {
       "Start a rules-backed battle with my character.",
     ]);
     expect(submission.submissionReview).toHaveLength(8);
-    expect(submission.publisherIdentity).toMatchObject({
-      status: "verifiedInOpenAiPortal",
-      name: "Verified Publisher",
-    });
-    expect(submission.reviewerAccess).toMatchObject({
-      status: "provisionedInOpenAiPortal",
-      mfaRequired: false,
-    });
-    expect(submission.domainVerification).toMatchObject({
-      status: "verifiedInOpenAiPortal",
-      origin: "https://oracle.publisher.dev",
-    });
-    expect(submission).not.toHaveProperty("submissionGate");
-    expect(submission.submissionPreparation).toHaveProperty(
-      "requirementsReview",
-    );
+    expect(submission).not.toHaveProperty("publisherIdentity");
+    expect(submission).not.toHaveProperty("reviewerAccess");
+    expect(submission).not.toHaveProperty("domainVerification");
+    expect(submission).not.toHaveProperty("submissionPreparation");
     expect(submission.dataHandling).toMatchObject({
       guestInactiveDays: GUEST_INACTIVITY_RETENTION_MS / DAY_MS,
       guestPressureCleanupMinimumInactiveHours:
@@ -291,15 +253,11 @@ describe("public plugin publication package", () => {
       "oracle.example.test",
       release,
     );
-    const publicationAttestation =
-      await writePublicationAttestation(temporaryDirectory);
     await expect(
       execFileAsync(process.execPath, [
         join(pluginRoot, "publication/prepare-package.mjs"),
         "--deployment-attestation",
         deploymentAttestation,
-        "--publication-attestation",
-        publicationAttestation,
         "--output",
         output,
       ]),
@@ -360,64 +318,6 @@ async function repositoryRelease(): Promise<string> {
     "HEAD",
   ]);
   return stdout.trim();
-}
-
-async function writePublicationAttestation(
-  directory: string,
-  oauthScopes = "openid email play-sessions",
-): Promise<string> {
-  const path = join(directory, "publication-attestation.json");
-  await writeFile(
-    path,
-    `${JSON.stringify(
-      {
-        publisherIdentity: {
-          status: "verifiedInOpenAiPortal",
-          name: "Verified Publisher",
-          verifiedAt: "2026-08-25T20:00:00Z",
-          attestedBy: "synthetic-test-operator",
-        },
-        reviewerAccess: {
-          oauthScopes,
-          status: "provisionedInOpenAiPortal",
-          mfaRequired: false,
-          attestedAt: "2026-08-25T20:01:00Z",
-          attestedBy: "synthetic-test-operator",
-        },
-        domainVerification: {
-          status: "verifiedInOpenAiPortal",
-          origin: "https://oracle.publisher.dev",
-          verifiedAt: "2026-08-25T20:02:00Z",
-          attestedBy: "synthetic-test-operator",
-        },
-        submissionEvidence: {
-          requirementsReview: {
-            officialUrls: [
-              "https://developers.openai.com/plugins/deploy/app-review",
-              "https://developers.openai.com/plugins/deploy/submission",
-              "https://developers.openai.com/plugins/deploy/submission-errors",
-            ],
-            reviewedAt: new Date(Date.now() - 60_000).toISOString(),
-            reviewedBy: "synthetic-test-operator",
-            changes: [],
-          },
-          operatorDataHandling: {
-            hostingRecipients: ["synthetic hosting operator"],
-            stderrRetention: "30 days",
-            ingressAccessLogRetention: "14 days",
-            budgetMonitoring: "enabled",
-            alertRecipient: "synthetic operations address",
-            attestedAt: "2026-08-25T20:03:00Z",
-            attestedBy: "synthetic-test-operator",
-          },
-        },
-      },
-      null,
-      2,
-    )}\n`,
-    "utf8",
-  );
-  return path;
 }
 
 async function readJson(relativePath: string): Promise<unknown> {
