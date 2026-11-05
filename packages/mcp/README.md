@@ -207,7 +207,7 @@ and incident procedures live in the
 
 ### ChatGPT plugin surface
 
-Set `DND_MCP_TOOL_SURFACE=chatgpt` on the HTTP host to expose the 127 named
+Set `DND_MCP_TOOL_SURFACE=chatgpt` on the HTTP host to expose the named
 ChatGPT tools. The default is `regular`; stdio continues to expose the regular
 MCP contract. Choose the surface for the host, rather than per model request.
 The two surfaces use the same catalogs, Play Session ownership, reducers,
@@ -425,16 +425,36 @@ does not wrap an unrelated success or attach a full checkpoint to it.
 relative to that result, or `pendingBattle` with inputs derived from the
 canonical pending frontier. Error results retain their Battle recovery context.
 
-Output schemas use content-addressed identities and shared `$defs`.
+MCP discovery advertises input contracts, descriptions, and annotations, without
+the output grammar of every possible future state. Actual responses retain
+their structured data and encoded text. Full output schemas remain available
+to canonical validation and publication review; they are not copied into model
+context through `tools/list`.
+
+`provide_battle_input` advertises the `kind`/`holeId` envelope of a pending
+request. Its complete argument contract is the current request's returned
+`fillSchema`, rather than the union of every possible Battle input. The same
+canonical parser and pending-request checks still validate submitted fields.
+
+Internal output schemas use content-addressed identities and shared `$defs`.
 Capacity-rich outputs derive their facts from runtime projections; storage schemas
 must not accept those capacities as independent state. Character-tool outputs
 omit accepted Battle subjects/fills. Model-facing projections preserve canonical
 root branches, fields, requiredness, and outer types; exact codecs remain the
 encoding authority.
 
-Protocol tests enforce the complete tool catalog's 2 MB app-version limit and
-the named 700,000-byte largest routed-schema cold-discovery budget, alongside
-malformed operation/result/next-operation rejection. See
+The complete advertised inventory is measured as serialized model context;
+see the [MCP context review rules](../../.claude/review-rules.md#mcp-context-cost).
+Compare captured `tools.json` inventories without starting a model or server:
+
+```sh
+pnpm --filter @dnd/mcp report:tool-context /path/to/tools.json --baseline /path/to/previous-tools.json --output /tmp/tool-context-report.json
+```
+
+The command prints component sizes and the largest definitions; its optional
+output must be a new file. It is a report, not an acceptance gate.
+
+Canonical output validation remains covered by the
 [model-facing schemas](src/play-session-model-facing-schema.ts) and
 [output schema tests](src/model-output-json-schema.test.ts).
 
@@ -505,9 +525,11 @@ the verdict. Both client backends return success only for a clean scenario; the
 wizard battle also requires verified intermediate live visualization artifacts.
 Mechanical completion remains separately reported. If living opponents remain,
 the Codex client can start a separate, tool-free reviewer for at most 180 seconds
-within the remaining run budget. It judges voluntary retreat and nonpursuit from
-hash-bound archived evidence and the original task; deterministic checks bind every citation to accepted
-movement, participant identity, event order, and the same settled battle. An
+within the remaining run budget. It judges reasonable voluntary cessation and
+absence of later contradictory hostility from hash-bound archived evidence and
+the original task. Deterministic checks bind exact pre-end quotes covering every
+living participant, optional claimed movement, and the same settled battle;
+semantic agreement and behavior are independent judgments, not deterministic proof. An
 uncertain review cannot establish completion. This semantic judgment is reported
 separately from deterministic knockout evidence and never overrides dice, tool
 rejection, source, or visualization checks. Ordinary offline controls never invoke

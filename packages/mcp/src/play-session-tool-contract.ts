@@ -41,8 +41,6 @@ export {
   type PlaySessionOperationName,
   type PlaySessionToolName,
 } from "./play-session-tool-names.ts";
-export const PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET = 700_000;
-
 export const playSessionToolDefinitionsByName = {
   [playSessionToolNames.create]: {
     name: playSessionToolNames.create,

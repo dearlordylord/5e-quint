@@ -498,36 +498,6 @@ describe("ChatGPT tool surface", () => {
     }
   });
 
-  it("describes only the invocation branches each Battle tool accepts", () => {
-    const action = CHATGPT_EXECUTION_TOOLS.heal_self.definition;
-    const reaction = CHATGPT_EXECUTION_TOOLS.decline_reaction.definition;
-    const both = CHATGPT_EXECUTION_TOOLS.attack.definition;
-    expect(action.inputSchema.properties).toHaveProperty("actKey");
-    expect(action.inputSchema.properties).not.toHaveProperty("fill");
-    expect(action.description).toContain("readyCalls");
-    expect(action.description).not.toContain("interruptDecision");
-    expect(reaction.inputSchema.properties).not.toHaveProperty("subject");
-    expect(reaction.inputSchema.properties).toHaveProperty("fill");
-    expect(reaction.description).toContain("interruptDecision");
-    expect(reaction.description).not.toContain("copy its subject");
-    expect(reaction.description).toContain(
-      "A decline has no choice or choice.fills",
-    );
-    expect(reaction.description).not.toContain(
-      "current request and selected choice",
-    );
-    expect(reaction.description).toContain("read_battle_state");
-    expect(reaction.description).toContain(
-      "do not automatically retry or decline",
-    );
-    expect(both.inputSchema.properties).toHaveProperty("actKey");
-    expect(both.inputSchema.properties).toHaveProperty("fill");
-    expect(both.description).toContain("subject");
-    expect(both.description).toContain("interruptDecision");
-    expect(both.description).toContain("choice.initialHoles");
-    expect(both.description).toContain("choice.fills: []");
-  });
-
   it("advertises the complete planned tool contract with annotations", () => {
     const definitions = buildAdvertisedToolDefinitions(
       chatGptExecutionToolDefinitions,

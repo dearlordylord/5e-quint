@@ -50,6 +50,22 @@ function kindIs(
   return literalValues(schemaField(schema, "kind"), definitions).includes(kind);
 }
 
+export function battleFillKindInputSchema(
+  schema: McpObjectInputSchema,
+): McpOutputSchema {
+  const definitions = schemaObject(schema.$defs) ? schema.$defs : {};
+  return {
+    type: "string",
+    enum: [
+      ...new Set(
+        alternatives(schemaField(schema, "fill"), definitions).flatMap((fill) =>
+          literalValues(schemaField(fill, "kind"), definitions),
+        ),
+      ),
+    ],
+  };
+}
+
 export function battleFillInputSchemaForOperation(
   schema: McpObjectInputSchema,
   input: {

@@ -415,7 +415,7 @@ export function evaluateRun(directory) {
         };
   const logicalEnd =
     mechanicalKnockout ||
-    (cessationReview.kind === "supportedRetreatWithoutPursuit" &&
+    (cessationReview.kind === "supportedVoluntaryCessation" &&
       cessationReview.playSessionId === target &&
       cessationReview.battleId === battleId);
   const livingTurns = observations

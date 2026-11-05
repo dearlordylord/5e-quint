@@ -1,4 +1,7 @@
-import { battleFillInputSchemaForOperation } from "./battle-fill-input-schema.ts";
+import {
+  battleFillInputSchemaForOperation,
+  battleFillKindInputSchema,
+} from "./battle-fill-input-schema.ts";
 import { BattleActKeySchema } from "./battle-act-selection.ts";
 import {
   BattleSubjectSchema,
@@ -191,36 +194,19 @@ export function chatGptBattleExecutionInputSchema(
           modifierKinds,
           declineAllowed: tool === "decline_reaction",
         });
-  const instructions = [
-    "Requires an active battle in the selected Play Session. Use only a matching option returned by discover_battle_acts or the current battle response.",
-    ...(initialSchema === null
-      ? []
-      : [
-          "To start an offered Act, copy the chosen readyCalls entry arguments unchanged and add only the selected playSessionId; omit fill. Never reconstruct an execution reference. When tableFactsRequired is returned, copy its arguments and supply its requiredArguments from table facts.",
-        ]),
-    ...(reactionSchema === null
-      ? []
-      : tool === "decline_reaction"
-        ? [
-            'To decline an offered Reaction, copy its readyCalls entry for the chosen eligible responder. Supply its interruptDecision fill with value: { kind: "decline", responderId }; omit subject. A decline has no choice or choice.fills.',
-          ]
-        : [
-            "For an offered Reaction, supply an interruptDecision fill for the current request and selected choice; omit subject. A reactionRollOrDamageReduction choice includes its one requested rolledDice fill from the canonical frontier choice.initialHoles, or [] when no roll is requested. Other interrupt choices require choice.fills: []; answer their later ordinary holes through provide_battle_input.",
-          ]),
-    ...(reactionSchema === null
-      ? []
-      : [
-          "readyCalls contains only choices executable without new table facts. Copy the selected entry arguments and add only the selected playSessionId. Omitted choices remain available through the frontier and their requested initialHoles. After rejected or stale arguments, read_battle_state and choose from its current frontier; do not automatically retry or decline.",
-        ]),
-    "Returns the updated saved battle or a request for the next choice, target fact, dice result, or Reaction. Supply requested facts with provide_battle_input; complete the pending action before starting another.",
-  ];
+  const invocation =
+    initialSchema === null
+      ? "Accepts the current Reaction's interruptDecision fill."
+      : reactionSchema === null
+        ? "Accepts a current Act's actKey."
+        : "Accepts a current Act's actKey or Reaction's interruptDecision fill.";
   return {
     ...battleSelectionInputSchema(
       initialSchema,
       reactionSchema,
       tool === "report_creature_fall",
     ),
-    description: instructions.join(" "),
+    description: `${invocation} Copy returned readyCalls arguments when present; otherwise use the current choice or tableFactsRequired arguments and requested facts. Add playSessionId; supply later facts through provide_battle_input.`,
   };
 }
 
@@ -285,6 +271,27 @@ function battleSelectionInputSchema(
     ...shareToolSchemaDefinitions(omitUnreferencedDefinitions(schema)),
     type: "object",
   });
+}
+
+export function chatGptRequestedBattleInputSchema(): McpObjectInputSchema {
+  return {
+    type: "object",
+    properties: {
+      fill: {
+        type: "object",
+        description:
+          "Construct the complete fill object from the fillSchema returned for the current pending Battle input. Copy its kind and holeId, then supply its requested fields. The engine validates typed fields against the pending request; this envelope does not admit arbitrary Battle facts.",
+        properties: {
+          kind: battleFillKindInputSchema(chatGptBattleHoleInputSchema()),
+          holeId: { type: "string" },
+        },
+        required: ["kind", "holeId"],
+        additionalProperties: true,
+      },
+    },
+    required: ["fill"],
+    additionalProperties: false,
+  };
 }
 
 export function chatGptBattleHoleInputSchema(): McpObjectInputSchema {

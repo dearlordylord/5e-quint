@@ -61,6 +61,11 @@ const client = new Client({ name: "coding-agent-evaluator", version: "1" }),
   [ct, st] = InMemoryTransport.createLinkedPair();
 await host.server.connect(st);
 await client.connect(ct);
+const canonicalInstructions = client.getInstructions();
+writeFileSync(
+  join(out, "server-instructions.json"),
+  JSON.stringify({ instructions: canonicalInstructions ?? null }, null, 2),
+);
 const listed = await client.listTools();
 writeFileSync(join(out, "tools.json"), JSON.stringify(listed, null, 2));
 const body = (r) => r?.structuredContent ?? r;
@@ -251,7 +256,10 @@ function compute(args) {
 }
 const server = new Server(
   { name: "oracle-dialogue-evaluation", version: "1" },
-  { capabilities: { tools: { listChanged: true } } },
+  {
+    capabilities: { tools: { listChanged: true } },
+    instructions: canonicalInstructions,
+  },
 );
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   const tools = [...listed.tools, mathTool];

@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 import { decodeSubmissionReviewPolicy } from "./submission-gate-policy.ts";
 import { inspectSubmissionResult } from "./submission-result-inspector.ts";
 import {
-  buildAdvertisedToolDefinitions,
+  buildReviewToolDefinitions,
   buildCanonicalToolDefinitions,
   createDndMcpProtocolServer,
 } from "./protocol-server.ts";
@@ -21,7 +21,7 @@ const policy = decodedPolicy.success;
 const reviewScope = submissionResultReviewScope(
   buildCanonicalToolDefinitions(undefined, "hosted"),
   policy,
-  buildAdvertisedToolDefinitions(undefined, "hosted"),
+  buildReviewToolDefinitions(undefined, "hosted"),
 );
 
 describe("submission representative-result inspector", () => {

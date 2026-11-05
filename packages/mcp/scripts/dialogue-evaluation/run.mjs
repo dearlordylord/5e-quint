@@ -297,6 +297,10 @@ const client = new Client({
 const [ct, st] = InMemoryTransport.createLinkedPair();
 await host.server.connect(st);
 await client.connect(ct);
+const canonicalInstructions = client.getInstructions();
+save("server-instructions.json", {
+  instructions: canonicalInstructions ?? null,
+});
 const listed = await client.listTools();
 save("tools.json", listed);
 const allow = options["--allow"]?.split(",") ?? resumed?.allowlist;
@@ -496,7 +500,8 @@ function modelResult(result) {
   };
 }
 const instructions =
-  "You are an autonomous tabletop player and game facilitator. Use Oracle tools as the authority for all game mechanics. Make reasonable decisions for all sides as requested, accept generated random outcomes, and do not claim results unsupported by engine state. When Python is available, use it to calculate geometry and create visual artifacts from the actual battle state; never use it as an alternate combat engine. Use the live viewer when provided. It automatically updates actual game state and tells you when computed geometry must be republished. You have no access to repository source or credentials. Complete the requested task without asking for routine choices.";
+  "You are an autonomous tabletop player and game facilitator. Use Oracle tools as the authority for all game mechanics. Make reasonable decisions for all sides as requested, accept generated random outcomes, and do not claim results unsupported by engine state. When Python is available, use it to calculate geometry and create visual artifacts from the actual battle state; never use it as an alternate combat engine. Use the live viewer when provided. It automatically updates actual game state and tells you when computed geometry must be republished. You have no access to repository source or credentials. Complete the requested task without asking for routine choices." +
+  (canonicalInstructions ? "\n\n" + canonicalInstructions : "");
 async function api(path, request, name) {
   for (let attempt = 0; attempt < 6; attempt++) {
     const remaining = timeout * 1000 - (Date.now() - started);

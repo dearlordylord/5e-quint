@@ -14,6 +14,7 @@
     "evidence:saved-session-registrations": "tsx src/saved-session-authorization/registration-evidence.ts",
     "serve:http": "tsx src/public-index.ts",
     "verify:staging": "tsx src/staging-http-smoke.ts",
+    "report:tool-context": "node scripts/report-tool-context.mjs",
     "check:submission-fast": "tsx scripts/submission-fast-gate.ts",
     "check:submission-candidate": "pnpm check:submission-fast && vitest run src/submission-result-inspector.test.ts src/submission-candidate-evidence.test.ts src/submission-live-gate.test.ts src/plugin-publication-package.test.ts src/public-http-boundary.test.ts src/public-play-session-boundary.test.ts --pool=threads --maxWorkers=1",
     "evidence:submission-candidate": "tsx scripts/submission-candidate-cli.ts",

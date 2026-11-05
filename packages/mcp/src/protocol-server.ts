@@ -57,6 +57,7 @@ import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
 export {
   buildAdvertisedToolDefinitions,
+  buildReviewToolDefinitions,
   buildCanonicalToolDefinitions,
   buildCanonicalCodecToolDefinitions,
 } from "./protocol-tool-definitions.ts";
@@ -201,12 +202,24 @@ function createProtocolServerHost({
     protocolDefinitions.map((definition) => [definition.name, definition]),
   );
   const playSessions = playSessionRegistry(applicationServices, options);
+  const selectionInstructions = Match.value(toolSurface).pipe(
+    Match.when(
+      "chatgpt",
+      () =>
+        "Copy returned readyCalls arguments when present; otherwise use the current choice or tableFactsRequired arguments and requested facts. Add playSessionId. An Act uses actKey; a Reaction uses its interruptDecision fill. Construct ordinary inputs from the current request's fillSchema.",
+    ),
+    Match.when(
+      "regular",
+      () =>
+        "Copy the complete current subject, including its damage selection, and answer the current typed hole.",
+    ),
+    Match.exhaustive,
+  );
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
     {
       capabilities: { tools: {} },
-      instructions:
-        "Create or retain a Play Session handle and pass it to every stateful operation. Copy current identifiers, subjects, holes, and options from results; do not invent executable mechanics. Select attacks from returned presentation and copy the complete subject, including its damage selection. Use the returned Battle checkpoint for HP, resources, and applied effects. A needsHoles result leaves a procedure unfinished. Report only changes already in its checkpoint. Answer the current fact request, using empty collections only for table-confirmed absence. Correct rejected inputs and retry the current request. Use cancel_battle_action only when returned availability permits it and respect a refusal. If recovery remains blocked, report the saved checkpoint and missing input. Raw dice rolls and external simulations do not update saved Battle state. Build map HP and events from returned state. Label table-supplied positions separately. After stale-state failures, rediscover from the returned projection. If a Play Session is unavailable, create a new one and follow its restoration guidance.",
+      instructions: `Use Oracle for mechanics and saved state. Create or select a Play Session and pass playSessionId to stateful calls. ${selectionInstructions} Finish pending inputs before another Act. Preserve returned dice faces in order; reroll only under an applicable rule. After rejected or stale Battle calls, read_battle_state; do not automatically retry or decline. Report only checkpoint outcomes and label table-supplied geometry separately. Call describe_mcp_workflow for invocation, Reaction-roll, cancellation, and restoration details.`,
     },
   );
 

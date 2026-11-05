@@ -6,7 +6,7 @@ import { Result, Schema } from "effect";
 
 import reviewPolicyJson from "../../../plugins/dnd-srd-oracle/publication/review-policy.json" with { type: "json" };
 import {
-  buildAdvertisedToolDefinitions,
+  buildReviewToolDefinitions,
   buildCanonicalToolDefinitions,
 } from "../src/protocol-server.ts";
 import { publicPublisherSiteResponse } from "../src/public-publisher-site.ts";
@@ -45,7 +45,7 @@ if (Result.isFailure(decodedPolicy)) {
       repositoryRoot,
       privacyHtml: await privacyResponse.text(),
     });
-    const definitions = buildAdvertisedToolDefinitions(
+    const definitions = buildReviewToolDefinitions(
       chatGptExecutionToolDefinitions,
       "hosted",
       "chatgpt",

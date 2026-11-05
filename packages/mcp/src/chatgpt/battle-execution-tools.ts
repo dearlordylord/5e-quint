@@ -36,12 +36,13 @@ export function defineChatGptBattleTool<
 ): ChatGptExecutionTool & {
   readonly definition: ProtocolToolDefinition & { readonly name: Name };
 } {
-  const inputSchema = chatGptBattleExecutionInputSchema(name);
+  const { description: invocation, ...inputSchema } =
+    chatGptBattleExecutionInputSchema(name);
   return {
     definition: {
       name,
       title: name.replaceAll("_", " "),
-      description: `${CHATGPT_TOOL_PLAN[name].description} ${inputSchema.description}`,
+      description: `${CHATGPT_TOOL_PLAN[name].description} ${invocation}`,
       inputSchema,
       annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     },

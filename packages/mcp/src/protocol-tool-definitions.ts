@@ -1,3 +1,5 @@
+import { chatGptRequestedBattleInputSchema } from "./chatgpt/battle-execution-schema.ts";
+import { playSessionRoutedInputSchema } from "./play-session-tool-schema.ts";
 import { canonicalToolDefinitionForSurface } from "./chatgpt/canonical-output-schema.ts";
 import { isChatGptStatefulToolName } from "./chatgpt/protocol-operation.ts";
 import { shareToolDefinitionsForSurface } from "./chatgpt/tool-surface.ts";
@@ -10,7 +12,10 @@ import {
   playSessionToolDefinitionForSurface,
   statefulPlaySessionToolDefinition,
 } from "./play-session-tool-contract.ts";
-import { isMcpModelOutputSchema } from "./schema-codec.ts";
+import {
+  canonicalMcpOutputSchema,
+  isMcpModelOutputSchema,
+} from "./schema-codec.ts";
 import { toolDefinitions } from "./server.ts";
 import {
   NO_AUTH_SECURITY_SCHEMES,
@@ -19,6 +24,31 @@ import {
 } from "./tool-definition-contract.ts";
 
 export function buildAdvertisedToolDefinitions(
+  definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
+  playSessionTransport: "hosted" | "localProcess" = "hosted",
+  toolSurface: McpToolSurface = "regular",
+): readonly ProtocolToolDefinition[] {
+  const reviewed = buildReviewToolDefinitions(
+    definitions,
+    playSessionTransport,
+    toolSurface,
+  );
+  return reviewed.map((definition) => {
+    const advertised = { ...definition };
+    delete advertised.outputSchema;
+    if (
+      toolSurface === "chatgpt" &&
+      definition.name === "provide_battle_input"
+    ) {
+      advertised.inputSchema = playSessionRoutedInputSchema(
+        chatGptRequestedBattleInputSchema(),
+      );
+    }
+    return advertised;
+  });
+}
+
+export function buildReviewToolDefinitions(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   playSessionTransport: "hosted" | "localProcess" = "hosted",
   toolSurface: McpToolSurface = "regular",
@@ -77,16 +107,18 @@ export function buildCanonicalToolDefinitions(
           canonicalDefinition.name,
           toolSurface,
         );
-        return statefulName === undefined
-          ? canonicalDefinition
-          : canonicalToolDefinitionForSurface(
-              statefulPlaySessionToolDefinition(
-                canonicalDefinition,
-                statefulName,
-                toolSurface,
-              ),
-              toolSurface,
-            );
+        if (statefulName === undefined) return canonicalDefinition;
+        const routed = statefulPlaySessionToolDefinition(
+          canonicalDefinition,
+          statefulName,
+          toolSurface,
+        );
+        return routed.outputSchema === undefined
+          ? routed
+          : {
+              ...routed,
+              outputSchema: canonicalMcpOutputSchema(routed.outputSchema),
+            };
       }),
     ],
     playSessionTransport,
