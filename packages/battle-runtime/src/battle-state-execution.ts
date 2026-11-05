@@ -5483,6 +5483,12 @@ export type BattleDamageRollHole = Extract<
 > & {
   readonly attack: SupportedAttackActionOption;
   readonly critical: boolean;
+  readonly damageDice:
+    | {
+        readonly kind: "fixed";
+        readonly groups: readonly Pick<DiceExpr, "dice" | "dieSize">[];
+      }
+    | { readonly kind: "selectionDependent" };
   readonly attackDamageRiders?: readonly AttackDamageRider[];
   readonly spellWeaponDamageRiders?: readonly SpellAttackDamageComponent[];
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];

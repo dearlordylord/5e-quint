@@ -7,7 +7,6 @@ import {
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 import {
-  resolveLocalSchemaReference,
   isJsonSchemaObject as schemaObject,
   jsonSchemaRecord as record,
   jsonSchemaAlternatives as alternatives,
@@ -19,6 +18,10 @@ import {
   omitUnreferencedDefinitions,
   type McpOutputSchema,
 } from "../schema-codec.ts";
+import {
+  attackRollValue,
+  diceGroupsValue,
+} from "./battle-dice-input-schema.ts";
 import { battleAreaInputInstructions } from "./battle-area-input-instructions.ts";
 
 export const BattleInputGuidanceSchema = Schema.Struct({
@@ -42,6 +45,21 @@ function requestedValue(
   hole: BattleHole,
   definitions: McpOutputSchema,
 ): McpOutputSchema {
+  if (
+    hole.kind === "attackRoll" &&
+    hole.rollMode !== undefined &&
+    !(
+      "ongoingFeatureActivations" in hole &&
+      hole.ongoingFeatureActivations?.length
+    )
+  )
+    return attackRollValue(schema, hole.rollMode, definitions);
+  if (
+    hole.kind === "rolledDice" &&
+    "damageDice" in hole &&
+    hole.damageDice.kind === "fixed"
+  )
+    return diceGroupsValue(schema, hole.damageDice.groups, definitions);
   if (isAllocatedSpellDamageRollHole(hole))
     return allocatedDamageDiceValue(
       schema,
@@ -88,33 +106,12 @@ function allocatedDamageDiceValue(
   request: BattleAllocatedSpellDamageRollHole["allocatedDamageDice"],
   definitions: McpOutputSchema,
 ): McpOutputSchema {
-  const value = resolveLocalSchemaReference(schema, definitions);
-  const group = resolveLocalSchemaReference(record(value.items), definitions);
-  const properties = record(group.properties);
-  const results = resolveLocalSchemaReference(
-    record(properties.results),
+  return diceGroupsValue(
+    schema,
+    request.groups,
     definitions,
+    ({ targetId }) => `Damage dice for allocated target ${targetId}.`,
   );
-  const die = resolveLocalSchemaReference(record(results.items), definitions);
-  return {
-    ...value,
-    minItems: request.groups.length,
-    maxItems: request.groups.length,
-    prefixItems: request.groups.map(({ targetId, dice, dieSize }) => ({
-      ...group,
-      description: `Damage dice for allocated target ${targetId}.`,
-      properties: {
-        ...properties,
-        results: {
-          ...results,
-          minItems: dice,
-          maxItems: dice,
-          items: { ...die, minimum: 1, maximum: dieSize },
-        },
-      },
-    })),
-    items: false,
-  };
 }
 
 export function battleInputGuidance(hole: BattleHole) {
@@ -194,6 +191,28 @@ export function battleInputGuidance(hole: BattleHole) {
         ...(allocatedDamageDice !== undefined
           ? [
               "Supply exactly one dice group per allocatedDamageDice.groups entry, in its target allocation order. Each group's results must contain that entry's dice count with natural faces from 1 through dieSize. A batched dice sample may be split into these groups without changing or rerolling its faces.",
+            ]
+          : []),
+        ...(hole.kind === "attackRoll" && hole.rollMode !== undefined
+          ? [
+              `The current attack roll mode is ${hole.rollMode}. Normal uses one natural d20; advantage/disadvantage uses two ordered natural d20 faces with that rollMode. Include the total after the attack bonus. Optional feature activations can change the mode; choose them before rolling.`,
+            ]
+          : []),
+        ...(hole.kind === "rolledDice" && "damageDice" in hole
+          ? hole.damageDice.kind === "fixed"
+            ? [
+                "Use exactly damageDice.groups in order as the groups for roll_dice, then return each group's natural faces in value[].results. These counts already include critical-hit doubling and required damage riders: do not double them again or add modifiers to faces.",
+                "If a fill is rejected, repair it using the existing sampled faces; inspect the current request before drawing any missing dice. A rejected fill is not permission to reroll the pending damage.",
+              ]
+            : [
+                "Choose optional damage riders and Cunning Strike when constructing this same fill, then roll their corresponding damage groups using the current attack details. Submit the choices and dice together; this choice-dependent request has no fixed groups. Critical-hit doubling applies once.",
+              ]
+          : []),
+        ...(hole.kind === "rolledDice" &&
+        "weaponDamageDiceRollChoiceProcedureRefs" in hole &&
+        hole.weaponDamageDiceRollChoiceProcedureRefs !== undefined
+          ? [
+              "If selecting the offered weapon damage dice-roll choice, supply its two candidate rolls and selected candidate together. The extra candidate rolls apply to the base weapon component; return the selected candidate as that component's value group and retain both candidates' actual faces.",
             ]
           : []),
         ...battleAreaInputInstructions(hole),

@@ -3,7 +3,11 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
-import { nonEmptyArrayProperty } from "../optional-property.ts";
+import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import {
   abilityModifier,
   attackBonus,
@@ -145,6 +149,15 @@ export function attackDamageHole(
     label: `${name} damage (${expression})`,
     attack: unboundAttackActionOption(attack),
     critical,
+    damageDice: attackDamageDiceRequest({
+      attack,
+      critical,
+      ...optionalProperty("attackRoll", attackRoll),
+      attackDamageRiders,
+      spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
+      cunningStrikeOptions,
+    }),
     ...nonEmptyArrayProperty("attackDamageRiders", attackDamageRiders),
     ...nonEmptyArrayProperty(
       "spellWeaponDamageRiders",

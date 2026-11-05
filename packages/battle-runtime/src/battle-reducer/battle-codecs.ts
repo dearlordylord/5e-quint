@@ -2592,6 +2592,18 @@ const BattleHolePayloadMembers = [
       kind: Schema.Literal("rolledDice"),
       attack: SupportedAttackActionOptionSchema,
       critical: Schema.Boolean,
+      damageDice: Schema.Union([
+        Schema.Struct({
+          kind: Schema.Literal("fixed"),
+          groups: Schema.Array(
+            Schema.Struct({
+              dice: DiceExprSchema.fields.dice,
+              dieSize: DiceExprSchema.fields.dieSize,
+            }),
+          ),
+        }),
+        Schema.Struct({ kind: Schema.Literal("selectionDependent") }),
+      ]),
       attackDamageRiders: Schema.optionalKey(
         Schema.Array(
           Schema.Struct({

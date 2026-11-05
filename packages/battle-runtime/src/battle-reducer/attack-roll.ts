@@ -1,3 +1,4 @@
+import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
 import {
   attackRollDefenseGrantsDisadvantage,
   recordAttackRollDefenseHit,
@@ -1530,6 +1531,7 @@ export function weaponMasteryCleaveDamageHole(
     label: `Cleave damage (${expression})`,
     attack,
     critical,
+    damageDice: attackDamageDiceRequest({ attack, critical, attackRoll }),
     ...(damageDieFloorProcedureRefs === null
       ? {}
       : {
@@ -1668,6 +1670,14 @@ export function huntersPreyHordeBreakerDamageHole(
     label: `Horde Breaker damage (${expression})`,
     attack,
     critical,
+    damageDice: attackDamageDiceRequest({
+      attack,
+      critical,
+      attackRoll,
+      attackDamageRiders,
+      spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
+    }),
     ...nonEmptyArrayProperty("attackDamageRiders", attackDamageRiders),
     ...nonEmptyArrayProperty(
       "spellWeaponDamageRiders",
