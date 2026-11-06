@@ -4,6 +4,7 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { verificationSourceFiles } from "../../../scripts/verification-receipts.mjs";
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const target = resolve(directory, "../../..");
@@ -58,17 +59,10 @@ export async function prepareMigrationKit({
     );
   if (git(target, ["status", "--porcelain", "--untracked-files=no"]) !== "")
     throw new Error("Target checkout contains tracked modifications.");
-  if (
-    git(target, [
-      "ls-files",
-      "--others",
-      "--exclude-standard",
-      "--",
-      ".",
-      ":(exclude).audit/**",
-      ":(exclude).artifacts/**",
-    ]) !== ""
-  )
+  const tracked = new Set(
+    git(target, ["ls-files", "-z", "--cached"]).split("\0"),
+  );
+  if (verificationSourceFiles(target).some((file) => !tracked.has(file)))
     throw new Error("Target checkout contains uncommitted source files.");
   const patchPath = resolve(manifestDirectory, manifest.patch.path);
   if (sha256(readFileSync(patchPath)) !== manifest.patch.sha256)

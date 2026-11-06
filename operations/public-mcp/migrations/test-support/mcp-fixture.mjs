@@ -25,9 +25,10 @@ function value(result) {
 const principalId = value(
   decodePrincipalId("principal:synthetic-source-fixture"),
 );
-const fixtureSessionId = value(
-  decodePlaySessionId("play-session:00000000-0000-4000-8000-000000000614"),
-);
+const fixtureSessionIds = [
+  "play-session:00000000-0000-4000-8000-000000000614",
+  "play-session:00000000-0000-4000-8000-000000000615",
+].map((id) => value(decodePlaySessionId(id)));
 const fixtureTime = value(decodeEpochMilliseconds(1000));
 
 async function connection(databasePath) {
@@ -38,11 +39,17 @@ async function connection(databasePath) {
   const repository = value(
     openSqlitePlaySessionRepository(databasePath, services),
   );
+  let nextSession = 0;
   const host = createDndMcpProtocolServer(services, undefined, {
     playSessionRepository: repository,
     toolSurface: "regular",
     requestIdentity: { tag: "authenticated", principalId },
-    playSessionIdFactory: () => fixtureSessionId,
+    playSessionIdFactory: () => {
+      const id = fixtureSessionIds[nextSession++];
+      if (id === undefined)
+        throw new Error("Fixture session allocation exhausted.");
+      return id;
+    },
     playSessionNow: () => fixtureTime,
   });
   const [clientTransport, serverTransport] =
@@ -57,12 +64,7 @@ async function connection(databasePath) {
     async call(name, args) {
       const result = await client.callTool({
         name,
-        arguments: {
-          ...args,
-          ...(name === "create_play_session"
-            ? {}
-            : { playSessionId: fixtureSessionId }),
-        },
+        arguments: args,
       });
       if (result.isError === true || result.structuredContent === undefined)
         throw new Error(JSON.stringify(result));
@@ -85,82 +87,104 @@ export async function createPendingDamageFixture(databasePath) {
     throw new Error("The original fixture database must be fresh.");
   const connected = await connection(databasePath);
   try {
-    const created = await connected.call("create_play_session", {});
-    if (created.playSessionId !== fixtureSessionId)
-      throw new Error("Source fixture allocation changed.");
-    const prefix = operation(
-      await connected.call("roll_dice", { groups: [{ dice: 2, dieSize: 20 }] }),
-    );
-    const started = operation(
-      await connected.call("start_battle", {
-        battleId: "synthetic-source-migration",
-        initiativeMode: "direct",
-        companionAdmissions: [],
-        initialCombatants: ["synthetic-attacker", "synthetic-target"].map(
-          (combatantId, index) => ({
-            kind: "statBlock",
-            statBlockId: "stat_block_goblin_warrior",
-            combatantId,
-            initiative: 20 - index,
-            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-            admissionSource: { kind: "encounterParticipant" },
-          }),
-        ),
-      }),
-    );
-    const subject = attackSubjectFromActs(
-      started,
-      "synthetic-attacker",
-      "Scimitar",
-    );
-    await connected.call("fill_battle_hole", {
-      subject,
-      fill: attackTargetFill(subject, "synthetic-target"),
-    });
-    const pending = operation(
+    const sessions = [];
+    for (const playSessionId of fixtureSessionIds) {
+      const created = await connected.call("create_play_session", {});
+      if (created.playSessionId !== playSessionId)
+        throw new Error("Source fixture allocation changed.");
+      const prefix = operation(
+        await connected.call("roll_dice", {
+          playSessionId,
+          groups: [{ dice: 2, dieSize: 20 }],
+        }),
+      );
+      const started = operation(
+        await connected.call("start_battle", {
+          playSessionId,
+          battleId: "synthetic-source-migration",
+          initiativeMode: "direct",
+          companionAdmissions: [],
+          initialCombatants: ["synthetic-attacker", "synthetic-target"].map(
+            (combatantId, index) => ({
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId,
+              initiative: 20 - index,
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              admissionSource: { kind: "encounterParticipant" },
+            }),
+          ),
+        }),
+      );
+      const subject = attackSubjectFromActs(
+        started,
+        "synthetic-attacker",
+        "Scimitar",
+      );
       await connected.call("fill_battle_hole", {
+        playSessionId,
         subject,
-        fill: attackRollFill(20, 16),
-      }),
-    );
-    if (
-      !pending.envelope?.frontier?.holes?.some(
-        (hole) => hole.kind === "rolledDice",
+        fill: attackTargetFill(subject, "synthetic-target"),
+      });
+      const pending = operation(
+        await connected.call("fill_battle_hole", {
+          playSessionId,
+          subject,
+          fill: attackRollFill(20, 16),
+        }),
+      );
+      if (
+        !pending.envelope?.frontier?.holes?.some(
+          (hole) => hole.kind === "rolledDice",
+        )
       )
-    )
-      throw new Error("Expected source damage continuation.");
-    return {
-      playSessionId: fixtureSessionId,
-      principalId,
-      subject,
-      prefix,
-      pending,
-    };
+        throw new Error("Expected source damage continuation.");
+      sessions.push({
+        playSessionId,
+        principalId,
+        subject,
+        prefix,
+        pending,
+      });
+    }
+    return { sessions };
   } finally {
     await connected.close();
   }
 }
 
-export async function continuePendingDamageFixture(databasePath, subject) {
+export async function continuePendingDamageFixture(
+  databasePath,
+  { playSessionId, subject },
+) {
   const connected = await connection(databasePath);
   try {
     const next = operation(
-      await connected.call("roll_dice", { groups: [{ dice: 3, dieSize: 6 }] }),
+      await connected.call("roll_dice", {
+        playSessionId,
+        groups: [{ dice: 3, dieSize: 6 }],
+      }),
     );
-    const attack = operation(await connected.call("read_battle_state", {}));
+    const attack = operation(
+      await connected.call("read_battle_state", { playSessionId }),
+    );
     const damageHole = attack.envelope?.frontier?.holes?.find(
       (hole) => hole.kind === "rolledDice",
     );
     if (damageHole === undefined)
       throw new Error("Expected original pending damage.");
     const damage = operation(
-      await connected.call("roll_dice", { groups: [{ dice: 1, dieSize: 6 }] }),
+      await connected.call("roll_dice", {
+        playSessionId,
+        groups: [{ dice: 1, dieSize: 6 }],
+      }),
     );
     const faces = damage.groups?.[0]?.results;
     if (!Array.isArray(faces))
       throw new Error("Expected original damage faces.");
     const settled = operation(
       await connected.call("fill_battle_hole", {
+        playSessionId,
         subject,
         fill: rolledDiceFill(damageHole.holeId, [faces]),
       }),

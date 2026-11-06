@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { verificationSourceFiles } from "../../../../scripts/verification-receipts.mjs";
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -23,17 +24,12 @@ export async function buildMcpFixture({
   const checkoutRelease = git(source, ["rev-parse", "HEAD"]);
   if (!/^[0-9a-f]{40}$/.test(release) || checkoutRelease !== release)
     throw new Error("Fixture checkout differs from the required release.");
+  const tracked = new Set(
+    git(source, ["ls-files", "-z", "--cached"]).split("\0"),
+  );
   if (
     git(source, ["status", "--porcelain", "--untracked-files=no"]) !== "" ||
-    git(source, [
-      "ls-files",
-      "--others",
-      "--exclude-standard",
-      "--",
-      ".",
-      ":(exclude).audit/**",
-      ":(exclude).artifacts/**",
-    ]) !== ""
+    verificationSourceFiles(source).some((file) => !tracked.has(file))
   )
     throw new Error("MCP fixture requires a clean release checkout.");
   const entry = readFileSync(resolve(directory, "mcp-fixture.mjs"));
