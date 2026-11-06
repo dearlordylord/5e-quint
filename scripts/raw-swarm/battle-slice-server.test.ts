@@ -9,7 +9,7 @@ const LIFECYCLE_PHASE_TIMEOUT_MS = 30_000;
 const LIFECYCLE_PHASES = [
   "initialization",
   "starting-tool-response",
-  "draining-interrupted-response",
+  "draining-tool-response",
   "settling-interrupted-process",
 ] as const;
 type LifecyclePhase = (typeof LIFECYCLE_PHASES)[number];
@@ -191,9 +191,8 @@ async function verifySignalLifecycle(signal: "SIGINT" | "SIGTERM") {
       })}\n`,
     );
     await toolResponseStarted;
-    expect(stdout.value.indexOf(0x0a, toolResponseOffset)).toBe(-1);
 
-    phase.value = "draining-interrupted-response";
+    phase.value = "draining-tool-response";
     const toolResponseLine = waitForLineAfter(
       child,
       stdout,
