@@ -82,6 +82,13 @@ function operation(result) {
   return result.operation.result;
 }
 
+export async function createEmptyFixtureDatabase(databasePath) {
+  if (existsSync(databasePath))
+    throw new Error("The archive fixture database must be fresh.");
+  const connected = await connection(databasePath);
+  await connected.close();
+}
+
 export async function createPendingDamageFixture(databasePath) {
   if (existsSync(databasePath))
     throw new Error("The original fixture database must be fresh.");
