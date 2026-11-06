@@ -164,3 +164,7 @@ export type {
   StatBlockAttackDamageSelection,
   StatBlockDamageComponentNotation,
 } from "./stat-block-attack-damage-selection.ts";
+export {
+  spellBattleSupport,
+  type SpellBattleSupport,
+} from "./spell-battle-support.ts";

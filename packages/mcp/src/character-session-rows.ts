@@ -1,3 +1,4 @@
+import { characterBattleSpellSupportOutput } from "./character-battle-spell-support-output.ts";
 import type { CharacterId } from "@dnd/battle-runtime";
 import type { CharacterBuildDisplayNameIssues } from "@dnd/character-creation-runtime";
 import {
@@ -221,6 +222,10 @@ function availableCharacterSessionDetail(
     });
   }
   const sheetProjection = parseCharacterSessionSheetProjection({
+    classSpellBattleSupport: characterBattleSpellSupportOutput({
+      build: sheet.build,
+      unitLibrary: root.unitLibrary,
+    }),
     currentHp: characterSessionCurrentHp(sheet),
     companion: characterSheetCompanionProjection(sheet),
     hitPointMaximum: hitPointMaximum.success,

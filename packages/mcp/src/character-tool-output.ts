@@ -1,3 +1,4 @@
+import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-output.ts";
 import { CreationInputGuidanceSchema } from "./creation-input-guidance-schema.ts";
 import { FinalizationInputGuidanceSchema } from "./character-finalization-input.ts";
 import {
@@ -352,6 +353,7 @@ export const CharacterSessionOperationResultSchema = Schema.Union([
   CharacterSessionResourceOperationResultSchema,
 ]);
 export const CharacterSessionSheetProjectionSchema = Schema.Struct({
+  classSpellBattleSupport: CharacterBattleSpellSupportSchema,
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union([
     Schema.Struct({ tag: Schema.Literal("none") }),

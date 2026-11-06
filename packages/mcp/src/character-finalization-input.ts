@@ -1,4 +1,8 @@
 import {
+  CharacterBattleSpellSupportSchema,
+  characterBattleSpellSupportOutput,
+} from "./character-battle-spell-support-output.ts";
+import {
   characterBuildDruidWildShapeFacts,
   type CharacterBuild,
   type CharacterBuildDruidWildShapeFacts,
@@ -35,6 +39,7 @@ const FinalizationCallFields = {
   tool: Schema.Literal("finalize_character"),
   argumentsSchema: Schema.Record(Schema.String, Schema.Unknown),
   instructions: Schema.Array(Schema.String),
+  classSpellBattleSupport: CharacterBattleSpellSupportSchema,
 };
 export const FinalizationInputGuidanceSchema = Schema.Union([
   Schema.Struct({
@@ -78,12 +83,17 @@ export function characterFinalizationInput(input: {
       draftId: input.draftId,
       land: land.success,
       knownForms: wildShape.success?.knownFormRoster,
+      classSpellBattleSupport: characterBattleSpellSupportOutput({
+        build,
+        unitLibrary: input.root.unitLibrary,
+      }),
     }),
   );
 }
 
 function characterSheetInitializationCall(input: {
   readonly draftId: CharacterDraftId;
+  readonly classSpellBattleSupport: typeof CharacterBattleSpellSupportSchema.Type;
   readonly land: readonly DruidCircleLandChoice[] | undefined;
   readonly knownForms:
     | CharacterBuildDruidWildShapeFacts["knownFormRoster"]
@@ -113,6 +123,7 @@ function characterSheetInitializationCall(input: {
     }),
   );
   const instructions = [
+    "Review classSpellBattleSupport before planning an encounter. It describes selected class cantrips and prepared spells. Admitted mechanics still require live targets, resources, timing, and other casting conditions; use available Battle acts during play. For planWithoutBattleCasting, retain the selection for other uses or revise preparation before finalizing, and choose a tactic that does not require casting it in Battle. These reasons do not classify execution outside Battle.",
     "The Character Build is complete. This schema describes the operation arguments for finalize_character; add the current playSessionId when invoking the hosted tool. Supply these initialization choices to create the in-play Character Sheet; no additional creation-hole fills are needed.",
     ...(land === undefined
       ? []
@@ -132,6 +143,7 @@ function characterSheetInitializationCall(input: {
         tool: "finalize_character",
         argumentsSchema,
         instructions,
+        classSpellBattleSupport: input.classSpellBattleSupport,
       }
     : {
         phase: "initializationRequired",
@@ -139,6 +151,7 @@ function characterSheetInitializationCall(input: {
         tool: "finalize_character",
         argumentsSchema,
         instructions,
+        classSpellBattleSupport: input.classSpellBattleSupport,
       };
 }
 

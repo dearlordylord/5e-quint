@@ -1843,3 +1843,7 @@ function characterZeroHpLifecycleFromBattle(input: {
     },
   });
 }
+export {
+  characterBuildClassSpellBattleSupport,
+  type CharacterBuildClassSpellBattleSupport,
+} from "./character-build-class-spell-battle-support.ts";
