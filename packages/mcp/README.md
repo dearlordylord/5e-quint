@@ -463,6 +463,14 @@ changing that contract. This development check uses the existing TypeScript
 dependency; serving statically imports the generated descriptor and owner
 refinements without a compiler or filesystem lookup.
 
+The explicit [migration qualification](test-support/verify-play-session-migration.mjs)
+requires prebuilt source and target MCP fixture bundles plus a prepared conversion
+kit. It checks two sessions created through the original MCP, continued dice and
+damage after conversion, preserved history and request counters, and rollback
+when a later row is corrupt. Missing artifacts fail the command; ordinary tests
+do not install historical dependencies. See the [migration kit owner](../../operations/public-mcp/migrations/README.md)
+for preparation.
+
 Local transport/parity tests do not establish live HTTPS deployment health.
 Use the staging smoke in [Run the server](#run-the-server) for that evidence.
 
