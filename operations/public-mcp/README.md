@@ -304,10 +304,13 @@ operations/public-mcp/rollback.sh /etc/dnd-oracle/production.env
 ```
 
 Automatic rollback refuses a different storage format, waits for health, and
-repeats the same smoke. Before a release that
-changes the SQLite format, stop the MCP container and take a storage snapshot
-with the host's normal volume/snapshot facility; document restoration testing
-for that release. Never restore an old database merely to roll back compatible
+repeats the same smoke. For format-five upgrades, use the
+[release-specific offline conversion kit](migrations/README.md) to stop all
+writers, preserve a consistent backup, materialize with the original release,
+and validate every save before starting the target. A conversion attempt keeps
+admission closed until the exact target passes deployment smoke; automatic
+old-code fallback is blocked during that interval. Failed upgrades require ad
+hoc investigation. Never restore an old database merely to roll back compatible
 application code.
 
 ## Observe and respond

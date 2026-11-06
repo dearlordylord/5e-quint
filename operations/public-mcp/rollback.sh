@@ -13,9 +13,15 @@ set -a
 # shellcheck disable=SC1090
 source "$environment_file"
 set +a
+[[ ! -e "$DND_MCP_STATE_DIRECTORY/migration-admission-closed" ]] || {
+  echo "Offline conversion requires ad hoc recovery; automatic code rollback is blocked" >&2
+  exit 65
+}
 release_directory="$DND_MCP_RELEASE_DIRECTORY"
 exec 9>"$release_directory/operation.lock"
 flock --nonblock 9 || { echo "Another $DND_MCP_ENVIRONMENT release operation is active" >&2; exit 75; }
+exec 8>"$DND_MCP_STATE_DIRECTORY/migration.lock"
+flock --nonblock 8 || { echo "An offline conversion is active" >&2; exit 75; }
 release_history="$release_directory/release-history"
 rollback_history="$release_directory/release-history.next"
 operations_environment_directory="$DND_MCP_OPERATIONS_DIRECTORY/$DND_MCP_ENVIRONMENT"

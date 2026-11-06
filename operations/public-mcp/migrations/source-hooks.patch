@@ -1,0 +1,352 @@
+diff --git a/packages/battle-runtime/src/battle-reducer/api-lifecycle.ts b/packages/battle-runtime/src/battle-reducer/api-lifecycle.ts
+index 9e9e7e6bb..2b6302649 100644
+--- a/packages/battle-runtime/src/battle-reducer/api-lifecycle.ts
++++ b/packages/battle-runtime/src/battle-reducer/api-lifecycle.ts
+@@ -270,6 +270,17 @@ class InitialInitiativeSetupWorkflow {
+     this.#context = session.context;
+   }
+ 
++retainContinuation(): InitialInitiativeContinuation {
++    return {
++      session: battleRuntimeSessionFromAdmittedContext(
++        this.#state,
++        this.#context,
++      ),
++      consumedSwapSources: [...this.#consumedInitiativeSwapSources],
++      open: this.#setupOpen,
++    };
++  }
++
+   get state(): BattleState {
+     return this.#state;
+   }
+@@ -1943,3 +1954,15 @@ export function removeBattleRuntimeCombatants(input: {
+ }
+ import { admitStatBlockSpellInvocations } from "../stat-block-spell-invocation-admission.ts";
+ import type { StatBlockSpellInvocationAdmissionPlan } from "../stat-block-spell-invocation-admission-plan.ts";
++
++export type InitialInitiativeContinuation = {
++  readonly session: BattleRuntimeSession;
++  readonly consumedSwapSources: readonly CombatantId[];
++  readonly open: boolean;
++};
++
++export function retainInitialInitiativeSetup(
++  setup: InitialInitiativeSetup,
++): InitialInitiativeContinuation {
++  return setup.retainContinuation();
++}
+diff --git a/packages/battle-runtime/src/battle-runtime-context.ts b/packages/battle-runtime/src/battle-runtime-context.ts
+index b25f01235..62b7917ce 100644
+--- a/packages/battle-runtime/src/battle-runtime-context.ts
++++ b/packages/battle-runtime/src/battle-runtime-context.ts
+@@ -366,3 +366,19 @@ export function battleRuntimeSessionWithStatBlockPresentation(
+     session,
+   );
+ }
++
++export type BattleRuntimeSessionContinuation = {
++  readonly state: BattleRuntimeSession["state"];
++  readonly characters: BattleRuntimeContext["characters"];
++  readonly statBlocks: BattleRuntimeContext["statBlocks"];
++};
++
++export function retainBattleRuntimeSession(
++  session: BattleRuntimeSession,
++): BattleRuntimeSessionContinuation {
++  return {
++    state: session.state,
++    characters: session.context.characters,
++    statBlocks: session.context.statBlocks,
++  };
++}
+diff --git a/packages/battle-runtime/src/battle-runtime-transaction.ts b/packages/battle-runtime/src/battle-runtime-transaction.ts
+index 8fe2c29b5..7cdefddbe 100644
+--- a/packages/battle-runtime/src/battle-runtime-transaction.ts
++++ b/packages/battle-runtime/src/battle-runtime-transaction.ts
+@@ -2015,3 +2015,156 @@ function nonEmpty<T>(
+   const [first, ...rest] = values;
+   return first === undefined ? undefined : [first, ...rest];
+ }
++
++import { retainBattleRuntimeSession, type BattleRuntimeSessionContinuation } from "./battle-runtime-context.ts";
++import { retainedAttackRollTableSource } from "./d20-test-circumstance.ts";
++
++type RetainedTransactionLayer = {
++  readonly baseSession: number;
++  readonly currentSession: number;
++  readonly subject: BattleSubject;
++  readonly fills: readonly BattleFill[];
++  readonly frontierKind: BattlePendingTransactionFrontier["kind"];
++  readonly checkpointOwnership:
++    | { readonly tag: "ordinaryFrontier" }
++    | {
++        readonly tag: "interruptFrontier";
++        readonly checkpoint: number;
++        readonly ancestors: readonly number[];
++      };
++  readonly completion:
++    | { readonly kind: "standaloneClose"; readonly parent: null }
++    | {
++        readonly kind: "replaySubject";
++        readonly parent: RetainedTransactionLayer | null;
++      }
++    | {
++        readonly kind: "refreshParentFrontier";
++        readonly parent: RetainedTransactionLayer;
++      };
++};
++
++export type BattleRuntimeContinuation = {
++  readonly sessions: readonly BattleRuntimeSessionContinuation[];
++  readonly currentSession: number;
++  readonly checkpointLinks: readonly {
++    readonly session: number;
++    readonly frame: number;
++    readonly identity: number;
++  }[];
++  readonly pending: RetainedTransactionLayer | null;
++  readonly attackRollTableSources: readonly NonNullable<
++    ReturnType<typeof retainedAttackRollTableSource>
++  >[];
++};
++
++export function retainBattleRuntimeContinuation(
++  session: BattleRuntimeSession,
++  transaction: BattlePendingTransaction | null,
++): Result.Result<BattleRuntimeContinuation, string> {
++  const sessions: BattleRuntimeSessionContinuation[] = [];
++  const indices = new Map<BattleRuntimeSession, number>();
++  const identities = new Map<InterruptCheckpointIdentity, number>();
++  const checkpointLinks: {
++    session: number;
++    frame: number;
++    identity: number;
++  }[] = [];
++  function identityIndex(identity: InterruptCheckpointIdentity): number {
++    const existing = identities.get(identity);
++    if (existing !== undefined) return existing;
++    const index = identities.size;
++    identities.set(identity, index);
++    return index;
++  }
++  function sessionIndex(value: BattleRuntimeSession): number {
++    const existing = indices.get(value);
++    if (existing !== undefined) return existing;
++    const index = sessions.length;
++    indices.set(value, index);
++    sessions.push(retainBattleRuntimeSession(value));
++    value.state.interruptStack.forEach((entry, frame) => {
++      if (entry.kind === "interruptCheckpoint")
++        checkpointLinks.push({
++          session: index,
++          frame,
++          identity: identityIndex(interruptCheckpointIdentity(entry.frame)),
++        });
++    });
++    return index;
++  }
++  function layer(data: BattlePendingTransactionData): RetainedTransactionLayer {
++    return {
++      baseSession: sessionIndex(data.baseSession),
++      currentSession: sessionIndex(data.currentSession),
++      subject: data.subject,
++      fills: data.fills,
++      frontierKind: data.frontier.kind,
++      checkpointOwnership:
++        data.checkpointOwnership.tag === "ordinaryFrontier"
++          ? data.checkpointOwnership
++          : {
++              tag: "interruptFrontier",
++              checkpoint: identityIndex(data.checkpointOwnership.checkpoint),
++              ancestors: data.checkpointOwnership.ancestors.map(identityIndex),
++            },
++      completion: Match.value(data.completion).pipe(
++        Match.when({ kind: "standaloneClose" }, () => ({
++          kind: "standaloneClose" as const,
++          parent: null,
++        })),
++        Match.when({ kind: "replaySubject" }, ({ parent }) => ({
++          kind: "replaySubject" as const,
++          parent: parent === null ? null : layer(parent),
++        })),
++        Match.when({ kind: "refreshParentFrontier" }, ({ parent }) => ({
++          kind: "refreshParentFrontier" as const,
++          parent: layer(parent),
++        })),
++        Match.exhaustive,
++      ),
++    };
++  }
++  const currentSession = sessionIndex(session);
++  const data =
++    transaction === null
++      ? undefined
++      : battlePendingTransactionData.get(transaction);
++  if (
++    transaction !== null &&
++    (data === undefined || data.currentSession !== session)
++  )
++    return Result.fail(
++      "The pending transaction does not own this Battle session.",
++    );
++  const pending = data === undefined ? null : layer(data);
++  const attackRollTableSources: NonNullable<
++    ReturnType<typeof retainedAttackRollTableSource>
++  >[] = [];
++  const seen = new Set<object>();
++  function collect(value: unknown): void {
++    if (typeof value !== "object" || value === null || seen.has(value)) return;
++    seen.add(value);
++    const retained = retainedAttackRollTableSource(value);
++    if (retained !== undefined) attackRollTableSources.push(retained);
++    if (value instanceof Map) {
++      for (const [key, entry] of value) {
++        collect(key);
++        collect(entry);
++      }
++    } else if (value instanceof Set) {
++      for (const entry of value) collect(entry);
++    } else {
++      for (const entry of Object.values(value)) collect(entry);
++    }
++  }
++  collect(sessions);
++  collect(pending);
++  return Result.succeed({
++    sessions,
++    currentSession,
++    checkpointLinks,
++    pending,
++    attackRollTableSources,
++  });
++}
+diff --git a/packages/battle-runtime/src/d20-test-circumstance.ts b/packages/battle-runtime/src/d20-test-circumstance.ts
+index 9a54f21da..64936b44a 100644
+--- a/packages/battle-runtime/src/d20-test-circumstance.ts
++++ b/packages/battle-runtime/src/d20-test-circumstance.ts
+@@ -579,19 +579,26 @@ export function battleHolesWithTableD20TestCircumstances(input: {
+ }
+ 
+ const admittedAttackRollTableSources = new WeakMap<
+-  BattleAttackRollResult,
+-  TableD20TestCircumstanceSource
++  object,
++  {
++    readonly roll: BattleAttackRollResult;
++    readonly source: TableD20TestCircumstanceSource;
++  }
+ >();
+ 
+ export function retainAdmittedAttackRollTableSource(
+   roll: BattleAttackRollResult,
+   source: TableD20TestCircumstanceSource,
+ ): void {
+-  admittedAttackRollTableSources.set(roll, source);
++  admittedAttackRollTableSources.set(roll, { roll, source });
+ }
+ 
+ export function admittedAttackRollTableSource(
+   roll: BattleAttackRollResult,
+ ): TableD20TestCircumstanceSource | undefined {
+-  return admittedAttackRollTableSources.get(roll);
++  return admittedAttackRollTableSources.get(roll)?.source;
++}
++
++export function retainedAttackRollTableSource(value: object) {
++  return admittedAttackRollTableSources.get(value);
+ }
+diff --git a/packages/battle-runtime/src/index.ts b/packages/battle-runtime/src/index.ts
+index 4002e6e1f..30645fa0d 100644
+--- a/packages/battle-runtime/src/index.ts
++++ b/packages/battle-runtime/src/index.ts
+@@ -977,3 +977,6 @@ export {
+   discloseMarkedCreatureDefenses,
+   type MarkedCreatureDefensesDisclosure,
+ } from "./marked-creature-defenses.ts";
++
++export { retainBattleRuntimeContinuation, type BattleRuntimeContinuation } from "./battle-runtime-transaction.ts";
++export { retainInitialInitiativeSetup } from "./battle-reducer/api-lifecycle.ts";
+diff --git a/packages/mcp/src/battle-action-selection-store.ts b/packages/mcp/src/battle-action-selection-store.ts
+index 0f3a0d677..374cac183 100644
+--- a/packages/mcp/src/battle-action-selection-store.ts
++++ b/packages/mcp/src/battle-action-selection-store.ts
+@@ -35,6 +35,9 @@ export function createBattleActionSelectionStore() {
+   let selection: McpPendingBattleSelection | null = null;
+   let ordinal = 0n;
+   return {
++retainContinuation(): BattleActionSelectionContinuation {
++      return { selection, ordinal };
++    },
+     get nextSelectionId(): BattleActionSelectionId {
+       return selectionIdForOrdinal(ordinal + 1n);
+     },
+@@ -96,3 +99,8 @@ export function createBattleActionSelectionStore() {
+     },
+   };
+ }
++
++export type BattleActionSelectionContinuation = {
++  readonly selection: McpPendingBattleSelection | null;
++  readonly ordinal: bigint;
++};
+diff --git a/packages/mcp/src/dice-sampling-service.ts b/packages/mcp/src/dice-sampling-service.ts
+index f8f32bf77..7b68fb30c 100644
+--- a/packages/mcp/src/dice-sampling-service.ts
++++ b/packages/mcp/src/dice-sampling-service.ts
+@@ -49,6 +49,7 @@ export type DiceSampling = {
+ };
+ 
+ export type DiceSamplingService = {
++  retainContinuation(): GeneratorState;
+   sample(
+     groups: readonly DiceRollGroup[],
+   ): Effect.Effect<DiceSampling, DiceSamplingFailure>;
+@@ -72,6 +73,9 @@ export function createDiceSamplingService(seed: DiceSeed): DiceSamplingService {
+   let state: GeneratorState = initialized.value;
+ 
+   return {
++retainContinuation() {
++      return state;
++    },
+     sample(groups) {
+       return Effect.suspend(
+         (): Effect.Effect<DiceSampling, DiceSamplingFailure> => {
+diff --git a/packages/mcp/src/session-store-types.ts b/packages/mcp/src/session-store-types.ts
+index 2e07f1d85..5fa5cd029 100644
+--- a/packages/mcp/src/session-store-types.ts
++++ b/packages/mcp/src/session-store-types.ts
+@@ -230,4 +230,13 @@ export type McpSessionStore = {
+     statBlockId: StatBlockId,
+   ): Result.Result<SrdStatBlockRecord, CharacterSessionIssue>;
+   snapshot(): McpSessionSnapshot;
++  retainContinuation(): McpSessionStoreContinuation;
++};
++
++export type McpSessionStoreContinuation = {
++  readonly drafts: ReadonlyMap<CharacterDraftId, CharacterDraft>;
++  readonly characters: readonly CharacterSession[];
++  readonly selectedStatBlockId: StatBlockId | null;
++  readonly battleState: McpBattleState;
++  readonly actionSelection: import("./battle-action-selection-store.ts").BattleActionSelectionContinuation;
+ };
+diff --git a/packages/mcp/src/session-store.ts b/packages/mcp/src/session-store.ts
+index 5a0f73d2d..4a6fcd10b 100644
+--- a/packages/mcp/src/session-store.ts
++++ b/packages/mcp/src/session-store.ts
+@@ -182,6 +182,15 @@ export function createMcpSessionStore(input: {
+   }
+ 
+   const store: McpSessionStore = {
++retainContinuation() {
++      return {
++        drafts,
++        characters: [...characters.entries()].map(([, value]) => value),
++        selectedStatBlockId,
++        battleState,
++        actionSelection: actionSelection.retainContinuation(),
++      };
++    },
+     drafts,
+     characters,
+     get battleState() {

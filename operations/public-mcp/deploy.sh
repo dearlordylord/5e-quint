@@ -18,10 +18,21 @@ release_directory="$DND_MCP_RELEASE_DIRECTORY"
 mkdir -p "$release_directory"
 exec 9>"$release_directory/operation.lock"
 flock --nonblock 9 || { echo "Another $DND_MCP_ENVIRONMENT release operation is active" >&2; exit 75; }
+exec 8>"$DND_MCP_STATE_DIRECTORY/migration.lock"
+flock --nonblock 8 || { echo "An offline conversion is active" >&2; exit 75; }
 release_history="$release_directory/release-history"
 candidate_history="$release_directory/release-history.next"
 operations_environment_directory="$DND_MCP_OPERATIONS_DIRECTORY/$DND_MCP_ENVIRONMENT"
 has_current_release=false
+migration_barrier="$DND_MCP_STATE_DIRECTORY/migration-admission-closed"
+migration_conversion=false
+if [[ -e "$migration_barrier" ]]; then
+  [[ "$(cat "$migration_barrier")" == "$DND_MCP_RELEASE" ]] || {
+    echo "Offline conversion has not admitted this exact target release" >&2
+    exit 65
+  }
+  migration_conversion=true
+fi
 retired_operations_release=""
 
 parse_release_record() {
@@ -69,6 +80,11 @@ fi
 
 restore_last_known_good() {
   local failure="$1"
+  if [[ "$migration_conversion" == true ]]; then
+    docker compose --env-file "$environment_file" -f "$directory/compose.yaml" stop --timeout -1 mcp
+    echo "$failure; converted database preserved, admission closed; recovery requires ad hoc investigation" >&2
+    return
+  fi
   rm -f "$candidate_history" "$operations_environment_directory/current.next"
   if [[ "$has_current_release" == true ]]; then
     export DND_MCP_IMAGE="$current_image" DND_MCP_RELEASE="$current_release_id"
@@ -126,4 +142,8 @@ if [[ -n "$retired_operations_release" ]]; then
   if ! rm -r -- "$retired_operations_release"; then
     echo "Deployment committed, but retired operations cleanup failed: $retired_operations_release" >&2
   fi
+fi
+
+if [[ "$migration_conversion" == true ]]; then
+  rm -- "$migration_barrier"
 fi

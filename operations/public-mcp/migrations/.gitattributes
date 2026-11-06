@@ -1,0 +1,2 @@
+# Unified diff context uses a single space for unchanged blank lines.
+source-hooks.patch whitespace=-blank-at-eol
