@@ -4022,10 +4022,9 @@ test("package imports", () => expect(value).toBe("development"));
       resolve(rawSwarmOutputDirectory, "transitive-unreadable-candidate-"),
     );
     const testPath = resolve(fixtureRoot, "fixture.test.ts");
-    const blockedDirectory = resolve(fixtureRoot, "blocked");
-    mkdirSync(blockedDirectory);
+    const candidatePath = resolve(fixtureRoot, "blocked");
+    symlinkSync(candidatePath, candidatePath);
     writeFileSync(testPath, 'import "./blocked";\n');
-    chmodSync(blockedDirectory, 0o000);
     try {
       const checked = spawnSync(
         process.execPath,
@@ -4037,9 +4036,8 @@ test("package imports", () => expect(value).toBe("development"));
       expect(output).toContain(
         "Could not inspect deterministic source candidate",
       );
-      expect(output).toContain("EACCES");
+      expect(output).toContain("ELOOP");
     } finally {
-      chmodSync(blockedDirectory, 0o700);
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
   }, 30_000);
