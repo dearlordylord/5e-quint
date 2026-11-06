@@ -224,17 +224,17 @@
   [ { coinsGp = 7
     , id = "option_a"
     , items = Some
-      [ { itemName = "Chain Shirt", kind = "draft_owned_item" }
-      , { itemName = "Shield", kind = "draft_owned_item" }
-      , { itemName = "Mace", kind = "draft_owned_item" }
-      , { itemName = "Holy Symbol", kind = "draft_owned_item" }
-      , { itemName = "Priest's Pack", kind = "draft_owned_item" }
+      [ { itemName = None Text, kind = "unit_ref", unitId = Some "armor_chain_shirt" }
+      , { itemName = None Text, kind = "unit_ref", unitId = Some "equipment_shield" }
+      , { itemName = Some "Mace", kind = "draft_owned_item", unitId = None Text }
+      , { itemName = Some "Holy Symbol", kind = "draft_owned_item", unitId = None Text }
+      , { itemName = Some "Priest's Pack", kind = "draft_owned_item", unitId = None Text }
       ]
     , kind = "item_bundle"
     }
   , { coinsGp = 110
     , id = "option_b"
-    , items = None (List { itemName : Text, kind : Text })
+    , items = None (List { itemName : Optional Text, kind : Text, unitId : Optional Text })
     , kind = "coin_grant"
     }
   ]

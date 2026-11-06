@@ -5,7 +5,7 @@
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "9ea8ed5cd3f3fa59c0aa3181298046c6bb64d463fa971af2ce96431ae9328c04",
+      "inputSha256": "57e0532f7d582f38f2f22736a1fe57699d3a407106d82b744e6458bfd63f7fa9",
       "expected": {
         "tag": "accepted"
       }
@@ -367,7 +367,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "6dd36e647dce2b7b7af0594472e043504a7cdec99ae0698d06a674ecc326a665",
+      "inputSha256": "bcb569860062df1d32836006063c3b46b3e50dd17c401346bafd5f61476ced45",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -720,6 +720,20 @@
             "targetKind": "unit",
             "targetId": "cleric_divine_intervention",
             "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[2].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "armor_chain_shirt",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[2].startingEquipment[0].items[1].unitId",
+            "targetKind": "unit",
+            "targetId": "equipment_shield",
+            "relation": "item-reference"
           },
           {
             "code": "dangling-authored-dependency",
@@ -2283,7 +2297,7 @@
     },
     {
       "name": "canonical dependency role: unit.startingEquipment[].items[].unitId",
-      "inputSha256": "096faabdfa8a1a8cbe0d2a9292300048461a2feb1f1f89094e469b1d1b8e6612",
+      "inputSha256": "cd74b6e1a001c8c43c9b9816553151ae5fcf2f6a638f5fa4b32ca50e925eb4b0",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -2291,56 +2305,49 @@
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[0].unitId",
             "targetKind": "unit",
-            "targetId": "wizard_ritual_adept",
+            "targetId": "cleric_divine_order",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[1].unitId",
             "targetKind": "unit",
-            "targetId": "wizard_arcane_recovery",
+            "targetId": "cleric_channel_divinity",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[2].unitId",
             "targetKind": "unit",
-            "targetId": "wizard_scholar",
+            "targetId": "cleric_ability_score_improvement_l4",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[3].unitId",
             "targetKind": "unit",
-            "targetId": "wizard_ability_score_improvement_l4",
+            "targetId": "cleric_ability_score_improvement_l4",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].featureGrants[4].unitId",
             "targetKind": "unit",
-            "targetId": "wizard_memorize_spell",
-            "relation": "unit-reference"
-          },
-          {
-            "code": "dangling-authored-dependency",
-            "path": "$.units[0].featureGrants[5].unitId",
-            "targetKind": "unit",
-            "targetId": "wizard_ability_score_improvement_l4",
+            "targetId": "cleric_divine_intervention",
             "relation": "unit-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].startingEquipment[0].items[0].unitId",
             "targetKind": "unit",
-            "targetId": "weapon_dagger",
+            "targetId": "armor_chain_shirt",
             "relation": "item-reference"
           },
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[0].startingEquipment[0].items[1].unitId",
             "targetKind": "unit",
-            "targetId": "weapon_quarterstaff",
+            "targetId": "equipment_shield",
             "relation": "item-reference"
           }
         ]

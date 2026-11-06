@@ -1074,12 +1074,12 @@
                 "kind": "item_bundle",
                 "items": [
                   {
-                    "kind": "draft_owned_item",
-                    "itemName": "Chain Shirt"
+                    "kind": "unit_ref",
+                    "unitId": "armor_chain_shirt"
                   },
                   {
-                    "kind": "draft_owned_item",
-                    "itemName": "Shield"
+                    "kind": "unit_ref",
+                    "unitId": "equipment_shield"
                   },
                   {
                     "kind": "draft_owned_item",
@@ -104107,12 +104107,12 @@
                 "kind": "item_bundle",
                 "items": [
                   {
-                    "kind": "draft_owned_item",
-                    "itemName": "Chain Shirt"
+                    "kind": "unit_ref",
+                    "unitId": "armor_chain_shirt"
                   },
                   {
-                    "kind": "draft_owned_item",
-                    "itemName": "Shield"
+                    "kind": "unit_ref",
+                    "unitId": "equipment_shield"
                   },
                   {
                     "kind": "draft_owned_item",
@@ -111325,6 +111325,20 @@
             },
             {
               "code": "dangling-authored-dependency",
+              "path": "$.units[2].startingEquipment[0].items[0].unitId",
+              "targetKind": "unit",
+              "targetId": "armor_chain_shirt",
+              "relation": "item-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[2].startingEquipment[0].items[1].unitId",
+              "targetKind": "unit",
+              "targetId": "equipment_shield",
+              "relation": "item-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
               "path": "$.units[3].featureGrants[1].unitId",
               "targetKind": "unit",
               "targetId": "druid_primal_order",
@@ -112846,6 +112860,20 @@
               "targetKind": "unit",
               "targetId": "cleric_divine_intervention",
               "relation": "unit-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[2].startingEquipment[0].items[0].unitId",
+              "targetKind": "unit",
+              "targetId": "armor_chain_shirt",
+              "relation": "item-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[2].startingEquipment[0].items[1].unitId",
+              "targetKind": "unit",
+              "targetId": "equipment_shield",
+              "relation": "item-reference"
             },
             {
               "code": "dangling-authored-dependency",
@@ -303206,29 +303234,27 @@
         "kind": "srd-5.2.1-surface-catalog",
         "units": [
           {
-            "id": "class_wizard",
-            "name": "Wizard",
+            "id": "class_cleric",
+            "name": "Cleric",
             "kind": "class",
             "primaryAbilities": {
               "kind": "all_of",
               "abilities": [
-                "int"
+                "wis"
               ]
             },
-            "hitPointDie": 6,
+            "hitPointDie": 8,
             "savingThrowProficiencies": [
-              "int",
-              "wis"
+              "wis",
+              "cha"
             ],
             "skillProficiencyChoice": {
               "choose": 2,
               "options": [
-                "arcana",
                 "history",
                 "insight",
-                "investigation",
                 "medicine",
-                "nature",
+                "persuasion",
                 "religion"
               ]
             },
@@ -303242,7 +303268,12 @@
               "kind": "none"
             },
             "armorTraining": {
-              "kind": "none"
+              "kind": "trained",
+              "categories": [
+                "light",
+                "medium",
+                "shield"
+              ]
             },
             "startingEquipment": [
               {
@@ -303251,129 +303282,128 @@
                 "items": [
                   {
                     "kind": "unit_ref",
-                    "unitId": "weapon_dagger",
-                    "quantity": 2
+                    "unitId": "armor_chain_shirt"
                   },
                   {
-                    "kind": "unit_ref_with_spellcasting_focus",
-                    "authoredItemId": "Arcane Focus (Quarterstaff)",
-                    "unitId": "weapon_quarterstaff",
-                    "spellcastingFocusKind": "arcane"
+                    "kind": "unit_ref",
+                    "unitId": "equipment_shield"
                   },
                   {
                     "kind": "draft_owned_item",
-                    "itemName": "Robe"
+                    "itemName": "Mace"
                   },
                   {
                     "kind": "draft_owned_item",
-                    "itemName": "Spellbook"
+                    "itemName": "Holy Symbol"
                   },
                   {
                     "kind": "draft_owned_item",
-                    "itemName": "Scholar's Pack"
+                    "itemName": "Priest's Pack"
                   }
                 ],
-                "coinsGp": 5
+                "coinsGp": 7
               },
               {
                 "id": "option_b",
                 "kind": "coin_grant",
-                "coinsGp": 55
+                "coinsGp": 110
               }
             ],
             "featureGrants": [
               {
-                "unitId": "wizard_ritual_adept",
+                "unitId": "cleric_divine_order",
                 "level": 1
               },
               {
-                "unitId": "wizard_arcane_recovery",
-                "level": 1
-              },
-              {
-                "unitId": "wizard_scholar",
+                "unitId": "cleric_channel_divinity",
                 "level": 2
               },
               {
-                "unitId": "wizard_ability_score_improvement_l4",
+                "unitId": "cleric_ability_score_improvement_l4",
                 "level": 4
               },
               {
-                "unitId": "wizard_memorize_spell",
-                "level": 5
+                "unitId": "cleric_ability_score_improvement_l4",
+                "level": 8
               },
               {
-                "unitId": "wizard_ability_score_improvement_l4",
-                "level": 8
+                "unitId": "cleric_divine_intervention",
+                "level": 10
               }
             ],
             "multiclassProficiencies": {
-              "kind": "none"
+              "kind": "fixed",
+              "proficiencies": [
+                {
+                  "kind": "armor_category",
+                  "category": "light"
+                },
+                {
+                  "kind": "armor_category",
+                  "category": "medium"
+                },
+                {
+                  "kind": "armor_category",
+                  "category": "shield"
+                }
+              ]
             },
             "subclassChoices": [
               {
                 "level": 3,
                 "options": [
-                  "subclass_wizard_evoker"
+                  "subclass_cleric_life_domain"
                 ]
               }
             ],
-            "className": "wizard",
+            "className": "cleric",
             "spellcasting": {
-              "kind": "wizard_spellcasting_creation",
+              "kind": "list_prepared_spellcasting_progression_creation",
               "featureLevel": 1,
-              "spellcastingAbility": "int",
+              "spellcastingAbility": "wis",
               "cantripAccess": {
-                "kind": "known_cantrips",
+                "kind": "known_cantrips_from_class_spell_list",
                 "choose": 3,
                 "spellIds": [
-                  "acid_splash",
-                  "chill_touch",
-                  "dancing_lights",
-                  "elementalism",
-                  "fire_bolt",
+                  "guidance",
                   "light",
-                  "mage_hand",
                   "mending",
-                  "message",
-                  "minor_illusion",
-                  "poison_spray",
-                  "prestidigitation",
-                  "ray_of_frost",
-                  "shocking_grasp",
-                  "true_strike"
+                  "resistance",
+                  "sacred_flame",
+                  "spare_the_dying",
+                  "thaumaturgy"
                 ],
                 "changeOn": {
-                  "kind": "long_rest",
+                  "kind": "class_level",
                   "count": 1
                 }
               },
-              "spellbookAccess": {
-                "kind": "spellbook",
-                "choose": 6,
+              "preparedAccess": {
+                "kind": "prepared_from_class_spell_list",
+                "choose": 4,
                 "spells": [
                   {
-                    "spellId": "alarm",
+                    "spellId": "bane",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "burning_hands",
+                    "spellId": "bless",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "charm_person",
+                    "spellId": "command",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "chromatic_orb",
+                    "spellId": "create_or_destroy_water",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "color_spray",
+                    "spellId": "cure_wounds",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "comprehend_languages",
+                    "spellId": "detect_evil_and_good",
                     "spellLevel": 1
                   },
                   {
@@ -303381,67 +303411,19 @@
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "disguise_self",
+                    "spellId": "detect_poison_and_disease",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "expeditious_retreat",
+                    "spellId": "guiding_bolt",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "false_life",
+                    "spellId": "healing_word",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "feather_fall",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "find_familiar",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "floating_disk",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "fog_cloud",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "grease",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "hideous_laughter",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "ice_knife",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "identify",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "illusory_script",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "jump",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "longstrider",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "mage_armor",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "magic_missile",
+                    "spellId": "inflict_wounds",
                     "spellLevel": 1
                   },
                   {
@@ -303449,43 +303431,19 @@
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "ray_of_sickness",
+                    "spellId": "purify_food_and_drink",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "shield",
+                    "spellId": "sanctuary",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "silent_image",
+                    "spellId": "shield_of_faith",
                     "spellLevel": 1
                   },
                   {
-                    "spellId": "sleep",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "thunderwave",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "unseen_servant",
-                    "spellLevel": 1
-                  },
-                  {
-                    "spellId": "acid_arrow",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "alter_self",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "arcane_lock",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "arcanists_magic_aura",
+                    "spellId": "aid",
                     "spellLevel": 2
                   },
                   {
@@ -303497,7 +303455,7 @@
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "blur",
+                    "spellId": "calm_emotions",
                     "spellLevel": 2
                   },
                   {
@@ -303505,31 +303463,11 @@
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "darkness",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "darkvision",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "detect_thoughts",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "dragons_breath",
-                    "spellLevel": 2
-                  },
-                  {
                     "spellId": "enhance_ability",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "enlarge_reduce",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "flaming_sphere",
+                    "spellId": "find_traps",
                     "spellLevel": 2
                   },
                   {
@@ -303537,23 +303475,11 @@
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "gust_of_wind",
-                    "spellLevel": 2
-                  },
-                  {
                     "spellId": "hold_person",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "invisibility",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "knock",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "levitate",
+                    "spellId": "lesser_restoration",
                     "spellLevel": 2
                   },
                   {
@@ -303561,59 +303487,27 @@
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "magic_mouth",
+                    "spellId": "prayer_of_healing",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "magic_weapon",
+                    "spellId": "protection_from_poison",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "mind_spike",
+                    "spellId": "silence",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "mirror_image",
+                    "spellId": "spiritual_weapon",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "misty_step",
+                    "spellId": "warding_bond",
                     "spellLevel": 2
                   },
                   {
-                    "spellId": "phantasmal_force",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "ray_of_enfeeblement",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "rope_trick",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "scorching_ray",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "see_invisibility",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "shatter",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "spider_climb",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "suggestion",
-                    "spellLevel": 2
-                  },
-                  {
-                    "spellId": "web",
+                    "spellId": "zone_of_truth",
                     "spellLevel": 2
                   },
                   {
@@ -303621,11 +303515,11 @@
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "bestow_curse",
+                    "spellId": "beacon_of_hope",
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "blink",
+                    "spellId": "bestow_curse",
                     "spellLevel": 3
                   },
                   {
@@ -303633,7 +303527,11 @@
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "counterspell",
+                    "spellId": "create_food_and_water",
+                    "spellLevel": 3
+                  },
+                  {
+                    "spellId": "daylight",
                     "spellLevel": 3
                   },
                   {
@@ -303641,35 +303539,7 @@
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "fear",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "fireball",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "fly",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "gaseous_form",
-                    "spellLevel": 3
-                  },
-                  {
                     "spellId": "glyph_of_warding",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "haste",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "hypnotic_pattern",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "lightning_bolt",
                     "spellLevel": 3
                   },
                   {
@@ -303677,15 +303547,11 @@
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "major_image",
+                    "spellId": "mass_healing_word",
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "nondetection",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "phantom_steed",
+                    "spellId": "meld_into_stone",
                     "spellLevel": 3
                   },
                   {
@@ -303697,15 +303563,11 @@
                     "spellLevel": 3
                   },
                   {
+                    "spellId": "revivify",
+                    "spellLevel": 3
+                  },
+                  {
                     "spellId": "sending",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "sleet_storm",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "slow",
                     "spellLevel": 3
                   },
                   {
@@ -303713,11 +303575,7 @@
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "stinking_cloud",
-                    "spellLevel": 3
-                  },
-                  {
-                    "spellId": "tiny_hut",
+                    "spellId": "spirit_guardians",
                     "spellLevel": 3
                   },
                   {
@@ -303725,117 +303583,101 @@
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "vampiric_touch",
+                    "spellId": "water_walk",
                     "spellLevel": 3
                   },
                   {
-                    "spellId": "water_breathing",
-                    "spellLevel": 3
+                    "spellId": "aura_of_life",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "banishment",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "control_water",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "death_ward",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "divination",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "freedom_of_movement",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "guardian_of_faith",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "locate_creature",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "stone_shape",
+                    "spellLevel": 4
+                  },
+                  {
+                    "spellId": "commune",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "contagion",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "dispel_evil_and_good",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "flame_strike",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "geas",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "greater_restoration",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "hallow",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "insect_plague",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "legend_lore",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "mass_cure_wounds",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "planar_binding",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "raise_dead",
+                    "spellLevel": 5
+                  },
+                  {
+                    "spellId": "scrying",
+                    "spellLevel": 5
                   }
-                ]
-              },
-              "preparedAccess": {
-                "kind": "prepared_from_spellbook",
-                "choose": 4,
-                "spellIds": [
-                  "alarm",
-                  "burning_hands",
-                  "charm_person",
-                  "chromatic_orb",
-                  "color_spray",
-                  "comprehend_languages",
-                  "detect_magic",
-                  "disguise_self",
-                  "expeditious_retreat",
-                  "false_life",
-                  "feather_fall",
-                  "find_familiar",
-                  "floating_disk",
-                  "fog_cloud",
-                  "grease",
-                  "hideous_laughter",
-                  "ice_knife",
-                  "identify",
-                  "illusory_script",
-                  "jump",
-                  "longstrider",
-                  "mage_armor",
-                  "magic_missile",
-                  "protection_from_evil_and_good",
-                  "ray_of_sickness",
-                  "shield",
-                  "silent_image",
-                  "sleep",
-                  "thunderwave",
-                  "unseen_servant",
-                  "acid_arrow",
-                  "alter_self",
-                  "arcane_lock",
-                  "arcanists_magic_aura",
-                  "augury",
-                  "blindness_deafness",
-                  "blur",
-                  "continual_flame",
-                  "darkness",
-                  "darkvision",
-                  "detect_thoughts",
-                  "dragons_breath",
-                  "enhance_ability",
-                  "enlarge_reduce",
-                  "flaming_sphere",
-                  "gentle_repose",
-                  "gust_of_wind",
-                  "hold_person",
-                  "invisibility",
-                  "knock",
-                  "levitate",
-                  "locate_object",
-                  "magic_mouth",
-                  "magic_weapon",
-                  "mind_spike",
-                  "mirror_image",
-                  "misty_step",
-                  "phantasmal_force",
-                  "ray_of_enfeeblement",
-                  "rope_trick",
-                  "scorching_ray",
-                  "see_invisibility",
-                  "shatter",
-                  "spider_climb",
-                  "suggestion",
-                  "web",
-                  "animate_dead",
-                  "bestow_curse",
-                  "blink",
-                  "clairvoyance",
-                  "counterspell",
-                  "dispel_magic",
-                  "fear",
-                  "fireball",
-                  "fly",
-                  "gaseous_form",
-                  "glyph_of_warding",
-                  "haste",
-                  "hypnotic_pattern",
-                  "lightning_bolt",
-                  "magic_circle",
-                  "major_image",
-                  "nondetection",
-                  "phantom_steed",
-                  "protection_from_energy",
-                  "remove_curse",
-                  "sending",
-                  "sleet_storm",
-                  "slow",
-                  "speak_with_dead",
-                  "stinking_cloud",
-                  "tiny_hut",
-                  "tongues",
-                  "vampiric_touch",
-                  "water_breathing"
                 ],
                 "changeOn": {
-                  "kind": "long_rest"
+                  "kind": "long_rest",
+                  "replacementCount": "any"
                 }
               },
               "spellSlotProjection": {
@@ -303854,7 +303696,6 @@
                 {
                   "atLevel": 1,
                   "cantripCount": 3,
-                  "spellbookSpellCount": 6,
                   "preparedSpellCount": 4,
                   "spellSlots": [
                     {
@@ -303866,7 +303707,6 @@
                 {
                   "atLevel": 2,
                   "cantripCount": 3,
-                  "spellbookSpellCount": 8,
                   "preparedSpellCount": 5,
                   "spellSlots": [
                     {
@@ -303878,7 +303718,6 @@
                 {
                   "atLevel": 3,
                   "cantripCount": 3,
-                  "spellbookSpellCount": 10,
                   "preparedSpellCount": 6,
                   "spellSlots": [
                     {
@@ -303894,7 +303733,6 @@
                 {
                   "atLevel": 4,
                   "cantripCount": 4,
-                  "spellbookSpellCount": 12,
                   "preparedSpellCount": 7,
                   "spellSlots": [
                     {
@@ -303910,7 +303748,6 @@
                 {
                   "atLevel": 5,
                   "cantripCount": 4,
-                  "spellbookSpellCount": 14,
                   "preparedSpellCount": 9,
                   "spellSlots": [
                     {
@@ -303930,7 +303767,6 @@
                 {
                   "atLevel": 6,
                   "cantripCount": 4,
-                  "spellbookSpellCount": 16,
                   "preparedSpellCount": 10,
                   "spellSlots": [
                     {
@@ -303950,7 +303786,6 @@
                 {
                   "atLevel": 7,
                   "cantripCount": 4,
-                  "spellbookSpellCount": 18,
                   "preparedSpellCount": 11,
                   "spellSlots": [
                     {
@@ -303974,7 +303809,6 @@
                 {
                   "atLevel": 8,
                   "cantripCount": 4,
-                  "spellbookSpellCount": 20,
                   "preparedSpellCount": 12,
                   "spellSlots": [
                     {
@@ -303998,7 +303832,6 @@
                 {
                   "atLevel": 9,
                   "cantripCount": 4,
-                  "spellbookSpellCount": 22,
                   "preparedSpellCount": 14,
                   "spellSlots": [
                     {
@@ -304026,7 +303859,6 @@
                 {
                   "atLevel": 10,
                   "cantripCount": 5,
-                  "spellbookSpellCount": 24,
                   "preparedSpellCount": 15,
                   "spellSlots": [
                     {
@@ -304052,16 +303884,13 @@
                   ]
                 }
               ],
-              "spellcastingFocuses": [
-                "arcane_focus",
-                "spellbook"
-              ]
+              "spellcastingFocus": "holy_symbol"
             },
             "provenance": {
               "kind": "srd-5.2.1",
-              "section": "classes.md:9798-9833; classes.md#Becoming a Wizard …; classes.md#Wizard Class Features; classes.md#Wizard Subclass: Evoker; classes.md#Wizard Spell List; spells.md#Phantasmal Force"
+              "section": "classes.md:1747-1782; classes.md#Becoming a Cleric …; classes.md#Cleric Class Features; classes.md#Cleric Subclass: Life Domain; classes.md#Cleric Spell List"
             },
-            "rulesExcerpt": "## Wizard\n\n**Core Wizard Traits**\n\n<table>\n  <tbody>\n    <tr>\n      <td>Primary Ability</td>\n      <td>Intelligence</td>\n    </tr>\n    <tr>\n      <td>Hit Point Die</td>\n      <td>D6 per Wizard level</td>\n    </tr>\n    <tr>\n      <td>Saving Throw Proficiencies</td>\n      <td>Intelligence and Wisdom</td>\n    </tr>\n    <tr>\n      <td>Skill Proficiencies</td>\n      <td>Choose 2: Arcana, History, Insight, Investigation, Medicine, Nature, or Religion</td>\n    </tr>\n    <tr>\n      <td>Weapon Proficiencies</td>\n      <td>Simple weapons</td>\n    </tr>\n    <tr>\n      <td>Armor Training</td>\n      <td>None</td>\n    </tr>\n    <tr>\n      <td>Starting Equipment</td>\n      <td>Choose A or B: (A) 2 Daggers, Arcane Focus (Quarterstaff), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP</td>\n    </tr>\n  </tbody>\n</table>\n\n# Classes\n## Wizard\n### Becoming a Wizard …\n\n#### As a Level 1 Character\n\n• Gain all the traits in the Core Wizard Traits table.\n• Gain the Wizard's level 1 features, which are listed in the Wizard Features table.\n\n#### As a Multiclass Character\n\n• Gain the Hit Point Die from the Core Wizard Traits table.\n• Gain the Wizard's level 1 features, which are listed in the Wizard Features table. See the multiclassing rules in \"Character Creation\" to determine your available spell slots.\n\n# Classes\n## Wizard\n### Wizard Class Features\n\nAs a Wizard, you gain the following class features when you reach the specified Wizard levels. These features are listed in the Wizard Features table.\n\n**Wizard Features**\n\n<table>\n  <thead>\n    <tr>\n      <th>Level</th>\n      <th>Proficiency Bonus</th>\n      <th>Class Features</th>\n      <th>Cantrips</th>\n      <th>Prepared Spells</th>\n      <th colspan=\"9\">——Spell Slots per Spell Level——</th>\n    </tr>\n    <tr>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>1</th>\n      <th>2</th>\n      <th>3</th>\n      <th>4</th>\n      <th>5</th>\n      <th>6</th>\n      <th>7</th>\n      <th>8</th>\n      <th>9</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>+2</td>\n      <td>Spellcasting, Ritual Adept, Arcane Recovery</td>\n      <td>3</td>\n      <td>4</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>+2</td>\n      <td>Scholar</td>\n      <td>3</td>\n      <td>5</td>\n      <td>3</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>+2</td>\n      <td>Wizard Subclass</td>\n      <td>3</td>\n      <td>6</td>\n      <td>4</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>+2</td>\n      <td>Ability Score Improvement</td>\n      <td>4</td>\n      <td>7</td>\n      <td>4</td>\n      <td>3</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>+3</td>\n      <td>Memorize Spell</td>\n      <td>4</td>\n      <td>9</td>\n      <td>4</td>\n      <td>3</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>6</td>\n      <td>+3</td>\n      <td>Subclass feature</td>\n      <td>4</td>\n      <td>10</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>7</td>\n      <td>+3</td>\n      <td>—</td>\n      <td>4</td>\n      <td>11</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>8</td>\n      <td>+3</td>\n      <td>Ability Score Improvement</td>\n      <td>4</td>\n      <td>12</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>9</td>\n      <td>+4</td>\n      <td>—</td>\n      <td>4</td>\n      <td>14</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>10</td>\n      <td>+4</td>\n      <td>Subclass feature</td>\n      <td>5</td>\n      <td>15</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>11</td>\n      <td>+4</td>\n      <td>—</td>\n      <td>5</td>\n      <td>16</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>12</td>\n      <td>+4</td>\n      <td>Ability Score Improvement</td>\n      <td>5</td>\n      <td>16</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>13</td>\n      <td>+5</td>\n      <td>—</td>\n      <td>5</td>\n      <td>17</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>14</td>\n      <td>+5</td>\n      <td>Subclass feature</td>\n      <td>5</td>\n      <td>18</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>15</td>\n      <td>+5</td>\n      <td>—</td>\n      <td>5</td>\n      <td>19</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>16</td>\n      <td>+5</td>\n      <td>Ability Score Improvement</td>\n      <td>5</td>\n      <td>21</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>17</td>\n      <td>+6</td>\n      <td>—</td>\n      <td>5</td>\n      <td>22</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>18</td>\n      <td>+6</td>\n      <td>Spell Mastery</td>\n      <td>5</td>\n      <td>23</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>19</td>\n      <td>+6</td>\n      <td>Epic Boon</td>\n      <td>5</td>\n      <td>24</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>20</td>\n      <td>+6</td>\n      <td>Signature Spells</td>\n      <td>5</td>\n      <td>25</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 1: Spellcasting\n\nAs a student of arcane magic, you have learned to cast spells. See \"Spells\" for the rules on spellcasting. The information below details how you use those rules with Wizard spells, which appear in the Wizard spell list later in the class's description.\n\n_Cantrips._ You know three Wizard cantrips of your choice. _Light_, _Mage Hand_, and _Ray of Frost_ are recommended. Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Wizard cantrip of your choice.\n\nWhen you reach Wizard levels 4 and 10, you learn another Wizard cantrip of your choice, as shown in the Cantrips column of the Wizard Features table.\n\n_Spellbook._ Your wizardly apprenticeship culminated in the creation of a unique book: your spellbook. It is a Tiny object that weighs 3 pounds, contains 100 pages, and can be read only by you or someone casting _Identify_. You determine the book's appearance and materials, such as a gilt-edged tome or a collection of vellum bound with twine.\n\nThe book contains the level 1+ spells you know. It starts with six level 1 Wizard spells of your choice. _Detect Magic_, _Feather Fall_, _Mage Armor_, _Magic Missile_, _Sleep_, and _Thunderwave_ are recommended.\n\nWhenever you gain a Wizard level after 1, add two Wizard spells of your choice to your spellbook. Each of these spells must be of a level for which you have spell slots, as shown in the Wizard Features table. The spells are the culmination of arcane research you do regularly.\n\n_Spell Slots._ The Wizard Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n_Prepared Spells of Level 1+._ You prepare the list of level 1+ spells that are available for you to cast with this feature. To do so, choose four spells from your spellbook. The chosen spells must be of a level for which you have spell slots.\n\nThe number of spells on your list increases as you gain Wizard levels, as shown in the Prepared Spells column of the Wizard Features table. Whenever that number increases, choose additional Wizard spells until the number of spells on your list matches the number in the table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Wizard, your list of prepared spells can include six spells of levels 1 and 2 in any combination, chosen from your spellbook.\n\nIf another Wizard feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Wizard spells for you.\n\n_Changing Your Prepared Spells._ Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.\n\n_Spellcasting Ability._ Intelligence is your spellcasting ability for your Wizard spells.\n\n_Spellcasting Focus._ You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Wizard spells.\n\n#### Level 1: Ritual Adept\n\nYou can cast any spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way.\n\n#### Level 1: Arcane Recovery\n\nYou can regain some of your magical energy by studying your spellbook. When you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level equal to no more than half your Wizard level (round up), and none of the slots can be level 6 or higher. For example, if you're a level 4 Wizard, you can recover up to two levels' worth of spell slots, regaining either one level 2 spell slot or two level 1 spell slots.\n\nOnce you use this feature, you can't do so again until you finish a Long Rest.\n\n#### Level 2: Scholar\n\nWhile studying magic, you also specialized in another field of study. Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion. You have Expertise in the chosen skill.\n\n#### Level 3: Wizard Subclass\n\nYou gain a Wizard subclass of your choice. The Evoker subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Wizard levels. For the rest of your career, you gain each of your subclass's features that are of your Wizard level or lower.\n\n> **Expanding and Replacing a Spellbook**\n>\n> The spells you add to your spellbook as you gain levels reflect your ongoing magical research, but you might find other spells during your adventures that you can add to the book. You could discover a Wizard spell on a _Spell Scroll_, for example, and then copy it into your spellbook.\n>\n> _Copying a Spell into the Book._ When you find a level 1+ Wizard spell, you can copy it into your spellbook if it's of a level you can prepare and if you have time to copy it. For each level of the spell, the transcription takes 2 hours and costs 50 GP. Afterward you can prepare the spell like the other spells in your spellbook.\n>\n> _Copying the Book._ You can copy a spell from your spellbook into another book. This is like copying a new spell into your spellbook but faster, since you already know how to cast the spell. You need spend only 1 hour and 10 GP for each level of the copied spell.\n>\n> If you lose your spellbook, you can use the same procedure to transcribe the Wizard spells that you have prepared into a new spellbook. Filling out the remainder of the new book requires you to find new spells to do so. For this reason, many wizards keep a backup spellbook.\n\n#### Level 4: Ability Score Improvement\n\nYou gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Wizard levels 8, 12, and 16.\n\n#### Level 5: Memorize Spell\n\nWhenever you finish a Short Rest, you can study your spellbook and replace one of the level 1+ Wizard spells you have prepared for your Spellcasting feature with another level 1+ spell from the book.\n\n#### Level 18: Spell Mastery\n\nYou have achieved such mastery over certain spells that you can cast them at will. Choose a level 1 and a level 2 spell in your spellbook that have a casting time of an action. You always have those spells prepared, and you can cast them at their lowest level without expending a spell slot. To cast either spell at a higher level, you must expend a spell slot.\n\nWhenever you finish a Long Rest, you can study your spellbook and replace one of those spells with an eligible spell of the same level from the book.\n\n#### Level 19: Epic Boon\n\nYou gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Spell Recall is recommended.\n\n#### Level 20: Signature Spells\n\nChoose two level 3 spells in your spellbook as your signature spells. You always have these spells prepared, and you can cast each of them once at level 3 without expending a spell slot. When you do so, you can't cast them in this way again until you finish a Short or Long Rest. To cast either spell at a higher level, you must expend a spell slot.\n\n# Classes\n## Wizard\n### Wizard Subclass: Evoker\n\n_Create Explosive Elemental Effects_\n\nYour studies focus on magic that creates powerful elemental effects such as bitter cold, searing flame, rolling thunder, crackling lightning, and burning acid. Some Evokers find employment in military forces, serving as artillery to blast armies from afar. Others use their power to protect others, while some seek their own gain.\n\n#### Level 3: Evocation Savant\n\nChoose two Wizard spells from the Evocation school, each of which must be no higher than level 2, and add them to your spellbook for free.\n\nIn addition, whenever you gain access to a new level of spell slots in this class, you can add one Wizard spell from the Evocation school to your spellbook for free. The chosen spell must be of a level for which you have spell slots.\n\n#### Level 3: Potent Cantrip\n\nYour damaging cantrips affect even creatures that avoid the brunt of the effect. When you cast a cantrip at a creature and you miss with the attack roll or the target succeeds on a saving throw against the cantrip, the target takes half the cantrip's damage (if any) but suffers no additional effect from the cantrip.\n\n#### Level 6: Sculpt Spells\n\nYou can create pockets of relative safety within the effects of your evocations. When you cast an Evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 plus the spell's level. The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save.\n\n#### Level 10: Empowered Evocation\n\nWhenever you cast a Wizard spell from the Evocation school, you can add your Intelligence modifier to one damage roll of that spell.\n\n#### Level 14: Overchannel\n\nYou can increase the power of your spells. When you cast a Wizard spell with a spell slot of levels 1–5 that deals damage, you can deal maximum damage with that spell on the turn you cast it.\n\nThe first time you do so, you suffer no adverse effect. If you use this feature again before you finish a Long Rest, you take 2d12 Necrotic damage for each level of the spell slot immediately after you cast it. This damage ignores Resistance and Immunity.\n\nEach time you use this feature again before finishing a Long Rest, the Necrotic damage per spell level increases by 1d12.\n\n# Classes\n## Wizard\n### Wizard Spell List\n\nThis section presents the Wizard spell list. The spells are organized by spell level and then alphabetized, and each spell's school of magic is listed. In the Special column, C means the spell requires Concentration, R means it's a Ritual, and M means it requires a specific Material component.\n\n#### Cantrips (Level 0 Wizard Spells)\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Acid Splash</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Chill Touch</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Dancing Lights</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Elementalism</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Fire Bolt</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Light</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Mage Hand</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Mending</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Message</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Minor Illusion</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Poison Spray</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Prestidigitation</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Ray of Frost</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Shocking Grasp</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>True Strike</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 1 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Alarm</td>\n      <td>Abjuration</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Burning Hands</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Charm Person</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Chromatic Orb</td>\n      <td>Evocation</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Color Spray</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Comprehend Languages</td>\n      <td>Divination</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Detect Magic</td>\n      <td>Divination</td>\n      <td>C, R</td>\n    </tr>\n    <tr>\n      <td>Disguise Self</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Expeditious Retreat</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>False Life</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Feather Fall</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Find Familiar</td>\n      <td>Conjuration</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Floating Disk</td>\n      <td>Conjuration</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Fog Cloud</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Grease</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Hideous Laughter</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Ice Knife</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Identify</td>\n      <td>Divination</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Illusory Script</td>\n      <td>Illusion</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Jump</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Longstrider</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Mage Armor</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Magic Missile</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Protection from Evil and Good</td>\n      <td>Abjuration</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Ray of Sickness</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Shield</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Silent Image</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Sleep</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Thunderwave</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Unseen Servant</td>\n      <td>Conjuration</td>\n      <td>R</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 2 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Acid Arrow</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Alter Self</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Arcane Lock</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Arcanist's Magic Aura</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Augury</td>\n      <td>Divination</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Blindness/Deafness</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Blur</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Continual Flame</td>\n      <td>Evocation</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Darkness</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Darkvision</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Detect Thoughts</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Dragon's Breath</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Enhance Ability</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Enlarge/Reduce</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Flaming Sphere</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Gentle Repose</td>\n      <td>Necromancy</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Gust of Wind</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Hold Person</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Invisibility</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Knock</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Levitate</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Locate Object</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Magic Mouth</td>\n      <td>Illusion</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Magic Weapon</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Mind Spike</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Mirror Image</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Misty Step</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Ray of Enfeeblement</td>\n      <td>Necromancy</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Rope Trick</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Scorching Ray</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>See Invisibility</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Shatter</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Spider Climb</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Suggestion</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Web</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 3 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Animate Dead</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Bestow Curse</td>\n      <td>Necromancy</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Blink</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Clairvoyance</td>\n      <td>Divination</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Counterspell</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Dispel Magic</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Fear</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Fireball</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Fly</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Gaseous Form</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Glyph of Warding</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Haste</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Hypnotic Pattern</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Lightning Bolt</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Magic Circle</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Major Image</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Nondetection</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Phantom Steed</td>\n      <td>Illusion</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Protection from Energy</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Remove Curse</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Sending</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Sleet Storm</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Slow</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Speak with Dead</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Stinking Cloud</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Tiny Hut</td>\n      <td>Evocation</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Tongues</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Vampiric Touch</td>\n      <td>Necromancy</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Water Breathing</td>\n      <td>Transmutation</td>\n      <td>R</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 4 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Arcane Eye</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Banishment</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Black Tentacles</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Blight</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Charm Monster</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Confusion</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Conjure Minor Elementals</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Control Water</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Dimension Door</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Divination</td>\n      <td>Divination</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Fabricate</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Faithful Hound</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Fire Shield</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Greater Invisibility</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Hallucinatory Terrain</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Ice Storm</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Locate Creature</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Phantasmal Killer</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Polymorph</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Private Sanctum</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Resilient Sphere</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Secret Chest</td>\n      <td>Conjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Stone Shape</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Stoneskin</td>\n      <td>Transmutation</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Vitriolic Sphere</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Wall of Fire</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 5 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Animate Objects</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Arcane Hand</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Cloudkill</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Cone of Cold</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Conjure Elemental</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Contact Other Plane</td>\n      <td>Divination</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Creation</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Dominate Person</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Dream</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Geas</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Hold Monster</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Legend Lore</td>\n      <td>Divination</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Mislead</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Modify Memory</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Passwall</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Planar Binding</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Scrying</td>\n      <td>Divination</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Seeming</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Summon Dragon</td>\n      <td>Conjuration</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Telekinesis</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Telepathic Bond</td>\n      <td>Divination</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Teleportation Circle</td>\n      <td>Conjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Wall of Force</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Wall of Stone</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 6 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Chain Lightning</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Circle of Death</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Contingency</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Create Undead</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Disintegrate</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Eyebite</td>\n      <td>Necromancy</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Flesh to Stone</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Freezing Sphere</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Globe of Invulnerability</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Guards and Wards</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Instant Summons</td>\n      <td>Conjuration</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Irresistible Dance</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Magic Jar</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Mass Suggestion</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Move Earth</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Programmed Illusion</td>\n      <td>Illusion</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Sunbeam</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>True Seeing</td>\n      <td>Divination</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Wall of Ice</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 7 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Arcane Sword</td>\n      <td>Evocation</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Delayed Blast Fireball</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Etherealness</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Finger of Death</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Forcecage</td>\n      <td>Evocation</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Magnificent Mansion</td>\n      <td>Conjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Mirage Arcane</td>\n      <td>Illusion</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Plane Shift</td>\n      <td>Conjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Prismatic Spray</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Project Image</td>\n      <td>Illusion</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Reverse Gravity</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Sequester</td>\n      <td>Transmutation</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Simulacrum</td>\n      <td>Illusion</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Symbol</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Teleport</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 8 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Antimagic Field</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Antipathy/Sympathy</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Befuddlement</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Clone</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Control Weather</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Demiplane</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Dominate Monster</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Incendiary Cloud</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Maze</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Mind Blank</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Power Word Stun</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Sunburst</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 9 Wizard Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Astral Projection</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Foresight</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Gate</td>\n      <td>Conjuration</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Imprisonment</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Meteor Swarm</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Power Word Kill</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Prismatic Wall</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Shapechange</td>\n      <td>Transmutation</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Time Stop</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>True Polymorph</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Weird</td>\n      <td>Illusion</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Wish</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n## Giant Insect\n#### Phantasmal Force\n\n_Level 2 Illusion (Bard, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S, M (a bit of fleece)\n**Duration:** Concentration, up to 1 minute\n\nYou attempt to craft an illusion in the mind of a creature you can see within range. The target makes an Intelligence saving throw. On a failed save, you create a phantasmal object, creature, or other phenomenon that is no larger than a 10-foot Cube and that is perceivable only to the target for the duration. The phantasm includes sound, temperature, and other stimuli.\n\nThe target can take a Study action to examine the phantasm with an Intelligence (Investigation) check against your spell save DC. If the check succeeds, the target realizes that the phantasm is an illusion, and the spell ends.\n\nWhile affected by the spell, the target treats the phantasm as if it were real and rationalizes any illogical outcomes from interacting with it. For example, if the target steps through a phantasmal bridge and survives the fall, it believes the bridge exists and something else caused it to fall.\n\nAn affected target can even take damage from the illusion if the phantasm represents a dangerous creature or hazard. On each of your turns, such a phantasm can deal 2d8 Psychic damage to the target if it is in the phantasm's area or within 5 feet of the phantasm. The target perceives the damage as a type appropriate to the illusion."
+            "rulesExcerpt": "## Cleric\n\n**Core Cleric Traits**\n\n<table>\n  <tbody>\n    <tr>\n      <td>Primary Ability</td>\n      <td>Wisdom</td>\n    </tr>\n    <tr>\n      <td>Hit Point Die</td>\n      <td>D8 per Cleric level</td>\n    </tr>\n    <tr>\n      <td>Saving Throw Proficiencies</td>\n      <td>Wisdom and Charisma</td>\n    </tr>\n    <tr>\n      <td>Skill Proficiencies</td>\n      <td>Choose 2: History, Insight, Medicine, Persuasion, or Religion</td>\n    </tr>\n    <tr>\n      <td>Weapon Proficiencies</td>\n      <td>Simple weapons</td>\n    </tr>\n    <tr>\n      <td>Armor Training</td>\n      <td>Light and Medium armor and Shields</td>\n    </tr>\n    <tr>\n      <td>Starting Equipment</td>\n      <td>Choose A or B: (A) Chain Shirt, Shield, Mace, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP</td>\n    </tr>\n  </tbody>\n</table>\n\n# Classes\n## Cleric\n### Becoming a Cleric …\n\n#### As a Level 1 Character\n\n- Gain all the traits in the Core Cleric Traits table.\n- Gain the Cleric's level 1 features, which are listed in the Cleric Features table.\n\n#### As a Multiclass Character\n\n- Gain the following traits from the Core Cleric Traits table: Hit Point Die and training with Light and Medium armor and Shields.\n- Gain the Cleric's level 1 features, which are listed in the Cleric Features table. See the multiclassing rules in \"Character Creation\" to determine your available spell slots.\n\n# Classes\n## Cleric\n### Cleric Class Features\n\nAs a Cleric, you gain the following class features when you reach the specified Cleric levels. These features are listed in the Cleric Features table.\n\n**Cleric Features**\n\n<table>\n  <thead>\n    <tr>\n      <th>Level</th>\n      <th>Proficiency Bonus</th>\n      <th>Class Features</th>\n      <th>Channel Divinity</th>\n      <th>Cantrips</th>\n      <th>Prepared Spells</th>\n      <th colspan=\"9\">——Spell Slots per Spell Level——</th>\n    </tr>\n    <tr>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>\n      </th>\n      <th>1</th>\n      <th>2</th>\n      <th>3</th>\n      <th>4</th>\n      <th>5</th>\n      <th>6</th>\n      <th>7</th>\n      <th>8</th>\n      <th>9</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>+2</td>\n      <td>Spellcasting, Divine Order</td>\n      <td>—</td>\n      <td>3</td>\n      <td>4</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>+2</td>\n      <td>Channel Divinity</td>\n      <td>2</td>\n      <td>3</td>\n      <td>5</td>\n      <td>3</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>+2</td>\n      <td>Cleric Subclass</td>\n      <td>2</td>\n      <td>3</td>\n      <td>6</td>\n      <td>4</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>+2</td>\n      <td>Ability Score Improvement</td>\n      <td>2</td>\n      <td>4</td>\n      <td>7</td>\n      <td>4</td>\n      <td>3</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>+3</td>\n      <td>Sear Undead</td>\n      <td>2</td>\n      <td>4</td>\n      <td>9</td>\n      <td>4</td>\n      <td>3</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>6</td>\n      <td>+3</td>\n      <td>Subclass feature</td>\n      <td>3</td>\n      <td>4</td>\n      <td>10</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>7</td>\n      <td>+3</td>\n      <td>Blessed Strikes</td>\n      <td>3</td>\n      <td>4</td>\n      <td>11</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>8</td>\n      <td>+3</td>\n      <td>Ability Score Improvement</td>\n      <td>3</td>\n      <td>4</td>\n      <td>12</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>9</td>\n      <td>+4</td>\n      <td>—</td>\n      <td>3</td>\n      <td>4</td>\n      <td>14</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>10</td>\n      <td>+4</td>\n      <td>Divine Intervention</td>\n      <td>3</td>\n      <td>5</td>\n      <td>15</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>11</td>\n      <td>+4</td>\n      <td>—</td>\n      <td>3</td>\n      <td>5</td>\n      <td>16</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>12</td>\n      <td>+4</td>\n      <td>Ability Score Improvement</td>\n      <td>3</td>\n      <td>5</td>\n      <td>16</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>13</td>\n      <td>+5</td>\n      <td>—</td>\n      <td>3</td>\n      <td>5</td>\n      <td>17</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>14</td>\n      <td>+5</td>\n      <td>Improved Blessed Strikes</td>\n      <td>3</td>\n      <td>5</td>\n      <td>17</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>15</td>\n      <td>+5</td>\n      <td>—</td>\n      <td>3</td>\n      <td>5</td>\n      <td>18</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>16</td>\n      <td>+5</td>\n      <td>Ability Score Improvement</td>\n      <td>3</td>\n      <td>5</td>\n      <td>18</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>17</td>\n      <td>+6</td>\n      <td>Subclass feature</td>\n      <td>3</td>\n      <td>5</td>\n      <td>19</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>18</td>\n      <td>+6</td>\n      <td>—</td>\n      <td>4</td>\n      <td>5</td>\n      <td>20</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>19</td>\n      <td>+6</td>\n      <td>Epic Boon</td>\n      <td>4</td>\n      <td>5</td>\n      <td>21</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>20</td>\n      <td>+6</td>\n      <td>Greater Divine Intervention</td>\n      <td>4</td>\n      <td>5</td>\n      <td>22</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>2</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 1: Spellcasting\n\nYou have learned to cast spells through prayer and meditation. See \"Spells\" for the rules on spellcasting. The information below details how you use those rules with Cleric spells, which appear on the Cleric spell list later in the class's description.\n\n_Cantrips._ You know three cantrips of your choice from the Cleric spell list. _Guidance_, _Sacred Flame_, and _Thaumaturgy_ are recommended.\n\nWhenever you gain a Cleric level, you can replace one of your cantrips with another cantrip of your choice from the Cleric spell list.\n\nWhen you reach Cleric levels 4 and 10, you learn another cantrip of your choice from the Cleric spell list, as shown in the Cantrips column of the Cleric Features table.\n\n_Spell Slots._ The Cleric Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n_Prepared Spells of Level 1+._ You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose four level 1 spells from the Cleric spell list. _Bless_, _Cure Wounds_, _Guiding Bolt_, and _Shield of Faith_ are recommended.\n\nThe number of spells on your list increases as you gain Cleric levels, as shown in the Prepared Spells column of the Cleric Features table. Whenever that number increases, choose additional spells from the Cleric spell list until the number of spells on your list matches the number on the table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Cleric, your list of prepared spells can include six spells of levels 1 and 2 in any combination.\n\nIf another Cleric feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Cleric spells for you.\n\n_Changing Your Prepared Spells._ Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with other Cleric spells for which you have spell slots.\n\n_Spellcasting Ability._ Wisdom is your spellcasting ability for your Cleric spells.\n\n_Spellcasting Focus._ You can use a Holy Symbol as a Spellcasting Focus for your Cleric spells.\n\n#### Level 1: Divine Order\n\nYou have dedicated yourself to one of the following sacred roles of your choice.\n\n_Protector._ Trained for battle, you gain proficiency with Martial weapons and training with Heavy armor.\n\n_Thaumaturge._ You know one extra cantrip from the Cleric spell list. In addition, your mystical connection to the divine gives you a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1).\n\n#### Level 2: Channel Divinity\n\nYou can channel divine energy directly from the Outer Planes to fuel magical effects. You start with two such effects: Divine Spark and Turn Undead, each of which is described below. Each time you use this class's Channel Divinity, choose which Channel Divinity effect from this class to create. You gain additional effect options at higher Cleric levels.\n\nYou can use this class's Channel Divinity twice. You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest. You gain additional uses when you reach certain Cleric levels, as shown in the Channel Divinity column of the Cleric Features table.\n\nIf a Channel Divinity effect requires a saving throw, the DC equals the spell save DC from this class's Spellcasting feature.\n\n_Divine Spark._ As a Magic action, you point your Holy Symbol at another creature you can see within 30 feet of yourself and focus divine energy at it. Roll 1d8 and add your Wisdom modifier. You either restore Hit Points to the creature equal to that total or force the creature to make a Constitution saving throw. On a failed save, the creature takes Necrotic or Radiant damage (your choice) equal to that total. On a successful save, the creature takes half as much damage (round down).\n\nYou roll an additional d8 when you reach Cleric levels 7 (2d8), 13 (3d8), and 18 (4d8).\n\n_Turn Undead._ As a Magic action, you present your Holy Symbol and censure Undead creatures. Each Undead of your choice within 30 feet of you must make a Wisdom saving throw. If the creature fails its save, it has the Frightened and Incapacitated conditions for 1 minute. For that duration, it tries to move as far from you as it can on its turns. This effect ends early on the creature if it takes any damage, if you have the Incapacitated condition, or if you die.\n\n#### Level 3: Cleric Subclass\n\nYou gain a Cleric subclass of your choice. The Life Domain subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Cleric levels. For the rest of your career, you gain each of your subclass's features that are of your Cleric level or lower.\n\n#### Level 4: Ability Score Improvement\n\nYou gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Cleric levels 8, 12, and 16.\n\n#### Level 5: Sear Undead\n\nWhenever you use Turn Undead, you can roll a number of d8s equal to your Wisdom modifier (minimum of 1d8) and add the rolls together. Each Undead that fails its saving throw against that use of Turn Undead takes Radiant damage equal to the roll's total. This damage doesn't end the turn effect.\n\n#### Level 7: Blessed Strikes\n\nDivine power infuses you in battle. You gain one of the following options of your choice (if you get either option from a Cleric subclass in an older book, use only the option you choose for this feature).\n\n_Divine Strike._ Once on each of your turns when you hit a creature with an attack roll using a weapon, you can cause the target to take an extra 1d8 Necrotic or Radiant damage (your choice).\n\n_Potent Spellcasting._ Add your Wisdom modifier to the damage you deal with any Cleric cantrip.\n\n#### Level 10: Divine Intervention\n\nYou can call on your deity or pantheon to intervene on your behalf. As a Magic action, choose any Cleric spell of level 5 or lower that doesn't require a Reaction to cast. As part of the same action, you cast that spell without expending a spell slot or needing Material components. You can't use this feature again until you finish a Long Rest.\n\n#### Level 14: Improved Blessed Strikes\n\nThe option you chose for Blessed Strikes grows more powerful.\n\n_Divine Strike._ The extra damage of your Divine Strike increases to 2d8.\n\n_Potent Spellcasting._ When you cast a Cleric cantrip and deal damage to a creature with it, you can give vitality to yourself or another creature within 60 feet of yourself, granting a number of Temporary Hit Points equal to twice your Wisdom modifier.\n\n#### Level 19: Epic Boon\n\nYou gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Fate is recommended.\n\n#### Level 20: Greater Divine Intervention\n\nYou can call on even more powerful divine intervention. When you use your Divine Intervention feature, you can choose _Wish_ when you select a spell. If you do so, you can't use Divine Intervention again until you finish 2d4 Long Rests.\n\n# Classes\n## Cleric\n### Cleric Subclass: Life Domain\n\n_Soothe the Hurts of the World_\n\nThe Life Domain focuses on the positive energy that helps sustain all life in the multiverse. Clerics who tap into this domain are masters of healing, using that life force to cure many hurts.\n\nExistence itself relies on the positive energy associated with this domain, so a Cleric of almost any religious tradition might choose it. This domain is particularly associated with agricultural deities, gods of healing or endurance, and gods of home and community. Religious orders of healing also seek the magic of this domain.\n\n#### Level 3: Disciple of Life\n\nWhen a spell you cast with a spell slot restores Hit Points to a creature, that creature regains additional Hit Points on the turn you cast the spell. The additional Hit Points equal 2 plus the spell slot's level.\n\n#### Level 3: Life Domain Spells\n\nYour connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared.\n\n**Life Domain Spells**\n\n<table>\n  <thead>\n    <tr>\n      <th>Cleric Level</th>\n      <th>Prepared Spells</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>3</td>\n      <td>Aid, Bless, Cure Wounds, Lesser Restoration</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>Mass Healing Word, Revivify</td>\n    </tr>\n    <tr>\n      <td>7</td>\n      <td>Aura of Life, Death Ward</td>\n    </tr>\n    <tr>\n      <td>9</td>\n      <td>Greater Restoration, Mass Cure Wounds</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 3: Preserve Life\n\nAs a Magic action, you present your Holy Symbol and expend a use of your Channel Divinity to evoke healing energy that can restore a number of Hit Points equal to five times your Cleric level. Choose Bloodied creatures within 30 feet of yourself (which can include you), and divide those Hit Points among them. This feature can restore a creature to no more than half its Hit Point maximum.\n\n#### Level 6: Blessed Healer\n\nThe healing spells you cast on others heal you as well. Immediately after you cast a spell with a spell slot that restores Hit Points to one or more creatures other than yourself, you regain Hit Points equal to 2 plus the spell slot's level.\n\n#### Level 17: Supreme Healing\n\nWhen you would normally roll one or more dice to restore Hit Points to a creature with a spell or Channel Divinity, don't roll those dice for the healing; instead use the highest number possible for each die. For example, instead of restoring 2d6 Hit Points to a creature with a spell, you restore 12.\n\n# Classes\n## Cleric\n### Cleric Spell List\n\nThis section presents the Cleric spell list. The spells are organized by spell level and then alphabetized, and each spell's school of magic is listed. In the Special column, _C_ means the spell requires Concentration, _R_ means it's a Ritual, and _M_ means it requires a specific Material component.\n\n#### Cantrips (Level 0 Cleric Spells)\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Guidance</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Light</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Mending</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Resistance</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Sacred Flame</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Spare the Dying</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Thaumaturgy</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 1 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Bane</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Bless</td>\n      <td>Enchantment</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Command</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Create or Destroy Water</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Cure Wounds</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Detect Evil and Good</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Detect Magic</td>\n      <td>Divination</td>\n      <td>C, R</td>\n    </tr>\n    <tr>\n      <td>Detect Poison and Disease</td>\n      <td>Divination</td>\n      <td>C, R</td>\n    </tr>\n    <tr>\n      <td>Guiding Bolt</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Healing Word</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Inflict Wounds</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Protection from Evil and Good</td>\n      <td>Abjuration</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Purify Food and Drink</td>\n      <td>Transmutation</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Sanctuary</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Shield of Faith</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 2 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Aid</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Augury</td>\n      <td>Divination</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Blindness/Deafness</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Calm Emotions</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Continual Flame</td>\n      <td>Evocation</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Enhance Ability</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Find Traps</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Gentle Repose</td>\n      <td>Necromancy</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Hold Person</td>\n      <td>Enchantment</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Lesser Restoration</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Locate Object</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Prayer of Healing</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Protection from Poison</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Silence</td>\n      <td>Illusion</td>\n      <td>C, R</td>\n    </tr>\n    <tr>\n      <td>Spiritual Weapon</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Warding Bond</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Zone of Truth</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 3 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Animate Dead</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Beacon of Hope</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Bestow Curse</td>\n      <td>Necromancy</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Clairvoyance</td>\n      <td>Divination</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Create Food and Water</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Daylight</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Dispel Magic</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Glyph of Warding</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Magic Circle</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Mass Healing Word</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Meld into Stone</td>\n      <td>Transmutation</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Protection from Energy</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Remove Curse</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Revivify</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Sending</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Speak with Dead</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Spirit Guardians</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Tongues</td>\n      <td>Divination</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Water Walk</td>\n      <td>Transmutation</td>\n      <td>R</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 4 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Aura of Life</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Banishment</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Control Water</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Death Ward</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Divination</td>\n      <td>Divination</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Freedom of Movement</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Guardian of Faith</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Locate Creature</td>\n      <td>Divination</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Stone Shape</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 5 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Commune</td>\n      <td>Divination</td>\n      <td>R</td>\n    </tr>\n    <tr>\n      <td>Contagion</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Dispel Evil and Good</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Flame Strike</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Geas</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Greater Restoration</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Hallow</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Insect Plague</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Legend Lore</td>\n      <td>Divination</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Mass Cure Wounds</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Planar Binding</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Raise Dead</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Scrying</td>\n      <td>Divination</td>\n      <td>C, M</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 6 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Blade Barrier</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Create Undead</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Find the Path</td>\n      <td>Divination</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Forbiddance</td>\n      <td>Abjuration</td>\n      <td>R, M</td>\n    </tr>\n    <tr>\n      <td>Harm</td>\n      <td>Necromancy</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Heal</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Heroes' Feast</td>\n      <td>Conjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Planar Ally</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Sunbeam</td>\n      <td>Evocation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>True Seeing</td>\n      <td>Divination</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Word of Recall</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 7 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Conjure Celestial</td>\n      <td>Conjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Divine Word</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Etherealness</td>\n      <td>Conjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Fire Storm</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Plane Shift</td>\n      <td>Conjuration</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Regenerate</td>\n      <td>Transmutation</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Resurrection</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Symbol</td>\n      <td>Abjuration</td>\n      <td>M</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 8 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Antimagic Field</td>\n      <td>Abjuration</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Control Weather</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Earthquake</td>\n      <td>Transmutation</td>\n      <td>C</td>\n    </tr>\n    <tr>\n      <td>Holy Aura</td>\n      <td>Abjuration</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Sunburst</td>\n      <td>Evocation</td>\n      <td>—</td>\n    </tr>\n  </tbody>\n</table>\n\n#### Level 9 Cleric Spells\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>School</th>\n      <th>Special</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Astral Projection</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n    <tr>\n      <td>Gate</td>\n      <td>Conjuration</td>\n      <td>C, M</td>\n    </tr>\n    <tr>\n      <td>Mass Heal</td>\n      <td>Abjuration</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>Power Word Heal</td>\n      <td>Enchantment</td>\n      <td>—</td>\n    </tr>\n    <tr>\n      <td>True Resurrection</td>\n      <td>Necromancy</td>\n      <td>M</td>\n    </tr>\n  </tbody>\n</table>"
           }
         ],
         "statBlocks": [
@@ -304207,56 +304036,49 @@
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[0].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_ritual_adept",
+              "targetId": "cleric_divine_order",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[1].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_arcane_recovery",
+              "targetId": "cleric_channel_divinity",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[2].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_scholar",
+              "targetId": "cleric_ability_score_improvement_l4",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[3].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_ability_score_improvement_l4",
+              "targetId": "cleric_ability_score_improvement_l4",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[4].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_memorize_spell",
-              "relation": "unit-reference"
-            },
-            {
-              "code": "dangling-authored-dependency",
-              "path": "$.units[0].featureGrants[5].unitId",
-              "targetKind": "unit",
-              "targetId": "wizard_ability_score_improvement_l4",
+              "targetId": "cleric_divine_intervention",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].startingEquipment[0].items[0].unitId",
               "targetKind": "unit",
-              "targetId": "weapon_dagger",
+              "targetId": "armor_chain_shirt",
               "relation": "item-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].startingEquipment[0].items[1].unitId",
               "targetKind": "unit",
-              "targetId": "weapon_quarterstaff",
+              "targetId": "equipment_shield",
               "relation": "item-reference"
             }
           ]
@@ -304268,56 +304090,49 @@
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[0].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_ritual_adept",
+              "targetId": "cleric_divine_order",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[1].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_arcane_recovery",
+              "targetId": "cleric_channel_divinity",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[2].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_scholar",
+              "targetId": "cleric_ability_score_improvement_l4",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[3].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_ability_score_improvement_l4",
+              "targetId": "cleric_ability_score_improvement_l4",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].featureGrants[4].unitId",
               "targetKind": "unit",
-              "targetId": "wizard_memorize_spell",
-              "relation": "unit-reference"
-            },
-            {
-              "code": "dangling-authored-dependency",
-              "path": "$.units[0].featureGrants[5].unitId",
-              "targetKind": "unit",
-              "targetId": "wizard_ability_score_improvement_l4",
+              "targetId": "cleric_divine_intervention",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].startingEquipment[0].items[0].unitId",
               "targetKind": "unit",
-              "targetId": "weapon_dagger",
+              "targetId": "armor_chain_shirt",
               "relation": "item-reference"
             },
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[0].startingEquipment[0].items[1].unitId",
               "targetKind": "unit",
-              "targetId": "weapon_quarterstaff",
+              "targetId": "equipment_shield",
               "relation": "item-reference"
             }
           ]

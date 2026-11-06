@@ -259,8 +259,10 @@ function startingEquipmentItemLabel(item: StartingEquipmentItemRef): string {
       { kind: "selected_tool_proficiency" },
       () => "item matching the selected tool proficiency",
     ),
-    Match.when({ kind: "draft_owned_item" }, ({ itemName, quantity }) =>
-      quantity === undefined ? itemName : `${quantity} × ${itemName}`,
+    Match.when(
+      { kind: "draft_owned_item" },
+      ({ itemName, quantity }) =>
+        `${quantity === undefined ? itemName : `${quantity} × ${itemName}`} (descriptive item; no loadout/Battle item support)`,
     ),
     Match.exhaustive,
   );

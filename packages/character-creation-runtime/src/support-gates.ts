@@ -457,6 +457,13 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       buildSlot: "armor",
     },
     {
+      slot: LOADOUT_ARMOR_SLOT,
+      unitId: authoredUnitId("armor_chain_shirt"),
+      optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
+      label: "Worn",
+      buildSlot: "armor",
+    },
+    {
       slot: LOADOUT_SHIELD_SLOT,
       unitId: authoredUnitId(PHASE1_SHIELD_UNIT_ID),
       optionId: PHASE1_LOADOUT_SHIELD_OPTION_ID,
