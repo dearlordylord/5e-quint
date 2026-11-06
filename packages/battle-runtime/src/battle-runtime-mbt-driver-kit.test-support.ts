@@ -16317,6 +16317,17 @@ function independentSpellAttackSequenceTargetFill(
           ? { distanceFeet: movementFeet(30) }
           : {}),
       },
+      ...(hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity" as const,
+              casterId: spellCasterId,
+              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              enemies: [],
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -18083,6 +18094,17 @@ function spellTargetChoiceFill(
           ? { distanceFeet: movementFeet(30) }
           : {}),
       },
+      ...(hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity" as const,
+              casterId: subject.actorId,
+              sourceProcedureRef: subject.procedureRef,
+              enemies: [],
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -18118,6 +18140,17 @@ function chainedAttackProcedureTargetFill(
         sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
         distanceFeet: movementFeet(30),
       },
+      ...(hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity" as const,
+              casterId: spellCasterId,
+              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              enemies: [],
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -18137,6 +18170,17 @@ function chainedAttackProcedureLeapTargetFill(
         sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
         distanceFeet: movementFeet(30),
       },
+      ...(hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity" as const,
+              casterId: spellCasterId,
+              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              enemies: [],
+            },
+          ]
+        : []),
       {
         kind: "spellLeapTargetWithinRange" as const,
         previousTargetId: spellTargetId,

@@ -1274,6 +1274,18 @@ function spellTargetFill(
           ? { distanceFeet: movementFeet(30) }
           : {}),
       },
+      ...(hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity" as const,
+              casterId: casterId,
+              sourceProcedureRef:
+                hole.spellTargetSpatialFactRequest.sourceProcedureRef,
+              enemies: [],
+            },
+          ]
+        : []),
     ],
   };
 }

@@ -1,0 +1,76 @@
+{
+  "id": "review-task",
+  "version": "1",
+  "initial": "checking",
+  "facts": {
+    "workload": "selected-input-v1",
+    "build": "reviewed-build-v1"
+  },
+  "states": {
+    "checking": {
+      "on": {
+        "CHECK_PASS": {
+          "target": "awaitingAcceptance",
+          "requires": {
+            "workload": {
+              "fact": "workload"
+            },
+            "build": {
+              "fact": "build"
+            },
+            "verdict": "pass"
+          }
+        },
+        "CHECK_FAIL": {
+          "target": "repair",
+          "requires": {
+            "workload": {
+              "fact": "workload"
+            },
+            "build": {
+              "fact": "build"
+            },
+            "verdict": "fail"
+          }
+        }
+      }
+    },
+    "repair": {
+      "on": {
+        "RECHECK": {
+          "target": "checking",
+          "requires": {
+            "workload": {
+              "fact": "workload"
+            },
+            "build": {
+              "fact": "build"
+            }
+          }
+        }
+      }
+    },
+    "awaitingAcceptance": {
+      "on": {
+        "ACCEPT": {
+          "target": "done",
+          "requires": {
+            "workload": {
+              "fact": "workload"
+            },
+            "build": {
+              "fact": "build"
+            },
+            "evidenceSha256": {
+              "fact": "evidenceSha256"
+            },
+            "verdict": "pass"
+          }
+        }
+      }
+    },
+    "done": {
+      "final": true
+    }
+  }
+}

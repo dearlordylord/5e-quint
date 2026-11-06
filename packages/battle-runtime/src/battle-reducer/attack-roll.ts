@@ -552,15 +552,20 @@ function rangedSpellAttackCloseCombatDisadvantage(
     if (
       fact.kind !== "rangedSpellAttackEnemyProximity" ||
       fact.casterId !== attackerId ||
-      fact.sourceProcedureRef !== invocation.sourceProcedureRef ||
-      fact.enemyId === attackerId ||
-      fact.distanceFeet > RANGED_ATTACK_ENEMY_PROXIMITY_FEET ||
-      !fact.enemyCanSeeCaster
+      fact.sourceProcedureRef !== invocation.sourceProcedureRef
     ) {
       return false;
     }
-    const enemy = state.combatants.get(fact.enemyId);
-    return enemy !== undefined && !isIncapacitated(enemy.conditions);
+    return fact.enemies.some((entry) => {
+      const enemy = state.combatants.get(entry.enemyId);
+      return (
+        entry.enemyId !== attackerId &&
+        entry.distanceFeet <= RANGED_ATTACK_ENEMY_PROXIMITY_FEET &&
+        entry.enemyCanSeeCaster &&
+        enemy !== undefined &&
+        !isIncapacitated(enemy.conditions)
+      );
+    });
   });
 }
 

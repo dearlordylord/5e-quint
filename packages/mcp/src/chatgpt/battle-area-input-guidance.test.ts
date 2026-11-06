@@ -5,6 +5,7 @@ import {
   battleProcedureExecutionRef,
   battleStatBlockExecutionScopeRef,
   combatantId,
+  type BattleHole,
   type BattleSpellAreaInputRequest,
   type BattleSpellSavingThrowOutcomeHole,
 } from "@dnd/battle-runtime";
@@ -13,7 +14,7 @@ import {
   battleInputGuidance,
 } from "./battle-input-guidance.ts";
 import { battleAreaInputInstructions } from "./battle-area-input-instructions.ts";
-import { NonNegativeInteger } from "@dnd/shared/types";
+import { movementFeet, NonNegativeInteger } from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -87,6 +88,100 @@ const pointAreaBase = {
 };
 
 describe("Battle area input guidance", () => {
+  it("pins independent Sphere membership to the discovered mechanics", () => {
+    const sphereFactRequest = {
+      kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
+      actorId,
+      sourceProcedureRef,
+      originWithinRangeFeet: movementFeet(60),
+      radiusFeet: movementFeet(10),
+    } as const;
+    const hole = {
+      kind: "targetSpatialFacts",
+      holeId: holeBase.holeId,
+      holeInstanceKey: holeBase.holeInstanceKey,
+      label: "Synthetic Sphere membership",
+      requiresTableSpatialFact: true,
+      sphereFactRequest,
+    } satisfies BattleHole;
+    expect(
+      Result.isSuccess(Schema.decodeUnknownResult(BattleHoleSchema)(hole)),
+    ).toBe(true);
+    const [guidance] = battleInputGuidance(hole);
+    if (guidance === undefined)
+      throw new Error("Expected membership guidance.");
+    const validate = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(guidance.fillSchema, "Sphere membership fill"),
+    );
+    const fact = { ...sphereFactRequest, targetIds: [actorId] };
+    const fill = {
+      kind: "targetSpatialFacts",
+      holeId: hole.holeId,
+      spatialFacts: [fact],
+    };
+    expect(validate(fill).valid).toBe(true);
+    expect(validate({ ...fill, spatialFacts: [] }).valid).toBe(false);
+    expect(
+      validate({ ...fill, spatialFacts: [{ ...fact, targetIds: [] }] }).valid,
+    ).toBe(false);
+    expect(validate({ ...fill, spatialFacts: [fact, fact] }).valid).toBe(false);
+    expect(
+      validate({ ...fill, spatialFacts: [{ ...fact, radiusFeet: 20 }] }).valid,
+    ).toBe(false);
+    expect(
+      validate({
+        ...fill,
+        spatialFacts: [{ ...fact, actorId: "another-actor" }],
+      }).valid,
+    ).toBe(false);
+    expect(JSON.stringify(guidance.fillSchema)).not.toContain(
+      "unitFeatureVisibleTargetWithinRange",
+    );
+    expect(guidance.instructions.join(" ")).toContain(
+      "Keep accepted Saving Throw outcomes and dice",
+    );
+  });
+
+  it("requires the requested visibility witness and excludes unrelated spatial families", () => {
+    const targetSpatialFactRequest = {
+      kind: "unitFeatureVisibleTargetWithinRange",
+      actorId,
+      sourceProcedureRef,
+      rangeFeet: movementFeet(60),
+    } as const;
+    const hole = {
+      ...holeBase,
+      targetIds: [actorId],
+      targetSpatialFactRequest,
+    } satisfies BattleHole;
+    const [guidance] = battleInputGuidance(hole);
+    if (guidance === undefined)
+      throw new Error("Expected visibility guidance.");
+    const validate = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(guidance.fillSchema, "Visible target fill"),
+    );
+    const fill = {
+      kind: "savingThrowOutcome",
+      holeId: hole.holeId,
+      value: {
+        outcomes: [{ targetId: actorId, succeeded: false, withoutRoll: true }],
+      },
+      spatialFacts: [{ ...targetSpatialFactRequest, targetId: actorId }],
+    };
+    expect(validate(fill).valid).toBe(true);
+    const { spatialFacts: _omitted, ...missing } = fill;
+    expect(validate(missing).valid).toBe(false);
+    expect(
+      validate({
+        ...fill,
+        spatialFacts: [{ ...fill.spatialFacts[0], rangeFeet: 30 }],
+      }).valid,
+    ).toBe(false);
+    expect(JSON.stringify(guidance.fillSchema)).not.toContain(
+      "magicActionAreaSaveDamageHealingTargetsInSphere",
+    );
+  });
+
   it("returns the canonical required ignition shape and explicit empty-object answer", () => {
     const guidance = guidanceFor("pointOriginSphereSaveDamageArea");
     const validate = validateArea("pointOriginSphereSaveDamageArea");

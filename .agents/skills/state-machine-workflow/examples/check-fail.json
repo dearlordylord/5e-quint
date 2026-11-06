@@ -1,0 +1,10 @@
+{
+  "type": "CHECK_FAIL",
+  "facts": {
+    "workload": "selected-input-v1",
+    "build": "reviewed-build-v1",
+    "verdict": "fail",
+    "evidencePath": "examples/review-evidence.txt",
+    "evidenceSha256": "9343069287e660c45e7d388e7e70995c339537b306c45287d0babd9acc82b432"
+  }
+}

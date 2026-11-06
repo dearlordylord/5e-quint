@@ -862,6 +862,16 @@ function breathWeaponSavingThrowFill(
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (
+    !("areaInput" in hole) ||
+    hole.areaInput === undefined ||
+    !("shapeChoices" in hole.areaInput)
+  )
+    throw new Error("Expected advertised Cone/Line area request.");
+  expect(hole.areaInput.shapeChoices).toEqual([
+    { kind: "cone", lengthFeet: 15 },
+    { kind: "line", lengthFeet: 30, widthFeet: 5 },
+  ]);
   const relationshipFactRequest =
     "relationshipFactRequest" in hole
       ? hole.relationshipFactRequest
@@ -891,7 +901,7 @@ function breathWeaponSavingThrowFill(
       : {}),
     value: {
       area: {
-        originAnchorId: spellCasterId,
+        originAnchorId: hole.areaInput.originAnchorId,
         affectedTargetIds: areaTargetIds,
       },
       outcomes,

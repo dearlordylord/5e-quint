@@ -99,6 +99,8 @@ import {
   spatialMeleeSpellAttackProxyPositionHole,
   spatialMeleeSpellAttackProxyPositionInvalidReason,
   spellTargetRequiresAttackRollRelationshipFact,
+  spellAttackRequiresExactDistance,
+  rangedSpellAttackEnemyProximityQualificationIssue,
 } from "./spells-targeting.ts";
 import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
 import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
@@ -523,6 +525,27 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
+    if (
+      spellAttackRequiresExactDistance(invocation) &&
+      (fill.kind === "objectTargetChoice" ||
+        (fill.kind === "targetChoice" &&
+          (fill.holeId === ATTACK_TARGET_HOLE_ID ||
+            (invocation.procedure === "spellAttackSequence" &&
+              spellAttackSequencePartIndexForHole(
+                invocation,
+                fill.holeId,
+                "target",
+              ) !== null))))
+    ) {
+      const proximityIssue = rangedSpellAttackEnemyProximityQualificationIssue({
+        state,
+        casterId: actorId,
+        sourceProcedureRef,
+        facts: fill.spatialFacts ?? [],
+      });
+      if (proximityIssue !== null) return proximityIssue;
+    }
+
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
     }

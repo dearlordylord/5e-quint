@@ -299,6 +299,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
         sourceProcedureRef,
         rangeFeet: movementFeet(120),
         requiresExactDistance: true,
+        requiresEnemyProximityQualification: true,
       },
     });
     const objectId = battleObjectId("proximity-training-object");
@@ -320,10 +321,14 @@ describe("battle runtime: Fire Bolt object targets", () => {
         {
           kind: "rangedSpellAttackEnemyProximity",
           casterId: wizardId,
-          enemyId: skeletonId,
           sourceProcedureRef,
-          distanceFeet: movementFeet(5),
-          enemyCanSeeCaster: true,
+          enemies: [
+            {
+              enemyId: skeletonId,
+              distanceFeet: movementFeet(5),
+              enemyCanSeeCaster: true,
+            },
+          ],
         },
         {
           kind: "spellObjectIgnition",
@@ -335,6 +340,20 @@ describe("battle runtime: Fire Bolt object targets", () => {
       ],
     });
 
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [
+          {
+            ...objectTargetFillForObject,
+            spatialFacts: objectTargetFillForObject.spatialFacts.filter(
+              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     expect(
       resolveBattleSubject({
         state: state.state,
@@ -456,10 +475,14 @@ describe("battle runtime: Fire Bolt object targets", () => {
       {
         kind: "rangedSpellAttackEnemyProximity",
         casterId: wizardId,
-        enemyId: skeletonId,
         sourceProcedureRef,
-        distanceFeet: movementFeet(5),
-        enemyCanSeeCaster: true,
+        enemies: [
+          {
+            enemyId: skeletonId,
+            distanceFeet: movementFeet(5),
+            enemyCanSeeCaster: true,
+          },
+        ],
       },
     ]);
 

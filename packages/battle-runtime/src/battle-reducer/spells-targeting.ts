@@ -326,6 +326,7 @@ export function spellAttackSequencePartTargetHole(
       rangeFeet: invocation.rangeFeet,
       visibility: "notSpecifiedByProcedure",
       requiresExactDistance: true,
+      requiresEnemyProximityQualification: true,
     },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -384,6 +385,7 @@ export function spellObjectTargetHole(
             sourceProcedureRef: invocation.sourceProcedureRef,
             rangeFeet: invocation.rangeFeet,
             requiresExactDistance: true as const,
+            requiresEnemyProximityQualification: true as const,
           },
         }
       : {}),
@@ -412,6 +414,7 @@ export function spellAttackSequencePartObjectTargetHole(
       sourceProcedureRef: invocation.sourceProcedureRef,
       rangeFeet: invocation.rangeFeet,
       requiresExactDistance: true,
+      requiresEnemyProximityQualification: true,
     },
   };
 }
@@ -685,10 +688,45 @@ function ordinarySpellTargetSpatialFactRequest(
               ? ("requiresSight" as const)
               : ("notSpecifiedByProcedure" as const),
           ...(spellAttackRequiresExactDistance(invocation)
-            ? { requiresExactDistance: true as const }
+            ? {
+                requiresExactDistance: true as const,
+                requiresEnemyProximityQualification: true as const,
+              }
             : {}),
         },
       };
+}
+
+export function rangedSpellAttackEnemyProximityQualificationIssue(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly facts: readonly BattleTargetSpatialFact[];
+}): { readonly tag: "invalid"; readonly message: string } | null {
+  const qualifications = input.facts.filter(
+    (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+  );
+  const qualification = qualifications[0];
+  if (
+    qualifications.length !== 1 ||
+    qualification === undefined ||
+    qualification.casterId !== input.casterId ||
+    qualification.sourceProcedureRef !== input.sourceProcedureRef ||
+    new Set(qualification.enemies.map((enemy) => enemy.enemyId)).size !==
+      qualification.enemies.length ||
+    qualification.enemies.some(
+      (enemy) =>
+        enemy.enemyId === input.casterId ||
+        !input.state.combatants.has(enemy.enemyId),
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Ranged Spell Attack target requires one scoped enemy proximity qualification; supply enemies: [] only after checking no enemies qualify.",
+    };
+  }
+  return null;
 }
 
 export function spellAttackRequiresExactDistance(

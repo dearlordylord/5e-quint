@@ -11,6 +11,7 @@ import {
   jsonSchemaRecord as record,
   jsonSchemaAlternatives as alternatives,
   jsonSchemaHasKind as hasKind,
+  resolveLocalSchemaReference,
 } from "../json-schema-sharing.ts";
 import { targetInputSchemas } from "./battle-target-input-schema.ts";
 import {
@@ -59,7 +60,8 @@ function requestedValue(
     hole.areaInput === undefined
   )
     return schema;
-  const areaKind = hole.areaInput.kind;
+  const areaRequest = hole.areaInput;
+  const areaKind = areaRequest.kind;
   const values = alternatives(schema, definitions).filter(
     (branch) =>
       schemaObject(branch.properties) && schemaObject(branch.properties.area),
@@ -79,7 +81,22 @@ function requestedValue(
       throw new Error(
         "The canonical fill must contain its requested area kind.",
       );
-    return { ...branch, properties: { ...properties, area: { anyOf: areas } } };
+    const originAnchorId =
+      "originAnchorId" in areaRequest ? areaRequest.originAnchorId : undefined;
+    const requestedAreas =
+      originAnchorId === undefined
+        ? areas
+        : areas.map((area) => ({
+            ...area,
+            properties: {
+              ...record(area.properties),
+              originAnchorId: { const: originAnchorId },
+            },
+          }));
+    return {
+      ...branch,
+      properties: { ...properties, area: { anyOf: requestedAreas } },
+    };
   });
   if (narrowed.length === 0)
     throw new Error(
@@ -164,6 +181,78 @@ function contextualInputInstructions(
   ];
 }
 
+function requestedSpatialFacts(
+  schema: McpOutputSchema,
+  hole: BattleHole,
+  definitions: McpOutputSchema,
+): McpOutputSchema | undefined {
+  const request =
+    "sphereFactRequest" in hole
+      ? hole.sphereFactRequest
+      : "targetSpatialFactRequest" in hole
+        ? hole.targetSpatialFactRequest
+        : undefined;
+  if (request === undefined) return undefined;
+  const array = resolveLocalSchemaReference(schema, definitions);
+  const facts = alternatives(record(array.items), definitions).filter((fact) =>
+    hasKind(fact, request.kind, definitions),
+  );
+  if (facts.length === 0)
+    throw new Error(
+      "The canonical spatial fill must contain its requested fact.",
+    );
+  return {
+    ...array,
+    minItems: 1,
+    ...("sphereFactRequest" in hole ? { maxItems: 1 } : {}),
+    items: {
+      anyOf: facts.map((fact) => ({
+        ...fact,
+        properties: {
+          ...record(fact.properties),
+          ...Object.fromEntries(
+            Object.entries(request).map(([key, value]) => [
+              key,
+              { const: value },
+            ]),
+          ),
+        },
+      })),
+    },
+  };
+}
+
+function spatialFactInstructions(hole: BattleHole): readonly string[] {
+  if ("sphereFactRequest" in hole)
+    return [
+      "Supply exactly one spatialFacts entry matching sphereFactRequest and all table-confirmed targetIds in that Sphere, including the healing target. Keep accepted Saving Throw outcomes and dice; this independent input supplies membership without replacing them.",
+    ];
+  if (
+    "targetSpatialFactRequest" in hole &&
+    hole.targetSpatialFactRequest !== undefined
+  )
+    return [
+      "Supply one spatialFacts entry matching targetSpatialFactRequest for each selected Saving Throw target, confirming that it is visible and within range.",
+    ];
+  if (
+    hole.kind === "savingThrowOutcome" &&
+    "areaInput" in hole &&
+    hole.areaInput !== undefined &&
+    "shapeChoices" in hole.areaInput
+  )
+    return [
+      "Use the acting creature as originAnchorId. The table computes one of areaInput.shapeChoices and reports every affectedTargetId; geometry is not inferred by the engine.",
+    ];
+  if (
+    hole.kind === "savingThrowOutcome" &&
+    "grantedAreaSaveDamageAction" in hole
+  )
+    return [
+      "Use the acting creature as originAnchorId. The table computes the Cone with grantedAreaSaveDamageAction.lengthFeet and reports every affectedTargetId.",
+    ];
+  return [];
+}
+
 export function battleInputGuidance(hole: BattleHole) {
   if (hole.kind === "interruptDecision") return [];
   const allocatedDamageDice = isAllocatedSpellDamageRollHole(hole)
@@ -180,18 +269,31 @@ export function battleInputGuidance(hole: BattleHole) {
     "relationshipFactRequest" in hole &&
     hole.relationshipFactRequest !== undefined;
   const target =
-    hole.kind === "targetChoice"
+    hole.kind === "targetChoice" || hole.kind === "objectTargetChoice"
       ? targetInputSchemas(members, hole, canonicalDefinitions)
       : { members, definitions: canonicalDefinitions, distanceFirst: false };
   const { members: requestedMembers, definitions, distanceFirst } = target;
   const narrowed = requestedMembers.map((requested) => {
     const properties = record(requested.properties);
+    const spatialFacts = schemaObject(properties.spatialFacts)
+      ? requestedSpatialFacts(properties.spatialFacts, hole, definitions)
+      : undefined;
     return {
       ...requested,
+      ...("targetSpatialFactRequest" in hole &&
+      hole.targetSpatialFactRequest !== undefined
+        ? {
+            required: [
+              ...(Array.isArray(requested.required) ? requested.required : []),
+              "spatialFacts",
+            ],
+          }
+        : {}),
       properties: {
         ...properties,
         kind: { const: hole.kind },
         holeId: { const: hole.holeId },
+        ...(spatialFacts === undefined ? {} : { spatialFacts }),
         ...(schemaObject(properties.value)
           ? { value: requestedValue(properties.value, hole, definitions) }
           : {}),
@@ -231,6 +333,7 @@ export function battleInputGuidance(hole: BattleHole) {
         ...damageDiceInstructions(hole),
         ...candidateDiceInstructions(hole),
         ...battleAreaInputInstructions(hole),
+        ...spatialFactInstructions(hole),
       ],
     },
   ];

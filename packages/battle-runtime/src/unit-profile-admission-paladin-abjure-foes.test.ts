@@ -9,7 +9,7 @@ import {
 import { describe, expect, test } from "vitest";
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { damageAmount, movementFeet, type ClassLevel } from "@dnd/shared/types";
+import { damageAmount, type ClassLevel } from "@dnd/shared/types";
 import { Result } from "effect";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
@@ -33,7 +33,6 @@ import type {
   BattleResolutionResult,
   BattleRuntimeSession,
   BattleState,
-  BattleTargetSpatialFact,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "./index.ts";
@@ -537,24 +536,18 @@ function abjureFoesSavingThrowFill(
     readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (
+    !("targetSpatialFactRequest" in hole) ||
+    hole.targetSpatialFactRequest === undefined
+  )
+    throw new Error("Expected advertised visibility and range request.");
+  expect(hole.targetSpatialFactRequest.sourceProcedureRef).toBe(
+    sourceProcedureRef,
+  );
+  const request = hole.targetSpatialFactRequest;
   return {
     ...savingThrowOutcomeFill(hole, outcomes),
-    spatialFacts: outcomes.map((outcome) =>
-      abjureFoesVisibleWithinRangeFact(sourceProcedureRef, outcome.targetId),
-    ),
-  };
-}
-
-function abjureFoesVisibleWithinRangeFact(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-  targetId: CombatantId,
-): BattleTargetSpatialFact {
-  return {
-    kind: "unitFeatureVisibleTargetWithinRange",
-    actorId: spellCasterId,
-    targetId,
-    sourceProcedureRef,
-    rangeFeet: movementFeet(60),
+    spatialFacts: outcomes.map(({ targetId }) => ({ ...request, targetId })),
   };
 }
 

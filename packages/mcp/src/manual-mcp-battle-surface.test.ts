@@ -1,3 +1,5 @@
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
@@ -1051,6 +1053,7 @@ describe("manual MCP battle surface coverage", () => {
     );
     expect(adjacentTarget.spellTargetSpatialFactRequest).toMatchObject({
       requiresExactDistance: true,
+      requiresEnemyProximityQualification: true,
       rangeFeet: 120,
     });
     const adjacentAfterTarget = call(adjacentRoot, "fill_battle_hole", {
@@ -1065,10 +1068,10 @@ describe("manual MCP battle surface coverage", () => {
           {
             kind: "rangedSpellAttackEnemyProximity",
             casterId: "fighter",
-            enemyId: "goblin",
             sourceProcedureRef: adjacentAct.subject.procedureRef,
-            distanceFeet: 5,
-            enemyCanSeeCaster: true,
+            enemies: [
+              { enemyId: "goblin", distanceFeet: 5, enemyCanSeeCaster: true },
+            ],
           },
         ],
       ),
@@ -1132,111 +1135,259 @@ describe("manual MCP battle surface coverage", () => {
     expect(nonAdjacentAttackRoll.rollMode).toBeUndefined();
   });
 
-  test("uses a typed adjacent-enemy fact independently of the selected target", () => {
-    const selectedAllyRoot = createMcpPlaySessionRoot();
-    selectedAllyRoot.sessionStore.storeActiveBattle(
-      startBattleRight(selectedAllyRoot, [
-        character(selectedAllyRoot, {
-          combatantId: fighterId,
-          displayName: "Wizard",
-          initiative: 20,
-          attack: null,
-          spellcasting: spellcasting(selectedAllyRoot, {
-            sourceClassName: "wizard",
-            abilityModifier: 3,
-            cantrips: ["fire_bolt"],
+  test.each([
+    {
+      scenario: "visible adjacent enemy",
+      distanceFeet: 5,
+      enemyCanSeeCaster: true,
+      enemyIncapacitated: false,
+      targetCannotSeeCaster: false,
+      expectedRollMode: "disadvantage",
+    },
+    {
+      scenario: "distant enemy",
+      distanceFeet: 10,
+      enemyCanSeeCaster: true,
+      enemyIncapacitated: false,
+      targetCannotSeeCaster: false,
+      expectedRollMode: undefined,
+    },
+    {
+      scenario: "enemy cannot see caster",
+      distanceFeet: 5,
+      enemyCanSeeCaster: false,
+      enemyIncapacitated: false,
+      targetCannotSeeCaster: false,
+      expectedRollMode: undefined,
+    },
+    {
+      scenario: "Incapacitated enemy",
+      distanceFeet: 5,
+      enemyCanSeeCaster: true,
+      enemyIncapacitated: true,
+      targetCannotSeeCaster: false,
+      expectedRollMode: undefined,
+    },
+    {
+      scenario: "Advantage cancels proximity Disadvantage",
+      distanceFeet: 5,
+      enemyCanSeeCaster: true,
+      enemyIncapacitated: false,
+      targetCannotSeeCaster: true,
+      expectedRollMode: "normal",
+    },
+  ])(
+    "qualifies enemies independently of the selected target: $scenario",
+    ({
+      distanceFeet,
+      enemyCanSeeCaster,
+      enemyIncapacitated,
+      targetCannotSeeCaster,
+      expectedRollMode,
+    }) => {
+      const selectedAllyRoot = createMcpPlaySessionRoot();
+      selectedAllyRoot.sessionStore.storeActiveBattle(
+        startBattleRight(selectedAllyRoot, [
+          character(selectedAllyRoot, {
+            combatantId: fighterId,
+            displayName: "Wizard",
+            initiative: 20,
+            attack: null,
+            spellcasting: spellcasting(selectedAllyRoot, {
+              sourceClassName: "wizard",
+              abilityModifier: 3,
+              cantrips: ["fire_bolt", "ray_of_frost"],
+            }),
           }),
-        }),
-        statBlock(selectedAllyRoot, { combatantId: allyId, initiative: 15 }),
-        statBlock(selectedAllyRoot, { combatantId: goblinId, initiative: 10 }),
-      ]),
-    );
-    const allyAct = requireSpellAct(selectedAllyRoot, "fire_bolt");
-    const allyTarget = requireHole(allyAct.initialHoles, "targetChoice");
-    const allyAfterTarget = call(selectedAllyRoot, "fill_battle_hole", {
-      subject: allyAct.subject,
-      fill: spellTargetFill(
+          statBlock(selectedAllyRoot, { combatantId: allyId, initiative: 15 }),
+          statBlock(selectedAllyRoot, {
+            combatantId: goblinId,
+            initiative: 10,
+          }),
+        ]),
+      );
+      const allyAct = requireSpellAct(selectedAllyRoot, "fire_bolt");
+      const allyTarget = requireHole(allyAct.initialHoles, "targetChoice");
+      const omittedQualification = spellTargetFill(
         allyTarget.holeId,
         "fighter",
         "ally",
         allyAct.subject.procedureRef,
         5,
-      ),
-    });
-    expect(allyAfterTarget).toMatchObject({
-      envelope: {
-        frontier: {
-          kind: "holes",
-          holes: [expect.objectContaining({ kind: "attackRoll" })],
-        },
-      },
-    });
-    if (allyAfterTarget.envelope.frontier.kind !== "holes") return;
-    expect(
-      requireHole(allyAfterTarget.envelope.frontier.holes, "attackRoll")
-        .rollMode,
-    ).toBeUndefined();
-
-    const distantTargetRoot = createMcpPlaySessionRoot();
-    distantTargetRoot.sessionStore.storeActiveBattle(
-      startBattleRight(distantTargetRoot, [
-        character(distantTargetRoot, {
-          combatantId: fighterId,
-          displayName: "Wizard",
-          initiative: 20,
-          attack: null,
-          spellcasting: spellcasting(distantTargetRoot, {
-            sourceClassName: "wizard",
-            abilityModifier: 3,
-            cantrips: ["fire_bolt"],
-          }),
-        }),
-        statBlock(distantTargetRoot, {
-          combatantId: allyId,
-          initiative: 15,
-        }),
-        statBlock(distantTargetRoot, {
-          combatantId: goblinId,
-          initiative: 10,
-        }),
-      ]),
-    );
-    const distantAct = requireSpellAct(distantTargetRoot, "fire_bolt");
-    const distantTarget = requireHole(distantAct.initialHoles, "targetChoice");
-    const distantAfterTarget = call(distantTargetRoot, "fill_battle_hole", {
-      subject: distantAct.subject,
-      fill: spellTargetFill(
-        distantTarget.holeId,
-        "fighter",
-        "goblin",
-        distantAct.subject.procedureRef,
-        30,
+      );
+      const qualification = {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: "fighter",
+        sourceProcedureRef: allyAct.subject.procedureRef,
+        enemies: [],
+      };
+      const nearbyEnemy = {
+        enemyId: "goblin",
+        distanceFeet: 5,
+        enemyCanSeeCaster: true,
+      };
+      const targetFacts = omittedQualification.spatialFacts.filter(
+        (fact) =>
+          !("kind" in fact) || fact.kind !== "rangedSpellAttackEnemyProximity",
+      );
+      for (const invalidQualifications of [
+        [],
+        [qualification, qualification],
+        [{ ...qualification, casterId: "ally" }],
         [
           {
-            kind: "rangedSpellAttackEnemyProximity",
-            casterId: "fighter",
-            enemyId: "ally",
-            sourceProcedureRef: distantAct.subject.procedureRef,
-            distanceFeet: 5,
-            enemyCanSeeCaster: true,
+            ...qualification,
+            sourceProcedureRef: requireSpellAct(
+              selectedAllyRoot,
+              "ray_of_frost",
+            ).subject.procedureRef,
           },
         ],
-      ),
-    });
-    expect(distantAfterTarget).toMatchObject({
-      envelope: {
-        frontier: {
-          kind: "holes",
-          holes: [
-            expect.objectContaining({
-              kind: "attackRoll",
-              rollMode: "disadvantage",
-            }),
-          ],
+        [{ ...qualification, enemies: [nearbyEnemy, nearbyEnemy] }],
+        [
+          {
+            ...qualification,
+            enemies: [{ ...nearbyEnemy, enemyId: "fighter" }],
+          },
+        ],
+        [
+          {
+            ...qualification,
+            enemies: [{ ...nearbyEnemy, enemyId: "absent-enemy" }],
+          },
+        ],
+      ]) {
+        expect(
+          call(selectedAllyRoot, "fill_battle_hole", {
+            subject: allyAct.subject,
+            fill: {
+              ...omittedQualification,
+              spatialFacts: [...targetFacts, ...invalidQualifications],
+            },
+          }),
+        ).toMatchObject({ result: { tag: "invalid" } });
+      }
+      const allyAfterTarget = call(selectedAllyRoot, "fill_battle_hole", {
+        subject: allyAct.subject,
+        fill: spellTargetFill(
+          allyTarget.holeId,
+          "fighter",
+          "ally",
+          allyAct.subject.procedureRef,
+          5,
+        ),
+      });
+      expect(allyAfterTarget).toMatchObject({
+        envelope: {
+          frontier: {
+            kind: "holes",
+            holes: [expect.objectContaining({ kind: "attackRoll" })],
+          },
         },
-      },
-    });
-  });
+      });
+      if (allyAfterTarget.envelope.frontier.kind !== "holes") return;
+      expect(
+        requireHole(allyAfterTarget.envelope.frontier.holes, "attackRoll")
+          .rollMode,
+      ).toBeUndefined();
+
+      const distantTargetRoot = createMcpPlaySessionRoot();
+      distantTargetRoot.sessionStore.storeActiveBattle(
+        startBattleRight(distantTargetRoot, [
+          character(distantTargetRoot, {
+            combatantId: fighterId,
+            displayName: "Wizard",
+            initiative: 20,
+            attack: null,
+            spellcasting: spellcasting(distantTargetRoot, {
+              sourceClassName: "wizard",
+              abilityModifier: 3,
+              cantrips: ["fire_bolt"],
+            }),
+          }),
+          statBlock(distantTargetRoot, {
+            combatantId: allyId,
+            initiative: 15,
+          }),
+          statBlock(distantTargetRoot, {
+            combatantId: goblinId,
+            initiative: 10,
+          }),
+        ]),
+      );
+      if (enemyIncapacitated) {
+        const session = distantTargetRoot.sessionStore.battleSession;
+        const enemy = session?.state.combatants.get(allyId);
+        if (
+          session === null ||
+          enemy === undefined ||
+          enemy.positiveHpUnconscious !== null
+        )
+          throw new Error("Expected the nearby enemy fixture.");
+        distantTargetRoot.sessionStore.storeActiveBattle(
+          battleRuntimeSessionForTest({
+            context: session.context,
+            state: {
+              ...session.state,
+              combatants: new Map(session.state.combatants).set(allyId, {
+                ...enemy,
+                conditions: applyCondition(enemy.conditions, "incapacitated"),
+              }),
+            },
+          }),
+        );
+      }
+      const distantAct = requireSpellAct(distantTargetRoot, "fire_bolt");
+      const distantTarget = requireHole(
+        distantAct.initialHoles,
+        "targetChoice",
+      );
+      const distantAfterTarget = call(distantTargetRoot, "fill_battle_hole", {
+        subject: distantAct.subject,
+        fill: spellTargetFill(
+          distantTarget.holeId,
+          "fighter",
+          "goblin",
+          distantAct.subject.procedureRef,
+          30,
+          [
+            {
+              kind: "rangedSpellAttackEnemyProximity",
+              casterId: "fighter",
+              sourceProcedureRef: distantAct.subject.procedureRef,
+              enemies: [{ enemyId: "ally", distanceFeet, enemyCanSeeCaster }],
+            },
+            ...(targetCannotSeeCaster
+              ? [
+                  {
+                    kind: "attackTargetCannotSeeAttacker",
+                    attackerId: "fighter",
+                    targetId: "goblin",
+                  },
+                ]
+              : []),
+          ],
+        ),
+      });
+      expect(distantAfterTarget).toMatchObject({
+        envelope: {
+          frontier: {
+            kind: "holes",
+            holes: [
+              expect.objectContaining({
+                kind: "attackRoll",
+              }),
+            ],
+          },
+        },
+      });
+      if (distantAfterTarget.envelope.frontier.kind !== "holes") return;
+      expect(
+        requireHole(distantAfterTarget.envelope.frontier.holes, "attackRoll")
+          .rollMode,
+      ).toBe(expectedRollMode);
+    },
+  );
 
   test("uses the canonical single spell range without a long-range spell band", () => {
     const inRangeRoot = createMcpPlaySessionRoot();
@@ -2291,6 +2442,16 @@ function spellTargetFill(
         sourceProcedureRef,
         ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
+      ...(additionalSpatialFacts.length === 0 && distanceFeet !== undefined
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity",
+              casterId,
+              sourceProcedureRef,
+              enemies: [],
+            },
+          ]
+        : []),
       ...additionalSpatialFacts,
     ],
   };

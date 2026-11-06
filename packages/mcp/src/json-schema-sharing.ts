@@ -408,12 +408,9 @@ export function jsonSchemaHasKind(
 ): boolean {
   const properties = jsonSchemaRecord(schema.properties);
   if (!isJsonSchemaObject(properties.kind)) return false;
-  const discriminant = resolveLocalSchemaReference(
-    properties.kind,
-    definitions,
-  );
-  return (
-    discriminant.const === kind ||
-    (Array.isArray(discriminant.enum) && discriminant.enum.includes(kind))
+  return jsonSchemaAlternatives(properties.kind, definitions).some(
+    (discriminant) =>
+      discriminant.const === kind ||
+      (Array.isArray(discriminant.enum) && discriminant.enum.includes(kind)),
   );
 }
