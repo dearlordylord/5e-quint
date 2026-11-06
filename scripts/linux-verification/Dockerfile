@@ -2,7 +2,7 @@ FROM node:24.20.0-bookworm
 
 LABEL io.dnd.verification-image="1"
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ripgrep openjdk-17-jre-headless \
+    ripgrep openjdk-17-jre-headless jq \
     && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
 
