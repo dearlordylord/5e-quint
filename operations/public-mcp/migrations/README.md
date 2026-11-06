@@ -77,12 +77,12 @@ and explicit `sourceRelease`/`targetRelease`. Recovery tests use this same
 operation and real prepared bundles after closing the original application.
 Standalone callers own the same stopped-writer precondition as the adapter.
 
-Recovery tests separately build `test-support/original-mcp-fixture.mjs` with
-`test-support/build-original-fixture.mjs CLEAN_ORIGINAL_CHECKOUT FROZEN_MANIFEST ABSENT_OUTPUT_DIRECTORY`.
-Build this fixture before preparation changes the original checkout. The
-builder resolves all MCP implementation and fixture-helper imports against
-that clean, exact original release and records its bundle hash and input
-closure. The fixture creates a fresh database through original MCP, closes it,
+Recovery tests separately build `test-support/mcp-fixture.mjs` with
+`test-support/build-mcp-fixture.mjs CLEAN_RELEASE_CHECKOUT FULL_RELEASE_COMMIT ABSENT_OUTPUT_DIRECTORY`.
+Build the original fixture before preparation changes its checkout. Build the
+same entry against the committed target for continuation checks. The builder
+resolves all MCP implementation and fixture-helper imports against the selected
+clean release and records its bundle hash and input closure. The fixture creates a fresh database through original MCP, closes it,
 and can continue a separate control copy through original MCP. It is never
 imported by the source materializer or serving application.
 

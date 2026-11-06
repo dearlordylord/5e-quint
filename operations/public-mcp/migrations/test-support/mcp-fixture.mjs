@@ -35,8 +35,9 @@ async function connection(databasePath) {
     ...createMcpApplicationServices(),
     createAdminMirrorPublication: disabledAdminMirrorPublication,
   };
-  // This entry is bundled only inside the explicitly pinned original source.
-  const repository = value(openSqlitePlaySessionRepository(databasePath));
+  const repository = value(
+    openSqlitePlaySessionRepository(databasePath, services),
+  );
   const host = createDndMcpProtocolServer(services, undefined, {
     playSessionRepository: repository,
     toolSurface: "regular",
@@ -79,7 +80,7 @@ function operation(result) {
   return result.operation.result;
 }
 
-export async function createOriginalFixture(databasePath) {
+export async function createPendingDamageFixture(databasePath) {
   if (existsSync(databasePath))
     throw new Error("The original fixture database must be fresh.");
   const connected = await connection(databasePath);
@@ -140,7 +141,7 @@ export async function createOriginalFixture(databasePath) {
   }
 }
 
-export async function continueOriginalFixture(databasePath, subject) {
+export async function continuePendingDamageFixture(databasePath, subject) {
   const connected = await connection(databasePath);
   try {
     const next = operation(

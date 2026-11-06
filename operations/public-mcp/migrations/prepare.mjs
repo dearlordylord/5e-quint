@@ -58,6 +58,18 @@ export async function prepareMigrationKit({
     );
   if (git(target, ["status", "--porcelain", "--untracked-files=no"]) !== "")
     throw new Error("Target checkout contains tracked modifications.");
+  if (
+    git(target, [
+      "ls-files",
+      "--others",
+      "--exclude-standard",
+      "--",
+      ".",
+      ":(exclude).audit/**",
+      ":(exclude).artifacts/**",
+    ]) !== ""
+  )
+    throw new Error("Target checkout contains uncommitted source files.");
   const patchPath = resolve(manifestDirectory, manifest.patch.path);
   if (sha256(readFileSync(patchPath)) !== manifest.patch.sha256)
     throw new Error("Owner patch hash mismatch.");
@@ -103,12 +115,13 @@ export async function prepareMigrationKit({
   mkdirSync(dirname(exporterEntry), { recursive: true });
   copyFileSync(resolve(directory, "source-exporter.ts"), exporterEntry);
   const bundles = {};
+  const bundleInputs = {};
   for (const [root, entry, output] of [
     [source, exporterEntry, "source-exporter.mjs"],
     [target, resolve(directory, "target-validator.ts"), "target-validator.mjs"],
   ]) {
     const outfile = resolve(outputDirectory, output);
-    await build({
+    const built = await build({
       absWorkingDir: root,
       entryPoints: [entry],
       outfile,
@@ -118,16 +131,18 @@ export async function prepareMigrationKit({
       target: "node22",
       external: ["redis"],
       legalComments: "linked",
+      metafile: true,
       banner: {
         js: 'import { createRequire } from "node:module"; const require = createRequire(import.meta.url);',
       },
     });
     bundles[output] = sha256(readFileSync(outfile));
+    bundleInputs[output] = Object.keys(built.metafile.inputs).sort();
   }
   writeFileSync(
     resolve(outputDirectory, "prepared.json"),
     JSON.stringify(
-      { ...manifest, targetRelease, targetFormat: 5, bundles },
+      { ...manifest, targetRelease, targetFormat: 5, bundles, bundleInputs },
       null,
       2,
     ) + "\n",
