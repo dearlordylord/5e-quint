@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
 import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 
+import { spellBattleSupport } from "../consumer-protocol.ts";
 import { wizardSpellcasting } from "../battle-runtime.test-support.ts";
 import { battleId, combatantId } from "../identity.ts";
 import { characterCreature } from "../unit-profile-admission-creature-fixture.test-support.ts";
@@ -78,6 +79,44 @@ function expectRestorationProcedureIssues(
 }
 
 describe("character spell procedure admission result", () => {
+  test.each([
+    {
+      spellId: "cure_wounds",
+      support: { tag: "admitted" },
+      invocationCount: 1,
+    },
+    {
+      spellId: "identify",
+      support: {
+        tag: "notBattleOwned",
+        reason: { kind: "noMatchingBattleProcedure" },
+      },
+      invocationCount: 0,
+    },
+  ] as const)(
+    "preflight predicts Battle spell availability: $spellId",
+    ({ spellId, support, invocationCount }) => {
+      const spell = spellRecord(spellId);
+      expect(spellBattleSupport(spell.mechanics)).toEqual(support);
+      const session = spellBattle({ preparedSpells: [spell] });
+      const actor = session.state.combatants.get(spellCasterId);
+      const spellcasting =
+        session.context.characters.get(
+          spellCasterId,
+        )?.spellcastingPresentationSource;
+      if (actor === undefined || spellcasting === undefined) {
+        throw new Error(
+          "Expected admitted test spellcaster and presentation source.",
+        );
+      }
+      const acts = admittedSpellActs(actor, session.state, spellcasting);
+      expect(acts.tag).toBe("admitted");
+      if (acts.tag === "admitted") {
+        expect(acts.invocations).toHaveLength(invocationCount);
+      }
+    },
+  );
+
   test("retains spellbook ritual mechanics while ordinary casting is blocked", () => {
     const session = spellBattle({
       preparedSpells: [],
@@ -184,6 +223,22 @@ describe("character spell procedure admission result", () => {
   });
 
   test("preserves every typed issue through battle start", () => {
+    const spells = malformedRestorationSpells();
+    for (const spell of spells) {
+      expect(spellBattleSupport(spell.mechanics)).toEqual({
+        tag: "rejected",
+        issues: [
+          {
+            tag: "spellProcedureAdmissionIssue",
+            procedure: "directHitPointRestoration",
+            failedFact: "school",
+            mechanicsPath: spellMechanicsHeaderPath("school"),
+            message:
+              "Unsupported directHitPointRestoration mechanics fact: school.",
+          },
+        ],
+      });
+    }
     expectRestorationProcedureIssues(
       startBattle({
         battleId: battleId("reject-spell"),
@@ -194,7 +249,7 @@ describe("character spell procedure admission result", () => {
             initiative: 20,
             spellcasting: wizardSpellcasting({
               cantrips: [],
-              preparedSpells: malformedRestorationSpells(),
+              preparedSpells: spells,
             }),
           }),
         ],
