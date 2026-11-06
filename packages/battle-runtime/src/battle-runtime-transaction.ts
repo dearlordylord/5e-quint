@@ -1,6 +1,13 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
-import { Match, Option, Result } from "effect";
+import { Match, Option, Result, Schema } from "effect";
+import {
+  BattleSnapshotSchema,
+  BattleFillSchema,
+  battleSnapshotExecutionScopeRefs,
+} from "./battle-reducer/battle-codecs.ts";
+import { BattleSubjectSchema } from "./battle-subjects.ts";
+import { parseCharacterBattleClassLevels } from "./character-class-level.ts";
 
 import {
   battleMechanicalFrontier,
@@ -20,10 +27,21 @@ import {
 import {
   battleRuntimeSessionFollows,
   battleRuntimeSessionWithState,
+  retainBattleRuntimeSession,
+  restoreBattleRuntimeSession,
+  type BattleRuntimeSessionContinuation,
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
 import {
   battleReplayStackDepth,
+  battleOwnedExecutionScopeRefOrdinalIsBefore,
+  battleProcedureExecutionRefOrdinalIsBefore,
+  battleStatBlockExecutionScopeRefBelongsToBattle,
+  battleStatBlockExecutionScopeRefBelongsToCombatant,
+  battleCharacterExecutionScopeRefBelongsToBattle,
+  battleCharacterExecutionScopeRefBelongsToCombatant,
+  battleAttackExecutionScopeRefBelongsToBattle,
+  battleAttackExecutionScopeRefBelongsToCombatant,
   type CombatantId,
   type BattleReplayStackDepth,
 } from "./identity.ts";
@@ -36,6 +54,7 @@ import {
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import {
   interruptCheckpointIdentity,
+  restoreInterruptCheckpointIdentity,
   type InterruptCheckpointIdentity,
 } from "./battle-reducer/interrupt-checkpoint-identity.ts";
 import { interruptedProcedureSubject } from "./battle-reducer/interrupt-execution.ts";
@@ -54,6 +73,10 @@ import type {
 import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  retainedAttackRollTableSource,
+  retainAdmittedAttackRollTableSource,
+} from "./d20-test-circumstance.ts";
 
 class BattlePendingTransactionToken {
   readonly #transactionIdentity = undefined;
@@ -260,6 +283,466 @@ const battlePendingTransactionData = new WeakMap<
   BattlePendingTransaction,
   BattlePendingTransactionData
 >();
+
+type RetainedTransactionLayer = {
+  readonly baseSession: number;
+  readonly currentSession: number;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+  readonly frontierKind: BattlePendingTransactionFrontier["kind"];
+  readonly checkpointOwnership:
+    | { readonly tag: "ordinaryFrontier" }
+    | {
+        readonly tag: "interruptFrontier";
+        readonly checkpoint: number;
+        readonly ancestors: readonly number[];
+      };
+  readonly completion:
+    | { readonly kind: "standaloneClose"; readonly parent: null }
+    | {
+        readonly kind: "replaySubject";
+        readonly parent: RetainedTransactionLayer | null;
+      }
+    | {
+        readonly kind: "refreshParentFrontier";
+        readonly parent: RetainedTransactionLayer;
+      };
+};
+
+export type BattleRuntimeContinuation = {
+  readonly sessions: readonly BattleRuntimeSessionContinuation[];
+  readonly currentSession: number;
+  readonly checkpointLinks: readonly {
+    readonly session: number;
+    readonly frame: number;
+    readonly identity: number;
+  }[];
+  readonly pending: RetainedTransactionLayer | null;
+  readonly attackRollTableSources: readonly NonNullable<
+    ReturnType<typeof retainedAttackRollTableSource>
+  >[];
+};
+
+export function retainBattleRuntimeContinuation(
+  session: BattleRuntimeSession,
+  transaction: BattlePendingTransaction | null,
+): Result.Result<BattleRuntimeContinuation, string> {
+  const sessions: BattleRuntimeSessionContinuation[] = [];
+  const indices = new Map<BattleRuntimeSession, number>();
+  const identities = new Map<InterruptCheckpointIdentity, number>();
+  const checkpointLinks: {
+    session: number;
+    frame: number;
+    identity: number;
+  }[] = [];
+  function identityIndex(identity: InterruptCheckpointIdentity): number {
+    const existing = identities.get(identity);
+    if (existing !== undefined) return existing;
+    const index = identities.size;
+    identities.set(identity, index);
+    return index;
+  }
+  function sessionIndex(value: BattleRuntimeSession): number {
+    const existing = indices.get(value);
+    if (existing !== undefined) return existing;
+    const index = sessions.length;
+    indices.set(value, index);
+    sessions.push(retainBattleRuntimeSession(value));
+    value.state.interruptStack.forEach((entry, frame) => {
+      if (entry.kind === "interruptCheckpoint")
+        checkpointLinks.push({
+          session: index,
+          frame,
+          identity: identityIndex(interruptCheckpointIdentity(entry.frame)),
+        });
+    });
+    return index;
+  }
+  function layer(data: BattlePendingTransactionData): RetainedTransactionLayer {
+    return {
+      baseSession: sessionIndex(data.baseSession),
+      currentSession: sessionIndex(data.currentSession),
+      subject: data.subject,
+      fills: data.fills,
+      frontierKind: data.frontier.kind,
+      checkpointOwnership:
+        data.checkpointOwnership.tag === "ordinaryFrontier"
+          ? data.checkpointOwnership
+          : {
+              tag: "interruptFrontier",
+              checkpoint: identityIndex(data.checkpointOwnership.checkpoint),
+              ancestors: data.checkpointOwnership.ancestors.map(identityIndex),
+            },
+      completion: Match.value(data.completion).pipe(
+        Match.when({ kind: "standaloneClose" }, () => ({
+          kind: "standaloneClose" as const,
+          parent: null,
+        })),
+        Match.when({ kind: "replaySubject" }, ({ parent }) => ({
+          kind: "replaySubject" as const,
+          parent: parent === null ? null : layer(parent),
+        })),
+        Match.when({ kind: "refreshParentFrontier" }, ({ parent }) => ({
+          kind: "refreshParentFrontier" as const,
+          parent: layer(parent),
+        })),
+        Match.exhaustive,
+      ),
+    };
+  }
+  const currentSession = sessionIndex(session);
+  const data =
+    transaction === null
+      ? undefined
+      : battlePendingTransactionData.get(transaction);
+  if (
+    transaction !== null &&
+    (data === undefined || data.currentSession !== session)
+  )
+    return Result.fail(
+      "The pending transaction does not own this Battle session.",
+    );
+  const pending = data === undefined ? null : layer(data);
+  const attackRollTableSources: NonNullable<
+    ReturnType<typeof retainedAttackRollTableSource>
+  >[] = [];
+  const seen = new Set<object>();
+  function collect(value: unknown): void {
+    if (typeof value !== "object" || value === null || seen.has(value)) return;
+    seen.add(value);
+    const retained = retainedAttackRollTableSource(value);
+    if (retained !== undefined) attackRollTableSources.push(retained);
+    if (value instanceof Map) {
+      for (const [key, entry] of value) {
+        collect(key);
+        collect(entry);
+      }
+    } else if (value instanceof Set) {
+      for (const entry of value) collect(entry);
+    } else {
+      for (const entry of Object.values(value)) collect(entry);
+    }
+  }
+  collect(sessions);
+  collect(pending);
+  return Result.succeed({
+    sessions,
+    currentSession,
+    checkpointLinks,
+    pending,
+    attackRollTableSources,
+  });
+}
+
+export function restoreBattleRuntimeContinuation(
+  continuation: BattleRuntimeContinuation,
+  statBlockCatalog?: BattleStatBlockExecutionCatalog,
+): Result.Result<
+  {
+    readonly session: BattleRuntimeSession;
+    readonly transaction: BattlePendingTransaction | null;
+  },
+  string
+> {
+  for (const retained of continuation.sessions) {
+    for (const [id, combatant] of retained.state.combatants) {
+      if (id !== combatant.combatantId)
+        return Result.fail("Saved combatant ownership is contradictory.");
+      if (
+        combatant.origin.kind === "character" &&
+        Result.isFailure(
+          parseCharacterBattleClassLevels(combatant.origin.classLevels),
+        )
+      )
+        return Result.fail("Saved character class-level facts are invalid.");
+    }
+    const snapshot = snapshotBattle(retained.state);
+    if (!Schema.is(BattleSnapshotSchema)(snapshot))
+      return Result.fail("Saved Battle execution ownership is invalid.");
+    for (const combatant of snapshot.combatants) {
+      const allocation = retained.state.executionScopeCursors.get(
+        combatant.combatantId,
+      );
+      if (
+        allocation?.kind !== "active" ||
+        !battleSnapshotExecutionScopeRefs(combatant).every((scope) =>
+          battleOwnedExecutionScopeRefOrdinalIsBefore(
+            scope,
+            allocation.nextScopeOrdinal,
+          ),
+        )
+      )
+        return Result.fail("Saved live execution scope allocation is invalid.");
+    }
+    for (const [id, allocation] of retained.state.executionScopeCursors) {
+      if ((allocation.kind === "active") !== retained.state.combatants.has(id))
+        return Result.fail(
+          "Saved execution scope allocation ownership is contradictory.",
+        );
+      if (allocation.kind === "retired") {
+        const ownsScope = Match.value(allocation.ownership).pipe(
+          Match.when(
+            { kind: "statBlock" },
+            (owned) =>
+              battleStatBlockExecutionScopeRefBelongsToBattle(
+                owned.statBlockScopeRef,
+                retained.state.battleId,
+              ) &&
+              battleStatBlockExecutionScopeRefBelongsToCombatant(
+                owned.statBlockScopeRef,
+                id,
+              ),
+          ),
+          Match.when(
+            { kind: "character" },
+            (owned) =>
+              battleCharacterExecutionScopeRefBelongsToBattle(
+                owned.characterScopeRef,
+                retained.state.battleId,
+              ) &&
+              battleCharacterExecutionScopeRefBelongsToCombatant(
+                owned.characterScopeRef,
+                id,
+              ) &&
+              battleAttackExecutionScopeRefBelongsToBattle(
+                owned.attackScopeRef,
+                retained.state.battleId,
+              ) &&
+              battleAttackExecutionScopeRefBelongsToCombatant(
+                owned.attackScopeRef,
+                id,
+              ) &&
+              owned.formScopeRefs.every(
+                (scope) =>
+                  battleStatBlockExecutionScopeRefBelongsToBattle(
+                    scope,
+                    retained.state.battleId,
+                  ) &&
+                  battleStatBlockExecutionScopeRefBelongsToCombatant(scope, id),
+              ),
+          ),
+          Match.exhaustive,
+        );
+        if (!ownsScope)
+          return Result.fail(
+            "Saved retired execution scopes belong to another Battle or actor.",
+          );
+        const refs = Match.value(allocation.ownership).pipe(
+          Match.when({ kind: "statBlock" }, (owned) => [
+            owned.statBlockScopeRef,
+          ]),
+          Match.when({ kind: "character" }, (owned) => [
+            owned.characterScopeRef,
+            owned.attackScopeRef,
+            ...owned.formScopeRefs,
+          ]),
+          Match.exhaustive,
+        );
+        if (
+          !refs.every((scope) =>
+            battleOwnedExecutionScopeRefOrdinalIsBefore(
+              scope,
+              allocation.nextScopeOrdinal,
+            ),
+          )
+        )
+          return Result.fail(
+            "Saved retired execution scope allocation is invalid.",
+          );
+      }
+    }
+    for (const combatant of retained.state.combatants.values()) {
+      if (combatant.origin.kind === "character") {
+        const execution = combatant.origin.execution;
+        if (
+          !execution.procedureBindings.every((binding) =>
+            battleProcedureExecutionRefOrdinalIsBefore(
+              binding.procedureRef,
+              execution.scopeRef,
+              execution.nextProcedureOrdinal,
+            ),
+          )
+        )
+          return Result.fail(
+            "Saved character procedure allocation is invalid.",
+          );
+      }
+    }
+  }
+  const sessions = continuation.sessions.map(restoreBattleRuntimeSession);
+  const session = sessions[continuation.currentSession];
+  if (session === undefined)
+    return Result.fail("The saved Battle session reference is absent.");
+  for (const retained of continuation.attackRollTableSources)
+    retainAdmittedAttackRollTableSource(retained.roll, retained.source);
+  const identities = new Map<number, InterruptCheckpointIdentity>();
+  const checkpointOwners = new Set<string>();
+  const sessionCheckpointIdentities = new Set<string>();
+  function identity(index: number): InterruptCheckpointIdentity {
+    const existing = identities.get(index);
+    if (existing !== undefined) return existing;
+    const value = Object.freeze({});
+    identities.set(index, value);
+    return value;
+  }
+  for (const link of continuation.checkpointLinks) {
+    if (
+      ![link.session, link.frame, link.identity].every(
+        (value) => Number.isSafeInteger(value) && value >= 0,
+      )
+    )
+      return Result.fail("A saved interrupt identity ordinal is invalid.");
+    const owner = `${link.session}/${link.frame}`;
+    if (checkpointOwners.has(owner))
+      return Result.fail(
+        "A saved interrupt checkpoint has duplicate ownership.",
+      );
+    checkpointOwners.add(owner);
+    const sessionIdentity = `${link.session}/${link.identity}`;
+    if (sessionCheckpointIdentities.has(sessionIdentity))
+      return Result.fail(
+        "Saved interrupt checkpoints share one identity within a session.",
+      );
+    sessionCheckpointIdentities.add(sessionIdentity);
+    const frame = sessions[link.session]?.state.interruptStack[link.frame];
+    if (frame?.kind !== "interruptCheckpoint")
+      return Result.fail("A saved interrupt checkpoint reference is absent.");
+    restoreInterruptCheckpointIdentity(frame.frame, identity(link.identity));
+  }
+  for (const [sessionIndex, restored] of sessions.entries()) {
+    for (const [frameIndex, entry] of restored.state.interruptStack.entries()) {
+      if (
+        entry.kind === "interruptCheckpoint" &&
+        !checkpointOwners.has(`${sessionIndex}/${frameIndex}`)
+      )
+        return Result.fail("Saved interrupt checkpoint identity is missing.");
+    }
+  }
+  function restoreLayer(
+    retained: RetainedTransactionLayer,
+  ): Result.Result<BattlePendingTransactionData, string> {
+    const baseSession = sessions[retained.baseSession];
+    const currentSession = sessions[retained.currentSession];
+    if (baseSession === undefined || currentSession === undefined)
+      return Result.fail("A saved transaction session reference is absent.");
+    if (
+      baseSession.state.battleId !== session.state.battleId ||
+      currentSession.state.battleId !== session.state.battleId
+    )
+      return Result.fail(
+        "Saved transaction sessions belong to different Battles.",
+      );
+    if (
+      !Schema.is(BattleSubjectSchema)(retained.subject) ||
+      !retained.fills.every(Schema.is(BattleFillSchema))
+    )
+      return Result.fail(
+        "Saved transaction inputs no longer match the executable contract.",
+      );
+    if (
+      retained.checkpointOwnership.tag === "interruptFrontier" &&
+      [
+        retained.checkpointOwnership.checkpoint,
+        ...retained.checkpointOwnership.ancestors,
+      ].some((index) => !identities.has(index))
+    )
+      return Result.fail("Saved transaction checkpoint ownership is absent.");
+    const parent =
+      retained.completion.parent === null
+        ? Result.succeed(null)
+        : restoreLayer(retained.completion.parent);
+    if (Result.isFailure(parent)) return Result.fail(parent.failure);
+    const envelope = battleCheckpointFrontierEnvelope(currentSession.state);
+    const resolved =
+      retained.frontierKind === "interruptDecision"
+        ? envelope.frontier.kind === "interruptDecision"
+          ? {
+              tag: "needsHoles" as const,
+              session: currentSession,
+              envelope: {
+                checkpoint: envelope.checkpoint,
+                frontier: envelope.frontier,
+              },
+            }
+          : null
+        : resolvePendingTransactionSubject({
+            transaction: { baseSession, currentSession },
+            subject: retained.subject,
+            fills: retained.fills,
+            ...optionalProperty("statBlockCatalog", statBlockCatalog),
+          });
+    if (resolved === null || resolved.tag !== "needsHoles")
+      return Result.fail(
+        "The saved transaction no longer has a derivable input frontier; deployment investigation is required.",
+      );
+    const frontier = battlePendingTransactionFrontierForResolution(resolved);
+    if (Result.isFailure(frontier))
+      return Result.fail("The saved transaction frontier is invalid.");
+    if (frontier.success.kind !== retained.frontierKind)
+      return Result.fail(
+        `Saved ${retained.frontierKind} transaction derived ${frontier.success.kind} for ${retained.subject.tag}; checkpoint stack ${currentSession.state.interruptStack.length}.`,
+      );
+    const completion = Match.value(retained.completion).pipe(
+      Match.when({ kind: "standaloneClose" }, () => ({
+        kind: "standaloneClose" as const,
+        parent: null,
+      })),
+      Match.when({ kind: "replaySubject" }, () => ({
+        kind: "replaySubject" as const,
+        parent: parent.success,
+      })),
+      Match.when({ kind: "refreshParentFrontier" }, () =>
+        parent.success === null
+          ? null
+          : { kind: "refreshParentFrontier" as const, parent: parent.success },
+      ),
+      Match.exhaustive,
+    );
+    if (completion === null)
+      return Result.fail("A nested saved transaction has no parent.");
+    const built = createBattlePendingTransaction({
+      baseSession,
+      currentSession,
+      subject: retained.subject,
+      fills: retained.fills,
+      frontier: frontier.success,
+      completion,
+    });
+    if (Result.isFailure(built))
+      return Result.fail("Saved transaction ownership cannot be restored.");
+    const checkpointOwnership: BattlePendingTransactionCheckpointOwnership =
+      retained.checkpointOwnership.tag === "ordinaryFrontier"
+        ? retained.checkpointOwnership
+        : {
+            tag: "interruptFrontier",
+            checkpoint: identity(retained.checkpointOwnership.checkpoint),
+            ancestors: retained.checkpointOwnership.ancestors.map(identity),
+          };
+    if (
+      privateReplayContextComparators.checkpointOwnership(built.success.data, {
+        ...built.success.data,
+        checkpointOwnership,
+      }) !== null
+    )
+      return Result.fail(
+        "Saved transaction checkpoint ownership is contradictory.",
+      );
+    return Result.succeed(built.success.data);
+  }
+  const pending =
+    continuation.pending === null
+      ? Result.succeed(null)
+      : restoreLayer(continuation.pending);
+  if (Result.isFailure(pending)) return Result.fail(pending.failure);
+  if (pending.success !== null && pending.success.currentSession !== session)
+    return Result.fail(
+      "The saved pending transaction belongs to a different session.",
+    );
+  return Result.succeed({
+    session,
+    transaction: pending.success?.transaction ?? null,
+  });
+}
 
 export type BattleRuntimeTransactionOperation =
   | {
@@ -1054,8 +1537,8 @@ function resolveOperation(input: {
           ),
         onSome: (pending) => {
           if (sameBattleSubject(pending.subject, subject)) {
-            return resolveBattleRuntimeSubject({
-              session: battleTransactionReplaySession(pending),
+            return resolvePendingTransactionSubject({
+              transaction: pending,
               subject: pending.subject,
               fills: appendFills(pending.fills, fills),
               ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
@@ -1077,8 +1560,28 @@ function resolveOperation(input: {
   );
 }
 
+function resolvePendingTransactionSubject(input: {
+  readonly transaction: Pick<
+    BattlePendingTransactionData,
+    "baseSession" | "currentSession"
+  >;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+}) {
+  return resolveBattleRuntimeSubject({
+    session: battleTransactionReplaySession(input.transaction),
+    subject: input.subject,
+    fills: input.fills,
+    ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+  });
+}
+
 function battleTransactionReplaySession(
-  transaction: BattlePendingTransactionData,
+  transaction: Pick<
+    BattlePendingTransactionData,
+    "baseSession" | "currentSession"
+  >,
 ): BattleRuntimeSession {
   return transaction.currentSession.state.subjectResolutionPhase.kind ===
     "subjectContinuation"

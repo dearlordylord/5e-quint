@@ -579,19 +579,26 @@ export function battleHolesWithTableD20TestCircumstances(input: {
 }
 
 const admittedAttackRollTableSources = new WeakMap<
-  BattleAttackRollResult,
-  TableD20TestCircumstanceSource
+  object,
+  {
+    readonly roll: BattleAttackRollResult;
+    readonly source: TableD20TestCircumstanceSource;
+  }
 >();
 
 export function retainAdmittedAttackRollTableSource(
   roll: BattleAttackRollResult,
   source: TableD20TestCircumstanceSource,
 ): void {
-  admittedAttackRollTableSources.set(roll, source);
+  admittedAttackRollTableSources.set(roll, { roll, source });
 }
 
 export function admittedAttackRollTableSource(
   roll: BattleAttackRollResult,
 ): TableD20TestCircumstanceSource | undefined {
-  return admittedAttackRollTableSources.get(roll);
+  return admittedAttackRollTableSources.get(roll)?.source;
+}
+
+export function retainedAttackRollTableSource(value: object) {
+  return admittedAttackRollTableSources.get(value);
 }

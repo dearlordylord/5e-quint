@@ -42,3 +42,6 @@ plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md
 # gate compares their exact bytes and owns their formatting.
 plans/raw-coverage/matrix.json
 plans/raw-coverage/REPORT.md
+
+# Canonical continuation descriptors are exact generator bytes.
+packages/mcp/src/play-session-continuation-descriptor.gen.ts

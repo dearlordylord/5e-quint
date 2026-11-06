@@ -828,8 +828,8 @@ function battleOwnedExecutionScopeRefBelongsToBattle(
   );
 }
 
-function battleOwnedExecutionScopeRefOrdinalIsBefore(
-  scopeRef: string,
+export function battleOwnedExecutionScopeRefOrdinalIsBefore(
+  scopeRef: BattleExecutionScopeRef,
   nextScopeOrdinal: BattleExecutionScopeCursor | undefined,
 ): boolean {
   if (nextScopeOrdinal === undefined) return false;

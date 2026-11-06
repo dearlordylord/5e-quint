@@ -31,3 +31,10 @@ export function copyInterruptCheckpointIdentity(
 ): void {
   identities.set(target, interruptCheckpointIdentity(source));
 }
+
+export function restoreInterruptCheckpointIdentity(
+  frame: BattleInterruptCheckpoint,
+  identity: InterruptCheckpointIdentity,
+): void {
+  identities.set(frame, identity);
+}

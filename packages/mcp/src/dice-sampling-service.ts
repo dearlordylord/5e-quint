@@ -49,6 +49,7 @@ export type DiceSampling = {
 };
 
 export type DiceSamplingService = {
+  retainContinuation(): GeneratorState;
   sample(
     groups: readonly DiceRollGroup[],
   ): Effect.Effect<DiceSampling, DiceSamplingFailure>;
@@ -62,16 +63,22 @@ export function generatedDiceSeed(): DiceSeed {
   return decoded.success;
 }
 
-export function createDiceSamplingService(seed: DiceSeed): DiceSamplingService {
+export function createDiceSamplingService(
+  seed: DiceSeed,
+  continuation?: GeneratorState,
+): DiceSamplingService {
   const initialized = initialize(seed);
   if (!initialized.ok) {
     throw new Error(
       "A Dice Sampling Service received an invalid validated Seed.",
     );
   }
-  let state: GeneratorState = initialized.value;
+  let state: GeneratorState = continuation ?? initialized.value;
 
   return {
+    retainContinuation() {
+      return state;
+    },
     sample(groups) {
       return Effect.suspend(
         (): Effect.Effect<DiceSampling, DiceSamplingFailure> => {

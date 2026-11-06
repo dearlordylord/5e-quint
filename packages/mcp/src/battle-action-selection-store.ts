@@ -31,10 +31,30 @@ function selectionIdForOrdinal(ordinal: bigint): BattleActionSelectionId {
   );
 }
 
-export function createBattleActionSelectionStore() {
-  let selection: McpPendingBattleSelection | null = null;
-  let ordinal = 0n;
+export function selectionOrdinalOwnsId(
+  ordinal: bigint,
+  selectionId: BattleActionSelectionId,
+): boolean {
+  return ordinal > 0n && selectionIdForOrdinal(ordinal) === selectionId;
+}
+
+export type BattleActionSelectionContinuation = {
+  readonly selection: McpPendingBattleSelection | null;
+  readonly ordinal: bigint;
+};
+
+export function createBattleActionSelectionStore(
+  continuation: BattleActionSelectionContinuation = {
+    selection: null,
+    ordinal: 0n,
+  },
+) {
+  let selection = continuation.selection;
+  let ordinal = continuation.ordinal;
   return {
+    retainContinuation(): BattleActionSelectionContinuation {
+      return { selection, ordinal };
+    },
     get nextSelectionId(): BattleActionSelectionId {
       return selectionIdForOrdinal(ordinal + 1n);
     },

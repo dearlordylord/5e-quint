@@ -479,6 +479,14 @@ pnpm --filter @dnd/mcp typecheck
 pnpm --filter @dnd/mcp test
 ```
 
+The existing typecheck first traverses the canonical retained continuation type
+once to check its generated storage validator. This catches required fields and
+widened unions that a stale generated type guard would otherwise omit. Regenerate
+with `pnpm --filter @dnd/mcp exec node scripts/continuation-codec.mjs` after
+changing that contract. This development check uses the existing TypeScript
+dependency; serving statically imports the generated descriptor and owner
+refinements without a compiler or filesystem lookup.
+
 Local transport/parity tests do not establish live HTTPS deployment health.
 Use the staging smoke in [Run the server](#run-the-server) for that evidence.
 

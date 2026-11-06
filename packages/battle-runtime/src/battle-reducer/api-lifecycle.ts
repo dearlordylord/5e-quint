@@ -270,6 +270,27 @@ class InitialInitiativeSetupWorkflow {
     this.#context = session.context;
   }
 
+  retainContinuation(): InitialInitiativeContinuation {
+    return {
+      session: battleRuntimeSessionFromAdmittedContext(
+        this.#state,
+        this.#context,
+      ),
+      consumedSwapSources: [...this.#consumedInitiativeSwapSources],
+      open: this.#setupOpen,
+    };
+  }
+
+  static restore(
+    continuation: InitialInitiativeContinuation,
+  ): InitialInitiativeSetupWorkflow {
+    const setup = new InitialInitiativeSetupWorkflow(continuation.session);
+    setup.#setupOpen = continuation.open;
+    for (const source of continuation.consumedSwapSources)
+      setup.#consumedInitiativeSwapSources.add(source);
+    return setup;
+  }
+
   get state(): BattleState {
     return this.#state;
   }
@@ -659,6 +680,24 @@ export function battleInitializationIssueFactFields(
 }
 
 export type InitialInitiativeSetup = InitialInitiativeSetupWorkflow;
+
+export type InitialInitiativeContinuation = {
+  readonly session: BattleRuntimeSession;
+  readonly consumedSwapSources: readonly CombatantId[];
+  readonly open: boolean;
+};
+
+export function retainInitialInitiativeSetup(
+  setup: InitialInitiativeSetup,
+): InitialInitiativeContinuation {
+  return setup.retainContinuation();
+}
+
+export function restoreInitialInitiativeSetup(
+  continuation: InitialInitiativeContinuation,
+): InitialInitiativeSetup {
+  return InitialInitiativeSetupWorkflow.restore(continuation);
+}
 
 export type { BattleStartInput } from "../battle-start-protocol.ts";
 

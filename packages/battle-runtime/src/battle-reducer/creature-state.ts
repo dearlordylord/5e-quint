@@ -655,7 +655,6 @@ export function battleCreatureStateAdmissionFromInit(
       origin: {
         kind: "character",
         characterId: creatureInit.characterId,
-        displayName: input.displayName,
         execution: execution.success.execution,
         classLevels,
         knownLanguages: creatureInit.knownLanguages,
@@ -689,7 +688,10 @@ export function battleCreatureStateAdmissionFromInit(
                 spellcastingPresentationSource,
               ),
             }),
-      },
+      } satisfies Extract<
+        BattleCreatureState["origin"],
+        { readonly kind: "character" }
+      >,
     });
     return {
       tag: "admitted",

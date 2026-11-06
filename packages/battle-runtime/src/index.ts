@@ -977,3 +977,17 @@ export {
   discloseMarkedCreatureDefenses,
   type MarkedCreatureDefensesDisclosure,
 } from "./marked-creature-defenses.ts";
+export {
+  retainBattleRuntimeContinuation,
+  restoreBattleRuntimeContinuation,
+  type BattleRuntimeContinuation,
+} from "./battle-runtime-transaction.ts";
+export {
+  retainBattleRuntimeSession,
+  restoreBattleRuntimeSession,
+  type BattleRuntimeSessionContinuation,
+} from "./battle-runtime-context.ts";
+export {
+  retainInitialInitiativeSetup,
+  restoreInitialInitiativeSetup,
+} from "./battle-reducer/api-lifecycle.ts";

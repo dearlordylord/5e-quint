@@ -197,6 +197,31 @@ class RuntimeSession {
  */
 export type BattleRuntimeSession = RuntimeSession;
 
+export type BattleRuntimeSessionContinuation = {
+  readonly state: BattleRuntimeSession["state"];
+  readonly characters: BattleRuntimeContext["characters"];
+  readonly statBlocks: BattleRuntimeContext["statBlocks"];
+};
+
+export function retainBattleRuntimeSession(
+  session: BattleRuntimeSession,
+): BattleRuntimeSessionContinuation {
+  return {
+    state: session.state,
+    characters: session.context.characters,
+    statBlocks: session.context.statBlocks,
+  };
+}
+
+export function restoreBattleRuntimeSession(
+  continuation: BattleRuntimeSessionContinuation,
+): BattleRuntimeSession {
+  return RuntimeSession.fromAdmittedContext(
+    continuation.state,
+    new RuntimeContext(continuation.characters, continuation.statBlocks),
+  );
+}
+
 /** Recognize the nominal session value constructed by this package. */
 export function isBattleRuntimeSession(
   value: unknown,

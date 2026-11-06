@@ -58,6 +58,7 @@ import type {
   McpBattleStateTransitionIssue,
   McpSessionSnapshot,
   McpSessionStore,
+  McpSessionStoreContinuation,
 } from "./session-store-types.ts";
 
 export type {
@@ -106,10 +107,13 @@ export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
 export function createMcpSessionStore(input: {
   readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
+  readonly continuation?: McpSessionStoreContinuation;
 }): McpSessionStore {
   const { statBlockCatalog, unitLibrary } = input;
-  const drafts = new Map<CharacterDraftId, CharacterDraft>();
+  const drafts = new Map(input.continuation?.drafts);
   const characters = createCharacterSessionRegistry();
+  for (const character of input.continuation?.characters ?? [])
+    characters.set(character);
   const storeIdentity = {};
   const battleRosterPlanner = createBattleRosterTransitionPlanner({
     characters,
@@ -117,9 +121,14 @@ export function createMcpSessionStore(input: {
     unitLibrary,
     storeIdentity,
   });
-  let selectedStatBlockId: StatBlockId | null = null;
-  const actionSelection = createBattleActionSelectionStore();
-  let battleState: McpBattleState = { tag: "none" };
+  let selectedStatBlockId: StatBlockId | null =
+    input.continuation?.selectedStatBlockId ?? null;
+  const actionSelection = createBattleActionSelectionStore(
+    input.continuation?.actionSelection,
+  );
+  let battleState: McpBattleState = input.continuation?.battleState ?? {
+    tag: "none",
+  };
 
   function planActiveBattleRosterTransition(
     operation: Extract<McpBattleRosterOperation, { readonly kind: "remove" }>,
@@ -182,6 +191,15 @@ export function createMcpSessionStore(input: {
   }
 
   const store: McpSessionStore = {
+    retainContinuation() {
+      return {
+        drafts,
+        characters: [...characters.entries()].map(([, value]) => value),
+        selectedStatBlockId,
+        battleState,
+        actionSelection: actionSelection.retainContinuation(),
+      };
+    },
     drafts,
     characters,
     get battleState() {

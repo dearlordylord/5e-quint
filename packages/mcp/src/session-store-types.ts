@@ -230,4 +230,13 @@ export type McpSessionStore = {
     statBlockId: StatBlockId,
   ): Result.Result<SrdStatBlockRecord, CharacterSessionIssue>;
   snapshot(): McpSessionSnapshot;
+  retainContinuation(): McpSessionStoreContinuation;
+};
+
+export type McpSessionStoreContinuation = {
+  readonly drafts: ReadonlyMap<CharacterDraftId, CharacterDraft>;
+  readonly characters: readonly CharacterSession[];
+  readonly selectedStatBlockId: StatBlockId | null;
+  readonly battleState: McpBattleState;
+  readonly actionSelection: import("./battle-action-selection-store.ts").BattleActionSelectionContinuation;
 };

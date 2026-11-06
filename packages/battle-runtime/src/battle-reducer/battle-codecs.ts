@@ -10087,7 +10087,7 @@ function serializedEffectOccurrenceSourceBindingsMatch(
   );
 }
 
-function battleSnapshotExecutionScopeRefs(
+export function battleSnapshotExecutionScopeRefs(
   combatant: EncodedBattleCreatureSnapshot,
 ): readonly BattleExecutionScopeRef[] {
   return combatant.origin.kind === "statBlock"
