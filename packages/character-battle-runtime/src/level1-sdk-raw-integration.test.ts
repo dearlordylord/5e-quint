@@ -83,9 +83,11 @@ import {
   resourceCount,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  characterBuildClassSpellBattleSupport,
   characterSpellcasting,
   settleCharacterSheetFromBattle,
 } from "./index.ts";
@@ -2178,6 +2180,40 @@ describe("level 1 SDK RAW integration", () => {
     const sorcererBuild = finalizedLevelOneSorcererMagicMissileBuild();
     const wizardBuild = finalizedLevelOneWizardMagicMissileBuild();
 
+    expect(
+      characterBuildClassSpellBattleSupport({
+        build: wizardBuild,
+        unitLibrary,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          spellId: authoredUnitId(magicMissileSpellId),
+          admission: { tag: "admitted" },
+        },
+      ]),
+    );
+
+    expect(
+      characterBuildClassSpellBattleSupport({
+        build: wizardBuild,
+        unitLibrary: {
+          ...unitLibrary,
+          getUnit: (id) =>
+            id === magicMissileSpellId
+              ? Option.none()
+              : unitLibrary.getUnit(id),
+        },
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          spellId: authoredUnitId(magicMissileSpellId),
+          admission: { tag: "spellRecordUnavailable" },
+        },
+      ]),
+    );
+
     expect(sorcererBuild.spellcasting?.sources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2211,22 +2247,26 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
+    const build = levelOneSingleClassBuild({
+      classUnitId: authoredUnitId("class_monk"),
+      abilityScores: {
+        str: 10,
+        dex: 16,
+        con: 14,
+        int: 10,
+        wis: 16,
+        cha: 10,
+      },
+    });
+    expect(
+      characterBuildClassSpellBattleSupport({ build, unitLibrary }),
+    ).toEqual([]);
     const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
       characters: [
         characterSheet({
           characterIdText: "character:l1-sdk-martial-arts",
-          build: levelOneSingleClassBuild({
-            classUnitId: authoredUnitId("class_monk"),
-            abilityScores: {
-              str: 10,
-              dex: 16,
-              con: 14,
-              int: 10,
-              wis: 16,
-              cha: 10,
-            },
-          }),
+          build,
           combatantId: monkId,
           initiative: 20,
         }),
