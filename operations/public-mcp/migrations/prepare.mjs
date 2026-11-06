@@ -27,38 +27,78 @@ const supportedPins = new Set([
 ]);
 function git(cwd, args) {
   const result = spawnSync("git", args, { cwd, encoding: "utf8" });
-  if (result.status !== 0) throw new Error(`git ${args[0]} failed: ${result.stderr}`);
+  if (result.status !== 0)
+    throw new Error(`git ${args[0]} failed: ${result.stderr}`);
   return result.stdout.trim();
 }
 
 /** Mutates only the explicitly supplied clean, isolated historical checkout. */
-export async function prepareMigrationKit({ sourceDirectory, manifestPath, outputDirectory }) {
+export async function prepareMigrationKit({
+  sourceDirectory,
+  manifestPath,
+  outputDirectory,
+}) {
   const source = resolve(sourceDirectory);
-  if (source === target) throw new Error("Historical instrumentation requires a separate checkout.");
+  if (source === target)
+    throw new Error("Historical instrumentation requires a separate checkout.");
   const manifestDirectory = dirname(resolve(manifestPath));
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  if (!supportedPins.has(manifest.sourceRelease)) throw new Error("Unsupported full source/target release identity.");
+  if (!supportedPins.has(manifest.sourceRelease))
+    throw new Error("Unsupported full source/target release identity.");
   const targetRelease = git(target, ["rev-parse", "HEAD"]);
-  if (git(source, ["rev-parse", "HEAD"]) !== manifest.sourceRelease || !/^[0-9a-f]{40}$/.test(targetRelease)) throw new Error("Checkout identity differs from the frozen release manifest.");
-  if (git(source, ["status", "--porcelain", "--untracked-files=all"]) !== "") throw new Error("Historical checkout must be clean, including untracked source files.");
-  if (git(target, ["status", "--porcelain", "--untracked-files=no"]) !== "") throw new Error("Target checkout contains tracked modifications.");
+  if (
+    git(source, ["rev-parse", "HEAD"]) !== manifest.sourceRelease ||
+    !/^[0-9a-f]{40}$/.test(targetRelease)
+  )
+    throw new Error(
+      "Checkout identity differs from the frozen release manifest.",
+    );
+  if (git(source, ["status", "--porcelain", "--untracked-files=all"]) !== "")
+    throw new Error(
+      "Historical checkout must be clean, including untracked source files.",
+    );
+  if (git(target, ["status", "--porcelain", "--untracked-files=no"]) !== "")
+    throw new Error("Target checkout contains tracked modifications.");
   const patchPath = resolve(manifestDirectory, manifest.patch.path);
-  if (sha256(readFileSync(patchPath)) !== manifest.patch.sha256) throw new Error("Owner patch hash mismatch.");
-  const patchPaths = git(source, ["apply", "--numstat", patchPath]).split("\n").map((line) => line.split("\t")[2]);
-  if (patchPaths.some((path) => !ownerPaths.has(path)) || patchPaths.length === 0) throw new Error("Instrumentation patch changes a non-owner path.");
-  if (Object.keys(manifest.sourceFiles).sort().join("\n") !== [...new Set(patchPaths)].sort().join("\n")) throw new Error("Every patched source file needs an exact preimage hash.");
+  if (sha256(readFileSync(patchPath)) !== manifest.patch.sha256)
+    throw new Error("Owner patch hash mismatch.");
+  const patchPaths = git(source, ["apply", "--numstat", patchPath])
+    .split("\n")
+    .map((line) => line.split("\t")[2]);
+  if (
+    patchPaths.some((path) => !ownerPaths.has(path)) ||
+    patchPaths.length === 0
+  )
+    throw new Error("Instrumentation patch changes a non-owner path.");
+  if (
+    Object.keys(manifest.sourceFiles).sort().join("\n") !==
+    [...new Set(patchPaths)].sort().join("\n")
+  )
+    throw new Error("Every patched source file needs an exact preimage hash.");
   for (const [path, hash] of Object.entries(manifest.sourceFiles)) {
-    if (sha256(readFileSync(resolve(source, path))) !== hash) throw new Error(`Original source hash mismatch: ${path}`);
+    if (sha256(readFileSync(resolve(source, path))) !== hash)
+      throw new Error(`Original source hash mismatch: ${path}`);
   }
   for (const name of copiedModules) {
     const path = `packages/mcp/src/${name}`;
-    if (sha256(readFileSync(resolve(target, path))) !== manifest.captureModules[path]) throw new Error(`Capture module hash mismatch: ${path}`);
+    if (
+      sha256(readFileSync(resolve(target, path))) !==
+      manifest.captureModules[path]
+    )
+      throw new Error(`Capture module hash mismatch: ${path}`);
   }
   git(source, ["apply", "--check", patchPath]);
   mkdirSync(outputDirectory, { recursive: false, mode: 0o700 });
   git(source, ["apply", patchPath]);
-  for (const name of copiedModules) copyFileSync(resolve(target, "packages/mcp/src", name), resolve(source, "packages/mcp/src", name));
-  const exporterEntry = resolve(source, "operations/public-mcp/migrations/source-exporter.ts");
+  for (const name of copiedModules)
+    copyFileSync(
+      resolve(target, "packages/mcp/src", name),
+      resolve(source, "packages/mcp/src", name),
+    );
+  const exporterEntry = resolve(
+    source,
+    "operations/public-mcp/migrations/source-exporter.ts",
+  );
   mkdirSync(dirname(exporterEntry), { recursive: true });
   copyFileSync(resolve(directory, "source-exporter.ts"), exporterEntry);
   const bundles = {};
@@ -67,14 +107,42 @@ export async function prepareMigrationKit({ sourceDirectory, manifestPath, outpu
     [target, resolve(directory, "target-validator.ts"), "target-validator.mjs"],
   ]) {
     const outfile = resolve(outputDirectory, output);
-    await build({ absWorkingDir: root, entryPoints: [entry], outfile, bundle: true, platform: "node", format: "esm", target: "node22", external: ["redis"], legalComments: "linked", banner: { js: 'import { createRequire } from "node:module"; const require = createRequire(import.meta.url);' } });
+    await build({
+      absWorkingDir: root,
+      entryPoints: [entry],
+      outfile,
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node22",
+      external: ["redis"],
+      legalComments: "linked",
+      banner: {
+        js: 'import { createRequire } from "node:module"; const require = createRequire(import.meta.url);',
+      },
+    });
     bundles[output] = sha256(readFileSync(outfile));
   }
-  writeFileSync(resolve(outputDirectory, "prepared.json"), JSON.stringify({ ...manifest, targetRelease, targetFormat: 5, bundles }, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+  writeFileSync(
+    resolve(outputDirectory, "prepared.json"),
+    JSON.stringify(
+      { ...manifest, targetRelease, targetFormat: 5, bundles },
+      null,
+      2,
+    ) + "\n",
+    { flag: "wx", mode: 0o600 },
+  );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const [sourceDirectory, manifestPath, outputDirectory] = process.argv.slice(2);
-  if (!outputDirectory || process.argv.length !== 5) throw new Error("usage: node prepare.mjs ISOLATED_SOURCE_CHECKOUT FROZEN_MANIFEST ABSENT_OUTPUT_DIRECTORY");
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  const [sourceDirectory, manifestPath, outputDirectory] =
+    process.argv.slice(2);
+  if (!outputDirectory || process.argv.length !== 5)
+    throw new Error(
+      "usage: node prepare.mjs ISOLATED_SOURCE_CHECKOUT FROZEN_MANIFEST ABSENT_OUTPUT_DIRECTORY",
+    );
   await prepareMigrationKit({ sourceDirectory, manifestPath, outputDirectory });
 }

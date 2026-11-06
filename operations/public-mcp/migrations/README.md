@@ -55,8 +55,8 @@ that has not passed target smoke. A failed or interrupted attempt keeps this
 record blocked and writers stopped. Successful conversion permits only its
 exact target release. Deployment failure keeps admission closed and prevents
 old-code fallback; successful target smoke and release promotion clear the
-record. Compose operations share the state-directory conversion lock. Serialize
-Dokku maintenance and deployment as one operator maintenance window.
+record. Compose and Dokku deployment operations hold the same state-directory
+conversion lock throughout release and smoke.
 
 The importable `convertPlaySessionDatabase` operation in `convert.mjs` accepts
 `databasePath`, absent `backupPath`, absent private `reportPath`, `kitDirectory`,

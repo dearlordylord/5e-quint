@@ -115,6 +115,15 @@ if [[ "$deployment_environment" == production && "$publication_mode" == enabled 
     exit 65
   }
 fi
+# Hold the same host lock as offline conversion throughout release and smoke.
+coproc migration_lock {
+  ssh "root@$dokku_host" "flock --nonblock /var/lib/dokku/data/storage/$dokku_app/migration.lock sh -c 'echo acquired; cat >/dev/null'"
+}
+read -r -t 30 -u "${migration_lock[0]}" migration_lock_status
+[[ "$migration_lock_status" == acquired ]] || {
+  echo "An offline conversion or deployment is active" >&2
+  exit 75
+}
 migration_barrier="/var/lib/dokku/data/storage/$dokku_app/migration-admission-closed"
 migration_conversion=false
 if ssh "root@$dokku_host" test -e "$migration_barrier"; then
