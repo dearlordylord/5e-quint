@@ -29,6 +29,5 @@ fi
   exit 75
 }
 node "$directory/convert.mjs" "$state_directory/play-sessions.sqlite" "$backup" "$report" "$kit" "$source_release" "$target_release"
-# A successful conversion permits only this exact target to reopen admission.
 (umask 077; printf '%s\n' "$target_release" >"$barrier")
 echo "Converted. Writers remain stopped; deploy only $target_release."

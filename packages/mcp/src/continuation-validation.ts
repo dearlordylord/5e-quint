@@ -199,7 +199,6 @@ export function parseCanonicalContinuation(
       Match.exhaustive,
     );
   }
-  // The descriptor is generated from this exact owner contract; matching brands retain their owner refinements.
   const matches = (value: unknown): value is PlaySessionContinuation =>
     check(continuationRoot, value);
   return matches(value)

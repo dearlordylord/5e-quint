@@ -84,7 +84,6 @@ async function convertDatabase({
       };
     }
     report = openSync(reportPath, "wx", 0o600);
-    // Reserve the destination exclusively; SQLite's backup must never overwrite evidence.
     const backupReservation = openSync(backupPath, "wx", 0o600);
     closeSync(backupReservation);
     database = new DatabaseSync(databasePath);
@@ -153,7 +152,6 @@ async function convertDatabase({
             converted += 1;
           } catch (cause) {
             failures += 1;
-            // One bounded private record per failure; never copy history or snapshots into the report.
             writeSync(
               report,
               JSON.stringify({

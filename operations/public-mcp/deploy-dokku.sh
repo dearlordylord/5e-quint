@@ -115,7 +115,6 @@ if [[ "$deployment_environment" == production && "$publication_mode" == enabled 
     exit 65
   }
 fi
-# Hold the same host lock as offline conversion throughout release and smoke.
 coproc migration_lock {
   ssh "root@$dokku_host" "flock --nonblock /var/lib/dokku/data/storage/$dokku_app/migration.lock sh -c 'echo acquired; cat >/dev/null'"
 }
@@ -247,7 +246,6 @@ ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null 2>&1 || true
 ssh "root@$dokku_host" rm -f -- "$rollback_archive"
 
 if [[ "$migration_conversion" == true ]]; then
-  # On any later failure, stop the candidate instead of admitting old code.
   trap 'ssh "dokku@$dokku_host" ps:stop "$dokku_app"' ERR
 fi
 DND_MCP_PUBLISHER_NAME="$publisher_name" \

@@ -254,6 +254,43 @@ describe("public MCP deployment operations", () => {
         ),
       ).toContain(`${operationsInstallDirectory}/staging/current`);
 
+      const flockPath = spawnSync("sh", ["-c", "command -v flock"], {
+        encoding: "utf8",
+      });
+      expect(flockPath.status).toBe(0);
+      const flockStub = join(binaryDirectory, "flock");
+      writeFileSync(
+        flockStub,
+        [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          'lock_path="$(readlink "/proc/$$/fd/${!#}")"',
+          'if [[ "$lock_path" == "$DND_MCP_STATE_DIRECTORY/migration.lock" ]]; then',
+          `  printf '%s\\n' '${"4".repeat(40)}' >"$DND_MCP_STATE_DIRECTORY/migration-admission-closed"`,
+          "fi",
+          `exec '${flockPath.stdout.trim()}' "$@"`,
+          "",
+        ].join("\n"),
+      );
+      chmodSync(flockStub, 0o755);
+      writeFileSync(commandLog, "");
+      expect(() =>
+        runOperation(
+          "rollback.sh",
+          environmentFile,
+          binaryDirectory,
+          commandLog,
+        ),
+      ).toThrow(
+        /rollback[.]sh failed \(65\):[\s\S]*automatic code rollback is blocked/u,
+      );
+      expect(readFileSync(commandLog, "utf8")).not.toContain(
+        " up --detach --wait mcp",
+      );
+      expectReleaseHistory(releaseDirectory, ["1", "2"]);
+      rmSync(flockStub);
+      rmSync(join(stateDirectory, "migration-admission-closed"));
+
       const historyPath = join(releaseDirectory, "release-history");
       const validHistory = readFileSync(historyPath, "utf8");
       const currentHistoryRecord = validHistory.split("\n")[0];
