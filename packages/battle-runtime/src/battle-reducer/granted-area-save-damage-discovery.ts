@@ -83,6 +83,7 @@ export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Granted area-save-damage Cone Saving Throw outcomes",
+    areaInput: { kind: "areaMembership", originAnchorId: actorId },
     grantedAreaSaveDamageAction: {
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,

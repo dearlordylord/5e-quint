@@ -7,7 +7,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
 // UNIT-IDENTITY-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
-import { DieRollResult, movementFeet } from "@dnd/shared/types";
+import { DieRollResult } from "@dnd/shared/types";
 import { Result } from "effect";
 
 import {
@@ -16,7 +16,6 @@ import {
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
-  type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
 import {
@@ -476,12 +475,8 @@ function resolveLandsAid(
     state,
     subject: act.subject,
     fills: [
-      landsAidSavingThrowFill(
-        save,
-        act.subject.procedureRef,
-        input.outcomes,
-        input.areaTargetIds,
-      ),
+      landsAidSphereFill(act.initialHoles, input.areaTargetIds),
+      landsAidSavingThrowFill(save, input.outcomes),
       rolledDiceFill(damage, input.damageRolls),
       targetChoiceFill(target, input.healingTargetId),
       rolledDiceFill(healing, input.healingRolls),
@@ -491,36 +486,30 @@ function resolveLandsAid(
 
 function landsAidSavingThrowFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  sourceProcedureRef: BattleProcedureExecutionRef,
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
     readonly withoutRoll: true;
   }[],
-  areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: { outcomes },
-    spatialFacts:
-      areaTargetIds.length === 0
-        ? []
-        : [landsAidAreaFact(sourceProcedureRef, areaTargetIds)],
   };
 }
 
-function landsAidAreaFact(
-  sourceProcedureRef: BattleProcedureExecutionRef,
+function landsAidSphereFill(
+  holes: readonly BattleHole[],
   targetIds: readonly CombatantId[],
-): BattleTargetSpatialFact {
+): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  const hole = holes.find((hole) => "sphereFactRequest" in hole);
+  if (hole === undefined || !("sphereFactRequest" in hole))
+    throw new Error("Expected advertised Sphere membership request.");
   return {
-    kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
-    actorId: spellCasterId,
-    sourceProcedureRef,
-    originWithinRangeFeet: movementFeet(60),
-    radiusFeet: movementFeet(10),
-    targetIds,
+    kind: "targetSpatialFacts",
+    holeId: hole.holeId,
+    spatialFacts: [{ ...hole.sphereFactRequest, targetIds }],
   };
 }
 

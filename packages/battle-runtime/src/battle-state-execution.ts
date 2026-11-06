@@ -5041,6 +5041,22 @@ export type BattleTurnConstraintSomaticSpellFailureOutcomeHole = {
     readonly sourceCombatantId: CombatantId;
   }[];
 };
+export type BattleUnitFeatureSphereFactsHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "targetSpatialFacts";
+  readonly label: string;
+  readonly requiresTableSpatialFact: true;
+  readonly sphereFactRequest: Omit<
+    Extract<
+      BattleTargetSpatialFact,
+      {
+        readonly kind: "magicActionAreaSaveDamageHealingTargetsInSphere";
+      }
+    >,
+    "targetIds"
+  >;
+};
 export type BattleLinkedEffectSeparationFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6400,6 +6416,10 @@ export type BattleSpellSavingThrowOutcomeHole = {
     }
 );
 export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
+  readonly areaInput: {
+    readonly kind: "areaMembership";
+    readonly originAnchorId: CombatantId;
+  };
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
@@ -6447,7 +6467,30 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
-};
+} & (
+  | {
+      readonly areaInput: {
+        readonly kind: "areaMembership";
+        readonly originAnchorId: CombatantId;
+        readonly shapeChoices: Extract<
+          UnitFeatureProcedureExecution,
+          { readonly kind: "attackActionAreaSaveDamageReplacement" }
+        >["breath"]["area"]["shapeChoice"];
+      };
+      readonly targetSpatialFactRequest?: never;
+    }
+  | {
+      readonly areaInput?: never;
+      readonly targetSpatialFactRequest: Omit<
+        Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "unitFeatureVisibleTargetWithinRange" }
+        >,
+        "targetId"
+      >;
+    }
+  | { readonly areaInput?: never; readonly targetSpatialFactRequest?: never }
+);
 export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6815,6 +6858,7 @@ export type BattleHole =
   | BattleSpellCastReactionFactsHole
   | BattleTurnConstraintSomaticSpellFailureOutcomeHole
   | BattleLinkedEffectSeparationFactsHole
+  | BattleUnitFeatureSphereFactsHole
   | BattleAreaWindStrengthHole
   | BattleObjectTargetChoiceHole
   | BattleObjectContactTargetsHole

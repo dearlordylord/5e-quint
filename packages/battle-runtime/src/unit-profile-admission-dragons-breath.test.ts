@@ -257,6 +257,8 @@ describe("Dragon's Breath initial cast admission", () => {
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
     expect(saveHole).toMatchObject({
       kind: "savingThrowOutcome",
+      areaInput: { kind: "areaMembership" },
+      grantedAreaSaveDamageAction: { lengthFeet: 15 },
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
     });

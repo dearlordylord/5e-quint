@@ -132,6 +132,7 @@ import type {
   BattleState,
   BattleTargetChoiceHole,
   BattleTargetSpatialFact,
+  BattleUnitFeatureSphereFactsHole,
   BattleUnitFeatureRollHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
   CharacterBattleCreatureState,
@@ -146,6 +147,8 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import {
+  magicActionAreaSaveDamageHealingSphereFactsHole,
+  magicActionAreaSaveDamageHealingSphereFactsHoleId,
   attackActionAreaSaveDamageReplacementProtocolId,
   attackActionAreaSaveDamageReplacementSavingThrowHole,
   attackActionAreaSaveDamageReplacementSavingThrowHoleId,
@@ -732,7 +735,23 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
       "Magic Action damage and healing is no longer available.",
     );
   }
+  const validation = validateMagicActionAreaSaveDamageHealing({
+    state: input.state,
+    actorId: actor.combatantId,
+    sourceProcedureRef: input.subject.procedureRef,
+    unitFeature,
+    sphereFacts: fills.value.sphereFacts,
+    savingThrows: fills.value.savingThrows,
+    healingTarget: fills.value.healingTarget,
+  });
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (validation.tag === "invalid") {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(input.state, "invalidFill", validation.message);
+  }
+  /* v8 ignore stop -- @preserve */
   if (
+    fills.value.sphereFacts === undefined ||
     fills.value.savingThrows === undefined ||
     fills.value.healingTarget === undefined ||
     fills.value.damageRoll === undefined ||
@@ -747,41 +766,8 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     });
   }
 
-  const validation = validateMagicActionAreaSaveDamageHealing({
-    state: input.state,
-    actorId: actor.combatantId,
-    sourceProcedureRef: input.subject.procedureRef,
-    unitFeature,
-    savingThrows: fills.value.savingThrows,
-    healingTarget: fills.value.healingTarget,
-  });
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (validation.tag === "invalid") {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", validation.message);
-  }
-  /* v8 ignore stop -- @preserve */
   const savingThrowTargetIds = [...validation.outcomesByTargetId.keys()];
-  const relationshipFacts = parseSavingThrowRelationshipFacts(
-    fills.value.savingThrows.relationshipFacts ?? [],
-    actor.combatantId,
-    savingThrowTargetIds,
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      actor.combatantId,
-      "enemySavingThrow",
-    ),
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (relationshipFacts === null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Magic Action damage and healing relationship facts must answer the saving-throw hole request.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
+  const relationshipFacts = validation.relationshipFacts;
 
   const actorAfterResourceSpend: CharacterBattleCreatureState = {
     ...actor,
@@ -815,7 +801,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     damageType: unitFeature.damageHealing.damage.damageType,
     damageTargetIds: validation.damageTargetIds,
     outcomesByTargetId: validation.outcomesByTargetId,
-    healingTargetId: validation.healingTargetId,
+    healingTargetId: fills.value.healingTarget.value,
     damageRoll: fills.value.damageRoll,
     healingRoll: fills.value.healingRoll,
     savingThrows: fills.value.savingThrows,
@@ -2508,6 +2494,9 @@ type MagicActionAreaSaveDamageHealingRollFill = Extract<
 >;
 
 type MagicActionAreaSaveDamageHealingFillSet = {
+  readonly sphereFacts:
+    | Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>
+    | undefined;
   readonly savingThrows:
     | MagicActionAreaSaveDamageHealingSavingThrowFill
     | undefined;
@@ -2783,6 +2772,9 @@ function magicActionAreaSaveDamageHealingFills(
       readonly value: MagicActionAreaSaveDamageHealingFillSet;
     }
   | { readonly tag: "invalid"; readonly message: string } {
+  let sphereFacts:
+    | Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>
+    | undefined;
   let savingThrows: MagicActionAreaSaveDamageHealingSavingThrowFill | undefined;
   let healingTarget: MagicActionAreaSaveDamageHealingTargetFill | undefined;
   let damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
@@ -2795,6 +2787,20 @@ function magicActionAreaSaveDamageHealingFills(
   for (const fill of fills.filter(
     (candidate) => !damageRepeatSaveSet.has(candidate),
   )) {
+    if (
+      fill.kind === "targetSpatialFacts" &&
+      fill.holeId ===
+        magicActionAreaSaveDamageHealingSphereFactsHoleId(procedureRef)
+    ) {
+      if (sphereFacts !== undefined)
+        return {
+          tag: "invalid",
+          message:
+            "Magic Action damage and healing Sphere membership was filled twice.",
+        };
+      sphereFacts = fill;
+      continue;
+    }
     if (
       fill.kind === "savingThrowOutcome" &&
       fill.holeId ===
@@ -2896,6 +2902,7 @@ function magicActionAreaSaveDamageHealingFills(
   return {
     tag: "ok",
     value: {
+      sphereFacts,
       savingThrows,
       healingTarget,
       damageRoll,
@@ -2910,21 +2917,24 @@ function validateMagicActionAreaSaveDamageHealing(input: {
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: MagicActionAreaSaveDamageHealingProfile;
-  readonly savingThrows: MagicActionAreaSaveDamageHealingSavingThrowFill;
-  readonly healingTarget: MagicActionAreaSaveDamageHealingTargetFill;
+  readonly sphereFacts: MagicActionAreaSaveDamageHealingFillSet["sphereFacts"];
+  readonly savingThrows: MagicActionAreaSaveDamageHealingFillSet["savingThrows"];
+  readonly healingTarget: MagicActionAreaSaveDamageHealingFillSet["healingTarget"];
 }):
   | {
       readonly tag: "ok";
+      readonly relationshipFacts: NonNullable<
+        ReturnType<typeof parseSavingThrowRelationshipFacts>
+      >;
       readonly damageTargetIds: readonly CombatantId[];
-      readonly healingTargetId: CombatantId;
       readonly outcomesByTargetId: ReadonlyMap<
         CombatantId,
         BattleSavingThrowOutcome
       >;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const healingTarget = input.healingTarget.value;
-  const outcomes = input.savingThrows.value.outcomes;
+  const healingTarget = input.healingTarget?.value;
+  const outcomes = input.savingThrows?.value.outcomes ?? [];
   const outcomesByTargetId = new Map<CombatantId, BattleSavingThrowOutcome>();
   for (const outcome of outcomes) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2950,7 +2960,10 @@ function validateMagicActionAreaSaveDamageHealing(input: {
     outcomesByTargetId.set(outcome.targetId, outcome);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.state.combatants.get(healingTarget) === undefined) {
+  if (
+    healingTarget !== undefined &&
+    input.state.combatants.get(healingTarget) === undefined
+  ) {
     /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
@@ -2962,7 +2975,10 @@ function validateMagicActionAreaSaveDamageHealing(input: {
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state: input.state,
     source: OTHER_MAGICAL_EFFECT_SOURCE,
-    targetIds: [...outcomesByTargetId.keys(), healingTarget],
+    targetIds: [
+      ...outcomesByTargetId.keys(),
+      ...(healingTarget === undefined ? [] : [healingTarget]),
+    ],
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicInterdiction !== null) {
@@ -2970,14 +2986,36 @@ function validateMagicActionAreaSaveDamageHealing(input: {
     return { tag: "invalid", message: antimagicInterdiction };
   }
   /* v8 ignore stop -- @preserve */
+  const relationshipFacts =
+    input.savingThrows === undefined
+      ? []
+      : parseSavingThrowRelationshipFacts(
+          input.savingThrows.relationshipFacts ?? [],
+          input.actorId,
+          [...outcomesByTargetId.keys()],
+          ongoingFeatureEnemyRelationshipDecisionRequired(
+            input.state,
+            input.actorId,
+            "enemySavingThrow",
+          ),
+        );
+  if (relationshipFacts === null)
+    return {
+      tag: "invalid",
+      message:
+        "Magic Action damage and healing relationship facts must answer the saving-throw hole request.",
+    };
   const areaFact = magicActionAreaSaveDamageHealingAreaFact(
-    input.savingThrows.spatialFacts ?? [],
+    input.sphereFacts?.spatialFacts ?? [],
     input.actorId,
     input.sourceProcedureRef,
     input.unitFeature,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (areaFact === undefined) {
+  if (
+    input.sphereFacts !== undefined &&
+    (input.sphereFacts.spatialFacts.length !== 1 || areaFact === undefined)
+  ) {
     /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
@@ -2986,10 +3024,37 @@ function validateMagicActionAreaSaveDamageHealing(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const areaTargetIds = new Set(areaFact.targetIds);
-  for (const targetId of [...outcomesByTargetId.keys(), healingTarget]) {
+  const areaTargetIds =
+    areaFact === undefined ? undefined : new Set(areaFact.targetIds);
+  if (
+    areaFact !== undefined &&
+    (areaTargetIds?.size !== areaFact.targetIds.length ||
+      areaFact.targetIds.some((id) => !input.state.combatants.has(id)))
+  )
+    return {
+      tag: "invalid",
+      message: "Sphere membership requires unique creatures in this battle.",
+    };
+  if (areaFact !== undefined) {
+    const healingChoices = magicActionAreaSaveDamageHealingHealingTargetHole(
+      input.state,
+      input.sourceProcedureRef,
+    ).choices;
+    if (
+      !areaFact.targetIds.some((targetId) => healingChoices.includes(targetId))
+    )
+      return {
+        tag: "invalid",
+        message:
+          "The Sphere area requires a creature available for the mandatory healing target.",
+      };
+  }
+  for (const targetId of [
+    ...outcomesByTargetId.keys(),
+    ...(healingTarget === undefined ? [] : [healingTarget]),
+  ]) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!areaTargetIds.has(targetId)) {
+    if (areaTargetIds !== undefined && !areaTargetIds.has(targetId)) {
       /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
@@ -3001,8 +3066,8 @@ function validateMagicActionAreaSaveDamageHealing(input: {
   }
   return {
     tag: "ok",
+    relationshipFacts,
     damageTargetIds: [...outcomesByTargetId.keys()],
-    healingTargetId: healingTarget,
     outcomesByTargetId,
   };
 }
@@ -3016,6 +3081,7 @@ function magicActionAreaSaveDamageHealingMissingHoles(input: {
   readonly fills: MagicActionAreaSaveDamageHealingFillSet;
 }): readonly (
   | BattleUnitFeatureSavingThrowOutcomeHole
+  | BattleUnitFeatureSphereFactsHole
   | BattleTargetChoiceHole
   | BattleUnitFeatureRollHole
 )[] {
@@ -3028,6 +3094,15 @@ function magicActionAreaSaveDamageHealingMissingHoles(input: {
             input.procedureRef,
             input.unitFeature,
             input.spellSaveDc,
+          ),
+        ]
+      : []),
+    ...(input.fills.sphereFacts === undefined
+      ? [
+          magicActionAreaSaveDamageHealingSphereFactsHole(
+            input.actorId,
+            input.procedureRef,
+            input.unitFeature,
           ),
         ]
       : []),

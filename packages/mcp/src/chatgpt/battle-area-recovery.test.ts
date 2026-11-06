@@ -122,7 +122,11 @@ describe("ChatGPT spell area recovery", () => {
       expect(areaRequest).toBeDefined();
       if (areaRequest === undefined)
         throw new Error("Expected an actionable area input contract.");
-      if (!("areaInput" in hole) || hole.areaInput === undefined)
+      if (
+        !("areaInput" in hole) ||
+        hole.areaInput === undefined ||
+        !("sourceProcedureRef" in hole)
+      )
         throw new Error("Expected the spell's canonical area requirement.");
       expect(areaRequest.valuePath).toBe("fill");
       expect(areaRequest.instructions.join(" ")).toContain(

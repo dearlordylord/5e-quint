@@ -77,6 +77,7 @@ import type {
   BattleHoleId,
   BattleState,
   BattleTargetChoiceHole,
+  BattleUnitFeatureSphereFactsHole,
   BattleUnitFeatureRollHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
   CharacterBattleCreatureState,
@@ -851,7 +852,10 @@ export function attackActionAreaSaveDamageReplacementSavingThrowHole(
   actor: CharacterBattleCreatureState,
   unitFeature: AttackActionAreaSaveDamageReplacementProfile,
   procedureRef: BattleProcedureExecutionRef,
-): BattleUnitFeatureSavingThrowOutcomeHole {
+): Extract<
+  BattleUnitFeatureSavingThrowOutcomeHole,
+  { readonly areaInput: object }
+> {
   return {
     kind: "savingThrowOutcome",
     holeId:
@@ -861,6 +865,11 @@ export function attackActionAreaSaveDamageReplacementSavingThrowHole(
         procedureRef,
       ),
     label: "Area damage replacement Cone or Line Dexterity Saving Throws",
+    areaInput: {
+      kind: "areaMembership",
+      originAnchorId: actor.combatantId,
+      shapeChoices: unitFeature.breath.area.shapeChoice,
+    },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       actor.combatantId,
@@ -982,7 +991,10 @@ export function magicActionSaveGatedConditionSavingThrowHole(
   unitFeature: MagicActionSaveGatedConditionProfile,
   procedureRef: BattleProcedureExecutionRef,
   spellSaveDc: DifficultyClass,
-): BattleUnitFeatureSavingThrowOutcomeHole {
+): Extract<
+  BattleUnitFeatureSavingThrowOutcomeHole,
+  { readonly targetSpatialFactRequest: object }
+> {
   const targetIds = magicActionSaveGatedConditionTargetChoices(
     state,
     actorId,
@@ -994,6 +1006,12 @@ export function magicActionSaveGatedConditionSavingThrowHole(
     holeInstanceKey:
       magicActionSaveGatedConditionSavingThrowHoleInstanceKey(procedureRef),
     label: "Magic Action condition Wisdom Saving Throws",
+    targetSpatialFactRequest: {
+      kind: "unitFeatureVisibleTargetWithinRange",
+      actorId,
+      sourceProcedureRef: procedureRef,
+      rangeFeet: unitFeature.condition.targetSelection.rangeFeet,
+    },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       actorId,
@@ -1045,6 +1063,7 @@ function magicActionAreaSaveDamageHealingHoles(
   spellSaveDc: DifficultyClass,
 ): readonly [
   BattleUnitFeatureSavingThrowOutcomeHole,
+  BattleUnitFeatureSphereFactsHole,
   BattleUnitFeatureRollHole,
   BattleTargetChoiceHole,
   BattleUnitFeatureRollHole,
@@ -1056,6 +1075,11 @@ function magicActionAreaSaveDamageHealingHoles(
       procedureRef,
       unitFeature,
       spellSaveDc,
+    ),
+    magicActionAreaSaveDamageHealingSphereFactsHole(
+      actorId,
+      procedureRef,
+      unitFeature,
     ),
     magicActionAreaSaveDamageHealingDamageRollHole(procedureRef, unitFeature),
     magicActionAreaSaveDamageHealingHealingTargetHole(state, procedureRef),
@@ -1121,7 +1145,6 @@ export function magicActionAreaSaveDamageHealingHealingTargetHole(
         procedureRef,
       ),
     label: "Magic Action damage and healing target",
-    requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter(
       (targetId) =>
         magicalEffectTargetsInterdictionMessage({
@@ -1159,9 +1182,45 @@ export function magicActionAreaSaveDamageHealingHealingRollHole(
   };
 }
 
+export function magicActionAreaSaveDamageHealingSphereFactsHoleId(
+  procedureRef: BattleProcedureExecutionRef,
+): BattleHoleId {
+  return holeId(
+    magicActionAreaSaveDamageHealingProtocolId(procedureRef, "sphere-facts"),
+  );
+}
+
+export function magicActionAreaSaveDamageHealingSphereFactsHole(
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleUnitFeatureSphereFactsHole {
+  return {
+    kind: "targetSpatialFacts",
+    holeId: magicActionAreaSaveDamageHealingSphereFactsHoleId(procedureRef),
+    holeInstanceKey: holeInstanceKey(
+      magicActionAreaSaveDamageHealingProtocolId(procedureRef, "sphere-facts"),
+    ),
+    label: "Magic Action damage and healing Sphere membership",
+    requiresTableSpatialFact: true,
+    sphereFactRequest: {
+      kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
+      actorId,
+      sourceProcedureRef: procedureRef,
+      originWithinRangeFeet: unitFeature.damageHealing.area.origin.rangeFeet,
+      radiusFeet: unitFeature.damageHealing.area.shape.radiusFeet,
+    },
+  };
+}
+
 function magicActionAreaSaveDamageHealingProtocolId(
   procedureRef: BattleProcedureExecutionRef,
-  hole: "saving-throws" | "damage-roll" | "healing-target" | "healing-roll",
+  hole:
+    | "saving-throws"
+    | "damage-roll"
+    | "healing-target"
+    | "healing-roll"
+    | "sphere-facts",
 ): string {
   return `battle:unit-feature:${procedureRef}:${hole}`;
 }

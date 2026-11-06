@@ -1,3 +1,8 @@
+import {
+  settleBattleRuntimeTransaction,
+  battlePendingActionCancellationForSession,
+} from "./battle-runtime-transaction.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
@@ -7,7 +12,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-area-save-damage-healing
 import { describe, expect, test } from "vitest";
 
-import { DieRollResult, movementFeet } from "@dnd/shared/types";
+import { DieRollResult } from "@dnd/shared/types";
 import { Result } from "effect";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
@@ -23,7 +28,6 @@ import {
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
-  type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
 import {
@@ -275,6 +279,7 @@ describe("Druid Land's Aid area save damage and healing", () => {
         battleResolutionHolesForTest(result).map((hole) => hole.kind),
       ).toEqual([
         "savingThrowOutcome",
+        "targetSpatialFacts",
         "rolledDice",
         "targetChoice",
         "rolledDice",
@@ -288,18 +293,13 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const { savingThrow, healingTarget, damageRoll, healingRoll } =
       landsAidHoles(act);
     const fills = [
-      landsAidSavingThrowFill(
-        savingThrow,
-        landsAidProcedureRef(state),
-        [
-          {
-            targetId: spellTargetId,
-            succeeded: false,
-            withoutRoll: true as const,
-          },
-        ],
-        [spellTargetId, healingTargetId],
-      ),
+      landsAidSavingThrowFill(savingThrow, [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ]),
       rolledDiceFill(damageRoll, [4, 4]),
       targetChoiceFill(healingTarget, healingTargetId),
       rolledDiceFill(healingRoll, [3, 4]),
@@ -326,6 +326,106 @@ describe("Druid Land's Aid area save damage and healing", () => {
         ),
       );
     }
+  });
+
+  test("continues retained saves and original rolls with the advertised Sphere input", () => {
+    const session = landsAidSession({ healingTargetHp: 1 });
+    const state = session.state;
+    const act = landsAidAct(state);
+    const { savingThrow, healingTarget, damageRoll, healingRoll } =
+      landsAidHoles(act);
+    const retained: readonly BattleFill[] = [
+      landsAidSavingThrowFill(savingThrow, [
+        { targetId: spellTargetId, succeeded: false, withoutRoll: true },
+      ]),
+      targetChoiceFill(healingTarget, healingTargetId),
+      rolledDiceFill(damageRoll, [4, 4]),
+      rolledDiceFill(healingRoll, [2, 5]),
+    ];
+    const pending = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: act.subject,
+        fills: retained,
+      },
+    });
+    if (pending.tag !== "needsHoles")
+      throw new Error(`Expected retained-input continuation: ${pending.tag}`);
+    const frontier = pending.resolution.envelope.frontier;
+    if (frontier.kind === "interruptDecision")
+      throw new Error("Expected ordinary Sphere input.");
+    const holes = frontier.holes;
+    expect(
+      battlePendingActionCancellationForSession(
+        pending.transaction,
+        pending.resolution.session,
+      ),
+    ).toEqual({ kind: "unavailable", reason: "acceptedInput" });
+    expect(holes).toHaveLength(1);
+    expect(holes[0]).toMatchObject({
+      kind: "targetSpatialFacts",
+      sphereFactRequest: { originWithinRangeFeet: 60, radiusFeet: 10 },
+    });
+    const continued = settleBattleRuntimeTransaction({
+      session: pending.resolution.session,
+      transaction: pending.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: act.subject,
+        fills: [landsAidSphereFill(holes, [spellTargetId, healingTargetId])],
+      },
+    });
+    if (continued.tag !== "settled")
+      throw new Error(`Expected repaired continuation: ${continued.tag}`);
+    const resolved = continued.resolution.session.state;
+    expect(currentHp(resolved, healingTargetId)).toBe(8);
+    expect(currentHp(resolved, spellTargetId)).toBe(12);
+    expect(wildShapeUsesRemaining(resolved)).toBe(1);
+  });
+
+  test("rejects malformed membership and known contradictory selections before requesting rolls", () => {
+    const state = landsAidBattle();
+    const act = landsAidAct(state);
+    const { savingThrow, healingTarget } = landsAidHoles(act);
+    const sphere = landsAidSphereFill(act.initialHoles, [spellTargetId]);
+    const save = landsAidSavingThrowFill(savingThrow, [
+      { targetId: secondTargetId, succeeded: false, withoutRoll: true },
+    ]);
+    for (const fills of [
+      [landsAidSphereFill(act.initialHoles, [])],
+      [{ ...sphere, spatialFacts: [] }],
+      [sphere, sphere],
+      [landsAidSphereFill(act.initialHoles, [spellTargetId, spellTargetId])],
+      [
+        landsAidSphereFill(act.initialHoles, [
+          combatantId("synthetic-absent-creature"),
+        ]),
+      ],
+      [sphere, save],
+      [sphere, targetChoiceFill(healingTarget, healingTargetId)],
+      [save, sphere],
+    ]) {
+      expect(
+        resolveBattleSubject({ state, subject: act.subject, fills }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    }
+  });
+
+  test("allows a full-HP creature as the sole Sphere healing recipient", () => {
+    const state = landsAidBattle();
+    const resolved = recordResolvedState(
+      resolveLandsAid(state, {
+        outcomes: [],
+        areaTargetIds: [spellTargetId],
+        healingTargetId: spellTargetId,
+        damageRolls: [4, 4],
+        healingRolls: [2, 5],
+      }),
+    );
+    expect(currentHp(resolved, spellTargetId)).toBe(20);
+    expect(wildShapeUsesRemaining(resolved)).toBe(1);
   });
 
   test("rejects stale missing-fill resolution when Magic Action is unavailable", () => {
@@ -539,6 +639,12 @@ describe("Druid Land's Aid area save damage and healing", () => {
 });
 
 function landsAidBattle(
+  input: Parameters<typeof landsAidSession>[0] = {},
+): BattleState {
+  return landsAidSession(input).state;
+}
+
+function landsAidSession(
   input: {
     readonly targetHp?: number;
     readonly secondTargetHp?: number;
@@ -547,7 +653,7 @@ function landsAidBattle(
     readonly druidLevel?: number;
     readonly includeRage?: boolean;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const druidLevel = input.druidLevel ?? 3;
   const classLevels: CharacterBattleClassLevelInits =
     input.includeRage === true
@@ -619,7 +725,7 @@ function landsAidBattle(
   if (Result.isFailure(result)) {
     throw new Error(battleInitializationIssueMessage(result.failure));
   }
-  return result.success.state;
+  return result.success;
 }
 
 function requireRageProcedureRef(
@@ -679,12 +785,8 @@ function resolveLandsAid(
     state,
     subject: act.subject,
     fills: [
-      landsAidSavingThrowFill(
-        save,
-        landsAidSubject(state).procedureRef,
-        input.outcomes,
-        input.areaTargetIds,
-      ),
+      landsAidSphereFill(act.initialHoles, input.areaTargetIds),
+      landsAidSavingThrowFill(save, input.outcomes),
       rolledDiceFill(damage, input.damageRolls),
       targetChoiceFill(target, input.healingTargetId),
       rolledDiceFill(healing, input.healingRolls),
@@ -772,13 +874,11 @@ function landsAidProcedureRef(state: BattleState): BattleProcedureExecutionRef {
 
 function landsAidSavingThrowFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  sourceProcedureRef: BattleProcedureExecutionRef,
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
     readonly withoutRoll: true;
   }[],
-  areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const relationshipFactRequest =
     "relationshipFactRequest" in hole
@@ -808,24 +908,20 @@ function landsAidSavingThrowFill(
           ],
         }
       : {}),
-    spatialFacts:
-      areaTargetIds.length === 0
-        ? []
-        : [landsAidAreaFact(sourceProcedureRef, areaTargetIds)],
   };
 }
 
-function landsAidAreaFact(
-  sourceProcedureRef: BattleProcedureExecutionRef,
+function landsAidSphereFill(
+  holes: readonly BattleHole[],
   targetIds: readonly CombatantId[],
-): BattleTargetSpatialFact {
+): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  const hole = holes.find((hole) => "sphereFactRequest" in hole);
+  if (hole === undefined || !("sphereFactRequest" in hole))
+    throw new Error("Expected advertised Sphere membership request.");
   return {
-    kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
-    actorId: spellCasterId,
-    sourceProcedureRef,
-    originWithinRangeFeet: movementFeet(60),
-    radiusFeet: movementFeet(10),
-    targetIds,
+    kind: "targetSpatialFacts",
+    holeId: hole.holeId,
+    spatialFacts: [{ ...hole.sphereFactRequest, targetIds }],
   };
 }
 
