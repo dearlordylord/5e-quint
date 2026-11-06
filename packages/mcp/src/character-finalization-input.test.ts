@@ -152,6 +152,10 @@ describe("Character Sheet initialization through character finalization", () => 
     const { root, draft, discover } = readyDraft("class_fighter", 1);
     const input = discover().finalizationInput;
     assert(input?.phase === "ready");
+    expect(input.classSpellBattleSupport).toEqual([]);
+    expect(input.instructions.join(" ")).not.toContain(
+      "classSpellBattleSupport",
+    );
     const validate = createDraft2020JsonSchemaValidator().getValidator(
       requireJsonSchema(input.argumentsSchema, "finalization arguments"),
     );
