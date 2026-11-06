@@ -10756,8 +10756,11 @@ describe("character creation finalization", () => {
         authoredUnitId("equipment_shield"),
       ],
       loadoutChoices: [
-        CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices[0]!,
-        CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices[1]!,
+        ...CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices.filter(
+          (choice) =>
+            choice.unitId === "armor_chain_mail" ||
+            choice.unitId === "equipment_shield",
+        ),
         spearWeaponLoadout,
       ],
     });
