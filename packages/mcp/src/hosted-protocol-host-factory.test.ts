@@ -16,8 +16,13 @@ import { PlaySessionIdSchema } from "./play-session.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 
+const applicationServices = createMcpApplicationServices();
+
 function repository() {
-  const opened = openSqlitePlaySessionRepository(":memory:");
+  const opened = openSqlitePlaySessionRepository(
+    ":memory:",
+    applicationServices,
+  );
   assert(Result.isSuccess(opened));
   return opened.success;
 }
@@ -64,7 +69,7 @@ describe("hosted protocol host factory", () => {
           : toolDefinitions;
       const reference = await connect(
         createDndMcpProtocolServer(
-          createMcpApplicationServices(),
+          applicationServices,
           toolSurface === "chatgpt" ? [contentToolDefinitions[0]] : definitions,
           {
             playSessionRepository: store,
@@ -79,7 +84,7 @@ describe("hosted protocol host factory", () => {
       await reference.close();
       sharing.mockClear();
       const factory = createHostedMcpProtocolHostFactory({
-        applicationServices: createMcpApplicationServices(),
+        applicationServices,
         playSessionRepository: store,
         toolSurface,
       });
@@ -120,7 +125,7 @@ describe("hosted protocol host factory", () => {
   test("isolates authenticated and anonymous access and survives another host closing", async () => {
     const store = repository();
     const factory = createHostedMcpProtocolHostFactory({
-      applicationServices: createMcpApplicationServices(),
+      applicationServices,
       playSessionRepository: store,
       toolSurface: "regular",
     });

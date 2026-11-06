@@ -1,3 +1,4 @@
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { EventEmitter, once } from "node:events";
 import { request as requestHttp } from "node:http";
 
@@ -23,6 +24,7 @@ describe("public HTTP boundary", () => {
   test("preserves malformed, initialization, notification and tool response statuses", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
     });
     const endpoint = await listen(server);
@@ -83,6 +85,7 @@ describe("public HTTP boundary", () => {
     async (accept) => {
       const repository = openRepository();
       const server = createDndMcpHttpServer({
+        applicationServices,
         playSessionRepository: repository,
       });
       const endpoint = await listen(server);
@@ -104,6 +107,7 @@ describe("public HTTP boundary", () => {
   test("serves the silent plugin demonstration as a stable MP4", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
     });
     const endpoint = await listen(server);
@@ -138,6 +142,7 @@ describe("public HTTP boundary", () => {
   test("serves publisher pages with public policy and locked-down headers", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       operations: {
         environment: "development",
@@ -214,6 +219,7 @@ describe("public HTTP boundary", () => {
   test("serves health, release, exact domain challenge, and protected metrics", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       operations: {
         environment: "staging",
@@ -261,6 +267,7 @@ describe("public HTTP boundary", () => {
   test("publishes OAuth metadata and creates saved sessions for a verified bearer", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       oauth: fakeOAuth(),
     });
@@ -307,6 +314,7 @@ describe("public HTTP boundary", () => {
   test("logs a named tool rejection without retaining session IDs or arguments", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       toolSurface: "chatgpt",
       oauth: fakeOAuth(),
@@ -374,6 +382,7 @@ describe("public HTTP boundary", () => {
   test("rejects invalid bearer tokens and oversized bodies before MCP parsing", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       oauth: fakeOAuth(),
     });
@@ -403,6 +412,7 @@ describe("public HTTP boundary", () => {
   test("rejects bearer authorization when OAuth is unavailable", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
     });
     const endpoint = await listen(server);
@@ -425,6 +435,7 @@ describe("public HTTP boundary", () => {
   test("rejects unknown public routes without entering MCP", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
     });
     const endpoint = await listen(server);
@@ -450,6 +461,7 @@ describe("public HTTP boundary", () => {
         ),
     };
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       savedSessionAuthorization: {
         origin: Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
@@ -514,6 +526,7 @@ describe("public HTTP boundary", () => {
       },
     };
     const server = createDndMcpHttpServer({
+      applicationServices,
       playSessionRepository: repository,
       savedSessionAuthorization: {
         origin: Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
@@ -571,8 +584,13 @@ function fakeOAuth(): PublicMcpOAuth {
   };
 }
 
+const applicationServices = createMcpApplicationServices();
+
 function openRepository() {
-  const repository = openSqlitePlaySessionRepository(":memory:");
+  const repository = openSqlitePlaySessionRepository(
+    ":memory:",
+    applicationServices,
+  );
   if (Result.isFailure(repository)) throw new Error(repository.failure.message);
   return repository.success;
 }

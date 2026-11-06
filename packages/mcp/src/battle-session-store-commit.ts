@@ -6,6 +6,7 @@ import { projectCharacterSessionInBattle } from "./character-session-occupancy.t
 import type {
   AvailableCharacterSession,
   CharacterSessionRegistry,
+  CharacterSession,
   McpBattleState,
   McpBattleStateTransitionIssue,
 } from "./session-store-types.ts";
@@ -49,16 +50,22 @@ export function commitBattleStartTransition(input: {
   const transitionCharacterIds = input.characterSessions.map(
     ({ characterId }) => characterId,
   );
-  if (!sameUniqueCharacterIdSet(battleCharacterIds, transitionCharacterIds)) {
+  const nextCharacterSessions = input.characterSessions.map((session) =>
+    projectCharacterSessionInBattle({ session, battleId }),
+  );
+  if (
+    !characterSessionsOwnBattleState(
+      input.nextBattleState,
+      nextCharacterSessions,
+    )
+  ) {
     return Result.fail({
       tag: "battleStateCharacterRosterMismatch",
       battleCharacterIds,
       transitionCharacterIds,
     });
   }
-  const nextCharacterSessions = input.characterSessions.map((session) =>
-    projectCharacterSessionInBattle({ session, battleId }),
-  );
+
   const committed = input.characters.setAll(nextCharacterSessions);
   if (Result.isFailure(committed)) {
     return Result.fail({
@@ -141,6 +148,34 @@ export function commitBattleEndTransition(input: {
     });
   }
   return Result.succeed({ tag: "none" });
+}
+
+export function characterSessionsOwnBattleState(
+  state: McpBattleState,
+  characters: readonly CharacterSession[],
+): boolean {
+  const occupied = characters.filter(
+    (character) => character.tag === "inBattle",
+  );
+  if (state.tag === "none") return occupied.length === 0;
+  const battleId = Match.value(state).pipe(
+    Match.when(
+      { tag: "initialInitiativeSetup" },
+      ({ setup }) => setup.state.battleId,
+    ),
+    Match.when(
+      { tag: "activeBattle" },
+      ({ session }) => session.state.battleId,
+    ),
+    Match.exhaustive,
+  );
+  return (
+    occupied.every((character) => character.battleId === battleId) &&
+    sameUniqueCharacterIdSet(
+      battleCharacterIdsFromState(state),
+      occupied.map(({ sheet }) => sheet.characterId),
+    )
+  );
 }
 
 function battleCharacterIdsFromState(

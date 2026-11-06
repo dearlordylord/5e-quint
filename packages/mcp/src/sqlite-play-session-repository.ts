@@ -18,25 +18,41 @@ import {
   type RecoverablePlaySessionRecord,
 } from "./play-session-repository.ts";
 import { runRateAdmission, runSave } from "./sqlite-play-session-actions.ts";
-import { preparePlaySessionSchema } from "./sqlite-play-session-schema.ts";
+import type { McpApplicationServices } from "./composition-root.ts";
+import { decodePlaySessionContinuation } from "./play-session-continuation-codec.ts";
+import { validatePlaySessionStorageSchema } from "./sqlite-play-session-schema.ts";
 
 export function openSqlitePlaySessionRepository(
   databasePath: string,
+  applicationServices: McpApplicationServices,
 ): Result.Result<PlaySessionRepository, PlaySessionRepositoryIssue> {
+  let database: DatabaseSync | undefined;
   try {
-    return Result.succeed(createSqlitePlaySessionRepository(databasePath));
+    database = new DatabaseSync(databasePath);
+    const schema = validatePlaySessionStorageSchema(database);
+    if (Result.isFailure(schema)) {
+      database.close();
+      return Result.fail(schema.failure);
+    }
+    if (schema.success === "ready") {
+      const ready = validateStoredContinuations(database, applicationServices);
+      if (Result.isFailure(ready)) {
+        database.close();
+        return Result.fail(ready.failure);
+      }
+    }
+    return Result.succeed(createSqlitePlaySessionRepository(database));
   } catch (cause) {
+    database?.close();
     return Result.fail(unreadableRepositoryIssue(cause));
   }
 }
 
 function createSqlitePlaySessionRepository(
-  databasePath: string,
+  database: DatabaseSync,
 ): PlaySessionRepository {
-  const database = new DatabaseSync(databasePath);
   database.exec("PRAGMA journal_mode = WAL");
   database.exec("PRAGMA busy_timeout = 5000");
-  preparePlaySessionSchema(database);
   database.exec(`
     CREATE TABLE IF NOT EXISTS play_sessions (
       play_session_id TEXT PRIMARY KEY,
@@ -51,6 +67,7 @@ function createSqlitePlaySessionRepository(
       guest_access_grant_digest TEXT,
       principal_id TEXT,
       last_activity_at_ms INTEGER NOT NULL,
+      continuation_json TEXT NOT NULL,
       CHECK (
         (tenure_kind = 'guest' AND guest_access_grant_digest IS NOT NULL AND principal_id IS NULL)
         OR
@@ -78,8 +95,9 @@ function createSqlitePlaySessionRepository(
       tenure_kind,
       guest_access_grant_digest,
       principal_id,
-      last_activity_at_ms
-    ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      last_activity_at_ms,
+      continuation_json
+    ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     WHERE (
       ? = 'guest' AND (
         SELECT COUNT(*) FROM play_sessions WHERE tenure_kind = 'guest'
@@ -94,7 +112,7 @@ function createSqlitePlaySessionRepository(
   const select = database.prepare(`
     SELECT format_version, dice_seed, dice_group_semantic_profile,
       prng_sequence_profile, state_schema_version, revision, operations_json,
-      tenure_kind, guest_access_grant_digest, principal_id, last_activity_at_ms
+      tenure_kind, guest_access_grant_digest, principal_id, last_activity_at_ms, continuation_json
     FROM play_sessions
     WHERE play_session_id = ?
   `);
@@ -103,6 +121,7 @@ function createSqlitePlaySessionRepository(
     SET revision = revision + 1,
       format_version = ?,
       operations_json = ?,
+      continuation_json = ?,
       tenure_kind = ?,
       guest_access_grant_digest = ?,
       principal_id = ?,
@@ -114,6 +133,7 @@ function createSqlitePlaySessionRepository(
     SET revision = revision + 1,
       format_version = ?,
       operations_json = ?,
+      continuation_json = ?,
       tenure_kind = 'saved',
       guest_access_grant_digest = NULL,
       principal_id = ?,
@@ -128,7 +148,7 @@ function createSqlitePlaySessionRepository(
     SELECT play_session_id, format_version, dice_seed,
       dice_group_semantic_profile, prng_sequence_profile, state_schema_version, revision,
       operations_json, tenure_kind, guest_access_grant_digest, principal_id,
-      last_activity_at_ms
+      last_activity_at_ms, continuation_json
     FROM play_sessions
     WHERE tenure_kind = 'saved' AND principal_id = ?
     ORDER BY last_activity_at_ms DESC, play_session_id ASC
@@ -187,13 +207,14 @@ function createSqlitePlaySessionRepository(
           record.diceReplay.randomSource.prngSequenceProfile,
           record.diceReplay.randomSource.stateSchemaVersion,
           record.revision,
-          JSON.stringify(record.operations),
+          record.operations.json,
           record.tenure.tag,
           record.tenure.tag === "guest"
             ? record.tenure.guestAccessGrantDigest
             : null,
           record.tenure.tag === "saved" ? record.tenure.principalId : null,
           record.tenure.lastActivityAtMs,
+          JSON.stringify(record.continuation),
           record.tenure.tag,
           limits.maximumGuestSessions,
           record.tenure.tag,
@@ -224,13 +245,16 @@ function createSqlitePlaySessionRepository(
     commit(record, change) {
       if (closed) return Result.fail(closedRepositoryIssue());
       try {
+        const archive =
+          change.operation === undefined
+            ? Result.succeed(record.operations)
+            : record.operations.append(change.operation);
+        if (Result.isFailure(archive))
+          return Result.fail(invalidStoredRecordIssue(archive.failure));
         const result = commit.run(
           record.formatVersion,
-          JSON.stringify(
-            change.operation === undefined
-              ? record.operations
-              : [...record.operations, change.operation],
-          ),
+          archive.success.json,
+          JSON.stringify(change.continuation),
           change.tenure.tag,
           change.tenure.tag === "guest"
             ? change.tenure.guestAccessGrantDigest
@@ -358,4 +382,36 @@ function createSqlitePlaySessionRepository(
       database.close();
     },
   };
+}
+
+function validateStoredContinuations(
+  database: DatabaseSync,
+  services: McpApplicationServices,
+): Result.Result<void, PlaySessionRepositoryIssue> {
+  const firstPage = database.prepare(
+    "SELECT * FROM play_sessions ORDER BY play_session_id LIMIT 100",
+  );
+  const followingPage = database.prepare(
+    "SELECT * FROM play_sessions WHERE play_session_id > ? ORDER BY play_session_id LIMIT 100",
+  );
+  let after: Parameters<PlaySessionRepository["load"]>[0] | null = null;
+  for (;;) {
+    const rows = after === null ? firstPage.all() : followingPage.all(after);
+    if (rows.length === 0) return Result.succeed(undefined);
+    for (const row of rows) {
+      const id = decodePlaySessionId(row.play_session_id);
+      if (Result.isFailure(id))
+        return Result.fail(invalidStoredRecordIssue(id.failure));
+      const record = decodeStoredPlaySessionRecord(row, id.success);
+      if (Result.isFailure(record)) return Result.fail(record.failure);
+      const restored = decodePlaySessionContinuation(
+        services,
+        record.success.diceReplay.seed,
+        record.success.continuation,
+      );
+      if (Result.isFailure(restored))
+        return Result.fail(invalidStoredRecordIssue(restored.failure));
+      after = id.success;
+    }
+  }
 }

@@ -36,7 +36,7 @@ const diceRequestSequence = fc.array(diceRequest, {
 describe("recoverable Play Session properties", () => {
   test("uses authenticated ownership and injected time across authorization and expiry", async () => {
     const applicationServices = createMcpApplicationServices();
-    const repository = openRepository();
+    const repository = openRepository(applicationServices);
     const playSessionId = requirePlaySessionId(
       "play-session:00000000-0000-4000-8000-000000000358",
     );
@@ -87,7 +87,7 @@ describe("recoverable Play Session properties", () => {
     }
   });
 
-  test("the serialized seed and command prefix determine every dice group", async () => {
+  test("the retained random stream determines every resumed dice group", async () => {
     const applicationServices = createMcpApplicationServices();
     await fc.assert(
       fc.asyncProperty(
@@ -107,8 +107,8 @@ describe("recoverable Play Session properties", () => {
           const playSessionId = requirePlaySessionId(
             "play-session:00000000-0000-4000-8000-000000000359",
           );
-          const firstRepository = openRepository();
-          const secondRepository = openRepository();
+          const firstRepository = openRepository(applicationServices);
+          const secondRepository = openRepository(applicationServices);
           try {
             const first = createRecoverablePlaySessionRegistry({
               applicationServices,
@@ -193,9 +193,9 @@ describe("recoverable Play Session properties", () => {
     );
   });
 
-  test("reconstructs retained rolls without persisting a caller identifier", async () => {
+  test("restores retained rolls without persisting a caller identifier", async () => {
     const applicationServices = createMcpApplicationServices();
-    const repository = openRepository();
+    const repository = openRepository(applicationServices);
     const playSessionId = requirePlaySessionId(
       "play-session:00000000-0000-4000-8000-000000000360",
     );
@@ -231,16 +231,15 @@ describe("recoverable Play Session properties", () => {
       const stored = repository.load(playSessionId);
       expect(Result.isSuccess(stored)).toBe(true);
       if (Result.isSuccess(stored)) {
-        expect(stored.success).toMatchObject({
-          tag: "found",
-          record: {
-            operations: [
-              { name: "roll_dice", args: { groups: request.groups } },
-              { name: "roll_dice", args: { groups: request.groups } },
-            ],
-          },
-        });
-        expect(JSON.stringify(stored.success)).not.toContain("requestId");
+        if (stored.success.tag !== "found")
+          throw new Error("Expected a stored Play Session.");
+        expect(JSON.parse(stored.success.record.operations.json)).toEqual([
+          { name: "roll_dice", args: { groups: request.groups } },
+          { name: "roll_dice", args: { groups: request.groups } },
+        ]);
+        expect(stored.success.record.operations.json).not.toContain(
+          "requestId",
+        );
       }
     } finally {
       repository.close();
@@ -293,8 +292,13 @@ async function rollRecoverably(
   return content;
 }
 
-function openRepository(): PlaySessionRepository {
-  const repository = openSqlitePlaySessionRepository(":memory:");
+function openRepository(
+  applicationServices: ReturnType<typeof createMcpApplicationServices>,
+): PlaySessionRepository {
+  const repository = openSqlitePlaySessionRepository(
+    ":memory:",
+    applicationServices,
+  );
   if (Result.isFailure(repository)) throw new Error(repository.failure.message);
   return repository.success;
 }

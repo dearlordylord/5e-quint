@@ -11,7 +11,7 @@ import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 
 export function rebuildCharacterSheetForOperation(
-  root: Pick<McpPlaySessionRoot, "unitLibrary" | "statBlockCatalog">,
+  root: McpPlaySessionRoot,
   input: {
     readonly sheet: AvailableCharacterSession;
     readonly build: AvailableCharacterSession["build"];

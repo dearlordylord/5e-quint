@@ -23,14 +23,6 @@ import {
 import type { PlaySessionExecutionOperationName } from "./chatgpt/protocol-operation.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 
-export const PLAY_SESSION_COMMAND_ADMISSION_VERSION = 3 as const;
-export const PLAY_SESSION_COMMAND_ADMISSION_VERSIONS = [
-  2,
-  PLAY_SESSION_COMMAND_ADMISSION_VERSION,
-] as const;
-export type PlaySessionCommandAdmissionVersion =
-  (typeof PLAY_SESSION_COMMAND_ADMISSION_VERSIONS)[number];
-
 const CREATION_FILL_CHANGED_STATE = {
   accepted: true,
   rejected: false,

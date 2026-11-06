@@ -1,3 +1,6 @@
+import { PlaySessionCommandArchive } from "./play-session-command-archive.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
+import { encodePlaySessionContinuation } from "./play-session-continuation-codec.ts";
 import { Result, Match } from "effect";
 
 import {
@@ -57,12 +60,28 @@ function createAttempt(
   const diceReplay =
     runtime.input.diceReplayFactory?.() ?? generatedPlaySessionDiceReplay();
   const creationTenure = savedTenure(caller.principalId, creationTime);
+  const root = createMcpPlaySessionRoot(
+    runtime.restorationServices,
+    undefined,
+    diceReplay.seed,
+  );
+  const continuation = encodePlaySessionContinuation(root);
+  if (Result.isFailure(continuation))
+    return {
+      tag: "failure",
+      failure: creationFailure({
+        tag: "playSessionRepositoryIssue",
+        reason: "invalidStoredRecord",
+        message: continuation.failure,
+      }),
+    };
   const record: RecoverablePlaySessionRecord = {
     playSessionId,
     formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
     diceReplay,
     revision: 0,
-    operations: [],
+    operations: PlaySessionCommandArchive.empty(),
+    continuation: continuation.success,
     tenure: creationTenure,
   };
   const created = runtime.input.repository.create(record, {
@@ -101,7 +120,7 @@ function creationFromRecord(
   record: RecoverablePlaySessionRecord,
   creationTenure: ReturnType<typeof savedTenure>,
 ): CreationAttempt {
-  const root = rootFromRecord(runtime.replayServices, record);
+  const root = rootFromRecord(runtime.restorationServices, record);
   if (Result.isFailure(root)) {
     return { tag: "failure", failure: creationFailure(root.failure) };
   }

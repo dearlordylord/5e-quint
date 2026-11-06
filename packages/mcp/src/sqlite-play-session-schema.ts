@@ -1,22 +1,10 @@
 import { DatabaseSync } from "node:sqlite";
 
-import { Match, Schema } from "effect";
-
-const RETIRED_UNOWNED_PLAY_SESSION_COLUMNS = [
-  "play_session_id",
-  "format_version",
-  "random_seed",
-  "revision",
-  "operations_json",
-] as const;
-
-const RETIRED_EFFECT_RANDOM_PLAY_SESSION_COLUMNS = [
-  ...RETIRED_UNOWNED_PLAY_SESSION_COLUMNS,
-  "tenure_kind",
-  "guest_access_grant_digest",
-  "principal_id",
-  "last_activity_at_ms",
-] as const;
+import { Result, Schema } from "effect";
+import {
+  invalidStoredRecordIssue,
+  type PlaySessionRepositoryIssue,
+} from "./play-session-repository.ts";
 
 export const OWNED_PLAY_SESSION_COLUMNS = [
   "play_session_id",
@@ -31,59 +19,28 @@ export const OWNED_PLAY_SESSION_COLUMNS = [
   "guest_access_grant_digest",
   "principal_id",
   "last_activity_at_ms",
+  "continuation_json",
 ] as const;
 
-export function preparePlaySessionSchema(database: DatabaseSync): void {
+export function validatePlaySessionStorageSchema(
+  database: DatabaseSync,
+): Result.Result<"absent" | "ready", PlaySessionRepositoryIssue> {
   const rows = database.prepare("PRAGMA table_info(play_sessions)").all();
-  const decoded = Schema.decodeUnknownSync(
+  const decoded = Schema.decodeUnknownResult(
     Schema.Array(Schema.Struct({ name: Schema.String })),
   )(rows);
-  const columns = decoded.map((row) => row.name);
-  if (
-    columns.length === 0 ||
-    columnsEqual(columns, OWNED_PLAY_SESSION_COLUMNS)
-  ) {
-    return;
-  }
-  const retiredTableName = columnsEqual(
-    columns,
-    RETIRED_UNOWNED_PLAY_SESSION_COLUMNS,
-  )
-    ? "retired_unowned_play_sessions_v1"
-    : columnsEqual(columns, RETIRED_EFFECT_RANDOM_PLAY_SESSION_COLUMNS)
-      ? "retired_effect_random_play_sessions_v2"
-      : null;
-  if (retiredTableName === null) {
-    throw new Error("The Play Session database schema is not supported.");
-  }
-  database.exec("BEGIN IMMEDIATE");
-  try {
-    Match.value(retiredTableName).pipe(
-      Match.when("retired_unowned_play_sessions_v1", () =>
-        database.exec(
-          "ALTER TABLE play_sessions RENAME TO retired_unowned_play_sessions_v1",
+  if (Result.isFailure(decoded))
+    return Result.fail(invalidStoredRecordIssue(decoded.failure.message));
+  const columns = decoded.success.map((row) => row.name);
+  if (columns.length === 0) return Result.succeed("absent");
+  return columns.length === OWNED_PLAY_SESSION_COLUMNS.length &&
+    columns.every(
+      (column, index) => column === OWNED_PLAY_SESSION_COLUMNS[index],
+    )
+    ? Result.succeed("ready")
+    : Result.fail(
+        invalidStoredRecordIssue(
+          "Play Session storage requires deployment conversion before serving.",
         ),
-      ),
-      Match.when("retired_effect_random_play_sessions_v2", () =>
-        database.exec(
-          "ALTER TABLE play_sessions RENAME TO retired_effect_random_play_sessions_v2",
-        ),
-      ),
-      Match.exhaustive,
-    );
-    database.exec("COMMIT");
-  } catch (cause) {
-    database.exec("ROLLBACK");
-    throw cause;
-  }
-}
-
-function columnsEqual(
-  actual: readonly string[],
-  expected: readonly string[],
-): boolean {
-  return (
-    actual.length === expected.length &&
-    actual.every((column, index) => column === expected[index])
-  );
+      );
 }

@@ -163,6 +163,10 @@ export function parseStoredHitPoints(
   if (Result.isFailure(tempHp)) return Result.fail(tempHp.failure);
   if (value.tag === "positive") {
     const currentHp = parseHp(value.currentHp);
+    if (Result.isSuccess(currentHp) && currentHp.success === Hp(0))
+      return characterSheetIssue(
+        "Positive-HP Character Sheet requires positive current HP.",
+      );
     return Result.isFailure(currentHp)
       ? Result.fail(currentHp.failure)
       : Result.succeed({

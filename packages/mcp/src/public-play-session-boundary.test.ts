@@ -1,3 +1,5 @@
+import { PlaySessionCommandArchive } from "./play-session-command-archive.ts";
+import { encodePlaySessionContinuation } from "./play-session-continuation-codec.ts";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,7 +10,10 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { createMcpApplicationServices } from "./composition-root.ts";
+import {
+  createMcpApplicationServices,
+  createMcpPlaySessionRoot,
+} from "./composition-root.ts";
 import {
   GUEST_INACTIVITY_RETENTION_MS,
   SAVED_INACTIVITY_RETENTION_MS,
@@ -36,101 +41,37 @@ import {
 import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
 import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-repository.ts";
 
-describe("public Play Session boundary", () => {
-  test("retires pre-ownership rows without treating them as accessible sessions", () => {
-    const directory = mkdtempSync(join(tmpdir(), "dnd-unowned-sessions-"));
-    const databasePath = join(directory, "sessions.sqlite");
-    const legacy = new DatabaseSync(databasePath);
-    legacy.exec(`
-      CREATE TABLE play_sessions (
-        play_session_id TEXT PRIMARY KEY,
-        format_version INTEGER NOT NULL,
-        random_seed TEXT NOT NULL,
-        revision INTEGER NOT NULL,
-        operations_json TEXT NOT NULL
-      ) STRICT;
-      INSERT INTO play_sessions VALUES (
-        'play-session:00000000-0000-4000-8000-000000000099',
-        1,
-        '${"0".repeat(64)}',
-        0,
-        '[]'
-      );
-    `);
-    legacy.close();
-    try {
-      const repository = openRepository(databasePath);
-      const retired = repository.load(
-        playSessionId("play-session:00000000-0000-4000-8000-000000000099"),
-      );
-      expect(Result.isSuccess(retired)).toBe(true);
-      if (Result.isSuccess(retired)) {
-        expect(retired.success).toEqual({ tag: "absent" });
-      }
-      repository.close();
-      const inspected = new DatabaseSync(databasePath, { readOnly: true });
-      expect(
-        inspected
-          .prepare(
-            "SELECT COUNT(*) AS count FROM retired_unowned_play_sessions_v1",
-          )
-          .get(),
-      ).toEqual({ count: 1 });
-      inspected.close();
-    } finally {
-      rmSync(directory, { force: true, recursive: true });
-    }
-  });
+const applicationServices = createMcpApplicationServices();
 
-  test("preserves Effect Random records in a retired format-2 table", () => {
-    const directory = mkdtempSync(
-      join(tmpdir(), "dnd-effect-random-sessions-"),
-    );
+describe("public Play Session boundary", () => {
+  test("refuses unconverted storage without renaming or deleting original rows", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-unconverted-sessions-"));
     const databasePath = join(directory, "sessions.sqlite");
-    const legacy = new DatabaseSync(databasePath);
-    legacy.exec(`
-      CREATE TABLE play_sessions (
-        play_session_id TEXT PRIMARY KEY,
-        format_version INTEGER NOT NULL,
-        random_seed TEXT NOT NULL,
-        revision INTEGER NOT NULL,
-        operations_json TEXT NOT NULL,
-        tenure_kind TEXT NOT NULL,
-        guest_access_grant_digest TEXT,
-        principal_id TEXT,
-        last_activity_at_ms INTEGER NOT NULL
-      ) STRICT;
-      INSERT INTO play_sessions VALUES (
-        'play-session:00000000-0000-4000-8000-000000000098',
-        2,
-        '${"1".repeat(64)}',
-        0,
-        '[]',
-        'guest',
-        '${"2".repeat(64)}',
-        NULL,
-        1000
-      );
-    `);
-    legacy.close();
+    const database = new DatabaseSync(databasePath);
+    database.exec(
+      "CREATE TABLE play_sessions (play_session_id TEXT PRIMARY KEY, format_version INTEGER NOT NULL, operations_json TEXT NOT NULL) STRICT; INSERT INTO play_sessions VALUES ('retained-source-row', 1, '[]')",
+    );
+    database.close();
     try {
-      const repository = openRepository(databasePath);
-      const retired = repository.load(
-        playSessionId("play-session:00000000-0000-4000-8000-000000000098"),
-      );
-      expect(Result.isSuccess(retired)).toBe(true);
-      if (Result.isSuccess(retired)) {
-        expect(retired.success).toEqual({ tag: "absent" });
-      }
-      repository.close();
+      expect(
+        openSqlitePlaySessionRepository(databasePath, applicationServices),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { reason: "invalidStoredRecord" },
+      });
       const inspected = new DatabaseSync(databasePath, { readOnly: true });
+      expect(inspected.prepare("SELECT * FROM play_sessions").all()).toEqual([
+        {
+          play_session_id: "retained-source-row",
+          format_version: 1,
+          operations_json: "[]",
+        },
+      ]);
       expect(
         inspected
-          .prepare(
-            "SELECT COUNT(*) AS count FROM retired_effect_random_play_sessions_v2",
-          )
-          .get(),
-      ).toEqual({ count: 1 });
+          .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+          .all(),
+      ).toEqual([{ name: "play_sessions" }]);
       inspected.close();
     } finally {
       rmSync(directory, { force: true, recursive: true });
@@ -489,17 +430,21 @@ describe("public Play Session boundary", () => {
 
   test("advertises required auth and emits the tool OAuth challenge", async () => {
     const repository = openRepository();
-    const anonymousHost = createDndMcpProtocolServer(undefined, undefined, {
-      playSessionRepository: repository,
-      requestIdentity: {
-        tag: "hostedAnonymous",
-        authentication: {
-          tag: "oauth",
-          resourceMetadataUrl:
-            "https://oracle.example.test/.well-known/oauth-protected-resource",
+    const anonymousHost = createDndMcpProtocolServer(
+      applicationServices,
+      undefined,
+      {
+        playSessionRepository: repository,
+        requestIdentity: {
+          tag: "hostedAnonymous",
+          authentication: {
+            tag: "oauth",
+            resourceMetadataUrl:
+              "https://oracle.example.test/.well-known/oauth-protected-resource",
+          },
         },
       },
-    });
+    );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "public-boundary", version: "0.1.0" });
@@ -529,7 +474,7 @@ describe("public Play Session boundary", () => {
 
   test("returns typed invalid arguments for authenticated saved-session listing", async () => {
     const repository = openRepository();
-    const host = createDndMcpProtocolServer(undefined, undefined, {
+    const host = createDndMcpProtocolServer(applicationServices, undefined, {
       playSessionRepository: repository,
       requestIdentity: {
         tag: "authenticated",
@@ -573,7 +518,7 @@ describe("public Play Session boundary", () => {
 
   test("fails hosted stateful access closed without an OAuth provider", async () => {
     const repository = openRepository();
-    const host = createDndMcpProtocolServer(undefined, undefined, {
+    const host = createDndMcpProtocolServer(applicationServices, undefined, {
       playSessionRepository: repository,
       requestIdentity: {
         tag: "hostedAnonymous",
@@ -621,7 +566,7 @@ function createRegistry(
 ) {
   let sequence = 0;
   return createRecoverablePlaySessionRegistry({
-    applicationServices: createMcpApplicationServices(),
+    applicationServices,
     repository,
     playSessionIdFactory: () =>
       playSessionId(
@@ -652,7 +597,8 @@ function seedLegacyGuest(repository: PlaySessionRepository, nowMs: number) {
       formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
       diceReplay: { seed: seeded.success, randomSource: DICE_RANDOM_SOURCE },
       revision: 0,
-      operations: [],
+      operations: PlaySessionCommandArchive.empty(),
+      continuation: emptyContinuation(seeded.success),
       tenure: {
         tag: "guest",
         guestAccessGrantDigest: guestAccessGrantDigest(guestAccessGrant),
@@ -686,7 +632,10 @@ function principal(input: string) {
 }
 
 function openRepository(databasePath = ":memory:"): PlaySessionRepository {
-  const repository = openSqlitePlaySessionRepository(databasePath);
+  const repository = openSqlitePlaySessionRepository(
+    databasePath,
+    applicationServices,
+  );
   if (Result.isFailure(repository)) throw new Error(repository.failure.message);
   return repository.success;
 }
@@ -714,4 +663,14 @@ function rightValue<A>(either: Result.Result<A, unknown>): A {
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function emptyContinuation(
+  seed: Parameters<typeof createMcpPlaySessionRoot>[2],
+) {
+  const encoded = encodePlaySessionContinuation(
+    createMcpPlaySessionRoot(applicationServices, undefined, seed),
+  );
+  if (Result.isFailure(encoded)) throw new Error(encoded.failure);
+  return encoded.success;
 }

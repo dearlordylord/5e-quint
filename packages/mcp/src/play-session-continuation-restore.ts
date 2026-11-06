@@ -1,3 +1,4 @@
+import { characterSessionsOwnBattleState } from "./battle-session-store-commit.ts";
 import {
   restoreBattleRuntimeContinuation,
   restoreInitialInitiativeSetup,
@@ -13,7 +14,7 @@ import {
   type DiceSeed,
 } from "./dice-sampling-service.ts";
 import { disabledAdminMirrorPublication } from "./admin-mirror.ts";
-import { rebuildCharacterSheetForOperation } from "./character-session-sheet-rebuild.ts";
+import { parseCharacterSheet } from "@dnd/character-sheet-runtime";
 import { selectionOrdinalOwnsId } from "./battle-action-selection-store.ts";
 import type { PlaySessionContinuation } from "./play-session-continuation.ts";
 
@@ -37,13 +38,14 @@ export function restorePlaySessionContinuation(
   }
   for (const retained of continuation.characters) {
     const sheet = retained.tag === "inBattle" ? retained.sheet : retained;
-    const validated = rebuildCharacterSheetForOperation(services, {
+    const validated = parseCharacterSheet(
       sheet,
-      build: sheet.build,
-    });
+      services.unitLibrary,
+      services.statBlockCatalog,
+    );
     if (Result.isFailure(validated))
       return Result.fail(
-        `Saved Character Sheet is invalid: ${validated.failure}`,
+        `Saved Character Sheet is invalid: ${validated.failure.message}`,
       );
   }
   const characterIds = continuation.characters.map((character) =>
@@ -112,20 +114,29 @@ export function restorePlaySessionContinuation(
     ),
     Match.exhaustive,
   );
-  return Result.map(battle, ({ battleState, selection }) => ({
-    ...services,
-    adminMirrorPublication: disabledAdminMirrorPublication(),
-    sessionStore: createMcpSessionStore({
-      statBlockCatalog: services.statBlockCatalog,
-      unitLibrary: services.unitLibrary,
-      continuation: {
-        drafts: continuation.drafts,
-        characters: continuation.characters,
-        selectedStatBlockId: continuation.selectedStatBlockId,
-        battleState,
-        actionSelection: { selection, ordinal: continuation.selectionOrdinal },
-      },
-    }),
-    diceSampling: createDiceSamplingService(seed, continuation.dice),
-  }));
+  return Result.flatMap(battle, ({ battleState, selection }) => {
+    if (!characterSessionsOwnBattleState(battleState, continuation.characters))
+      return Result.fail(
+        "Saved Character Session Battle ownership is contradictory.",
+      );
+    return Result.succeed({
+      ...services,
+      adminMirrorPublication: disabledAdminMirrorPublication(),
+      sessionStore: createMcpSessionStore({
+        statBlockCatalog: services.statBlockCatalog,
+        unitLibrary: services.unitLibrary,
+        continuation: {
+          drafts: continuation.drafts,
+          characters: continuation.characters,
+          selectedStatBlockId: continuation.selectedStatBlockId,
+          battleState,
+          actionSelection: {
+            selection,
+            ordinal: continuation.selectionOrdinal,
+          },
+        },
+      }),
+      diceSampling: createDiceSamplingService(seed, continuation.dice),
+    });
+  });
 }

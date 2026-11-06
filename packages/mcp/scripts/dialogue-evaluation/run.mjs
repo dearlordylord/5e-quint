@@ -262,6 +262,7 @@ const [
   { Client },
   { InMemoryTransport },
   { createDndMcpProtocolServer },
+  { createMcpApplicationServices },
   { openSqlitePlaySessionRepository },
   { decodePrincipalId },
   { Result },
@@ -269,20 +270,23 @@ const [
   sdk("client/index.js"),
   sdk("inMemory.js"),
   load("packages/mcp/src/protocol-server.ts"),
+  load("packages/mcp/src/composition-root.ts"),
   load("packages/mcp/src/sqlite-play-session-repository.ts"),
   load("packages/mcp/src/play-session-access.ts"),
   import(pathToFileURL(require.resolve("effect")).href),
 ]);
+const applicationServices = createMcpApplicationServices();
 const principal =
   resumed?.principal ?? "synthetic-api-evaluator:" + randomUUID();
 const decodedPrincipal = decodePrincipalId(principal);
 const opened = openSqlitePlaySessionRepository(
   resolve(out, "play-sessions.sqlite"),
+  applicationServices,
 );
 if (Result.isFailure(decodedPrincipal) || Result.isFailure(opened))
   throw new Error("Unable to open isolated synthetic session repository");
 const repository = opened.success;
-const host = createDndMcpProtocolServer(undefined, undefined, {
+const host = createDndMcpProtocolServer(applicationServices, undefined, {
   toolSurface: "chatgpt",
   playSessionRepository: repository,
   requestIdentity: {

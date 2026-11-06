@@ -1,3 +1,4 @@
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -26,6 +27,7 @@ describe("public HTTP and stdio MCP transport boundaries", () => {
       const directory = await mkdtemp(join(tmpdir(), "dnd-http-parity-"));
       const repository = openRepository(join(directory, "sessions.sqlite"));
       const httpServer = createDndMcpHttpServer({
+        applicationServices,
         playSessionRepository: repository,
       });
       const endpoint = await httpServer.listen();
@@ -119,8 +121,13 @@ async function expectEquivalentResult(
   expect(httpResult).toEqual(stdioResult);
 }
 
+const applicationServices = createMcpApplicationServices();
+
 function openRepository(databasePath: string): PlaySessionRepository {
-  const repository = openSqlitePlaySessionRepository(databasePath);
+  const repository = openSqlitePlaySessionRepository(
+    databasePath,
+    applicationServices,
+  );
   if (Result.isFailure(repository)) throw new Error(repository.failure.message);
   return repository.success;
 }

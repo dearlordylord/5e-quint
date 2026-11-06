@@ -1,3 +1,4 @@
+import { encodePlaySessionContinuation } from "./play-session-continuation-codec.ts";
 import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -106,7 +107,10 @@ async function runReadyAttempt<A>(
   if (rateFailure !== undefined) {
     return { tag: "result", result: Result.fail(rateFailure) };
   }
-  const reconstructed = rootFromRecord(context.runtime.replayServices, record);
+  const reconstructed = rootFromRecord(
+    context.runtime.restorationServices,
+    record,
+  );
   if (Result.isFailure(reconstructed)) {
     return {
       tag: "result",
@@ -227,8 +231,21 @@ function commitSucceededRun<A>(
     ...record.tenure,
     lastActivityAtMs: context.runtime.now(),
   };
+  const continuation = encodePlaySessionContinuation(root);
+  if (Result.isFailure(continuation))
+    return {
+      tag: "result",
+      result: Result.fail(
+        accessFailure({
+          tag: "playSessionRepositoryIssue",
+          reason: "invalidStoredRecord",
+          message: continuation.failure,
+        }),
+      ),
+    };
   const committed = context.runtime.input.repository.commit(record, {
     tenure,
+    continuation: continuation.success,
     ...(command === undefined ? {} : { operation: command }),
   });
   if (Result.isFailure(committed)) {

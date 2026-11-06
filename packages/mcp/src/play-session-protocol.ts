@@ -31,7 +31,6 @@ import {
 import {
   retainedPlaySessionCommand,
   creationCommandChangedState,
-  PLAY_SESSION_COMMAND_ADMISSION_VERSION,
 } from "./play-session-command.ts";
 import {
   battleSessionPayload,
@@ -266,14 +265,12 @@ export async function handlePlaySessionOperation(
       };
     },
     {
-      commandFor: (operation) => ({
-        ...retainedPlaySessionCommand(
+      commandFor: (operation) =>
+        retainedPlaySessionCommand(
           input,
           operation.retainedArguments,
           operation.operationContent,
         ),
-        admissionVersion: PLAY_SESSION_COMMAND_ADMISSION_VERSION,
-      }),
       retain: (operation) =>
         input.recordOperation &&
         operation.commandRetention === "retain" &&

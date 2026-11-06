@@ -1,3 +1,4 @@
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -24,7 +25,6 @@ import { PlaySessionIdSchema } from "./play-session.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
-import { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
 
 const reportedIncompleteArea = {
   originAnchorId: "g1",
@@ -46,8 +46,10 @@ const BattleExecutionSchema = Schema.Struct({
   chatGptBattleOperations: ChatGptBattleGuidanceSchema,
 });
 
+const applicationServices = createMcpApplicationServices();
+
 function openRepository(path: string) {
-  const opened = openSqlitePlaySessionRepository(path);
+  const opened = openSqlitePlaySessionRepository(path, applicationServices);
   if (Result.isFailure(opened)) throw new Error(opened.failure.message);
   return opened.success;
 }
@@ -60,7 +62,7 @@ async function connect(
   if (Result.isFailure(principal)) throw new Error(principal.failure);
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
-  const host = createDndMcpProtocolServer(undefined, undefined, {
+  const host = createDndMcpProtocolServer(applicationServices, undefined, {
     playSessionRepository: repository,
     toolSurface,
     requestIdentity: { tag: "authenticated", principalId: principal.success },
@@ -211,9 +213,8 @@ test(
             selected.operation.result.envelope.checkpoint,
           );
           const after = retainedRecord(repository, retainedId);
-          expect(after.operations).toHaveLength(before.operations.length + 1);
-          expect(after.operations.at(-1)).toEqual({
-            admissionVersion: PLAY_SESSION_COMMAND_ADMISSION_VERSION,
+          expect(after.operations.length).toBe(before.operations.length + 1);
+          expect(JSON.parse(after.operations.json).at(-1)).toEqual({
             toolSurface: "chatgpt",
             name: "provide_battle_input",
             args: { fill: incompleteFill },
@@ -245,8 +246,14 @@ test(
             rejected.operation.result.envelope,
           );
           expect(
-            retainedRecord(repository, retainedId)
-              .operations.slice(-3)
+            Schema.decodeUnknownSync(
+              Schema.Array(Schema.Struct({ name: Schema.String })),
+            )(
+              JSON.parse(
+                retainedRecord(repository, retainedId).operations.json,
+              ),
+            )
+              .slice(-3)
               .map((command) => command.name),
           ).toEqual(["provide_battle_input", "roll_dice", "roll_dice"]);
           return { envelope: rejected.operation.result.envelope, saveHole };

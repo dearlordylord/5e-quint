@@ -29,6 +29,7 @@ const [
   { InMemoryTransport },
   { CallToolRequestSchema, ListToolsRequestSchema },
   { createDndMcpProtocolServer },
+  { createMcpApplicationServices },
   { openSqlitePlaySessionRepository },
   { decodePrincipalId },
   { handleReadPlaySession },
@@ -40,19 +41,24 @@ const [
   sdk("inMemory.js"),
   sdk("types.js"),
   load("packages/mcp/src/protocol-server.ts"),
+  load("packages/mcp/src/composition-root.ts"),
   load("packages/mcp/src/sqlite-play-session-repository.ts"),
   load("packages/mcp/src/play-session-access.ts"),
   load("packages/mcp/src/play-session-protocol.ts"),
   import(pathToFileURL(require.resolve("effect")).href),
 ]);
+const applicationServices = createMcpApplicationServices();
 const principal = decodePrincipalId(
     "synthetic-codex-evaluator:" + process.env.DND_EVAL_RUN_ID,
   ),
-  opened = openSqlitePlaySessionRepository(join(out, "play-sessions.sqlite"));
+  opened = openSqlitePlaySessionRepository(
+    join(out, "play-sessions.sqlite"),
+    applicationServices,
+  );
 if (Result.isFailure(principal) || Result.isFailure(opened))
   throw new Error("Isolated evaluator repository unavailable");
 const identity = { tag: "authenticated", principalId: principal.success };
-const host = createDndMcpProtocolServer(undefined, undefined, {
+const host = createDndMcpProtocolServer(applicationServices, undefined, {
   toolSurface: "chatgpt",
   playSessionRepository: opened.success,
   requestIdentity: identity,

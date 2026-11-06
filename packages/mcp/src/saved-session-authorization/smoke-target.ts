@@ -1,3 +1,4 @@
+import { createMcpApplicationServices } from "../composition-root.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -102,14 +103,17 @@ async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTar
       jwksUrl: new URL("/api/auth/jwks", origin).toString(),
     });
     if (Result.isFailure(oauth)) throw new Error(oauth.failure.message);
+    const applicationServices = createMcpApplicationServices();
     const repository = openSqlitePlaySessionRepository(
       join(scratchDirectory, "mcp-play-sessions.sqlite"),
+      applicationServices,
     );
     if (Result.isFailure(repository)) {
       throw new Error(repository.failure.message);
     }
     closeRepository = () => repository.success.close();
     const server = createDndMcpHttpServer({
+      applicationServices,
       toolSurface: "chatgpt",
       hostname: "127.0.0.1",
       port: 9876,

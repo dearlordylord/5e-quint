@@ -1,3 +1,4 @@
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { MCP_TOOL_SURFACES } from "./mcp-tool-surface.ts";
 import { Result, Effect, ManagedRuntime, Schema } from "effect";
 
@@ -83,8 +84,10 @@ if (Result.isFailure(configuration) || Result.isFailure(operatorDataHandling)) {
     writePublicMcpInitializationFailure("oauth");
     process.exitCode = 1;
   } else {
+    const applicationServices = createMcpApplicationServices();
     const repository = openSqlitePlaySessionRepository(
       configuration.success.databasePath,
+      applicationServices,
     );
     if (Result.isFailure(repository)) {
       writePublicMcpInitializationFailure("storage");
@@ -108,6 +111,7 @@ if (Result.isFailure(configuration) || Result.isFailure(operatorDataHandling)) {
         process.exitCode = 1;
       } else {
         const server = createDndMcpHttpServer({
+          applicationServices,
           playSessionRepository: repository.success,
           toolSurface: configuration.success.toolSurface,
           hostname: configuration.success.hostname,

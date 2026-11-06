@@ -68,6 +68,11 @@ describe("stored Character Sheet primitive parsers", () => {
       expected: "Expected Character Sheet hit points.",
     },
     {
+      name: "positive HP cannot be zero",
+      value: { tag: "positive", currentHp: 0, tempHp: 0 },
+      expected: "Positive-HP Character Sheet requires positive current HP.",
+    },
+    {
       name: "invalid temporary HP",
       value: { tag: "positive", currentHp: 1, tempHp: -1 },
       expected: "Expected nonnegative HP.",

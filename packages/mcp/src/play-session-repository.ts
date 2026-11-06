@@ -1,15 +1,9 @@
-import {
-  PLAY_SESSION_COMMAND_ADMISSION_VERSIONS,
-  PLAY_SESSION_COMMAND_ADMISSION_VERSION,
-} from "./play-session-command.ts";
-import { migrateStoredBattleInput } from "./stored-battle-input-migration.ts";
-import { CHATGPT_STATE_OPERATION_NAMES } from "./chatgpt/protocol-operation.ts";
 import { Result, Schema } from "effect";
 
-import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
-import { CHARACTER_TOOL_NAMES } from "./character-tool-input.ts";
-import { RollDiceArgsSchema, diceToolNames } from "./dice-tool-input.ts";
 import { type PlaySessionCommand, type PlaySessionId } from "./play-session.ts";
+import { parseContinuationGraph } from "./play-session-continuation-codec.ts";
+import { PlaySessionCommandArchive } from "./play-session-command-archive.ts";
+import type { ContinuationGraph } from "./continuation-graph.ts";
 import {
   DICE_RANDOM_SOURCE,
   decodeDiceSeed,
@@ -25,49 +19,12 @@ import {
   type StoredPlaySessionTenure,
 } from "./play-session-access.ts";
 
-export const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 4 as const;
-const READABLE_PLAY_SESSION_FORMAT_VERSIONS = [
-  3,
-  RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
-] as const;
-
-const RecoverableStateOperationNameSchema = Schema.Literals([
-  ...CHARACTER_TOOL_NAMES,
-  ...BATTLE_TOOL_NAMES,
-]);
-const RecoverablePlaySessionOperationsSchema = Schema.Array(
-  Schema.Union([
-    Schema.Struct({
-      admissionVersion: Schema.optionalKey(
-        Schema.Literals(PLAY_SESSION_COMMAND_ADMISSION_VERSIONS),
-      ),
-      toolSurface: Schema.Literal("chatgpt"),
-      name: Schema.Literals(CHATGPT_STATE_OPERATION_NAMES),
-      args: Schema.JsonObject,
-    }),
-    Schema.Struct({
-      admissionVersion: Schema.optionalKey(
-        Schema.Literals(PLAY_SESSION_COMMAND_ADMISSION_VERSIONS),
-      ),
-      toolSurface: Schema.optionalKey(Schema.Never),
-      name: RecoverableStateOperationNameSchema,
-      args: Schema.JsonObject,
-    }),
-    Schema.Struct({
-      admissionVersion: Schema.optionalKey(
-        Schema.Literals(PLAY_SESSION_COMMAND_ADMISSION_VERSIONS),
-      ),
-      toolSurface: Schema.optionalKey(Schema.Never),
-      name: Schema.Literal(diceToolNames.rollDice),
-      args: RollDiceArgsSchema,
-    }),
-  ]),
-);
+export const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 5 as const;
 const StoredDiceSeedSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[0-9a-f]{32}$/u)),
 );
 const StoredPlaySessionRowSchema = Schema.Struct({
-  format_version: Schema.Literals(READABLE_PLAY_SESSION_FORMAT_VERSIONS),
+  format_version: Schema.Literal(RECOVERABLE_PLAY_SESSION_FORMAT_VERSION),
   dice_seed: StoredDiceSeedSchema,
   dice_group_semantic_profile: Schema.Literal(
     DICE_RANDOM_SOURCE.diceGroupSemanticProfile,
@@ -79,6 +36,7 @@ const StoredPlaySessionRowSchema = Schema.Struct({
     Schema.isGreaterThanOrEqualTo(0),
   ),
   operations_json: Schema.String,
+  continuation_json: Schema.String,
   tenure_kind: Schema.Literals(["guest", "saved"]),
   guest_access_grant_digest: Schema.NullOr(GuestAccessGrantDigestSchema),
   principal_id: Schema.NullOr(Schema.String),
@@ -94,7 +52,8 @@ export type RecoverablePlaySessionRecord = {
   readonly formatVersion: typeof RECOVERABLE_PLAY_SESSION_FORMAT_VERSION;
   readonly diceReplay: PlaySessionDiceReplay;
   readonly revision: number;
-  readonly operations: readonly PlaySessionCommand[];
+  readonly operations: PlaySessionCommandArchive;
+  readonly continuation: ContinuationGraph;
   readonly tenure: StoredPlaySessionTenure;
 };
 
@@ -119,6 +78,7 @@ export type PlaySessionRepositorySaveResult =
   | { readonly tag: "savedSessionQuotaExceeded" };
 export type PlaySessionRepositoryCommit = {
   readonly tenure: StoredPlaySessionTenure;
+  readonly continuation: ContinuationGraph;
   readonly operation?: PlaySessionCommand;
 };
 export type PlaySessionRepositoryRateAdmission =
@@ -191,6 +151,15 @@ export function decodeStoredPlaySessionRecord(
   }
   const operations = decodeStoredOperationHistory(decodedRow.success);
   if (Result.isFailure(operations)) return Result.fail(operations.failure);
+  let parsedContinuation: unknown;
+  try {
+    parsedContinuation = JSON.parse(decodedRow.success.continuation_json);
+  } catch (cause) {
+    return Result.fail(invalidStoredRecordIssue(String(cause)));
+  }
+  const continuation = parseContinuationGraph(parsedContinuation);
+  if (Result.isFailure(continuation))
+    return Result.fail(invalidStoredRecordIssue(continuation.failure));
   const tenure = decodeStoredTenure(decodedRow.success);
   if (Result.isFailure(tenure)) return Result.fail(tenure.failure);
   const diceSeed = decodeDiceSeed(
@@ -208,64 +177,21 @@ export function decodeStoredPlaySessionRecord(
     },
     revision: decodedRow.success.revision,
     operations: operations.success,
+    continuation: continuation.success,
     tenure: tenure.success,
   });
 }
 
 function decodeStoredOperationHistory(
   row: typeof StoredPlaySessionRowSchema.Type,
-): Result.Result<readonly PlaySessionCommand[], PlaySessionRepositoryIssue> {
-  let parsedOperations: unknown;
-  try {
-    parsedOperations = JSON.parse(row.operations_json);
-  } catch (cause) {
-    return Result.fail(invalidStoredRecordIssue(String(cause)));
-  }
-  const decodedOperations = Schema.decodeUnknownResult(
-    RecoverablePlaySessionOperationsSchema,
-  )(parsedOperations);
-  if (Result.isFailure(decodedOperations)) {
-    return Result.fail(
-      invalidStoredRecordIssue(decodedOperations.failure.message),
-    );
-  }
-  if (
-    row.format_version === 3 &&
-    decodedOperations.success.some(
-      (operation) =>
-        operation.admissionVersion !== undefined &&
-        operation.admissionVersion !== 2,
-    )
-  ) {
-    return Result.fail(
-      invalidStoredRecordIssue(
-        "Storage format three only supports unmarked or version-two command admission.",
-      ),
-    );
-  }
-  return migrateStoredOperationHistory(decodedOperations.success);
-}
-
-function migrateStoredOperationHistory(
-  history: typeof RecoverablePlaySessionOperationsSchema.Type,
-): Result.Result<readonly PlaySessionCommand[], PlaySessionRepositoryIssue> {
-  const operations: PlaySessionCommand[] = [];
-  for (const operation of history) {
-    if (
-      operation.admissionVersion === PLAY_SESSION_COMMAND_ADMISSION_VERSION ||
-      (operation.toolSurface === undefined &&
-        operation.name === diceToolNames.rollDice)
-    ) {
-      operations.push(operation);
-      continue;
-    }
-    const migrated = migrateStoredBattleInput(operation.args);
-    if (Result.isFailure(migrated)) {
-      return Result.fail(invalidStoredRecordIssue(migrated.failure));
-    }
-    operations.push({ ...operation, args: migrated.success });
-  }
-  return Result.succeed(operations);
+): Result.Result<
+  RecoverablePlaySessionRecord["operations"],
+  PlaySessionRepositoryIssue
+> {
+  return Result.mapError(
+    PlaySessionCommandArchive.parse(row.operations_json),
+    invalidStoredRecordIssue,
+  );
 }
 
 function splitStoredDiceSeed(seed: string) {

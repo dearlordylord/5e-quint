@@ -46,7 +46,7 @@ export type RecoverableRegistryInput = {
 
 export type RecoverableRegistryRuntime = {
   readonly input: RecoverableRegistryInput;
-  readonly replayServices: McpApplicationServices;
+  readonly restorationServices: McpApplicationServices;
   readonly now: () => EpochMilliseconds;
   readonly maximumRetainedCommandsPerSession: number;
   readonly maximumRequestsPerMinute: number;
@@ -101,7 +101,7 @@ export function runtimeFrom(
 ): RecoverableRegistryRuntime {
   return {
     input,
-    replayServices: {
+    restorationServices: {
       ...input.applicationServices,
       createAdminMirrorPublication: disabledAdminMirrorPublication,
     },

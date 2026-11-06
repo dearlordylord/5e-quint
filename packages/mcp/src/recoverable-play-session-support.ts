@@ -1,7 +1,4 @@
-import { formatThreeCreationReplayProfile } from "./recoverable-creation-admission.ts";
-import { CHATGPT_EXECUTION_TOOLS } from "./chatgpt/tool-surface.ts";
 import { Result, Match } from "effect";
-import { PLAY_SESSION_COMMAND_ADMISSION_VERSION } from "./play-session-command.ts";
 
 import {
   publishAdminProjectionBestEffort,
@@ -9,7 +6,6 @@ import {
 } from "./admin-mirror.ts";
 import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import {
-  createMcpPlaySessionRoot,
   type McpApplicationServices,
   type McpPlaySessionRoot,
 } from "./composition-root.ts";
@@ -37,46 +33,24 @@ import {
   DICE_RANDOM_SOURCE,
   generatedDiceSeed,
 } from "./dice-sampling-service.ts";
-import { handleToolCall } from "./server.ts";
+import { decodePlaySessionContinuation } from "./play-session-continuation-codec.ts";
 
 export function rootFromRecord(
   applicationServices: McpApplicationServices,
   record: RecoverablePlaySessionRecord,
 ): Result.Result<McpPlaySessionRoot, PlaySessionRepositoryIssue> {
-  const root = createMcpPlaySessionRoot(
-    applicationServices,
-    adminMirrorSessionId(record.playSessionId),
-    record.diceReplay.seed,
-  );
-  const historicalRoot = {
-    ...root,
-    characterCreationSupportProfile: formatThreeCreationReplayProfile(
-      root.characterCreationSupportProfile,
+  return Result.mapError(
+    decodePlaySessionContinuation(
+      applicationServices,
+      record.diceReplay.seed,
+      record.continuation,
     ),
-  };
-  for (const operation of record.operations) {
-    const operationRoot = Match.value(operation.admissionVersion).pipe(
-      Match.when(undefined, () => historicalRoot),
-      Match.when(2, () => root),
-      Match.when(PLAY_SESSION_COMMAND_ADMISSION_VERSION, () => root),
-      Match.exhaustive,
-    );
-    const replayed =
-      operation.toolSurface === "chatgpt"
-        ? CHATGPT_EXECUTION_TOOLS[operation.name].handle(
-            operationRoot,
-            operation.args,
-          )
-        : handleToolCall(operationRoot, operation.name, operation.args);
-    if ("isError" in replayed && replayed.isError === true) {
-      return Result.fail({
-        tag: "playSessionRepositoryIssue",
-        reason: "invalidStoredRecord",
-        message: `Stored Play Session operation ${operation.name} no longer reconstructs successfully.`,
-      });
-    }
-  }
-  return Result.succeed(root);
+    (message) => ({
+      tag: "playSessionRepositoryIssue" as const,
+      reason: "invalidStoredRecord" as const,
+      message,
+    }),
+  );
 }
 
 export function publishCurrentProjection(

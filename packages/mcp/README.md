@@ -90,52 +90,28 @@ closed with the OAuth challenge and never creates durable anonymous state.
 
 ## Recovery and persistence
 
-HTTP persists tenure, format version, random-stream configuration, revision, and
-ordered reconstructive commands, including gameplay inputs rejected by the runtime.
-The checkpoint determines applied effects; a stored command alone does not.
-Each operation reconstructs a root,
-applies the command, and commits against the expected revision; conflicts reload
-and retry. Disable Admin Mirror publication during reconstruction, then publish
-committed projections. Never persist derived summaries or another dice cursor.
+HTTP stores one canonical continuation per Play Session with tenure, revision,
+original random-source metadata, and an inert command archive. The continuation
+retains drafts, Character Sheets, Battle runtime state and pending transactions,
+selection allocation, initiative setup, and the actual DRDice GeneratorState.
+Runtime owners restore their opaque associations; requests and projections are
+derived from those retained facts. Shared catalog references include hashes of
+the referenced facts and fail validation when those facts change.
 
-[Creation replay admission](src/recoverable-creation-admission.ts) owns the bounded
-format-3 compatibility policy for commands recorded before creation mastery
-admission was narrowed. Unmarked commands retain the formerly admitted Dagger
-and Shortsword mastery selections through the same typed creation handlers;
-the seven original mastery choices are frozen independently of the live list.
-Commands with admission versions 2 and 3 use the live creation profile. New
-commands carry version 3. Future changes to mastery admission require another
-command admission version. This is an
-explicit historical support-admission boundary, not name-based Battle dispatch.
-Recovery shares reconstructed state but returns the live profile before a new
-operation. Existing records and selected identities are not rewritten, and Battle
-still rejects unsupported mastery execution. Rejected creation fills and
-non-ready finalization attempts do not change state and are no longer retained;
-rejected gameplay inputs keep their existing retention behavior. Unknown command
-admission versions are rejected by the persisted schema. This policy covers the
-known format-3 narrowing, not arbitrary future support changes. Unmarked
-commands written during a release that already narrowed support cannot encode
-whether that release accepted a selection; they require deployment evidence
-rather than an inferred history.
+Each successful operation restores that continuation, applies its input, and
+atomically replaces the snapshot against the expected revision. Conflicts reload
+and retry. Mirror publication follows commit. Archive appends preserve existing
+serialized entries and metadata; serving never executes archived commands or
+selects a historical admission profile.
 
-[Stored battle input migration](src/stored-battle-input-migration.ts) owns the
-transition to command admission version 3 for point-origin inputs. On read, version-2 and unmarked stored
-sphere inputs convert their combatant `originAnchorId` to the typed
-`originAnchor` without changing the chosen center, outcomes, or dice history.
-New public sphere inputs require the typed origin, including
-`{ kind: "tableSelectedPoint" }` for a point chosen by the table's geometry.
-New writes use storage format 4, so the deployment rollback guard blocks older
-format-3 images from reading version-3 commands. Format-3 rows remain readable;
-their next committed change or guest-save promotion atomically writes the
-normalized history with format 4. Repository loads alone do not rewrite a row. Conflicting
-or malformed historical origins are rejected.
-
-DRDice recovery retains the Seed, Dice Group Semantic Profile, PRNG Sequence
-Profile, and State Schema Identity. Incompatible databases are retained in
-`retired_unowned_play_sessions_v1` or `retired_effect_random_play_sessions_v2`;
-old handles do not acquire invented ownership or replay under new dice semantics.
-See [SQLite repository](src/sqlite-play-session-repository.ts) and
-[schema](src/sqlite-play-session-schema.ts) before changing storage.
+Storage format 5 is the only serving format. Opening the
+[SQLite repository](src/sqlite-play-session-repository.ts) requires the same
+application services supplied to its host. It validates the schema and every
+stored continuation in bounded pages before returning a repository. Unsupported
+schemas and invalid saves fail without renaming, deleting, or converting them.
+Deployment conversion belongs to the [operations runbook](../../operations/public-mcp/README.md),
+with writers stopped and an explicitly pinned source materializer. It does not
+run in requests or invent missing historical choices and facts.
 
 Default limits: 20 saved sessions per principal, 10,000 commands per session,
 and 120 stateful requests/minute per principal. Legacy guest rows from an older
@@ -145,7 +121,7 @@ MCP parsing.
 
 [Recovery protocol tests](src/recoverable-play-session-protocol.test.ts) cover
 restart and concurrent-operation behavior;
-[property tests](src/recoverable-play-session.property.test.ts) cover reconstruction.
+[property tests](src/recoverable-play-session.property.test.ts) cover resumed random streams.
 
 ## Run the server
 

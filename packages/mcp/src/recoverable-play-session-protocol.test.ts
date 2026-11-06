@@ -1,3 +1,4 @@
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { isDeepStrictEqual } from "node:util";
 import { ChatGptBattleGuidanceSchema } from "./chatgpt/battle-guidance-schema.ts";
 import { CHATGPT_TOOL_PLAN } from "./chatgpt/operation-tool-plan.ts";
@@ -66,7 +67,11 @@ function recoverableProtocolTestOAuth(): PublicMcpOAuth {
 function createDndMcpHttpServer(
   input: Parameters<typeof createBaseDndMcpHttpServer>[0],
 ) {
-  return createBaseDndMcpHttpServer({ ...input, oauth: testOAuth });
+  return createBaseDndMcpHttpServer({
+    ...input,
+    applicationServices,
+    oauth: testOAuth,
+  });
 }
 
 afterEach(async () => {
@@ -195,7 +200,7 @@ describe("recoverable Play Session protocol", () => {
   );
 
   test(
-    "replays mixed regular and ChatGPT commands with overlapping tool names",
+    "restores state created through regular and ChatGPT tools with overlapping names",
     async () => {
       const directory = await mkdtemp(join(tmpdir(), "dnd-chatgpt-replay-"));
       temporaryDirectories.push(directory);
@@ -410,7 +415,7 @@ describe("recoverable Play Session protocol", () => {
     TEST_TIMEOUT,
   );
 
-  test("retains a runtime-assigned Character Draft identity across replay", async () => {
+  test("retains a runtime-assigned Character Draft identity across restart", async () => {
     const directory = await mkdtemp(join(tmpdir(), "dnd-generated-draft-"));
     temporaryDirectories.push(directory);
     const repository = openRepository(join(directory, "play-sessions.sqlite"));
@@ -1243,7 +1248,7 @@ describe("recoverable Play Session protocol", () => {
     TEST_TIMEOUT,
   );
 
-  test("rejects a stored command that cannot reconstruct application state", async () => {
+  test("restores canonical state without interpreting retained command history", async () => {
     const directory = await mkdtemp(join(tmpdir(), "dnd-invalid-session-"));
     temporaryDirectories.push(directory);
     const databasePath = join(directory, "play-sessions.sqlite");
@@ -1275,15 +1280,8 @@ describe("recoverable Play Session protocol", () => {
         name: "read_play_session",
         arguments: { playSessionId },
       });
-      expect(failed.isError).toBe(true);
-      if (!Array.isArray(failed.content) || !isJsonObject(failed.content[0])) {
-        throw new Error("Expected a typed stored-record failure response.");
-      }
-      expect(failed.content[0].type).toBe("text");
-      expect(JSON.parse(String(failed.content[0].text))).toMatchObject({
-        details: { reason: "invalidStoredRecord" },
-      });
-      expect(failed.structuredContent).toBeUndefined();
+      expect(failed.isError).not.toBe(true);
+      expect(failed.structuredContent).toBeDefined();
     } finally {
       await recoveredConnection.close();
       recoveredRepository.close();
@@ -1734,7 +1732,7 @@ async function connectClient(
 ) {
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
-  const host = createDndMcpProtocolServer(undefined, undefined, {
+  const host = createDndMcpProtocolServer(applicationServices, undefined, {
     playSessionRepository,
     toolSurface,
     requestIdentity: {
@@ -1756,8 +1754,13 @@ async function connectClient(
   };
 }
 
+const applicationServices = createMcpApplicationServices();
+
 function openRepository(databasePath: string) {
-  const repository = openSqlitePlaySessionRepository(databasePath);
+  const repository = openSqlitePlaySessionRepository(
+    databasePath,
+    applicationServices,
+  );
   if (Result.isFailure(repository)) throw new Error(repository.failure.message);
   return repository.success;
 }
