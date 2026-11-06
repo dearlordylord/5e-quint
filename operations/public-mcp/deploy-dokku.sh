@@ -115,6 +115,15 @@ if [[ "$deployment_environment" == production && "$publication_mode" == enabled 
     exit 65
   }
 fi
+migration_barrier="/var/lib/dokku/data/storage/$dokku_app/migration-admission-closed"
+migration_conversion=false
+if ssh "root@$dokku_host" test -e "$migration_barrier"; then
+  [[ "$(ssh "root@$dokku_host" cat "$migration_barrier")" == "$release" ]] || {
+    echo "Offline conversion has not admitted this exact target release" >&2
+    exit 65
+  }
+  migration_conversion=true
+fi
 previous_release="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_RELEASE)"
 [[ "$previous_release" =~ ^[0-9a-f]{40}$ ]] || {
   echo "$dokku_app has no valid configured release to restore" >&2
@@ -202,6 +211,11 @@ if ! ssh "dokku@$dokku_host" \
   "dnd-oracle:$release" \
   "5e Quint deployment" \
   "deployment@localhost" < "$image_archive"; then
+  if [[ "$migration_conversion" == true ]]; then
+    ssh "dokku@$dokku_host" ps:stop "$dokku_app"
+    echo "Converted database preserved and admission closed; recovery requires ad hoc investigation" >&2
+    exit 1
+  fi
   echo "Dokku image release failed; restoring $previous_release" >&2
   ssh "dokku@$dokku_host" config:set --no-restart "$dokku_app" "DND_MCP_RELEASE=$previous_release" >/dev/null
   ssh "root@$dokku_host" docker image load --input "$rollback_archive" >/dev/null
@@ -223,9 +237,18 @@ fi
 ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null 2>&1 || true
 ssh "root@$dokku_host" rm -f -- "$rollback_archive"
 
+if [[ "$migration_conversion" == true ]]; then
+  # On any later failure, stop the candidate instead of admitting old code.
+  trap 'ssh "dokku@$dokku_host" ps:stop "$dokku_app"' ERR
+fi
 DND_MCP_PUBLISHER_NAME="$publisher_name" \
   DND_MCP_PUBLICATION_MODE="$publication_mode" \
   DND_OPENAI_APPS_CHALLENGE="$openai_apps_challenge" \
   "$directory/smoke-origin.sh" "$public_origin" "$release" "$configured_environment"
 
 echo "Dokku $deployment_environment deployment passed for $release at $public_origin."
+
+if [[ "$migration_conversion" == true ]]; then
+  ssh "root@$dokku_host" rm -- "$migration_barrier"
+  trap - ERR
+fi
