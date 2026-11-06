@@ -82,11 +82,13 @@ describe("character spell procedure admission result", () => {
   test.each([
     {
       spellId: "cure_wounds",
+      className: "cleric",
       support: { tag: "admitted" },
       invocationCount: 1,
     },
     {
       spellId: "identify",
+      className: "wizard",
       support: {
         tag: "notBattleOwned",
         reason: { kind: "noMatchingBattleProcedure" },
@@ -95,10 +97,13 @@ describe("character spell procedure admission result", () => {
     },
   ] as const)(
     "preflight predicts Battle spell availability: $spellId",
-    ({ spellId, support, invocationCount }) => {
+    ({ spellId, className, support, invocationCount }) => {
       const spell = spellRecord(spellId);
       expect(spellBattleSupport(spell.mechanics)).toEqual(support);
-      const session = spellBattle({ preparedSpells: [spell] });
+      const session = spellBattle({
+        preparedSpells: [spell],
+        casterClassLevels: [{ className, level: 1 }],
+      });
       const actor = session.state.combatants.get(spellCasterId);
       const spellcasting =
         session.context.characters.get(
