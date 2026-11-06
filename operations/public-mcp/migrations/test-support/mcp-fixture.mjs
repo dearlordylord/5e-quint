@@ -71,8 +71,20 @@ async function connection(databasePath) {
       return result.structuredContent;
     },
     async close() {
-      await Promise.allSettled([client.close(), host.server.close()]);
-      repository.close();
+      const stopped = await Promise.allSettled([
+        client.close(),
+        host.server.close(),
+      ]);
+      const failures = stopped
+        .filter((result) => result.status === "rejected")
+        .map((result) => result.reason);
+      try {
+        repository.close();
+      } catch (cause) {
+        failures.push(cause);
+      }
+      if (failures.length > 0)
+        throw new AggregateError(failures, "Fixture shutdown failed.");
     },
   };
 }
