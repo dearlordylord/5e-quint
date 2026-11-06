@@ -133,6 +133,7 @@ async function main() {
           args: [
             "exec",
             "tsc",
+            "--singleThreaded",
             "-p",
             "scripts/raw-swarm/sdk-player/tsconfig.json",
           ],
