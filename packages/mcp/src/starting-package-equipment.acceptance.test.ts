@@ -85,7 +85,7 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
   const characterId = characterIdFromDraftId(draftId);
   const call = (name: string, args: unknown): unknown => {
     const result = handleToolCall(root, name, args);
-    expect(result.isError).not.toBe(true);
+    expect(result).not.toHaveProperty("isError", true);
     const text = result.content[0]?.text;
     if (text === undefined) throw new Error("Expected a tool response.");
     return JSON.parse(text);
