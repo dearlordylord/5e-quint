@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 194,
+    "total": 195,
     "bySubject": {
-      "battle-hole-family": 97,
+      "battle-hole-family": 98,
       "battle-fill-kind": 57,
       "battle-subject-kind": 40
     },
     "byClassification": {
       "semantic-frontier": 151,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 43,
+      "table-owned-fact": 44,
       "unsupported-dead-branch": 0
     }
   },
@@ -6478,6 +6478,15 @@
       "holeKind": "targetSpatialFacts",
       "id": "BattleSpellCastReactionFactsHole",
       "reason": "Spell-cast visibility, range, and component witnesses are caller/table facts covered by the boundary obligation. If those facts admit a Reaction window, offer, decline, spend, and continuation resume are the existing reducer semantics covered by BATTLE.REACTION.OFFER_DECLINE_RESUME; spell-specific reaction procedures remain profile-join work, not a new targetSpatialFacts obligation.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
+      "followUpTaskIds": [],
+      "holeKind": "targetSpatialFacts",
+      "id": "BattleUnitFeatureSphereFactsHole",
+      "reason": "The feature Sphere membership hole requests caller/table target membership for one procedure occurrence. Its range and radius derive from the admitted feature profile; geometry and membership derivation remain outside reducer state. Saving Throw, damage, and healing consequences remain owned by the feature procedure obligation and its area save damage healing profile witnesses.",
       "subject": "battle-hole-family"
     },
     {
