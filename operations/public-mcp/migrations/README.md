@@ -76,10 +76,15 @@ qualification is unknown; it must never become an empty enemy set or an
 invented player choice.
 
 The result measures main/WAL/SHM/journal files before conversion, after commit
-or rollback, and after closing; backup files, private report and separate bundle
-sizes; and complete serialized snapshot/history bytes. These are actual file
-and encoding costs, with no invented disk cap. Preserve the full result beside
-the private report. No partial conversion counts as successful verification.
+or rollback, and after closing. `inTransactionObservedMax` records each file's
+largest observed size after each attempted row and before commit or rollback,
+including transaction failures. These samples can miss growth between sampling
+points. The per-file maxima need not occur together and are not an operating
+system peak or a peak total footprint. The result also records backup files,
+private report and separate bundle sizes, and complete serialized
+snapshot/history bytes. These are actual file and encoding costs, with no
+invented disk cap. Preserve the full result beside the private report. No partial
+conversion counts as successful verification.
 
 Recovery is ad hoc. Inspect the actual database and report, identify its format,
 and approve concrete repair or source/target decisions before changing the

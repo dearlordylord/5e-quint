@@ -35,6 +35,15 @@ async function convertDatabase({
   let report;
   let reserved = false;
   const measurements = { before: footprint(databasePath) };
+  const observeTransactionFootprint = () => {
+    const observed = footprint(databasePath);
+    measurements.inTransactionObservedMax = Object.fromEntries(
+      Object.entries(observed).map(([name, size]) => [
+        name,
+        Math.max(measurements.inTransactionObservedMax?.[name] ?? 0, size),
+      ]),
+    );
+  };
   try {
     const kit = resolve(kitDirectory);
     const manifest = JSON.parse(
@@ -152,12 +161,15 @@ async function convertDatabase({
                 issue: String(cause).slice(0, 2048),
               }) + "\n",
             );
+          } finally {
+            observeTransactionFootprint();
           }
         }
       }
     } finally {
       snapshot.close();
     }
+    observeTransactionFootprint();
     if (failures !== 0) {
       database.exec("ROLLBACK");
       reserved = false;
@@ -196,7 +208,13 @@ async function convertDatabase({
       },
     };
   } catch (cause) {
-    if (reserved) database.exec("ROLLBACK");
+    if (reserved) {
+      try {
+        observeTransactionFootprint();
+      } finally {
+        database.exec("ROLLBACK");
+      }
+    }
     const message = String(cause).slice(0, 2048);
     if (report !== undefined)
       writeSync(report, JSON.stringify({ issue: message }) + "\n");
