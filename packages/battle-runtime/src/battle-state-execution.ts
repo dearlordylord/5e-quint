@@ -1762,16 +1762,18 @@ export type BattleTargetSpatialFact =
     }
   | {
       /**
-       * Table-supplied proximity facts for a ranged Spell Attack. This is
-       * deliberately independent of the selected target: another visible,
-       * non-Incapacitated enemy within 5 feet also imposes Disadvantage.
+       * Complete table-supplied enemy qualification for a ranged Spell Attack.
+       * An empty enemies array means checked-none; omission is unqualified.
+       * Enemies are contextual and independent of the selected target.
        */
       readonly kind: "rangedSpellAttackEnemyProximity";
       readonly casterId: CombatantId;
-      readonly enemyId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      readonly distanceFeet: MovementFeet;
-      readonly enemyCanSeeCaster: boolean;
+      readonly enemies: readonly {
+        readonly enemyId: CombatantId;
+        readonly distanceFeet: MovementFeet;
+        readonly enemyCanSeeCaster: boolean;
+      }[];
     }
   | {
       readonly kind: "unitFeatureVisibleTargetWithinRange";
@@ -4879,6 +4881,23 @@ export type AvailableBattleAct = BattleActExecutionCandidate & {
 
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
+export const RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS = [
+  "spellTarget",
+  "spellObjectTarget",
+  "spellObjectTargetSight",
+  "spellObjectIgnition",
+  "rangedSpellAttackEnemyProximity",
+  "spellLeapTargetWithinRange",
+  "spellTargetKnownWilling",
+  "reactionSpellDamagerVisibleWithinRange",
+  "retaliationDamagerWithinFiveFeet",
+  "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
+  "attackAttackerCannotSeeTarget",
+  "attackTargetCannotSeeAttacker",
+  "attackerPerceivesObscuredTargetWithSense",
+  "attackerUnaffectedByDuplicateHitInterceptionWithSense",
+] as const satisfies readonly BattleTargetSpatialFact["kind"][];
+
 export type BattleSpellTargetSpatialFactRequest = {
   readonly casterId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -4887,6 +4906,7 @@ export type BattleSpellTargetSpatialFactRequest = {
   readonly requiresKnownWillingTarget?: true;
   /** Ranged spell attacks must carry the exact caster-to-target distance. */
   readonly requiresExactDistance?: true;
+  readonly requiresEnemyProximityQualification?: true;
 };
 export type BattleSpellLeapTargetSpatialFactRequest = {
   readonly previousTargetId: CombatantId;
@@ -4898,6 +4918,7 @@ export type BattleSpellObjectTargetSpatialFactRequest = {
   readonly rangeFeet: MovementFeet;
   /** Ranged spell attacks must carry the exact caster-to-object distance. */
   readonly requiresExactDistance: true;
+  readonly requiresEnemyProximityQualification: true;
 };
 export type BattleTargetChoiceHole = Extract<
   RuntimeHole & { readonly label: string },
@@ -5328,6 +5349,7 @@ export type BattleSpellTargetAllocationHole = {
     readonly rangeFeet: MovementFeet;
     readonly visibility: "requiresSight";
     readonly requiresExactDistance?: true;
+    readonly requiresEnemyProximityQualification?: true;
   };
 };
 export type BattleSpellTargetListHole = {
@@ -5352,6 +5374,7 @@ export type BattleSpellTargetListHole = {
     readonly rangeFeet: MovementFeet;
     readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
     readonly requiresExactDistance?: true;
+    readonly requiresEnemyProximityQualification?: true;
   };
   readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;

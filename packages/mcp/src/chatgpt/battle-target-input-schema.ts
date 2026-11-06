@@ -1,4 +1,7 @@
-import type { BattleHole } from "@dnd/battle-runtime";
+import {
+  RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS,
+  type BattleHole,
+} from "@dnd/battle-runtime";
 import { Match } from "effect";
 import {
   resolveLocalSchemaReference,
@@ -235,7 +238,111 @@ function targetSpatialConstraints(
   };
 }
 
-export function targetInputSchemas(
+function rangedSpellTargetSchema(
+  member: McpOutputSchema,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetChoice" | "objectTargetChoice" }
+  >,
+  definitions: McpOutputSchema,
+): McpOutputSchema {
+  const request = Match.value(hole).pipe(
+    Match.when(
+      { kind: "targetChoice" },
+      (request) => request.spellTargetSpatialFactRequest,
+    ),
+    Match.when(
+      { kind: "objectTargetChoice" },
+      (request) => request.spellObjectTargetSpatialFactRequest,
+    ),
+    Match.exhaustive,
+  );
+  if (request?.requiresEnemyProximityQualification !== true) return member;
+  const properties = record(member.properties);
+  const spatial = resolveLocalSchemaReference(
+    record(properties.spatialFacts),
+    definitions,
+  );
+  const facts = targetFactMembers(member, definitions).filter(
+    (candidate) =>
+      RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS.some((kind) =>
+        hasKind(candidate, kind, definitions),
+      ) &&
+      (hole.kind !== "targetChoice" ||
+        !("objectId" in record(candidate.properties))) &&
+      (!hasKind(candidate, "spellLeapTargetWithinRange", definitions) ||
+        (hole.kind === "targetChoice" &&
+          hole.spellLeapTargetSpatialFactRequest !== undefined)) &&
+      (!hasKind(candidate, "spellTargetKnownWilling", definitions) ||
+        (hole.kind === "targetChoice" &&
+          hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget ===
+            true)),
+  );
+  const qualification = facts.filter((fact) =>
+    hasKind(fact, "rangedSpellAttackEnemyProximity", definitions),
+  );
+  return {
+    ...member,
+    required: [
+      ...new Set([
+        ...(Array.isArray(member.required) ? member.required : []),
+        "spatialFacts",
+      ]),
+    ],
+    properties: {
+      ...properties,
+      spatialFacts: {
+        ...spatial,
+        items: { anyOf: facts },
+        allOf: [
+          ...(Array.isArray(spatial.allOf) ? spatial.allOf : []),
+          {
+            contains: {
+              anyOf: qualification.map((fact) =>
+                pinFact(fact, {
+                  kind: "rangedSpellAttackEnemyProximity",
+                  casterId: request.casterId,
+                  sourceProcedureRef: request.sourceProcedureRef,
+                }),
+              ),
+            },
+            maxContains: 1,
+          },
+          ...(hole.kind === "objectTargetChoice"
+            ? [
+                {
+                  contains: {
+                    anyOf: facts
+                      .filter((fact) =>
+                        hasKind(fact, "spellObjectTarget", definitions),
+                      )
+                      .map((fact) => ({
+                        ...pinFact(fact, {
+                          kind: "spellObjectTarget",
+                          casterId: request.casterId,
+                          sourceProcedureRef: request.sourceProcedureRef,
+                          rangeFeet: request.rangeFeet,
+                        }),
+                        allOf: [
+                          {
+                            properties: {
+                              distanceFeet: { maximum: request.rangeFeet },
+                            },
+                          },
+                        ],
+                      })),
+                  },
+                  maxContains: 1,
+                },
+              ]
+            : []),
+        ],
+      },
+    },
+  };
+}
+
+function creatureTargetInputSchemas(
   members: readonly McpOutputSchema[],
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   canonicalDefinitions: McpOutputSchema,
@@ -267,8 +374,37 @@ export function targetInputSchemas(
     distanceFirst: attack !== undefined,
     members: members.flatMap((member) =>
       attack === undefined
-        ? [targetSpatialConstraints(member, hole, definitions)]
+        ? [
+            targetSpatialConstraints(
+              rangedSpellTargetSchema(member, hole, definitions),
+              hole,
+              definitions,
+            ),
+          ]
         : attackTargetSchemas(member, hole, attack, definitions),
     ),
   };
+}
+
+export function targetInputSchemas(
+  members: readonly McpOutputSchema[],
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetChoice" | "objectTargetChoice" }
+  >,
+  canonicalDefinitions: McpOutputSchema,
+) {
+  return Match.value(hole).pipe(
+    Match.when({ kind: "targetChoice" }, (request) =>
+      creatureTargetInputSchemas(members, request, canonicalDefinitions),
+    ),
+    Match.when({ kind: "objectTargetChoice" }, (request) => ({
+      definitions: canonicalDefinitions,
+      distanceFirst: false,
+      members: members.map((member) =>
+        rangedSpellTargetSchema(member, request, canonicalDefinitions),
+      ),
+    })),
+    Match.exhaustive,
+  );
 }

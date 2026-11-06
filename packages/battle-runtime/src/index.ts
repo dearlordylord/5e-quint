@@ -1,3 +1,4 @@
+export { RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS } from "./battle-state-execution.ts";
 export { creatureSpellProcedure } from "./creature-spell-procedure.ts";
 export { characterSpellProcedure } from "./character-execution-queries.ts";
 export * from "./consumer-protocol.ts";

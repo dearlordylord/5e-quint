@@ -304,11 +304,17 @@ describe("ChatGPT newcomer battle recovery", () => {
       targetId: spellTargetId,
       distanceFeet: 30,
     };
+    const qualification = {
+      kind: "rangedSpellAttackEnemyProximity",
+      casterId: request.casterId,
+      sourceProcedureRef: request.sourceProcedureRef,
+      enemies: [],
+    };
     const fill = {
       kind: target.kind,
       holeId: target.holeId,
       value: spellTargetId,
-      spatialFacts: [spatialFact],
+      spatialFacts: [spatialFact, qualification],
     };
     expect(
       validate({
@@ -327,28 +333,140 @@ describe("ChatGPT newcomer battle recovery", () => {
             sourceProcedureRef: spatialFact.sourceProcedureRef,
             targetId: spatialFact.targetId,
           },
+          qualification,
         ],
       }).valid,
     ).toBe(false);
     expect(
       validate({
         ...fill,
-        spatialFacts: [{ ...spatialFact, casterId: spellTargetId }],
+        spatialFacts: [
+          { ...spatialFact, casterId: spellTargetId },
+          qualification,
+        ],
       }).valid,
     ).toBe(false);
     expect(
       validate({
         ...fill,
-        spatialFacts: [{ ...spatialFact, targetId: request.casterId }],
+        spatialFacts: [
+          { ...spatialFact, targetId: request.casterId },
+          qualification,
+        ],
       }).valid,
     ).toBe(false);
     expect(
       validate({
         ...fill,
-        spatialFacts: [{ ...spatialFact, distanceFeet: request.rangeFeet + 1 }],
+        spatialFacts: [
+          { ...spatialFact, distanceFeet: request.rangeFeet + 1 },
+          qualification,
+        ],
       }).valid,
     ).toBe(false);
+    expect(validate({ ...fill, spatialFacts: [spatialFact] }).valid).toBe(
+      false,
+    );
     expect(validate(fill).valid).toBe(true);
+    const optionalSightAndSenseFacts = [
+      {
+        kind: "reactionSpellDamagerVisibleWithinRange",
+        reactorId: spellTargetId,
+        damageSourceId: request.casterId,
+        sourceProcedureRef: request.sourceProcedureRef,
+        rangeFeet: 60,
+      },
+      {
+        kind: "retaliationDamagerWithinFiveFeet",
+        damagedId: spellTargetId,
+        damageSourceId: request.casterId,
+      },
+      {
+        kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
+        beneficiaryId: spellTargetId,
+        damageSourceId: request.casterId,
+        targetId: spellTargetId,
+        sourceProcedureRef: request.sourceProcedureRef,
+        rangeFeet: 10,
+      },
+      {
+        kind: "attackTargetCannotSeeAttacker",
+        attackerId: request.casterId,
+        targetId: spellTargetId,
+      },
+      {
+        kind: "attackerPerceivesObscuredTargetWithSense",
+        attackerId: request.casterId,
+        targetId: spellTargetId,
+        sense: "blindsight",
+      },
+      {
+        kind: "attackerUnaffectedByDuplicateHitInterceptionWithSense",
+        attackerId: request.casterId,
+        targetId: spellTargetId,
+        sense: "truesight",
+      },
+    ];
+    expect(
+      validate({
+        ...fill,
+        spatialFacts: [...fill.spatialFacts, ...optionalSightAndSenseFacts],
+      }).valid,
+    ).toBe(true);
+    expect(JSON.stringify(input.fillSchema)).not.toContain(
+      "spellTargetsInPointOriginSphere",
+    );
+    expect(JSON.stringify(input.fillSchema)).not.toContain(
+      "stagedConditionShakeAwakeActorWithin5Feet",
+    );
+    const objectHole = selected.envelope.frontier.holes.find(
+      (hole) => hole.kind === "objectTargetChoice",
+    );
+    const objectInput = guidance.inputs.find(
+      (candidate) => candidate.holeId === objectHole?.holeId,
+    );
+    if (objectHole === undefined || objectInput === undefined)
+      throw new Error("Expected the alternative object-target schema.");
+    const validateObject = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(objectInput.fillSchema, "spell object target fill"),
+    );
+    const objectFact = {
+      kind: "spellObjectTarget",
+      casterId: request.casterId,
+      sourceProcedureRef: request.sourceProcedureRef,
+      objectId: "practice-object",
+      rangeFeet: request.rangeFeet,
+      distanceFeet: 30,
+      armorClass: 13,
+      damageDisposition: { kind: "hitPoints", hitPoints: 5 },
+    };
+    const objectIgnition = {
+      kind: "spellObjectIgnition",
+      casterId: request.casterId,
+      sourceProcedureRef: request.sourceProcedureRef,
+      objectId: "practice-object",
+      disposition: { kind: "notFlammable" },
+    };
+    const objectFill = {
+      kind: objectHole.kind,
+      holeId: objectHole.holeId,
+      value: "practice-object",
+      spatialFacts: [objectFact, objectIgnition, qualification],
+    };
+    expect(validateObject(objectFill).valid).toBe(true);
+    expect(
+      validateObject({
+        ...objectFill,
+        spatialFacts: [objectFact, objectIgnition],
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateObject({ ...objectFill, spatialFacts: [qualification] }).valid,
+    ).toBe(false);
+    expect(JSON.stringify(objectInput.fillSchema)).not.toContain(
+      "spellObjectLightTarget",
+    );
+
     const accepted = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
       jsonContentPayload(
         CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, { fill }),

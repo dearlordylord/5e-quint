@@ -515,6 +515,19 @@ function spellTargetFill(
           battleProcedureExecutionRefForTest(String(eldritchBlastUnitId)),
         ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
+      ...(hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true
+        ? [
+            {
+              kind: "rangedSpellAttackEnemyProximity" as const,
+              casterId: casterId,
+              sourceProcedureRef:
+                hole.spellTargetSpatialFactRequest?.sourceProcedureRef ??
+                battleProcedureExecutionRefForTest(String(eldritchBlastUnitId)),
+              enemies: [],
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -540,6 +553,12 @@ function spellObjectTargetFill(
           hitPoints: Hp(initialObjectHp),
         },
       } satisfies SpellObjectTargetFact,
+      {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId,
+        sourceProcedureRef: hole.sourceProcedureRef,
+        enemies: [],
+      },
     ],
   };
 }

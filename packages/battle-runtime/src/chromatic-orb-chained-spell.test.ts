@@ -1,3 +1,5 @@
+import { reactionSpellTargetFactsForAfterDamage } from "./battle-reducer/reaction-triggered-spells.ts";
+import { enemyZeroHitPointTemporaryHitPointsTriggerApplies } from "./battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   statBlockId,
@@ -216,6 +218,22 @@ describe("Chromatic Orb chained spell attack", () => {
       battleResolutionHolesForTest(awaitingTarget),
       "targetChoice",
     );
+    const qualifiedTarget = spellTargetFill(targetHole, firstTargetId);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          damageTypeFill(damageTypeHole, "fire"),
+          {
+            ...qualifiedTarget,
+            spatialFacts: (qualifiedTarget.spatialFacts ?? []).filter(
+              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     const awaitingAttack = resolveNeedsHoles(state, act.subject, [
       damageTypeFill(damageTypeHole, "fire"),
       spellTargetFill(targetHole, firstTargetId),
@@ -405,6 +423,66 @@ describe("Chromatic Orb chained spell attack", () => {
       "targetChoice",
     );
     const targetFill = spellTargetFill(targetHole, firstTargetId);
+    const damageContextFacts = [
+      {
+        kind: "reactionSpellDamagerVisibleWithinRange",
+        reactorId: firstTargetId,
+        damageSourceId: spellCasterId,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        rangeFeet: movementFeet(60),
+      },
+      {
+        kind: "retaliationDamagerWithinFiveFeet",
+        damagedId: firstTargetId,
+        damageSourceId: spellCasterId,
+      },
+      {
+        kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
+        beneficiaryId: secondTargetId,
+        damageSourceId: spellCasterId,
+        targetId: firstTargetId,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        rangeFeet: movementFeet(10),
+      },
+    ] as const;
+    const contextParse = chainedSpellFillSet(
+      [
+        {
+          ...targetFill,
+          spatialFacts: [
+            ...(targetFill.spatialFacts ?? []),
+            ...damageContextFacts,
+          ],
+        },
+      ],
+      invocation,
+      spellCasterId,
+      session.state,
+    );
+    if (contextParse.tag !== "ok")
+      throw new Error("Expected qualified chained target context.");
+    const retainedFacts = contextParse.steps[0]?.target?.spatialFacts;
+    if (retainedFacts === undefined)
+      throw new Error("Expected retained chained target facts.");
+    expect(
+      reactionSpellTargetFactsForAfterDamage({
+        facts: retainedFacts,
+        damagedId: firstTargetId,
+        damageSourceId: spellCasterId,
+      }),
+    ).toEqual(damageContextFacts.slice(0, 2));
+    expect(
+      enemyZeroHitPointTemporaryHitPointsTriggerApplies({
+        procedureRef: invocation.sourceProcedureRef,
+        beneficiaryId: secondTargetId,
+        damageSourceId: spellCasterId,
+        targetId: firstTargetId,
+        selfTrigger: true,
+        otherWithinFeet: movementFeet(10),
+        spatialFacts: retainedFacts,
+      }),
+    ).toBe(true);
+
     const duplicateSightFact = {
       kind: "attackAttackerCannotSeeTarget" as const,
       attackerId: spellCasterId,
@@ -412,7 +490,11 @@ describe("Chromatic Orb chained spell attack", () => {
     };
     const duplicateSightFill = {
       ...targetFill,
-      spatialFacts: [duplicateSightFact, duplicateSightFact],
+      spatialFacts: [
+        ...(targetFill.spatialFacts ?? []),
+        duplicateSightFact,
+        duplicateSightFact,
+      ],
     } satisfies Extract<BattleFill, { readonly kind: "targetChoice" }>;
     expect(
       chainedSpellFillSet(
@@ -474,6 +556,21 @@ describe("Chromatic Orb chained spell attack", () => {
       secondTargetId,
       true,
     );
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: first.subject,
+        fills: [
+          ...first.fills,
+          {
+            ...leapTargetFill,
+            spatialFacts: (leapTargetFill.spatialFacts ?? []).filter(
+              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     const leapDamageFills = chainedStepAttackAndDamageFills(
       state,
       first.subject,
@@ -1778,6 +1875,13 @@ function spellTargetFill(
           battleProcedureExecutionRefForSpellHoleForTest(hole),
         distanceFeet: movementFeet(30),
       },
+      {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: spellCasterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        enemies: [],
+      },
     ],
   };
 }
@@ -1801,6 +1905,13 @@ function spellLeapTargetFill(
             sourceProcedureRef:
               battleProcedureExecutionRefForSpellHoleForTest(hole),
             distanceFeet: movementFeet(30),
+          },
+          {
+            kind: "rangedSpellAttackEnemyProximity",
+            casterId: spellCasterId,
+            sourceProcedureRef:
+              battleProcedureExecutionRefForSpellHoleForTest(hole),
+            enemies: [],
           },
           {
             kind: "spellLeapTargetWithinRange" as const,

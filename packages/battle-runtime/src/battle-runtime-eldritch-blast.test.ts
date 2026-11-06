@@ -116,6 +116,40 @@ describe("battle runtime: Eldritch Blast", () => {
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });
+    expect(targetHoles[0]?.spellTargetSpatialFactRequest).toMatchObject({
+      requiresEnemyProximityQualification: true,
+    });
+    expect(
+      objectTargetHoles[1]?.spellObjectTargetSpatialFactRequest,
+    ).toMatchObject({ requiresEnemyProximityQualification: true });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            ...beamOneTarget,
+            spatialFacts: (beamOneTarget.spatialFacts ?? []).filter(
+              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            ...beamTwoTarget,
+            spatialFacts: (beamTwoTarget.spatialFacts ?? []).filter(
+              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     const firstAttackRoll = requireHole(
       resolveBattleSubject({
         state,

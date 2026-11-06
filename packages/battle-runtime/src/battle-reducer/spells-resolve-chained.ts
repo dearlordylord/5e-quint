@@ -1,3 +1,4 @@
+import { rangedSpellAttackEnemyProximityQualificationIssue } from "./spells-targeting.ts";
 // Chained spell attack-damage resolution, currently Chromatic Orb.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -1263,6 +1264,14 @@ export function chainedSpellFillSet(
         }
         /* v8 ignore stop -- @preserve */
         const spatialFacts = fill.spatialFacts ?? [];
+        const proximityIssue =
+          rangedSpellAttackEnemyProximityQualificationIssue({
+            state,
+            casterId: actorId,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            facts: spatialFacts,
+          });
+        if (proximityIssue !== null) return proximityIssue;
         const sightFactValidation =
           chainedSpellAttackSightFactValidation(spatialFacts);
         if (sightFactValidation !== null) return sightFactValidation;

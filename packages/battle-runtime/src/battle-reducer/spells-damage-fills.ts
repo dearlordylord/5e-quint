@@ -532,6 +532,7 @@ export function chainedSpellTargetHole(input: {
       rangeFeet: input.invocation.rangeFeet,
       visibility: "notSpecifiedByProcedure",
       requiresExactDistance: true,
+      requiresEnemyProximityQualification: true,
     },
     ...(input.stepIndex === 0
       ? {}

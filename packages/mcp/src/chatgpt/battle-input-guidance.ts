@@ -269,7 +269,7 @@ export function battleInputGuidance(hole: BattleHole) {
     "relationshipFactRequest" in hole &&
     hole.relationshipFactRequest !== undefined;
   const target =
-    hole.kind === "targetChoice"
+    hole.kind === "targetChoice" || hole.kind === "objectTargetChoice"
       ? targetInputSchemas(members, hole, canonicalDefinitions)
       : { members, definitions: canonicalDefinitions, distanceFirst: false };
   const { members: requestedMembers, definitions, distanceFirst } = target;

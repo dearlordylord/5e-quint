@@ -899,10 +899,14 @@ const BattleTargetSpatialFactSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
     casterId: CombatantId,
-    enemyId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    distanceFeet: MovementFeet,
-    enemyCanSeeCaster: Schema.Boolean,
+    enemies: Schema.Array(
+      Schema.Struct({
+        enemyId: CombatantId,
+        distanceFeet: MovementFeet,
+        enemyCanSeeCaster: Schema.Boolean,
+      }),
+    ),
   }),
   Schema.Struct({
     ...UnitFeatureVisibleTargetFactRequestFields,
@@ -2311,6 +2315,9 @@ const BattleHolePayloadMembers = [
         ]),
         requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
         requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+        requiresEnemyProximityQualification: Schema.optionalKey(
+          Schema.Literal(true),
+        ),
       }),
     ),
     spellLeapTargetSpatialFactRequest: Schema.optionalKey(
@@ -2396,6 +2403,7 @@ const BattleHolePayloadMembers = [
         sourceProcedureRef: BattleProcedureExecutionRef,
         rangeFeet: MovementFeet,
         requiresExactDistance: Schema.Literal(true),
+        requiresEnemyProximityQualification: Schema.Literal(true),
       }),
     ),
   }),
@@ -2530,6 +2538,9 @@ const BattleHolePayloadMembers = [
       rangeFeet: MovementFeet,
       visibility: Schema.Literal("requiresSight"),
       requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+      requiresEnemyProximityQualification: Schema.optionalKey(
+        Schema.Literal(true),
+      ),
     }),
   }),
   pairedBattleHoleMember({
@@ -2558,6 +2569,9 @@ const BattleHolePayloadMembers = [
           "notSpecifiedByProcedure",
         ]),
         requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+        requiresEnemyProximityQualification: Schema.optionalKey(
+          Schema.Literal(true),
+        ),
       }),
     ),
     requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
@@ -3482,6 +3496,9 @@ const BattleHolePayloadMembers = [
         ]),
         requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
         requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+        requiresEnemyProximityQualification: Schema.optionalKey(
+          Schema.Literal(true),
+        ),
       }),
     ),
     spellLeapTargetSpatialFactRequest: Schema.optionalKey(
@@ -4012,10 +4029,12 @@ type BattleFillEncoded =
         | {
             readonly kind: "rangedSpellAttackEnemyProximity";
             readonly casterId: string;
-            readonly enemyId: string;
             readonly sourceProcedureRef: string;
-            readonly distanceFeet: number;
-            readonly enemyCanSeeCaster: boolean;
+            readonly enemies: readonly {
+              readonly enemyId: string;
+              readonly distanceFeet: number;
+              readonly enemyCanSeeCaster: boolean;
+            }[];
           }
         | {
             readonly kind: "spellObjectLightTarget";
@@ -5238,10 +5257,14 @@ export const BattleFillSchema: Schema.Codec<
           Schema.Struct({
             kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
             casterId: CombatantId,
-            enemyId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
-            distanceFeet: MovementFeet,
-            enemyCanSeeCaster: Schema.Boolean,
+            enemies: Schema.Array(
+              Schema.Struct({
+                enemyId: CombatantId,
+                distanceFeet: MovementFeet,
+                enemyCanSeeCaster: Schema.Boolean,
+              }),
+            ),
           }),
           Schema.Struct({
             kind: Schema.Literal("spellObjectLightTarget"),
