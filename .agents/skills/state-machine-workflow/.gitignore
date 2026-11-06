@@ -1,0 +1,8 @@
+node_modules/
+.local/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

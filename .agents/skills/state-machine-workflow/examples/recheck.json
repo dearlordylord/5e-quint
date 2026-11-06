@@ -1,0 +1,7 @@
+{
+  "type": "RECHECK",
+  "facts": {
+    "workload": "selected-input-v1",
+    "build": "reviewed-build-v1"
+  }
+}

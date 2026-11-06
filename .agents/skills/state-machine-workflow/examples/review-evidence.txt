@@ -1,0 +1,2 @@
+Synthetic example evidence: the selected review fixture passed.
+This file demonstrates fact binding; it is not evidence about your project.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "State Machine Workflow"
+  short_description: "Execute tasks with persisted state and live graphs"
+  default_prompt: "Use $state-machine-workflow to execute this task and maintain its persisted state graph."

@@ -1,0 +1,29 @@
+{
+  "name": "state-machine-workflow",
+  "version": "0.2.0",
+  "private": true,
+  "description": "An agent skill and passive XState/SQLite controller with a live browser graph",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "license": "ISC",
+  "scripts": {
+    "machine": "tsx scripts/cli.ts",
+    "watch": "tsx scripts/watch.ts",
+    "view": "tsx scripts/viewer.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck && pnpm test"
+  },
+  "dependencies": {
+    "xstate": "5.33.3",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}
