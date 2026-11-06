@@ -109,13 +109,13 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
       "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
   },
   measure: {
-    files: 383,
-    bytes: 9_534_615,
+    files: 384,
+    bytes: 9_573_775,
   },
   pathLedgerSha256:
-    "f58c03e61b3e49d69e5a71a268b351bd6371c540395472c32d2e4237457a1e63",
+    "726cd2952e1cd0afeb744375e9b6b7536e1f1c90a9a299d87acc10684f4a8ce7",
   contentLedgerSha256:
-    "7fd9785f6f34e40f625ca92bb7bfbc6141154667f9f50de101285679610c916c",
+    "fa8021b9fad035bc28ba736b363771c525d53dd4c31927106406a03903f41055",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
@@ -547,6 +547,7 @@ function strictDeclarationEmission(
     process.execPath,
     [
       compiler,
+      "--singleThreaded",
       "-p",
       config,
       "--outDir",

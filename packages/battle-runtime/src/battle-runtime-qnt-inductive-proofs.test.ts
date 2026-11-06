@@ -33,19 +33,21 @@ test("Battle inductive proof lane classifies every package-local inductive modul
   }
 });
 
-describe.skipIf(!runInductiveProofs)(
-  "Battle inductive proofs (opt-in, bounded per module)",
-  () => {
-    test.concurrent.each(selectedInductiveProofModules)(
-      "$modulePath",
-      async (proofModule) => {
-        const outcome = await runInductiveProofModule(proofModule);
-        expect(outcome).toEqual({
-          tag: "passed",
-          module: proofModule.modulePath,
-        });
-      },
-      proofModuleTimeoutMs + 30_000,
-    );
-  },
-);
+if (selectedInductiveProofModules.length > 0) {
+  describe.skipIf(!runInductiveProofs)(
+    "Battle inductive proofs (opt-in, bounded per module)",
+    () => {
+      test.concurrent.each(selectedInductiveProofModules)(
+        "$modulePath",
+        async (proofModule) => {
+          const outcome = await runInductiveProofModule(proofModule);
+          expect(outcome).toEqual({
+            tag: "passed",
+            module: proofModule.modulePath,
+          });
+        },
+        proofModuleTimeoutMs + 30_000,
+      );
+    },
+  );
+}
