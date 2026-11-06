@@ -15,6 +15,7 @@ export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
   druidCircleLandAfterLongRest,
+  druidCircleLandChoicesForBuild,
   druidCircleLandFromInput,
   isDruidCircleLandChoice,
   storedBookOfShadowsDruidCircleLandSelectionIssue,

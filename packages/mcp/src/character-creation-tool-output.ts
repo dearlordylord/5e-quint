@@ -12,19 +12,29 @@ import type {
 } from "./model-facing-creation-holes.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
+import { Result } from "effect";
+import { characterFinalizationInput } from "./character-finalization-input.ts";
 
 export function creationDraftPayload(
   root: McpPlaySessionRoot,
   draft: CharacterDraft,
   projection: ModelFacingCreationState,
 ) {
-  return {
-    draft,
-    creationInputs: creationInputGuidance(projection.holes),
-    holes: projection.holes,
-    finalization: projection.finalization,
-    session: mcpSessionSummary(root.sessionStore.snapshot()),
-  };
+  return Result.map(
+    characterFinalizationInput({
+      root,
+      draftId: draft.draftId,
+      finalization: projection.finalization,
+    }),
+    (finalizationInput) => ({
+      draft,
+      creationInputs: creationInputGuidance(projection.holes),
+      holes: projection.holes,
+      finalization: projection.finalization,
+      finalizationInput,
+      session: mcpSessionSummary(root.sessionStore.snapshot()),
+    }),
+  );
 }
 
 export function invalidCreationSupportProfileContent(

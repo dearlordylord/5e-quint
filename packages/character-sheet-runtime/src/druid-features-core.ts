@@ -147,13 +147,13 @@ export function druidCircleLandFromInput(
   CharacterSheetDruidCircleLand | undefined,
   CharacterSheetIssue
 > {
-  const ownedGrants = druidCircleLandPreparedSpellAccessGrantsForBuild({
+  const choices = druidCircleLandChoicesForBuild({
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Circle of the Land grants are projected only from feature ids admitted into this build. */
-  if (Result.isFailure(ownedGrants)) return Result.fail(ownedGrants.failure);
-  if (ownedGrants.success.length === 0) {
+  if (Result.isFailure(choices)) return Result.fail(choices.failure);
+  if (choices.success === undefined) {
     /* v8 ignore start -- @preserve -- Malformed sheet input: V8 maps retained Circle of the Land state without its owning Circle Spells feature to this conditional. */
     if (input.druidCircleLand === undefined) return Result.succeed(undefined);
     return characterSheetIssue(
@@ -180,6 +180,19 @@ export function druidCircleLandFromInput(
   if (Result.isFailure(druidSourceUnitId))
     return Result.fail(druidSourceUnitId.failure);
   return Result.succeed(input.druidCircleLand);
+}
+
+export function druidCircleLandChoicesForBuild(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Result.Result<
+  typeof DRUID_CIRCLE_LAND_CHOICES | undefined,
+  CharacterSheetIssue
+> {
+  return Result.map(
+    druidCircleLandPreparedSpellAccessGrantsForBuild(input),
+    (grants) => (grants.length === 0 ? undefined : DRUID_CIRCLE_LAND_CHOICES),
+  );
 }
 
 export function isDruidCircleLandChoice(

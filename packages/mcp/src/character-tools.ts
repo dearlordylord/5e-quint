@@ -4,11 +4,6 @@ import {
   finalizeCharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import {
-  characterSheetConstructionIssuesSummary,
-  createFreshCharacterSheet,
-} from "@dnd/character-sheet-runtime";
-import { Hp } from "@dnd/shared/types";
 import { Result, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
@@ -57,6 +52,10 @@ import {
 } from "./model-facing-creation-holes.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
+import {
+  characterFinalizationInput,
+  createCharacterSheetForFinalization,
+} from "./character-finalization-input.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export { characterToolDefinitions } from "./character-tool-definitions.ts";
@@ -102,11 +101,10 @@ export function handleCharacterToolCall(
         return invalidCreationSupportProfileContent(projection.issues);
       }
       root.sessionStore.drafts.set(draft.draftId, draft);
+      const payload = creationDraftPayload(root, draft, projection.value);
+      if (Result.isFailure(payload)) return payload.failure;
       publishAdminProjectionBestEffort(root);
-      return schemaJsonContent(
-        CreationDraftOutputSchema,
-        creationDraftPayload(root, draft, projection.value),
-      );
+      return schemaJsonContent(CreationDraftOutputSchema, payload.success);
     }),
     Match.when(
       { name: characterToolNames.discoverCreationHoles },
@@ -121,10 +119,9 @@ export function handleCharacterToolCall(
         if (projection.tag === "invalidSupportProfile") {
           return invalidCreationSupportProfileContent(projection.issues);
         }
-        return schemaJsonContent(
-          CreationDraftOutputSchema,
-          creationDraftPayload(root, draft, projection.value),
-        );
+        const payload = creationDraftPayload(root, draft, projection.value);
+        if (Result.isFailure(payload)) return payload.failure;
+        return schemaJsonContent(CreationDraftOutputSchema, payload.success);
       },
     ),
     Match.when({ name: characterToolNames.fillCreationHoles }, (matched) => {
@@ -148,12 +145,20 @@ export function handleCharacterToolCall(
         return invalidCreationSupportProfileContent(projection.issues);
       }
 
+      const finalizationInput = characterFinalizationInput({
+        root,
+        draftId: draft.draftId,
+        finalization: projection.value.finalization,
+      });
+      if (Result.isFailure(finalizationInput)) return finalizationInput.failure;
+
       if (result.tag === "accepted") {
         root.sessionStore.drafts.set(result.draft.draftId, result.draft);
         publishAdminProjectionBestEffort(root);
       }
 
       return schemaJsonContent(FillCreationHolesOutputSchema, {
+        finalizationInput: finalizationInput.success,
         result: projection.value,
         creationInputs: creationInputGuidance(projection.value.holes),
         storedDraft: result.tag === "accepted" ? result.draft : draft,
@@ -177,29 +182,13 @@ export function handleCharacterToolCall(
       if (projection.tag === "invalidSupportProfile") {
         return invalidCreationSupportProfileContent(projection.issues);
       }
-      const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
-        const session = createFreshCharacterSheet({
-          characterId: finalizedCharacterId,
+        const session = createCharacterSheetForFinalization({
+          root,
+          args: matched.args,
           build: finalization.build,
-          tempHp: Hp(0),
-          hitPointMaximumReduction: Hp(0),
-          conditions: [],
-          unitLibrary: root.unitLibrary,
-          statBlockCatalog: root.statBlockCatalog,
-          ...(matched.args.druidWildShapeKnownFormStatBlockIds === undefined
-            ? {}
-            : {
-                druidWildShapeKnownFormStatBlockIds:
-                  matched.args.druidWildShapeKnownFormStatBlockIds,
-              }),
         });
-        if (Result.isFailure(session)) {
-          return errorContent("Character finalization session failed.", {
-            code: "CHARACTER_SESSION_INVALID",
-            message: characterSheetConstructionIssuesSummary(session.failure),
-          });
-        }
+        if (Result.isFailure(session)) return session.failure;
         root.sessionStore.characters.set(session.success);
         root.sessionStore.drafts.delete(draftId);
         publishAdminProjectionBestEffort(root);

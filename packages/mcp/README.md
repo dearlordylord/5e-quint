@@ -310,6 +310,12 @@ runtime discovery; no presets or direct draft patches. Accepted fills replace
 the draft atomically; finalization stores an available Character Sheet and removes
 the draft only after `ready`.
 
+A `ready` Build can still require initial Character Sheet choices. Discovery and
+fill responses expose `finalizationInput.phase` and an `argumentsSchema` for
+`finalize_character`. Supply its required known forms and Circle Spells land when
+requested; hosted calls also include the current `playSessionId`. These choices
+initialize the sheet rather than adding permanent draft selections.
+
 The default creation support profile exposes every selectable Standard Language,
 all nine alignments, and every Fighter skill option returned by the SRD class
 record. Common is automatic and is not a language fill option. A host that

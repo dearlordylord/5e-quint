@@ -8,6 +8,8 @@ import {
   type StatBlockId as StatBlockIdType,
 } from "@dnd/shared/game-facts";
 import { Match, Result, Schema } from "effect";
+import { DRUID_CIRCLE_LAND_CHOICES } from "@dnd/surface/surface/types";
+import type { CharacterSheetInput } from "@dnd/character-sheet-runtime";
 
 import {
   decodeToolArgs,
@@ -44,7 +46,7 @@ const CharacterSessionIdArgsSchema = Schema.Struct({
   }),
 });
 
-const FinalizeCharacterArgsSchema = Schema.Struct({
+export const FinalizeCharacterArgsSchema = Schema.Struct({
   draftId: Schema.String.annotate({
     description: "Character Draft id returned by create_character_draft.",
   }),
@@ -52,6 +54,14 @@ const FinalizeCharacterArgsSchema = Schema.Struct({
     Schema.Array(StatBlockId).annotate({
       description:
         "Selected Beast Stat Block ids for a Druid Wild Shape character. Required when the finalized draft has Wild Shape.",
+    }),
+  ),
+  druidCircleLand: Schema.optionalKey(
+    Schema.Struct({
+      land: Schema.Literals(DRUID_CIRCLE_LAND_CHOICES),
+    }).annotate({
+      description:
+        "Initial retained land choice when the build grants Circle Spells. Follow finalizationInput.argumentsSchema; this choice can change after a Long Rest.",
     }),
   ),
 });
@@ -96,6 +106,9 @@ type DraftIdToolInput = {
 type FinalizeCharacterToolInput = {
   readonly draftId: CharacterDraftId;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockIdType[];
+  readonly druidCircleLand?: NonNullable<
+    CharacterSheetInput["druidCircleLand"]
+  >;
 };
 type EmptyToolInput = Record<string, never>;
 type CharacterSessionIdToolInput = {
@@ -280,6 +293,9 @@ function decodeFinalizeCharacterArgs(
           druidWildShapeKnownFormStatBlockIds:
             value.druidWildShapeKnownFormStatBlockIds,
         }),
+    ...(value.druidCircleLand === undefined
+      ? {}
+      : { druidCircleLand: value.druidCircleLand }),
   }));
 }
 

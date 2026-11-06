@@ -59,7 +59,7 @@ export const characterToolDefinitionsByName = {
     name: characterToolNames.finalizeCharacter,
     title: "Finalize Character",
     description:
-      "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft. Druid Wild Shape drafts require selected known Beast Stat Block ids.",
+      "Finalize a complete supported character draft using finalizationInput.argumentsSchema returned by creation discovery or the prior response. Supply its required Character Sheet initialization choices. Success stores the characterId and removes the active draft.",
     inputSchema: finalizeCharacterInputSchema,
     annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),

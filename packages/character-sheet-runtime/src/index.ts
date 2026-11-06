@@ -105,6 +105,7 @@ export {
 export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
+  druidCircleLandChoicesForBuild,
 } from "./druid-features.ts";
 export {
   characterSheetCompanion,
