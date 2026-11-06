@@ -131,7 +131,7 @@ describe("choice-selection structural equality", () => {
         coinsGp: 4,
       }),
     ).toBe(
-      "synthetic_bundle — equipment package: 2 × Synthetic Item, item matching the selected tool proficiency; plus 4 GP",
+      "synthetic_bundle — equipment package: 2 × Synthetic Item (descriptive item; no loadout/Battle item support), item matching the selected tool proficiency; plus 4 GP",
     );
     expect(
       startingEquipmentLabel({
@@ -161,7 +161,7 @@ describe("choice-selection structural equality", () => {
         ],
       }),
     ).toBe(
-      "synthetic_adventuring_bundle — equipment package: synthetic_rope, 3 × synthetic_ration, synthetic_focus (arcane focus), 2 × synthetic_symbol (arcane focus), Synthetic Keepsake",
+      "synthetic_adventuring_bundle — equipment package: synthetic_rope, 3 × synthetic_ration, synthetic_focus (arcane focus), 2 × synthetic_symbol (arcane focus), Synthetic Keepsake (descriptive item; no loadout/Battle item support)",
     );
     expect(
       startingEquipmentLabel({
