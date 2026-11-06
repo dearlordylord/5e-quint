@@ -105,6 +105,9 @@ Draft 2020-12 validator. Regenerate them with
 This boundary changes no D&D rules; it only validates the already-authored
 publication contract.
 
+The [publication delta diagnostic](PUBLICATION-DELTA.md) retains historical
+certificate evidence separately from publication acceptance.
+
 The standalone SRD Stat Block evidence contract is exported from
 `surface/stat-block-parity-observation`. The parity reader derives one report
 containing source discovery, coverage, provenance, and publication-peer facts.

@@ -1,6 +1,6 @@
 # SRD Surface publication delta
 
-The generated Surface publication is reviewed against the immutable
+The historical Surface publication certificate records review against the immutable
 publication baseline at commit `76d9abaf0ec9c8369d5f95f603c5cce88704d26e`.
 The machine-readable classification and evidence are in
 [`srd-surface-delta-certificate.json`](./publication/srd-surface-delta-certificate.json).
@@ -185,9 +185,17 @@ pnpm check:surface-publication-delta
 ```
 
 The regular `pnpm check:surface-content-publication` gate regenerates the
-aggregate and schema deterministically from the canonical Dhall/JSON sources,
-requires byte equality with the checked-in artifacts, and then invokes the same
-delta verifier.
+aggregate and schema deterministically from the canonical Dhall/JSON sources
+and requires byte equality with the checked-in artifacts. Portable validation
+cases and independent expectations also pin the published aggregate input.
+
+The delta verifier is an opt-in historical diagnostic, not an acceptance gate.
+Catalog updates do not require refreshing its certificate or pinned digest.
+Verifier tests use the publication and certificate from commit
+`c9cef52573e5b08407e0d6dd1b9106f1ad5b589c`, preserving classification checks
+without requiring the live catalog to match that historical snapshot. Updating
+hashes establishes consistency with a declared snapshot; it does not establish
+that changed mechanics match RAW or received independent review.
 
 ## Class feature selection and recovery increments
 

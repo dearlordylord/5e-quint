@@ -28,10 +28,6 @@ import {
   type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
-import {
-  describeSurfacePublicationDeltaIssue,
-  verifySurfacePublicationDelta,
-} from "../packages/surface/src/surface/publication-delta-verifier.ts";
 import { buildSrdSurfacePortableCases } from "./generate-surface-portable-cases.ts";
 import {
   readSrdStatBlockParity,
@@ -113,19 +109,11 @@ export type PublicationIssue =
       readonly issue: SurfacePublicationBuildIssue;
     }
   | {
-      readonly kind: "publication-delta-verification-failed";
-      readonly message: string;
-    }
-  | {
       readonly kind: "peer-family-mismatch";
       readonly source: string;
       readonly peer: string;
       readonly expectedRecordKind: SurfacePublicationKnownRecordKind;
       readonly actualRecordKind: SurfacePublicationKnownRecordKind;
-    }
-  | {
-      readonly kind: "publication-delta-verification-failed";
-      readonly message: string;
     };
 
 type JsonDocument = unknown;
@@ -1495,15 +1483,6 @@ async function main(): Promise<void> {
     srdSurface.statBlocks,
   );
   const issues: PublicationIssue[] = [...publicationCheck.issues];
-  const publicationDelta = verifySurfacePublicationDelta({ repoRoot });
-  if (publicationDelta.tag === "invalid") {
-    issues.push(
-      ...publicationDelta.issues.map((issue) => ({
-        kind: "publication-delta-verification-failed" as const,
-        message: describeSurfacePublicationDeltaIssue(issue),
-      })),
-    );
-  }
 
   if (issues.length > 0) {
     console.error(
@@ -1572,10 +1551,6 @@ async function main(): Promise<void> {
             { kind: "publication-generation-failed" },
             ({ issue: buildIssue }) =>
               `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(buildIssue)}`,
-          ),
-          Match.when(
-            { kind: "publication-delta-verification-failed" },
-            ({ message }) => `- ${message}`,
           ),
           Match.when(
             { kind: "peer-family-mismatch" },

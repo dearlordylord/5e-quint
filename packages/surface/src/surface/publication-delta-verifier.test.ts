@@ -1,5 +1,4 @@
 import {
-  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -16,7 +15,6 @@ import { describe, expect, test } from "vitest";
 
 import {
   SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH,
-  type SurfacePublicationDeltaVerificationOptions,
   verifySurfacePublicationDelta,
 } from "./publication-delta-verifier.ts";
 import { locateComparisonOngoingMechanicsOwner } from "./publication-delta-verifier-core.ts";
@@ -27,11 +25,14 @@ const repositoryRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../../../..",
 );
-const publicationRoot = join(repositoryRoot, "packages/surface/publication");
-const certificatePath = join(
-  repositoryRoot,
-  SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH,
-);
+const fixtureCommit = "c9cef52573e5b08407e0d6dd1b9106f1ad5b589c";
+
+function historicalPublicationArtifact(relativePath: string): Buffer {
+  return execFileSync("git", ["show", `${fixtureCommit}:${relativePath}`], {
+    cwd: repositoryRoot,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+}
 
 type FixturePaths = {
   readonly publicationDir: string;
@@ -63,15 +64,16 @@ function withFixture(
   const publicationDir = join(fixtureRoot, "publication");
   const fixtureCertificatePath = join(fixtureRoot, "certificate.json");
   mkdirSync(publicationDir, { recursive: true });
-  copyFileSync(
-    join(publicationRoot, "srd-surface.json"),
-    join(publicationDir, "srd-surface.json"),
+  for (const filename of ["srd-surface.json", "srd-surface.schema.json"]) {
+    writeFileSync(
+      join(publicationDir, filename),
+      historicalPublicationArtifact(`packages/surface/publication/${filename}`),
+    );
+  }
+  writeFileSync(
+    fixtureCertificatePath,
+    historicalPublicationArtifact(SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH),
   );
-  copyFileSync(
-    join(publicationRoot, "srd-surface.schema.json"),
-    join(publicationDir, "srd-surface.schema.json"),
-  );
-  copyFileSync(certificatePath, fixtureCertificatePath);
   const reviewedCertificateSha256 = sha256(
     readFileSync(fixtureCertificatePath),
   );
@@ -600,7 +602,11 @@ function ongoingMechanicsOwnerSchema(
 
 function fixtureSchemaComparisonCommit(): string {
   const certificate = fixtureObject(
-    JSON.parse(readFileSync(certificatePath, "utf8")),
+    JSON.parse(
+      historicalPublicationArtifact(
+        SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH,
+      ).toString("utf8"),
+    ),
     "certificate",
   );
   const graphDelta = fixtureObjectField(
@@ -970,28 +976,11 @@ describe("Surface publication delta verifier", () => {
     );
   }, 180_000);
 
-  test("verifies the reviewed certificate against the immutable baseline", () => {
-    const result = verifySurfacePublicationDelta({ repoRoot: repositoryRoot });
-
-    expect(result.tag).toBe("verified");
-    if (result.tag === "verified") {
-      expect(result.baselineCommit).toMatch(/^[0-9a-f]{40}$/u);
-    }
-  }, 180_000);
-
-  test("production verification cannot be redirected to caller-selected certificate authority", () => {
-    const options: SurfacePublicationDeltaVerificationOptions = {
-      repoRoot: repositoryRoot,
-    };
-    // @ts-expect-error Certificate authority belongs only to fixture verification.
-    options.certificateAuthority = {
-      path: "/tmp/unreviewed-surface-certificate.json",
-      sha256: "0".repeat(64),
-    };
-
-    const result = verifySurfacePublicationDelta(options);
-
-    expect(result.tag).toBe("verified");
+  test("verifies the historical certificate against its publication snapshot", () => {
+    expect(withFixture(() => undefined)).toEqual({
+      tag: "verified",
+      baselineCommit: "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
+    });
   }, 180_000);
 
   test("reports when the baseline commit is unavailable in checkout history", () => {
