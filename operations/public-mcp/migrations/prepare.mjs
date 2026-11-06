@@ -12,6 +12,8 @@ const ownerPaths = new Set([
   "packages/battle-runtime/src/battle-runtime-context.ts",
   "packages/battle-runtime/src/battle-runtime-transaction.ts",
   "packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.ts",
+  "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+  "packages/battle-runtime/src/identity.ts",
   "packages/battle-runtime/src/d20-test-circumstance.ts",
   "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
   "packages/battle-runtime/src/index.ts",

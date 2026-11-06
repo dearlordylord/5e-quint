@@ -5,13 +5,17 @@ import { decodeStoredPlaySessionRecord } from "../../../packages/mcp/src/play-se
 import { rootFromRecord } from "../../../packages/mcp/src/recoverable-play-session-support.ts";
 import { retainPlaySessionContinuation } from "../../../packages/mcp/src/play-session-continuation.ts";
 import { encodeContinuationGraph } from "../../../packages/mcp/src/continuation-graph.ts";
+import { disabledAdminMirrorPublication } from "../../../packages/mcp/src/admin-mirror.ts";
 
 export function materializeStoredRow(row: unknown, id: unknown) {
   const playSessionId = decodePlaySessionId(id);
   if (Result.isFailure(playSessionId)) return issue(playSessionId.failure);
   const record = decodeStoredPlaySessionRecord(row, playSessionId.success);
   if (Result.isFailure(record)) return issue(record.failure.message);
-  const services = createMcpApplicationServices();
+  const services = {
+    ...createMcpApplicationServices(),
+    createAdminMirrorPublication: disabledAdminMirrorPublication,
+  };
   const root = rootFromRecord(services, record.success);
   if (Result.isFailure(root)) return issue(root.failure.message);
   const retained = retainPlaySessionContinuation(root.success);
