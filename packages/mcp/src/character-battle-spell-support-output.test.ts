@@ -86,10 +86,16 @@ test("creation and stored sheet explain the selected class spell Battle gap befo
   expect(support).toContainEqual({
     spellId: "silence",
     ...rejected,
-    nextStep: "planWithoutBattleCasting",
+    nextStep: "resolveBattleEntryBlocker",
   });
   expect(output.finalizationInput.instructions.join(" ")).toContain(
     "live targets, resources, timing",
+  );
+  expect(output.finalizationInput.instructions.join(" ")).toContain(
+    "choosing another tactic does not allow this character to enter Battle",
+  );
+  expect(output.finalizationInput.instructions.join(" ")).toContain(
+    "Only if the caller explicitly chooses a separate alternative build, use create_character_draft",
   );
   const finalization = finalizeCharacterDraft({
     draft,
@@ -115,6 +121,44 @@ test("creation and stored sheet explain the selected class spell Battle gap befo
   assert(session !== undefined);
   assert(session.tag === "available");
   expect(session.build.spellcasting).toEqual(before);
+  const battleStart = handleToolCall(root, "start_battle", {
+    battleId: "battle:rejected-preparation",
+    initiativeMode: "direct",
+    companionAdmissions: [],
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId: characterIdFromDraftId(draft.draftId),
+        combatantId: "cleric",
+        ammunitionStocks: [],
+        initiative: 20,
+      },
+    ],
+  });
+  expect(battleStart).toMatchObject({ isError: true });
+  expect(jsonContentPayload(battleStart)).toMatchObject({
+    details: {
+      code: "INVALID_BATTLE_COMBATANTS",
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          kind: "battleInitialization",
+          code: "BATTLE_INITIALIZATION_INVALID",
+          reason: "characterSpellProcedureInvalid",
+          cause: rejected.issues[0],
+        }),
+      ]),
+    },
+  });
+  expect(
+    root.sessionStore.characters.get(characterIdFromDraftId(draft.draftId)),
+  ).toEqual(session);
+  expect(handleToolCall(root, "create_character_draft", {})).not.toHaveProperty(
+    "isError",
+    true,
+  );
+  expect(
+    root.sessionStore.characters.get(characterIdFromDraftId(draft.draftId)),
+  ).toEqual(session);
   const spellcasting = finalization.build.spellcasting;
   assert(spellcasting !== undefined);
   const [source, ...sources] = spellcasting.sources;
@@ -135,7 +179,7 @@ test("creation and stored sheet explain the selected class spell Battle gap befo
   ).toContainEqual({
     spellId: "synthetic_missing_spell",
     tag: "spellRecordUnavailable",
-    nextStep: "planWithoutBattleCasting",
+    nextStep: "resolveSpellRecordAvailability",
   });
   const { spellcasting: omittedSpellcasting, ...nonSpellcastingBuild } =
     finalization.build;

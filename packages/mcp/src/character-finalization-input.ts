@@ -91,6 +91,35 @@ export function characterFinalizationInput(input: {
   );
 }
 
+function classSpellBattleSupportInstructions(
+  support: typeof CharacterBattleSpellSupportSchema.Type,
+): readonly string[] {
+  if (support.length === 0) return [];
+  return [
+    "Review classSpellBattleSupport before planning an encounter. It covers selected class cantrips and prepared spells, not execution outside Battle.",
+    ...(support.some(({ tag }) => tag === "admitted")
+      ? [
+          "Admitted mechanics still require live targets, resources, timing, and other casting conditions; use available Battle acts during play.",
+        ]
+      : []),
+    ...(support.some(({ tag }) => tag === "notBattleOwned")
+      ? [
+          "For planWithoutBattleCasting, retain the selection for other uses and choose a tactic that does not require casting it in Battle.",
+        ]
+      : []),
+    ...(support.some(({ tag }) => tag === "rejected")
+      ? [
+          "A rejected procedure is a Battle entry blocker: choosing another tactic does not allow this character to enter Battle. Creation tools cannot revise existing preparation choices in place. Only if the caller explicitly chooses a separate alternative build, use create_character_draft and select its preparation there, retaining the original draft or sheet.",
+        ]
+      : []),
+    ...(support.some(({ tag }) => tag === "spellRecordUnavailable")
+      ? [
+          "For resolveSpellRecordAvailability, the selected spell record could not be read. This alone establishes neither Battle entry nor a casting route. Canonical character-to-Battle admission determines whether an absent selection is runtime-detached or a handoff issue.",
+        ]
+      : []),
+  ];
+}
+
 function characterSheetInitializationCall(input: {
   readonly draftId: CharacterDraftId;
   readonly classSpellBattleSupport: typeof CharacterBattleSpellSupportSchema.Type;
@@ -101,8 +130,8 @@ function characterSheetInitializationCall(input: {
 }): Exclude<FinalizationInputGuidance, null> {
   const { land, knownForms } = input;
   const requiredArguments: InitializationArgument[] = [
-    ...(land === undefined ? [] : [CIRCLE_LAND_ARGUMENT]),
-    ...(knownForms === undefined ? [] : [KNOWN_FORMS_ARGUMENT]),
+    ...(land === undefined ? [] : ([CIRCLE_LAND_ARGUMENT] as const)),
+    ...(knownForms === undefined ? [] : ([KNOWN_FORMS_ARGUMENT] as const)),
   ];
   const argumentsSchema = mcpObjectJsonSchema(
     Schema.Struct({
@@ -123,7 +152,7 @@ function characterSheetInitializationCall(input: {
     }),
   );
   const instructions = [
-    "Review classSpellBattleSupport before planning an encounter. It describes selected class cantrips and prepared spells. Admitted mechanics still require live targets, resources, timing, and other casting conditions; use available Battle acts during play. For planWithoutBattleCasting, retain the selection for other uses or revise preparation before finalizing, and choose a tactic that does not require casting it in Battle. These reasons do not classify execution outside Battle.",
+    ...classSpellBattleSupportInstructions(input.classSpellBattleSupport),
     "The Character Build is complete. This schema describes the operation arguments for finalize_character; add the current playSessionId when invoking the hosted tool. Supply these initialization choices to create the in-play Character Sheet; no additional creation-hole fills are needed.",
     ...(land === undefined
       ? []
@@ -180,7 +209,8 @@ export function createCharacterSheetForFinalization(input: {
     draftId: input.args.draftId,
     finalization: { tag: "ready", build: input.build },
   });
-  if (Result.isFailure(finalizationInput)) return finalizationInput;
+  if (Result.isFailure(finalizationInput))
+    return Result.fail(finalizationInput.failure);
   const guidance = finalizationInput.success;
   if (guidance?.phase === "initializationRequired") {
     const missingArguments = guidance.requiredArguments.filter(

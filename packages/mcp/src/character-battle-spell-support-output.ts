@@ -51,12 +51,12 @@ export const CharacterBattleSpellSupportSchema = Schema.Array(
       ...SelectionFields,
       tag: Schema.Literal("rejected"),
       issues: Schema.NonEmptyArray(SupportIssueSchema),
-      nextStep: Schema.Literal("planWithoutBattleCasting"),
+      nextStep: Schema.Literal("resolveBattleEntryBlocker"),
     }),
     Schema.Struct({
       ...SelectionFields,
       tag: Schema.Literal("spellRecordUnavailable"),
-      nextStep: Schema.Literal("planWithoutBattleCasting"),
+      nextStep: Schema.Literal("resolveSpellRecordAvailability"),
     }),
   ]),
 );
@@ -81,12 +81,12 @@ export function characterBattleSpellSupportOutput(input: {
         Match.when({ tag: "rejected" }, (value) => ({
           spellId,
           ...value,
-          nextStep: "planWithoutBattleCasting" as const,
+          nextStep: "resolveBattleEntryBlocker" as const,
         })),
         Match.when({ tag: "spellRecordUnavailable" }, (value) => ({
           spellId,
           ...value,
-          nextStep: "planWithoutBattleCasting" as const,
+          nextStep: "resolveSpellRecordAvailability" as const,
         })),
         Match.exhaustive,
       ),
