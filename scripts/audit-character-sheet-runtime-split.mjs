@@ -13,6 +13,7 @@ const indexFile = path.join(repoRoot, indexPath);
 const baseRef = process.argv[2] ?? null;
 
 const EXPECTED_EXPORTS = [
+  "druidCircleLandChoicesForBuild",
   "CHARACTER_SHEET_FEATURE_EVIDENCE_BRANCHES",
   "CHARACTER_SHEET_FEATURE_PATH_DISPOSITIONS",
   "PARTIAL_CHARACTER_SHEET_FEATURE_PROJECTION_ISSUE_CODES",

@@ -1,7 +1,11 @@
+import type { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
 import {
-  CharacterBattleSpellSupportSchema,
-  characterBattleSpellSupportOutput,
-} from "./character-battle-spell-support-output.ts";
+  CIRCLE_LAND_ARGUMENT,
+  KNOWN_FORMS_ARGUMENT,
+  type InitializationArgument,
+  type FinalizationInputGuidance,
+} from "./character-finalization-input-guidance.ts";
+import { characterBattleSpellSupportOutput } from "./character-battle-spell-support-output.ts";
 import {
   characterBuildDruidWildShapeFacts,
   type CharacterBuild,
@@ -27,37 +31,6 @@ import { characterIdFromDraftId } from "./session-store.ts";
 import { StatBlockId } from "@dnd/shared/game-facts";
 import { errorContent } from "./tool-content.ts";
 import { mcpObjectJsonSchema, type ToolError } from "./schema-codec.ts";
-
-const CIRCLE_LAND_ARGUMENT = "druidCircleLand";
-const KNOWN_FORMS_ARGUMENT = "druidWildShapeKnownFormStatBlockIds";
-const INITIALIZATION_ARGUMENTS = [
-  CIRCLE_LAND_ARGUMENT,
-  KNOWN_FORMS_ARGUMENT,
-] as const satisfies readonly (keyof typeof FinalizeCharacterArgsSchema.fields)[];
-type InitializationArgument = (typeof INITIALIZATION_ARGUMENTS)[number];
-const FinalizationCallFields = {
-  tool: Schema.Literal("finalize_character"),
-  argumentsSchema: Schema.Record(Schema.String, Schema.Unknown),
-  instructions: Schema.Array(Schema.String),
-  classSpellBattleSupport: CharacterBattleSpellSupportSchema,
-};
-export const FinalizationInputGuidanceSchema = Schema.Union([
-  Schema.Struct({
-    phase: Schema.Literal("initializationRequired"),
-    requiredArguments: Schema.NonEmptyArray(
-      Schema.Literals(INITIALIZATION_ARGUMENTS),
-    ),
-    ...FinalizationCallFields,
-  }),
-  Schema.Struct({
-    phase: Schema.Literal("ready"),
-    ...FinalizationCallFields,
-  }),
-  Schema.Null,
-]);
-export type FinalizationInputGuidance = Schema.Schema.Type<
-  typeof FinalizationInputGuidanceSchema
->;
 
 export function characterFinalizationInput(input: {
   readonly root: Pick<McpPlaySessionRoot, "unitLibrary">;

@@ -1,6 +1,6 @@
-import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-output.ts";
+import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
 import { CreationInputGuidanceSchema } from "./creation-input-guidance-schema.ts";
-import { FinalizationInputGuidanceSchema } from "./character-finalization-input.ts";
+import { FinalizationInputGuidanceSchema } from "./character-finalization-input-guidance.ts";
 import {
   ABILITY_SCORE_GENERATION_DRAFT_PATH,
   CHARACTER_DRAFT_CHOICE_PATHS,
