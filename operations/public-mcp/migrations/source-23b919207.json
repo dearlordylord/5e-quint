@@ -1,0 +1,50 @@
+{
+  "sourceRelease": "23b919207ff7f2b04da849a8f6f521ea07cdd3be",
+  "captureRevision": "4ee0bd57da3c4943e867957a22a1fa5931a38b11",
+  "patch": {
+    "path": "source-hooks.patch",
+    "sha256": "7ecc2042bb4d2d7c4f5aebbfa6c57a45c4b5b4310c4170d8cf5e9dbdce545c64"
+  },
+  "sourceFiles": [
+    {
+      "path": "packages/battle-runtime/src/battle-runtime-context.ts",
+      "sha256": "d7c22aaf346bd765f5cfb46f3f321b3584bfdcfa7fb24d1316b3c29e0e87dc21"
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-runtime-transaction.ts",
+      "sha256": "a873042f99e029f127fa73e2aed096a55ed69f2791d6ff7d7166b6c28d1665f7"
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+      "sha256": "5ae78eea5be111e9af33a8eb337d7a923e59b4c3bab08160d2aead3d43699b3a"
+    },
+    {
+      "path": "packages/battle-runtime/src/d20-test-circumstance.ts",
+      "sha256": "b945493e0cc99da0f20f96c857e5715cccda1236b28da1401891f08e584694b8"
+    },
+    {
+      "path": "packages/battle-runtime/src/index.ts",
+      "sha256": "3e7de1ff697161ee1d4913b355fb7bec6c914d118ad057bfec13580f7da0d6d7"
+    },
+    {
+      "path": "packages/mcp/src/battle-action-selection-store.ts",
+      "sha256": "e838c1ecd43b5efacaa6a6852d2dea70f83c940a2e0f3e0c644489237141b527"
+    },
+    {
+      "path": "packages/mcp/src/session-store-types.ts",
+      "sha256": "a4d6c1ffd3502f8996a8b43518d1f27413c5f00115f7f7b6e4ecadfc85f955d8"
+    },
+    {
+      "path": "packages/mcp/src/session-store.ts",
+      "sha256": "a1767abc58b802f96815cd6e0b13b4e706745289f6eafb46a4333ca42d90097a"
+    },
+    {
+      "path": "packages/mcp/src/dice-sampling-service.ts",
+      "sha256": "52466d95069a9dcfe96fac40b4f7eda364ba8e76f5a69e1b29ff01f947fef1d5"
+    }
+  ],
+  "captureModules": {
+    "packages/mcp/src/play-session-continuation.ts": "d111c93ac95ddab14fdb926bb8506e3ecd890a752068521ab95f672c2e106411",
+    "packages/mcp/src/continuation-graph.ts": "32d785ea18ee19350ba8d2cc6c7c31e7027f20488a8d52cd997a5ebf4b3b36d1"
+  }
+}

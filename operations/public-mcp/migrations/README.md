@@ -20,14 +20,27 @@ node operations/public-mcp/migrations/prepare.mjs \
 ```
 
 The source manifest contains the exact supported full `sourceRelease`,
-`patch: {path, sha256}`, `sourceFiles: {repositoryPath: sha256}` for every patched
+`patch: {path, sha256}`, `sourceFiles: [{path, sha256}]` for every patched
 file, and `captureModules: {repositoryPath: sha256}` for
 `packages/mcp/src/play-session-continuation.ts` and `continuation-graph.ts`.
 Patch paths must be the runtime-owned capture hooks. Preparation checks the
 full original commit, every patch preimage, the patch itself and copied modules.
+The checked-in `source-23b919207.json` and `source-c9cef525.json` manifests
+share `source-hooks.patch`. Their `captureRevision` identifies the committed
+capture-module bytes; the prepared kit's `targetRelease` identifies the serving
+release being validated. Capture hooks expose existing owner facts and leave
+original constructors and gameplay handlers unchanged. Target restoration,
+scope validation and descriptor modules are not injected into original source.
 The prepared record hashes both separately bundled source and target modules.
 A source pin is admitted only after its real prepared exporter has passed the
 MCP/SQLite recovery cases; listing a pin alone is not qualification.
+
+The source exporter disables admin publication explicitly. At capture only, it
+removes the original character origin's duplicate display name after checking
+equality with that session's canonical character context. A mismatch or missing
+context stops conversion. Projected origins, creatures, combatant maps and
+states preserve sharing across captured sessions. The original replayed state
+is never modified.
 
 Stop admission and all writers before conversion. On the deployment host, the
 state directory must be exclusively owned by the deployment and mounted at its

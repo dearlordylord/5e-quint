@@ -11,9 +11,6 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const ownerPaths = new Set([
   "packages/battle-runtime/src/battle-runtime-context.ts",
   "packages/battle-runtime/src/battle-runtime-transaction.ts",
-  "packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.ts",
-  "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-  "packages/battle-runtime/src/identity.ts",
   "packages/battle-runtime/src/d20-test-circumstance.ts",
   "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
   "packages/battle-runtime/src/index.ts",
@@ -73,11 +70,13 @@ export async function prepareMigrationKit({
   )
     throw new Error("Instrumentation patch changes a non-owner path.");
   if (
-    Object.keys(manifest.sourceFiles).sort().join("\n") !==
-    [...new Set(patchPaths)].sort().join("\n")
+    manifest.sourceFiles
+      .map(({ path }) => path)
+      .sort()
+      .join("\n") !== [...new Set(patchPaths)].sort().join("\n")
   )
     throw new Error("Every patched source file needs an exact preimage hash.");
-  for (const [path, hash] of Object.entries(manifest.sourceFiles)) {
+  for (const { path, sha256: hash } of manifest.sourceFiles) {
     if (sha256(readFileSync(resolve(source, path))) !== hash)
       throw new Error(`Original source hash mismatch: ${path}`);
   }
