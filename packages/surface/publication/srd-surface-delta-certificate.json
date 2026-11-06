@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2673529,
-        "sha256": "78380f5e81a87465049ed4f09572b9d7ec12ec3f72a5c8036b13313142df8ca8"
+        "byteLength": 2673525,
+        "sha256": "fc5b65877d0cce0240c0cca06219cc23f02373f51b7b7253e4f5e5e27b3dc8dc"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "4d0943785ae43d4199f4d27fd3fea20b731b83dc1710622f1503659fa9d22ee9",
+        "candidateCanonicalJsonSha256": "e3631281b8c83b3efc15106807dbed0f339722d2477e14c7f2b06bf07eea5109",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -62,7 +62,7 @@
             "family": "units",
             "id": "class_cleric",
             "baselineCanonicalJsonSha256": "a8fd225a6101f7092de6275cd1424efa1c02e24fa954f1c2482c0c166a6f890d",
-            "candidateCanonicalJsonSha256": "c41b6160a88b7aa8064bf06c9fb2995ed95cb8780f5dc27da4f51e77b2884ddd",
+            "candidateCanonicalJsonSha256": "c9d0e52a537aafbec0a9c940014c7e01721a6ffa6f87574db97a513e340a12d0",
             "semanticClass": "authored-cross-record-reference"
           },
           {

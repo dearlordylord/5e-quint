@@ -20,7 +20,7 @@ Strict level-9 final support blockers: 0.
 | Selected identity readiness | 216/216 (100%) |
 | Diagnostic product readiness | 930/930 (100%) |
 | Strict level-9 final support | 340/340 (100%) |
-| SRD authored product readiness | 124/124 (100%) |
+| SRD authored product readiness | 128/128 (100%) |
 | Rules-kernel profile join | 130/130 (100%) |
 | Rules-kernel covered profile join | 118/130 (90.8%) |
 | Supported Unit rules-kernel chain | 152/189 (80.4%) |
@@ -60,7 +60,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 305/305 (100%) | _none_ |
 | Selected identity readiness | pass | 216/216 (100%) | _none_ |
-| SRD authored product readiness | pass | 124/124 (100%) | _none_ |
+| SRD authored product readiness | pass | 128/128 (100%) | _none_ |
 | Strict level-9 final support | pass | 340/340 (100%) | _none_ |
 
 These gate rows govern the Unit-profile disposition only. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent unless they enter the SRD-authored blocker set.
@@ -85,8 +85,8 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD species records | complete | 9/9 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 22/22 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD class feature grants through level 7 | complete | 76/76 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
-| SRD class concrete equipment refs | complete | 1/1 (100%) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
-| Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
+| SRD class concrete equipment refs | complete | 3/3 (100%) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
+| Unique SRD concrete equipment refs | complete | 6/6 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
 ### Readiness Blockers
 
