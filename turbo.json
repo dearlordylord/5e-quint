@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["GOMEMLIMIT", "GOGC"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
