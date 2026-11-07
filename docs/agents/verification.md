@@ -69,11 +69,37 @@ remaining stages. Reuse a prerequisite only when its relevant source, generated
 artifacts, configuration, and session preconditions are unchanged. Invalidate
 it when those inputs change.
 
-A focused rerun supplies evidence for its own scope. If the owner has no supported
-resume point, use a local reproduction rather than bypassing its acceptance
-stages. The milestone and production coverage have no resumable acceptance
-checkpoint: after coverage repair, a changed candidate still requires a fresh
-full milestone. Build/test caches may reuse artifacts within that run.
+A changed revision alone does not invalidate a successful stage. Invalidate
+results according to changed inputs and affected boundaries, not commit identity.
+
+When a cheap check fails after expensive stages have passed, the agent must
+continue verification manually at finer granularity:
+
+1. Preserve the completed run's receipts and identify its passed, failed and
+   unexecuted stages.
+2. Repair and rerun the failing check at the narrowest owning boundary, then
+   check affected invariants and consumers.
+3. Compare the repair with each previously passed stage's relevant source,
+   generated artifacts, configuration and execution preconditions. Retain its
+   PASS only where these are unchanged; rerun affected stages. Investigate
+   uncertain dependencies rather than assuming reuse.
+4. Complete the remaining general integration verification with the existing
+   public stage/package commands and their locks, omitting the successful,
+   unaffected prefix. Use `quality:repair` for supported stage selections and
+   `coverage:diagnose --package <package>` for coverage repair. The absence of a
+   single resume command does not require restarting the full milestone.
+   A new commit or completed review round does not justify a full restart.
+   Before any broader rerun, name the changed inputs that invalidate that scope
+   or the operator's explicit request.
+5. Record a combined acceptance summary mapping every required stage to its
+   passing evidence, checked inputs, reuse justification or new execution.
+   Acceptance requires all required scopes to be covered and no failed or
+   unexecuted obligation to remain.
+
+A focused rerun proves only its own scope. Granular continuation preserves every
+required integration and production-coverage obligation while avoiding repeated
+work. Report acceptance as combined evidence; the original failed milestone
+command remains failed and must not be relabeled as a passing full run.
 
 ## Milestone Failure Policy
 

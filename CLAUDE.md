@@ -155,10 +155,15 @@ and keeping the coverage timeout avoids instrumentation flakiness.
 
 Coverage repair protocol: when milestone coverage fails, use the reported package
 and uncovered lines with `pnpm coverage:diagnose --package <package>`; repair and
-rerun that package-only diagnostic until it passes, then rerun the full
-`pnpm quality:milestone` on the stable revision. Coverage has no resumable
-checkpoint: caches may reuse artifacts, but a changed revision requires a fresh
-full milestone for acceptance.
+rerun that package-only diagnostic until it passes. Then complete integration
+verification using the [granular continuation protocol](docs/agents/verification.md#reuse-past-a-successful-stage).
+A changed revision alone does not require repeating successful, unaffected
+stages. When a cheap check fails after expensive stages pass, the agent must
+repair locally and complete the remaining verification without repeating that
+unaffected prefix. A new commit, a completed review round, or the absence of a
+single resume command is not a reason for a full restart. Rerun the full
+milestone only when changed inputs invalidate its whole scope or the operator
+explicitly requests it; record the reason before launching.
 
 Proof and battle-MBT public scripts acquire the same lock. Direct Quint or
 filtered MBT commands must use `scripts/with-mbt-lock.sh`; never nest the broad
