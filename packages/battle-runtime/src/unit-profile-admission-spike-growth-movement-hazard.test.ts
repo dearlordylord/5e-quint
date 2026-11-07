@@ -7,6 +7,13 @@ import {
   battleActUnitPresentation,
 } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
+import {
+  battlePendingTransactionEnvelopeForSession,
+  retainBattleRuntimeContinuation,
+  restoreBattleRuntimeContinuation,
+  settleBattleRuntimeTransaction,
+} from "./battle-runtime-transaction.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   attackDamageDispositionFill,
@@ -65,6 +72,7 @@ import {
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
   battleEffectExecutionRefForTest,
+  battleRuntimeContextForStateForTest,
   attackExecutionSelectionForSubjectForTest,
   battleAreaId,
   battleProcedureExecutionRefForTest,
@@ -2026,6 +2034,80 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         }),
       ],
     });
+
+    const opened = settleBattleRuntimeTransaction({
+      session: battleRuntimeSessionForTest({
+        state,
+        context: battleRuntimeContextForStateForTest(state),
+      }),
+      transaction: null,
+      operation: { kind: "ordinarySubject", subject, fills: [movement] },
+    });
+    if (
+      opened.tag !== "needsHoles" ||
+      opened.resolution.envelope.frontier.kind !== "interruptDecision"
+    ) {
+      throw new Error("Expected the runtime Opportunity Attack decision.");
+    }
+    const declined = settleBattleRuntimeTransaction({
+      session: opened.resolution.session,
+      transaction: opened.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          opened.resolution.envelope.frontier.decisionHole,
+          { kind: "decline", responderId: spellCasterId },
+        ),
+      },
+    });
+    if (declined.tag !== "needsHoles") {
+      throw new Error("Expected runtime Spike Growth movement damage.");
+    }
+    expect(declined.resolution.session.state.interruptStack).toEqual([]);
+    expect(declined.resolution.envelope.frontier).toMatchObject({
+      kind: "holes",
+      continuation: { kind: "runtimeOwnedInterrupt" },
+    });
+    const retained = retainBattleRuntimeContinuation(
+      declined.resolution.session,
+      declined.transaction,
+    );
+    if (Result.isFailure(retained)) throw new Error(retained.failure);
+    const restored = restoreBattleRuntimeContinuation(
+      structuredClone(retained.success),
+    );
+    if (Result.isFailure(restored)) throw new Error(restored.failure);
+    if (restored.success.transaction === null) {
+      throw new Error("Expected the restored movement transaction.");
+    }
+    const restoredEnvelope = battlePendingTransactionEnvelopeForSession(
+      restored.success.transaction,
+      restored.success.session,
+    );
+    const operation = {
+      kind: "ordinarySubject" as const,
+      subject,
+      fills: [damageRollFillWithGroups(damage, [[1, 1]])],
+    };
+    const originalNext = settleBattleRuntimeTransaction({
+      session: declined.resolution.session,
+      transaction: declined.transaction,
+      operation,
+    });
+    const restoredNext = settleBattleRuntimeTransaction({
+      session: restored.success.session,
+      transaction: restored.success.transaction,
+      operation,
+    });
+    expect.soft(restoredEnvelope).toEqual({
+      tag: "valid",
+      envelope: declined.resolution.envelope,
+    });
+    expect(originalNext.tag).toBe("needsHoles");
+    expect(restoredNext.tag).toBe("needsHoles");
+    expect(restoredNext.resolution.envelope).toEqual(
+      originalNext.resolution.envelope,
+    );
   });
 
   test("breaking concentration removes the spike growth hazard", () => {
