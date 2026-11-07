@@ -39,6 +39,7 @@ import { describe, expect, test } from "vitest";
 import type {
   BattleActiveEffect,
   BattleSpellTargetListHole,
+  BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import {
   EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
@@ -1061,7 +1062,18 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         : [],
       "targetingSaveInterdictionOutcome",
     );
-    const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
+    const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId, [
+      {
+        enemyId: skeletonId,
+        distanceFeet: movementFeet(30),
+        enemyCanSeeCaster: true,
+      },
+      {
+        enemyId: fighterId,
+        distanceFeet: movementFeet(30),
+        enemyCanSeeCaster: true,
+      },
+    ]);
     const awaitingAttackRoll = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -1146,7 +1158,18 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         : [],
       "targetingSaveInterdictionOutcome",
     );
-    const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
+    const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId, [
+      {
+        enemyId: skeletonId,
+        distanceFeet: movementFeet(30),
+        enemyCanSeeCaster: true,
+      },
+      {
+        enemyId: fighterId,
+        distanceFeet: movementFeet(30),
+        enemyCanSeeCaster: true,
+      },
+    ]);
     const fills: BattleFill[] = [
       originalTarget,
       secondTarget,
@@ -5080,6 +5103,10 @@ function withHuntersMark(
 function sanctuaryRetargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
+  enemies: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "rangedSpellAttackEnemyProximity" }
+  >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
   if (hole.kind !== "targetingSaveInterdictionOutcome") {
     throw new Error("Expected Sanctuary interdiction outcome hole.");
@@ -5093,6 +5120,12 @@ function sanctuaryRetargetFill(
         kind: "newTarget",
         targetId,
         spatialFacts: [
+          {
+            kind: "rangedSpellAttackEnemyProximity",
+            casterId: wizardId,
+            sourceProcedureRef: hole.triggeringProcedureRef,
+            enemies,
+          },
           {
             kind: "spellTarget",
             casterId: wizardId,

@@ -1188,6 +1188,13 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       spellId: "starry_wisp",
       casterId: spellTargetId,
       distanceFeet: movementFeet(30),
+      enemies: [
+        {
+          enemyId: spellCasterId,
+          distanceFeet: movementFeet(30),
+          enemyCanSeeCaster: true,
+        },
+      ],
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(10) },
     });
     const attackRoll = requireResultHole(

@@ -978,6 +978,13 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       spellId: starryWispUnitId,
       casterId: attackAct.subject.actorId,
       distanceFeet: movementFeet(30),
+      enemies: [
+        {
+          enemyId: spellTargetId,
+          distanceFeet: movementFeet(30),
+          enemyCanSeeCaster: true,
+        },
+      ],
       attackerCanSeeObject: true,
     });
     const attackRequest = resolveBattleSubject({

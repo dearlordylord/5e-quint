@@ -43,6 +43,7 @@ import {
   type BattleSubject,
   type BattleRuntimeSession,
   type CombatantId,
+  type BattleTargetSpatialFact,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
@@ -79,6 +80,22 @@ const casterId = combatantId("sanctuary-caster");
 const wardedId = combatantId("sanctuary-warded");
 const attackerId = combatantId("sanctuary-attacker");
 const replacementId = combatantId("sanctuary-replacement");
+
+const spellAttackTableEnemies = [
+  {
+    enemyId: wardedId,
+    distanceFeet: movementFeet(30),
+    enemyCanSeeCaster: true,
+  },
+  {
+    enemyId: replacementId,
+    distanceFeet: movementFeet(30),
+    enemyCanSeeCaster: true,
+  },
+] satisfies Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "rangedSpellAttackEnemyProximity" }
+>["enemies"];
 
 type NeedsHolesResult = Extract<
   ReturnType<typeof resolveBattleSubject>,
@@ -535,6 +552,7 @@ describe("Sanctuary targeting interdiction", () => {
       fireBoltUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -583,6 +601,7 @@ describe("Sanctuary targeting interdiction", () => {
       sacredFlameUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -631,6 +650,7 @@ describe("Sanctuary targeting interdiction", () => {
       sacredFlameUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const originalTargetFact = targetFill.spatialFacts?.find(
       (fact) => fact.kind === "spellTarget",
@@ -1023,6 +1043,7 @@ describe("Sanctuary targeting interdiction", () => {
       eldritchBlastUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1075,7 +1096,13 @@ describe("Sanctuary targeting interdiction", () => {
     );
     expect(targetHoles).toHaveLength(2);
     const targetFills = targetHoles.map((hole) =>
-      spellTargetFill(hole, eldritchBlastUnitId, casterId, wardedId),
+      spellTargetFill(
+        hole,
+        eldritchBlastUnitId,
+        casterId,
+        wardedId,
+        spellAttackTableEnemies,
+      ),
     );
     const needsFirstSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1145,6 +1172,7 @@ describe("Sanctuary targeting interdiction", () => {
       iceKnifeUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1196,6 +1224,7 @@ describe("Sanctuary targeting interdiction", () => {
       iceKnifeUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1220,6 +1249,7 @@ describe("Sanctuary targeting interdiction", () => {
       iceKnifeUnitId,
       casterId,
       replacementId,
+      spellAttackTableEnemies,
     );
 
     const retargeted = resolveBattleSubject({
@@ -1282,6 +1312,7 @@ describe("Sanctuary targeting interdiction", () => {
       chromaticOrbUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1349,6 +1380,7 @@ describe("Sanctuary targeting interdiction", () => {
       chromaticOrbUnitId,
       casterId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1373,6 +1405,7 @@ describe("Sanctuary targeting interdiction", () => {
       chromaticOrbUnitId,
       casterId,
       replacementId,
+      spellAttackTableEnemies,
     );
     const sanctuaryFill = sanctuaryOutcomeFill(sanctuaryHole, {
       saveSucceeded: false,
@@ -1458,6 +1491,7 @@ describe("Sanctuary targeting interdiction", () => {
       chromaticOrbUnitId,
       casterId,
       replacementId,
+      spellAttackTableEnemies,
     );
     const needsAttack = resolveBattleSubject({
       state: warded.state,
@@ -1515,6 +1549,7 @@ describe("Sanctuary targeting interdiction", () => {
       leapTargetHole,
       replacementId,
       wardedId,
+      spellAttackTableEnemies,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -1699,6 +1734,7 @@ describe("Sanctuary targeting interdiction", () => {
           longstriderUnitId,
           casterId,
           casterId,
+          spellAttackTableEnemies,
         ),
       ],
     });
@@ -2033,6 +2069,10 @@ function spellTargetFill(
   _spellId: string,
   casterIdValue: CombatantId,
   targetId: CombatantId,
+  enemies: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "rangedSpellAttackEnemyProximity" }
+  >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const distanceFeet =
     hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
@@ -2056,6 +2096,13 @@ function spellTargetFill(
       : {}),
     spatialFacts: [
       {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: casterIdValue,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        enemies,
+      },
+      {
         kind: "spellTarget",
         casterId: casterIdValue,
         targetId,
@@ -2071,6 +2118,10 @@ function spellLeapTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   previousTargetId: CombatantId,
   targetId: CombatantId,
+  enemies: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "rangedSpellAttackEnemyProximity" }
+  >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const casterId = hole.spellTargetSpatialFactRequest?.casterId;
   if (casterId === undefined) {
@@ -2093,6 +2144,13 @@ function spellLeapTargetFill(
         }
       : {}),
     spatialFacts: [
+      {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: casterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        enemies,
+      },
       {
         kind: "spellTarget" as const,
         casterId,

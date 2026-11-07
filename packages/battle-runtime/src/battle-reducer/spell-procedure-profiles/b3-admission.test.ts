@@ -459,6 +459,7 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: dragonProcedureRef,
         lengthFeet: 15,
+        areaInput: { kind: "areaMembership", originAnchorId: spellCasterId },
       },
       ability: "dex",
       dc: { kind: "fixed", dc: 12 },

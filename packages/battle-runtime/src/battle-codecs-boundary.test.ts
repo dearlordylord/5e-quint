@@ -1263,6 +1263,7 @@ const savingThrowCases: readonly CodecCase[] = [
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
         lengthFeet: 15,
+        areaInput: { kind: "areaMembership", originAnchorId: wizardId },
       },
     ),
   ),

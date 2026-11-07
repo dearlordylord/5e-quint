@@ -723,6 +723,10 @@ export function spellObjectTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
   readonly objectId?: ObjectTargetChoiceFill["value"];
   readonly spellId: string;
+  readonly enemies: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "rangedSpellAttackEnemyProximity" }
+  >["enemies"];
   readonly casterId: CombatantId;
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
   readonly distanceFeet?: ReturnType<typeof movementFeet>;
@@ -740,6 +744,12 @@ export function spellObjectTargetFill(input: {
     holeId: input.hole.holeId,
     value: objectId,
     spatialFacts: [
+      {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: input.casterId,
+        sourceProcedureRef,
+        enemies: input.enemies,
+      },
       {
         kind: "spellObjectTarget",
         casterId: input.casterId,
