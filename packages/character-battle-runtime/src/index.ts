@@ -27,13 +27,12 @@ import {
 } from "@dnd/battle-runtime";
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
-  characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
   characterSheetPactSlots,
   characterSheetResources,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
-  rebuildCharacterSheet,
+  characterSheetHitPoints,
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   replaceCharacterSheetSpellSlotSourceState,
@@ -458,9 +457,6 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     );
   }
   const bookOfShadowsPresence = bookOfShadowsPresenceFromBattle(input);
-  const druidWildShapeKnownForms = characterSheetDruidWildShapeKnownForms(
-    input.sheet,
-  );
   const spellSlotState = characterSheetSpellSlotSourceStateFromBattle(input);
   if (Result.isFailure(spellSlotState)) {
     return Result.fail(
@@ -477,14 +473,9 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     );
   }
 
-  const sheet = rebuildCharacterSheet({
-    characterId: input.sheet.characterId,
-    build: input.sheet.build,
-    hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
+  const hitPoints = characterSheetHitPoints({
     currentHp: input.combatant.hp,
     tempHp: input.combatant.tempHp,
-    conditions: characterSheetConditionsFromBattle(input.combatant),
-    unitLibrary: input.unitLibrary,
     ...(knockedOut.success === null
       ? {}
       : {
@@ -494,33 +485,32 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     ...(input.combatant.hp === 0 && zeroHpLifecycle !== undefined
       ? { zeroHpLifecycle: zeroHpLifecycle.success }
       : {}),
-    ...(pactSlotExpenditure.success === undefined
-      ? {}
-      : { pactSlots: pactSlotExpenditure.success }),
-    ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
-    ...(druidWildShapeKnownForms === undefined
-      ? {}
-      : {
-          druidWildShapeKnownFormStatBlockIds:
-            druidWildShapeKnownForms.statBlockIds,
-        }),
-    spentHitDice: input.sheet.spentHitDice,
-    restFeatureUses: input.sheet.restFeatureUses,
-    resourceExpenditures: resourceExpenditures.success,
-    companion: input.sheet.companion,
-    ...(input.statBlockCatalog === undefined
-      ? {}
-      : { statBlockCatalog: input.statBlockCatalog }),
   });
-  if (Result.isFailure(sheet)) {
+  if (Result.isFailure(hitPoints)) {
     return Result.fail(
-      characterSheetBattleHandoffIssueFromIssue(sheet.failure),
+      characterSheetBattleHandoffIssueFromIssue(hitPoints.failure),
     );
   }
-  if (spellSlotState.success === undefined)
-    return Result.succeed(sheet.success);
+  const sheet: CharacterSheet = {
+    ...input.sheet,
+    hitPoints: hitPoints.success,
+    conditions: characterSheetConditionsFromBattle(input.combatant),
+    resourceExpenditures: resourceExpenditures.success,
+  };
+  const settled =
+    sheet.spellSlotExpenditures === undefined
+      ? sheet
+      : {
+          ...sheet,
+          bookOfShadowsPresence,
+          pactSlotExpenditure:
+            pactSlotExpenditure.success?.expended === resourceCount(0)
+              ? undefined
+              : pactSlotExpenditure.success,
+        };
+  if (spellSlotState.success === undefined) return Result.succeed(settled);
   const replaced = replaceCharacterSheetSpellSlotSourceState({
-    sheet: sheet.success,
+    sheet: settled,
     unitLibrary: input.unitLibrary,
     spellSlotState: spellSlotState.success,
   });

@@ -676,7 +676,7 @@
     "packages/character-battle-runtime/src/index.ts": {
       "module/binding:characterSheetPactSlotExpenditureFromBattle": 9,
       "module/binding:characterSheetSpellSlotSourceStateFromBattle": 19,
-      "module/binding:settleBattleCombatantIntoCharacterSheet": 20,
+      "module/binding:settleBattleCombatantIntoCharacterSheet": 19,
       "module/binding:spellSlotSourceSpendForBattleDelta": 11
     },
     "packages/character-creation-runtime/src/character-build-advancement.ts": {

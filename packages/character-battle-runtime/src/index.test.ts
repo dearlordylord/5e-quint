@@ -387,6 +387,122 @@ function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
 }
 
 describe("Character Sheet battle handoff", () => {
+  test.each([
+    {
+      name: "non-spellcasting exhaustion and Heroic Inspiration",
+      input: () => ({
+        build: defenseBuild({ wearingArmor: false }),
+        exhaustionLevel: 2 as const,
+        heroicInspiration: { tag: "available" as const },
+      }),
+    },
+    {
+      name: "Circle of the Land selection and Wild Shape forms",
+      input: () => {
+        const build = druidWildShapeBuildAtLevel(3);
+        if (build.spellcasting === undefined) {
+          throw new Error("Expected Druid spellcasting fixture.");
+        }
+        return {
+          build: {
+            ...build,
+            features: [
+              {
+                kind: "selectedClassChoice" as const,
+                selectedFromUnitId: authoredUnitId("class_druid"),
+                unitId: authoredUnitId("subclass_druid_circle_of_the_land"),
+              },
+            ],
+            spellcasting: {
+              ...build.spellcasting,
+              slotPools: {
+                spellcasting: {
+                  kind: "spellcasting" as const,
+                  slots: [
+                    { spellLevel: 1, count: 4 },
+                    { spellLevel: 2, count: 2 },
+                  ],
+                },
+              },
+            },
+          },
+          druidCircleLand: { land: "temperate" as const },
+          druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+        };
+      },
+    },
+    {
+      name: "Fiendish Resilience selection",
+      input: () => {
+        const build = armorOfShadowsWarlockBuild({ armorOfShadows: false });
+        if (build.spellcasting === undefined) {
+          throw new Error("Expected Warlock spellcasting fixture.");
+        }
+        return {
+          build: {
+            ...build,
+            progression: {
+              startingClass: classUnitId(authoredUnitId("class_warlock")),
+              advancements: Array.from({ length: 9 }, () => ({
+                classUnitId: classUnitId(authoredUnitId("class_warlock")),
+                hitPointRule: { tag: "fixedHigherLevelGain" as const },
+              })),
+            },
+            features: [
+              {
+                kind: "selectedClassChoice" as const,
+                selectedFromUnitId: authoredUnitId("class_warlock"),
+                unitId: authoredUnitId("subclass_warlock_fiend_patron"),
+              },
+            ],
+            spellcasting: {
+              ...build.spellcasting,
+              slotPools: {
+                pactMagic: {
+                  kind: "pactMagic" as const,
+                  slotLevel: 5,
+                  count: 2,
+                },
+              },
+            },
+          },
+          fiendishResilience: { damageType: "fire" as const },
+        };
+      },
+    },
+  ])("preserves Sheet-owned $name while settling battle HP", ({ input }) => {
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:retained-settlement-state"),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+        statBlockCatalog,
+        ...input(),
+      }),
+    );
+    const settled = expectSuccess(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:retained-settlement-state"),
+          },
+          hp: Hp(8),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(3),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(characterSheetCurrentHp(settled)).toBe(8);
+    expect(characterSheetTempHp(settled)).toBe(3);
+    expect({ ...settled, hitPoints: sheet.hitPoints }).toEqual(sheet);
+  });
+
   test("projects every State init leaf into a structured handoff fact", () => {
     expect(
       characterSheetBattleHandoffIssuesFromStateInit({
@@ -4391,45 +4507,6 @@ describe("Character Sheet battle handoff", () => {
     expect(characterSheetCompanion(handoff)).toEqual({ tag: "none" });
   });
 
-  test("passes the caller Stat Block catalog while preserving Wild Shape forms", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:druid-wild-shape-catalog"),
-      build: druidWildShapeBuild(),
-      currentHp: Hp(15),
-      tempHp: Hp(0),
-      unitLibrary,
-      statBlockCatalog,
-      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
-    });
-    expect(Result.isSuccess(sheet)).toBe(true);
-    if (Result.isFailure(sheet)) return;
-
-    const countedStatBlockCatalog = statBlockCatalogWithLookupCount();
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.success,
-      unitLibrary,
-      statBlockCatalog: countedStatBlockCatalog.catalog,
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:druid-wild-shape-catalog"),
-        },
-        hp: Hp(12),
-        maxHp: sheetMaximumHp(sheet.success),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    expect(Result.isSuccess(handoff)).toBe(true);
-    if (Result.isSuccess(handoff)) {
-      expect(characterSheetDruidWildShapeKnownForms(handoff.success)).toEqual({
-        statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
-      });
-    }
-    expect(countedStatBlockCatalog.lookupCount()).toBeGreaterThan(0);
-  });
-
   test("threads Druid Wild Shape known forms into battle initialization", () => {
     const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-init"),
@@ -6174,27 +6251,34 @@ describe("Character Sheet battle handoff", () => {
       expended: 1,
     });
 
-    const unchanged = expectSuccess(
-      settleHandoffBranchToCharacterSheet({
-        sheet,
-        unitLibrary,
-        combatant: handoffBranchCombatant({
-          origin: {
-            kind: "character",
-            characterId: characterId("character:pure-pact-magic-spent"),
-          },
-          hp: Hp(8),
-          maxHp: sheetMaximumHp(sheet),
-          tempHp: Hp(0),
-          positiveHpUnconscious: null,
+    for (const spellcasting of [
+      undefined,
+      pactMagicHandoffSpellcastingState({ expended: resourceCount(0) }),
+    ]) {
+      const unchanged = expectSuccess(
+        settleHandoffBranchToCharacterSheet({
+          sheet,
+          unitLibrary,
+          combatant: handoffBranchCombatant({
+            origin: {
+              kind: "character",
+              characterId: characterId("character:pure-pact-magic-spent"),
+              ...(spellcasting === undefined ? {} : { spellcasting }),
+            },
+            hp: Hp(8),
+            maxHp: sheetMaximumHp(sheet),
+            tempHp: Hp(0),
+            positiveHpUnconscious: null,
+          }),
         }),
-      }),
-    );
-    expect(characterSheetPactSlots(unchanged)).toEqual({
-      slotLevel: 1,
-      count: 1,
-      expended: 0,
-    });
+      );
+      expect(characterSheetPactSlots(unchanged)).toEqual({
+        slotLevel: 1,
+        count: 1,
+        expended: 0,
+      });
+      expect(unchanged.pactSlotExpenditure).toBeUndefined();
+    }
   });
 
   test("rejects pure Pact Magic battle handoff when Pact Slot capacity drifts", () => {
@@ -12928,23 +13012,6 @@ function startDruidWildShapeSheetBattle(
       ],
     }),
   );
-}
-
-function statBlockCatalogWithLookupCount(): {
-  readonly catalog: StatBlockCatalog;
-  readonly lookupCount: () => number;
-} {
-  let getStatBlockCalls = 0;
-  return {
-    catalog: {
-      getStatBlock: (id) => {
-        getStatBlockCalls += 1;
-        return statBlockCatalog.getStatBlock(id);
-      },
-      listStatBlocks: () => statBlockCatalog.listStatBlocks(),
-    },
-    lookupCount: () => getStatBlockCalls,
-  };
 }
 
 function emptyStatBlockCatalog(): StatBlockCatalog {
