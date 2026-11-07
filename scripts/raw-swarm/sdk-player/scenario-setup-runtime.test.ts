@@ -3223,6 +3223,10 @@ describe("scenario setup public-SDK boundary", () => {
       return;
     }
     const ordinaryRequest = ordinaryTargetHole.spellTargetSpatialFactRequest;
+    expect(ordinaryRequest).toMatchObject({
+      requiresExactDistance: true,
+      requiresEnemyProximityQualification: true,
+    });
     const tableWithoutSpellDecision = createScenarioSession({
       battle: result.session.battle,
       spatial: { kind: "tableAuthored", spatialDecisions: [] },
@@ -3474,32 +3478,132 @@ describe("scenario setup public-SDK boundary", () => {
         },
       });
     }
-    expect(
-      scenarioCreatureSpellTargetFills({
-        session: result.session,
-        subject: ordinarySpellAttackAct.subject,
-        fills: [
-          {
-            kind: "targetChoice",
-            holeId: ordinaryTargetHole.holeId,
-            value: visibleOrdinaryTarget,
-            spatialFacts: [],
-          },
-        ],
-      }).pipe(Result.map((fills) => fills[0])),
-    ).toMatchObject({
-      _tag: "Success",
-      success: {
-        kind: "targetChoice",
-        spatialFacts: [
-          {
-            kind: "spellTarget",
-            casterId: ordinaryRequest.casterId,
-            targetId: visibleOrdinaryTarget,
-          },
-        ],
+    const unqualifiedSpellTarget = scenarioCreatureSpellTargetFills({
+      session: result.session,
+      subject: ordinarySpellAttackAct.subject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: ordinaryTargetHole.holeId,
+          value: visibleOrdinaryTarget,
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(unqualifiedSpellTarget).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "spell-target-projection",
+        message: expect.stringContaining("rangedSpellAttackEnemyProximity"),
       },
     });
+    if (Result.isFailure(unqualifiedSpellTarget)) {
+      expect(unqualifiedSpellTarget.failure.message).toContain(
+        "requiresEnemyProximityQualification is true",
+      );
+      expect(unqualifiedSpellTarget.failure.message).toContain(
+        String(ordinaryRequest.casterId),
+      );
+      expect(unqualifiedSpellTarget.failure.message).toContain(
+        String(ordinaryRequest.sourceProcedureRef),
+      );
+    }
+    const enemyRelation = scenarioRelation({
+      session: result.session,
+      sourceId: combatantId("wolf-3b"),
+      targetId: ordinaryRequest.casterId,
+    });
+    expect(enemyRelation.tag).toBe("relation");
+    if (enemyRelation.tag !== "relation") return;
+    const qualification = {
+      kind: "rangedSpellAttackEnemyProximity" as const,
+      casterId: ordinaryRequest.casterId,
+      sourceProcedureRef: ordinaryRequest.sourceProcedureRef,
+      enemies: [
+        {
+          enemyId: combatantId("wolf-3b"),
+          distanceFeet: movementFeet(
+            Number(enemyRelation.relation.distanceFeet),
+          ),
+          enemyCanSeeCaster: enemyRelation.relation.attackerCanSeeTarget,
+        },
+      ],
+    };
+    const qualifiedTargetFill = {
+      kind: "targetChoice" as const,
+      holeId: ordinaryTargetHole.holeId,
+      value: visibleOrdinaryTarget,
+      spatialFacts: [qualification],
+    };
+    const qualifiedProjection = scenarioCreatureSpellTargetFills({
+      session: result.session,
+      subject: ordinarySpellAttackAct.subject,
+      fills: [qualifiedTargetFill],
+    });
+    expect(qualifiedProjection).toMatchObject({
+      _tag: "Success",
+      success: [
+        {
+          kind: "targetChoice",
+          spatialFacts: [
+            qualification,
+            {
+              kind: "spellTarget",
+              casterId: ordinaryRequest.casterId,
+              targetId: visibleOrdinaryTarget,
+              sourceProcedureRef: ordinaryRequest.sourceProcedureRef,
+              distanceFeet: movementFeet(
+                Number(visibleRelation.relation.distanceFeet),
+              ),
+            },
+          ],
+        },
+      ],
+    });
+    if (Result.isSuccess(qualifiedProjection)) {
+      expect(qualifiedProjection.success[0]).toHaveProperty(
+        "spatialFacts.0",
+        qualification,
+      );
+      expect(
+        resolveBattleRuntimeSubject({
+          session: result.session.battle,
+          subject: ordinarySpellAttackAct.subject,
+          fills: qualifiedProjection.success,
+        }).tag,
+      ).toBe("needsHoles");
+    }
+    for (const spatialFacts of [
+      [{ ...qualification, casterId: combatantId("wolf-3b") }],
+      [
+        {
+          ...qualification,
+          sourceProcedureRef: battleProcedureExecutionRef(
+            battleStatBlockExecutionScopeRef(
+              battleId("stale-enemy-qualification"),
+              ordinaryRequest.casterId,
+              battleExecutionScopeOrdinal(0),
+            ),
+            NonNegativeInteger(0),
+          ),
+        },
+      ],
+      [qualification, qualification],
+    ]) {
+      expect(
+        scenarioCreatureSpellTargetFills({
+          session: result.session,
+          subject: ordinarySpellAttackAct.subject,
+          fills: [{ ...qualifiedTargetFill, spatialFacts }],
+        }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          tag: "spell-target-projection",
+          message: expect.stringContaining("Supply exactly one"),
+        },
+      });
+    }
     const damaged = scenarioSessionWithBattleResult(
       result.session,
       result.session.battle,
@@ -4488,6 +4592,12 @@ describe("scenario setup public-SDK boundary", () => {
       }),
     ).toEqual(projectedAttack);
 
+    const tableCheckedNoEnemies = {
+      kind: "rangedSpellAttackEnemyProximity" as const,
+      casterId: spellRequest.casterId,
+      sourceProcedureRef: spellRequest.sourceProcedureRef,
+      enemies: [],
+    };
     const projectedSpell = scenarioCreatureSpellTargetFills({
       session: tableSession.success,
       subject: ordinarySpellAttackAct.subject,
@@ -4496,7 +4606,7 @@ describe("scenario setup public-SDK boundary", () => {
           kind: "targetChoice",
           holeId: ordinarySpellHole.holeId,
           value: spellTarget,
-          spatialFacts: [],
+          spatialFacts: [tableCheckedNoEnemies],
         },
       ],
     });
@@ -4505,11 +4615,15 @@ describe("scenario setup public-SDK boundary", () => {
       success: [
         {
           spatialFacts: [
+            tableCheckedNoEnemies,
             {
               kind: "spellTarget",
               casterId: spellRequest.casterId,
               targetId: spellTarget,
               sourceProcedureRef: spellRequest.sourceProcedureRef,
+              distanceFeet: movementFeet(
+                Number(spellAnswer.relation.distanceFeet),
+              ),
             },
           ],
         },

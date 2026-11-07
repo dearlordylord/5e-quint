@@ -2401,7 +2401,34 @@ export function scenarioCreatureSpellTargetFills(input: {
         casterId: request.casterId,
         targetId,
         sourceProcedureRef: request.sourceProcedureRef,
+        ...(request.requiresExactDistance === true
+          ? {
+              distanceFeet: movementFeet(
+                Number(relation.relation.distanceFeet),
+              ),
+            }
+          : {}),
       });
+    }
+    if (
+      canonicalFacts.length > 0 &&
+      request.requiresEnemyProximityQualification === true
+    ) {
+      const qualifications = (fill.spatialFacts ?? []).filter(
+        (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+      );
+      const qualification = qualifications[0];
+      if (
+        qualifications.length !== 1 ||
+        qualification === undefined ||
+        qualification.casterId !== request.casterId ||
+        qualification.sourceProcedureRef !== request.sourceProcedureRef
+      ) {
+        return Result.fail({
+          tag: "spell-target-projection",
+          message: `requiresEnemyProximityQualification is true for casterId ${String(request.casterId)} and sourceProcedureRef ${String(request.sourceProcedureRef)}. Supply exactly one rangedSpellAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeCaster. Use enemies: [] only after checking none qualify. The retained initial enemy relationships do not establish this cast's complete qualification.`,
+        });
+      }
     }
     projectedFills.push(
       Match.value(fill).pipe(
