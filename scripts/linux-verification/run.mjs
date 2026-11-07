@@ -340,10 +340,14 @@ export async function runContainerVerification(
     save(join(scratch, "input.json"), input);
     const runner = join(scratch, "runner");
     cpSync(OWN, runner, { recursive: true });
+    const toolchain = readFileSync(
+      join(source, "packages/surface/dhall-json-toolchain.json"),
+    );
+    writeFileSync(join(runner, "dhall-json-toolchain.json"), toolchain);
     const recipe = readFileSync(join(runner, "Dockerfile"));
     const tag =
       process.env.DND_LINUX_VERIFICATION_IMAGE ??
-      `dnd-verification:${hash(recipe).slice(0, 16)}`;
+      `dnd-verification:${hash(Buffer.concat([recipe, toolchain])).slice(0, 16)}`;
     if (!dockerJson(["image", "inspect", "--format", "{{json .Id}}", tag])) {
       if (process.env.DND_LINUX_VERIFICATION_IMAGE)
         throw new Error(

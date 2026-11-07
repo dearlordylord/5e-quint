@@ -4,7 +4,13 @@ Public lock-taking commands select this runner automatically on macOS. Linux
 keeps the existing supervisor and lock wrappers. Docker must be running; the
 first macOS invocation builds a dedicated tools image. Its recipe pins Node
 24.20.0, pnpm's global fallback and mise; the project's packageManager/lockfile
-remain authoritative for dependency installation.
+remain authoritative for dependency installation. The tools image installs the
+checksum-verified Dhall JSON release from
+[`packages/surface/dhall-json-toolchain.json`](../../packages/surface/dhall-json-toolchain.json).
+The Dockerfile and manifest bytes determine its cache identity. Upstream ships
+this compiler for Linux x86_64; ARM64 images run only `dhall-to-json` through
+explicit `qemu-x86_64-static` with x86_64 runtime libraries. Node and the rest of
+the runner stay native. The build checks the installed compiler version.
 
 Run the usual commands, for example `pnpm quality:repair --checks markdown-links`,
 `pnpm check:workspace-quality-inventory`, `pnpm typecheck:affected`, or the final
