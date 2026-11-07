@@ -27,6 +27,8 @@ import {
   createInitialInitiativeForCombatants,
   finishInitialInitiativeSetup as finishInitialInitiativeSetupFromApi,
   removeBattleRuntimeCombatants,
+  retainInitialInitiativeSetup,
+  restoreInitialInitiativeSetup,
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup as startBattleWithInitialInitiativeSetupFromApi,
@@ -893,7 +895,10 @@ describe("battle lifecycle admission issue aggregation", () => {
     expect(Result.isSuccess(setupResult)).toBe(true);
     if (Result.isFailure(setupResult)) return;
 
-    const setup = setupResult.success;
+    const setup = restoreInitialInitiativeSetup(
+      structuredClone(retainInitialInitiativeSetup(setupResult.success)),
+    );
+    expect(setup.state).toEqual(setupResult.success.state);
     expect(
       requiredInitiativeRollModeForCombatant(
         setup.state,
@@ -970,9 +975,13 @@ describe("battle lifecycle admission issue aggregation", () => {
 
     const finished = finishInitialInitiativeSetupFromApi(setup);
     expect(finished.state).toBe(setup.state);
+    const closedSetup = restoreInitialInitiativeSetup(
+      structuredClone(retainInitialInitiativeSetup(setup)),
+    );
+    expect(closedSetup.state).toEqual(finished.state);
     expect(
       applyInitiativeSwap({
-        setup,
+        setup: closedSetup,
         sourceId: baseCombatant.combatantId,
         candidateId: statBlock.combatantId,
         candidateWitness: { tag: "willingAlly" },
