@@ -1,3 +1,7 @@
+import {
+  retainBattleRuntimeContinuation,
+  restoreBattleRuntimeContinuation,
+} from "./battle-runtime-transaction.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
@@ -3865,20 +3869,46 @@ test("active Wild Shape reversion reports an owner removed through the public ro
   if (shapeShift.kind !== "shapeShifted") {
     throw new Error("Expected active Wild Shape runtime state.");
   }
-  const removed = removeBattleRuntimeCombatants({
-    session: battleRuntimeSessionForTest({
+  const retainedActive = retainBattleRuntimeContinuation(
+    battleRuntimeSessionForTest({
       state: assumed.state,
       context: session.context,
     }),
+    null,
+  );
+  if (Result.isFailure(retainedActive)) throw new Error(retainedActive.failure);
+  const restoredActive = restoreBattleRuntimeContinuation(
+    structuredClone(retainedActive.success),
+  );
+  if (Result.isFailure(restoredActive)) throw new Error(restoredActive.failure);
+  expect(restoredActive.success.transaction).toBeNull();
+  expect(restoredActive.success.session.state).toEqual(assumed.state);
+  expect(
+    battleShapeShiftedRuntimeState(
+      requireCharacter(restoredActive.success.session.state, druidId),
+    ),
+  ).toEqual(shapeShift);
+  const removed = removeBattleRuntimeCombatants({
+    session: restoredActive.success.session,
     combatantIds: [druidId],
   });
   if (Result.isFailure(removed)) {
     throw new Error(JSON.stringify(removed.failure));
   }
 
+  const retained = retainBattleRuntimeContinuation(removed.success, null);
+  if (Result.isFailure(retained)) throw new Error(retained.failure);
+  const restored = restoreBattleRuntimeContinuation(
+    structuredClone(retained.success),
+  );
+  if (Result.isFailure(restored)) throw new Error(restored.failure);
+  expect(restored.success.transaction).toBeNull();
+  expect(snapshotBattle(restored.success.session.state)).toEqual(
+    snapshotBattle(removed.success.state),
+  );
   expect(
     revertShapeShiftedRuntimeState({
-      state: removed.success.state,
+      state: restored.success.session.state,
       shapeShift,
     }),
   ).toMatchObject({

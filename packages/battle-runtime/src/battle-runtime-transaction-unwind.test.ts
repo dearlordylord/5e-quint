@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
-import { Option } from "effect";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
 import {
@@ -10,6 +10,8 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 
 import {
+  retainBattleRuntimeContinuation,
+  restoreBattleRuntimeContinuation,
   admitBattleRuntimeTransactionOperation,
   battlePendingActionCancellationForSession,
   battlePendingTransactionEnvelopeForSession,
@@ -101,6 +103,38 @@ type InterruptFrontier = Extract<
   BattleMechanicalFrontier,
   { readonly kind: "interruptDecision" }
 >;
+
+function savedFrontier(
+  result: NeedsHolesTransactionResult,
+): NeedsHolesTransactionResult {
+  const retained = retainBattleRuntimeContinuation(
+    result.resolution.session,
+    result.transaction,
+  );
+  if (Result.isFailure(retained)) throw new Error(retained.failure);
+  const restored = restoreBattleRuntimeContinuation(
+    structuredClone(retained.success),
+  );
+  if (Result.isFailure(restored)) throw new Error(restored.failure);
+  const { session, transaction } = restored.success;
+  if (transaction === null)
+    throw new Error("Expected saved pending transaction.");
+  const envelope = battlePendingTransactionEnvelopeForSession(
+    transaction,
+    session,
+  );
+  const view = battlePendingTransactionViewForSession(transaction, session);
+  if (envelope.tag !== "valid" || view.tag !== "valid")
+    throw new Error("Expected restored owned frontier.");
+  expect(envelope.envelope).toEqual(result.resolution.envelope);
+  expect(session.state).toEqual(result.resolution.session.state);
+  return {
+    tag: "needsHoles",
+    transaction,
+    frontier: view.view.frontier,
+    resolution: { tag: "needsHoles", session, envelope: envelope.envelope },
+  };
+}
 
 function requireInterruptFrontier(
   frontier: BattleMechanicalFrontier,
@@ -640,7 +674,12 @@ describe("battle runtime transaction completion unwind", () => {
     ).toEqual({ tag: "compatible" });
     expect(report.frontier.kind).toBe("interruptDecision");
 
-    const settled = settledByDeclining(report, fighterId);
+    const original = settledByDeclining(report, fighterId);
+    const settled = settledByDeclining(savedFrontier(report), fighterId);
+    expect(settled.resolution.session.state).toEqual(
+      original.resolution.session.state,
+    );
+    expect(settled.resolution.envelope).toEqual(original.resolution.envelope);
     expect(settled.tag).toBe("settled");
     if (settled.tag === "settled") {
       expect(settled.resolution.session.state.interruptStack).toEqual([]);
@@ -814,7 +853,7 @@ describe("battle runtime transaction completion unwind", () => {
       "root Ready report over interrupt stack",
     );
 
-    const closed = settledByDeclining(rootReport, fighterId);
+    const closed = settledByDeclining(savedFrontier(rootReport), fighterId);
     const remaining = requireNeedsHoles(
       closed,
       "the existing Opportunity Attack after root Ready decline",
@@ -918,9 +957,10 @@ describe("battle runtime transaction completion unwind", () => {
     if (reductionHole === undefined) {
       throw new Error("Expected the attack-roll reduction roll hole.");
     }
+    const restoredOuter = savedFrontier(outer);
     const settled = settleBattleRuntimeTransaction({
-      session: outer.resolution.session,
-      transaction: outer.transaction,
+      session: restoredOuter.resolution.session,
+      transaction: restoredOuter.transaction,
       operation: {
         kind: "interruptDecision",
         fill: interruptDecisionFill(requireHole(outer, "interruptDecision"), {
@@ -1766,12 +1806,13 @@ describe("battle runtime transaction completion unwind", () => {
         });
       }
     }
-    const readyMovementHole = requireHole(release, "movement");
+    const savedRelease = savedFrontier(release);
+    const readyMovementHole = requireHole(savedRelease, "movement");
 
     const nested = requireNeedsHoles(
       settleBattleRuntimeTransaction({
-        session: release.resolution.session,
-        transaction: release.transaction,
+        session: savedRelease.resolution.session,
+        transaction: savedRelease.transaction,
         operation: {
           kind: "ordinarySubject",
           subject: transactionSubject(release),
@@ -1812,7 +1853,66 @@ describe("battle runtime transaction completion unwind", () => {
       "opportunityAttack",
     );
 
-    const afterNested = settledByDeclining(nested, secondSkeletonId);
+    const retainedNested = retainBattleRuntimeContinuation(
+      nested.resolution.session,
+      nested.transaction,
+    );
+    if (Result.isFailure(retainedNested))
+      throw new Error(retainedNested.failure);
+    const firstLink = retainedNested.success.checkpointLinks[0];
+    if (firstLink === undefined)
+      throw new Error("Expected retained interrupt ownership.");
+    expect(
+      restoreBattleRuntimeContinuation({
+        ...structuredClone(retainedNested.success),
+        checkpointLinks: [...retainedNested.success.checkpointLinks, firstLink],
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: "A saved interrupt checkpoint has duplicate ownership.",
+    });
+    expect(
+      restoreBattleRuntimeContinuation({
+        ...structuredClone(retainedNested.success),
+        currentSession: retainedNested.success.sessions.length,
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: "The saved Battle session reference is absent.",
+    });
+    const retainedRelease = retainBattleRuntimeContinuation(
+      savedRelease.resolution.session,
+      savedRelease.transaction,
+    );
+    if (Result.isFailure(retainedRelease))
+      throw new Error(retainedRelease.failure);
+    const ordinaryFrontier = retainedRelease.success.pending?.frontier;
+    const damagedNested = structuredClone(retainedNested.success);
+    if (
+      ordinaryFrontier?.kind !== "ordinaryHoles" ||
+      damagedNested.pending === null
+    )
+      throw new Error("Expected retained Ready and nested frontiers.");
+    expect(
+      restoreBattleRuntimeContinuation({
+        ...damagedNested,
+        pending: { ...damagedNested.pending, frontier: ordinaryFrontier },
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure:
+        "The saved transaction no longer has a derivable input frontier; deployment investigation is required.",
+    });
+    const restoredNested = savedFrontier(nested);
+    const originalNext = settledByDeclining(nested, secondSkeletonId);
+    const afterNested = settledByDeclining(restoredNested, secondSkeletonId);
+    expect(afterNested.tag).toBe(originalNext.tag);
+    expect(afterNested.resolution.session.state).toEqual(
+      originalNext.resolution.session.state,
+    );
+    expect(afterNested.resolution.envelope).toEqual(
+      originalNext.resolution.envelope,
+    );
     expect(afterNested.tag).toBe("needsHoles");
     if (afterNested.tag !== "needsHoles") return;
     expect(afterNested.frontier.kind).toBe("interruptDecision");
@@ -1871,7 +1971,7 @@ describe("battle runtime transaction completion unwind", () => {
       expect(refreshedParent.value.fills).toHaveLength(1);
     }
 
-    const settled = settledByDeclining(afterNested, skeletonId);
+    const settled = settledByDeclining(savedFrontier(afterNested), skeletonId);
     expect(settled.tag).toBe("settled");
     if (settled.tag === "settled") {
       expect(settled.resolution.session.state.interruptStack).toEqual([]);

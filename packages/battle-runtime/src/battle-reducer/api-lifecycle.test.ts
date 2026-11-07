@@ -31,6 +31,10 @@ import {
   startBattle,
   startBattleWithInitialInitiativeSetup as startBattleWithInitialInitiativeSetupFromApi,
 } from "./api-lifecycle.ts";
+import {
+  retainBattleRuntimeContinuation,
+  restoreBattleRuntimeContinuation,
+} from "../battle-runtime-transaction.ts";
 import type {
   BattleInitializationIssue,
   BattleInitializationIssueFacts,
@@ -768,6 +772,44 @@ describe("battle lifecycle admission issue aggregation", () => {
     expect(
       removed.success.context.statBlocks.has(addedStatBlock.combatantId),
     ).toBe(false);
+    const retained = retainBattleRuntimeContinuation(removed.success, null);
+    if (Result.isFailure(retained)) throw new Error(retained.failure);
+    const restored = restoreBattleRuntimeContinuation(
+      structuredClone(retained.success),
+    );
+    if (Result.isFailure(restored)) throw new Error(restored.failure);
+    expect(restored.success.transaction).toBeNull();
+    expect(restored.success.session.state).toEqual(removed.success.state);
+    const readdedCharacter = addBattleRuntimeCombatant({
+      session: restored.success.session,
+      combatant: addedCombatant,
+    });
+    if (Result.isFailure(readdedCharacter))
+      throw new Error("Expected character readmission.");
+    const readded = addBattleRuntimeCombatant({
+      session: readdedCharacter.success,
+      combatant: addedStatBlock,
+    });
+    if (Result.isFailure(readded))
+      throw new Error("Expected stat block readmission.");
+    for (const id of [addedCombatant.combatantId, addedStatBlock.combatantId]) {
+      const before = addedWithStatBlock.success.state.combatants.get(id);
+      const after = readded.success.state.combatants.get(id);
+      if (before === undefined || after === undefined)
+        throw new Error("Expected admitted actor.");
+      expect(after.origin.execution.scopeRef).not.toEqual(
+        before.origin.execution.scopeRef,
+      );
+    }
+    const readmittedSave = retainBattleRuntimeContinuation(
+      readded.success,
+      null,
+    );
+    if (Result.isFailure(readmittedSave))
+      throw new Error(readmittedSave.failure);
+    expect(
+      restoreBattleRuntimeContinuation(structuredClone(readmittedSave.success)),
+    ).toMatchObject({ _tag: "Success" });
     expect(
       requiredInitiativeRollModeForCombatant(
         removed.success.state,
