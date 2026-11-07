@@ -151,6 +151,10 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
+  ReplayContinuationExecution,
+  resolveReplayContinuationFromState,
+} from "./battle-reducer/replay-continuation.ts";
+import {
   maybeSpellAct,
   spellAct,
   flamingSphereAreaFill,
@@ -1091,6 +1095,43 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ),
       requiresEnemyProximityQualification: true,
     });
+    const unqualifiedReplay = resolveReplayContinuationFromState({
+      state,
+      continuation: {
+        kind: "replay",
+        subject: {
+          tag: "actionSpell",
+          actorId: spellCasterId,
+          procedureRef: needsContext.request.sourceProcedureRef,
+          mode: { tag: "cast" },
+        },
+        fills: [],
+        glyphStoredSpellReleaseReplay: {
+          profile: requireGlyphStoredSpellProfile(),
+          witness: storedSingleCreatureReleaseWitness(
+            glyphEffectRef(state),
+            [],
+            spellTargetId,
+            [],
+          ),
+        },
+      },
+      handledInterruptOccurrence: { trigger: "attackHit" },
+      fills: [],
+      execution: ReplayContinuationExecution.fromExecutionRegistry(
+        executionRegistry,
+        () => {
+          throw new Error("Stored Glyph replay must use its release resolver.");
+        },
+      ),
+    });
+    expect(unqualifiedReplay).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Glyph stored spell release replay requires its recorded enemy proximity qualification.",
+    });
+    expect(unqualifiedReplay.state).toBe(state);
     const proximity = {
       kind: "rangedSpellAttackEnemyProximity",
       casterId: needsContext.request.casterId,

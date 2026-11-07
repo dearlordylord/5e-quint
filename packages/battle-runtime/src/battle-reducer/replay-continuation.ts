@@ -460,11 +460,23 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-  return invalidResult(
-    result.state,
-    "invalidFill",
-    result.message ??
-      `Glyph stored spell release replay witness is invalid: ${result.reason}.`,
+  return Match.value(result).pipe(
+    Match.when({ tag: "needsTargetSpatialFacts" }, (unqualified) =>
+      invalidResult(
+        unqualified.state,
+        "invalidFill",
+        "Glyph stored spell release replay requires its recorded enemy proximity qualification.",
+      ),
+    ),
+    Match.when({ tag: "invalidWitness" }, (invalid) =>
+      invalidResult(
+        invalid.state,
+        "invalidFill",
+        invalid.message ??
+          `Glyph stored spell release replay witness is invalid: ${invalid.reason}.`,
+      ),
+    ),
+    Match.exhaustive,
   );
   /* v8 ignore stop -- @preserve */
 }
