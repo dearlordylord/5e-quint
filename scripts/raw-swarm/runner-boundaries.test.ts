@@ -118,7 +118,6 @@ const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
 const DIRECT_SDK_INVALID_ARGUMENTS_OUTER_TIMEOUT_MS = 3 * 60_000;
 const STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS = 10 * 60_000;
 const CONTEXT_AUTHORITY_DELIVERY_OUTER_TIMEOUT_MS = 3 * 60_000;
-const SETSID_FIXTURE_COOPERATIVE_EXIT_DELAY_MS = 250;
 const modelLaneLockDirectory = mkdtempSync(
   resolve(tmpdir(), "dnd-runner-model-lane-"),
 );
@@ -4585,114 +4584,6 @@ esac
     }
   }, 15_000);
 
-  test("keeps the model lane held while a setsid child with cleared environment settles", async () => {
-    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-setsid-git-"));
-    const commonRoot = mkdtempSync(
-      resolve(tmpdir(), "dnd-model-setsid-common-"),
-    );
-    const fakeGit = resolve(commandRoot, "git");
-    const childPidPath = resolve(commandRoot, "detached-child.pid");
-    const termPath = resolve(commandRoot, "detached-child.term");
-    const exitPath = resolve(commandRoot, "detached-child.exit");
-    const acquiredPath = resolve(commandRoot, "contender.acquired");
-    const lanePath = resolve(commonRoot, "raw-swarm-model-lane-1.lock");
-    writeFileSync(
-      fakeGit,
-      `#!/bin/sh
-set -eu
-case "$*" in
-  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
-  *) exit 1 ;;
-esac
-`,
-    );
-    chmodSync(fakeGit, 0o755);
-    const detachedChildSource = [
-      'const fs = require("node:fs");',
-      `fs.writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid));`,
-      `process.on("SIGTERM", () => { fs.writeFileSync(${JSON.stringify(termPath)}, "term"); setTimeout(() => { fs.writeFileSync(${JSON.stringify(exitPath)}, "exit"); process.exit(0); }, ${SETSID_FIXTURE_COOPERATIVE_EXIT_DELAY_MS}); });`,
-      "setInterval(() => {}, 1000);",
-    ].join(" ");
-    const commandSource = [
-      'const { spawn } = require("node:child_process");',
-      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, env: {}, stdio: "ignore" });`,
-      "detached.unref();",
-      "setInterval(() => {}, 1000);",
-    ].join(" ");
-    let contender: ReturnType<typeof spawn> | undefined;
-    // The campaign deadline includes native compiler bootstrap before child readiness.
-    const fixtureCampaignBudgetMs = 5_000;
-    const wrapperDiagnostics: string[] = [];
-    const wrapper = spawn(
-      modelLaneLock,
-      ["campaign", process.execPath, "-e", commandSource],
-      {
-        cwd: repoRoot,
-        env: {
-          ...modelLaneTestEnvironment(
-            commandRoot,
-            new Date(Date.now() + fixtureCampaignBudgetMs).toISOString(),
-          ),
-        },
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    );
-    wrapper.stdout.on("data", (chunk: Buffer) =>
-      wrapperDiagnostics.push(chunk.toString()),
-    );
-    wrapper.stderr.on("data", (chunk: Buffer) =>
-      wrapperDiagnostics.push(chunk.toString()),
-    );
-    try {
-      try {
-        await waitForFile(childPidPath, fixtureCampaignBudgetMs);
-      } catch (error) {
-        throw new Error(
-          `${String(error)} Wrapper status=${wrapper.exitCode} signal=${wrapper.signalCode}: ${wrapperDiagnostics.join("")}`,
-        );
-      }
-      const childPid = Number(readFileSync(childPidPath, "utf8").trim());
-      expect(Number.isSafeInteger(childPid)).toBe(true);
-      expect(processIsLive(childPid)).toBe(true);
-
-      contender = spawn(
-        "bash",
-        [
-          "-c",
-          'set -euo pipefail; exec 9>"$1"; while ! flock --exclusive --nonblock 9; do sleep 0.01; done; printf acquired > "$2"',
-          "lane-contender",
-          lanePath,
-          acquiredPath,
-        ],
-        { stdio: "ignore" },
-      );
-
-      await waitForFile(termPath, fixtureCampaignBudgetMs);
-      expect(processIsLive(childPid)).toBe(true);
-      expect(existsSync(acquiredPath)).toBe(false);
-
-      await waitForFile(exitPath, 3_000);
-      await waitForProcessExit(childPid, 3_000);
-      await waitForFile(acquiredPath, 3_000);
-      await waitForProcessExit(contender.pid, 3_000);
-      await waitForProcessExit(wrapper.pid, 3_000);
-      expect(wrapper.exitCode).not.toBe(0);
-    } finally {
-      if (wrapper.exitCode === null) wrapper.kill("SIGKILL");
-      if (contender !== undefined && contender.exitCode === null) {
-        contender.kill("SIGKILL");
-      }
-      if (existsSync(childPidPath)) {
-        const childPid = Number(readFileSync(childPidPath, "utf8").trim());
-        if (Number.isSafeInteger(childPid) && processIsLive(childPid)) {
-          process.kill(childPid, "SIGKILL");
-        }
-      }
-      rmSync(commandRoot, { recursive: true, force: true });
-      rmSync(commonRoot, { recursive: true, force: true });
-    }
-  }, 20_000);
-
   test("settles a detached model child before lane reacquisition at the campaign deadline", async () => {
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-git-"));
     const commonRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-common-"));
@@ -4911,6 +4802,8 @@ wait "$wrapper_pid"
     const commonRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-term-common-"));
     const fakeGit = resolve(commandRoot, "git");
     const childPidPath = resolve(commandRoot, "detached-child.pid");
+    const settlementProbePath = resolve(commandRoot, "settlement-lock.status");
+    const lanePath = resolve(commonRoot, "raw-swarm-model-lane-1.lock");
     writeFileSync(
       fakeGit,
       `#!/bin/sh
@@ -4924,16 +4817,24 @@ esac
     chmodSync(fakeGit, 0o755);
     const detachedChildSource = [
       'const fs = require("node:fs");',
-      'process.on("SIGTERM", () => {});',
+      'const { spawnSync } = require("node:child_process");',
+      "const leaderPid = process.ppid;",
+      "function probeAfterLeaderExit() {",
+      "try { process.kill(leaderPid, 0); setImmediate(probeAfterLeaderExit); }",
+      'catch (error) { if (error.code !== "ESRCH") throw error;',
+      `const probe = spawnSync("flock", ["--exclusive", "--nonblock", "--conflict-exit-code", "75", ${JSON.stringify(lanePath)}, "true"], { stdio: "ignore" });`,
+      `fs.writeFileSync(${JSON.stringify(settlementProbePath)}, String(probe.status));`,
+      "process.exit(0); } }",
+      'process.once("SIGTERM", probeAfterLeaderExit);',
       "setInterval(() => {}, 1000);",
-      "const pidPath = process.env.RAW_SWARM_CHILD_PID;",
+      `const pidPath = ${JSON.stringify(childPidPath)};`,
       "const pidTempPath = `${pidPath}.tmp`;",
       "fs.writeFileSync(pidTempPath, String(process.pid));",
       "fs.renameSync(pidTempPath, pidPath);",
     ].join(" ");
     const commandSource = [
       'const { spawn } = require("node:child_process");',
-      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, stdio: "ignore" });`,
+      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, env: {}, stdio: "ignore" });`,
       "detached.unref();",
       "setInterval(() => {}, 1000);",
     ].join(" ");
@@ -4947,7 +4848,6 @@ esac
             commandRoot,
             new Date(Date.now() + 60_000).toISOString(),
           ),
-          RAW_SWARM_CHILD_PID: childPidPath,
         },
         stdio: "ignore",
       },
@@ -4964,6 +4864,7 @@ esac
         wrapper.once("close", () => resolveClosed());
       });
       await waitForProcessExit(childPid);
+      expect(readFileSync(settlementProbePath, "utf8")).toBe("75");
 
       const reacquired = spawnSync(
         modelLaneLock,
