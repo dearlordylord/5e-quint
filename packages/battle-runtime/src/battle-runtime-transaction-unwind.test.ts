@@ -46,6 +46,7 @@ import {
   fighterId,
   goblinAttackSubject,
   goblinId,
+  holeId,
   interruptDecisionFill,
   movementFill,
   movementFeet,
@@ -1306,7 +1307,7 @@ describe("battle runtime transaction completion unwind", () => {
     expect(declined.resolution.envelope.frontier.kind).toBe("acts");
   });
 
-  test("replays the outer attack after a nested readied-spell interrupt declines", () => {
+  test("retries rejected nested damage without rerolling the resumed outer attack", () => {
     const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
     const session = battleRuntimeSessionForTest({
       state,
@@ -1411,10 +1412,42 @@ describe("battle runtime transaction completion unwind", () => {
       "nested decline",
     );
     const damage = requireHole(declined, "rolledDice");
+    const beforeRetry = battlePendingTransactionView(declined.transaction);
+    const rejected = settleBattleRuntimeTransaction({
+      session: declined.resolution.session,
+      transaction: declined.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: transactionSubject(declined),
+        fills: [
+          {
+            ...damageRollFillWithGroups(damage, [[4]]),
+            holeId: holeId("stale-nested-readied-spell-damage"),
+          },
+        ],
+      },
+    });
+    expect(rejected.tag).toBe("invalid");
+    if (rejected.tag !== "invalid") {
+      throw new Error("Expected the stale nested damage fill to be rejected.");
+    }
+    expect(rejected.resolution.reason).toBe("invalidFill");
+    expect(rejected.transaction).toBe(declined.transaction);
+    expect(rejected.resolution.session).toBe(declined.resolution.session);
+    expect(rejected.resolution.envelope).toEqual(declined.resolution.envelope);
+    expect(battlePendingTransactionView(declined.transaction)).toEqual(
+      beforeRetry,
+    );
+    expect(
+      battlePendingTransactionEnvelopeForSession(
+        declined.transaction,
+        rejected.resolution.session,
+      ),
+    ).toEqual({ tag: "valid", envelope: rejected.resolution.envelope });
     const afterDamage = requireNeedsHoles(
       settleBattleRuntimeTransaction({
-        session: declined.resolution.session,
-        transaction: declined.transaction,
+        session: rejected.resolution.session,
+        transaction: rejected.transaction,
         operation: {
           kind: "ordinarySubject",
           subject: transactionSubject(declined),
@@ -1446,6 +1479,9 @@ describe("battle runtime transaction completion unwind", () => {
       throw new Error("Expected the outer attack's ordinary Hole frontier.");
     }
     expect(resumed.frontier.replaySubject).toEqual(subject);
+    expect(battlePendingTransactionView(resumed.transaction)).toMatchObject({
+      value: { subject, fills: [outerTargetFill, outerAttackRollFill] },
+    });
     expect(resumed.frontier.holes.map((hole) => hole.kind)).toEqual([
       "rolledDice",
     ]);
