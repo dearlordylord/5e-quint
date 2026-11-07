@@ -28,7 +28,10 @@ import {
   battleRuntimeSessionWithState,
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
-import type { BattleMechanicalFrontier } from "./battle-mechanical-frontier.ts";
+import {
+  battleMechanicalFrontier,
+  type BattleMechanicalFrontier,
+} from "./battle-mechanical-frontier.ts";
 import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
 import {
   attackInitialTargetHole,
@@ -128,11 +131,24 @@ function savedFrontier(
     throw new Error("Expected restored owned frontier.");
   expect(envelope.envelope).toEqual(result.resolution.envelope);
   expect(session.state).toEqual(result.resolution.session.state);
+  const restoredFrontier = envelope.envelope.frontier;
+  if (restoredFrontier.kind === "acts")
+    throw new Error("Expected restored pending input frontier.");
+  const mechanicalFrontier = battleMechanicalFrontier({
+    result: restoredFrontier,
+    acceptedFills: view.view.fills,
+  });
+  if (Result.isFailure(mechanicalFrontier))
+    throw new Error(mechanicalFrontier.failure.tag);
   return {
     tag: "needsHoles",
     transaction,
-    frontier: view.view.frontier,
-    resolution: { tag: "needsHoles", session, envelope: envelope.envelope },
+    frontier: mechanicalFrontier.success,
+    resolution: {
+      tag: "needsHoles",
+      session,
+      envelope: { ...envelope.envelope, frontier: restoredFrontier },
+    },
   };
 }
 
