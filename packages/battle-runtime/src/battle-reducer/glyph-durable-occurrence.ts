@@ -1061,34 +1061,11 @@ export function releaseGlyphStoredSpell(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  if (
-    spellAttackRequiresExactDistance(ref.effect.release.storedProcedure) &&
-    input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature" &&
-    !input.witness.targeting.targetSpatialFacts.some(
-      (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
-    )
-  ) {
-    const sourceProcedureRef = glyphStoredSpellProcedureRef(
-      input.state,
-      ref.effect,
-    );
-    if (sourceProcedureRef !== undefined) {
-      return {
-        tag: "needsTargetSpatialFacts",
-        state: input.state,
-        sourceEffectId,
-        request: {
-          casterId: ref.effect.sourceCombatantId,
-          sourceProcedureRef,
-          requiresEnemyProximityQualification: true,
-        },
-      };
-    }
-  }
+  const effect = ref.effect;
   const resolved = resolveStoredSpellGlyphRelease({
     state: input.state,
     profile: input.profile,
-    effect: ref.effect,
+    effect,
     witness: input.witness,
     executionRegistry: input.executionRegistry,
     ...optionalProperty(
@@ -1096,42 +1073,53 @@ export function releaseGlyphStoredSpell(input: {
       input.handledInterruptTrigger,
     ),
   });
-  if (resolved.tag === "needsHoles") {
-    return {
-      tag: "needsHoles",
-      state: resolved.state,
-      sourceEffectId,
-      frontier: resolved.frontier,
-      ...optionalProperty("checkpointBoundary", resolved.checkpointBoundary),
-    };
-  }
-  if (resolved.tag === "invalid") {
-    return {
-      tag: "invalidWitness",
-      state: input.state,
-      sourceEffectId,
-      reason: "storedSpellResolutionInvalid",
-      message: resolved.message,
-    };
-  }
-  const concentrationProjected = stateWithGlyphStoredConcentrationFullDuration({
-    beforeRelease: input.state,
-    afterRelease: resolved.state,
-    sourceCombatantId: ref.effect.sourceCombatantId,
-    sourceProcedureRef: glyphStoredSpellProcedureRef(input.state, ref.effect),
-    storedProcedure: ref.effect.release.storedProcedure,
-  });
-  const state = battleStateWithoutGlyphOccurrence(
-    concentrationProjected,
-    ref.effect.effectRef,
+  return Match.value(resolved).pipe(
+    Match.when({ tag: "needsTargetSpatialFacts" }, (request) => request),
+    Match.when(
+      { tag: "needsHoles" },
+      (pending) =>
+        ({
+          tag: "needsHoles",
+          state: pending.state,
+          sourceEffectId,
+          frontier: pending.frontier,
+          ...optionalProperty("checkpointBoundary", pending.checkpointBoundary),
+        }) satisfies ReleaseGlyphStoredSpellResult,
+    ),
+    Match.when(
+      { tag: "invalid" },
+      (invalid) =>
+        ({
+          tag: "invalidWitness",
+          state: input.state,
+          sourceEffectId,
+          reason: "storedSpellResolutionInvalid",
+          message: invalid.message,
+        }) satisfies ReleaseGlyphStoredSpellResult,
+    ),
+    Match.when({ tag: "resolved" }, (completed) => {
+      const concentrationProjected =
+        stateWithGlyphStoredConcentrationFullDuration({
+          beforeRelease: input.state,
+          afterRelease: completed.state,
+          sourceCombatantId: effect.sourceCombatantId,
+          sourceProcedureRef: glyphStoredSpellProcedureRef(input.state, effect),
+          storedProcedure: effect.release.storedProcedure,
+        });
+      const state = battleStateWithoutGlyphOccurrence(
+        concentrationProjected,
+        effect.effectRef,
+      );
+      return {
+        tag: "released",
+        state,
+        effect,
+        triggeringCreatureId: input.witness.triggeringCreatureId,
+        storedProcedure: effect.release.storedProcedure,
+      } satisfies ReleaseGlyphStoredSpellResult;
+    }),
+    Match.exhaustive,
   );
-  return {
-    tag: "released",
-    state,
-    effect: ref.effect,
-    triggeringCreatureId: input.witness.triggeringCreatureId,
-    storedProcedure: ref.effect.release.storedProcedure,
-  };
 }
 
 export function addGlyphDurableOccurrence(input: {
@@ -1918,7 +1906,12 @@ function resolveStoredSpellGlyphRelease(input: {
   readonly witness: GlyphStoredSpellReleaseWitness;
   readonly executionRegistry: SpellProcedureExecutionRegistry;
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
-}): BattleResolutionResult {
+}):
+  | BattleResolutionResult
+  | Extract<
+      ReleaseGlyphStoredSpellResult,
+      { readonly tag: "needsTargetSpatialFacts" }
+    > {
   const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
   if (procedureRef === undefined) {
     return invalidResult(
@@ -1926,6 +1919,24 @@ function resolveStoredSpellGlyphRelease(input: {
       "staleSubject",
       "The stored spell procedure is no longer bound to its source character.",
     );
+  }
+  if (
+    spellAttackRequiresExactDistance(input.effect.release.storedProcedure) &&
+    input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature" &&
+    !input.witness.targeting.targetSpatialFacts.some(
+      (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+    )
+  ) {
+    return {
+      tag: "needsTargetSpatialFacts",
+      state: input.state,
+      sourceEffectId: input.witness.triggerOccurrence.sourceEffectId,
+      request: {
+        casterId: input.effect.sourceCombatantId,
+        sourceProcedureRef: procedureRef,
+        requiresEnemyProximityQualification: true,
+      },
+    };
   }
   const invocation = bindStoredSpellProcedureExecutionFacts(
     input.effect.release.storedProcedure,
