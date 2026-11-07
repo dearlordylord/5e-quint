@@ -76,8 +76,14 @@ Optional configuration:
   including `/usr/local/bin/node`. Image entrypoints and healthchecks are disabled.
   Its `/workspace` must be empty so old source or build outputs cannot leak in.
 - `DND_LINUX_VERIFICATION_CPUS` and `DND_LINUX_VERIFICATION_MEMORY`: payload caps.
-- Existing `DND_VERIFICATION_*_TIMEOUT_MS`, `GOMEMLIMIT` and `GOGC` are forwarded.
+- Existing `DND_VERIFICATION_*_TIMEOUT_MS`, `NODE_OPTIONS`, `GOMEMLIMIT` and `GOGC`
+  are forwarded.
   Host owner PIDs, credentials and arbitrary application environment are not.
+
+For a Node heap exhaustion failure, set `NODE_OPTIONS='--max-old-space-size=6144'`
+on the public command to allow a 6 GiB old-space heap within the default 8 GiB
+container. `GOMEMLIMIT=6GiB` separately sets the Go runtime memory target. These
+runtime settings do not increase the container memory cap.
 
 This runner supports repository-contained verification inputs, not publication
 credentials or external host paths. It does not certify installed ChatGPT UX.

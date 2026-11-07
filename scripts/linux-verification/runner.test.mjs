@@ -93,7 +93,13 @@ test("snapshot preserves executable source and refuses external symlinks", (t) =
   );
 });
 
-test("container plan shares only coordination files and own outputs writable", () => {
+test("container plan shares only coordination files and own outputs writable", (t) => {
+  const priorNodeOptions = process.env.NODE_OPTIONS;
+  process.env.NODE_OPTIONS = "--max-old-space-size=6144";
+  t.after(() => {
+    if (priorNodeOptions === undefined) delete process.env.NODE_OPTIONS;
+    else process.env.NODE_OPTIONS = priorNodeOptions;
+  });
   const args = containerArguments({
     name: "dnd-verify-fixture",
     job: "fixture",
@@ -129,6 +135,11 @@ test("container plan shares only coordination files and own outputs writable", (
     !args.some(
       (arg) => arg.includes("docker.sock") || arg.includes("pid=host"),
     ),
+  );
+  assert(args.includes("NODE_OPTIONS=--max-old-space-size=6144"));
+  assert.equal(
+    args[args.indexOf("NODE_OPTIONS=--max-old-space-size=6144") - 1],
+    "--env",
   );
   assert(args.includes("--memory"));
   assert(args.includes("--cpus"));

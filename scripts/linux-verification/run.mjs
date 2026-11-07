@@ -202,7 +202,7 @@ export function containerArguments({
         ([key]) =>
           /^DND_VERIFICATION_(LOCK_ACQUISITION|EXECUTION|STAGE)_TIMEOUT_MS$/u.test(
             key,
-          ) || ["GOMEMLIMIT", "GOGC"].includes(key),
+          ) || ["NODE_OPTIONS", "GOMEMLIMIT", "GOGC"].includes(key),
       )
       .flatMap(([key, value]) => ["--env", `${key}=${value}`]),
     image,
