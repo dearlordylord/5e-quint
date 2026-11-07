@@ -5124,43 +5124,6 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("rejects duplicated persisted Dragonborn Draconic Ancestry damage type", () => {
-    const sheet = expectSuccess(
-      rebuildCharacterSheetFixture({
-        characterId: characterSheetId("character:dragonborn-breath-mismatch"),
-        build: dragonbornFighterBuild(),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        unitLibrary,
-      }),
-    );
-
-    expect(
-      parseCharacterSheet(
-        {
-          ...sheet,
-          build: {
-            ...sheet.build,
-            speciesChoiceFacts: {
-              draconicAncestry: {
-                kind: "draconicAncestry",
-                ancestorId: "red",
-                damageType: "fire",
-              },
-            },
-          },
-        },
-        unitLibrary,
-      ),
-    ).toEqual(
-      Result.fail({
-        tag: "characterSheetIssue",
-        message:
-          "Character Build Draconic Ancestry fact must contain exactly selected ancestry fact fields.",
-      }),
-    );
-  });
-
   test("blocks active Wild Shape handoff and persists spent use after dismissal", () => {
     const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-resource"),

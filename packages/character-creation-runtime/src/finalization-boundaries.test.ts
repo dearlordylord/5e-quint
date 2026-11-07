@@ -315,6 +315,19 @@ describe("character finalization boundaries", () => {
         "Character Build Draconic Ancestry fact must reference the selected species source table.",
     },
     {
+      name: "ancestry with a duplicated derived damage type",
+      species: "species_dragonborn",
+      speciesChoiceFacts: {
+        draconicAncestry: {
+          kind: "draconicAncestry",
+          ancestorId: "red",
+          damageType: "fire",
+        },
+      },
+      expected:
+        "Character Build species choice facts must contain exactly supported species choice facts.",
+    },
+    {
       name: "missing required lineage",
       species: "species_gnome",
       speciesChoiceFacts: undefined,
