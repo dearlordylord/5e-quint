@@ -1418,11 +1418,10 @@ export function settleBattleRuntimeTransaction(input: {
   const operationAdmission = admitBattleRuntimeTransactionOperation(input);
   if (operationAdmission.tag === "rejected") {
     return transactionInvalidResult(
-      invalidTransactionOperationResolution(
-        input.session,
-        input.transaction,
-        transactionOperationAdmissionMessage(operationAdmission.issue),
-      ),
+      invalidTransactionRetryResolution(input.session, input.transaction, {
+        reason: "staleSubject",
+        message: transactionOperationAdmissionMessage(operationAdmission.issue),
+      }),
       input.transaction,
     );
   }
@@ -1502,11 +1501,10 @@ function settleValidatedBattleRuntimeResolution(input: {
   const operationAdmission = admitBattleRuntimeTransactionOperation(input);
   if (operationAdmission.tag === "rejected") {
     return transactionInvalidResult(
-      invalidTransactionOperationResolution(
-        input.session,
-        input.transaction,
-        transactionOperationAdmissionMessage(operationAdmission.issue),
-      ),
+      invalidTransactionRetryResolution(input.session, input.transaction, {
+        reason: "staleSubject",
+        message: transactionOperationAdmissionMessage(operationAdmission.issue),
+      }),
       input.transaction,
     );
   }
@@ -1553,7 +1551,14 @@ function invalidTransactionWithRetryOwner(
     return transactionInvalidResult(resolution, input.transaction);
   }
   if (input.transaction !== null && acceptedOperation.fills.length === 0) {
-    return transactionInvalidResult(resolution, input.transaction);
+    return transactionInvalidResult(
+      invalidTransactionRetryResolution(
+        input.session,
+        input.transaction,
+        resolution,
+      ),
+      input.transaction,
+    );
   }
   const frontier = resolution.envelope.frontier;
   const retryResolution: NeedsHolesResolution = {
@@ -2544,26 +2549,25 @@ function invalidTransactionResolution(
   };
 }
 
-function invalidTransactionOperationResolution(
+function invalidTransactionRetryResolution(
   session: BattleRuntimeSession,
   transaction: BattlePendingTransaction | null,
-  message: string,
+  failure: Pick<InvalidResolution, "reason" | "message">,
 ): InvalidResolution {
-  if (transaction === null)
-    return invalidTransactionResolution(session, message);
-  const pending = battlePendingTransactionEnvelopeForSession(
-    transaction,
+  const pending =
+    transaction === null
+      ? null
+      : battlePendingTransactionEnvelopeForSession(transaction, session);
+  return {
+    tag: "invalid",
     session,
-  );
-  return pending.tag === "valid"
-    ? {
-        tag: "invalid",
-        session,
-        reason: "staleSubject",
-        message,
-        envelope: pending.envelope,
-      }
-    : invalidTransactionResolution(session, message);
+    reason: failure.reason,
+    message: failure.message,
+    envelope:
+      pending !== null && pending.tag === "valid"
+        ? pending.envelope
+        : battleCheckpointFrontierEnvelope(session.state),
+  };
 }
 
 function transactionOperationAdmissionMessage(
