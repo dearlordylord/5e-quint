@@ -455,11 +455,11 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       holeInstanceKey: "battle:b3-codec:dragon",
       label: "Synthetic B3 Dragon codec hole",
       kind: "savingThrowOutcome",
+      areaInput: { kind: "areaMembership", originAnchorId: spellCasterId },
       grantedAreaSaveDamageAction: {
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: dragonProcedureRef,
         lengthFeet: 15,
-        areaInput: { kind: "areaMembership", originAnchorId: spellCasterId },
       },
       ability: "dex",
       dc: { kind: "fixed", dc: 12 },
