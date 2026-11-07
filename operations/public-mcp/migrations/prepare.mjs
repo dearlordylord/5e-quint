@@ -32,6 +32,28 @@ function git(cwd, args) {
   return result.stdout.trim();
 }
 
+export function loadCaptureModules(repository, manifest) {
+  const revision = manifest.captureRevision;
+  if (
+    typeof revision !== "string" ||
+    !/^[0-9a-f]{40}$/.test(revision) ||
+    git(repository, ["cat-file", "-t", revision]) !== "commit"
+  )
+    throw new Error("Capture revision must identify an available full commit.");
+  return copiedModules.map((name) => {
+    const path = `packages/mcp/src/${name}`;
+    const result = spawnSync("git", ["show", `${revision}:${path}`], {
+      cwd: repository,
+    });
+    if (result.status !== 0)
+      throw new Error(`Capture module unavailable: ${path}: ${result.stderr}`);
+    const bytes = result.stdout;
+    if (sha256(bytes) !== manifest.captureModules[path])
+      throw new Error(`Capture module hash mismatch: ${path}`);
+    return { path, bytes };
+  });
+}
+
 /** Mutates only the explicitly supplied clean, isolated historical checkout. */
 export async function prepareMigrationKit({
   sourceDirectory,
@@ -86,22 +108,12 @@ export async function prepareMigrationKit({
     if (sha256(readFileSync(resolve(source, path))) !== hash)
       throw new Error(`Original source hash mismatch: ${path}`);
   }
-  for (const name of copiedModules) {
-    const path = `packages/mcp/src/${name}`;
-    if (
-      sha256(readFileSync(resolve(target, path))) !==
-      manifest.captureModules[path]
-    )
-      throw new Error(`Capture module hash mismatch: ${path}`);
-  }
+  const captureModules = loadCaptureModules(target, manifest);
   git(source, ["apply", "--check", patchPath]);
   mkdirSync(outputDirectory, { recursive: false, mode: 0o700 });
   git(source, ["apply", patchPath]);
-  for (const name of copiedModules)
-    copyFileSync(
-      resolve(target, "packages/mcp/src", name),
-      resolve(source, "packages/mcp/src", name),
-    );
+  for (const { path, bytes } of captureModules)
+    writeFileSync(resolve(source, path), bytes, { flag: "wx" });
   const exporterEntry = resolve(
     source,
     "operations/public-mcp/migrations/source-exporter.ts",

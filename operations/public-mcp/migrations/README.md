@@ -26,8 +26,11 @@ file, and `captureModules: {repositoryPath: sha256}` for
 Patch paths must be the runtime-owned capture hooks. Preparation checks the
 full original commit, every patch preimage, the patch itself and copied modules.
 The checked-in `source-23b919207.json` and `source-c9cef525.json` manifests
-share `source-hooks.patch`. Their `captureRevision` identifies the committed
-capture-module bytes; the prepared kit's `targetRelease` identifies the serving
+share `source-hooks.patch`. Their full `captureRevision` identifies the immutable committed
+capture-module bytes. Preparation reads those Git objects from the target checkout,
+checks their hashes, and writes those exact bytes into the historical checkout.
+A missing commit or module stops preparation without fetching or using working
+tree files. The prepared kit's `targetRelease` identifies the current serving
 release being validated. Capture hooks expose existing owner facts and leave
 original constructors and gameplay handlers unchanged. Target restoration,
 scope validation and descriptor modules are not injected into original source.
