@@ -10194,7 +10194,7 @@ function serializedEffectOccurrenceSourceBindingsMatch(
 }
 
 export function battleSnapshotExecutionScopeRefs(
-  combatant: EncodedBattleCreatureSnapshot,
+  combatant: Pick<BattleCreatureSnapshot, "origin">,
 ): readonly BattleExecutionScopeRef[] {
   return combatant.origin.kind === "statBlock"
     ? [combatant.origin.execution.scopeRef]
