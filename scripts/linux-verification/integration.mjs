@@ -125,6 +125,11 @@ try {
     copyFileSync(join(root, "scripts", file), join(fixture, "scripts", file));
     if (file.endsWith(".sh")) chmodSync(join(fixture, "scripts", file), 0o755);
   }
+  mkdirSync(join(fixture, "packages/surface"), { recursive: true });
+  copyFileSync(
+    join(root, "packages/surface/dhall-json-toolchain.json"),
+    join(fixture, "packages/surface/dhall-json-toolchain.json"),
+  );
   writeFileSync(join(fixture, ".gitignore"), "node_modules/\n.scratch/\n");
   writeFileSync(
     join(fixture, "package.json"),
