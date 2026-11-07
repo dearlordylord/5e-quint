@@ -288,12 +288,28 @@ const battlePendingTransactionData = new WeakMap<
   BattlePendingTransactionData
 >();
 
+type RetainedTransactionFrontier =
+  | Pick<
+      Extract<
+        BattlePendingTransactionFrontier,
+        { readonly kind: "ordinaryHoles" }
+      >,
+      "kind" | "continuation"
+    >
+  | Pick<
+      Extract<
+        BattlePendingTransactionFrontier,
+        { readonly kind: "interruptDecision" }
+      >,
+      "kind"
+    >;
+
 type RetainedTransactionLayer = {
   readonly baseSession: number;
   readonly currentSession: number;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
-  readonly frontierKind: BattlePendingTransactionFrontier["kind"];
+  readonly frontier: RetainedTransactionFrontier;
   readonly checkpointOwnership:
     | { readonly tag: "ordinaryFrontier" }
     | {
@@ -393,7 +409,14 @@ export function retainBattleRuntimeContinuation(
       currentSession: sessionIndex(data.currentSession),
       subject: data.subject,
       fills: data.fills,
-      frontierKind: data.frontier.kind,
+      frontier: Match.value(data.frontier).pipe(
+        Match.when({ kind: "ordinaryHoles" }, ({ kind, continuation }) => ({
+          kind,
+          continuation,
+        })),
+        Match.when({ kind: "interruptDecision" }, ({ kind }) => ({ kind })),
+        Match.exhaustive,
+      ),
       checkpointOwnership:
         data.checkpointOwnership.tag === "ordinaryFrontier"
           ? data.checkpointOwnership
@@ -731,7 +754,7 @@ export function restoreBattleRuntimeContinuation(
     ): Result.Result<BattlePendingTransactionFrontier, string> {
       const envelope = battleCheckpointFrontierEnvelope(currentSession.state);
       const resolved =
-        retained.frontierKind === "interruptDecision"
+        retained.frontier.kind === "interruptDecision"
           ? envelope.frontier.kind === "interruptDecision"
             ? {
                 tag: "needsHoles" as const,
@@ -755,11 +778,19 @@ export function restoreBattleRuntimeContinuation(
       const frontier = battlePendingTransactionFrontierForResolution(resolved);
       if (Result.isFailure(frontier))
         return Result.fail("The saved transaction frontier is invalid.");
-      if (frontier.success.kind !== retained.frontierKind)
+      if (frontier.success.kind !== retained.frontier.kind)
         return Result.fail(
-          `Saved ${retained.frontierKind} transaction derived ${frontier.success.kind} for ${retained.subject.tag}; checkpoint stack ${currentSession.state.interruptStack.length}.`,
+          `Saved ${retained.frontier.kind} transaction derived ${frontier.success.kind} for ${retained.subject.tag}; checkpoint stack ${currentSession.state.interruptStack.length}.`,
         );
-      return Result.succeed(frontier.success);
+      return Result.succeed(
+        frontier.success.kind === "ordinaryHoles" &&
+          retained.frontier.kind === "ordinaryHoles"
+          ? {
+              ...frontier.success,
+              continuation: retained.frontier.continuation,
+            }
+          : frontier.success,
+      );
     }
     function restoreLayerCompletion(
       retained: RetainedTransactionLayer["completion"],
