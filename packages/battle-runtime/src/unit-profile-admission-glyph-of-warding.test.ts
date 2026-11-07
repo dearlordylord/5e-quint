@@ -154,6 +154,7 @@ import {
   ReplayContinuationExecution,
   resolveReplayContinuationFromState,
 } from "./battle-reducer/replay-continuation.ts";
+import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import {
   maybeSpellAct,
   spellAct,
@@ -1095,6 +1096,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ),
       requiresEnemyProximityQualification: true,
     });
+    const beforeReplay = snapshotBattle(state);
     const unqualifiedReplay = resolveReplayContinuationFromState({
       state,
       continuation: {
@@ -1131,7 +1133,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       message:
         "Glyph stored spell release replay requires its recorded enemy proximity qualification.",
     });
-    expect(unqualifiedReplay.state).toBe(state);
+    expect(unqualifiedReplay.snapshot).toEqual(beforeReplay);
     const proximity = {
       kind: "rangedSpellAttackEnemyProximity",
       casterId: needsContext.request.casterId,
