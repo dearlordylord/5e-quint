@@ -457,7 +457,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts": {
       "module/binding:spellAttackSequencePartIndexForHole": 12,
-      "module/binding:spellFillSet": 245,
+      "module/binding:spellFillSet": 244,
       "module/binding:spellFillSetSavingThrowTargeting": 19
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts": {
@@ -536,12 +536,12 @@
     },
     "packages/battle-runtime/src/battle-reducer/unit-features.ts": {
       "module/binding:attackActionAreaSaveDamageReplacementFills": 9,
-      "module/binding:magicActionAreaSaveDamageHealingFills": 16,
+      "module/binding:magicActionAreaSaveDamageHealingFills": 14,
       "module/binding:resolveAttackActionAreaSaveDamageReplacementUnitFeature": 12,
       "module/binding:resolveBardicInspirationGrantUnitFeature": 17,
       "module/binding:resolveDruidWildShapeUnitFeature": 15,
       "module/binding:resolveFailedAbilityCheckResourceBoost": 12,
-      "module/binding:resolveMagicActionAreaSaveDamageHealingUnitFeature": 13,
+      "module/binding:resolveMagicActionAreaSaveDamageHealingUnitFeature": 12,
       "module/binding:resolveMagicActionHealingPoolUnitFeature": 9,
       "module/binding:resolveMagicActionSaveGatedConditionUnitFeature": 10,
       "module/binding:resolveSuccessfulAbilityCheckReactionReduction": 20,
@@ -836,7 +836,6 @@
       "module/binding:parseStoredClassFeatureLanguages": 24,
       "module/binding:parseStoredCreatedSpellSlots": 11,
       "module/binding:parseStoredEquipment": 9,
-      "module/binding:parseStoredHitPoints": 9,
       "module/binding:parseStoredLoadout": 9,
       "module/binding:parseStoredPactSlots": 10,
       "module/binding:parseStoredProficiencyChoices": 16,
