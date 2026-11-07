@@ -1,6 +1,7 @@
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 import {
+  battlePendingTransactionEnvelopeForSession,
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
   settleBattleRuntimeTransaction,
@@ -383,9 +384,16 @@ describe("battle runtime transaction SR-04 invariants", () => {
           kind: "ordinaryHoles",
           holes: [attackRoll],
           pendingProcedure: { kind: "subjectResolution" },
+          continuation: { kind: "ordinaryReplay" },
         },
       }),
     );
+    expect(
+      battlePendingTransactionEnvelopeForSession(
+        rejected.transaction,
+        rejected.resolution.session,
+      ),
+    ).toEqual({ tag: "valid", envelope: targeted.resolution.envelope });
     const blockedEndTurn = settleBattleRuntimeTransaction({
       session: rejected.resolution.session,
       transaction: rejected.transaction,

@@ -117,6 +117,10 @@ export type BattlePendingTransactionFrontier =
       readonly kind: "ordinaryHoles";
       readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryTransactionHole>;
       readonly pendingProcedure: BattlePendingProcedure;
+      readonly continuation: Extract<
+        BattleCheckpointFrontierEnvelope["frontier"],
+        { readonly kind: "holes" }
+      >["continuation"];
     }
   | {
       readonly kind: "interruptDecision";
@@ -1281,13 +1285,7 @@ export function battlePendingTransactionEnvelopeForSession(
           replaySubject: transactionData.subject,
           holes: frontier.holes,
           pendingProcedure: frontier.pendingProcedure,
-          continuation: {
-            kind:
-              transactionData.baseSession !== session ||
-              session.state.interruptStack.length > 0
-                ? ("runtimeOwnedInterrupt" as const)
-                : ("ordinaryReplay" as const),
-          },
+          continuation: frontier.continuation,
         },
       },
     })),
@@ -1950,6 +1948,7 @@ function battlePendingTransactionFrontierForResolution(
         kind: "ordinaryHoles" as const,
         holes: frontier.holes,
         pendingProcedure: frontier.pendingProcedure,
+        continuation: frontier.continuation,
       }),
     ),
     Match.exhaustive,

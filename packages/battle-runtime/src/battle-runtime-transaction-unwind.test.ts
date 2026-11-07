@@ -1479,6 +1479,12 @@ describe("battle runtime transaction completion unwind", () => {
       throw new Error("Expected the outer attack's ordinary Hole frontier.");
     }
     expect(resumed.frontier.replaySubject).toEqual(subject);
+    expect(
+      battlePendingTransactionEnvelopeForSession(
+        resumed.transaction,
+        resumed.resolution.session,
+      ),
+    ).toEqual({ tag: "valid", envelope: resumed.resolution.envelope });
     expect(battlePendingTransactionView(resumed.transaction)).toMatchObject({
       value: { subject, fills: [outerTargetFill, outerAttackRollFill] },
     });
