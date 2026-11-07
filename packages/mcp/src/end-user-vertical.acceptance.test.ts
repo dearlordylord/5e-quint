@@ -703,6 +703,24 @@ describe("end-user MCP vertical", () => {
         value: "skeleton-b",
         spatialFacts: [
           {
+            kind: "rangedSpellAttackEnemyProximity",
+            casterId: "wizard",
+            sourceProcedureRef: rayOfFrostAct.subject.procedureRef,
+            enemies: [
+              {
+                enemyId: "skeleton-a",
+                distanceFeet: 30,
+                enemyCanSeeCaster: true,
+              },
+              {
+                enemyId: "skeleton-b",
+                distanceFeet: 30,
+                enemyCanSeeCaster: true,
+              },
+              { enemyId: "goblin", distanceFeet: 30, enemyCanSeeCaster: true },
+            ],
+          },
+          {
             kind: "spellTarget",
             casterId: "wizard",
             targetId: "skeleton-b",
@@ -1106,6 +1124,12 @@ describe("end-user MCP vertical", () => {
       total: 16,
       naturalD20: 11,
       damageResults: [4],
+      enemies: [
+        { enemyId: "goblin-a", distanceFeet: 5, enemyCanSeeCaster: true },
+        { enemyId: "goblin-b", distanceFeet: 30, enemyCanSeeCaster: true },
+        { enemyId: "skeleton-a", distanceFeet: 30, enemyCanSeeCaster: true },
+        { enemyId: "skeleton-b", distanceFeet: 30, enemyCanSeeCaster: true },
+      ],
     });
     expect(combatant(root, "goblin-b")).toMatchObject({ hp: 6 });
     endTurn(root, "wizard");
@@ -1156,6 +1180,12 @@ describe("end-user MCP vertical", () => {
       total: 16,
       naturalD20: 11,
       damageResults: [4],
+      enemies: [
+        { enemyId: "goblin-a", distanceFeet: 5, enemyCanSeeCaster: true },
+        { enemyId: "goblin-b", distanceFeet: 30, enemyCanSeeCaster: true },
+        { enemyId: "skeleton-a", distanceFeet: 30, enemyCanSeeCaster: true },
+        { enemyId: "skeleton-b", distanceFeet: 30, enemyCanSeeCaster: true },
+      ],
     });
     expect(combatant(root, "goblin-b")).toMatchObject({ hp: 2 });
     endTurn(root, "wizard");
@@ -2462,6 +2492,11 @@ function resolveSpellAttack(
     readonly total: number;
     readonly naturalD20: number;
     readonly damageResults: readonly number[];
+    readonly enemies: readonly {
+      readonly enemyId: string;
+      readonly distanceFeet: number;
+      readonly enemyCanSeeCaster: boolean;
+    }[];
   },
 ) {
   const act = requireSpellAct(root, input.actorId, input.spellId);
@@ -2470,6 +2505,12 @@ function resolveSpellAttack(
     holeId: requireHole(act.initialHoles, "targetChoice").holeId,
     value: input.targetId,
     spatialFacts: [
+      {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: input.actorId,
+        sourceProcedureRef: act.subject.procedureRef,
+        enemies: input.enemies,
+      },
       {
         kind: "spellTarget",
         casterId: input.actorId,

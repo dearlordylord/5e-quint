@@ -10038,6 +10038,18 @@ describe("MCP server route", () => {
           value: "dry-training-dummy",
           spatialFacts: [
             {
+              kind: "rangedSpellAttackEnemyProximity",
+              casterId: "fighter",
+              sourceProcedureRef: act.subject.procedureRef,
+              enemies: [
+                {
+                  enemyId: "goblin",
+                  distanceFeet: 30,
+                  enemyCanSeeCaster: true,
+                },
+              ],
+            },
+            {
               kind: "spellObjectTarget",
               casterId: "fighter",
               objectId: "dry-training-dummy",
@@ -10271,6 +10283,18 @@ describe("MCP server route", () => {
           holeId: target.holeId,
           value: "goblin",
           spatialFacts: [
+            {
+              kind: "rangedSpellAttackEnemyProximity",
+              casterId: "fighter",
+              sourceProcedureRef: act.subject.procedureRef,
+              enemies: [
+                {
+                  enemyId: "goblin",
+                  distanceFeet: 30,
+                  enemyCanSeeCaster: true,
+                },
+              ],
+            },
             {
               kind: "spellTarget",
               casterId: "fighter",
@@ -10588,6 +10612,18 @@ describe("MCP server route", () => {
           value: "training-crystal",
           spatialFacts: [
             {
+              kind: "rangedSpellAttackEnemyProximity",
+              casterId: "fighter",
+              sourceProcedureRef: act.subject.procedureRef,
+              enemies: [
+                {
+                  enemyId: "goblin",
+                  distanceFeet: 30,
+                  enemyCanSeeCaster: true,
+                },
+              ],
+            },
+            {
               kind: "spellObjectTarget",
               casterId: "fighter",
               objectId: "training-crystal",
@@ -10876,11 +10912,23 @@ describe("MCP server route", () => {
           value: "goblin",
           spatialFacts: [
             {
+              kind: "rangedSpellAttackEnemyProximity",
+              casterId: "fighter",
+              sourceProcedureRef: releaseChoice.choice.subject.procedureRef,
+              enemies: [
+                {
+                  enemyId: "goblin",
+                  distanceFeet: 5,
+                  enemyCanSeeCaster: true,
+                },
+              ],
+            },
+            {
               kind: "spellTarget",
               casterId: "fighter",
               targetId: "goblin",
               sourceProcedureRef: releaseChoice.choice.subject.procedureRef,
-              distanceFeet: 30,
+              distanceFeet: 5,
             },
           ],
         },
@@ -10891,7 +10939,7 @@ describe("MCP server route", () => {
       envelope: {
         frontier: {
           kind: "holes",
-          holes: [{ kind: "attackRoll" }],
+          holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
         },
       },
     });
