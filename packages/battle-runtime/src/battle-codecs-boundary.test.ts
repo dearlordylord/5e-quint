@@ -1252,20 +1252,23 @@ const savingThrowCases: readonly CodecCase[] = [
       },
     ),
   ),
-  successCase("grantedAreaSaveDamageActionSave", {
-    ...saving(
-      "grantedAreaSaveDamageActionSave",
-      "grantedAreaSaveDamageAction",
-      "dex",
-      {
-        targetId: skeletonId,
+  successCase(
+    "grantedAreaSaveDamageActionSave",
+    hole("grantedAreaSaveDamageActionSave", {
+      kind: "savingThrowOutcome",
+      areaInput: { kind: "areaMembership", originAnchorId: wizardId },
+      grantedAreaSaveDamageAction: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
         lengthFeet: 15,
       },
-    ),
-    areaInput: { kind: "areaMembership", originAnchorId: wizardId },
-  }),
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      areaChoices: [],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    }),
+  ),
 ];
 
 const damage = { expr: { dice: 1, dieSize: 6 }, damageType: "cold" };
