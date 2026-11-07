@@ -13,7 +13,6 @@ import { Result } from "effect";
 import {
   type BattleFill,
   type BattleHole,
-  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
   type CombatantId,

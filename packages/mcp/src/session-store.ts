@@ -1,7 +1,4 @@
-import type {
-  CharacterDraft,
-  CharacterDraftId,
-} from "@dnd/character-creation-runtime";
+import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type {
   BattlePendingTransaction,
   BattleRuntimeSession,
