@@ -9463,6 +9463,16 @@ function spellLeapTargetFill(
         distanceFeet: movementFeet(30),
       },
       {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+        enemies: [previousTargetId, targetId].map((enemyId) => ({
+          enemyId,
+          distanceFeet: movementFeet(30),
+          enemyCanSeeCaster: true,
+        })),
+      },
+      {
         kind: "spellLeapTargetWithinRange" as const,
         previousTargetId,
         targetId,
