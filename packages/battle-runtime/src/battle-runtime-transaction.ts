@@ -759,27 +759,25 @@ export function restoreBattleRuntimeContinuation(
     }
     function restoreLayerCompletion(
       retained: RetainedTransactionLayer["completion"],
-      parent: BattlePendingTransactionData | null,
     ): Result.Result<BattlePendingTransactionCompletion, string> {
-      const completion = Match.value(retained).pipe(
-        Match.when({ kind: "standaloneClose" }, () => ({
-          kind: "standaloneClose" as const,
-          parent: null,
-        })),
-        Match.when({ kind: "replaySubject" }, () => ({
-          kind: "replaySubject" as const,
-          parent,
-        })),
-        Match.when({ kind: "refreshParentFrontier" }, () =>
-          parent === null
-            ? null
-            : { kind: "refreshParentFrontier" as const, parent },
+      return Match.value(retained).pipe(
+        Match.when({ kind: "standaloneClose" }, () =>
+          Result.succeed({ kind: "standaloneClose" as const, parent: null }),
+        ),
+        Match.when({ kind: "replaySubject" }, ({ parent }) =>
+          Result.map(
+            parent === null ? Result.succeed(null) : restoreLayer(parent),
+            (parent) => ({ kind: "replaySubject" as const, parent }),
+          ),
+        ),
+        Match.when({ kind: "refreshParentFrontier" }, ({ parent }) =>
+          Result.map(restoreLayer(parent), (parent) => ({
+            kind: "refreshParentFrontier" as const,
+            parent,
+          })),
         ),
         Match.exhaustive,
       );
-      if (completion === null)
-        return Result.fail("A nested saved transaction has no parent.");
-      return Result.succeed(completion);
     }
     function restoreLayerOwnership(
       retained: RetainedTransactionLayer,
@@ -827,18 +825,11 @@ export function restoreBattleRuntimeContinuation(
         const { baseSession, currentSession } =
           yield* restoreLayerSessions(retained);
         yield* validateLayerInputs(retained);
-        const parent =
-          retained.completion.parent === null
-            ? null
-            : yield* restoreLayer(retained.completion.parent);
+        const completion = yield* restoreLayerCompletion(retained.completion);
         const frontier = yield* restoreLayerFrontier(
           retained,
           baseSession,
           currentSession,
-        );
-        const completion = yield* restoreLayerCompletion(
-          retained.completion,
-          parent,
         );
         return yield* restoreLayerOwnership(
           retained,

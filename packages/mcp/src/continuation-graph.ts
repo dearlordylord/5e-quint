@@ -105,9 +105,22 @@ export function encodeContinuationGraph(
   const nodes: (typeof Node.Type)[] = [];
   const indices = new Map<unknown, number>();
   const active = new Set<object>();
-  function encodeObject(
-    value: object,
-  ): Result.Result<typeof Node.Type, string> {
+  function encodeObject(value: object): Result.Result<
+    Extract<
+      typeof Node.Type,
+      {
+        readonly kind:
+          | "catalog"
+          | "some"
+          | "none"
+          | "array"
+          | "map"
+          | "set"
+          | "object";
+      }
+    >,
+    string
+  > {
     return Result.gen(function* () {
       const key = references.keys.get(value);
       const reference =
@@ -123,7 +136,13 @@ export function encodeContinuationGraph(
   }
   function encodeCollection(
     value: object,
-  ): Result.Result<typeof Node.Type, string> {
+  ): Result.Result<
+    Extract<
+      typeof Node.Type,
+      { readonly kind: "array" | "map" | "set" | "object" }
+    >,
+    string
+  > {
     return Result.gen(function* () {
       if (Array.isArray(value))
         return {
