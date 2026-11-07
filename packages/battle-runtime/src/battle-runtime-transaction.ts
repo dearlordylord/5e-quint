@@ -1281,7 +1281,13 @@ export function battlePendingTransactionEnvelopeForSession(
           replaySubject: transactionData.subject,
           holes: frontier.holes,
           pendingProcedure: frontier.pendingProcedure,
-          continuation: { kind: "ordinaryReplay" as const },
+          continuation: {
+            kind:
+              transactionData.baseSession !== session ||
+              session.state.interruptStack.length > 0
+                ? ("runtimeOwnedInterrupt" as const)
+                : ("ordinaryReplay" as const),
+          },
         },
       },
     })),
