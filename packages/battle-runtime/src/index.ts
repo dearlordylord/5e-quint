@@ -47,8 +47,16 @@ export {
   battleSpellEffectOccurrenceId,
   characterId,
   spellId,
-  type BattleAreaId,
-  type BattleSpellEffectOccurrenceId,
+  BattleAreaId,
+  BattleEffectExecutionRef,
+  BattleEffectExecutionOrdinal,
+  BattleExecutionScopeCursor,
+  BattleProcedureExecutionCursor,
+  BattleStartTurnOccurrenceId,
+  BattleStatBlockExecutionScopeRef,
+  StatBlockSpellcastingGroupOrdinal,
+  StatBlockSpellcastingInvocationOrdinal,
+  BattleSpellEffectOccurrenceId,
 } from "./identity.ts";
 
 export {
@@ -992,3 +1000,11 @@ export {
   retainInitialInitiativeSetup,
   restoreInitialInitiativeSetup,
 } from "./battle-reducer/api-lifecycle.ts";
+
+export { BattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
+export { KnockedOutOneHp } from "./battle-reducer/knocked-out-state.ts";
+export {
+  StatBlockAttackDamageSelection,
+  StatBlockBaseDamageComponentOrdinal,
+} from "./stat-block-attack-damage-selection.ts";
+export { BattleDamageRelationshipQuestionIdSchema } from "./battle-reducer/damage-relationship-question-id.ts";

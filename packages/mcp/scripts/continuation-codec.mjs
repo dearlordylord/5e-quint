@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, relative, dirname } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -84,6 +84,77 @@ for (const file of program.getSourceFiles()) {
   }
 }
 
+const packageImports = new Map();
+function refinementImport(symbol) {
+  const file = symbol.valueDeclaration.getSourceFile();
+  let owner = dirname(file.fileName);
+  while (!existsSync(resolve(owner, "package.json"))) {
+    const parent = dirname(owner);
+    if (parent === owner)
+      throw new Error(
+        `No owning package for continuation refinement ${symbol.name}.`,
+      );
+    owner = parent;
+  }
+  if (owner === root) {
+    const path = relative(dirname(output), file.fileName).replaceAll("\\", "/");
+    return {
+      name: symbol.name,
+      path: path.startsWith(".") ? path : `./${path}`,
+    };
+  }
+  if (!packageImports.has(owner)) {
+    const manifest = JSON.parse(
+      readFileSync(resolve(owner, "package.json"), "utf8"),
+    );
+    const routes = [];
+    for (const [subpath, target] of Object.entries(manifest.exports ?? {})) {
+      if (typeof target !== "string")
+        throw new Error(
+          `Unsupported export target ${manifest.name}${subpath}: expected a runtime source path.`,
+        );
+      const entry = program.getSourceFile(resolve(owner, target));
+      const module = entry && checker.getSymbolAtLocation(entry);
+      if (!module) continue;
+      for (const exported of checker.getExportsOfModule(module)) {
+        const value =
+          exported.flags & ts.SymbolFlags.Alias
+            ? checker.getAliasedSymbol(exported)
+            : exported;
+        // The pinned compiler tracks type-only admission through alias/reexport chains.
+        if (
+          !(value.flags & ts.SymbolFlags.Value) ||
+          checker.getTypeOnlyAliasDeclaration(exported)
+        )
+          continue;
+        routes.push({
+          symbol: value,
+          name: exported.name,
+          path: manifest.name + (subpath === "." ? "" : subpath.slice(1)),
+        });
+      }
+    }
+    packageImports.set(owner, routes);
+  }
+  const routes = packageImports
+    .get(owner)
+    .filter((route) => route.symbol === symbol);
+  // Prefer the package root, then the shortest admitted subpath; aliases stay explicit.
+  routes.sort(
+    (left, right) =>
+      left.path.length - right.path.length ||
+      left.path.localeCompare(right.path) ||
+      Number(right.name === symbol.name) - Number(left.name === symbol.name) ||
+      left.name.localeCompare(right.name),
+  );
+  const route = routes[0];
+  if (!route)
+    throw new Error(
+      `Continuation refinement ${symbol.name} in ${file.fileName} has no admitted runtime package export. Export its canonical value from ${owner}/package.json's entrypoint.`,
+    );
+  return route;
+}
+
 function refinement(type) {
   const symbol = schemas.get(type) ?? type.aliasSymbol ?? type.symbol;
   if (!symbol || !symbol.valueDeclaration) return undefined;
@@ -104,9 +175,9 @@ function refinement(type) {
     .find((candidate) => candidate === symbol);
   if (!exported) return undefined;
   const name = `Refinement${imports.length}`;
-  const path = relative(dirname(output), file.fileName).replaceAll("\\", "/");
+  const imported = refinementImport(symbol);
   imports.push(
-    `import { ${symbol.name} as ${name} } from ${JSON.stringify(path.startsWith(".") ? path : `./${path}`)};`,
+    `import { ${imported.name} as ${name} } from ${JSON.stringify(imported.path)};`,
   );
   refinements.push(
     schema
