@@ -444,13 +444,13 @@
       "category": "playSessionStorage",
       "data": [
         "fictional character and battle state",
-        "ordered reconstructive commands",
+        "canonical continuation state",
+        "ordered inert command history",
         "ownership and retention state"
       ],
       "purposes": [
         "continue saved Play Sessions",
-        "recover state after restart",
-        "retire inaccessible legacy guest rows"
+        "recover state after restart"
       ],
       "recipients": ["service operator", "connected account"],
       "retentionSource": "packages/mcp/src/public-play-session-policy.json",
@@ -462,7 +462,7 @@
       "implementationOwner": "packages/mcp/src/sqlite-play-session-repository.ts",
       "implementationEvidence": {
         "tag": "canonicalInventory",
-        "digest": "5034c38ca2b9063eb7e77afe38975ca888199338b57f9b23d00d8468e3c7fa00"
+        "digest": "7aeef4a03478d68a9de771482214e272421c844e5f3e861180c047a69bc302ef"
       },
       "privacyAnchor": "play-session-data",
       "privacyEvidence": {
@@ -516,7 +516,7 @@
       "implementationEvidence": {
         "tag": "scopedHumanReview",
         "scope": "Play Session rate-limit repository, SQLite actions, and window policy",
-        "sourceDigest": "c3c33603a7f9529217ec2c3d11e6c61fdab9f46613934ac388559af60ce4a5d9"
+        "sourceDigest": "3953a7813b7d6f890a76e09748d140da719b1480b16d7f83aa63ffc3ffa946e5"
       },
       "privacyAnchor": "rate-limit-capacity",
       "privacyEvidence": {
