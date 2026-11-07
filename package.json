@@ -113,7 +113,7 @@
     "generate:opaque-oracle-corpus": "pnpm --filter @dnd/opaque-oracle generate:corpus",
     "write:opaque-oracle-corpus": "pnpm --filter @dnd/opaque-oracle write:corpus",
     "build:distribution": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh node scripts/distribution/build.mjs",
-    "check:distribution": "pnpm check:distribution:self-test && . scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh node scripts/distribution/qualify.mjs",
+    "check:distribution": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh sh -c 'pnpm check:distribution:self-test && node scripts/distribution/qualify.mjs'",
     "local-release": "node scripts/distribution/release.mjs",
     "check:distribution:self-test": "node --test scripts/distribution/release.test.mjs scripts/distribution/build.test.mjs"
   },
