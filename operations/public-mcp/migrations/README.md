@@ -115,3 +115,20 @@ Recovery is ad hoc. Inspect the actual database and report, identify its format,
 and approve concrete repair or source/target decisions before changing the
 recovery record. Never delete saves or automatically restore the backup after
 players have made progress. No generic player migration workflow is provided.
+
+The service operator owns retention and manual removal of the offline migration
+backup, private investigation report, and preserved conversion result. These
+operator-held recovery files remain after successful conversion and after a
+failed conversion has created them, for offline recovery and investigation. The
+backup is a complete source SQLite copy, including character and battle history,
+ownership identifiers, and request-limit records; a report can contain session
+identifiers and bounded failure diagnostics. Keep these files in operator-only
+private storage. They are not available through hosted Play Session tools.
+
+Serving-session deletion, inactivity expiry, and request-bucket pruning affect
+only the active SQLite database. They do not remove or update these offline
+copies. There is no automatic expiry or cleanup period for the recovery files;
+the operator must remove them manually when they are no longer needed for
+recovery or investigation. Operator retention and removal of these copies is
+separate from the active session policy and must be included in the operator's
+data-handling attestation.

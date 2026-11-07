@@ -446,18 +446,21 @@
         "fictional character and battle state",
         "canonical continuation state",
         "ordered inert command history",
+        "operator-held offline migration SQLite backups and private recovery reports",
         "ownership and retention state"
       ],
       "purposes": [
         "continue saved Play Sessions",
-        "recover state after restart"
+        "recover state after restart",
+        "offline migration recovery and investigation"
       ],
       "recipients": ["service operator", "connected account"],
-      "retentionSource": "packages/mcp/src/public-play-session-policy.json",
+      "retentionSource": "packages/mcp/src/public-play-session-policy.json (active SQLite); operatorAttestation under operations/public-mcp/migrations/README.md (operator-held offline backups and recovery reports)",
       "controls": [
         "authenticated listing",
-        "permanent deletion",
-        "inactivity expiry"
+        "permanent deletion and inactivity expiry in active SQLite",
+        "operator-only private offline backup and recovery-report access",
+        "manual operator cleanup of offline copies; no automatic expiry"
       ],
       "implementationOwner": "packages/mcp/src/sqlite-play-session-repository.ts",
       "implementationEvidence": {
@@ -469,8 +472,8 @@
         "data": "fictional character and battle state",
         "purpose": "needed to continue them",
         "recipients": "connected account",
-        "retention": "expire after 90 inactive days",
-        "controls": "Deleting a saved Play Session is permanent"
+        "retention": "expire from the active SQLite database after 90 inactive days",
+        "controls": "Session deletion, inactivity expiry, and request-bucket pruning do not remove these offline copies. They have no automatic expiry; the operator must remove them manually"
       }
     },
     {
@@ -506,12 +509,20 @@
       "data": [
         "hashed authorization bucket",
         "bounded request counts",
-        "capacity counts"
+        "capacity counts",
+        "request-limit records retained in operator-held offline migration backups"
       ],
-      "purposes": ["protect availability", "enforce service limits"],
+      "purposes": [
+        "protect availability",
+        "enforce service limits",
+        "offline migration recovery and investigation"
+      ],
       "recipients": ["service operator"],
-      "retentionSource": "packages/mcp/src/play-session-access.ts",
-      "controls": ["bounded rate window", "capacity limits"],
+      "retentionSource": "packages/mcp/src/play-session-access.ts (active SQLite); operatorAttestation under operations/public-mcp/migrations/README.md (operator-held offline migration copies)",
+      "controls": [
+        "bounded rate window and capacity limits in active SQLite",
+        "operator-only private offline access and manual operator cleanup; no automatic expiry"
+      ],
       "implementationOwner": "packages/mcp/src/play-session-repository.ts",
       "implementationEvidence": {
         "tag": "scopedHumanReview",
@@ -523,8 +534,8 @@
         "data": "hashed authorization buckets, bounded request counts, and current capacity counts",
         "purpose": "protect availability and enforce service limits",
         "recipients": "service operator",
-        "retention": "Rate buckets older than one minute are pruned",
-        "controls": "Automatic pruning and fixed capacity limits"
+        "retention": "Rate buckets older than one minute are pruned from the active SQLite database",
+        "controls": "Offline migration copies follow the manual operator cleanup described under Play Session data"
       }
     },
     {
