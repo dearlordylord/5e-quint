@@ -863,6 +863,8 @@ export type CharacterCreationBatchFact = Schema.Schema.Type<
 const strictDecodeOptions: { readonly onExcessProperty: "error" } = {
   onExcessProperty: "error",
 };
+export const decodeCharacterBuildSpeciesChoiceFacts =
+  Schema.decodeUnknownResult(SpeciesChoiceFactsSchema, strictDecodeOptions);
 export const decodeCreationHoleFact = Schema.decodeUnknownResult(
   CreationHoleFactSchema,
   strictDecodeOptions,

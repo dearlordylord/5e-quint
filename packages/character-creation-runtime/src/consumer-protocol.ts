@@ -59,6 +59,7 @@ export {
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   characterBuildUnitRefs,
+  parseCharacterBuildSpeciesChoiceFacts,
   characterCreationIssueMessage,
   finalizeCharacterDraft,
 } from "./finalization.ts";

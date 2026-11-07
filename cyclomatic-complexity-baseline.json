@@ -840,7 +840,6 @@
       "module/binding:parseStoredPactSlots": 10,
       "module/binding:parseStoredProficiencyChoices": 16,
       "module/binding:parseStoredProgression": 10,
-      "module/binding:parseStoredSpeciesChoiceFacts": 9,
       "module/binding:parseStoredSpellcastingSource": 12,
       "module/binding:parseStoredSpellSlotPools": 10,
       "module/binding:parseStoredSpellSlots": 17,

@@ -1,3 +1,4 @@
+import { decodeCharacterBuildSpeciesChoiceFacts } from "./oracle-facts.ts";
 import {
   resolveFeatSelectionScoreSequence,
   type FeatScoreSelection,
@@ -1083,6 +1084,123 @@ function draconicAncestryDamageTypeSource(
     : undefined;
 }
 
+export type CharacterBuildSpeciesChoiceFactsIssue = {
+  readonly tag: "characterBuildSpeciesChoiceFactsIssue";
+  readonly message: string;
+};
+
+function speciesChoiceFactsIssue(
+  message: string,
+): CharacterBuildSpeciesChoiceFactsIssue {
+  return { tag: "characterBuildSpeciesChoiceFactsIssue", message };
+}
+
+export function parseCharacterBuildSpeciesChoiceFacts(input: {
+  readonly species: UnitRecord["id"];
+  readonly value: unknown;
+  readonly unitLibrary: UnitCatalog;
+}): Result.Result<
+  CharacterBuildSpeciesChoiceFacts | undefined,
+  CharacterBuildSpeciesChoiceFactsIssue
+> {
+  return Result.gen(function* () {
+    const species = yield* characterBuildSpeciesFacts(
+      input.species,
+      input.unitLibrary,
+    ).pipe(
+      Result.mapError((issues) =>
+        speciesChoiceFactsIssue(characterCreationIssueMessage(issues[0])),
+      ),
+    );
+    const draconicSource = draconicAncestryDamageTypeSource(species.facts);
+    const lineageSource = yield* speciesLineageChoiceSource(
+      species.unit,
+      species.facts,
+      input.unitLibrary,
+    ).pipe(
+      Result.mapError((issues) =>
+        speciesChoiceFactsIssue(characterCreationIssueMessage(issues[0])),
+      ),
+    );
+    if (draconicSource !== undefined && lineageSource !== undefined) {
+      return yield* Result.fail(
+        speciesChoiceFactsIssue(
+          "Character Build species has conflicting species choice sources.",
+        ),
+      );
+    }
+    if (input.value === undefined) {
+      return yield* draconicSource !== undefined
+        ? Result.fail(
+            speciesChoiceFactsIssue(
+              "Character Build requires selected Draconic Ancestry fact for species with a Draconic Ancestry source.",
+            ),
+          )
+        : lineageSource !== undefined
+          ? Result.fail(
+              speciesChoiceFactsIssue(
+                "Character Build requires selected Gnomish Lineage fact for species with a Gnomish Lineage source.",
+              ),
+            )
+          : Result.succeed(undefined);
+    }
+    const facts = yield* decodeCharacterBuildSpeciesChoiceFacts(
+      input.value,
+    ).pipe(
+      Result.mapError(() =>
+        speciesChoiceFactsIssue(
+          "Character Build species choice facts must contain exactly supported species choice facts.",
+        ),
+      ),
+    );
+    return yield* Match.value(facts).pipe(
+      Match.when(
+        { draconicAncestry: { kind: "draconicAncestry" } },
+        (facts) => {
+          if (draconicSource === undefined) {
+            return Result.fail(
+              speciesChoiceFactsIssue(
+                "Character Build cannot carry Draconic Ancestry fact for species without a Draconic Ancestry source.",
+              ),
+            );
+          }
+          return draconicSource.options.some(
+            (option) => option.id === facts.draconicAncestry.ancestorId,
+          )
+            ? Result.succeed(facts)
+            : Result.fail(
+                speciesChoiceFactsIssue(
+                  "Character Build Draconic Ancestry fact must reference the selected species source table.",
+                ),
+              );
+        },
+      ),
+      Match.when({ gnomishLineage: { kind: "gnomishLineage" } }, (facts) => {
+        if (lineageSource === undefined) {
+          return Result.fail(
+            speciesChoiceFactsIssue(
+              "Character Build cannot carry Gnomish Lineage fact for species without a Gnomish Lineage source.",
+            ),
+          );
+        }
+        return lineageSource.mechanics.options.some(
+          (option) => option.id === facts.gnomishLineage.lineageId,
+        ) &&
+          lineageSource.mechanics.spellcastingAbilityChoice.abilities.some(
+            (ability) => ability === facts.gnomishLineage.spellcastingAbility,
+          )
+          ? Result.succeed(facts)
+          : Result.fail(
+              speciesChoiceFactsIssue(
+                "Character Build Gnomish Lineage fact must reference the selected species trait option and spellcasting ability rosters.",
+              ),
+            );
+      }),
+      Match.exhaustive,
+    );
+  });
+}
+
 function finalizedSpeciesChoiceFacts(
   selections: Pick<
     FinalizedCharacterSelections,
@@ -1175,23 +1293,32 @@ function speciesLineageChoiceSource(
   speciesFacts: SpeciesCreationFacts,
   unitLibrary: UnitCatalog,
 ): Result.Result<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
-  const sources = Object.values(speciesFacts.traits).flatMap((traitUnitId) => {
-    const traitUnit = unitLibrary.getUnit(traitUnitId);
-    if (Option.isNone(traitUnit)) {
-      return [];
-    }
-    const trait = projectCharacterCreationFeature(traitUnit.value);
-    return trait.tag === "readable" &&
-      trait.value.kind === "species_trait" &&
-      trait.value.facts.mechanics.family === "species_lineage_choice"
-      ? [
-          {
+  const traits = traverseValidation(
+    Object.values(speciesFacts.traits),
+    (traitUnitId) => {
+      const traitUnit = unitLibrary.getUnit(traitUnitId);
+      if (Option.isNone(traitUnit)) {
+        return Result.fail(
+          unsupportedFinalizationIssue({ tag: "unsupportedSpecies" }),
+        );
+      }
+      const trait = projectCharacterCreationFeature(traitUnit.value);
+      return trait.tag === "readable" && trait.value.kind === "species_trait"
+        ? Result.succeed({
             traitUnitId: traitUnit.value.id,
-            mechanics: trait.value.facts.mechanics,
-          },
-        ]
-      : [];
-  });
+            facts: trait.value.facts,
+          })
+        : Result.fail(
+            unsupportedFinalizationIssue({ tag: "unsupportedSpecies" }),
+          );
+    },
+  );
+  if (Result.isFailure(traits)) return Result.fail(traits.failure);
+  const sources = traits.success.flatMap((trait) =>
+    trait.facts.mechanics.family === "species_lineage_choice"
+      ? [{ traitUnitId: trait.traitUnitId, mechanics: trait.facts.mechanics }]
+      : [],
+  );
   /* v8 ignore start -- @preserve -- The supported species catalog admits at most one trait carrying Gnomish Lineage mechanics. */
   if (sources.length > 1) {
     return Result.fail([

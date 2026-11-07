@@ -696,6 +696,27 @@ describe("stored Character Build parser", () => {
     expect(Result.isSuccess(result), JSON.stringify(result)).toBe(true);
   });
 
+  test.each(["forest_gnome", "rock_gnome"] as const)(
+    "parses the recorded %s lineage without changing its choices",
+    (lineageId) => {
+      const speciesChoiceFacts = {
+        gnomishLineage: {
+          kind: "gnomishLineage" as const,
+          lineageId,
+          spellcastingAbility: "int" as const,
+        },
+      };
+      const recorded = {
+        ...fighterBuild,
+        species: "species_gnome",
+        speciesChoiceFacts,
+      };
+      expect(parseCharacterBuild(recorded, unitLibrary)).toEqual(
+        Result.succeed(recorded),
+      );
+    },
+  );
+
   test("parses owned equipment and its loadout identity", () => {
     const equipped = armorClassBuild({
       startingClass: "class_fighter",
@@ -1156,13 +1177,12 @@ describe("stored Character Build parser", () => {
     {
       name: "an unknown species Unit",
       value: { ...fighterBuild, species: "species_unknown" },
-      expected: "Character Build species Unit id is unknown.",
+      expected: "Cannot find species Unit: species_unknown.",
     },
     {
       name: "a non-species Unit as species",
       value: { ...fighterBuild, species: "class_fighter" },
-      expected:
-        "Character Build species Unit id must reference a species Unit.",
+      expected: "Cannot read species Unit class_fighter: unsupported Unit kind",
     },
     {
       name: "Draconic Ancestry on a species without its source",
@@ -1185,7 +1205,8 @@ describe("stored Character Build parser", () => {
         species: "species_dragonborn",
         speciesChoiceFacts: null,
       },
-      expected: "Expected Character Build species choice facts.",
+      expected:
+        "Character Build species choice facts must contain exactly supported species choice facts.",
     },
     {
       name: "unsupported species choice fact keys",
@@ -1204,7 +1225,8 @@ describe("stored Character Build parser", () => {
         species: "species_dragonborn",
         speciesChoiceFacts: { draconicAncestry: null },
       },
-      expected: "Expected Character Build Draconic Ancestry fact.",
+      expected:
+        "Character Build species choice facts must contain exactly supported species choice facts.",
     },
     {
       name: "malformed Draconic Ancestry",
@@ -1219,7 +1241,7 @@ describe("stored Character Build parser", () => {
         },
       },
       expected:
-        "Character Build Draconic Ancestry fact must contain exactly selected ancestry fact fields.",
+        "Character Build species choice facts must contain exactly supported species choice facts.",
     },
     {
       name: "unknown Draconic Ancestry option",

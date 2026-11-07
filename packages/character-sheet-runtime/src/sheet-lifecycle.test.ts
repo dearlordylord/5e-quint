@@ -431,6 +431,26 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     ).toEqual(invalidReduction);
   });
 
+  test("restores recorded Gnomish Lineage facts through the public sheet parser", () => {
+    const speciesChoiceFacts = {
+      gnomishLineage: {
+        kind: "gnomishLineage" as const,
+        lineageId: "forest_gnome" as const,
+        spellcastingAbility: "wis" as const,
+      },
+    };
+    const restored = requireSuccess(
+      parseCharacterSheet(
+        storedAvailableSheetInput({
+          characterId: "character:recorded-lineage",
+          build: { ...build, species: "species_gnome", speciesChoiceFacts },
+        }),
+        unitLibrary,
+      ),
+    );
+    expect(restored.build.speciesChoiceFacts).toEqual(speciesChoiceFacts);
+  });
+
   test("rejects stale stored sheets with build-derived maximum HP", () => {
     const sheet = parseCharacterSheet(
       {

@@ -3,9 +3,10 @@ import { abilityScore } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
+  type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { EffectAtom, UnitRecord } from "@dnd/surface/surface/types";
-import { Option } from "effect";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { classUnitId } from "./character-progression-types.ts";
@@ -22,6 +23,7 @@ import {
   finalizedBuildEquipment,
   finalizedClassChoiceFeatures,
   finalizedSelections,
+  parseCharacterBuildSpeciesChoiceFacts,
   isSupportedBackgroundAbilityScoreIncrease,
   selectedPreparedSpellsAreInSelectedSpellbook,
 } from "./finalization.ts";
@@ -227,6 +229,201 @@ function expectUnsupportedHitPointDelta(input: {
 }
 
 describe("character finalization boundaries", () => {
+  test.each([
+    {
+      species: "species_dragonborn",
+      value: {
+        draconicAncestry: { kind: "draconicAncestry", ancestorId: "red" },
+      },
+    },
+    ...["forest_gnome", "rock_gnome"].map((lineageId) => ({
+      species: "species_gnome",
+      value: {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId,
+          spellcastingAbility: "int",
+        },
+      },
+    })),
+    { species: "species_orc", value: undefined },
+  ])("retains the selected facts for $species", ({ species, value }) => {
+    expect(
+      parseCharacterBuildSpeciesChoiceFacts({
+        species: authoredUnitId(species),
+        value,
+        unitLibrary,
+      }),
+    ).toEqual(Result.succeed(value));
+  });
+
+  test.each(["species_unknown", "class_fighter"])(
+    "rejects unavailable species facts from %s",
+    (species) => {
+      expect(
+        Result.isFailure(
+          parseCharacterBuildSpeciesChoiceFacts({
+            species: authoredUnitId(species),
+            value: undefined,
+            unitLibrary,
+          }),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test.each([
+    { name: "missing", replacement: Option.none<UnitRecord>() },
+    {
+      name: "unreadable",
+      replacement: unitLibrary.getUnit("class_fighter"),
+    },
+    {
+      name: "not a species trait",
+      replacement: unitLibrary.getUnit("feat_alert"),
+    },
+  ])("rejects an unresolved species trait that is $name", ({ replacement }) => {
+    const catalog: UnitCatalog = {
+      ...unitLibrary,
+      getUnit: (id) =>
+        id === "species_gnome_gnomish_lineage"
+          ? replacement
+          : unitLibrary.getUnit(id),
+    };
+    expect(
+      Result.isFailure(
+        parseCharacterBuildSpeciesChoiceFacts({
+          species: authoredUnitId("species_gnome"),
+          value: undefined,
+          unitLibrary: catalog,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    {
+      name: "ancestry outside the selected source options",
+      species: "species_dragonborn",
+      speciesChoiceFacts: {
+        draconicAncestry: {
+          kind: "draconicAncestry",
+          ancestorId: "synthetic_unknown",
+        },
+      },
+      expected:
+        "Character Build Draconic Ancestry fact must reference the selected species source table.",
+    },
+    {
+      name: "missing required lineage",
+      species: "species_gnome",
+      speciesChoiceFacts: undefined,
+      expected:
+        "Character Build requires selected Gnomish Lineage fact for species with a Gnomish Lineage source.",
+    },
+    {
+      name: "missing required ancestry",
+      species: "species_dragonborn",
+      speciesChoiceFacts: undefined,
+      expected:
+        "Character Build requires selected Draconic Ancestry fact for species with a Draconic Ancestry source.",
+    },
+    {
+      name: "lineage on a species without its source",
+      species: "species_dwarf",
+      speciesChoiceFacts: {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "forest_gnome",
+          spellcastingAbility: "int",
+        },
+      },
+      expected:
+        "Character Build cannot carry Gnomish Lineage fact for species without a Gnomish Lineage source.",
+    },
+    {
+      name: "lineage on an ancestry species",
+      species: "species_dragonborn",
+      speciesChoiceFacts: {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "forest_gnome",
+          spellcastingAbility: "int",
+        },
+      },
+      expected:
+        "Character Build cannot carry Gnomish Lineage fact for species without a Gnomish Lineage source.",
+    },
+    {
+      name: "ancestry on a lineage species",
+      species: "species_gnome",
+      speciesChoiceFacts: {
+        draconicAncestry: { kind: "draconicAncestry", ancestorId: "red" },
+      },
+      expected:
+        "Character Build cannot carry Draconic Ancestry fact for species without a Draconic Ancestry source.",
+    },
+    ...[
+      {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "synthetic_unknown_lineage",
+          spellcastingAbility: "int",
+        },
+      },
+      {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "forest_gnome",
+          spellcastingAbility: "str",
+        },
+      },
+      {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "forest_gnome",
+          spellcastingAbility: "int",
+          extra: true,
+        },
+      },
+      {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "forest_gnome",
+          spellcastingAbility: "int",
+        },
+        extra: true,
+      },
+      {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "forest_gnome",
+          spellcastingAbility: "int",
+        },
+        draconicAncestry: { kind: "draconicAncestry", ancestorId: "red" },
+      },
+    ].map((speciesChoiceFacts) => ({
+      name: "malformed or excess lineage fields",
+      species: "species_gnome",
+      speciesChoiceFacts,
+      expected:
+        "Character Build species choice facts must contain exactly supported species choice facts.",
+    })),
+  ])("rejects $name", ({ species, speciesChoiceFacts, expected }) => {
+    expect(
+      parseCharacterBuildSpeciesChoiceFacts({
+        species: authoredUnitId(species),
+        value: speciesChoiceFacts,
+        unitLibrary,
+      }),
+    ).toEqual(
+      Result.fail({
+        tag: "characterBuildSpeciesChoiceFactsIssue",
+        message: expected,
+      }),
+    );
+  });
+
   test("rejects unknown spellbook owners while accepting non-Wizard owners", () => {
     expect(
       selectedPreparedSpellsAreInSelectedSpellbook(
