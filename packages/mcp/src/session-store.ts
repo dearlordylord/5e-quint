@@ -103,6 +103,14 @@ export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
   return characterSheetId(`character:${encodeURIComponent(String(draftId))}`);
 }
 
+function retainedCharacterRegistry(
+  characters: McpSessionStoreContinuation["characters"] | undefined,
+) {
+  const registry = createCharacterSessionRegistry();
+  for (const character of characters ?? []) registry.set(character);
+  return registry;
+}
+
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export function createMcpSessionStore(input: {
   readonly statBlockCatalog: SrdStatBlockCatalog;
@@ -111,9 +119,7 @@ export function createMcpSessionStore(input: {
 }): McpSessionStore {
   const { statBlockCatalog, unitLibrary } = input;
   const drafts = new Map(input.continuation?.drafts);
-  const characters = createCharacterSessionRegistry();
-  for (const character of input.continuation?.characters ?? [])
-    characters.set(character);
+  const characters = retainedCharacterRegistry(input.continuation?.characters);
   const storeIdentity = {};
   const battleRosterPlanner = createBattleRosterTransitionPlanner({
     characters,

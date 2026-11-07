@@ -234,8 +234,15 @@ function spatialFactInstructions(hole: BattleHole): readonly string[] {
     return [
       "Supply one spatialFacts entry matching targetSpatialFactRequest for each selected Saving Throw target, confirming that it is visible and within range.",
     ];
+  return hole.kind === "savingThrowOutcome"
+    ? savingThrowSpatialInstructions(hole)
+    : [];
+}
+
+function savingThrowSpatialInstructions(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): readonly string[] {
   if (
-    hole.kind === "savingThrowOutcome" &&
     "areaInput" in hole &&
     hole.areaInput !== undefined &&
     "shapeChoices" in hole.areaInput
@@ -243,21 +250,89 @@ function spatialFactInstructions(hole: BattleHole): readonly string[] {
     return [
       "Use the acting creature as originAnchorId. The table computes one of areaInput.shapeChoices and reports every affectedTargetId; geometry is not inferred by the engine.",
     ];
-  if (
-    hole.kind === "savingThrowOutcome" &&
-    "grantedAreaSaveDamageAction" in hole
-  )
+  if ("grantedAreaSaveDamageAction" in hole)
     return [
       "Use the acting creature as originAnchorId. The table computes the Cone with grantedAreaSaveDamageAction.lengthFeet and reports every affectedTargetId.",
     ];
   return [];
 }
 
+function requestedFillValue(
+  properties: McpOutputSchema,
+  hole: BattleHole,
+  definitions: McpOutputSchema,
+): McpOutputSchema {
+  return schemaObject(properties.value)
+    ? { value: requestedValue(properties.value, hole, definitions) }
+    : {};
+}
+
+function requestedSpatialFill(
+  requested: McpOutputSchema,
+  hole: BattleHole,
+  definitions: McpOutputSchema,
+): McpOutputSchema {
+  const properties = record(requested.properties);
+  const spatialFacts = schemaObject(properties.spatialFacts)
+    ? requestedSpatialFacts(properties.spatialFacts, hole, definitions)
+    : undefined;
+  return {
+    ...requested,
+    ...("targetSpatialFactRequest" in hole &&
+    hole.targetSpatialFactRequest !== undefined
+      ? {
+          required: [
+            ...(Array.isArray(requested.required) ? requested.required : []),
+            "spatialFacts",
+          ],
+        }
+      : {}),
+    properties: {
+      ...properties,
+      ...(spatialFacts === undefined ? {} : { spatialFacts }),
+    },
+  };
+}
+
+function narrowRequestedFill(
+  requested: McpOutputSchema,
+  hole: BattleHole,
+  definitions: McpOutputSchema,
+  requestedRelationship: boolean,
+): McpOutputSchema {
+  const spatial = requestedSpatialFill(requested, hole, definitions);
+  const properties = record(spatial.properties);
+  return {
+    ...spatial,
+    properties: {
+      ...properties,
+      kind: { const: hole.kind },
+      holeId: { const: hole.holeId },
+      ...requestedFillValue(properties, hole, definitions),
+      ...("relationshipFacts" in properties && !requestedRelationship
+        ? { relationshipFacts: false }
+        : {}),
+      ...(!isAllocatedSpellDamageRollHole(hole)
+        ? {}
+        : Object.fromEntries(
+            ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY.map(
+              ({ field }) => [field, false],
+            ),
+          )),
+    },
+  };
+}
+
+function fillAlternatives(
+  members: readonly McpOutputSchema[],
+  distanceFirst: boolean,
+): McpOutputSchema {
+  if (!distanceFirst) return { anyOf: members };
+  return members.length === 0 ? { not: {} } : { oneOf: members };
+}
+
 export function battleInputGuidance(hole: BattleHole) {
   if (hole.kind === "interruptDecision") return [];
-  const allocatedDamageDice = isAllocatedSpellDamageRollHole(hole)
-    ? hole.allocatedDamageDice
-    : undefined;
   const canonical = mcpOutputJsonSchema(BattleFillSchema);
   const canonicalDefinitions = record(canonical.$defs);
   const members = alternatives(canonical, canonicalDefinitions).filter(
@@ -273,54 +348,16 @@ export function battleInputGuidance(hole: BattleHole) {
       ? targetInputSchemas(members, hole, canonicalDefinitions)
       : { members, definitions: canonicalDefinitions, distanceFirst: false };
   const { members: requestedMembers, definitions, distanceFirst } = target;
-  const narrowed = requestedMembers.map((requested) => {
-    const properties = record(requested.properties);
-    const spatialFacts = schemaObject(properties.spatialFacts)
-      ? requestedSpatialFacts(properties.spatialFacts, hole, definitions)
-      : undefined;
-    return {
-      ...requested,
-      ...("targetSpatialFactRequest" in hole &&
-      hole.targetSpatialFactRequest !== undefined
-        ? {
-            required: [
-              ...(Array.isArray(requested.required) ? requested.required : []),
-              "spatialFacts",
-            ],
-          }
-        : {}),
-      properties: {
-        ...properties,
-        kind: { const: hole.kind },
-        holeId: { const: hole.holeId },
-        ...(spatialFacts === undefined ? {} : { spatialFacts }),
-        ...(schemaObject(properties.value)
-          ? { value: requestedValue(properties.value, hole, definitions) }
-          : {}),
-        ...("relationshipFacts" in properties && !requestedRelationship
-          ? { relationshipFacts: false }
-          : {}),
-        ...(allocatedDamageDice === undefined
-          ? {}
-          : Object.fromEntries(
-              ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY.map(
-                ({ field }) => [field, false],
-              ),
-            )),
-      },
-    };
-  });
+  const narrowed = requestedMembers.map((requested) =>
+    narrowRequestedFill(requested, hole, definitions, requestedRelationship),
+  );
   return [
     {
       holeId: hole.holeId,
       valuePath: "fill" as const,
       fillSchema: omitUnreferencedDefinitions({
         type: "object",
-        ...(distanceFirst
-          ? narrowed.length === 0
-            ? { not: {} }
-            : { oneOf: narrowed }
-          : { anyOf: narrowed }),
+        ...fillAlternatives(narrowed, distanceFirst),
         $defs: definitions,
       }),
       instructions: [

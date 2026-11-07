@@ -15,27 +15,31 @@ export function parseCanonicalContinuation(
   let depth = 0;
   const path: string[] = ["continuation"];
   const accepted = new WeakMap<object, Set<number>>();
+  function hasAcceptedObject(index: number, value: unknown): boolean {
+    return (
+      typeof value === "object" &&
+      value !== null &&
+      accepted.get(value)?.has(index) === true
+    );
+  }
+  function acceptObject(index: number, value: unknown): void {
+    if (typeof value !== "object" || value === null) return;
+    const indices = accepted.get(value) ?? new Set<number>();
+    indices.add(index);
+    accepted.set(value, indices);
+  }
   function check(index: number, value: unknown): boolean {
     const descriptor: ContinuationTypeDescriptor | undefined =
       continuationDescriptor[index];
     if (descriptor === undefined) return false;
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      accepted.get(value)?.has(index)
-    )
-      return true;
+    if (hasAcceptedObject(index, value)) return true;
     const previousPath = failurePath;
     const previousDepth = depth;
     const result = match(descriptor, value);
     if (result) {
       failurePath = previousPath;
       depth = previousDepth;
-    }
-    if (result && typeof value === "object" && value !== null) {
-      const indices = accepted.get(value) ?? new Set<number>();
-      indices.add(index);
-      accepted.set(value, indices);
+      acceptObject(index, value);
     }
     if (!result && path.length >= depth) {
       depth = path.length;

@@ -238,6 +238,27 @@ function targetSpatialConstraints(
   };
 }
 
+function rangedSpellFactKinds(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetChoice" | "objectTargetChoice" }
+  >,
+) {
+  return RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS.filter((kind) => {
+    if (kind === "spellLeapTargetWithinRange")
+      return (
+        hole.kind === "targetChoice" &&
+        hole.spellLeapTargetSpatialFactRequest !== undefined
+      );
+    if (kind === "spellTargetKnownWilling")
+      return (
+        hole.kind === "targetChoice" &&
+        hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget === true
+      );
+    return true;
+  });
+}
+
 function rangedSpellTargetSchema(
   member: McpOutputSchema,
   hole: Extract<
@@ -263,20 +284,12 @@ function rangedSpellTargetSchema(
     record(properties.spatialFacts),
     definitions,
   );
+  const allowedKinds = rangedSpellFactKinds(hole);
   const facts = targetFactMembers(member, definitions).filter(
     (candidate) =>
-      RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS.some((kind) =>
-        hasKind(candidate, kind, definitions),
-      ) &&
+      allowedKinds.some((kind) => hasKind(candidate, kind, definitions)) &&
       (hole.kind !== "targetChoice" ||
-        !("objectId" in record(candidate.properties))) &&
-      (!hasKind(candidate, "spellLeapTargetWithinRange", definitions) ||
-        (hole.kind === "targetChoice" &&
-          hole.spellLeapTargetSpatialFactRequest !== undefined)) &&
-      (!hasKind(candidate, "spellTargetKnownWilling", definitions) ||
-        (hole.kind === "targetChoice" &&
-          hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget ===
-            true)),
+        !("objectId" in record(candidate.properties))),
   );
   const qualification = facts.filter((fact) =>
     hasKind(fact, "rangedSpellAttackEnemyProximity", definitions),

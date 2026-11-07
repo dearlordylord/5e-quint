@@ -86,6 +86,17 @@ function catalogReferences(
   return references;
 }
 
+function isGraphScalar(
+  value: unknown,
+): value is Extract<typeof Node.Type, { readonly kind: "scalar" }>["value"] {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    (typeof value === "number" && Number.isFinite(value))
+  );
+}
+
 export function encodeContinuationGraph(
   services: McpApplicationServices,
   value: unknown,
@@ -94,6 +105,79 @@ export function encodeContinuationGraph(
   const nodes: (typeof Node.Type)[] = [];
   const indices = new Map<unknown, number>();
   const active = new Set<object>();
+  function encodeObject(
+    value: object,
+  ): Result.Result<typeof Node.Type, string> {
+    return Result.gen(function* () {
+      const key = references.keys.get(value);
+      const reference =
+        key === undefined ? undefined : references.values.get(key);
+      if (reference !== undefined && key !== undefined)
+        return { kind: "catalog", key, hash: reference.hash };
+      if (Option.isOption(value))
+        return Option.isSome(value)
+          ? { kind: "some", value: yield* encode(value.value) }
+          : { kind: "none" };
+      return yield* encodeCollection(value);
+    });
+  }
+  function encodeCollection(
+    value: object,
+  ): Result.Result<typeof Node.Type, string> {
+    return Result.gen(function* () {
+      if (Array.isArray(value))
+        return {
+          kind: "array",
+          items: yield* Result.all(value.map(encode)),
+        };
+      if (value instanceof Map)
+        return {
+          kind: "map",
+          entries: yield* Result.all(
+            [...value].map(([key, entry]) =>
+              Result.gen(function* () {
+                return [yield* encode(key), yield* encode(entry)] as const;
+              }),
+            ),
+          ),
+        };
+      if (value instanceof Set)
+        return {
+          kind: "set",
+          items: yield* Result.all([...value].map(encode)),
+        };
+      if (
+        Object.getPrototypeOf(value) === Object.prototype ||
+        Object.getPrototypeOf(value) === null
+      )
+        return {
+          kind: "object",
+          fields: yield* Result.all(
+            Object.entries(value).map(([key, entry]) =>
+              Result.map(encode(entry), (index) => [key, index] as const),
+            ),
+          ),
+        };
+      return yield* Result.fail(
+        "Canonical continuation contains an unsupported class.",
+      );
+    });
+  }
+  function encodeNode(value: unknown): Result.Result<typeof Node.Type, string> {
+    if (value === undefined) return Result.succeed({ kind: "undefined" });
+    if (isGraphScalar(value)) return Result.succeed({ kind: "scalar", value });
+    if (typeof value === "bigint")
+      return Result.succeed({ kind: "bigint", value: String(value) });
+    if (typeof value === "object" && value !== null) {
+      active.add(value);
+      const node = encodeObject(value);
+      active.delete(value);
+      return node;
+    }
+    return Result.fail(
+      "Canonical continuation contains a function, symbol, or non-finite value.",
+    );
+  }
   function encode(value: unknown): Result.Result<number, string> {
     return Result.gen(function* () {
       if (typeof value === "object" && value !== null && active.has(value))
@@ -103,69 +187,7 @@ export function encodeContinuationGraph(
       const index = nodes.length;
       indices.set(value, index);
       nodes.push({ kind: "undefined" });
-      if (value === undefined) return index;
-      if (
-        value === null ||
-        typeof value === "string" ||
-        typeof value === "boolean" ||
-        (typeof value === "number" && Number.isFinite(value))
-      )
-        nodes[index] = { kind: "scalar", value };
-      else if (typeof value === "bigint")
-        nodes[index] = { kind: "bigint", value: String(value) };
-      else if (typeof value === "object") {
-        active.add(value);
-        const key = references.keys.get(value);
-        const reference =
-          key === undefined ? undefined : references.values.get(key);
-        if (reference !== undefined && key !== undefined)
-          nodes[index] = { kind: "catalog", key, hash: reference.hash };
-        else if (Option.isOption(value))
-          nodes[index] = Option.isSome(value)
-            ? { kind: "some", value: yield* encode(value.value) }
-            : { kind: "none" };
-        else if (Array.isArray(value))
-          nodes[index] = {
-            kind: "array",
-            items: yield* Result.all(value.map(encode)),
-          };
-        else if (value instanceof Map)
-          nodes[index] = {
-            kind: "map",
-            entries: yield* Result.all(
-              [...value].map(([key, entry]) =>
-                Result.gen(function* () {
-                  return [yield* encode(key), yield* encode(entry)] as const;
-                }),
-              ),
-            ),
-          };
-        else if (value instanceof Set)
-          nodes[index] = {
-            kind: "set",
-            items: yield* Result.all([...value].map(encode)),
-          };
-        else if (
-          Object.getPrototypeOf(value) === Object.prototype ||
-          Object.getPrototypeOf(value) === null
-        )
-          nodes[index] = {
-            kind: "object",
-            fields: yield* Result.all(
-              Object.entries(value).map(([key, entry]) =>
-                Result.map(encode(entry), (index) => [key, index] as const),
-              ),
-            ),
-          };
-        else
-          return yield* Result.fail(
-            "Canonical continuation contains an unsupported class.",
-          );
-        active.delete(value);
-      } else
-        return yield* Result.fail(
-          "Canonical continuation contains a function, symbol, or non-finite value.",
-        );
+      nodes[index] = yield* encodeNode(value);
       return index;
     });
   }
