@@ -1003,8 +1003,5 @@ export {
 
 export { BattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 export { KnockedOutOneHp } from "./battle-reducer/knocked-out-state.ts";
-export {
-  StatBlockAttackDamageSelection,
-  StatBlockBaseDamageComponentOrdinal,
-} from "./stat-block-attack-damage-selection.ts";
+export { StatBlockBaseDamageComponentOrdinal } from "./stat-block-attack-damage-selection.ts";
 export { BattleDamageRelationshipQuestionIdSchema } from "./battle-reducer/damage-relationship-question-id.ts";

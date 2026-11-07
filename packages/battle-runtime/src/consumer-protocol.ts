@@ -160,9 +160,9 @@ export { TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE } from "./unit-feature-exec
 export type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 export type { CharacterBattleResourceExecutionFacts } from "./character-battle-resource-execution.ts";
-export type {
+export {
   StatBlockAttackDamageSelection,
-  StatBlockDamageComponentNotation,
+  type StatBlockDamageComponentNotation,
 } from "./stat-block-attack-damage-selection.ts";
 export {
   spellBattleSupport,
