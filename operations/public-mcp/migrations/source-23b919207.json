@@ -3,7 +3,7 @@
   "captureRevision": "4ee0bd57da3c4943e867957a22a1fa5931a38b11",
   "patch": {
     "path": "source-hooks.patch",
-    "sha256": "7ecc2042bb4d2d7c4f5aebbfa6c57a45c4b5b4310c4170d8cf5e9dbdce545c64"
+    "sha256": "ce3bf69702a66349af76a70735c9f4752ea7bd116c51282eae2e695cf0a99431"
   },
   "sourceFiles": [
     {

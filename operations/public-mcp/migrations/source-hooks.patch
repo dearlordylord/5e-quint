@@ -61,10 +61,29 @@ index b25f01235..62b7917ce 100644
 +  };
 +}
 diff --git a/packages/battle-runtime/src/battle-runtime-transaction.ts b/packages/battle-runtime/src/battle-runtime-transaction.ts
-index 8fe2c29b5..7cdefddbe 100644
+index 8fe2c29b5..4af5d0597 100644
 --- a/packages/battle-runtime/src/battle-runtime-transaction.ts
 +++ b/packages/battle-runtime/src/battle-runtime-transaction.ts
-@@ -2015,3 +2015,156 @@ function nonEmpty<T>(
+@@ -94,6 +94,10 @@ export type BattlePendingTransactionFrontier =
+       readonly kind: "ordinaryHoles";
+       readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryTransactionHole>;
+       readonly pendingProcedure: BattlePendingProcedure;
++      readonly continuation: Extract<
++        BattleCheckpointFrontierEnvelope["frontier"],
++        { readonly kind: "holes" }
++      >["continuation"];
+     }
+   | {
+       readonly kind: "interruptDecision";
+@@ -1325,6 +1329,7 @@ function battlePendingTransactionFrontierForResolution(
+         kind: "ordinaryHoles" as const,
+         holes: frontier.holes,
+         pendingProcedure: frontier.pendingProcedure,
++        continuation: frontier.continuation,
+       }),
+     ),
+     Match.exhaustive,
+@@ -2015,3 +2020,179 @@ function nonEmpty<T>(
    const [first, ...rest] = values;
    return first === undefined ? undefined : [first, ...rest];
  }
@@ -72,12 +91,28 @@ index 8fe2c29b5..7cdefddbe 100644
 +import { retainBattleRuntimeSession, type BattleRuntimeSessionContinuation } from "./battle-runtime-context.ts";
 +import { retainedAttackRollTableSource } from "./d20-test-circumstance.ts";
 +
++type RetainedTransactionFrontier =
++  | Pick<
++      Extract<
++        BattlePendingTransactionFrontier,
++        { readonly kind: "ordinaryHoles" }
++      >,
++      "kind" | "continuation"
++    >
++  | Pick<
++      Extract<
++        BattlePendingTransactionFrontier,
++        { readonly kind: "interruptDecision" }
++      >,
++      "kind"
++    >;
++
 +type RetainedTransactionLayer = {
 +  readonly baseSession: number;
 +  readonly currentSession: number;
 +  readonly subject: BattleSubject;
 +  readonly fills: readonly BattleFill[];
-+  readonly frontierKind: BattlePendingTransactionFrontier["kind"];
++  readonly frontier: RetainedTransactionFrontier;
 +  readonly checkpointOwnership:
 +    | { readonly tag: "ordinaryFrontier" }
 +    | {
@@ -152,7 +187,14 @@ index 8fe2c29b5..7cdefddbe 100644
 +      currentSession: sessionIndex(data.currentSession),
 +      subject: data.subject,
 +      fills: data.fills,
-+      frontierKind: data.frontier.kind,
++      frontier: Match.value(data.frontier).pipe(
++        Match.when({ kind: "ordinaryHoles" }, ({ kind, continuation }) => ({
++          kind,
++          continuation,
++        })),
++        Match.when({ kind: "interruptDecision" }, ({ kind }) => ({ kind })),
++        Match.exhaustive,
++      ),
 +      checkpointOwnership:
 +        data.checkpointOwnership.tag === "ordinaryFrontier"
 +          ? data.checkpointOwnership
