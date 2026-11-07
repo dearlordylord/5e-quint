@@ -57,8 +57,10 @@ pattern as QNT proofs: `.github/workflows/raw-swarm-deterministic.yml` runs it
 for relevant pull-request and `master` changes, and `workflow_dispatch` admits
 an explicit milestone run. Run `pnpm check:raw-swarm-deterministic` locally
 after the integration revision is stable and before merging a change covered
-by that workflow's path filters. Any subsequent revision change invalidates
-that result.
+by that workflow's path filters. After a local failure, use the
+[granular continuation protocol](../../docs/agents/verification.md#reuse-past-a-successful-stage)
+to rerun affected scopes and retain successful scopes whose inputs are unchanged.
+A new commit alone does not invalidate their evidence.
 
 The hygiene check preserves the classified deterministic-lane test inventory,
 classifies the two pre-existing MCP prototype tests in a closed exclusion list,
