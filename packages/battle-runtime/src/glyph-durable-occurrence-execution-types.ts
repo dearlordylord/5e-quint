@@ -5,6 +5,7 @@ import type {
   BattleFill,
   GlyphDurableOccurrenceActiveEffect,
   BattleTargetSpatialFact,
+  BattleSpellTargetSpatialFactRequest,
 } from "./battle-state-execution.ts";
 import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import type {
@@ -122,6 +123,19 @@ export type GlyphStoredSpellReleaseWitnessValidationFailure =
   | "storedSpellResolutionInvalid";
 
 export type ReleaseGlyphStoredSpellResult =
+  | {
+      readonly tag: "needsTargetSpatialFacts";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly request: Required<
+        Pick<
+          BattleSpellTargetSpatialFactRequest,
+          | "casterId"
+          | "sourceProcedureRef"
+          | "requiresEnemyProximityQualification"
+        >
+      >;
+    }
   | {
       readonly tag: "released";
       readonly state: BattleState;

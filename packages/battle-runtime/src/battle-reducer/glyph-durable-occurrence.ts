@@ -173,6 +173,7 @@ import {
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
+import { spellAttackRequiresExactDistance } from "./spells-targeting.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
@@ -1060,6 +1061,30 @@ export function releaseGlyphStoredSpell(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  if (
+    spellAttackRequiresExactDistance(ref.effect.release.storedProcedure) &&
+    input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature" &&
+    !input.witness.targeting.targetSpatialFacts.some(
+      (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+    )
+  ) {
+    const sourceProcedureRef = glyphStoredSpellProcedureRef(
+      input.state,
+      ref.effect,
+    );
+    if (sourceProcedureRef !== undefined) {
+      return {
+        tag: "needsTargetSpatialFacts",
+        state: input.state,
+        sourceEffectId,
+        request: {
+          casterId: ref.effect.sourceCombatantId,
+          sourceProcedureRef,
+          requiresEnemyProximityQualification: true,
+        },
+      };
+    }
+  }
   const resolved = resolveStoredSpellGlyphRelease({
     state: input.state,
     profile: input.profile,

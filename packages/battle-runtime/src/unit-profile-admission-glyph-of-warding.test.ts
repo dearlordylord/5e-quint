@@ -1036,12 +1036,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   });
 
   test("stored single-creature release retargets the triggering creature and cleans up the glyph", () => {
+    const storedInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
     const state = stateWithGlyphEffect(
       requireCompletedGlyphEffect({
         anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
         release: {
           kind: "spellGlyph",
-          storedInvocation: storedSpellInvocation(guidingBoltUnitId, 1),
+          storedInvocation,
         },
       }),
       glyphBattle({
@@ -1049,6 +1050,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         spellSlots: [{ spellLevel: 1, count: 1 }],
         targetHp: 50,
         targetMaxHp: 50,
+        extraTargetIds: [thunderwaveSecondTargetId],
       }),
     );
     expect(
@@ -1066,7 +1068,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       tag: "invalidWitness",
       reason: "triggerCreatureTargetMismatch",
     });
-    const needsAttackRoll = releaseGlyphStoredSpell({
+    const needsContext = releaseGlyphStoredSpell({
       executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
@@ -1078,6 +1080,68 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ),
     });
 
+    expect(needsContext.tag).toBe("needsTargetSpatialFacts");
+    if (needsContext.tag !== "needsTargetSpatialFacts") return;
+    expect(needsContext.state).toBe(state);
+    expect(needsContext.request).toEqual({
+      casterId: spellCasterId,
+      sourceProcedureRef: storedSpellProcedureRefInState(
+        state,
+        storedInvocation,
+      ),
+      requiresEnemyProximityQualification: true,
+    });
+    const proximity = {
+      kind: "rangedSpellAttackEnemyProximity",
+      casterId: needsContext.request.casterId,
+      sourceProcedureRef: needsContext.request.sourceProcedureRef,
+      enemies: [
+        {
+          enemyId: thunderwaveSecondTargetId,
+          distanceFeet: movementFeet(5),
+          enemyCanSeeCaster: true,
+        },
+      ],
+    } as const satisfies BattleTargetSpatialFact;
+    for (const staleProximity of [
+      { ...proximity, casterId: spellTargetId },
+      { ...proximity, sourceProcedureRef: glyphProcedureRef },
+      {
+        ...proximity,
+        enemies: [
+          { ...proximity.enemies[0], enemyId: combatantId("absent-enemy") },
+        ],
+      },
+    ]) {
+      const rejected = releaseGlyphStoredSpell({
+        executionRegistry,
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness(
+          glyphEffectRef(state),
+          [],
+          spellTargetId,
+          [staleProximity],
+        ),
+      });
+      expect(rejected).toMatchObject({
+        tag: "invalidWitness",
+        reason: "storedSpellResolutionInvalid",
+      });
+      expect(rejected.state).toBe(state);
+    }
+    const needsAttackRoll = releaseGlyphStoredSpell({
+      executionRegistry,
+      state: needsContext.state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        glyphEffectRef(state),
+        [],
+        spellTargetId,
+        [proximity],
+      ),
+    });
+
     expect(needsAttackRoll.tag).toBe("needsHoles");
     if (needsAttackRoll.tag !== "needsHoles") return;
     const attackRoll = requireReleaseHole(
@@ -1085,6 +1149,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "attackRoll",
     );
     expect("spell" in attackRoll).toBe(false);
+    expect(attackRoll.rollMode).toBe("disadvantage");
     expect(
       battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
     ).toBeDefined();
@@ -1094,9 +1159,15 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
         glyphEffectRef(state),
-        [attackRollFill(attackRoll, { total: 18, naturalD20: 12 })],
+        [
+          attackRollFill(attackRoll, {
+            total: 18,
+            naturalD20: 12,
+            rollMode: "disadvantage",
+          }),
+        ],
         spellTargetId,
-        [],
+        [proximity],
       ),
     });
 
@@ -1113,11 +1184,15 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       witness: storedSingleCreatureReleaseWitness(
         glyphEffectRef(state),
         [
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          attackRollFill(attackRoll, {
+            total: 18,
+            naturalD20: 12,
+            rollMode: "disadvantage",
+          }),
           glyphDamageRollFill(damageRoll, [[4, 4, 4, 4]]),
         ],
         spellTargetId,
-        [],
+        [proximity],
       ),
     });
 
@@ -1125,6 +1200,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (released.tag !== "released") return;
     expect(glyphEffects(released.state)).toEqual([]);
     expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(34);
+    expect(released.state.combatants.get(thunderwaveSecondTargetId)?.hp).toBe(
+      state.combatants.get(thunderwaveSecondTargetId)?.hp,
+    );
     const caster = requireCombatant(released.state, spellCasterId);
     expect(caster.origin.kind).toBe("character");
     if (caster.origin.kind !== "character") return;
@@ -1153,11 +1231,39 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         targetMaxHp: 20,
       }),
     );
-    const initialWitness = storedSingleCreatureReleaseWitness(
+    const unqualifiedWitness = storedSingleCreatureReleaseWitness(
       glyphEffectRef(state),
       [],
       spellTargetId,
       [],
+    );
+    const needsContext = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: unqualifiedWitness,
+    });
+    expect(needsContext.tag).toBe("needsTargetSpatialFacts");
+    if (needsContext.tag !== "needsTargetSpatialFacts") return;
+    expect(needsContext.state).toBe(state);
+    const initialWitness = storedSingleCreatureReleaseWitness(
+      glyphEffectRef(state),
+      [],
+      spellTargetId,
+      [
+        {
+          kind: "rangedSpellAttackEnemyProximity",
+          casterId: needsContext.request.casterId,
+          sourceProcedureRef: needsContext.request.sourceProcedureRef,
+          enemies: [
+            {
+              enemyId: spellTargetId,
+              distanceFeet: movementFeet(10),
+              enemyCanSeeCaster: true,
+            },
+          ],
+        },
+      ],
     );
     const needsAttack = releaseGlyphStoredSpell({
       executionRegistry,
@@ -1280,7 +1386,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       characterStoredSpellProcedureRef(unavailableExecution, storedInvocation),
     ).toBe(originalRef);
 
-    const release = releaseGlyphStoredSpell({
+    const needsContext = releaseGlyphStoredSpell({
       executionRegistry,
       state: unavailableState,
       profile: requireGlyphStoredSpellProfile(),
@@ -1292,6 +1398,34 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ),
     });
 
+    expect(needsContext.tag).toBe("needsTargetSpatialFacts");
+    if (needsContext.tag !== "needsTargetSpatialFacts") return;
+    expect(needsContext.state).toBe(unavailableState);
+    expect(needsContext.request.sourceProcedureRef).toBe(originalRef);
+    const release = releaseGlyphStoredSpell({
+      executionRegistry,
+      state: needsContext.state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        glyphEffectRef(state),
+        [],
+        spellTargetId,
+        [
+          {
+            kind: "rangedSpellAttackEnemyProximity",
+            casterId: needsContext.request.casterId,
+            sourceProcedureRef: needsContext.request.sourceProcedureRef,
+            enemies: [
+              {
+                enemyId: spellTargetId,
+                distanceFeet: movementFeet(10),
+                enemyCanSeeCaster: true,
+              },
+            ],
+          },
+        ],
+      ),
+    });
     expect(release.tag).toBe("needsHoles");
     if (release.tag !== "needsHoles") return;
     expect(
