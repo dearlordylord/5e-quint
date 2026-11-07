@@ -525,40 +525,18 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
-    if (
-      spellAttackRequiresExactDistance(invocation) &&
-      (fill.kind === "objectTargetChoice" ||
-        (fill.kind === "targetChoice" &&
-          (fill.holeId === ATTACK_TARGET_HOLE_ID ||
-            (invocation.procedure === "spellAttackSequence" &&
-              spellAttackSequencePartIndexForHole(
-                invocation,
-                fill.holeId,
-                "target",
-              ) !== null))))
-    ) {
-      const proximityIssue = rangedSpellAttackEnemyProximityQualificationIssue({
-        state,
-        casterId: actorId,
-        sourceProcedureRef,
-        facts: fill.spatialFacts ?? [],
-      });
-      if (proximityIssue !== null) return proximityIssue;
-    }
+    const proximityIssue = spellAttackFillQualificationIssue({
+      fill,
+      invocation,
+      state,
+      actorId,
+      sourceProcedureRef,
+    });
+    if (proximityIssue !== null) return proximityIssue;
 
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
     }
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fill.kind === "attackRoll" && fill.relationshipFacts !== undefined) {
-      /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
-      return {
-        tag: "invalid",
-        message:
-          "Spell attack roll relationship facts do not match a requested spell attack-roll decision.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
     if (fill.kind === "turnConstraintSomaticSpellFailureOutcome") {
       continue;
     }
@@ -2400,6 +2378,57 @@ function isSpellCastReactionFact(
   fact: BattleTargetSpatialFact,
 ): fact is SpellCastReactionFact {
   return fact.kind === "spellCastInterruptionTriggerCasterVisibleWithinRange";
+}
+
+function isSpellAttackProximityTargetFill(
+  fill: BattleFill,
+  invocation: RuntimeSpellProcedure,
+): fill is Extract<
+  BattleFill,
+  { readonly kind: "targetChoice" | "objectTargetChoice" }
+> {
+  return (
+    spellAttackRequiresExactDistance(invocation) &&
+    (fill.kind === "objectTargetChoice" ||
+      (fill.kind === "targetChoice" &&
+        (fill.holeId === ATTACK_TARGET_HOLE_ID ||
+          (invocation.procedure === "spellAttackSequence" &&
+            spellAttackSequencePartIndexForHole(
+              invocation,
+              fill.holeId,
+              "target",
+            ) !== null))))
+  );
+}
+
+function spellAttackFillQualificationIssue(input: {
+  readonly fill: BattleFill;
+  readonly invocation: RuntimeSpellProcedure;
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+}): Extract<SpellFillSet, { readonly tag: "invalid" }> | null {
+  const { fill, invocation } = input;
+  if (isSpellAttackProximityTargetFill(fill, invocation)) {
+    const proximityIssue = rangedSpellAttackEnemyProximityQualificationIssue({
+      state: input.state,
+      casterId: input.actorId,
+      sourceProcedureRef: input.sourceProcedureRef,
+      facts: fill.spatialFacts ?? [],
+    });
+    if (proximityIssue !== null) return proximityIssue;
+  }
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (fill.kind === "attackRoll" && fill.relationshipFacts !== undefined) {
+    /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
+    return {
+      tag: "invalid",
+      message:
+        "Spell attack roll relationship facts do not match a requested spell attack-roll decision.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return null;
 }
 
 function attackSightFactValidation(

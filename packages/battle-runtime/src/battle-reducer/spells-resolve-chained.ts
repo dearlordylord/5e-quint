@@ -1264,17 +1264,13 @@ export function chainedSpellFillSet(
         }
         /* v8 ignore stop -- @preserve */
         const spatialFacts = fill.spatialFacts ?? [];
-        const proximityIssue =
-          rangedSpellAttackEnemyProximityQualificationIssue({
-            state,
-            casterId: actorId,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            facts: spatialFacts,
-          });
-        if (proximityIssue !== null) return proximityIssue;
-        const sightFactValidation =
-          chainedSpellAttackSightFactValidation(spatialFacts);
-        if (sightFactValidation !== null) return sightFactValidation;
+        const spatialValidation = chainedSpellAttackSpatialFactValidation({
+          state,
+          casterId: actorId,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          facts: spatialFacts,
+        });
+        if (spatialValidation !== null) return spatialValidation;
         steps[stepIndex] = {
           ...step,
           target: { ...parsed.fill, spatialFacts },
@@ -1398,10 +1394,15 @@ export function chainedSpellFillSet(
   };
 }
 
-function chainedSpellAttackSightFactValidation(
-  facts: readonly BattleTargetSpatialFact[],
+function chainedSpellAttackSpatialFactValidation(
+  input: Parameters<
+    typeof rangedSpellAttackEnemyProximityQualificationIssue
+  >[0],
 ): Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> | null {
-  const message = validateUniqueAttackSightFacts(facts);
+  const proximityIssue =
+    rangedSpellAttackEnemyProximityQualificationIssue(input);
+  if (proximityIssue !== null) return proximityIssue;
+  const message = validateUniqueAttackSightFacts(input.facts);
   return message === null ? null : { tag: "invalid", message };
 }
 

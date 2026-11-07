@@ -162,17 +162,10 @@ export function parseStoredHitPoints(
     value.tempHp === undefined ? Result.succeed(Hp(0)) : parseHp(value.tempHp);
   if (Result.isFailure(tempHp)) return Result.fail(tempHp.failure);
   if (value.tag === "positive") {
-    const currentHp = parseHp(value.currentHp);
-    if (Result.isSuccess(currentHp) && currentHp.success === Hp(0))
-      return characterSheetIssue(
-        "Positive-HP Character Sheet requires positive current HP.",
-      );
-    return Result.isFailure(currentHp)
-      ? Result.fail(currentHp.failure)
-      : Result.succeed({
-          currentHp: currentHp.success,
-          tempHp: tempHp.success,
-        });
+    return Result.map(parseStoredPositiveHp(value.currentHp), (currentHp) => ({
+      currentHp,
+      tempHp: tempHp.success,
+    }));
   }
   if (value.tag === "knockedOut") {
     return Result.succeed({
@@ -192,6 +185,17 @@ export function parseStoredHitPoints(
         tempHp: tempHp.success,
         zeroHpLifecycle: lifecycle.success,
       });
+}
+
+function parseStoredPositiveHp(
+  value: unknown,
+): Result.Result<HpType, CharacterSheetIssue> {
+  const currentHp = parseHp(value);
+  if (Result.isSuccess(currentHp) && currentHp.success === Hp(0))
+    return characterSheetIssue(
+      "Positive-HP Character Sheet requires positive current HP.",
+    );
+  return currentHp;
 }
 
 function parseStoredZeroHpLifecycle(
