@@ -778,18 +778,13 @@ export function restoreBattleRuntimeContinuation(
       const frontier = battlePendingTransactionFrontierForResolution(resolved);
       if (Result.isFailure(frontier))
         return Result.fail("The saved transaction frontier is invalid.");
-      if (frontier.success.kind !== retained.frontier.kind)
-        return Result.fail(
+      return Result.mapError(
+        restoreRetainedTransactionFrontier({
+          retained: retained.frontier,
+          derived: frontier.success,
+        }),
+        () =>
           `Saved ${retained.frontier.kind} transaction derived ${frontier.success.kind} for ${retained.subject.tag}; checkpoint stack ${currentSession.state.interruptStack.length}.`,
-        );
-      return Result.succeed(
-        frontier.success.kind === "ordinaryHoles" &&
-          retained.frontier.kind === "ordinaryHoles"
-          ? {
-              ...frontier.success,
-              continuation: retained.frontier.continuation,
-            }
-          : frontier.success,
       );
     }
     function restoreLayerCompletion(
@@ -1981,6 +1976,31 @@ function battlePendingTransactionFrontierForResolution(
         pendingProcedure: frontier.pendingProcedure,
         continuation: frontier.continuation,
       }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function restoreRetainedTransactionFrontier(input: {
+  readonly retained: RetainedTransactionFrontier;
+  readonly derived: BattlePendingTransactionFrontier;
+}): Result.Result<
+  BattlePendingTransactionFrontier,
+  { readonly tag: "frontierKindMismatch" }
+> {
+  return Match.value(input.derived).pipe(
+    Match.when({ kind: "ordinaryHoles" }, (derived) =>
+      input.retained.kind === "ordinaryHoles"
+        ? Result.succeed({
+            ...derived,
+            continuation: input.retained.continuation,
+          })
+        : Result.fail({ tag: "frontierKindMismatch" as const }),
+    ),
+    Match.when({ kind: "interruptDecision" }, (derived) =>
+      input.retained.kind === "interruptDecision"
+        ? Result.succeed(derived)
+        : Result.fail({ tag: "frontierKindMismatch" as const }),
     ),
     Match.exhaustive,
   );
