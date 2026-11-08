@@ -1940,8 +1940,7 @@ function validateMagicActionHealingPoolDistribution(input: {
       /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
-        message:
-          "Magic Action healing cannot restore a target above half its Hit Point Maximum.",
+        message: `Magic Action healing cannot restore target "${allocation.targetId}" above half its Hit Point Maximum (${cap} HP). The target has ${target.hp}/${target.maxHp} HP; healing it by ${healing} HP exceeds the ${cap - Number(target.hp)} HP it can regain before reaching that ceiling. allocations.hitPoints means HP regained, not final HP.`,
       };
     }
     /* v8 ignore stop -- @preserve */
