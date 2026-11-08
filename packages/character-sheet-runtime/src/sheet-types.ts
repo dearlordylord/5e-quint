@@ -103,6 +103,8 @@ export const ARMOR_TRAINING_CATEGORY_VALUES = [
 export const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
   authoredUnitId("bard_bardic_inspiration"),
+  // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
+  authoredUnitId("fighter_action_surge"),
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
