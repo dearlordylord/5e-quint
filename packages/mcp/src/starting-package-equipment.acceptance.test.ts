@@ -76,12 +76,28 @@ function expectedEquipment(packageChoice: EquipmentPackageChoice) {
   };
 }
 
-function replayClericEquipment(packageChoice: "option_a" | "option_b") {
+function replayStartingEquipment(input: {
+  readonly classUnitId: ReturnType<typeof unitId>;
+  readonly packageChoice: EquipmentPackageChoice;
+  readonly expectedArmorClass: number;
+  readonly equipmentLoadout?: { readonly armor: string };
+  readonly expectedEquipment: {
+    readonly startingEquipmentCurrencyRemainderCp: number;
+    readonly owned: ReturnType<typeof expect.arrayContaining>;
+    readonly loadout: {
+      readonly armor?: string;
+      readonly shield?: string;
+    };
+  };
+}) {
+  const { classUnitId, packageChoice } = input;
   const catalog = buildUnitCatalog({ collections: [srdUnitCollection] });
   if (catalog.tag !== "ok") throw new Error("Expected the SRD catalog.");
   const unitLibrary = catalog.catalog;
   const root = createMcpPlaySessionRoot();
-  const draftId = characterDraftId(`draft:cleric-equipment-${packageChoice}`);
+  const draftId = characterDraftId(
+    `draft:${classUnitId}-equipment-${packageChoice}`,
+  );
   const characterId = characterIdFromDraftId(draftId);
   const call = (name: string, args: unknown): unknown => {
     const result = handleToolCall(root, name, args);
@@ -93,7 +109,7 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
   let draft = createCharacterDraft({ draftId, unitLibrary });
   call("create_character_draft", { draftId });
   const progressionOption = progressionOptionId(
-    testProgression(unitLibrary, unitId("class_cleric"), 5),
+    testProgression(unitLibrary, classUnitId, 5),
   );
   for (let pass = 0; pass < DEFAULT_MAX_FILL_PASSES; pass += 1) {
     const holes = discoverCreationHoles({ draft, unitLibrary });
@@ -117,7 +133,11 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
           cha: 10,
         },
         fixtureOptionIds: (source) =>
-          equipmentFixtureOptions(source, packageChoice),
+          classUnitId === "class_cleric"
+            ? equipmentFixtureOptions(source, packageChoice)
+            : source.choiceKey === "class_equipment_choice"
+              ? [creationChoiceOptionId(packageChoice)]
+              : manifestFixtureOptionIds(source),
       }),
     );
     const result = call("apply_character_creation_choices", {
@@ -139,7 +159,14 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
   const finalized = call("finalize_character", { draftId });
   expect(finalized).toMatchObject({ finalization: { tag: "ready" } });
   expect(finalized).toMatchObject({
-    build: { equipment: expectedEquipment(packageChoice) },
+    build: { equipment: input.expectedEquipment },
+  });
+  call("apply_character_session_operation", {
+    characterId,
+    operation: {
+      kind: "setEquipmentLoadout",
+      loadout: input.equipmentLoadout ?? input.expectedEquipment.loadout,
+    },
   });
   const queried = call("query_character_session", {
     characterId,
@@ -147,11 +174,11 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
   });
   expect(queried).toMatchObject({
     query: {
-      projection: { armorClass: packageChoice === "option_a" ? 16 : 13 },
+      projection: { armorClass: input.expectedArmorClass },
     },
   });
   const started = call("start_battle", {
-    battleId: `battle:cleric-equipment-${packageChoice}`,
+    battleId: `battle:${classUnitId}-equipment-${packageChoice}`,
     initiativeMode: "direct",
     companionAdmissions: [],
     initialCombatants: [
@@ -159,7 +186,7 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
         kind: "characterSession",
         ammunitionStocks: [],
         characterId,
-        combatantId: "cleric",
+        combatantId: "character",
         initiative: 18,
       },
       {
@@ -177,8 +204,8 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
       checkpoint: {
         combatants: expect.arrayContaining([
           expect.objectContaining({
-            combatantId: "cleric",
-            armorClass: packageChoice === "option_a" ? 16 : 13,
+            combatantId: "character",
+            armorClass: input.expectedArmorClass,
           }),
         ]),
       },
@@ -189,11 +216,68 @@ function replayClericEquipment(packageChoice: "option_a" | "option_b") {
 
 describe("starting-package equipment through public creation and Battle", () => {
   test("retains the level-5 Cleric package and replays its trained AC", () => {
-    expect(replayClericEquipment("option_a")).toEqual(
-      replayClericEquipment("option_a"),
+    expect(
+      replayStartingEquipment({
+        classUnitId: unitId("class_cleric"),
+        packageChoice: "option_a",
+        expectedArmorClass: 16,
+        expectedEquipment: expectedEquipment("option_a"),
+      }),
+    ).toEqual(
+      replayStartingEquipment({
+        classUnitId: unitId("class_cleric"),
+        packageChoice: "option_a",
+        expectedArmorClass: 16,
+        expectedEquipment: expectedEquipment("option_a"),
+      }),
     );
   });
   test("also retains a supported shield-only purchase", () => {
-    replayClericEquipment("option_b");
+    replayStartingEquipment({
+      classUnitId: unitId("class_cleric"),
+      packageChoice: "option_b",
+      expectedArmorClass: 13,
+      expectedEquipment: expectedEquipment("option_b"),
+    });
   });
 });
+
+const armorPackages = [
+  {
+    classUnitId: unitId("class_fighter"),
+    packageChoice: "option_a",
+    armorItemId: "armor:armor_chain_mail",
+    expectedArmorClass: 16,
+    expectedCurrency: 5200,
+  },
+  {
+    classUnitId: unitId("class_fighter"),
+    packageChoice: "option_b",
+    armorItemId: "armor:armor_studded_leather_armor",
+    expectedArmorClass: 13,
+    expectedCurrency: 5900,
+  },
+  {
+    classUnitId: unitId("class_rogue"),
+    packageChoice: "option_a",
+    armorItemId: "armor:armor_leather",
+    expectedArmorClass: 12,
+    expectedCurrency: 5600,
+  },
+] as const;
+
+for (const scenario of armorPackages) {
+  test(`${scenario.classUnitId} ${scenario.packageChoice} owns and equips its starting armor in Battle`, () => {
+    replayStartingEquipment({
+      ...scenario,
+      equipmentLoadout: { armor: scenario.armorItemId },
+      expectedEquipment: {
+        startingEquipmentCurrencyRemainderCp: scenario.expectedCurrency,
+        owned: expect.arrayContaining([
+          { kind: "catalogItem", itemId: scenario.armorItemId, quantity: 1 },
+        ]),
+        loadout: {},
+      },
+    });
+  });
+}
