@@ -49,8 +49,8 @@
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 631,
-      "numerator": 448,
-      "percent": "71%"
+      "numerator": 449,
+      "percent": "71.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 449
+      "value": 450
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 243,
@@ -67,8 +67,8 @@
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 449,
-      "numerator": 449,
+      "denominator": 450,
+      "numerator": 450,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -53367,6 +53367,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Equipment AC data is authored and consumed by Character Sheet Armor Class projection, but the armor record is not represented as an executable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_studded_leather_armor.json",
+      "unitId": "armor_studded_leather_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Shield equipment AC data is authored but not represented as an executable Unit profile row.",
         "tag": "unsupported-profile"
       },
@@ -54063,24 +54081,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/armor_splint_armor.json",
       "unitId": "armor_splint_armor"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "armor",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/armor_studded_leather_armor.json",
-      "unitId": "armor_studded_leather_armor"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

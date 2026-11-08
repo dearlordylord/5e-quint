@@ -24574,8 +24574,8 @@
         "group": "class-starting-equipment-unit-refs",
         "label": "SRD class concrete equipment refs",
         "metrics": {
-          "denominator": 3,
-          "numerator": 3,
+          "denominator": 6,
+          "numerator": 6,
           "percent": "100%"
         },
         "rows": [
@@ -24601,6 +24601,36 @@
           },
           {
             "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_chain_mail.json",
+            "status": "installed",
+            "unitId": "armor_chain_mail"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_b.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_studded_leather_armor.json",
+            "status": "installed",
+            "unitId": "armor_studded_leather_armor"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_leather.json",
+            "status": "installed",
+            "unitId": "armor_leather"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
             "kind": "weapon",
             "ownerUnitId": "class_wizard",
             "quantity": 2,
@@ -24612,7 +24642,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 3
+          "installed": 6
         }
       },
       {
@@ -24622,11 +24652,21 @@
         "group": "starting-equipment-concrete-unit-refs",
         "label": "Unique SRD concrete equipment refs",
         "metrics": {
-          "denominator": 6,
-          "numerator": 6,
+          "denominator": 9,
+          "numerator": 9,
           "percent": "100%"
         },
         "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_chain_mail.json",
+            "status": "installed",
+            "unitId": "armor_chain_mail"
+          },
           {
             "group": "starting-equipment-unit-refs",
             "kind": "armor",
@@ -24636,6 +24676,26 @@
             "sourceRecordPath": "packages/surface/content/armor_chain_shirt.json",
             "status": "installed",
             "unitId": "armor_chain_shirt"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_leather.json",
+            "status": "installed",
+            "unitId": "armor_leather"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_b.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_studded_leather_armor.json",
+            "status": "installed",
+            "unitId": "armor_studded_leather_armor"
           },
           {
             "group": "starting-equipment-unit-refs",
@@ -24690,13 +24750,13 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 6
+          "installed": 9
         }
       }
     ],
     "metrics": {
-      "denominator": 156,
-      "numerator": 156,
+      "denominator": 162,
+      "numerator": 162,
       "percent": "100%"
     },
     "openBlockerCount": 0
