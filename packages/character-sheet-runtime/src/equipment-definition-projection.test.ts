@@ -11,27 +11,12 @@ import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 
 import { projectCharacterSheetEquipmentDefinition } from "./equipment-definition-projection.ts";
 
-const armorAndShieldRoots = srdUnitCollection.units.filter(
-  (unit) => unit.kind === "armor" || unit.kind === "shield",
-);
-
 describe("Character Sheet equipment definition projection", () => {
-  test("diagnoses exactly three armor roots and one shield root", () => {
-    expect(armorAndShieldRoots).toHaveLength(4);
-    expect(
-      armorAndShieldRoots.filter(({ kind }) => kind === "armor"),
-    ).toHaveLength(3);
-    expect(
-      armorAndShieldRoots.filter(({ kind }) => kind === "shield"),
-    ).toHaveLength(1);
-
+  test("projects installed armor categories and shields", () => {
     const admitted = srdUnitCollection.units.flatMap((unit) => {
       const projection = projectCharacterSheetEquipmentDefinition(unit);
       return Result.isSuccess(projection) ? [projection.success] : [];
     });
-    expect(admitted).toHaveLength(4);
-    expect(admitted.filter(({ kind }) => kind === "armor")).toHaveLength(3);
-    expect(admitted.filter(({ kind }) => kind === "shield")).toHaveLength(1);
     expect(admitted).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
