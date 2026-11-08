@@ -75,10 +75,10 @@ let fighter =
         [ { coinsGp = 4
           , id = "option_a"
           , items = Some
-            [ { itemName = Some "Chain Mail"
-              , kind = "draft_owned_item"
+            [ { itemName = None Text
+              , kind = "unit_ref"
               , quantity = None Natural
-              , unitId = None Text
+              , unitId = Some "armor_chain_mail"
               }
             , { itemName = Some "Greatsword"
               , kind = "draft_owned_item"
@@ -106,10 +106,10 @@ let fighter =
         , { coinsGp = 11
           , id = "option_b"
           , items = Some
-            [ { itemName = Some "Studded Leather Armor"
-              , kind = "draft_owned_item"
+            [ { itemName = None Text
+              , kind = "unit_ref"
               , quantity = None Natural
-              , unitId = None Text
+              , unitId = Some "armor_studded_leather_armor"
               }
             , { itemName = Some "Scimitar"
               , kind = "draft_owned_item"

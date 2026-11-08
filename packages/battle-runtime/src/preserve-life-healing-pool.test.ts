@@ -158,16 +158,22 @@ describe("Preserve Life Magic Action healing pool", () => {
   });
 
   test("rejects allocations beyond the half Hit Point Maximum cap", () => {
-    const state = preserveLifeBattle();
+    const state = preserveLifeBattle({ targetHp: 13, targetMaxHp: 28 });
     const result = resolvePreserveLife(state, [
-      { targetId: spellTargetId, hitPoints: 9 },
+      { targetId: spellTargetId, hitPoints: 14 },
     ]);
 
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: expect.stringContaining("half"),
+      message: `Magic Action healing cannot restore target "${spellTargetId}" above half its Hit Point Maximum (14 HP). The target has 13/28 HP; healing it by 14 HP exceeds the 1 HP it can regain before reaching that ceiling. allocations.hitPoints means HP regained, not final HP.`,
     });
+
+    const resolved = recordResolvedState(
+      resolvePreserveLife(state, [{ targetId: spellTargetId, hitPoints: 1 }]),
+    );
+    expect(currentHp(resolved, spellTargetId)).toBe(14);
+    expect(channelDivinityUsesRemaining(resolved)).toBe(1);
   });
 
   test("rejects missing range facts for non-self targets", () => {
@@ -261,6 +267,7 @@ function preserveLifeBattle(
   input: {
     readonly casterHp?: number;
     readonly targetHp?: number;
+    readonly targetMaxHp?: number;
     readonly secondTargetHp?: number;
     readonly channelDivinityUsesRemaining?: number;
   } = {},
@@ -293,7 +300,7 @@ function preserveLifeBattle(
         displayName: "Target",
         initiative: 10,
         currentHp: input.targetHp ?? 2,
-        maxHp: 20,
+        maxHp: input.targetMaxHp ?? 20,
       }),
       characterCreature({
         combatantId: secondTargetId,

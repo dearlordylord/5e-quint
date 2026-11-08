@@ -5,7 +5,7 @@
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "57e0532f7d582f38f2f22736a1fe57699d3a407106d82b744e6458bfd63f7fa9",
+      "inputSha256": "620daee5697c1627a32c0a49c2baf62c9c83a5e97004618b9f78311688db1806",
       "expected": {
         "tag": "accepted"
       }
@@ -367,7 +367,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "bcb569860062df1d32836006063c3b46b3e50dd17c401346bafd5f61476ced45",
+      "inputSha256": "7ef490d1d781c45746f02f92f0c56ccdd3ca0505610e5e362d57bcb6fb605bcb",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1059,6 +1059,20 @@
           },
           {
             "code": "dangling-authored-dependency",
+            "path": "$.units[4].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "armor_chain_mail",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].startingEquipment[1].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "armor_studded_leather_armor",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
             "path": "$.units[40].mechanics.trigger.sourceUnitId",
             "targetKind": "unit",
             "targetId": "rogue_sneak_attack",
@@ -1672,6 +1686,13 @@
             "targetKind": "unit",
             "targetId": "rogue_ability_score_improvement_l4",
             "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "armor_leather",
+            "relation": "item-reference"
           },
           {
             "code": "dangling-authored-dependency",

@@ -387,6 +387,106 @@ function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
 }
 
 describe("Character Sheet battle handoff", () => {
+  test("retains spent Action Surge through settlement, restore and the next Battle", () => {
+    const actorId = combatantId("action-surge-fighter");
+    const base = defenseBuild({ wearingArmor: false });
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:action-surge-fighter"),
+        build: {
+          ...base,
+          progression: {
+            startingClass: classUnitId(authoredUnitId("class_fighter")),
+            advancements: Array.from({ length: 2 }, () => ({
+              classUnitId: classUnitId(authoredUnitId("class_fighter")),
+              hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            })),
+          },
+        },
+        currentHp: Hp(20),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const enter = (input: {
+      readonly sheet: CharacterSheet;
+      readonly battleId: ReturnType<typeof battleId>;
+    }) =>
+      expectSuccess(
+        startBattle({
+          battleId: input.battleId,
+          combatants: [
+            expectSuccess(
+              characterSheetBattleInit({
+                sheet: input.sheet,
+                unitLibrary,
+                statBlockCatalog,
+                combatantId: actorId,
+                displayName: "Fighter",
+                initiative: initiativeScore(20),
+                ammunitionStocks: [],
+              }),
+            ),
+          ],
+        }),
+      );
+    const session = enter({
+      sheet,
+      battleId: battleId("battle:action-surge-first"),
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(candidate)?.unitId === "fighter_action_surge",
+    );
+    if (act?.subject.tag !== "unitFeature")
+      throw new Error("Expected Action Surge act.");
+    const surged = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [],
+      }),
+    );
+    const settled = expectSuccess(
+      settleCharacterSheetFromBattle({
+        sheet,
+        battleSession: battleRuntimeSessionForTest({
+          state: surged.state,
+          context: session.context,
+        }),
+        combatantId: actorId,
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+    expect(settled.resourceExpenditures).toContainEqual({
+      tag: "useCountResource",
+      unitId: "fighter_action_surge",
+      expended: 1,
+    });
+    const restored = expectSuccess(
+      parseCharacterSheet(
+        JSON.parse(JSON.stringify(settled)),
+        unitLibrary,
+        statBlockCatalog,
+      ),
+    );
+    expect(
+      discoverBattleActs(
+        enter({
+          sheet: restored,
+          battleId: battleId("battle:action-surge-next"),
+        }),
+      ).some(
+        (candidate) =>
+          candidate.subject.tag === "unitFeature" &&
+          battleActUnitPresentation(candidate)?.unitId ===
+            "fighter_action_surge",
+      ),
+    ).toBe(false);
+  });
+
   test.each([
     {
       name: "non-spellcasting exhaustion and Heroic Inspiration",

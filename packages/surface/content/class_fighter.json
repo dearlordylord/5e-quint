@@ -119,8 +119,8 @@
       "id": "option_a",
       "items": [
         {
-          "itemName": "Chain Mail",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "armor_chain_mail"
         },
         {
           "itemName": "Greatsword",
@@ -147,8 +147,8 @@
       "id": "option_b",
       "items": [
         {
-          "itemName": "Studded Leather Armor",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "armor_studded_leather_armor"
         },
         {
           "itemName": "Scimitar",

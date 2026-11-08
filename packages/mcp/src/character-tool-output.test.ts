@@ -50,6 +50,7 @@ const decodeCharacterRow = (value: unknown) =>
   Schema.decodeUnknownResult(CharacterSessionRowSchema)(value);
 
 const normalCharacterSheetProjection = {
+  equippedWeaponBattleBlockers: [],
   classSpellBattleSupport: [],
   currentHp: 10,
   companion: { tag: "none" },

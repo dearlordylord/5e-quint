@@ -1,3 +1,7 @@
+import {
+  equippedWeaponBattleBlockersOutput,
+  type EquippedWeaponBattleBlockersSchema,
+} from "./equipped-weapon-battle-blockers.ts";
 import type { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
 import {
   CIRCLE_LAND_ARGUMENT,
@@ -56,6 +60,10 @@ export function characterFinalizationInput(input: {
       draftId: input.draftId,
       land: land.success,
       knownForms: wildShape.success?.knownFormRoster,
+      equippedWeaponBattleBlockers: equippedWeaponBattleBlockersOutput({
+        build,
+        unitLibrary: input.root.unitLibrary,
+      }),
       classSpellBattleSupport: characterBattleSpellSupportOutput({
         build,
         unitLibrary: input.root.unitLibrary,
@@ -96,6 +104,7 @@ function classSpellBattleSupportInstructions(
 function characterSheetInitializationCall(input: {
   readonly draftId: CharacterDraftId;
   readonly classSpellBattleSupport: typeof CharacterBattleSpellSupportSchema.Type;
+  readonly equippedWeaponBattleBlockers: typeof EquippedWeaponBattleBlockersSchema.Type;
   readonly land: readonly DruidCircleLandChoice[] | undefined;
   readonly knownForms:
     | CharacterBuildDruidWildShapeFacts["knownFormRoster"]
@@ -125,6 +134,7 @@ function characterSheetInitializationCall(input: {
     }),
   );
   const instructions = [
+    "Review equippedWeaponBattleBlockers before planning an encounter. Ownership and equipping remain valid for noncombat use; resolve any listed Battle-entry blockers using their nextStep guidance.",
     ...classSpellBattleSupportInstructions(input.classSpellBattleSupport),
     "The Character Build is complete. This schema describes the operation arguments for finalize_character; add the current playSessionId when invoking the hosted tool. Supply these initialization choices to create the in-play Character Sheet; no additional creation-hole fills are needed.",
     ...(land === undefined
@@ -146,6 +156,7 @@ function characterSheetInitializationCall(input: {
         argumentsSchema,
         instructions,
         classSpellBattleSupport: input.classSpellBattleSupport,
+        equippedWeaponBattleBlockers: input.equippedWeaponBattleBlockers,
       }
     : {
         phase: "initializationRequired",
@@ -154,6 +165,7 @@ function characterSheetInitializationCall(input: {
         argumentsSchema,
         instructions,
         classSpellBattleSupport: input.classSpellBattleSupport,
+        equippedWeaponBattleBlockers: input.equippedWeaponBattleBlockers,
       };
 }
 

@@ -748,6 +748,69 @@ describe("Character Sheet runtime / resources", () => {
     );
   });
 
+  test.each([
+    { level: 3, count: 1 },
+    { level: 17, count: 2 },
+  ])(
+    "restores the level $level Action Surge pool after either rest",
+    ({ level, count }) => {
+      const unitId = authoredUnitId("fighter_action_surge");
+      const spent = requireSuccess(
+        rebuildCharacterSheetFixture({
+          characterId: characterSheetId(`character:action-surge-rest-${level}`),
+          build: armorClassBuild({
+            startingClass: "class_fighter",
+            advancements: Array.from(
+              { length: level - 1 },
+              () => "class_fighter",
+            ),
+          }),
+          currentHp: Hp(20),
+          tempHp: Hp(0),
+          unitLibrary,
+          resourceExpenditures: [
+            { tag: "useCountResource", unitId, expended: resourceCount(count) },
+          ],
+        }),
+      );
+      const restored = requireSuccess(
+        parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
+      );
+      expect(
+        requireSuccess(characterSheetResources(restored, unitLibrary)),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tag: "useCountResource",
+            unitId,
+            count,
+            expended: count,
+            resetCadence: { kind: "short_or_long_rest" },
+          }),
+        ]),
+      );
+      for (const result of [
+        completeShortRest({ sheet: restored, unitLibrary }),
+        completeLongRest({ sheet: restored, unitLibrary }),
+      ]) {
+        const rested = requireSuccess(result);
+        expect(rested.resourceExpenditures).toEqual([]);
+        expect(
+          requireSuccess(characterSheetResources(rested, unitLibrary)),
+        ).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              tag: "useCountResource",
+              unitId,
+              count,
+              expended: 0,
+            }),
+          ]),
+        );
+      }
+    },
+  );
+
   test(sorcererFontOfMagicLongRestRecoveryTestName, () => {
     const sorcererBuild = sorcererFontOfMagicBuild();
     expect(characterBuildResources(sorcererBuild, unitLibrary)).toEqual(

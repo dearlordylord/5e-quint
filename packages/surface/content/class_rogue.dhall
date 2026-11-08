@@ -71,7 +71,7 @@ let rogue =
         [ { coinsGp = 8
           , id = "option_a"
           , items = Some
-            [ { itemName = Some "Leather Armor", kind = "draft_owned_item", quantity = None Natural, unitId = None Text }
+            [ { itemName = None Text, kind = "unit_ref", quantity = None Natural, unitId = Some "armor_leather" }
             , { itemName = Some "Dagger", kind = "draft_owned_item", quantity = Some 2, unitId = None Text }
             , { itemName = Some "Shortsword", kind = "draft_owned_item", quantity = None Natural, unitId = None Text }
             , { itemName = Some "Shortbow", kind = "draft_owned_item", quantity = None Natural, unitId = None Text }

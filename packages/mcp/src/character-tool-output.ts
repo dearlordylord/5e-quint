@@ -1,3 +1,4 @@
+import { EquippedWeaponBattleBlockersSchema } from "./equipped-weapon-battle-blockers.ts";
 import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
 import { CreationInputGuidanceSchema } from "./creation-input-guidance-schema.ts";
 import { FinalizationInputGuidanceSchema } from "./character-finalization-input-guidance.ts";
@@ -353,6 +354,7 @@ export const CharacterSessionOperationResultSchema = Schema.Union([
   CharacterSessionResourceOperationResultSchema,
 ]);
 export const CharacterSessionSheetProjectionSchema = Schema.Struct({
+  equippedWeaponBattleBlockers: EquippedWeaponBattleBlockersSchema,
   classSpellBattleSupport: CharacterBattleSpellSupportSchema,
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union([

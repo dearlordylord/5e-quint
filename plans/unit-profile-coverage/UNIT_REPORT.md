@@ -10,15 +10,15 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 449 Units |
+| Installed collection inventory count | 450 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 448/631 | 71% |
+| Authored Surface Unit catalog admission | 449/631 | 71.2% |
 | Authored Surface executable catalog admission | 398/543 | 73.3% |
-| Installed Unit profile classification coverage | 449/449 | 100% |
+| Installed Unit profile classification coverage | 450/450 | 100% |
 | Supported executable Unit coverage | 243/399 | 60.9% |
 | QNT profile modeling coverage | 165/170 | 97.1% |
 | QNT proof coverage | 162/170 | 95.3% |
@@ -498,7 +498,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | spell | 57 | `alarm`, `animal_shapes`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `beacon_of_hope`, `blade_barrier`, `blight`, `call_lightning`, `charm_monster`, `circle_of_death`, `comprehend_languages`, `compulsion`, `conjure_minor_elementals`, `conjure_woodland_beings`, `death_ward`, `disintegrate`, `dominate_beast`, `dominate_monster`, `earthquake`, `fabricate`, `find_steed`, `fire_shield`, `fire_storm`, `flesh_to_stone`, `forcecage`, `freedom_of_movement`, `gentle_repose`, `greater_invisibility`, `heal`, `holy_aura`, `incendiary_cloud`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `phantom_steed`, `polymorph`, `power_word_heal`, `prismatic_wall`, `reverse_gravity`, `sequester`, `silent_image`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `sunbeam`, `sunburst`, `true_polymorph`, `tsunami`, `vampiric_touch`, `wall_of_ice`, `wall_of_thorns`, `weird`, `wind_wall` |
 | weapon | 29 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
 | class_feature | 10 | `barbarian_primal_champion`, `bard_epic_boon`, `bard_words_of_creation`, `cleric_epic_boon`, `druid_epic_boon`, `fighter_epic_boon`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_feral_senses` |
-| armor | 9 | `armor_breastplate`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
+| armor | 8 | `armor_breastplate`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
 | shield_template | 2 | `magic_item_sentinel_shield`, `magic_item_shield_1_2_or_3` |
@@ -509,7 +509,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | ---: | --- | --- |
 | intentional-backlog | future magic item profile intake | 78 | magic_item: 70, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | srd-candidate | QMBT14-QMBT16 | 57 | spell: 57 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
-| non-runtime-authored-data | no promoted runtime lane | 38 | weapon: 29, armor: 9 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
+| non-runtime-authored-data | no promoted runtime lane | 37 | weapon: 29, armor: 8 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | unsupported-widening-pressure | QMBT18 | 10 | class_feature: 10 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
 
 | Unit | Disposition | Planning lane | Kind | Mechanics | Source |
@@ -527,7 +527,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `armor_ring_mail` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_ring_mail.json` |
 | `armor_scale_mail` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_scale_mail.json` |
 | `armor_splint_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_splint_armor.json` |
-| `armor_studded_leather_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_studded_leather_armor.json` |
 | `aura_of_life` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/aura_of_life.json` |
 | `banishment` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/banishment.json` |
 | `barbarian_primal_champion` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/barbarian_primal_champion.json` |
@@ -715,7 +714,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `armor_ring_mail` | armor | no | `packages/surface/content/armor_ring_mail.json` |
 | `armor_scale_mail` | armor | no | `packages/surface/content/armor_scale_mail.json` |
 | `armor_splint_armor` | armor | no | `packages/surface/content/armor_splint_armor.json` |
-| `armor_studded_leather_armor` | armor | no | `packages/surface/content/armor_studded_leather_armor.json` |
 | `aura_of_life` | spell | yes | `packages/surface/content/aura_of_life.json` |
 | `banishment` | spell | yes | `packages/surface/content/banishment.json` |
 | `barbarian_primal_champion` | class_feature | yes | `packages/surface/content/barbarian_primal_champion.json` |
@@ -1704,6 +1702,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
 | `armor_chain_shirt` | unsupported-profile | Equipment AC data is authored and consumed by Character Sheet Armor Class projection, but the armor record is not represented as an executable Unit profile row. |
 | `armor_leather` | unsupported-profile | Equipment AC data is authored and consumed by Character Sheet Armor Class projection, but the armor record is not represented as an executable Unit profile row. |
+| `armor_studded_leather_armor` | unsupported-profile | Equipment AC data is authored and consumed by Character Sheet Armor Class projection, but the armor record is not represented as an executable Unit profile row. |
 | `equipment_shield` | unsupported-profile | Shield equipment AC data is authored but not represented as an executable Unit profile row. |
 | `weapon_club` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_dagger` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
@@ -1759,7 +1758,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 156 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_halfling`, `species_human`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_barbarian_path_of_the_berserker`, `subclass_bard_college_of_lore`, `subclass_cleric_life_domain`, `subclass_druid_circle_of_the_land`, `subclass_fighter_champion`, `subclass_monk_warrior_of_the_open_hand`, `subclass_paladin_oath_of_devotion`, `subclass_ranger_hunter`, `subclass_rogue_thief`, `subclass_sorcerer_draconic_sorcery`, `subclass_warlock_fiend_patron`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `species_gnome_darkvision`, `species_tiefling_darkvision`, `animate_dead`, `chain_lightning`, `clairvoyance`, `confusion`, `control_water`, `control_weather`, `create_undead`, `dimension_door`, `disguise_self`, `druidcraft`, `elementalism`, `etherealness`, `fear`, `finger_of_death`, `harm`, `heroes_feast`, `ice_storm`, `identify`, `mage_hand`, `major_image`, `phantasmal_killer`, `plane_shift`, `power_word_kill`, `power_word_stun`, `project_image`, `resurrection`, `spirit_guardians`, `teleport`, `tongues`, `true_seeing`, `vitriolic_sphere`, `wall_of_fire`, `water_breathing`, `wind_walk`, `word_of_recall`, `animal_messenger`, `arcanists_magic_aura`, `augury`, `bestow_curse`, `blink`, `conjure_animals`, `create_food_and_water`, `darkvision`, `daylight`, `find_traps`, `knock`, `locate_animals_or_plants`, `locate_object`, `mending`, `message`, `phantasmal_force`, `plant_growth`, `prestidigitation`, `remove_curse`, `revivify`, `rope_trick`, `sending`, `speak_with_animals`, `speak_with_dead`, `speak_with_plants`, `tiny_hut`, `water_walk`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `magic_circle`, `magic_mouth`, `meld_into_stone`, `nondetection`, `silence`, `suggestion`, `zone_of_truth`, `minor_illusion`, `alarm`, `arcane_eye`, `arcane_lock`, `aura_of_life`, `banishment`, `barbarian_primal_champion`, `bard_epic_boon`, `bard_words_of_creation`, `beacon_of_hope`, `blight`, `call_lightning`, `charm_monster`, `cleric_epic_boon`, `comprehend_languages`, `compulsion`, `conjure_minor_elementals`, `conjure_woodland_beings`, `death_ward`, `dominate_beast`, `druid_epic_boon`, `fabricate`, `fighter_epic_boon`, `find_steed`, `fire_shield`, `freedom_of_movement`, `gentle_repose`, `greater_invisibility`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `polymorph`, `ranger_feral_senses`, `silent_image`, `stinking_cloud`, `stoneskin`, `vampiric_touch`, `wind_wall` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 66 | `species_gnome`, `fighter_indomitable`, `druid_wild_shape`, `druid_wild_companion`, `monk_monks_focus`, `monk_acrobatic_movement`, `ranger_favored_enemy`, `rogue_fast_hands`, `sorcerer_font_of_magic`, `sorcerer_metamagic`, `wizard_evocation_savant`, `mastery_push`, `species_gnome_gnomish_lineage`, `species_halfling_nimbleness`, `species_halfling_luck`, `species_halfling_naturally_stealthy`, `species_human_resourceful`, `animate_objects`, `antilife_shell`, `arcane_hand`, `awaken`, `calm_emotions`, `cloudkill`, `commune`, `commune_with_nature`, `contact_other_plane`, `conjure_elemental`, `contagion`, `creation`, `darkness`, `dispel_evil_and_good`, `dominate_person`, `dream`, `enlarge_reduce`, `enthrall`, `find_familiar`, `geas`, `greater_restoration`, `gust_of_wind`, `hallow`, `insect_plague`, `legend_lore`, `levitate`, `mislead`, `modify_memory`, `passwall`, `telekinesis`, `wall_of_force`, `wall_of_stone`, `pass_without_trace`, `planar_binding`, `prayer_of_healing`, `raise_dead`, `reincarnate`, `scrying`, `seeming`, `telepathic_bond`, `teleportation_circle`, `thaumaturgy`, `tree_stride`, `mind_spike`, `moonbeam`, `sleet_storm`, `spike_growth`, `summon_dragon`, `charm_person` |
-| srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 13 | `armor_chain_mail`, `armor_chain_shirt`, `armor_leather`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 14 | `armor_chain_mail`, `armor_chain_shirt`, `armor_leather`, `armor_studded_leather_armor`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | broader ongoing Spell Effect occurrence model plus additional spell-specific dispel exception owners | profile-subset-supported | 1 | `dispel_magic` |
 | srd-5.2.1 | character inventory/equipment component legality plus runtime-detached object presentation owner | profile-subset-supported | 1 | `continual_flame` |
 | srd-5.2.1 | future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner | unsupported-profile | 1 | `gaseous_form` |

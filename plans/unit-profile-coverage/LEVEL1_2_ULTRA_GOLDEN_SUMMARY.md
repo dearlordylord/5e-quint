@@ -12,7 +12,7 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 
 | Layer | Status | Evidence | Blocking issue |
 | --- | --- | --- | --- |
-| Support completeness | pass | strict target closure 122/122 (100%); selected identity 104/104 (100%); SRD authored product readiness 95/95 (100%) | _none_ |
+| Support completeness | pass | strict target closure 122/122 (100%); selected identity 104/104 (100%); SRD authored product readiness 101/101 (100%) | _none_ |
 | QNT/generator readiness | pass | QNT-covered obligations 50/50; generator-ready semantic-core obligations 41/41 | _none_ |
 | MBT/parity evidence | pass | parity-witnessed obligations 50/50; witness kinds contract-test: 9, deterministic-qnt-replay: 8, focused-mbt: 57, runtime-test: 19 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
@@ -25,7 +25,7 @@ Unit-profile disposition gate: **pass**.
 | --- | ---: | ---: |
 | Strict target closure | 122/122 (100%) | 0 |
 | Selected identity readiness | 104/104 (100%) | 0 |
-| SRD authored product readiness | 95/95 (100%) | 0 |
+| SRD authored product readiness | 101/101 (100%) | 0 |
 
 Diagnostic product readiness remains a separate lower-layer accounting view. It can be below 100% while the Unit-profile disposition gate passes when the strict, selected-identity, and SRD-authored blocker counts are all zero. This pass does not claim complete default-SDK execution.
 

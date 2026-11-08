@@ -7,13 +7,16 @@ import {
 import { characterId, combatantId, initiativeScore } from "@dnd/battle-runtime";
 import {
   battleCreatureInitIssueLeaves,
+  battleCreatureInitIssueMessage,
   battleCreatureInitFromCharacterBuild,
   characterArmorClassState,
+  characterBuildEquippedWeaponBattleBlockers,
   characterSpellcasting,
   characterWeaponAttackActionOptions,
 } from "./index.ts";
 import {
   levelFiveMartialBuild,
+  requireSuccess,
   unitLibrary,
 } from "./sdk-integration.test-support.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -199,25 +202,65 @@ describe("Character Build battle spell projection boundaries", () => {
       slot: "off",
       unitId: offHandUnitId.success,
     });
-    const result = characterWeaponAttackActionOptions({
-      build: {
-        ...build,
-        equipment: {
-          ...build.equipment,
-          owned: [
-            ...build.equipment.owned,
-            {
-              kind: "catalogItem",
-              itemId: offHandItemId,
-              quantity: PositiveInteger(1),
-            },
-          ],
-          loadout: {
-            ...build.equipment.loadout,
-            offHandWeapon: { itemId: offHandItemId },
+    const longswordUnitId = requireSuccess(
+      characterEquipmentItemUnitId(authoredUnitId("weapon_longsword")),
+    );
+    const mainAlternative = characterEquipmentItemId({
+      slot: "main",
+      unitId: longswordUnitId,
+    });
+    const offHandAlternative = characterEquipmentItemId({
+      slot: "off",
+      unitId: longswordUnitId,
+    });
+    const focusAlternative = characterEquipmentItemId({
+      slot: "main",
+      unitId: requireSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_quarterstaff")),
+      ),
+    });
+    const equippedBuild: typeof build = {
+      ...build,
+      equipment: {
+        ...build.equipment,
+        owned: [
+          ...build.equipment.owned,
+          {
+            kind: "catalogItem",
+            itemId: offHandItemId,
+            quantity: PositiveInteger(1),
           },
+          {
+            kind: "catalogItem",
+            itemId: mainAlternative,
+            quantity: PositiveInteger(1),
+          },
+          {
+            kind: "catalogItem",
+            itemId: offHandAlternative,
+            quantity: PositiveInteger(1),
+          },
+          {
+            kind: "authoredCatalogItem",
+            itemId: focusAlternative,
+            authoredItemId: "Synthetic Arcane Staff",
+            spellcastingFocusKind: "arcane",
+            quantity: PositiveInteger(1),
+          },
+          {
+            kind: "authoredStartingItem",
+            itemName: "Synthetic Travel Pack",
+            quantity: PositiveInteger(1),
+          },
+        ],
+        loadout: {
+          ...build.equipment.loadout,
+          offHandWeapon: { itemId: offHandItemId },
         },
       },
+    };
+    const result = characterWeaponAttackActionOptions({
+      build: equippedBuild,
       unitLibrary,
       weaponMasteries: [],
       classLevels: [{ className: "fighter", level: 5 }],
@@ -237,6 +280,48 @@ describe("Character Build battle spell projection boundaries", () => {
         admissionReason: "unsupported_mechanics",
       }),
     ]);
+    const blockers = characterBuildEquippedWeaponBattleBlockers({
+      build: equippedBuild,
+      unitLibrary,
+    });
+    expect(blockers).toEqual([
+      {
+        slot: "main",
+        itemId: build.equipment.loadout.weapon?.itemId,
+        weaponUnitId: "weapon_dagger",
+        messages: [expect.any(String)],
+        weaponDefinitionAdmittedOwnedAlternatives: [
+          mainAlternative,
+          focusAlternative,
+        ],
+      },
+      {
+        slot: "offHand",
+        itemId: offHandItemId,
+        weaponUnitId: "weapon_shortbow",
+        messages: [expect.any(String)],
+        weaponDefinitionAdmittedOwnedAlternatives: [offHandAlternative],
+      },
+    ]);
+    for (const blocker of blockers) {
+      for (const message of blocker.messages) {
+        expect(battleCreatureInitIssueMessage(result.failure)).toContain(
+          message,
+        );
+      }
+    }
+  });
+
+  test("discloses no equipped weapon blockers when the weapon definition is admitted", () => {
+    expect(
+      characterBuildEquippedWeaponBattleBlockers({
+        build: levelFiveMartialBuild({
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
+        }),
+        unitLibrary,
+      }),
+    ).toEqual([]);
   });
 
   test("reports a selected defensive feature that is unavailable", () => {

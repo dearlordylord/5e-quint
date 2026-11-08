@@ -1,3 +1,4 @@
+import { equippedWeaponBattleBlockersOutput } from "./equipped-weapon-battle-blockers.ts";
 import { characterBattleSpellSupportOutput } from "./character-battle-spell-support-output.ts";
 import type { CharacterId } from "@dnd/battle-runtime";
 import type { CharacterBuildDisplayNameIssues } from "@dnd/character-creation-runtime";
@@ -222,6 +223,10 @@ function availableCharacterSessionDetail(
     });
   }
   const sheetProjection = parseCharacterSessionSheetProjection({
+    equippedWeaponBattleBlockers: equippedWeaponBattleBlockersOutput({
+      build: sheet.build,
+      unitLibrary: root.unitLibrary,
+    }),
     classSpellBattleSupport: characterBattleSpellSupportOutput({
       build: sheet.build,
       unitLibrary: root.unitLibrary,
