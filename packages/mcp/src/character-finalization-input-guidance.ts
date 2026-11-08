@@ -1,3 +1,4 @@
+import { EquippedWeaponBattleBlockersSchema } from "./equipped-weapon-battle-blockers.ts";
 import { Schema } from "effect";
 import type { FinalizeCharacterArgsSchema } from "./character-tool-input.ts";
 import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
@@ -10,6 +11,7 @@ const INITIALIZATION_ARGUMENTS = [
 ] as const satisfies readonly (keyof typeof FinalizeCharacterArgsSchema.fields)[];
 export type InitializationArgument = (typeof INITIALIZATION_ARGUMENTS)[number];
 const FinalizationCallFields = {
+  equippedWeaponBattleBlockers: EquippedWeaponBattleBlockersSchema,
   tool: Schema.Literal("finalize_character"),
   argumentsSchema: Schema.Record(Schema.String, Schema.Unknown),
   instructions: Schema.Array(Schema.String),

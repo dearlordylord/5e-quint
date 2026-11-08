@@ -29,7 +29,10 @@ import {
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
-import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
+import {
+  admitWeaponDefinition,
+  type AdmittedWeaponDefinition,
+} from "@dnd/battle-runtime/weapon-definition-admission";
 import type { CharacterBuildProficiencies } from "@dnd/character-creation-runtime";
 
 import {
@@ -551,8 +554,10 @@ export type CharacterWeaponAttackActionOptions = {
   readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
 };
 
+export const CHARACTER_WEAPON_ATTACK_SLOTS = ["main", "offHand"] as const;
+
 type CharacterWeaponLoadoutRequest = {
-  readonly slot: "main" | "offHand";
+  readonly slot: (typeof CHARACTER_WEAPON_ATTACK_SLOTS)[number];
   readonly itemId: CharacterEquipmentItemId;
 };
 
@@ -588,33 +593,6 @@ type CharacterWeaponAttackProjectionInput = {
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
 };
-
-function projectCharacterWeaponLoadoutRequest(
-  input: CharacterWeaponAttackProjectionInput & {
-    readonly weaponProficiencies: readonly WeaponProficiency[];
-  },
-  request: CharacterWeaponLoadoutRequest,
-): Result.Result<CharacterWeaponLoadoutProjection, BattleCreatureInitIssue> {
-  const projected = characterWeaponAttackActionOption({
-    unitId: characterEquipmentItemSourceFromId(request.itemId).unitId,
-    itemId: request.itemId,
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-    weaponMasteries: input.weaponMasteries,
-    classLevels: input.classLevels,
-    weaponProficiencies: input.weaponProficiencies,
-    pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
-  });
-  if (Result.isFailure(projected)) return Result.fail(projected.failure);
-  if (request.slot === "offHand") {
-    return projected.success === null
-      ? battleCreatureInitIssue(
-          "Off-hand weapon loadout must reference a Weapon Unit.",
-        )
-      : Result.succeed({ slot: request.slot, attack: projected.success });
-  }
-  return Result.succeed({ slot: request.slot, attack: projected.success });
-}
 
 export function characterWeaponAttackActionOptions(
   input: CharacterWeaponAttackProjectionInput,
@@ -820,50 +798,38 @@ export function characterPactBladeBondedWeaponItemId(input: {
   return Result.succeed(input.itemId);
 }
 
-function characterWeaponAttackActionOption(input: {
-  readonly unitId: UnitRecord["id"];
-  readonly itemId: CharacterEquipmentItemId;
-  readonly build: CharacterBuild;
-  readonly unitLibrary: UnitCatalog;
-  readonly classLevels: readonly CharacterBattleClassLevelInit[];
-  readonly pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined;
-  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
-  readonly weaponProficiencies: readonly WeaponProficiency[];
-}): Result.Result<
-  CharacterBattleCreatureInitWeaponAttack | null,
-  BattleCreatureInitIssue
-> {
-  const unit = getRequiredUnit(input.unitLibrary, input.unitId);
-  if (Result.isFailure(unit)) {
-    return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(unit.failure),
-    );
-  }
-  if (!isDiceDamageWeapon(unit.success)) {
-    return Result.succeed(null);
-  }
-
-  const executionWeapon = characterExecutionWeapon(
-    unit.success,
-    input.unitLibrary,
-    input.weaponMasteries,
-  );
-  if (Result.isFailure(executionWeapon)) {
-    return Result.fail(executionWeapon.failure);
-  }
+function projectCharacterWeaponLoadoutRequest(
+  input: CharacterWeaponAttackProjectionInput & {
+    readonly weaponProficiencies: readonly WeaponProficiency[];
+  },
+  request: CharacterWeaponLoadoutRequest,
+): Result.Result<CharacterWeaponLoadoutProjection, BattleCreatureInitIssue> {
+  const admitted = characterWeaponDefinitionForBattle({
+    request,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
+  if (admitted.success.definition === null)
+    return Result.succeed({ slot: "main", attack: null });
+  const { weapon, definition } = admitted.success.definition;
+  const executionWeapon = bindCharacterWeaponExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    weaponMasteries: input.weaponMasteries,
+  });
 
   const weaponAttackAbilitySelection = characterWeaponAttackAbilitySelection(
-    executionWeapon.success,
+    executionWeapon,
     input.build,
   );
   const weaponAttackAbility = weaponAttackAbilitySelection.selected;
   const isProficient = input.weaponProficiencies.some((proficiency) =>
-    weaponMatchesProficiency(executionWeapon.success, proficiency),
+    weaponMatchesProficiency(executionWeapon, proficiency),
   );
   const baseAttack = {
     ...characterBattleCreatureInitWeaponAttack({
       kind: "weapon",
-      weapon: executionWeapon.success,
+      weapon: executionWeapon,
       ability: weaponAttackAbility.ability,
       abilityModifier: weaponAttackAbility.modifier,
       ...(isProficient
@@ -904,18 +870,19 @@ function characterWeaponAttackActionOption(input: {
   }
   const projectedAttack = characterMartialArtsWeaponAttack(
     baseAttack,
-    unit.success,
+    weapon,
     input.build,
     martialArts.success,
   );
-  return Result.succeed(
-    pactBladeWeaponAttack(
+  return Result.succeed({
+    slot: admitted.success.slot,
+    attack: pactBladeWeaponAttack(
       projectedAttack,
       input.build,
-      input.itemId,
+      request.itemId,
       input.pactBladeBondedWeaponItemId,
     ),
-  );
+  });
 }
 
 type PhysicalWeaponAttackAbility = {
@@ -986,38 +953,126 @@ function characterWeaponAttackAbilityChoice(
   };
 }
 
-function isDiceDamageWeapon(unit: UnitRecord): unit is Extract<
-  UnitRecord,
-  { readonly kind: "weapon" }
-> & {
+type BattleAttackWeaponRecord = WeaponRecord & {
   readonly damage: { readonly kind: "dice" };
-} {
+};
+
+function isDiceDamageWeapon(
+  unit: UnitRecord,
+): unit is BattleAttackWeaponRecord {
   return unit.kind === "weapon" && unit.damage.kind === "dice";
 }
 
-function characterExecutionWeapon(
-  weapon: Extract<UnitRecord, { readonly kind: "weapon" }> & {
-    readonly damage: { readonly kind: "dice" };
-  },
-  unitLibrary: UnitCatalog,
-  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-) {
-  const definition = admitWeaponDefinition({
-    weapon,
-    unitCatalog: unitLibrary,
-  });
-  if (definition.tag === "rejected") {
-    return battleCreatureInitIssueFromLeaves(
-      battleWeaponDefinitionAdmissionIssues(weapon.id, definition.issues),
+type CharacterBattleWeaponDefinition = {
+  readonly weapon: BattleAttackWeaponRecord;
+  readonly definition: AdmittedWeaponDefinition;
+};
+
+type CharacterWeaponDefinitionProjection =
+  | {
+      readonly slot: "main";
+      readonly definition: CharacterBattleWeaponDefinition | null;
+    }
+  | {
+      readonly slot: "offHand";
+      readonly definition: CharacterBattleWeaponDefinition;
+    };
+
+function characterWeaponDefinitionForBattle(input: {
+  readonly request: CharacterWeaponLoadoutRequest;
+  readonly unitLibrary: UnitCatalog;
+}): Result.Result<
+  CharacterWeaponDefinitionProjection,
+  BattleCreatureInitIssue
+> {
+  const source = characterEquipmentItemSourceFromId(input.request.itemId);
+  const unit = getRequiredUnit(input.unitLibrary, source.unitId);
+  if (Result.isFailure(unit)) {
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(unit.failure),
     );
   }
-  return Result.succeed(
-    bindCharacterWeaponExecutionWeapon({
-      weaponUnitId: weapon.id,
-      definition,
-      weaponMasteries,
+  if (!isDiceDamageWeapon(unit.success)) {
+    return Match.value(input.request.slot).pipe(
+      Match.when("offHand", () =>
+        battleCreatureInitIssue(
+          "Off-hand weapon loadout must reference a Weapon Unit.",
+        ),
+      ),
+      Match.when("main", () =>
+        Result.succeed({ slot: "main" as const, definition: null }),
+      ),
+      Match.exhaustive,
+    );
+  }
+  const weapon = unit.success;
+  return Match.value(
+    admitWeaponDefinition({
+      weapon,
+      unitCatalog: input.unitLibrary,
     }),
+  ).pipe(
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      battleCreatureInitIssueFromLeaves(
+        battleWeaponDefinitionAdmissionIssues(weapon.id, issues),
+      ),
+    ),
+    Match.when({ tag: "admitted" }, (definition) =>
+      Result.succeed({
+        slot: input.request.slot,
+        definition: { weapon, definition },
+      }),
+    ),
+    Match.exhaustive,
   );
+}
+
+type CharacterEquippedWeaponBattleBlocker = {
+  readonly slot: CharacterWeaponLoadoutRequest["slot"];
+  readonly itemId: CharacterEquipmentItemId;
+  readonly weaponUnitId: UnitRecord["id"];
+  readonly messages: readonly [string, ...string[]];
+  readonly weaponDefinitionAdmittedOwnedAlternatives: readonly CharacterEquipmentItemId[];
+};
+
+export function characterBuildEquippedWeaponBattleBlockers(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CharacterEquippedWeaponBattleBlocker[] {
+  return characterWeaponLoadoutRequests(input.build).flatMap((request) => {
+    const source = characterEquipmentItemSourceFromId(request.itemId);
+    const admission = characterWeaponDefinitionForBattle({
+      request,
+      unitLibrary: input.unitLibrary,
+    });
+    if (Result.isSuccess(admission)) return [];
+    return [
+      {
+        slot: request.slot,
+        itemId: request.itemId,
+        weaponUnitId: source.unitId,
+        messages: [battleCreatureInitIssueMessage(admission.failure)],
+        weaponDefinitionAdmittedOwnedAlternatives:
+          input.build.equipment.owned.flatMap((item) => {
+            if (
+              item.kind !== "catalogItem" &&
+              item.kind !== "authoredCatalogItem"
+            )
+              return [];
+            const candidate = characterEquipmentItemSourceFromId(item.itemId);
+            if (candidate.slot !== source.slot) return [];
+            const alternative = characterWeaponDefinitionForBattle({
+              request: { ...request, itemId: item.itemId },
+              unitLibrary: input.unitLibrary,
+            });
+            return Result.isSuccess(alternative) &&
+              alternative.success.definition !== null
+              ? [item.itemId]
+              : [];
+          }),
+      },
+    ];
+  });
 }
 
 function characterMartialArtsWeaponAttack(

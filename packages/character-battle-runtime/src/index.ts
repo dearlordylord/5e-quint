@@ -161,6 +161,8 @@ export {
   battleCreatureInitIssues,
   characterArmorClassState,
   characterWeaponAttackActionOptions,
+  characterBuildEquippedWeaponBattleBlockers,
+  CHARACTER_WEAPON_ATTACK_SLOTS,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
   characterSpellcasting,
