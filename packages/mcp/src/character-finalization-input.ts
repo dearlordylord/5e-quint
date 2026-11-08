@@ -134,11 +134,7 @@ function characterSheetInitializationCall(input: {
     }),
   );
   const instructions = [
-    ...(input.equippedWeaponBattleBlockers.length === 0
-      ? []
-      : [
-          "Review equippedWeaponBattleBlockers before planning an encounter. Ownership and equipping remain valid for noncombat use; resolve these weapon-definition Battle-entry blockers using their nextStep guidance.",
-        ]),
+    "Review equippedWeaponBattleBlockers before planning an encounter. Ownership and equipping remain valid for noncombat use; resolve any listed Battle-entry blockers using their nextStep guidance.",
     ...classSpellBattleSupportInstructions(input.classSpellBattleSupport),
     "The Character Build is complete. This schema describes the operation arguments for finalize_character; add the current playSessionId when invoking the hosted tool. Supply these initialization choices to create the in-play Character Sheet; no additional creation-hole fills are needed.",
     ...(land === undefined
