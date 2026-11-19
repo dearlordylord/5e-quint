@@ -99,6 +99,7 @@ const COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND = {
   continueSpellCasting: false,
   move: true,
   standFromProne: true,
+  // ASSUMPTIONS.md A52: "doesn't move" also rules out Dropping Prone.
   dropProne: true,
   releaseReadiedSpell: false,
   releaseReadiedMovement: false,
