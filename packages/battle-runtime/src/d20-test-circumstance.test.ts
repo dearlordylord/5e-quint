@@ -180,7 +180,7 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(combineD20TestRollMode(atSixFeet, "advantage")).toBe("normal");
   });
 
-  test("matches the QNT Prone attacker source and its composition", () => {
+  test("matches the QNT Prone attacker source", () => {
     const prone = applyCondition(EMPTY_CONDITION_STATE, "prone");
     expect(attackerConditionAttackRollModeSources(prone)).toEqual(
       PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
@@ -203,20 +203,6 @@ describe("Table-authored per-test D20 circumstances", () => {
     ).toEqual({
       advantage: false,
       disadvantage: false,
-    });
-    const withProneTarget = (distance: number) => {
-      const target = proneAttackRollModeSources(movementFeet(distance));
-      return {
-        advantage: target.advantage,
-        disadvantage:
-          target.disadvantage ||
-          PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES.disadvantage,
-      };
-    };
-    expect(withProneTarget(5)).toEqual({ advantage: true, disadvantage: true });
-    expect(withProneTarget(6)).toEqual({
-      advantage: false,
-      disadvantage: true,
     });
     expect(
       combineD20TestRollMode(

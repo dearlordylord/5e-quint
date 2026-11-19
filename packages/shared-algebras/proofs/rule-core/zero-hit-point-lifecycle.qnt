@@ -60,6 +60,22 @@ module zeroHitPointLifecycle {
       | Dead => true
     }
 
+  // Every lifecycle legalDeathSavingThrowLifecycle accepts, enumerated so
+  // inductive proofs can bound a lifecycle variable with `.in(...)`.
+  pure val legalDeathSavingThrowLifecycles: Set[DeathSavingThrowLifecycle] = Set(
+    Stable,
+    Dead,
+    Dying({ successes: 0, failures: 0 }),
+    Dying({ successes: 0, failures: 1 }),
+    Dying({ successes: 0, failures: 2 }),
+    Dying({ successes: 1, failures: 0 }),
+    Dying({ successes: 1, failures: 1 }),
+    Dying({ successes: 1, failures: 2 }),
+    Dying({ successes: 2, failures: 0 }),
+    Dying({ successes: 2, failures: 1 }),
+    Dying({ successes: 2, failures: 2 }),
+  )
+
   pure def legalPlayerCharacterDeathSavingThrowState(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle
