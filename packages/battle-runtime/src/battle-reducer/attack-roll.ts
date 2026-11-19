@@ -21,7 +21,6 @@ import {
 } from "../optional-property.ts";
 import {
   applyCondition,
-  EMPTY_CONDITION_STATE,
   hasCondition,
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
@@ -403,10 +402,7 @@ function attackRollSourceFlags(
     dodgeDisadvantage ||
     grappleDisadvantage ||
     longRangeDisadvantage ||
-    hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
-    attackerConditionAttackRollModeSources(
-      attacker?.conditions ?? EMPTY_CONDITION_STATE,
-    ).disadvantage ||
+    attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
       attackerCanSeeTarget,
       attack,
@@ -482,10 +478,7 @@ function objectTargetAttackRollSourceFlags(
       attackerCanSeeObject,
     );
   const hasDisadvantage =
-    hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
-    attackerConditionAttackRollModeSources(
-      attacker?.conditions ?? EMPTY_CONDITION_STATE,
-    ).disadvantage ||
+    attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
     activeEffectGrantsAttackRollMode(
       state,
       attacker,

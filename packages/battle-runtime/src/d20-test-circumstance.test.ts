@@ -190,6 +190,15 @@ describe("Table-authored per-test D20 circumstances", () => {
       disadvantage: true,
     });
     expect(
+      attackerConditionAttackRollModeSources(
+        applyCondition(EMPTY_CONDITION_STATE, "poisoned"),
+      ),
+    ).toEqual({ advantage: false, disadvantage: true });
+    expect(attackerConditionAttackRollModeSources(undefined)).toEqual({
+      advantage: false,
+      disadvantage: false,
+    });
+    expect(
       attackerConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
     ).toEqual({
       advantage: false,

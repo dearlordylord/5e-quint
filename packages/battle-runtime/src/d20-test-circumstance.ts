@@ -11,6 +11,7 @@ import type {
 import { Brand, Result } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
 import {
+  EMPTY_CONDITION_STATE,
   hasCondition,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
@@ -55,12 +56,21 @@ export const PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES: D20TestRollModeSources = {
   disadvantage: true,
 };
 
+/**
+ * The attack-roll sources an attacker's own conditions supply on their own:
+ * Poisoned ("You have Disadvantage on attack rolls and ability checks") and
+ * Prone. An absent attacker supplies none.
+ */
 export function attackerConditionAttackRollModeSources(
-  attackerConditions: ConditionState,
+  attackerConditions: ConditionState | undefined,
 ): D20TestRollModeSources {
-  return hasCondition(attackerConditions, "prone")
+  const conditions = attackerConditions ?? EMPTY_CONDITION_STATE;
+  return hasCondition(conditions, "prone")
     ? PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES
-    : { advantage: false, disadvantage: false };
+    : {
+        advantage: false,
+        disadvantage: hasCondition(conditions, "poisoned"),
+      };
 }
 
 export const TABLE_D20_TEST_CIRCUMSTANCE_SOURCES = [
