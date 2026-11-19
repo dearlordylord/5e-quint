@@ -1,9 +1,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 import fc from "fast-check";
 import { Result } from "effect";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import {
+  applyCondition,
+  EMPTY_CONDITION_STATE,
+} from "@dnd/shared-algebras/conditions-algebra";
 import {
   holeId,
   holeInstanceKey,
@@ -76,6 +81,8 @@ import {
   battleHolesWithTableD20TestCircumstances,
   combineD20TestRollMode,
   proneAttackRollModeSources,
+  attackerConditionAttackRollModeSources,
+  PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
   mechanicalD20TestRollModeSources,
   effectiveD20TestRollMode,
   d20TestResolutionId,
@@ -171,6 +178,38 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(atSixFeet).toEqual({ advantage: false, disadvantage: true });
     expect(combineD20TestRollMode(atFiveFeet, "disadvantage")).toBe("normal");
     expect(combineD20TestRollMode(atSixFeet, "advantage")).toBe("normal");
+  });
+
+  test("matches the QNT Prone attacker source", () => {
+    const prone = applyCondition(EMPTY_CONDITION_STATE, "prone");
+    expect(attackerConditionAttackRollModeSources(prone)).toEqual(
+      PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
+    );
+    expect(PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES).toEqual({
+      advantage: false,
+      disadvantage: true,
+    });
+    expect(
+      attackerConditionAttackRollModeSources(
+        applyCondition(EMPTY_CONDITION_STATE, "poisoned"),
+      ),
+    ).toEqual({ advantage: false, disadvantage: true });
+    expect(attackerConditionAttackRollModeSources(undefined)).toEqual({
+      advantage: false,
+      disadvantage: false,
+    });
+    expect(
+      attackerConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
+    ).toEqual({
+      advantage: false,
+      disadvantage: false,
+    });
+    expect(
+      combineD20TestRollMode(
+        PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
+        "advantage",
+      ),
+    ).toBe("normal");
   });
 
   test("requests every RAW D20 Test kind", () => {

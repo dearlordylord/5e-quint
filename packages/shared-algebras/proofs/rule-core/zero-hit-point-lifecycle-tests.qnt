@@ -129,4 +129,13 @@ module zeroHitPointLifecycleTests {
     }
   }
 
+  run test_legal_death_saving_throw_lifecycles_enumerates_the_legal_lifecycles = all {
+    assert(legalDeathSavingThrowLifecycles.size() == 11),
+    assert(legalDeathSavingThrowLifecycles.forall(lifecycle => legalDeathSavingThrowLifecycle(lifecycle))),
+    assert(0.to(3).forall(successes => 0.to(3).forall(failures =>
+      legalDeathSavingThrowLifecycles.contains(Dying({ successes: successes, failures: failures }))
+        == legalDeathSavingThrowLifecycle(Dying({ successes: successes, failures: failures }))
+    ))),
+  }
+
 }

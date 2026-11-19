@@ -10,6 +10,7 @@ import {
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
@@ -20,7 +21,6 @@ import {
 } from "../optional-property.ts";
 import {
   applyCondition,
-  EMPTY_CONDITION_STATE,
   hasCondition,
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
@@ -172,6 +172,7 @@ import {
 } from "./roll-trigger-relationship-facts.ts";
 import {
   admittedAttackRollTableSource,
+  attackerConditionAttackRollModeSources,
   combineD20TestRollMode,
   mechanicalD20TestRollMode,
   mechanicalD20TestRollModeSources,
@@ -401,7 +402,7 @@ function attackRollSourceFlags(
     dodgeDisadvantage ||
     grappleDisadvantage ||
     longRangeDisadvantage ||
-    hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
+    attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
       attackerCanSeeTarget,
       attack,
@@ -477,7 +478,7 @@ function objectTargetAttackRollSourceFlags(
       attackerCanSeeObject,
     );
   const hasDisadvantage =
-    hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
+    attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
     activeEffectGrantsAttackRollMode(
       state,
       attacker,

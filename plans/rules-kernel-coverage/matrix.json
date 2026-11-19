@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 172,
-    "covered": 161,
+    "total": 173,
+    "covered": 162,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 132,
+      "battle": 133,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 161,
+      "covered": 162,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5346,6 +5346,38 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "Canonical exact attack-target distance derives Prone and Unconscious roll modes and gates ordinary and fixed-target attack paths"
+    },
+    {
+      "id": "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-test-circumstance.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-prone-attacker.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "reason": "The QNT owner models the Prone attacker as an unconditional Disadvantage source that joins the mechanical sources, including a Prone target's distance source, before cancellation: alone it gives Disadvantage, with a Prone target within 5 feet it cancels to Normal, and beyond 5 feet it stays Disadvantage. d20-test-circumstance owns the attacker-condition source; attack-roll applies it on the creature-target and object-target attack-roll source paths, which every ordinary, spell, opportunity, and object attack roll uses. The executable parity witnesses cover the source, its composition at the 5/6-foot boundary, the surfaced attack-roll hole mode, rejection of a normal fill, and the object-target path.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/d20-test-circumstance.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Prone",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
+      ],
+      "title": "A Prone attacker's attack rolls have Disadvantage against creature and object targets, composed with every other source before cancellation"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
@@ -12531,6 +12563,7 @@
     {
       "evidence": "Owns the RAW three-kind D20 Test vocabulary, Advantage/Disadvantage source combination and cancellation, and exact pending-request equality independently of battle or authored identity.",
       "obligationIds": [
+        "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
         "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
         "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION"
       ],
@@ -19669,6 +19702,30 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
       ],
