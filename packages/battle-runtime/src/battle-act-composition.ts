@@ -768,6 +768,7 @@ const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   continueSpellCasting: "Continue Casting",
   move: "Move",
   standFromProne: "Stand",
+  dropProne: "Drop Prone",
   releaseReadiedSpell: "Release Readied Spell",
   releaseReadiedMovement: "Release Readied Movement",
   reportReadyTrigger: "Report Ready Trigger",

@@ -9,6 +9,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
+import type { BattleRuntimeCommand } from "../battle-subjects.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import {
@@ -151,13 +152,19 @@ function passiveAbilityCheckRollModePhases(
   };
 }
 
+/** Runtime commands that add or remove Prone, so creature stats re-project. */
+const PRONE_TRANSITION_COMMANDS: ReadonlySet<BattleRuntimeCommand> = new Set([
+  "standFromProne",
+  "dropProne",
+]);
+
 export function passiveProjectionRouteForDiscoveredAct(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
 ): BattleReducerRouteEvents | undefined {
   if (
     act.subject.tag === "runtimeCommand" &&
-    act.subject.command === "standFromProne"
+    PRONE_TRANSITION_COMMANDS.has(act.subject.command)
   ) {
     const phases = creatureStatProjectionPhases(state);
     if (phases !== undefined) {
@@ -191,7 +198,7 @@ export function passiveProjectionRouteForResolution(
   if (
     result.tag === "resolved" &&
     input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "standFromProne"
+    PRONE_TRANSITION_COMMANDS.has(input.subject.command)
   ) {
     return creatureStatProjectionPhases(input.state)?.resolution;
   }

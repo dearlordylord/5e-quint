@@ -61,6 +61,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTurnBoundary";
     case "move":
     case "standFromProne":
+    case "dropProne":
     case "fixedCostMovementReplacement":
     case "creatureFalls":
       return "runtimeMovement";

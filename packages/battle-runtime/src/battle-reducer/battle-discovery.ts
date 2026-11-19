@@ -146,6 +146,7 @@ import {
   compelledNextTurnBehaviorEffectsForActor,
   type CompelledNextTurnBehaviorEffect,
 } from "./compelled-behavior-discovery.ts";
+import { dropProneAvailable } from "./drop-prone-policy.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
@@ -684,12 +685,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...persistentAreaSaveConditionEscapeDepartureActs(state, actorId));
   acts.push(...movablePersistentAreaExitActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
-  if (standFromProneCostFeet(state, actorId) !== null) {
-    acts.push({
-      subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
-      initialHoles: [],
-    });
-  }
+  acts.push(...proneTransitionActs(state, actorId));
   acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
   acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
   acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -2210,3 +2206,26 @@ export function isStatBlockBattleCreatureState(
 }
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
+
+/** Stand from Prone or Drop Prone, whichever the actor can take now. */
+function proneTransitionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleActDiscoveryCandidate[] {
+  if (standFromProneCostFeet(state, actorId) !== null) {
+    return [
+      {
+        subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
+        initialHoles: [],
+      },
+    ];
+  }
+  return dropProneAvailable(state, actorId)
+    ? [
+        {
+          subject: { tag: "runtimeCommand", actorId, command: "dropProne" },
+          initialHoles: [],
+        },
+      ]
+    : [];
+}
