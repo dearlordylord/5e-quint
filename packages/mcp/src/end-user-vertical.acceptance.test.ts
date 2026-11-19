@@ -203,6 +203,7 @@ describe("end-user MCP vertical", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -258,6 +259,7 @@ describe("end-user MCP vertical", () => {
       "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -586,6 +588,7 @@ describe("end-user MCP vertical", () => {
       "Second Wind",
       "Action Surge",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -646,6 +649,7 @@ describe("end-user MCP vertical", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);

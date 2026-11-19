@@ -2910,6 +2910,7 @@ describe("MCP server route", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -3614,7 +3615,13 @@ describe("MCP server route", () => {
       afterDamage.envelope.frontier.acts.map(
         (act: { label: string }) => act.label,
       ),
-    ).toEqual(["Adrenaline Rush: Dash", "Second Wind", "Move", "End Turn"]);
+    ).toEqual([
+      "Adrenaline Rush: Dash",
+      "Second Wind",
+      "Move",
+      "Drop Prone",
+      "End Turn",
+    ]);
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
 
     const battleBeforeWrongActorEnd = root.sessionStore.battleSession;
@@ -3707,6 +3714,7 @@ describe("MCP server route", () => {
       "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -8138,6 +8146,7 @@ describe("MCP server route", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -8245,6 +8254,7 @@ describe("MCP server route", () => {
       "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
