@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 import type { CombatantId } from "./identity.ts";
 import type {
   BattleAttackRollResult,
@@ -9,6 +10,10 @@ import type {
 } from "./battle-state-execution.ts";
 import { Brand, Result } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
+import {
+  hasCondition,
+  type ConditionState,
+} from "@dnd/shared-algebras/conditions-algebra";
 import type { MovementFeet, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 export const D20_TEST_KINDS = [
@@ -39,6 +44,23 @@ export function proneAttackRollModeSources(
     disadvantage:
       Number(distanceFeet) > Number(PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET),
   };
+}
+
+/**
+ * The Prone condition's attacker-side source: "You have Disadvantage on attack
+ * rolls" (rules-glossary.md#Prone), at any distance and against any target.
+ */
+export const PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES: D20TestRollModeSources = {
+  advantage: false,
+  disadvantage: true,
+};
+
+export function attackerConditionAttackRollModeSources(
+  attackerConditions: ConditionState,
+): D20TestRollModeSources {
+  return hasCondition(attackerConditions, "prone")
+    ? PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES
+    : { advantage: false, disadvantage: false };
 }
 
 export const TABLE_D20_TEST_CIRCUMSTANCE_SOURCES = [

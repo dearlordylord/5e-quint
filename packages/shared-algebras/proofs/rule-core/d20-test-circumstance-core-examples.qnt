@@ -95,6 +95,25 @@ module d20TestCircumstanceCoreExamples {
     ) == AttackRollModeInvalidDistance),
   }
 
+  run d20TestCircumstanceProneAttacker = all {
+    assert(d20TestRollModeWithProneAttacker(noMechanicalSources) == DisadvantageD20TestRoll),
+    assert(d20TestRollModeWithProneAttacker(mechanicalDisadvantage) == DisadvantageD20TestRoll),
+    assert(d20TestRollModeWithProneAttacker(mechanicalAdvantage) == NormalD20TestRoll),
+    assert(d20TestRollModeWithProneAttacker(cancellingMechanicalSources) == NormalD20TestRoll),
+    assert(attackRollModeMatches(
+      d20TestRollModeWithProneAttackerAndProneTarget(noMechanicalSources, 5),
+      NormalD20TestRoll,
+    )),
+    assert(attackRollModeMatches(
+      d20TestRollModeWithProneAttackerAndProneTarget(noMechanicalSources, 6),
+      DisadvantageD20TestRoll,
+    )),
+    assert(d20TestRollModeWithProneAttackerAndProneTarget(
+      noMechanicalSources,
+      -1,
+    ) == AttackRollModeInvalidDistance),
+  }
+
   run d20TestCircumstanceExactRequestBinding = {
     val abilityCheckRequest: D20TestRequestRef = {
       lineage: 7,

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 
 // RAW trace:
 // - .references/srd-5.2.1/playing-the-game.md#D20 Tests defines Ability
@@ -11,6 +11,9 @@
 //   any Disadvantage produces a normal one-d20 roll.
 // - .references/srd-5.2.1/rules-glossary.md#Prone says an attack against a
 //   Prone target has Advantage within 5 feet and Disadvantage otherwise.
+// - The same Prone entry says a Prone creature has Disadvantage on attack
+//   rolls, at any distance, so a Prone attacker supplies a Disadvantage source
+//   that combines with the target's sources before cancellation.
 // - .references/srd-5.2.1/rules-glossary.md#Unconscious says attack rolls
 //   against an Unconscious target have Advantage; Unconscious also implies
 //   Prone, so both sources are combined before cancellation.
@@ -124,6 +127,29 @@ module d20TestCircumstanceCore {
           }),
         })
     }
+
+  pure val proneAttackerAttackRollSources: D20TestRollModeSources = {
+    advantage: false,
+    disadvantage: true,
+  }
+
+  pure def withProneAttacker(
+    mechanicalSources: D20TestRollModeSources,
+  ): D20TestRollModeSources = {
+    advantage: mechanicalSources.advantage or proneAttackerAttackRollSources.advantage,
+    disadvantage: mechanicalSources.disadvantage or proneAttackerAttackRollSources.disadvantage,
+  }
+
+  pure def d20TestRollModeWithProneAttacker(
+    mechanicalSources: D20TestRollModeSources,
+  ): D20TestRollMode =
+    d20TestRollModeFromSources(withProneAttacker(mechanicalSources))
+
+  pure def d20TestRollModeWithProneAttackerAndProneTarget(
+    mechanicalSources: D20TestRollModeSources,
+    distance: AttackRollTargetDistance,
+  ): AttackRollModeResult =
+    d20TestRollModeWithProneTarget(withProneAttacker(mechanicalSources), distance)
 
   pure def d20TestRollModeWithUnconsciousTarget(
     mechanicalSources: D20TestRollModeSources,
