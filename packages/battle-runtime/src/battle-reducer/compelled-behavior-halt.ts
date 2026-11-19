@@ -99,7 +99,7 @@ const COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND = {
   continueSpellCasting: false,
   move: true,
   standFromProne: true,
-  dropProne: false,
+  dropProne: true,
   releaseReadiedSpell: false,
   releaseReadiedMovement: false,
   reportReadyTrigger: false,
