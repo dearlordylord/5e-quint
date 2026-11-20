@@ -307,6 +307,8 @@ export {
   type CharacterProgressionLevelIssue,
   type ClassUnitId,
   type FixedHigherLevelClassHitPointRule,
+  type HigherLevelClassHitPointRule,
+  type RolledHigherLevelClassHitPointRule,
   type ClassHitPointRule,
   type LevelOneClassHitPointRule,
 } from "./character-progression-types.ts";

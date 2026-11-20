@@ -46,6 +46,10 @@ import {
   type NonEmptyReadonlyArray,
 } from "./types.ts";
 import { holeIdForSource } from "./hole-factories.ts";
+import {
+  HigherLevelClassHitPointRuleSchema,
+  type HigherLevelClassHitPointRule,
+} from "./character-progression-types.ts";
 
 const UnitIdSchema = SharedUnitIdSchema;
 const AbilitySchema = Schema.Literals(ABILITIES);
@@ -224,9 +228,7 @@ const ProgressionSchema = Schema.Struct({
   advancements: Schema.Array(
     Schema.Struct({
       classUnitId: UnitIdSchema,
-      hitPointRule: Schema.Struct({
-        tag: Schema.Literal("fixedHigherLevelGain"),
-      }),
+      hitPointRule: HigherLevelClassHitPointRuleSchema,
     }),
   ),
 });
@@ -616,6 +618,12 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("missingHitPointMaximumGrantSourceUnit"),
     sourceUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("rolledHitDieResultAboveHitDie"),
+    classUnitId: UnitIdSchema,
+    hitDieResult: Schema.Number,
+    hitDieSize: Schema.Number,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedHitPointMaximumGrant"),
@@ -1064,11 +1072,25 @@ function progressionFact(
       const { classUnitId, hitPointRule, ...unprojectedAdvancement } =
         advancement;
       noUnprojectedFields(unprojectedAdvancement);
-      const { tag, ...unprojectedHitPointRule } = hitPointRule;
-      noUnprojectedFields(unprojectedHitPointRule);
-      return { classUnitId, hitPointRule: { tag } };
+      return { classUnitId, hitPointRule: hitPointRuleFact(hitPointRule) };
     }),
   };
+}
+
+function hitPointRuleFact(
+  hitPointRule: HigherLevelClassHitPointRule,
+): HigherLevelClassHitPointRule {
+  return Match.value(hitPointRule).pipe(
+    byTag("fixedHigherLevelGain", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("rolledHigherLevelGain", ({ tag, hitDieResult, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, hitDieResult };
+    }),
+    Match.exhaustive,
+  );
 }
 
 function speciesChoiceFactsFact(
@@ -1611,6 +1633,13 @@ function characterBuildProjectionCauseFact(
       ({ tag, sourceUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
         return { tag, sourceUnitId };
+      },
+    ),
+    byTag(
+      "rolledHitDieResultAboveHitDie",
+      ({ tag, classUnitId, hitDieResult, hitDieSize, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, classUnitId, hitDieResult, hitDieSize };
       },
     ),
     byTag(

@@ -1,5 +1,6 @@
 import { UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
+import { HigherLevelClassHitPointRuleSchema } from "./character-progression-types.ts";
 import { UNIT_CHOICE_KEYS } from "./types.ts";
 
 const ChoiceGainsSchema = Schema.NonEmptyArray(
@@ -29,9 +30,6 @@ const ChoiceGainsSchema = Schema.NonEmptyArray(
     }),
   ]),
 );
-const FixedHigherLevelGainRuleSchema = Schema.Struct({
-  tag: Schema.Literal("fixedHigherLevelGain"),
-});
 const PreparedSpellReplacementSchema = Schema.Struct({
   replaceSpellId: UnitId,
   selectedSpellId: UnitId,
@@ -46,13 +44,13 @@ const ListPreparedSpellcastingGainSchema = Schema.Struct({
 const CharacterBuildPlainClassLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("classLevelGain"),
   classUnitId: UnitId,
-  hitPointRule: FixedHigherLevelGainRuleSchema,
+  hitPointRule: HigherLevelClassHitPointRuleSchema,
   gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
 });
 const CharacterBuildListPreparedSpellcastingLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("classLevelGainWithListPreparedSpellcasting"),
   classUnitId: UnitId,
-  hitPointRule: FixedHigherLevelGainRuleSchema,
+  hitPointRule: HigherLevelClassHitPointRuleSchema,
   gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
   preparedSpellcasting: ListPreparedSpellcastingGainSchema,
 });
@@ -60,7 +58,7 @@ const CharacterBuildFighterFightingStyleReplacementLevelGainSchema =
   Schema.Struct({
     tag: Schema.Literal("fighterLevelGainWithFightingStyleReplacement"),
     classUnitId: UnitId,
-    hitPointRule: FixedHigherLevelGainRuleSchema,
+    hitPointRule: HigherLevelClassHitPointRuleSchema,
     gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
     replacement: Schema.Struct({
       selectedFeatUnitId: UnitId,
@@ -70,7 +68,7 @@ const CharacterBuildFightingStyleCantripReplacementLevelGainSchema =
   Schema.Struct({
     tag: Schema.Literal("classLevelGainWithFightingStyleCantripReplacement"),
     classUnitId: UnitId,
-    hitPointRule: FixedHigherLevelGainRuleSchema,
+    hitPointRule: HigherLevelClassHitPointRuleSchema,
     gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
     replacement: Schema.Struct({
       replaceCantripId: UnitId,
@@ -81,7 +79,7 @@ const CharacterBuildFightingStyleCantripReplacementLevelGainSchema =
 const CharacterBuildWeaponMasteryLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("classLevelGainWithWeaponMasterySelection"),
   classUnitId: UnitId,
-  hitPointRule: FixedHigherLevelGainRuleSchema,
+  hitPointRule: HigherLevelClassHitPointRuleSchema,
   gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
   weaponMastery: Schema.Struct({
     featureUnitId: UnitId,
@@ -94,7 +92,7 @@ const CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGainSche
       "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
     ]),
     classUnitId: UnitId,
-    hitPointRule: FixedHigherLevelGainRuleSchema,
+    hitPointRule: HigherLevelClassHitPointRuleSchema,
     gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
     weaponMastery: Schema.Struct({
       featureUnitId: UnitId,
@@ -107,7 +105,7 @@ const CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGainSche
 const CharacterBuildSorcererMetamagicLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("sorcererLevelGain"),
   classUnitId: UnitId,
-  hitPointRule: FixedHigherLevelGainRuleSchema,
+  hitPointRule: HigherLevelClassHitPointRuleSchema,
   gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
   metamagic: Schema.Struct({
     gainedOptions: Schema.Array(NonEmptyTrimmedStringSchema),
@@ -142,7 +140,7 @@ const EldritchInvocationSelectionSchema = Schema.Union([
 const CharacterBuildWarlockLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("warlockLevelGain"),
   classUnitId: UnitId,
-  hitPointRule: FixedHigherLevelGainRuleSchema,
+  hitPointRule: HigherLevelClassHitPointRuleSchema,
   gainedChoices: Schema.optionalKey(ChoiceGainsSchema),
   pactMagic: Schema.Struct({
     gainedCantrips: Schema.Array(UnitId),

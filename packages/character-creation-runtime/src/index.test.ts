@@ -3321,6 +3321,59 @@ describe("character creation batch fill", () => {
     });
   });
 
+  test("accepts Random Generation scores from 3 to 18 and records the method", () => {
+    const draft = createTestDraft(
+      "draft:batch-random-generation-ability-scores",
+    );
+    const fill = (str: number) =>
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: [
+          {
+            kind: "abilityScores",
+            holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+            method: "randomGeneration",
+            value: testAbilityScoreAssignment({
+              str,
+              dex: 3,
+              con: 16,
+              int: 9,
+              wis: 12,
+              cha: 12,
+            }),
+          },
+        ],
+      });
+
+    expect(fill(18)).toMatchObject({
+      tag: "accepted",
+      draft: {
+        selections: {
+          abilityScoreGeneration: {
+            method: "randomGeneration",
+            assignedScores: testAbilityScoreAssignment({
+              str: 18,
+              dex: 3,
+              con: 16,
+              int: 9,
+              wis: 12,
+              cha: 12,
+            }),
+          },
+        },
+      },
+    });
+    expect(fill(19)).toMatchObject({
+      tag: "rejected",
+      draft,
+      issues: [
+        { tag: "illegalFill", code: "invalidAbilityScores", fillIndex: 0 },
+      ],
+    });
+  });
+
   test("rejects ability score assignments that are invalid for their method", () => {
     const draft = createTestDraft("draft:batch-invalid-ability-scores");
     const result = fillCreationHoles({

@@ -222,3 +222,21 @@ someone else uses an Action to shake the creature out of its stupor. Unlike
 requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
+
+## A56: A level's Hit Point gain is recomputed from the current Constitution modifier
+
+**Assumption:** Each level after 1 keeps its Hit Point rule, either the fixed
+value or the Hit Die as rolled, and never a stored total. The Hit Point
+maximum adds, for each such level, that value plus the current Constitution
+modifier, with a minimum of 1. A rolled level and a fixed level follow the
+same rule.
+
+**Rules basis / gap:** `.references/srd-5.2.1/character-creation.md`, "Level
+Advancement," step 2, adds the rolled or fixed value plus the Constitution
+modifier, "minimum of 1," when the level is gained. Step 5, "Adjust Ability
+Modifiers," says that when the Constitution modifier increases by 1, the Hit
+Point maximum increases by 1 for each level attained. The SRD doesn't say what
+a later change does to a level whose total was raised to the minimum of 1, nor
+what a decrease does. Recomputing every level from the current modifier gives
+the step 5 result whenever no level is at the minimum, and keeps each level at
+1 or more.

@@ -1123,6 +1123,12 @@ export type CharacterBuildProjectionCause =
       readonly sourceUnitId: UnitRecord["id"];
     }
   | {
+      readonly tag: "rolledHitDieResultAboveHitDie";
+      readonly classUnitId: UnitRecord["id"];
+      readonly hitDieResult: number;
+      readonly hitDieSize: number;
+    }
+  | {
       readonly tag: "unsupportedHitPointMaximumGrant";
       readonly sourceUnitId: UnitRecord["id"];
     }

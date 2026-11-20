@@ -11,6 +11,7 @@ import {
 export const SUPPORTED_ABILITY_SCORE_METHODS = [
   "standardArray",
   "pointBuy",
+  "randomGeneration",
 ] as const;
 export type SupportedAbilityScoreMethod =
   (typeof SUPPORTED_ABILITY_SCORE_METHODS)[number];
@@ -34,6 +35,9 @@ export type AbilityScoreAssignmentIssue =
     };
 
 export const STANDARD_ARRAY_SCORES = [15, 14, 13, 12, 10, 8] as const;
+/** The total of the highest three of four d6s. */
+export const RANDOM_GENERATION_MIN_SCORE = 3;
+export const RANDOM_GENERATION_MAX_SCORE = 18;
 export const POINT_BUY_BUDGET = 27;
 export const POINT_BUY_MIN_SCORE = 8;
 export const POINT_BUY_MAX_SCORE = 15;
@@ -135,6 +139,17 @@ export function isStandardArrayAssignment(
   return sameNumberMultiset(abilityScoreValues(scores), STANDARD_ARRAY_SCORES);
 }
 
+export function isRandomGenerationAssignment(
+  scores: AbilityScoreAssignment,
+): boolean {
+  return abilityScoreValues(scores).every(
+    (score) =>
+      Number.isInteger(score) &&
+      score >= RANDOM_GENERATION_MIN_SCORE &&
+      score <= RANDOM_GENERATION_MAX_SCORE,
+  );
+}
+
 export function isPointBuyAssignment(scores: AbilityScoreAssignment): boolean {
   const totalCost = totalPointBuyCost(scores);
   return (
@@ -155,6 +170,7 @@ export function isValidAbilityScoreAssignment(
 ): boolean {
   return Match.value(method).pipe(
     Match.when("standardArray", () => isStandardArrayAssignment(scores)),
+    Match.when("randomGeneration", () => isRandomGenerationAssignment(scores)),
     Match.when("pointBuy", () => isPointBuyAssignment(scores)),
     Match.exhaustive,
   );

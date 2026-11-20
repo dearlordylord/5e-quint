@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { abilityScore } from "@dnd/shared/types";
+import { abilityScore, DieRollResult } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -83,6 +83,8 @@ function selectionsWithStartingClass(
     equipment: { selectedUnitIds: [] },
   };
 }
+
+const dieRollResult = (value: number) => DieRollResult(value);
 
 function projectionBuild(
   startingClass: ReturnType<typeof classUnitId>,
@@ -856,6 +858,63 @@ describe("character finalization boundaries", () => {
     ).toMatchObject({
       _tag: "Success",
       success: { maximum: 15 },
+    });
+  });
+
+  test("adds a rolled Hit Die plus the Constitution modifier for a level after 1", () => {
+    const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
+    const startingBuild = projectionBuild(fighterClassUnitId);
+    const fighterLevelTwo = (
+      hitPointRule: CharacterBuild["progression"]["advancements"][number]["hitPointRule"],
+      con: number,
+    ) => ({
+      ...startingBuild,
+      abilityScores: { ...startingBuild.abilityScores, con: abilityScore(con) },
+      progression: {
+        ...startingBuild.progression,
+        advancements: [{ classUnitId: fighterClassUnitId, hitPointRule }],
+      },
+    });
+    const rolled = (hitDieResult: number) => ({
+      tag: "rolledHigherLevelGain" as const,
+      hitDieResult: dieRollResult(hitDieResult),
+    });
+
+    expect(
+      characterBuildHitPoints(
+        fighterLevelTwo({ tag: "fixedHigherLevelGain" }, 14),
+        unitLibrary,
+      ),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 12 + 8 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(10), 14), unitLibrary),
+    ).toMatchObject({
+      _tag: "Success",
+      success: {
+        maximum: 12 + 12,
+        hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 2 }],
+      },
+    });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(2), 10), unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 10 + 2 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(1), 3), unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 6 + 1 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(11), 10), unitLibrary),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          cause: {
+            tag: "rolledHitDieResultAboveHitDie",
+            classUnitId: "class_fighter",
+            hitDieResult: 11,
+            hitDieSize: 10,
+          },
+        },
+      ],
     });
   });
 

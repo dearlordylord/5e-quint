@@ -4803,6 +4803,61 @@ describe("Character Sheet battle handoff", () => {
     expect(init.creatureInit.currentHp).toBe(7);
   });
 
+  test("admits a rolled Hit Die above the fixed value into battle initialization", () => {
+    const fighterUnitId = classUnitId(authoredUnitId("class_fighter"));
+    const rolledBuild = {
+      ...build,
+      progression: {
+        startingClass: fighterUnitId,
+        advancements: [
+          {
+            classUnitId: fighterUnitId,
+            hitPointRule: {
+              tag: "rolledHigherLevelGain" as const,
+              hitDieResult: DieRollResult(10),
+            },
+          },
+        ],
+      },
+    };
+    const fixedBuild = {
+      ...rolledBuild,
+      progression: {
+        ...rolledBuild.progression,
+        advancements: [
+          {
+            classUnitId: fighterUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          },
+        ],
+      },
+    };
+    const initWith = (
+      characterBuild: typeof rolledBuild | typeof fixedBuild,
+      hitPointMaximum?: number,
+    ) =>
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("rolled-maximum-init"),
+        characterId: characterId("character:rolled-maximum-init"),
+        displayName: "Fighter",
+        build: characterBuild,
+        initiative: initiativeScore(20),
+        ammunitionStocks: [],
+        unitLibrary,
+        ...(hitPointMaximum === undefined
+          ? {}
+          : { hitPointMaximum: Hp(hitPointMaximum) }),
+      });
+
+    const fixed = expectSuccess(initWith(fixedBuild)).creatureInit;
+    const rolled = expectSuccess(initWith(rolledBuild)).creatureInit;
+    expect(rolled.maxHp - fixed.maxHp).toBe(10 - 6);
+    expect(
+      expectSuccess(initWith(rolledBuild, rolled.maxHp)).creatureInit.maxHp,
+    ).toBe(rolled.maxHp);
+    expect(Result.isFailure(initWith(fixedBuild, rolled.maxHp))).toBe(true);
+  });
+
   test("rejects CharacterBuild battle initialization max HP above the build-derived maximum", () => {
     const init = battleCreatureInitFromCharacterBuild({
       combatantId: combatantId("contradictory-maximum-init"),

@@ -49,7 +49,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 0,
-      fixedHigherLevelHitPointDice: [],
+      higherLevelHitPointGains: [],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -64,7 +64,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [],
+      higherLevelHitPointGains: [],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -80,7 +80,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [10],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(10)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -96,7 +96,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [10],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(10)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -112,7 +112,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: -4,
-      fixedHigherLevelHitPointDice: [6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -128,7 +128,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [6, 6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6), fixedHigherLevelHitPointGainFor(6)],
       hitPointMaximumBonus: 3,
       hitPointMaximumReduction: 0,
     },
@@ -144,7 +144,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [10],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(10)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 3,
     },
@@ -160,7 +160,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 2,
-      fixedHigherLevelHitPointDice: [6, 6, 6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6), fixedHigherLevelHitPointGainFor(6), fixedHigherLevelHitPointGainFor(6)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -176,7 +176,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 2,
-      fixedHigherLevelHitPointDice: [6, 6, 6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6), fixedHigherLevelHitPointGainFor(6), fixedHigherLevelHitPointGainFor(6)],
       hitPointMaximumBonus: 4,
       hitPointMaximumReduction: 0,
     },

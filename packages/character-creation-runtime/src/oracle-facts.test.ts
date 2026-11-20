@@ -1295,6 +1295,12 @@ describe("Character Creation owner facts", () => {
           sourceUnitId: syntheticFeatureUnitId,
         },
         {
+          tag: "rolledHitDieResultAboveHitDie",
+          classUnitId: syntheticUnitId,
+          hitDieResult: 11,
+          hitDieSize: 10,
+        },
+        {
           tag: "unsupportedClassFeatureLanguage",
           featureUnitId: syntheticFeatureUnitId,
           languageId: "Synthetic",

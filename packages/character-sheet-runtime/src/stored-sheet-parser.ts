@@ -50,6 +50,7 @@ import {
   type CharacterEquipmentItemSlot,
   type CopperPieceAmount,
   type UnitCatalog,
+  HigherLevelClassHitPointRuleSchema,
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   ABILITIES,
@@ -870,6 +871,10 @@ function knownWarlockCantripIdsForStoredBuild(
   return cantripIds;
 }
 
+const decodeStoredHigherLevelHitPointRule = Schema.decodeUnknownResult(
+  HigherLevelClassHitPointRuleSchema,
+);
+
 function parseStoredProgression(
   value: unknown,
 ): Result.Result<CharacterBuild["progression"], CharacterSheetIssue> {
@@ -883,11 +888,14 @@ function parseStoredProgression(
   }
   const advancements = [];
   for (const advancement of value.advancements) {
+    const hitPointRule = isRecord(advancement)
+      ? decodeStoredHigherLevelHitPointRule(advancement.hitPointRule)
+      : undefined;
     if (
       !isRecord(advancement) ||
       typeof advancement.classUnitId !== "string" ||
-      !isRecord(advancement.hitPointRule) ||
-      advancement.hitPointRule.tag !== "fixedHigherLevelGain"
+      hitPointRule === undefined ||
+      Result.isFailure(hitPointRule)
     ) {
       return characterSheetIssue(
         "Character Build progression advancement is invalid.",
@@ -895,7 +903,7 @@ function parseStoredProgression(
     }
     advancements.push({
       classUnitId: classUnitId(authoredUnitId(advancement.classUnitId)),
-      hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      hitPointRule: hitPointRule.success,
     });
   }
   const totalLevel = 1 + advancements.length;

@@ -72,6 +72,7 @@ export {
   classLevelForUnit,
   classUnitId,
   computeTotalLevel,
+  HigherLevelClassHitPointRuleSchema,
   progressionClassLevels,
   progressionClassUnitIds,
 } from "./character-progression-types.ts";

@@ -71,6 +71,7 @@ import {
   progressionClassUnitIds,
   progressionClassLevels,
   startingClassUnitId,
+  type HigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
@@ -1703,7 +1704,7 @@ function characterBuildProjectionCauseMessage(
 
 type RemainingCharacterBuildProjectionCause = Extract<
   CharacterBuildProjectionCause,
-  { readonly tag: "invalidChoiceOption" }
+  { readonly tag: "invalidChoiceOption" | "rolledHitDieResultAboveHitDie" }
 >;
 
 function characterBuildProjectionCauseMessageRemaining(
@@ -1714,6 +1715,11 @@ function characterBuildProjectionCauseMessageRemaining(
       { tag: "invalidChoiceOption" },
       ({ optionId, reason }) =>
         `${choiceOptionDecodeCauseMessage(reason)} Selected option: ${optionId}`,
+    ),
+    Match.when(
+      { tag: "rolledHitDieResultAboveHitDie" },
+      ({ classUnitId, hitDieResult, hitDieSize }) =>
+        `Rolled Hit Die result ${hitDieResult} exceeds the d${hitDieSize} Hit Die of class ${classUnitId}.`,
     ),
     Match.exhaustive,
   );
@@ -2327,20 +2333,39 @@ function magicInitiateSpellcastingAbility(
   );
 }
 
+type HigherLevelHitPointGainFacts = {
+  readonly hitPointDie: number;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
+};
+
 type CharacterHitPointMaximumFacts = {
   readonly startingHitPointDie: number;
   readonly constitutionModifier: number;
-  readonly fixedHigherLevelHitPointDice: readonly number[];
+  readonly higherLevelHitPointGains: readonly HigherLevelHitPointGainFacts[];
   readonly hitPointMaximumBonus: number;
 };
 
-function fixedHigherLevelHitPointGain(input: {
-  readonly hitPointDie: number;
+function higherLevelHitDieValue(facts: HigherLevelHitPointGainFacts): number {
+  return Match.value(facts.hitPointRule).pipe(
+    Match.when(
+      { tag: "fixedHigherLevelGain" },
+      () => Math.floor(facts.hitPointDie / 2) + 1,
+    ),
+    Match.when(
+      { tag: "rolledHigherLevelGain" },
+      ({ hitDieResult }) => hitDieResult,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function higherLevelHitPointGain(input: {
+  readonly gain: HigherLevelHitPointGainFacts;
   readonly constitutionModifier: number;
 }): number {
   return Math.max(
     1,
-    Math.floor(input.hitPointDie / 2) + 1 + input.constitutionModifier,
+    higherLevelHitDieValue(input.gain) + input.constitutionModifier,
   );
 }
 
@@ -2348,17 +2373,40 @@ function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
   return (
     facts.startingHitPointDie +
     facts.constitutionModifier +
-    facts.fixedHigherLevelHitPointDice.reduce(
-      (total, hitPointDie) =>
+    facts.higherLevelHitPointGains.reduce(
+      (total, gain) =>
         total +
-        fixedHigherLevelHitPointGain({
-          hitPointDie,
+        higherLevelHitPointGain({
+          gain,
           constitutionModifier: facts.constitutionModifier,
         }),
       0,
     ) +
     facts.hitPointMaximumBonus
   );
+}
+
+function rolledHitDieResultIssues(
+  progression: CharacterBuild["progression"],
+  classFactsByUnitId: ClassFactsByUnitId,
+): readonly CharacterBuildProjectionIssue[] {
+  return progression.advancements.flatMap((advancement) => {
+    const hitPointDie = classFactsByUnitId.get(
+      advancement.classUnitId,
+    )?.hitPointDie;
+    return advancement.hitPointRule.tag === "rolledHigherLevelGain" &&
+      hitPointDie !== undefined &&
+      advancement.hitPointRule.hitDieResult > hitPointDie
+      ? [
+          characterBuildProjectionIssue({
+            tag: "rolledHitDieResultAboveHitDie",
+            classUnitId: advancement.classUnitId,
+            hitDieResult: advancement.hitPointRule.hitDieResult,
+            hitDieSize: hitPointDie,
+          }),
+        ]
+      : [];
+  });
 }
 
 export function characterBuildHitPoints(
@@ -2399,15 +2447,27 @@ export function characterBuildHitPoints(
     return Result.fail(hitPointMaximumGrantBonus.failure);
   }
 
+  const rolledIssues = nonEmptyReadonlyArray(
+    rolledHitDieResultIssues(build.progression, classFactsByUnitId.success),
+  );
+  if (rolledIssues !== undefined) return Result.fail(rolledIssues);
+
   const constitutionModifier = abilityModifier(build.abilityScores.con);
   const maximum = normalHitPointMaximum({
     startingHitPointDie: startingClassFacts.hitPointDie,
     constitutionModifier,
-    fixedHigherLevelHitPointDice: build.progression.advancements.flatMap(
+    higherLevelHitPointGains: build.progression.advancements.flatMap(
       (advancement) => {
         const facts = classFactsByUnitId.success.get(advancement.classUnitId);
         /* v8 ignore start -- @preserve -- allClassFactsForFinalization populated this map from the same progression advancements. */
-        return facts == null ? [] : [facts.hitPointDie];
+        return facts == null
+          ? []
+          : [
+              {
+                hitPointDie: facts.hitPointDie,
+                hitPointRule: advancement.hitPointRule,
+              },
+            ];
         /* v8 ignore stop -- @preserve */
       },
     ),

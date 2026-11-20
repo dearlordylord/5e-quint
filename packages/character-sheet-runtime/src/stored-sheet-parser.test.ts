@@ -616,6 +616,29 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test("round-trips fixed and rolled Hit Point rules for levels after 1", () => {
+    const build = {
+      ...fighterBuild,
+      progression: {
+        ...fighterBuild.progression,
+        advancements: [
+          {
+            classUnitId: "class_fighter",
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+          {
+            classUnitId: "class_fighter",
+            hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 8 },
+          },
+        ],
+      },
+    };
+    expect(parseCharacterBuild(build, unitLibrary)).toMatchObject({
+      _tag: "Success",
+      success: { progression: build.progression },
+    });
+  });
+
   test("round-trips every supported proficiency-choice shape", () => {
     const choice = fc.constantFrom(
       { kind: "skill" as const, skill: "athletics" as const },
@@ -1027,6 +1050,22 @@ describe("stored Character Build parser", () => {
         progression: {
           startingClass: "class_fighter",
           advancements: [{ classUnitId: "class_fighter" }],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
+      name: "a rolled Hit Point rule without a positive integer result",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 0 },
+            },
+          ],
         },
       },
       expected: "Character Build progression advancement is invalid.",

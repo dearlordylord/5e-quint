@@ -1,4 +1,4 @@
-import { Brand, Result, Match } from "effect";
+import { Brand, Result, Match, Schema } from "effect";
 import {
   CHARACTER_CLASS_LEVELS,
   characterClassLevel,
@@ -27,13 +27,39 @@ export type LevelOneClassHitPointRule = {
   readonly tag: "levelOneMaximumHitDie";
 };
 
-export type FixedHigherLevelClassHitPointRule = {
-  readonly tag: "fixedHigherLevelGain";
-};
+const HitDieResultSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+  Schema.brand("PositiveInteger"),
+  Schema.brand("DieRollResult"),
+);
+
+export const FixedHigherLevelClassHitPointRuleSchema = Schema.Struct({
+  tag: Schema.Literal("fixedHigherLevelGain"),
+});
+
+export const RolledHigherLevelClassHitPointRuleSchema = Schema.Struct({
+  tag: Schema.Literal("rolledHigherLevelGain"),
+  hitDieResult: HitDieResultSchema,
+});
+
+export const HigherLevelClassHitPointRuleSchema = Schema.Union([
+  FixedHigherLevelClassHitPointRuleSchema,
+  RolledHigherLevelClassHitPointRuleSchema,
+]);
+
+export type FixedHigherLevelClassHitPointRule =
+  typeof FixedHigherLevelClassHitPointRuleSchema.Type;
+
+/** The class's Hit Die as the player rolled it for a level after 1. */
+export type RolledHigherLevelClassHitPointRule =
+  typeof RolledHigherLevelClassHitPointRuleSchema.Type;
+
+export type HigherLevelClassHitPointRule =
+  typeof HigherLevelClassHitPointRuleSchema.Type;
 
 export type ClassHitPointRule =
   | LevelOneClassHitPointRule
-  | FixedHigherLevelClassHitPointRule;
+  | HigherLevelClassHitPointRule;
 
 export type CharacterTotalLevelHitPointRule =
   | {
@@ -42,12 +68,12 @@ export type CharacterTotalLevelHitPointRule =
     }
   | {
       readonly totalLevel: PostLevelOneCharacterClassLevel;
-      readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+      readonly hitPointRule: HigherLevelClassHitPointRule;
     };
 
 export type CharacterProgressionEntry = {
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
 };
 
 export type CharacterProgression = {
@@ -91,17 +117,20 @@ export function characterTotalLevelHitPointRule(input: {
             hitPointRule,
           }),
     ),
-    Match.when({ tag: "fixedHigherLevelGain" }, (hitPointRule) =>
-      input.totalLevel > 1
-        ? Result.succeed({
-            totalLevel: PostLevelOneCharacterClassLevel(input.totalLevel),
-            hitPointRule,
-          })
-        : Result.fail({
-            code: "invalidHitPointRuleForLevel" as const,
-            totalLevel: input.totalLevel,
-            hitPointRule,
-          }),
+    Match.whenOr(
+      { tag: "fixedHigherLevelGain" },
+      { tag: "rolledHigherLevelGain" },
+      (hitPointRule) =>
+        input.totalLevel > 1
+          ? Result.succeed({
+              totalLevel: PostLevelOneCharacterClassLevel(input.totalLevel),
+              hitPointRule,
+            })
+          : Result.fail({
+              code: "invalidHitPointRuleForLevel" as const,
+              totalLevel: input.totalLevel,
+              hitPointRule,
+            }),
     ),
     Match.exhaustive,
   );
@@ -110,7 +139,7 @@ export function characterTotalLevelHitPointRule(input: {
 export function characterProgressionEntry(input: {
   readonly classUnitId: ClassUnitId;
   readonly characterLevel: CharacterClassLevel;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
 }): Result.Result<CharacterProgressionEntry, CharacterProgressionLevelIssue> {
   const levelRule = characterTotalLevelHitPointRule({
     totalLevel: input.characterLevel,
@@ -128,7 +157,7 @@ export function characterProgressionEntry(input: {
 export function characterProgressionWithClassLevelGain(input: {
   readonly progression: CharacterProgression;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
 }): Result.Result<CharacterProgression, CharacterProgressionLevelIssue> {
   const nextCharacterLevel = 2 + input.progression.advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)) {
@@ -143,7 +172,7 @@ export function characterProgressionWithClassLevelGain(input: {
     characterLevel: characterClassLevel(nextCharacterLevel),
     hitPointRule: input.hitPointRule,
   });
-  /* v8 ignore start -- @preserve -- The consecutive level and fixed higher-level Hit Point rule satisfy this narrowed constructor. */
+  /* v8 ignore start -- @preserve -- The consecutive level and higher-level Hit Point rule satisfy this narrowed constructor. */
   if (Result.isFailure(entry)) return Result.fail(entry.failure);
   /* v8 ignore stop -- @preserve */
 
@@ -155,20 +184,27 @@ export function characterProgressionWithClassLevelGain(input: {
 
 export function hitPointRuleOptionSuffix(
   rule: ClassHitPointRule,
-): "maximum_hit_die" | "fixed_hp_gain" {
+): "maximum_hit_die" | "fixed_hp_gain" | "rolled_hp_gain" {
   return Match.value(rule).pipe(
     Match.when(
       { tag: "levelOneMaximumHitDie" },
       () => "maximum_hit_die" as const,
     ),
     Match.when({ tag: "fixedHigherLevelGain" }, () => "fixed_hp_gain" as const),
+    Match.when(
+      { tag: "rolledHigherLevelGain" },
+      () => "rolled_hp_gain" as const,
+    ),
     Match.exhaustive,
   );
 }
 
 export function hitPointRuleLabel(
   rule: ClassHitPointRule,
-): "Level 1 Hit Point maximum" | "Fixed higher-level HP gain" {
+):
+  | "Level 1 Hit Point maximum"
+  | "Fixed higher-level HP gain"
+  | "Rolled higher-level HP gain" {
   return Match.value(rule).pipe(
     Match.when(
       { tag: "levelOneMaximumHitDie" },
@@ -178,6 +214,10 @@ export function hitPointRuleLabel(
       { tag: "fixedHigherLevelGain" },
       () => "Fixed higher-level HP gain" as const,
     ),
+    Match.when(
+      { tag: "rolledHigherLevelGain" },
+      () => "Rolled higher-level HP gain" as const,
+    ),
     Match.exhaustive,
   );
 }
@@ -185,9 +225,7 @@ export function hitPointRuleLabel(
 export function hitPointsAfterLevelOneMultiplier(
   progression: CharacterProgression,
 ): number {
-  return progression.advancements.filter(
-    (entry) => entry.hitPointRule.tag === "fixedHigherLevelGain",
-  ).length;
+  return progression.advancements.length;
 }
 
 export function computeTotalLevel(
