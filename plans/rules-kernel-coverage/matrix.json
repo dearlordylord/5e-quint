@@ -4178,6 +4178,7 @@
         ".references/srd-5.2.1/character-creation.md#Hit Points",
         ".references/srd-5.2.1/character-creation.md#Level 1 Hit Points by Class",
         ".references/srd-5.2.1/character-creation.md#Fixed Hit Points by Class",
+        ".references/srd-5.2.1/character-creation.md#Level Advancement",
         ".references/srd-5.2.1/character-origins.md#Dwarven Toughness",
         ".references/srd-5.2.1/rules-glossary.md#Hit Points",
         ".references/srd-5.2.1/rules-glossary.md#Long Rest"
@@ -10230,10 +10231,16 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt carries executable Character Sheet Hit Point Maximum derivation semantics from class Hit Dice, Constitution modifier, fixed higher-level gains, deterministic maximum bonuses, and maximum reductions.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt carries executable Character Sheet Hit Point Maximum derivation semantics from class Hit Dice, Constitution modifier, fixed or rolled higher-level gains, deterministic maximum bonuses, and maximum reductions.",
       "obligationIds": ["SHEET.HIT_POINTS.MAXIMUM_DERIVATION"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover fixed and rolled higher-level Hit Point gains, the minimum of 1, a Constitution increase over rolled levels, and rolls outside the Hit Die for the Hit Point maximum core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-maximum-examples.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt is a bounded replay owner for Character Sheet Hit Point Maximum parity evidence; the reusable semantics live in packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt.",
@@ -14573,6 +14580,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-maximum-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt",
       "role": "semantic-core"
     },
@@ -18724,6 +18736,7 @@
       "blockedBy": [],
       "generatorSubset": [
         "import",
+        "variant",
         "record",
         "pure-def",
         "int",
@@ -18735,11 +18748,13 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
+        "pattern-match",
         "all-block"
       ],
       "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
       "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+        "packages/shared-algebras/proofs/rule-core/hit-point-maximum-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt"
