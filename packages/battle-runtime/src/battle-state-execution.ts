@@ -164,7 +164,7 @@ import {
   type RolledDiceGroup,
   type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { type CreatureType } from "@dnd/shared/game-facts";
+import { type CreatureType, type HeroicInspiration } from "@dnd/shared/game-facts";
 import {
   AbilityModifier,
   AttackBonus,
@@ -4391,6 +4391,7 @@ type BattleCreatureStateCommon = {
         readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
+        readonly heroicInspiration: HeroicInspiration;
         readonly metamagic?: CharacterBattleMetamagicState;
         readonly spellcasting?: CharacterBattleSpellcastingExecutionState;
       }
@@ -8149,6 +8150,7 @@ export type BattleCreatureOriginSnapshot =
         readonly offHandAttackProcedureRef: BattleAttackProcedureExecutionRef | null;
       };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
+      readonly heroicInspiration: HeroicInspiration;
       readonly druidWildShapeAvailableForms: readonly {
         readonly statBlockId: StatBlockId;
         readonly execution: StatBlockExecutionSnapshot;

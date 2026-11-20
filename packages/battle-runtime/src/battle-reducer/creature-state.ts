@@ -35,7 +35,7 @@ import {
   resetDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
-import type { UnitId } from "@dnd/shared/game-facts";
+import { NO_HEROIC_INSPIRATION, type UnitId } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
@@ -680,6 +680,8 @@ export function battleCreatureStateAdmissionFromInit(
           attackExecution.execution.offHandAttack,
         ),
         resources,
+        heroicInspiration:
+          creatureInit.heroicInspiration ?? NO_HEROIC_INSPIRATION,
         ...optionalProperty("metamagic", metamagic),
         ...(spellcastingPresentationSource === undefined
           ? {}

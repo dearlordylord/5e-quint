@@ -46,6 +46,8 @@ import { AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema } from "@dn
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
   STANDARD_ACTION_KINDS,
   StatBlockId,
   UnitId,
@@ -6989,6 +6991,11 @@ type CharacterProcedureBindingSnapshotCodec = Schema.Union<
 const CharacterProcedureBindingSnapshotSchema: CharacterProcedureBindingSnapshotCodec =
   Schema.Union(CharacterProcedureBindingSnapshotMembers);
 
+const HeroicInspirationSchema = Schema.Union([
+  Schema.Struct({ tag: Schema.Literal(NO_HEROIC_INSPIRATION.tag) }),
+  Schema.Struct({ tag: Schema.Literal(HEROIC_INSPIRATION_AVAILABLE.tag) }),
+]);
+
 const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   kind: Schema.Literal("character"),
   characterId: CharacterIdSchema,
@@ -7013,6 +7020,7 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
     ]),
   }),
   resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
+  heroicInspiration: HeroicInspirationSchema,
   druidWildShapeAvailableForms: Schema.Array(
     Schema.Struct({
       statBlockId: StatBlockId,
@@ -10266,6 +10274,7 @@ type EncodedCharacterBattleCreatureOriginSnapshot = {
       | null;
   };
   readonly resources: readonly (typeof BattleCharacterResourceSnapshotSchema.Encoded)[];
+  readonly heroicInspiration: typeof HeroicInspirationSchema.Encoded;
   readonly druidWildShapeAvailableForms: readonly {
     readonly statBlockId: typeof StatBlockId.Encoded;
     readonly execution: typeof StatBlockExecutionSnapshotSchema.Encoded;

@@ -315,7 +315,10 @@ function characterSheetInitialConditions(
 
 function withDefinedCharacterBattleSheetState(
   sheet: CharacterSheet,
-): Pick<CharacterBuildCreatureInput, "resourceExpenditures"> &
+): Pick<
+  CharacterBuildCreatureInput,
+  "resourceExpenditures" | "heroicInspiration"
+> &
   Partial<
     Pick<
       CharacterBuildCreatureInput,
@@ -339,6 +342,7 @@ function withDefinedCharacterBattleSheetState(
       ? {}
       : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
     resourceExpenditures: sheet.resourceExpenditures,
+    heroicInspiration: sheet.heroicInspiration,
   };
 }
 
