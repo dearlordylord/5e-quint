@@ -72,6 +72,7 @@ export {
   classLevelForUnit,
   classUnitId,
   computeTotalLevel,
+  ConstitutionModifierAtGainSchema,
   HigherLevelClassHitPointRuleSchema,
   progressionClassLevels,
   progressionClassUnitIds,

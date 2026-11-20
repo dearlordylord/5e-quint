@@ -47,6 +47,7 @@ import {
 } from "./types.ts";
 import { holeIdForSource } from "./hole-factories.ts";
 import {
+  ConstitutionModifierAtGainSchema,
   HigherLevelClassHitPointRuleSchema,
   type HigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
@@ -229,6 +230,7 @@ const ProgressionSchema = Schema.Struct({
     Schema.Struct({
       classUnitId: UnitIdSchema,
       hitPointRule: HigherLevelClassHitPointRuleSchema,
+      constitutionModifierAtGain: ConstitutionModifierAtGainSchema,
     }),
   ),
 });
@@ -624,6 +626,12 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union([
     classUnitId: UnitIdSchema,
     hitDieResult: Schema.Number,
     hitDieSize: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("constitutionModifierAtGainAboveCurrent"),
+    characterLevel: Schema.Number,
+    constitutionModifierAtGain: Schema.Number,
+    constitutionModifier: Schema.Number,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedHitPointMaximumGrant"),
@@ -1069,10 +1077,18 @@ function progressionFact(
   return {
     startingClass,
     advancements: advancements.map((advancement) => {
-      const { classUnitId, hitPointRule, ...unprojectedAdvancement } =
-        advancement;
+      const {
+        classUnitId,
+        hitPointRule,
+        constitutionModifierAtGain,
+        ...unprojectedAdvancement
+      } = advancement;
       noUnprojectedFields(unprojectedAdvancement);
-      return { classUnitId, hitPointRule: hitPointRuleFact(hitPointRule) };
+      return {
+        classUnitId,
+        hitPointRule: hitPointRuleFact(hitPointRule),
+        constitutionModifierAtGain,
+      };
     }),
   };
 }
@@ -1771,7 +1787,8 @@ type RemainingCharacterBuildProjectionCause = Extract<
       | "unknownUnit"
       | "abilityScoreCapExceeded"
       | "unsupportedToolProficiency"
-      | "invalidChoiceOption";
+      | "invalidChoiceOption"
+      | "constitutionModifierAtGainAboveCurrent";
   }
 >;
 
@@ -1850,6 +1867,24 @@ function characterBuildProjectionCauseFactRemaining(
           tag,
           optionId,
           reason: creationChoiceOptionDecodeCauseFact(reason),
+        };
+      },
+    ),
+    byTag(
+      "constitutionModifierAtGainAboveCurrent",
+      ({
+        tag,
+        characterLevel,
+        constitutionModifierAtGain,
+        constitutionModifier,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        return {
+          tag,
+          characterLevel,
+          constitutionModifierAtGain,
+          constitutionModifier,
         };
       },
     ),

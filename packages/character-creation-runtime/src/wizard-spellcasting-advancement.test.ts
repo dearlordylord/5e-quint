@@ -227,6 +227,9 @@ describe("Wizard source-owned advancement", () => {
         advancements: globalThis.Array.from({ length: 19 }, () => ({
           classUnitId,
           hitPointRule: base.hitPointRule,
+          constitutionModifierAtGain: Math.floor(
+            (initial.abilityScores.con - 10) / 2,
+          ),
         })),
       },
     };

@@ -21,7 +21,10 @@ import {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey character-creation.species-lineage-choice
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  unitId as authoredUnitId,
+  type CharacterClassLevel,
+} from "@dnd/shared/game-facts";
 import { Result, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared/validation";
@@ -70,7 +73,10 @@ import {
   computeTotalLevel,
   progressionClassUnitIds,
   progressionClassLevels,
+  constitutionModifierAtGainAboveCurrentMessage,
+  constitutionModifiersAtGainAboveCurrent,
   startingClassUnitId,
+  type CharacterBuildProgression,
   type HigherLevelClassHitPointRule,
   rolledHitDieResultAboveHitDie,
   rolledHitDieResultAboveHitDieMessage,
@@ -1710,7 +1716,12 @@ function characterBuildProjectionCauseMessage(
 
 type RemainingCharacterBuildProjectionCause = Extract<
   CharacterBuildProjectionCause,
-  { readonly tag: "invalidChoiceOption" | "rolledHitDieResultAboveHitDie" }
+  {
+    readonly tag:
+      | "invalidChoiceOption"
+      | "rolledHitDieResultAboveHitDie"
+      | "constitutionModifierAtGainAboveCurrent";
+  }
 >;
 
 function characterBuildProjectionCauseMessageRemaining(
@@ -1725,6 +1736,11 @@ function characterBuildProjectionCauseMessageRemaining(
     Match.when(
       { tag: "rolledHitDieResultAboveHitDie" },
       ({ tag: _tag, ...issue }) => rolledHitDieResultAboveHitDieMessage(issue),
+    ),
+    Match.when(
+      { tag: "constitutionModifierAtGainAboveCurrent" },
+      ({ tag: _tag, ...issue }) =>
+        constitutionModifierAtGainAboveCurrentMessage(issue),
     ),
     Match.exhaustive,
   );
@@ -2017,10 +2033,17 @@ function characterBuildSpeciesFacts(
       ]);
 }
 
-function characterBuildAbilityScores(
+type CharacterBuildScoresAndProgression = {
+  readonly abilityScores: AbilityScoreAssignment;
+  readonly progression: CharacterBuildProgression;
+};
+
+function characterBuildScoresAndProgression(
   selections: FinalizedCharacterSelections,
+  progression: CharacterProgression,
   backgroundFacts: CharacterDefinitionBackgroundFacts,
-): Result.Result<AbilityScoreAssignment, FinalizationIssues> {
+  unitLibrary: UnitCatalog,
+): Result.Result<CharacterBuildScoresAndProgression, FinalizationIssues> {
   const backgroundScores = applyBackgroundAbilityScoreIncrease(
     selections.abilityScoreGeneration.assignedScores,
     selections.backgroundAbilityScoreIncrease,
@@ -2028,10 +2051,91 @@ function characterBuildAbilityScores(
   );
   if (Result.isFailure(backgroundScores))
     return Result.fail([backgroundScores.failure]);
-  return applyClassFeatureAbilityScoreIncreases(
+  const abilityScores = applyClassFeatureAbilityScoreIncreases(
     backgroundScores.success,
     selections,
   );
+  if (Result.isFailure(abilityScores))
+    return Result.fail(abilityScores.failure);
+  return Result.succeed({
+    abilityScores: abilityScores.success,
+    progression: characterBuildProgression({
+      selections,
+      progression,
+      constitutionAfterBackground: backgroundScores.success.con,
+      unitLibrary,
+    }),
+  });
+}
+
+/**
+ * The draft's levels after 1, each recording the Constitution modifier before
+ * its own class-feature score increases (Level Advancement steps 2 and 5).
+ */
+function characterBuildProgression(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly progression: CharacterProgression;
+  readonly constitutionAfterBackground: number;
+  readonly unitLibrary: UnitCatalog;
+}): CharacterBuildProgression {
+  const increases = constitutionIncreaseAcquisitions(input);
+  return {
+    ...input.progression,
+    advancements: input.progression.advancements.map((advancement, index) => {
+      const characterLevel = computeTotalLevel({
+        ...input.progression,
+        advancements: input.progression.advancements.slice(0, index + 1),
+      });
+      return {
+        ...advancement,
+        constitutionModifierAtGain: abilityModifier(
+          increases
+            .filter(({ acquiredAtLevel }) => acquiredAtLevel < characterLevel)
+            .reduce(
+              (score, { increase }) => score + increase,
+              input.constitutionAfterBackground,
+            ),
+        ),
+      };
+    }),
+  };
+}
+
+type ConstitutionIncreaseAcquisition = {
+  readonly acquiredAtLevel: CharacterClassLevel;
+  readonly increase: number;
+};
+
+/** Each class-feature Constitution increase with the character level that chose it. */
+function constitutionIncreaseAcquisitions(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly progression: CharacterProgression;
+  readonly unitLibrary: UnitCatalog;
+}): readonly ConstitutionIncreaseAcquisition[] {
+  return unitChoiceSelections(input.selections)
+    .filter(
+      (selection) =>
+        selection.source.choiceKey ===
+        CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+    )
+    .flatMap((selection) => {
+      const acquisition = selectedFeatAcquisitionProgression(
+        selection,
+        input.progression,
+        input.unitLibrary,
+      );
+      /* v8 ignore next -- @preserve -- The feat prerequisite gate placed this score choice's class feature in the progression. */
+      if (acquisition === undefined) return [];
+      const acquiredAtLevel = computeTotalLevel(acquisition);
+      return choiceSelectionOptionIds(selection).flatMap((optionId) => {
+        const deltas = decodeAbilityScoreIncreaseOptionId(optionId);
+        /* v8 ignore next -- @preserve -- Supported class-feature score choices retain codec-emitted ids. */
+        if (Result.isFailure(deltas)) return [];
+        return deltas.success.flatMap(({ ability, increase }) =>
+          ability === "con" ? [{ acquiredAtLevel, increase }] : [],
+        );
+      });
+    });
 }
 
 type CharacterBuildProjectionInput = {
@@ -2132,12 +2236,14 @@ export function buildCharacterBuild(
     return Result.fail(speciesChoiceFacts.failure);
   }
   /* v8 ignore stop -- @preserve */
-  const finalAbilityScores = characterBuildAbilityScores(
+  const scoresAndProgression = characterBuildScoresAndProgression(
     selections,
+    progression,
     backgroundFacts,
+    input.unitLibrary,
   );
-  if (Result.isFailure(finalAbilityScores))
-    return Result.fail(finalAbilityScores.failure);
+  if (Result.isFailure(scoresAndProgression))
+    return Result.fail(scoresAndProgression.failure);
   const mechanics = characterBuildMechanics(
     input,
     selections,
@@ -2158,7 +2264,7 @@ export function buildCharacterBuild(
     input.unitLibrary,
   );
   return Result.succeed({
-    progression,
+    progression: scoresAndProgression.success.progression,
     background: selections.background,
     species: selections.species,
     ...(selections.speciesSize === undefined
@@ -2170,7 +2276,7 @@ export function buildCharacterBuild(
     originLanguages: selections.languages,
     classFeatureLanguages,
     alignment: selections.alignment,
-    abilityScores: finalAbilityScores.success,
+    abilityScores: scoresAndProgression.success.abilityScores,
     proficiencyChoices,
     features: buildFeatures,
     ...(buildSpellcasting == null ? {} : { spellcasting: buildSpellcasting }),
@@ -2341,6 +2447,7 @@ function magicInitiateSpellcastingAbility(
 type HigherLevelHitPointGainFacts = {
   readonly hitPointDie: number;
   readonly hitPointRule: HigherLevelClassHitPointRule;
+  readonly constitutionModifierAtGain: number;
 };
 
 type CharacterHitPointMaximumFacts = {
@@ -2364,13 +2471,23 @@ function higherLevelHitDieValue(facts: HigherLevelHitPointGainFacts): number {
   );
 }
 
+/**
+ * RAW: character-creation.md Level Advancement. Step 2 gains the Hit Die value
+ * plus the modifier at the time, minimum 1; step 5 adds 1 for each later +1.
+ * The caller has checked that no level records a modifier above the current.
+ */
 function higherLevelHitPointGain(input: {
   readonly gain: HigherLevelHitPointGainFacts;
   readonly constitutionModifier: number;
 }): number {
-  return Math.max(
-    1,
-    higherLevelHitDieValue(input.gain) + input.constitutionModifier,
+  return (
+    Math.max(
+      1,
+      higherLevelHitDieValue(input.gain) +
+        input.gain.constitutionModifierAtGain,
+    ) +
+    input.constitutionModifier -
+    input.gain.constitutionModifierAtGain
   );
 }
 
@@ -2396,7 +2513,7 @@ function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
  * its facts. A class without facts already has its own finalization issue.
  */
 function draftRolledHitDieResultIssues(
-  progression: CharacterBuild["progression"],
+  progression: CharacterProgression,
   classFacts: SupportDependencyCollection<ClassFactsByUnitId>,
 ): readonly CharacterBuildProjectionIssue[] {
   return classFacts.issues.length === 0
@@ -2405,11 +2522,34 @@ function draftRolledHitDieResultIssues(
 }
 
 /**
+ * A built character's levels that its Hit Point maximum can't count: a rolled
+ * result above the Hit Die, or a recorded modifier above the current one.
+ */
+function characterBuildHitPointLevelIssues(
+  progression: CharacterBuildProgression,
+  classFactsByUnitId: ClassFactsByUnitId,
+  constitutionModifier: number,
+): readonly CharacterBuildProjectionIssue[] {
+  return [
+    ...rolledHitDieResultIssues(progression, classFactsByUnitId),
+    ...constitutionModifiersAtGainAboveCurrent(
+      progression,
+      constitutionModifier,
+    ).map((issue) =>
+      characterBuildProjectionIssue({
+        tag: "constitutionModifierAtGainAboveCurrent",
+        ...issue,
+      }),
+    ),
+  ];
+}
+
+/**
  * A level's rolled Hit Die result above its class's Hit Die. A draft, a level
  * gain and a stored sheet are all checked against the class facts.
  */
 function rolledHitDieResultIssues(
-  progression: CharacterBuild["progression"],
+  progression: CharacterProgression,
   classFactsByUnitId: ClassFactsByUnitId,
 ): readonly CharacterBuildProjectionIssue[] {
   return progression.advancements.flatMap((advancement) => {
@@ -2473,12 +2613,16 @@ export function characterBuildHitPoints(
     return Result.fail(hitPointMaximumGrantBonus.failure);
   }
 
-  const rolledIssues = nonEmptyReadonlyArray(
-    rolledHitDieResultIssues(build.progression, classFactsByUnitId.success),
-  );
-  if (rolledIssues !== undefined) return Result.fail(rolledIssues);
-
   const constitutionModifier = abilityModifier(build.abilityScores.con);
+  const levelIssues = nonEmptyReadonlyArray(
+    characterBuildHitPointLevelIssues(
+      build.progression,
+      classFactsByUnitId.success,
+      constitutionModifier,
+    ),
+  );
+  if (levelIssues !== undefined) return Result.fail(levelIssues);
+
   const maximum = normalHitPointMaximum({
     startingHitPointDie: startingClassFacts.hitPointDie,
     constitutionModifier,
@@ -2492,6 +2636,8 @@ export function characterBuildHitPoints(
               {
                 hitPointDie: facts.hitPointDie,
                 hitPointRule: advancement.hitPointRule,
+                constitutionModifierAtGain:
+                  advancement.constitutionModifierAtGain,
               },
             ];
         /* v8 ignore stop -- @preserve */
@@ -2848,7 +2994,9 @@ export function characterBuildArmorTraining(
 }
 
 export function characterBuildFeatureUnitIds(
-  build: Pick<CharacterBuild, "progression" | "features">,
+  build: Pick<CharacterBuild, "features"> & {
+    readonly progression: CharacterProgression;
+  },
   unitLibrary: UnitCatalog,
 ): readonly UnitRecord["id"][] {
   const selectedClassChoiceUnitIds = build.features.flatMap((feature) =>
@@ -2879,7 +3027,7 @@ export function characterBuildFeatureUnitIds(
 }
 
 function selectedSubclassFeatureGrantUnitIds(input: {
-  readonly build: Pick<CharacterBuild, "progression">;
+  readonly build: { readonly progression: CharacterProgression };
   readonly selectedClassChoiceUnitIds: readonly UnitRecord["id"][];
   readonly unitLibrary: UnitCatalog;
 }): readonly UnitRecord["id"][] {
@@ -2908,7 +3056,7 @@ function selectedSubclassFeatureGrantUnitIds(input: {
 }
 
 function classUnitIdForSubclass(input: {
-  readonly build: Pick<CharacterBuild, "progression">;
+  readonly build: { readonly progression: CharacterProgression };
   readonly subclassClassName: Extract<
     UnitRecord,
     { readonly kind: "subclass" }
@@ -2929,8 +3077,9 @@ function classUnitIdForSubclass(input: {
 
 type FinalizedClassFeatureLanguagesInput = Pick<
   CharacterBuild,
-  "progression" | "originLanguages" | "features"
+  "originLanguages" | "features"
 > & {
+  readonly progression: CharacterProgression;
   readonly unitChoices: readonly UnitChoiceSelection[];
   readonly unitLibrary: UnitCatalog;
 };

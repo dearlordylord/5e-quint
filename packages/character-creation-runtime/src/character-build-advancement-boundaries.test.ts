@@ -146,8 +146,16 @@ function fighterLevelThreeBuild(
     progression: {
       ...build.progression,
       advancements: [
-        { classUnitId: fighterUnitId, hitPointRule: fixedHitPoints },
-        { classUnitId: fighterUnitId, hitPointRule: fixedHitPoints },
+        {
+          classUnitId: fighterUnitId,
+          hitPointRule: fixedHitPoints,
+          constitutionModifierAtGain: 2,
+        },
+        {
+          classUnitId: fighterUnitId,
+          hitPointRule: fixedHitPoints,
+          constitutionModifierAtGain: 2,
+        },
       ],
     },
   };
@@ -160,6 +168,7 @@ function classAdvancementEntries(
   return Array.from({ length: classLevel - 1 }, () => ({
     classUnitId,
     hitPointRule: fixedHitPoints,
+    constitutionModifierAtGain: 2,
   }));
 }
 
@@ -678,10 +687,12 @@ describe("Character Build advancement typed boundaries", () => {
             {
               classUnitId: fighterUnitId,
               hitPointRule: fixedHitPoints,
+              constitutionModifierAtGain: 2,
             },
             {
               classUnitId: fighterUnitId,
               hitPointRule: fixedHitPoints,
+              constitutionModifierAtGain: 2,
             },
           ],
         },
@@ -718,6 +729,13 @@ describe("Character Build advancement typed boundaries", () => {
       expect(fighterAdvancement.success.progression.advancements).toHaveLength(
         3,
       );
+      // Level 4 gains its Hit Points before its own feat raises Constitution.
+      expect(
+        fighterAdvancement.success.progression.advancements.map(
+          ({ constitutionModifierAtGain }) => constitutionModifierAtGain,
+        ),
+      ).toEqual([2, 2, 2]);
+      expect(fighterAdvancement.success.abilityScores.con).toBe(16);
     }
   });
 
@@ -865,10 +883,12 @@ describe("Character Build advancement typed boundaries", () => {
               {
                 classUnitId: barbarianUnitId,
                 hitPointRule: fixedHitPoints,
+                constitutionModifierAtGain: 2,
               },
               {
                 classUnitId: barbarianUnitId,
                 hitPointRule: fixedHitPoints,
+                constitutionModifierAtGain: 2,
               },
             ],
           },

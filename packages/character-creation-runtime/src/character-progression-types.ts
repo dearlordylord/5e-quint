@@ -79,6 +79,26 @@ export type CharacterProgression = {
   readonly advancements: readonly CharacterProgressionEntry[];
 };
 
+/** Decodes the Constitution modifier a level records: a whole number. */
+export const ConstitutionModifierAtGainSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
+);
+
+/**
+ * A level after 1 as a built character records it: its Hit Point rule and the
+ * Constitution modifier the character had when gaining it, before that level's
+ * own score increases. A later increase adds 1 per level from that modifier.
+ */
+export type CharacterBuildProgressionEntry = CharacterProgressionEntry & {
+  readonly constitutionModifierAtGain: number;
+};
+
+/** A built character's class levels, each recording its gain's Constitution modifier. */
+export type CharacterBuildProgression = {
+  readonly startingClass: ClassUnitId;
+  readonly advancements: readonly CharacterBuildProgressionEntry[];
+};
+
 export type CharacterProgressionClassLevel = {
   readonly classUnitId: ClassUnitId;
   readonly classLevel: CharacterClassLevel;
@@ -153,10 +173,11 @@ export function characterProgressionEntry(input: {
 }
 
 export function characterProgressionWithClassLevelGain(input: {
-  readonly progression: CharacterProgression;
+  readonly progression: CharacterBuildProgression;
   readonly classUnitId: ClassUnitId;
   readonly hitPointRule: HigherLevelClassHitPointRule;
-}): Result.Result<CharacterProgression, CharacterProgressionLevelIssue> {
+  readonly constitutionModifierAtGain: number;
+}): Result.Result<CharacterBuildProgression, CharacterProgressionLevelIssue> {
   const nextCharacterLevel = 2 + input.progression.advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)) {
     return Result.fail({
@@ -176,7 +197,13 @@ export function characterProgressionWithClassLevelGain(input: {
 
   return Result.succeed({
     startingClass: input.progression.startingClass,
-    advancements: [...input.progression.advancements, entry.success],
+    advancements: [
+      ...input.progression.advancements,
+      {
+        ...entry.success,
+        constitutionModifierAtGain: input.constitutionModifierAtGain,
+      },
+    ],
   });
 }
 
@@ -255,6 +282,45 @@ export function rolledHitDieResultAboveHitDieMessage(
   issue: RolledHitDieResultAboveHitDie,
 ): string {
   return `Rolled Hit Die result ${issue.hitDieResult} exceeds the d${issue.hitDieSize} Hit Die of class ${issue.classUnitId}.`;
+}
+
+/**
+ * A level that records a higher Constitution modifier than the character has
+ * now. A built character's scores only rise, so a stored sheet or direct input
+ * that lowers Constitution afterwards has no Level Advancement reading.
+ */
+export type ConstitutionModifierAtGainAboveCurrent = {
+  readonly characterLevel: CharacterClassLevel;
+  readonly constitutionModifierAtGain: number;
+  readonly constitutionModifier: number;
+};
+
+/** The levels that record a higher Constitution modifier than the current one. */
+export function constitutionModifiersAtGainAboveCurrent(
+  progression: CharacterBuildProgression,
+  constitutionModifier: number,
+): readonly ConstitutionModifierAtGainAboveCurrent[] {
+  return progression.advancements.flatMap(
+    ({ constitutionModifierAtGain }, index) =>
+      constitutionModifierAtGain > constitutionModifier
+        ? [
+            {
+              characterLevel: computeTotalLevel({
+                ...progression,
+                advancements: progression.advancements.slice(0, index + 1),
+              }),
+              constitutionModifierAtGain,
+              constitutionModifier,
+            },
+          ]
+        : [],
+  );
+}
+
+export function constitutionModifierAtGainAboveCurrentMessage(
+  issue: ConstitutionModifierAtGainAboveCurrent,
+): string {
+  return `Character level ${issue.characterLevel} records Constitution modifier ${issue.constitutionModifierAtGain}, above the current ${issue.constitutionModifier}.`;
 }
 
 export function computeTotalLevel(

@@ -625,10 +625,12 @@ describe("stored Character Build parser", () => {
           {
             classUnitId: "class_fighter",
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 0,
           },
           {
             classUnitId: "class_fighter",
             hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 8 },
+            constitutionModifierAtGain: 1,
           },
         ],
       },
@@ -1064,6 +1066,40 @@ describe("stored Character Build parser", () => {
             {
               classUnitId: "class_fighter",
               hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 0 },
+              constitutionModifierAtGain: 1,
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
+      name: "a level without the Constitution modifier it was gained with",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
+      name: "a fractional Constitution modifier at a level's gain",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+              constitutionModifierAtGain: 0.5,
             },
           ],
         },
@@ -1079,6 +1115,7 @@ describe("stored Character Build parser", () => {
           advancements: Array.from({ length: 20 }, () => ({
             classUnitId: "class_fighter",
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 1,
           })),
         },
       },

@@ -126,6 +126,7 @@ function fighterSorcererMulticlassProjectionBuild(): ReturnType<
         {
           classUnitId: sorcererClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 0,
         },
       ],
     },
@@ -867,12 +868,19 @@ describe("character finalization boundaries", () => {
     const fighterLevelTwo = (
       hitPointRule: CharacterBuild["progression"]["advancements"][number]["hitPointRule"],
       con: number,
+      conAtGain: number = con,
     ) => ({
       ...startingBuild,
       abilityScores: { ...startingBuild.abilityScores, con: abilityScore(con) },
       progression: {
         ...startingBuild.progression,
-        advancements: [{ classUnitId: fighterClassUnitId, hitPointRule }],
+        advancements: [
+          {
+            classUnitId: fighterClassUnitId,
+            hitPointRule,
+            constitutionModifierAtGain: Math.floor((conAtGain - 10) / 2),
+          },
+        ],
       },
     });
     const rolled = (hitDieResult: number) => ({
@@ -901,6 +909,25 @@ describe("character finalization boundaries", () => {
     expect(
       characterBuildHitPoints(fighterLevelTwo(rolled(1), 3), unitLibrary),
     ).toMatchObject({ _tag: "Success", success: { maximum: 6 + 1 } });
+    // Level 2 rolled 1 at Constitution 8 (gain 1); Constitution 10 adds 1.
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(1), 10, 8), unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 10 + 2 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(5), 10, 14), unitLibrary),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          cause: {
+            tag: "constitutionModifierAtGainAboveCurrent",
+            characterLevel: 2,
+            constitutionModifierAtGain: 2,
+            constitutionModifier: 0,
+          },
+        },
+      ],
+    });
     expect(
       characterBuildHitPoints(fighterLevelTwo(rolled(11), 10), unitLibrary),
     ).toMatchObject({

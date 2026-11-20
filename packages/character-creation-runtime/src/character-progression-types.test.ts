@@ -21,6 +21,7 @@ import {
   rolledHitDieResultAboveHitDie,
   rolledHitDieResultAboveHitDieMessage,
   startingClassUnitId,
+  type CharacterBuildProgression,
   type CharacterProgression,
 } from "./character-progression-types.ts";
 
@@ -94,7 +95,7 @@ describe("Character progression typed boundaries", () => {
   });
 
   test("appends a class level and rejects progression beyond level 20", () => {
-    const progression: CharacterProgression = {
+    const progression: CharacterBuildProgression = {
       startingClass: fighterUnitId,
       advancements: [],
     };
@@ -103,21 +104,27 @@ describe("Character progression typed boundaries", () => {
         progression,
         classUnitId: wizardUnitId,
         hitPointRule: fixedHitPoints,
+        constitutionModifierAtGain: -1,
       }),
     ).toEqual(
       Result.succeed({
         startingClass: fighterUnitId,
         advancements: [
-          { classUnitId: wizardUnitId, hitPointRule: fixedHitPoints },
+          {
+            classUnitId: wizardUnitId,
+            hitPointRule: fixedHitPoints,
+            constitutionModifierAtGain: -1,
+          },
         ],
       }),
     );
 
-    const levelTwenty: CharacterProgression = {
+    const levelTwenty: CharacterBuildProgression = {
       startingClass: fighterUnitId,
       advancements: Array.from({ length: 19 }, () => ({
         classUnitId: fighterUnitId,
         hitPointRule: fixedHitPoints,
+        constitutionModifierAtGain: 0,
       })),
     };
     expect(
@@ -125,6 +132,7 @@ describe("Character progression typed boundaries", () => {
         progression: levelTwenty,
         classUnitId: fighterUnitId,
         hitPointRule: fixedHitPoints,
+        constitutionModifierAtGain: 0,
       }),
     ).toEqual(
       Result.fail({ code: "invalidCharacterClassLevel", classLevel: 21 }),

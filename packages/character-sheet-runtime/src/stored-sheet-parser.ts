@@ -50,6 +50,7 @@ import {
   type CharacterEquipmentItemSlot,
   type CopperPieceAmount,
   type UnitCatalog,
+  ConstitutionModifierAtGainSchema,
   HigherLevelClassHitPointRuleSchema,
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import {
@@ -874,6 +875,9 @@ function knownWarlockCantripIdsForStoredBuild(
 const decodeStoredHigherLevelHitPointRule = Schema.decodeUnknownResult(
   HigherLevelClassHitPointRuleSchema,
 );
+const decodeStoredConstitutionModifierAtGain = Schema.decodeUnknownResult(
+  ConstitutionModifierAtGainSchema,
+);
 
 function parseStoredProgressionAdvancement(
   value: unknown,
@@ -882,11 +886,16 @@ function parseStoredProgressionAdvancement(
     return undefined;
   }
   const hitPointRule = decodeStoredHigherLevelHitPointRule(value.hitPointRule);
-  return Result.isFailure(hitPointRule)
+  const constitutionModifierAtGain = decodeStoredConstitutionModifierAtGain(
+    value.constitutionModifierAtGain,
+  );
+  return Result.isFailure(hitPointRule) ||
+    Result.isFailure(constitutionModifierAtGain)
     ? undefined
     : {
         classUnitId: classUnitId(authoredUnitId(value.classUnitId)),
         hitPointRule: hitPointRule.success,
+        constitutionModifierAtGain: constitutionModifierAtGain.success,
       };
 }
 

@@ -187,7 +187,10 @@ import {
   manifestFixtureOptionIds,
   requireAcceptedBatch,
   testAbilityScoreAssignment,
+  testBuildProgression,
   testProgression,
+  constitutionModifierOf,
+  withTestBuildProgression,
   testUnitChoiceSourceKey,
 } from "./supported-progression-fill.test-support.ts";
 
@@ -6227,11 +6230,12 @@ describe("character creation finalization", () => {
       characterBuildMonksFocusFacts({
         build: {
           features: result.build.features,
-          progression: testProgression(
+          progression: testBuildProgression({
             unitLibrary,
-            authoredUnitId("class_monk"),
-            4,
-          ),
+            classUnitId: authoredUnitId("class_monk"),
+            classLevel: 4,
+            constitutionModifierAtGain: constitutionModifierOf(result.build),
+          }),
         },
         unitLibrary,
       }),
@@ -6307,11 +6311,12 @@ describe("character creation finalization", () => {
         characterBuildMonkUncannyMetabolismFacts({
           build: {
             features: result.build.features,
-            progression: testProgression(
+            progression: testBuildProgression({
               unitLibrary,
-              authoredUnitId("class_monk"),
-              expectation.level,
-            ),
+              classUnitId: authoredUnitId("class_monk"),
+              classLevel: expectation.level,
+              constitutionModifierAtGain: constitutionModifierOf(result.build),
+            }),
           },
           unitLibrary,
         }),
@@ -6405,11 +6410,12 @@ describe("character creation finalization", () => {
       characterBuildSorcererFontOfMagicFacts({
         build: {
           features: result.build.features,
-          progression: testProgression(
+          progression: testBuildProgression({
             unitLibrary,
-            authoredUnitId("class_sorcerer"),
-            4,
-          ),
+            classUnitId: authoredUnitId("class_sorcerer"),
+            classLevel: 4,
+            constitutionModifierAtGain: constitutionModifierOf(result.build),
+          }),
         },
         unitLibrary,
       }),
@@ -6519,11 +6525,12 @@ describe("character creation finalization", () => {
               optionId: testSorcererMetamagicOptionId("sorcerer_subtle_spell"),
             },
           ],
-          progression: testProgression(
+          progression: testBuildProgression({
             unitLibrary,
-            authoredUnitId("class_sorcerer"),
-            10,
-          ),
+            classUnitId: authoredUnitId("class_sorcerer"),
+            classLevel: 10,
+            constitutionModifierAtGain: constitutionModifierOf(result.build),
+          }),
         },
         unitLibrary,
       }),
@@ -6685,14 +6692,14 @@ describe("character creation finalization", () => {
   });
 
   test("advances Sorcerer level 10 and 17 Metamagic option gains from Surface thresholds", () => {
-    const levelNineBuild = {
-      ...finalizedSorcererMetamagicBuild("draft:sorcerer-metamagic-level-ten"),
-      progression: testProgression(
-        unitLibrary,
-        authoredUnitId("class_sorcerer"),
-        9,
+    const levelNineBuild = withTestBuildProgression({
+      build: finalizedSorcererMetamagicBuild(
+        "draft:sorcerer-metamagic-level-ten",
       ),
-    };
+      unitLibrary,
+      classUnitId: authoredUnitId("class_sorcerer"),
+      classLevel: 9,
+    });
 
     const levelTen = expectRight(
       advanceWithRequiredClassChoices({
@@ -6729,14 +6736,12 @@ describe("character creation finalization", () => {
       )?.choiceCount,
     ).toBe(4);
 
-    const levelSixteenBuild = {
-      ...levelTen,
-      progression: testProgression(
-        unitLibrary,
-        authoredUnitId("class_sorcerer"),
-        16,
-      ),
-    };
+    const levelSixteenBuild = withTestBuildProgression({
+      build: levelTen,
+      unitLibrary,
+      classUnitId: authoredUnitId("class_sorcerer"),
+      classLevel: 16,
+    });
     const levelSeventeen = expectRight(
       advanceWithRequiredClassChoices({
         build: levelSixteenBuild,
@@ -6776,16 +6781,14 @@ describe("character creation finalization", () => {
   });
 
   test("rejects Sorcerer Metamagic level gains that duplicate known options", () => {
-    const levelNineBuild = {
-      ...finalizedSorcererMetamagicBuild(
+    const levelNineBuild = withTestBuildProgression({
+      build: finalizedSorcererMetamagicBuild(
         "draft:sorcerer-metamagic-duplicate-gain",
       ),
-      progression: testProgression(
-        unitLibrary,
-        authoredUnitId("class_sorcerer"),
-        9,
-      ),
-    };
+      unitLibrary,
+      classUnitId: authoredUnitId("class_sorcerer"),
+      classLevel: 9,
+    });
     const levelGain = expectRight(
       sorcererLevelGain({
         unitLibrary,
@@ -6812,16 +6815,14 @@ describe("character creation finalization", () => {
 
   test("rejects incoherent Sorcerer Metamagic advancement state", () => {
     const classUnitId = testClassUnitId(authoredUnitId("class_sorcerer"));
-    const build = {
-      ...finalizedSorcererMetamagicBuild(
+    const build = withTestBuildProgression({
+      build: finalizedSorcererMetamagicBuild(
         "draft:sorcerer-metamagic-advancement-errors",
       ),
-      progression: testProgression(
-        unitLibrary,
-        authoredUnitId("class_sorcerer"),
-        9,
-      ),
-    };
+      unitLibrary,
+      classUnitId: authoredUnitId("class_sorcerer"),
+      classLevel: 9,
+    });
     const validGain = expectRight(
       sorcererLevelGain({
         unitLibrary,
@@ -6955,11 +6956,12 @@ describe("character creation finalization", () => {
       characterBuildDruidWildShapeFacts({
         build: {
           features: result.build.features,
-          progression: testProgression(
+          progression: testBuildProgression({
             unitLibrary,
-            authoredUnitId("class_druid"),
-            4,
-          ),
+            classUnitId: authoredUnitId("class_druid"),
+            classLevel: 4,
+            constitutionModifierAtGain: constitutionModifierOf(result.build),
+          }),
         },
         unitLibrary,
       }),
@@ -7016,6 +7018,7 @@ describe("character creation finalization", () => {
         {
           classUnitId: "class_fighter",
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 2,
         },
       ],
     });
@@ -7927,11 +7930,12 @@ describe("character creation finalization", () => {
     const [firstSource, ...remainingSources] = spellcasting.sources;
     const fighterSourceBuild: CharacterBuild = {
       ...build,
-      progression: testProgression(
+      progression: testBuildProgression({
         unitLibrary,
-        authoredUnitId("class_fighter"),
-        1,
-      ),
+        classUnitId: authoredUnitId("class_fighter"),
+        classLevel: 1,
+        constitutionModifierAtGain: constitutionModifierOf(build),
+      }),
       spellcasting: {
         ...spellcasting,
         sources: [
@@ -11454,11 +11458,12 @@ describe("character creation finalization", () => {
     );
 
     const build = {
-      progression: testProgression(
+      progression: testBuildProgression({
         unitLibrary,
-        authoredUnitId("class_barbarian"),
-        3,
-      ),
+        classUnitId: authoredUnitId("class_barbarian"),
+        classLevel: 3,
+        constitutionModifierAtGain: 0,
+      }),
       background: authoredUnitId("background_soldier"),
       proficiencyChoices: [
         { kind: "skill", skill: "athletics" },
@@ -11478,11 +11483,12 @@ describe("character creation finalization", () => {
 
   test("adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature", () => {
     const baseBuild = {
-      progression: testProgression(
+      progression: testBuildProgression({
         unitLibrary,
-        authoredUnitId("class_sorcerer"),
-        3,
-      ),
+        classUnitId: authoredUnitId("class_sorcerer"),
+        classLevel: 3,
+        constitutionModifierAtGain: 1,
+      }),
       species: authoredUnitId("species_orc"),
       abilityScores: testAbilityScoreAssignment({
         str: 8,

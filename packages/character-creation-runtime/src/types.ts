@@ -61,7 +61,9 @@ import type {
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 import type {
+  CharacterBuildProgression,
   CharacterProgression,
+  ConstitutionModifierAtGainAboveCurrent,
   RolledHitDieResultAboveHitDie,
 } from "./character-progression-types.ts";
 
@@ -1128,6 +1130,9 @@ export type CharacterBuildProjectionCause =
   | ({
       readonly tag: "rolledHitDieResultAboveHitDie";
     } & RolledHitDieResultAboveHitDie)
+  | ({
+      readonly tag: "constitutionModifierAtGainAboveCurrent";
+    } & ConstitutionModifierAtGainAboveCurrent)
   | {
       readonly tag: "unsupportedHitPointMaximumGrant";
       readonly sourceUnitId: UnitRecord["id"];
@@ -1620,7 +1625,7 @@ export type CharacterBuildClassFeatureLanguage =
 // In-play CharacterSheet state such as current HP, Temporary Hit Points, and
 // Hit Dice remaining belongs to the adventuring/rest boundary, not this package.
 export type CharacterBuild = {
-  readonly progression: CharacterProgression;
+  readonly progression: CharacterBuildProgression;
   readonly background: UnitRecord["id"];
   readonly species: UnitRecord["id"];
   // Present only when the selected species has a size choice in Surface.

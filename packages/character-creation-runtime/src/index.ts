@@ -300,6 +300,8 @@ export {
   hitPointRuleLabel,
   hitPointRuleOptionSuffix,
   startingClassUnitId,
+  type CharacterBuildProgression,
+  type CharacterBuildProgressionEntry,
   type CharacterProgressionClassLevel,
   type CharacterProgressionEntry,
   type CharacterTotalLevelHitPointRule,

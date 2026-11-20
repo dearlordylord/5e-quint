@@ -39,6 +39,7 @@ const hitPointMaximumScenarios = [
   "reduced-effective-maximum",
   "rolled-minimum-higher-level-gain",
   "rolled-multiclass",
+  "rolled-minimum-gain-after-constitution-increase",
 ] as const;
 type HitPointMaximumScenario = (typeof hitPointMaximumScenarios)[number];
 const hitPointMaximumReplayStepCount = hitPointMaximumScenarios.length - 1;
@@ -72,6 +73,7 @@ const driverSchema = {
   doProjectReducedEffectiveMaximum: {},
   doProjectRolledMinimumHigherLevelGain: {},
   doProjectRolledMulticlass: {},
+  doProjectRolledMinimumGainAfterConstitutionIncrease: {},
   step: {},
 } as const;
 
@@ -208,6 +210,23 @@ function createHitPointMaximumDriver() {
           replayIndex: 10,
         });
       },
+      doProjectRolledMinimumGainAfterConstitutionIncrease: () => {
+        projection = projectHitPointMaximum({
+          outcome: "rolled-minimum-gain-after-constitution-increase",
+          build: buildFixture({
+            startingClass: "class_wizard",
+            constitutionScore: 10,
+            advancements: [
+              {
+                classUnitId: "class_wizard",
+                hitDieResult: 1,
+                constitutionScoreAtGain: 8,
+              },
+            ],
+          }),
+          replayIndex: 11,
+        });
+      },
       step: () => {},
       getState: () => projection,
     };
@@ -303,10 +322,17 @@ function projectHitPointMaximum(input: {
 function buildFixture(input: {
   readonly startingClass: string;
   readonly constitutionScore: number;
-  /** A class alone takes the fixed value; a class with a result rolled it. */
+  /**
+   * A class alone takes the fixed value; a class with a result rolled it,
+   * at the current Constitution unless the level names an earlier score.
+   */
   readonly advancements?: readonly (
     | string
-    | { readonly classUnitId: string; readonly hitDieResult: number }
+    | {
+        readonly classUnitId: string;
+        readonly hitDieResult: number;
+        readonly constitutionScoreAtGain?: number;
+      }
   )[];
   readonly species?: string;
 }): CharacterBuild {
@@ -318,6 +344,9 @@ function buildFixture(input: {
           ? {
               classUnitId: classUnitId(authoredUnitId(advancement)),
               hitPointRule: { tag: "fixedHigherLevelGain" },
+              constitutionModifierAtGain: scoreModifier(
+                input.constitutionScore,
+              ),
             }
           : {
               classUnitId: classUnitId(authoredUnitId(advancement.classUnitId)),
@@ -325,6 +354,9 @@ function buildFixture(input: {
                 tag: "rolledHigherLevelGain",
                 hitDieResult: DieRollResult(advancement.hitDieResult),
               },
+              constitutionModifierAtGain: scoreModifier(
+                advancement.constitutionScoreAtGain ?? input.constitutionScore,
+              ),
             },
       ),
     },
@@ -424,6 +456,8 @@ const qntOutcomeByVariant = {
   CharacterSheetHitPointMaximumRolledMinimumHigherLevelGain:
     "rolled-minimum-higher-level-gain",
   CharacterSheetHitPointMaximumRolledMulticlass: "rolled-multiclass",
+  CharacterSheetHitPointMaximumRolledMinimumGainAfterConstitutionIncrease:
+    "rolled-minimum-gain-after-constitution-increase",
 } as const;
 
 function outcomeField(
@@ -463,4 +497,8 @@ function recordField(
     throw new Error(`Expected Quint record field ${field}.`);
   }
   return Object.fromEntries(Object.entries(value));
+}
+
+function scoreModifier(score: number): number {
+  return Math.floor((score - 10) / 2);
 }

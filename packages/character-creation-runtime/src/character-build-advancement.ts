@@ -18,6 +18,7 @@ import {
   selectedPreparedSpellAccess,
 } from "./chosen-prepared-spell-access.ts";
 import {
+  abilityModifier,
   characterBuildFeatureUnitIds,
   characterBuildProficiencies,
   finalizedClassChoiceFeaturesForSupportedChoices,
@@ -1361,6 +1362,9 @@ export function advanceCharacterBuildClassLevel(input: {
     progression: input.build.progression,
     classUnitId: input.levelGain.classUnitId,
     hitPointRule: input.levelGain.hitPointRule,
+    // RAW: character-creation.md Level Advancement steps 2 and 5: the level's
+    // Hit Points use the modifier before its own feats raise Constitution.
+    constitutionModifierAtGain: abilityModifier(input.build.abilityScores.con),
   });
   /* v8 ignore start -- @preserve -- A parsed level gain cannot make its already-valid progression nonconsecutive; this reports malformed direct inputs. */
   if (Result.isFailure(progression)) {

@@ -8,9 +8,12 @@ module hitPointMaximum {
     | FixedHigherLevelGain
     | RolledHigherLevelGain(int)
 
+  // Each level records the Constitution modifier the character had when gaining
+  // it, before that level's own score increases.
   type HigherLevelHitPointGain = {
     hitPointDie: int,
     rule: HigherLevelHitPointRule,
+    constitutionModifierAtGain: int,
   }
 
   type HitPointMaximumFacts = {
@@ -21,11 +24,26 @@ module hitPointMaximum {
     hitPointMaximumReduction: int,
   }
 
-  pure def fixedHigherLevelHitPointGainFor(hitPointDie: int): HigherLevelHitPointGain =
-    { hitPointDie: hitPointDie, rule: FixedHigherLevelGain }
+  pure def fixedHigherLevelHitPointGainFor(
+    hitPointDie: int,
+    constitutionModifierAtGain: int,
+  ): HigherLevelHitPointGain =
+    {
+      hitPointDie: hitPointDie,
+      rule: FixedHigherLevelGain,
+      constitutionModifierAtGain: constitutionModifierAtGain,
+    }
 
-  pure def rolledHigherLevelHitPointGainFor(hitPointDie: int, hitDieResult: int): HigherLevelHitPointGain =
-    { hitPointDie: hitPointDie, rule: RolledHigherLevelGain(hitDieResult) }
+  pure def rolledHigherLevelHitPointGainFor(
+    hitPointDie: int,
+    hitDieResult: int,
+    constitutionModifierAtGain: int,
+  ): HigherLevelHitPointGain =
+    {
+      hitPointDie: hitPointDie,
+      rule: RolledHigherLevelGain(hitDieResult),
+      constitutionModifierAtGain: constitutionModifierAtGain,
+    }
 
   pure def higherLevelHitDieValue(gain: HigherLevelHitPointGain): int =
     match gain.rule {
@@ -33,10 +51,12 @@ module hitPointMaximum {
       | RolledHigherLevelGain(hitDieResult) => hitDieResult
     }
 
-  // Recomputed from the current Constitution modifier, with the minimum of 1.
+  // Level Advancement step 2: the value plus the modifier at the time, minimum 1.
+  // Step 5: each later +1 to the modifier adds 1 for the level.
   pure def higherLevelHitPointGain(gain: HigherLevelHitPointGain, constitutionModifier: int): int = {
-    val total = higherLevelHitDieValue(gain) + constitutionModifier
-    if (total < 1) 1 else total
+    val gained = higherLevelHitDieValue(gain) + gain.constitutionModifierAtGain
+    val atGain = if (gained < 1) 1 else gained
+    atGain + constitutionModifier - gain.constitutionModifierAtGain
   }
 
   pure def legalHigherLevelHitPointGain(gain: HigherLevelHitPointGain): bool = all {
@@ -58,10 +78,14 @@ module hitPointMaximum {
   pure def effectiveHitPointMaximum(facts: HitPointMaximumFacts): int =
     normalHitPointMaximum(facts) - facts.hitPointMaximumReduction
 
+  // A built character's scores only rise, so no level records a modifier above
+  // the current one.
   pure def legalHitPointMaximumFacts(facts: HitPointMaximumFacts): bool = all {
     facts.startingHitPointDie > 0,
     facts.higherLevelHitPointGains.foldl(true, (legal, gain) =>
-      legal and legalHigherLevelHitPointGain(gain)
+      legal
+        and legalHigherLevelHitPointGain(gain)
+        and gain.constitutionModifierAtGain <= facts.constitutionModifier
     ),
     normalHitPointMaximum(facts) > 0,
     facts.hitPointMaximumReduction >= 0,
