@@ -9,6 +9,7 @@ import type {
   BattleAttackRollHole,
   BattleAttackRollResult,
   BattleCreatureState,
+  BattleSpellAttackRollHole,
 } from "../battle-state-execution.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
@@ -99,15 +100,25 @@ export function attackRollD20TestRerolls(input: {
   }
   return {
     tag: "resolved",
-    effectiveAttackRoll: effectiveHeroicInspirationRerollAttackRoll(
-      effectiveD20TestNaturalOneRerollAttackRoll(attackRoll),
-    ),
+    effectiveAttackRoll: attackRollAfterD20TestRerolls(attackRoll),
   };
+}
+
+/**
+ * The attack roll after its D20 Test reroll decisions. At most one of them
+ * takes the reroll, so the order doesn't change the result.
+ */
+export function attackRollAfterD20TestRerolls(
+  attackRoll: BattleAttackRollResult,
+): BattleAttackRollResult {
+  return effectiveHeroicInspirationRerollAttackRoll(
+    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll),
+  );
 }
 
 /** The attack roll hole with the reroll options it is asked again with. */
 export function attackRollHoleWithD20TestRerollOptions<
-  T extends BattleAttackRollHole,
+  T extends BattleAttackRollHole | BattleSpellAttackRollHole,
 >(hole: T, options: AttackRollD20TestRerollOptions): T {
   const withNaturalOne: T = options.naturalOne
     ? attackRollHoleWithD20TestNaturalOneRerollOption(hole)

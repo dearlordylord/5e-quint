@@ -77,11 +77,11 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+} from "./attack-roll-d20-test-rerolls.ts";
+import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -540,15 +540,14 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     const actorBeforeSpellAttack = replayState.combatants.get(input.actorId);
-    if (
-      d20TestNaturalOneRerollRollDecisionRequired({
-        actor: actorBeforeSpellAttack,
-        originalD20TestRoll: step.attackRoll.value.d20TestRoll,
-        decision: step.attackRoll.value.d20TestNaturalOneReroll,
-      })
-    ) {
+    const d20TestRerolls = attackRollD20TestRerolls({
+      attacker: actorBeforeSpellAttack,
+      attackRoll: step.attackRoll.value,
+      requiredRollMode,
+    });
+    if (d20TestRerolls.tag === "decisionsRequired") {
       return needsHolesResult(input.input.state, input.input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHoleWithD20TestRerollOptions(
           chainedSpellAttackRollHole(
             replayState,
             input.actorId,
@@ -556,27 +555,23 @@ export function resolveChainedSpellAttackDamageAct(input: {
             stepIndex,
             requiredRollMode,
           ),
+          d20TestRerolls.options,
         ),
       ]);
     }
-    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-      actor: actorBeforeSpellAttack,
-      total: step.attackRoll.value.total,
-      originalD20TestRoll: step.attackRoll.value.d20TestRoll,
-      decision: step.attackRoll.value.d20TestNaturalOneReroll,
-      requiredRollMode,
-    });
+    const d20TestRerollIssue =
+      d20TestRerolls.tag === "invalid" ? d20TestRerolls.issue : null;
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (d20TestNaturalOneRerollIssue !== null) {
+    if (d20TestRerollIssue !== null) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        d20TestNaturalOneRerollIssue,
+        d20TestRerollIssue,
       );
     }
     /* v8 ignore stop -- @preserve */
-    const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    const effectiveAttackRoll = attackRollAfterD20TestRerolls(
       step.attackRoll.value,
     );
 
@@ -610,7 +605,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
     const attackRolledState = recordAttackRollMissToHitReplacementUsed(
       consumeHelpAttackForAttackRoll(
         recordAttackRollOngoingFeatures(
-          replayState,
+          battleStateAfterHeroicInspirationReroll(
+            replayState,
+            input.actorId,
+            step.attackRoll.value.heroicInspirationReroll,
+          ),
           input.actorId,
           target.combatantId,
           null,

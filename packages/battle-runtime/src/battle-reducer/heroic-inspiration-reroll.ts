@@ -13,6 +13,7 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleAttackRollHole,
+  type BattleSpellAttackRollHole,
   type BattleAttackRollResult,
   type BattleCreatureState,
   type BattleD20TestRoll,
@@ -138,7 +139,7 @@ export function heroicInspirationRerollRollIssue(
 
 /** The attack roll hole, asked again with the Heroic Inspiration reroll option. */
 export function attackRollHoleWithHeroicInspirationRerollOption<
-  T extends BattleAttackRollHole,
+  T extends BattleAttackRollHole | BattleSpellAttackRollHole,
 >(
   hole: T,
 ): T & {
@@ -152,10 +153,7 @@ export function attackRollHoleWithHeroicInspirationRerollOption<
   };
 }
 
-/**
- * The attack roll after both D20 Test reroll sources. At most one of them
- * rerolls, so the order doesn't change the result.
- */
+/** The attack roll after its Heroic Inspiration reroll decision. */
 export function effectiveHeroicInspirationRerollAttackRoll(
   attackRoll: BattleAttackRollResult,
 ): BattleAttackRollResult {

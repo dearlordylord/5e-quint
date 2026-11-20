@@ -76,13 +76,13 @@ import {
   saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget,
 } from "./staged-condition-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollOutcomeIssue,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+} from "./attack-roll-d20-test-rerolls.ts";
+import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellCastInterruptFrame,
@@ -502,41 +502,32 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   }
   /* v8 ignore stop -- @preserve */
   const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: input.partFill.attackRoll.d20TestRoll,
-      decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    attacker: actorBeforeSpellAttack,
+    attackRoll: input.partFill.attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         spellAttackSequencePartAttackRollHole(
           input.invocation,
           input.partIndex,
           requiredRollMode,
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: input.partFill.attackRoll.total,
-    originalD20TestRoll: input.partFill.attackRoll.d20TestRoll,
-    decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
+  const d20TestRerollIssue =
+    d20TestRerolls.tag === "invalid" ? d20TestRerolls.issue : null;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerollIssue !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      d20TestNaturalOneRerollIssue,
-    );
+    return invalidResult(input.input.state, "invalidFill", d20TestRerollIssue);
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(
     input.partFill.attackRoll,
   );
   const ordinaryHit = attackRollHits(
@@ -571,7 +562,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        input.state,
+        battleStateAfterHeroicInspirationReroll(
+          input.state,
+          input.actorId,
+          input.partFill.attackRoll.heroicInspirationReroll,
+        ),
         input.actorId,
         target.combatantId,
         null,
@@ -1177,38 +1172,29 @@ function resolveSpellAttackSequenceObjectPart(input: {
   }
   /* v8 ignore stop -- @preserve */
   const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: input.partFill.attackRoll.d20TestRoll,
-      decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    attacker: actorBeforeSpellAttack,
+    attackRoll: input.partFill.attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         spellAttackSequencePartAttackRollHole(
           input.invocation,
           input.partIndex,
           requiredRollMode,
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: input.partFill.attackRoll.total,
-    originalD20TestRoll: input.partFill.attackRoll.d20TestRoll,
-    decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
+  const d20TestRerollIssue =
+    d20TestRerolls.tag === "invalid" ? d20TestRerolls.issue : null;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerollIssue !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      d20TestNaturalOneRerollIssue,
-    );
+    return invalidResult(input.input.state, "invalidFill", d20TestRerollIssue);
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1225,16 +1211,21 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(
     input.partFill.attackRoll,
   );
   const hit = attackRollHits(effectiveAttackRoll, objectFact.armorClass);
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
+  const spentState = battleStateAfterHeroicInspirationReroll(
+    input.state,
+    input.actorId,
+    input.partFill.attackRoll.heroicInspirationReroll,
+  );
   const attackRolledState = consumeSelfAttackRollEffects(
     {
-      ...input.state,
+      ...spentState,
       currentTurnResources: {
-        ...input.state.currentTurnResources,
+        ...spentState.currentTurnResources,
         attackRollMadeThisTurn: true,
       },
     },

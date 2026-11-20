@@ -2642,7 +2642,10 @@ const BattleHolePayloadMembers = [
       AttackRollMissToHitReplacementFields,
       mergeBattleHoleFieldPairs(
         SpellAttackRerollHoleOptionsFields,
-        D20TestNaturalOneRerollHoleOptionsFields,
+        mergeBattleHoleFieldPairs(
+          D20TestNaturalOneRerollHoleOptionsFields,
+          HeroicInspirationRerollHoleOptionsFields,
+        ),
       ),
     ),
   ),

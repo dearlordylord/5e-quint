@@ -50,12 +50,23 @@ import {
   type BattleHole,
   type BattleResolutionResult,
 } from "./battle-state-execution.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import type { CombatantId } from "./identity.ts";
 import {
   battleId,
   battleUnitRefWithSupportProfiles,
   speciesHalflingLuckUnitId,
+  spellCasterId,
+  spellTargetId,
   unitLibrary,
 } from "./unit-profile-admission.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  spellAct,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { movementFeet } from "@dnd/shared/types";
 
 type AttackRollValue = Extract<
@@ -376,6 +387,82 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     );
   });
 
+  test("a Spell Attack offers the caster's Heroic Inspiration and spends it", () => {
+    const rayOfFrost = spellRecord("ray_of_frost");
+    const session = sessionWithHeroicInspiration(
+      spellBattle({
+        cantrips: [rayOfFrost],
+        casterClassLevels: [{ className: "sorcerer", level: 5 }],
+      }),
+      spellCasterId,
+    );
+    const act = spellAct({ session, spellId: rayOfFrost.id });
+    const targetSelection = spellTargetFill(
+      requireHole(
+        resolveBattleSubject({
+          state: session.state,
+          subject: act.subject,
+          fills: [],
+        }),
+        "targetChoice",
+      ),
+      rayOfFrost.id,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetSelection],
+      }),
+      "attackRoll",
+    );
+    const resolveRoll = (value: Parameters<typeof attackRollFill>[1]) =>
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetSelection, attackRollFill(attack, value)],
+      });
+
+    expect(
+      requireHole(resolveRoll({ total: 4, naturalD20: 2 }), "attackRoll"),
+    ).toMatchObject({
+      heroicInspirationRerolls: [
+        { effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND },
+      ],
+    });
+
+    const rerolledHit = resolveRoll({
+      total: 4,
+      naturalD20: 2,
+      heroicInspirationReroll: reroll({ total: 25, naturalD20: 20 }),
+    });
+    expect(holeKinds(rerolledHit)).toEqual(["rolledDice"]);
+
+    const rerolledMiss = requireResolved(
+      resolveRoll({
+        total: 4,
+        naturalD20: 2,
+        heroicInspirationReroll: reroll({ total: 5, naturalD20: 3 }),
+      }),
+    );
+    expect(heroicInspiration(rerolledMiss.state, spellCasterId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
+
+    const declinedMiss = requireResolved(
+      resolveRoll({
+        total: 4,
+        naturalD20: 2,
+        heroicInspirationReroll: declineReroll(),
+      }),
+    );
+    expect(heroicInspiration(declinedMiss.state, spellCasterId)).toEqual(
+      HEROIC_INSPIRATION_AVAILABLE,
+    );
+  });
+
   test("an Opportunity Attack offers the reactor's Heroic Inspiration and spends it", () => {
     const state = startBattleRight({
       battleId: battleId("heroic-inspiration-opportunity-reactor"),
@@ -479,6 +566,27 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
   });
 });
 
+function sessionWithHeroicInspiration(
+  session: BattleRuntimeSession,
+  id: CombatantId,
+): BattleRuntimeSession {
+  const creature = session.state.combatants.get(id);
+  if (creature?.origin.kind !== "character") {
+    throw new Error("Expected a character combatant.");
+  }
+  const combatants = new Map(session.state.combatants).set(id, {
+    ...creature,
+    origin: {
+      ...creature.origin,
+      heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+    },
+  });
+  return battleRuntimeSessionForTest({
+    ...session,
+    state: { ...session.state, combatants },
+  });
+}
+
 function fighterBattle(inspiration: HeroicInspiration): BattleState {
   return startBattleRight({
     battleId: battleId("heroic-inspiration-attack-roll"),
@@ -556,11 +664,14 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
       }),
     ],
   });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Opportunity Attack interrupt.");
+  }
   const decision = battleFrontierInterruptDecisionForState(
     awaitingReaction.state,
   );
-  if (awaitingReaction.tag !== "needsHoles" || decision === undefined) {
-    throw new Error("Expected Opportunity Attack interrupt.");
+  if (decision === null || decision === undefined) {
+    throw new Error("Expected Opportunity Attack decision.");
   }
   const choice = reactionChoiceWithSubject(decision.choices);
   const startedReaction = resolveBattleInterrupt({
@@ -571,6 +682,9 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
       choice: opportunityAttackProcedureSelectionForTest(choice),
     }),
   });
+  if (startedReaction.tag !== "needsHoles") {
+    throw new Error("Expected Opportunity Attack roll hole.");
+  }
   return {
     state: startedReaction.state,
     subject: choice.subject,
@@ -592,7 +706,7 @@ function goblinHp(state: BattleState): number {
 
 function heroicInspiration(
   state: BattleState,
-  id: typeof fighterId,
+  id: CombatantId,
 ): HeroicInspiration | undefined {
   const creature = state.combatants.get(id);
   return creature?.origin.kind === "character"
