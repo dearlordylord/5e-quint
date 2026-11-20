@@ -367,18 +367,19 @@ export function bonusActionDashSubjectForSpeedKind(
 }
 
 /**
- * An ability check with a skill that the runtime resolves itself: the hole that
- * asks for it, and the state once the check is made. A Help benefit for the
- * skill gives the check Advantage and is used up by it, so the hole's roll mode
- * and the used-up benefit come from this one operation.
+ * An ability check with a skill: the hole that asks for it, and the state once
+ * the check is made. A Help benefit for the skill gives the check Advantage and
+ * is used up by it, so the hole's roll mode and the used-up benefit come from
+ * this one operation. Whoever resolves the check continues from
+ * `stateAfterCheck`.
  */
-export interface BattleRuntimeSkillCheck {
+export interface BattleSkillCheck {
   readonly hole: BattleAbilityCheckHole;
   /** The state after the check, without the Help benefits it used up. */
   readonly stateAfterCheck: BattleState;
 }
 
-function runtimeSkillCheck(
+function skillCheck(
   state: BattleState,
   actorId: CombatantId,
   check: {
@@ -393,7 +394,7 @@ function runtimeSkillCheck(
     readonly dc: DifficultyClass;
     readonly requiresTableSpatialFact?: true;
   },
-): BattleRuntimeSkillCheck {
+): BattleSkillCheck {
   const sources = abilityCheckRollModeSources(
     state,
     actorId,
@@ -428,8 +429,8 @@ function runtimeSkillCheck(
 export function hideSkillCheck(
   state: BattleState,
   actorId: CombatantId,
-): BattleRuntimeSkillCheck {
-  return runtimeSkillCheck(
+): BattleSkillCheck {
+  return skillCheck(
     state,
     actorId,
     { ability: "dex", skill: "stealth" },
@@ -447,8 +448,8 @@ export function searchSkillCheck(
   state: BattleState,
   actorId: CombatantId,
   targetId?: CombatantId,
-): BattleRuntimeSkillCheck {
-  return runtimeSkillCheck(
+): BattleSkillCheck {
+  return skillCheck(
     state,
     actorId,
     {
@@ -469,7 +470,7 @@ export function escapeSpellRestraintSkillCheck(
   state: BattleState,
   effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
   input: { readonly actorId: CombatantId; readonly targetId: CombatantId },
-): BattleRuntimeSkillCheck {
+): BattleSkillCheck {
   const dc = spellSaveDcForCaster(
     state,
     effect.sourceCombatantId,
@@ -478,7 +479,7 @@ export function escapeSpellRestraintSkillCheck(
   const key = escapeSpellRestraintAbilityCheckHoleKey(
     spellActiveEffectExecutionRef(effect),
   );
-  return runtimeSkillCheck(
+  return skillCheck(
     state,
     input.actorId,
     { ability: "str", skill: "athletics" },
@@ -494,25 +495,28 @@ export function escapeSpellRestraintSkillCheck(
   );
 }
 
-export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
+/**
+ * The Influence Charisma (Intimidation) check that a temporary ability-check
+ * roll mode (Booming Voice) applies to. The host resolves it, then continues
+ * from `stateAfterCheck`.
+ */
+export function temporaryAbilityCheckRollModeInfluenceSkillCheck(
   state: BattleState,
   actorId: CombatantId,
   dc: DifficultyClass,
-): BattleAbilityCheckHole {
-  const rollMode = requiredAbilityCheckRollMode(state, actorId, "cha", {
-    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
-  });
-  return {
-    holeInstanceKey:
-      MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
-    kind: "abilityCheck",
-    label: `Influence Charisma (Intimidation) check (DC ${dc})`,
-    ability: "cha",
-    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
-    dc,
-    ...optionalProperty("rollMode", rollMode),
-  };
+): BattleSkillCheck {
+  return skillCheck(
+    state,
+    actorId,
+    { ability: "cha", skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL },
+    {
+      holeInstanceKey:
+        MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+      holeId: MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+      label: `Influence Charisma (Intimidation) check (DC ${dc})`,
+      dc,
+    },
+  );
 }
 
 export function requiredAbilityCheckRollMode(
@@ -531,8 +535,8 @@ export function requiredAbilityCheckRollMode(
 
 /**
  * Whether an ability check has a source of Advantage and of Disadvantage,
- * leaving out a Help benefit: only a check the runtime resolves can use one up
- * (see `runtimeSkillCheck`).
+ * leaving out a Help benefit: a check uses that benefit up, so only
+ * `skillCheck`, which also returns the state after the check, counts it.
  */
 function abilityCheckRollModeSources(
   state: BattleState,

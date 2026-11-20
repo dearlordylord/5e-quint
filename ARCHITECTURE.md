@@ -319,9 +319,9 @@ the boundary where the procedure needs them:
   the later qualifying attack. Help's ability check option takes the ally and
   the Help Assistance decision in one Table Decision hole, offers the helper's
   skill proficiencies, and battle owns the benefit's expiry and its use by the
-  ally's next ability check with that skill. Only a check that battle resolves
-  itself (Hide, Search, escaping a spell's Restraint) sees the benefit: one
-  operation builds that check's hole and the state with the benefit used up.
+  ally's next ability check with that skill. One operation builds a skill
+  check's hole, with the benefit's Advantage, and the state with the benefit
+  used up, so whoever resolves the check continues from that state.
 
 For one exact pending spatial question, an adapter-derived witness and a
 Table-authored spatial decision are alternative sources. The session supplies

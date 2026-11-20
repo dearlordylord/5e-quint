@@ -44,7 +44,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import type { BattleFill } from "./battle-state-execution.ts";
 import { HELP_ABILITY_CHECK_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { combatantSkillProficiencies } from "./battle-reducer/druid-wild-shape.ts";
-import { temporaryAbilityCheckRollModeInfluenceAbilityCheckHole } from "./battle-reducer/hole-helpers.ts";
+import { temporaryAbilityCheckRollModeInfluenceSkillCheck } from "./battle-reducer/hole-helpers.ts";
 import type { CombatantId } from "./identity.ts";
 import {
   battleUnitRefWithSupportProfiles,
@@ -555,24 +555,23 @@ describe("Help: Assist an Ability Check", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
-  test("an Influence check, which the runtime doesn't resolve, neither shows nor uses the benefit", () => {
+  test("an Influence check gets the Advantage, and the state after it has used the benefit up", () => {
     const helped = help(
       helpBattle({ helperSkills: ["intimidation"] }),
       fighterId,
-      {
-        allyId: rogueId,
-        skill: "intimidation",
-      },
+      { allyId: rogueId, skill: "intimidation" },
     );
     const rogueTurn = endTurns(helped, [fighterId, goblinId]);
-    expect(
-      temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
-        rogueTurn,
-        rogueId,
-        difficultyClass(10),
-      ),
-    ).not.toHaveProperty("rollMode");
-    expect(rogueTurn.helpAbilityChecks).toHaveLength(1);
+    const influence = temporaryAbilityCheckRollModeInfluenceSkillCheck(
+      rogueTurn,
+      rogueId,
+      difficultyClass(10),
+    );
+    expect(influence.hole).toMatchObject({
+      skill: "intimidation",
+      rollMode: "advantage",
+    });
+    expect(influence.stateAfterCheck.helpAbilityChecks).toEqual([]);
   });
 
   test("a readied Help records the benefit when it is released", () => {
