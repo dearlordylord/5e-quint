@@ -4419,11 +4419,6 @@ export function testRangedCleaveLongbowUnitRef(): BattleUnitRef {
   };
 }
 
-/**
- * A synthetic heavy, two-handed slashing weapon whose mastery is Graze. The
- * shipped weapon catalog has no Graze weapon, so the Greataxe record is renamed
- * and pointed at the SRD Graze mastery.
- */
 /** A Hunter's Prey unit ref with the chosen option's support profile. */
 export function huntersPreyUnitRef(
   optionId: "colossusSlayer" | "hordeBreaker",
@@ -4467,6 +4462,11 @@ export function huntersPreyUnitRef(
   };
 }
 
+/**
+ * A synthetic heavy, two-handed slashing weapon whose mastery is Graze. The
+ * shipped weapon catalog has no Graze weapon, so the Greataxe record is renamed
+ * and pointed at the SRD Graze mastery.
+ */
 export function testGrazeWeaponUnitRef(): BattleUnitRef {
   const weapon = unitLibrary.requireUnit("weapon_greataxe");
   if (weapon.kind !== "weapon") {
