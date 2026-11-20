@@ -54,6 +54,16 @@ const COVERAGE_REPORTERS = [
   "--coverage.reporter=json",
 ];
 
+// CI runs the coverage gate as parallel jobs, one per shard. Each production
+// package names its shard in PACKAGE_POLICIES; the groups balance measured
+// wall time (2026-11-19: Surface about 14 minutes, MCP plus Opaque Oracle
+// about 11, the rest about 6). Local `pnpm coverage` still runs every shard.
+const COVERAGE_SHARDS = Object.freeze([
+  "surface",
+  "mcp-and-opaque-oracle",
+  "runtimes-and-libraries",
+]);
+
 // Every production package must appear here. Library coverage floors are
 // temporary non-regression ratchets remeasured with Vitest 4.1.11 and
 // @vitest/coverage-v8 4.1.11's AST remapper on 2026-08-22. The previous
@@ -67,6 +77,7 @@ const COVERAGE_REPORTERS = [
 const PACKAGE_POLICIES = {
   app: {
     coverage: "packageConfig",
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -84,6 +95,7 @@ const PACKAGE_POLICIES = {
       functions: 96.39,
       branches: 88.75,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -97,6 +109,7 @@ const PACKAGE_POLICIES = {
       functions: 98.48,
       branches: 97.89,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -109,6 +122,7 @@ const PACKAGE_POLICIES = {
       functions: 99.06,
       branches: 96.07,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -125,6 +139,7 @@ const PACKAGE_POLICIES = {
       functions: 97.87,
       branches: 94.81,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -137,6 +152,7 @@ const PACKAGE_POLICIES = {
       functions: 90.85,
       branches: 81.15,
     },
+    coverageShard: "mcp-and-opaque-oracle",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -149,6 +165,7 @@ const PACKAGE_POLICIES = {
       functions: 69.08,
       branches: 47.9,
     },
+    coverageShard: "mcp-and-opaque-oracle",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -159,6 +176,7 @@ const PACKAGE_POLICIES = {
       functions: 96.2,
       branches: 98.18,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -169,6 +187,7 @@ const PACKAGE_POLICIES = {
       functions: 98.37,
       branches: 98.01,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -183,6 +202,7 @@ const PACKAGE_POLICIES = {
       functions: 96.9,
       branches: 94.73,
     },
+    coverageShard: "surface",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -193,6 +213,7 @@ const PACKAGE_POLICIES = {
       functions: 100,
       branches: 98.62,
     },
+    coverageShard: "runtimes-and-libraries",
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -282,6 +303,10 @@ function checkInventory() {
     throw new Error(
       `Workspace quality inventory mismatch. Missing: ${issues.missing.join(", ") || "none"}; stale: ${issues.stale.join(", ") || "none"}.`,
     );
+  }
+  const shardIssues = coverageShardIssues();
+  if (shardIssues.length > 0) {
+    throw new Error(`Coverage shard mismatch:\n${shardIssues.join("\n")}`);
   }
   const testIssues = testExecutionIssues(discovered);
   if (testIssues.length > 0) {
@@ -473,17 +498,40 @@ export function executeQualityMilestone(
   return { outcomes, exitCode };
 }
 
-function runQualityMilestone() {
-  const args = process.argv.slice(3);
+function parseQualityMilestoneArguments(args) {
+  const usage = "Usage: quality:milestone [--collect-all] [--defer <ids>]";
+  let collectAll = false;
+  let deferred = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--collect-all" && !collectAll) collectAll = true;
+    else if (
+      args[index] === "--defer" &&
+      deferred.length === 0 &&
+      index + 1 < args.length
+    ) {
+      deferred = args[index + 1].split(",");
+      index += 1;
+    } else throw new Error(usage);
+  }
   assert(
-    args.length === 0 || (args.length === 1 && args[0] === "--collect-all"),
-    "Usage: quality:milestone [--collect-all]",
+    deferred.every((id) => id !== ""),
+    `${usage}: --defer needs comma-separated check ids.`,
   );
-  const collectAll = args.length === 1;
-  runRecordedChecks(qualityMilestonePlan.qualityMilestonePlan({ collectAll }), {
-    mode: collectAll ? "diagnostic" : "milestone",
-    collectAll,
-  });
+  return { collectAll, deferred };
+}
+
+function runQualityMilestone() {
+  const { collectAll, deferred } = parseQualityMilestoneArguments(
+    process.argv.slice(3),
+  );
+  runRecordedChecks(
+    qualityMilestonePlan.qualityMilestonePlan({ collectAll, deferred }),
+    {
+      mode: collectAll ? "diagnostic" : "milestone",
+      collectAll,
+      deferred,
+    },
+  );
 }
 
 function selectedRepairPlan(ids) {
@@ -500,7 +548,7 @@ function selectedRepairPlan(ids) {
   return QUALITY_MILESTONE_PLAN.filter((check) => wanted.has(check.id));
 }
 
-function runRecordedChecks(plan, { mode, collectAll = false }) {
+function runRecordedChecks(plan, { mode, collectAll = false, deferred = [] }) {
   const inputSha256 = verificationInputs(ROOT);
   const result = executeQualityMilestone(plan, { collectAll });
   const inputsStable =
@@ -512,6 +560,7 @@ function runRecordedChecks(plan, { mode, collectAll = false }) {
   );
   writeReceipt(path, {
     mode,
+    deferred,
     inputSha256,
     inputsStable,
     inputVerification:
@@ -942,9 +991,48 @@ function coverageFailureDiagnostics(
   return `${output.join("\n")}\n`;
 }
 
-function checkCoverage() {
+function parseCoverageShard(args) {
+  if (args.length === 0) return undefined;
+  if (args.length !== 2 || args[0] !== "--shard") {
+    throw new Error(
+      "Usage: workspace-quality-harness.mjs coverage [--shard <coverage-shard>]",
+    );
+  }
+  if (!COVERAGE_SHARDS.includes(args[1])) {
+    throw new Error(
+      `Unknown coverage shard ${JSON.stringify(args[1])}. Choose one of: ${COVERAGE_SHARDS.join(", ")}.`,
+    );
+  }
+  return args[1];
+}
+
+function coverageShardPackages(shard, policies = PACKAGE_POLICIES) {
+  return Object.entries(policies)
+    .filter(
+      ([, policy]) => shard === undefined || policy.coverageShard === shard,
+    )
+    .map(([packageName]) => packageName);
+}
+
+function coverageShardIssues(policies = PACKAGE_POLICIES) {
+  return [
+    ...Object.entries(policies)
+      .filter(([, policy]) => !COVERAGE_SHARDS.includes(policy.coverageShard))
+      .map(
+        ([packageName, policy]) =>
+          `${packageName}: unknown coverage shard ${JSON.stringify(policy.coverageShard)}`,
+      ),
+    ...COVERAGE_SHARDS.filter(
+      (shard) => coverageShardPackages(shard, policies).length === 0,
+    ).map((shard) => `coverage shard ${shard} has no packages`),
+  ];
+}
+
+function checkCoverage(args = []) {
   checkInventory();
-  for (const [packageName, policy] of Object.entries(PACKAGE_POLICIES)) {
+  const shard = parseCoverageShard(args);
+  for (const packageName of coverageShardPackages(shard)) {
+    const policy = PACKAGE_POLICIES[packageName];
     const packageDirectory = join(PACKAGE_ROOT, packageName);
     const result = run("pnpm", coverageArguments(policy.coverage), {
       cwd: packageDirectory,
@@ -1069,6 +1157,76 @@ function deadlineSelfTest() {
   );
 }
 
+// The workflow job that runs each check CI defers out of the milestone job, and
+// the step that runs it. The self-test reads the deferred ids from the workflow
+// and requires each one's job to build first and to feed the quality gate.
+const DEFERRED_CHECK_JOBS = Object.freeze({
+  coverage: Object.freeze({
+    job: "coverage",
+    run: /^\s*run: pnpm coverage --shard \$\{\{ matrix\.shard \}\}\s*$/m,
+  }),
+  typecheck: Object.freeze({
+    job: "typecheck",
+    run: /^\s*run: pnpm typecheck\s*$/m,
+  }),
+});
+
+// Splits a workflow's `jobs:` section into each job's text, keyed by job id.
+function workflowJobs(workflow) {
+  const jobsSection = workflow.slice(workflow.search(/^jobs:\s*$/m));
+  const headers = [...jobsSection.matchAll(/^ {2}([\w-]+):\s*$/gm)];
+  return new Map(
+    headers.map((header, index) => [
+      header[1],
+      jobsSection.slice(header.index, headers[index + 1]?.index),
+    ]),
+  );
+}
+
+function assertDeferredChecksGated(workflow, deferred) {
+  const jobs = workflowJobs(workflow);
+  const gate = jobs.get("quality-gate");
+  assert(gate, "The quality workflow must have a quality-gate job.");
+  assert.match(
+    gate,
+    /^ {4}if: always\(\)\s*$/m,
+    "The quality gate must run even when a job it needs fails.",
+  );
+  const gateNeeds = gate
+    .match(/^ {4}needs: \[([^\]]*)\]\s*$/m)?.[1]
+    .split(",")
+    .map((need) => need.trim());
+  assert(gateNeeds, "The quality gate must list the jobs it needs.");
+  for (const needed of [
+    "quality",
+    ...deferred.map((id) => DEFERRED_CHECK_JOBS[id].job),
+  ]) {
+    assert(
+      gateNeeds.includes(needed),
+      `The quality gate must need the ${needed} job.`,
+    );
+    assert(
+      gate.includes(`needs.${needed}.result != 'success'`),
+      `The quality gate must fail when the ${needed} job does not succeed.`,
+    );
+  }
+  for (const id of deferred) {
+    const { job, run } = DEFERRED_CHECK_JOBS[id];
+    const text = jobs.get(job);
+    assert(
+      text,
+      `The quality workflow must run deferred ${id} in its ${job} job.`,
+    );
+    const checkStep = text.search(run);
+    assert(checkStep >= 0, `The ${job} job must run the deferred ${id} check.`);
+    const build = text.search(/^\s*run: pnpm build\s*$/m);
+    assert(
+      build >= 0 && build < checkStep,
+      `The ${job} job must run pnpm build before ${id}, as the milestone plan does.`,
+    );
+  }
+}
+
 function selfTest() {
   const workflowControls = run(process.execPath, [
     "--test",
@@ -1128,11 +1286,40 @@ function selfTest() {
     join(ROOT, ".github/workflows/quality.yml"),
     "utf8",
   );
+  const milestoneRuns = [
+    ...qualityWorkflow.matchAll(
+      /^\s*run: pnpm quality:milestone --defer (\S+)\s*$/gm,
+    ),
+  ];
   assert.equal(
-    (qualityWorkflow.match(/^\s*run: pnpm quality:milestone\s*$/gm) ?? [])
-      .length,
+    milestoneRuns.length,
     1,
-    "The quality workflow must run the milestone quality command exactly once.",
+    "The quality workflow must run the milestone quality command exactly once, with --defer.",
+  );
+  assert.equal(
+    (qualityWorkflow.match(/pnpm quality:milestone/g) ?? []).length,
+    1,
+    "The quality workflow must not run the milestone in any other form.",
+  );
+  const ciDeferred = parseQualityMilestoneArguments([
+    "--defer",
+    milestoneRuns[0][1],
+  ]).deferred;
+  assert.deepEqual(
+    [...ciDeferred].sort(),
+    Object.keys(DEFERRED_CHECK_JOBS).sort(),
+    "Every check the workflow defers must have its own job, and only those.",
+  );
+  assertDeferredChecksGated(qualityWorkflow, ciDeferred);
+  assert.match(
+    qualityWorkflow,
+    /^\s*run: pnpm coverage --shard \$\{\{ matrix\.shard \}\}\s*$/m,
+    "The quality workflow must run each coverage shard.",
+  );
+  assert.match(
+    qualityWorkflow,
+    /node scripts\/workspace-quality-harness\.mjs coverage:shards/,
+    "The coverage matrix must come from the harness's shard list.",
   );
   assert.doesNotMatch(
     qualityWorkflow,
@@ -1221,6 +1408,75 @@ function selfTest() {
     QUALITY_MILESTONE_PLAN.find(({ id }) => id === "deployment-lifecycle")
       .prerequisites,
     ["build"],
+  );
+  assert.deepEqual(
+    qualityMilestonePlan.qualityMilestonePlan({ deferred: ["coverage"] }),
+    QUALITY_MILESTONE_PLAN.slice(0, -1),
+    "Deferring coverage must leave every other check unchanged.",
+  );
+  assert.deepEqual(
+    qualityMilestonePlan.qualityMilestonePlan({ deferred: ciDeferred }),
+    QUALITY_MILESTONE_PLAN.filter(({ id }) => !ciDeferred.includes(id)),
+    "CI's deferred plan must keep every other check unchanged.",
+  );
+  assert.throws(
+    () =>
+      qualityMilestonePlan.qualityMilestonePlan({ deferred: ["typecheck"] }),
+    /Cannot defer typecheck: coverage depends on it\./u,
+  );
+  assert.throws(
+    () => qualityMilestonePlan.qualityMilestonePlan({ deferred: ["unknown"] }),
+    /Cannot defer unknown quality check: unknown\./u,
+  );
+  assert.deepEqual(parseQualityMilestoneArguments([]), {
+    collectAll: false,
+    deferred: [],
+  });
+  assert.deepEqual(
+    parseQualityMilestoneArguments(["--defer", "coverage", "--collect-all"]),
+    { collectAll: true, deferred: ["coverage"] },
+  );
+  for (const malformed of [
+    ["--defer"],
+    ["--defer", ""],
+    ["--defer", "coverage,"],
+    ["--collect-all", "--collect-all"],
+    ["--defer", "coverage", "--defer", "typecheck"],
+    ["--unknown"],
+  ]) {
+    assert.throws(() => parseQualityMilestoneArguments(malformed));
+  }
+  assert.equal(parseCoverageShard([]), undefined);
+  assert.equal(parseCoverageShard(["--shard", "surface"]), "surface");
+  assert.throws(() => parseCoverageShard(["--shard"]));
+  assert.throws(
+    () => parseCoverageShard(["--shard", "everything"]),
+    /Unknown coverage shard "everything"/u,
+  );
+  assert.deepEqual(coverageShardIssues(), []);
+  const shardedPackages = COVERAGE_SHARDS.flatMap((shard) =>
+    coverageShardPackages(shard),
+  );
+  assert.deepEqual(
+    [...shardedPackages].sort(),
+    Object.keys(PACKAGE_POLICIES).sort(),
+    "Every production package must be in exactly one coverage shard.",
+  );
+  assert.deepEqual(
+    coverageShardPackages(undefined),
+    Object.keys(PACKAGE_POLICIES),
+    "Coverage without a shard must run every production package.",
+  );
+  assert.deepEqual(
+    coverageShardIssues({
+      only: { coverageShard: "surface" },
+      unknown: { coverageShard: "elsewhere" },
+    }),
+    [
+      'unknown: unknown coverage shard "elsewhere"',
+      "coverage shard mcp-and-opaque-oracle has no packages",
+      "coverage shard runtimes-and-libraries has no packages",
+    ],
   );
   assert.equal(
     rootPackage.scripts["test:turbo"],
@@ -1706,7 +1962,9 @@ if (
     else if (command === "complexity:prune")
       await checkCyclomaticComplexity(true);
     else if (command === "duplication") checkDuplication();
-    else if (command === "coverage") checkCoverage();
+    else if (command === "coverage") checkCoverage(process.argv.slice(3));
+    else if (command === "coverage:shards")
+      process.stdout.write(`${JSON.stringify(COVERAGE_SHARDS)}\n`);
     else if (command === "coverage:diagnose")
       runCoverageDiagnostic(process.argv.slice(3));
     else if (command === "milestone") runQualityMilestone();
@@ -1715,7 +1973,7 @@ if (
       inspectQualityReceipt(process.argv.slice(3));
     else {
       throw new Error(
-        "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone|repair --checks <ids>|receipt --receipt <file> --checks <ids>",
+        "Usage: workspace-quality-harness.mjs --self-test|--deadline-self-test|inventory|circular|complexity|complexity:prune|duplication|coverage [--shard <coverage-shard>]|coverage:shards|coverage:diagnose --package <production-package>|milestone [--collect-all] [--defer <ids>]|repair --checks <ids>|receipt --receipt <file> --checks <ids>",
       );
     }
   } catch (error) {
