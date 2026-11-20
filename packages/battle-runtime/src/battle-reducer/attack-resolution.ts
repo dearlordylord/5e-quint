@@ -7,6 +7,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.HELP.ABILITY_CHECK_ASSIST
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
@@ -265,6 +266,7 @@ import {
   helpAttackTargetChoices,
   helpAttackTargetHole,
 } from "./help-attack.ts";
+import { consumeHelpAbilityChecks } from "./help-ability-check.ts";
 import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 
 type BonusActionStandardActionResolverInputBase =
@@ -1017,7 +1019,11 @@ export function resolveHide(
       : null;
   const nextActor = { ...actor, hidden };
   const nextState = normalizeBattleGrapples({
-    ...input.state,
+    ...consumeHelpAbilityChecks(
+      input.state,
+      input.subject.actorId,
+      checkHole.skill,
+    ),
     combatants: new Map(input.state.combatants).set(
       input.subject.actorId,
       nextActor,
@@ -1207,7 +1213,11 @@ export function resolveSearch(
   const found = check.value.value.total >= target.hidden.discoveryDc;
   const nextTarget = found ? { ...target, hidden: null } : target;
   const nextState = normalizeBattleGrapples({
-    ...input.state,
+    ...consumeHelpAbilityChecks(
+      input.state,
+      input.subject.actorId,
+      checkHole.skill,
+    ),
     combatants: new Map(input.state.combatants).set(
       target.combatantId,
       nextTarget,
@@ -1334,7 +1344,11 @@ export function resolveStatBlockBonusActionHide(
       : null;
   const nextState = updateStatBlockActorResources(
     normalizeBattleGrapples({
-      ...input.state,
+      ...consumeHelpAbilityChecks(
+        input.state,
+        input.subject.actorId,
+        checkHole.skill,
+      ),
       currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(actor.combatantId, {
         ...actor,
@@ -1767,20 +1781,22 @@ export function resolveEscapeSpellRestraint(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const stateAfterCheck = {
+    ...consumeHelpAbilityChecks(
+      input.state,
+      input.subject.actorId,
+      checkHole.skill,
+    ),
+    currentTurnResources: spent.success,
+  };
   const nextState =
     check.value.value.total >= dc
       ? resolveSuccessfulEscapeSpellRestraint(
-          {
-            ...input.state,
-            currentTurnResources: spent.success,
-          },
+          stateAfterCheck,
           input.subject.targetId,
           effect,
         )
-      : {
-          ...input.state,
-          currentTurnResources: spent.success,
-        };
+      : stateAfterCheck;
   return {
     tag: "resolved",
     state: nextState,

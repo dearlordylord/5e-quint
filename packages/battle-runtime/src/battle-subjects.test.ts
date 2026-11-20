@@ -325,6 +325,7 @@ describe("BattleSubject identity", () => {
       disengage: {},
       dodge: {},
       helpAttack: {},
+      helpAbilityCheck: {},
       hide: {},
       multiattack: { procedureRef: statBlockProcedureRef },
       ready: {},

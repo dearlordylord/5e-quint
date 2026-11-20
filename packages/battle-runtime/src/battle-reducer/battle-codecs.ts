@@ -2290,6 +2290,13 @@ const BattleHolePayloadMembers = [
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("helpAbilityCheckDecision"),
+    helperId: CombatantId,
+    allyChoices: Schema.NonEmptyArray(CombatantId),
+    skillChoices: Schema.NonEmptyArray(Schema.Literals(BATTLE_SURFACE_SKILLS)),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("damageRelationshipDecisions"),
     damageEventHoleId: BattleHoleIdSchema,
     damageSourceId: CombatantId,
@@ -3953,6 +3960,13 @@ type BattleFillEncoded =
       readonly targetWithinFiveFeetOfHelper: boolean;
     }
   | {
+      readonly kind: "helpAbilityCheckDecision";
+      readonly holeId: string;
+      readonly allyId: string;
+      readonly skill: Skill;
+      readonly allyCanBeAssisted: boolean;
+    }
+  | {
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
@@ -5178,6 +5192,13 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       targetEnemyId: CombatantId,
       targetWithinFiveFeetOfHelper: Schema.Boolean,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("helpAbilityCheckDecision"),
+      holeId: BattleHoleIdSchema,
+      allyId: CombatantId,
+      skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+      allyCanBeAssisted: Schema.Boolean,
     }),
     Schema.Struct({
       kind: Schema.Literal("targetChoice"),
@@ -7448,6 +7469,13 @@ const BattleHelpAttackSnapshotSchema = Schema.Struct({
   expiresAt: OngoingFeatureExpirationSchema,
 });
 
+const BattleHelpAbilityCheckSnapshotSchema = Schema.Struct({
+  helperId: CombatantId,
+  allyId: CombatantId,
+  skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+  expiresAt: OngoingFeatureExpirationSchema,
+});
+
 const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literals([
@@ -8396,6 +8424,7 @@ function serializedBattleHoleExecutionReferences(
         ),
       helpAttackAllyDecision: noSerializedExecutionReferences,
       helpAttackEnemyDecision: noSerializedExecutionReferences,
+      helpAbilityCheckDecision: noSerializedExecutionReferences,
       areaWindStrength: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
         value.questions.flatMap((question) =>
@@ -10022,6 +10051,7 @@ const BattleSnapshotCommonFields = {
     actionsOrMovements: Schema.Array(BattleReadiedResponseSnapshotSchema),
   }),
   helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
+  helpAbilityCheckMarkers: Schema.Array(BattleHelpAbilityCheckSnapshotSchema),
 };
 
 const BattleSnapshotExcludedFields = {

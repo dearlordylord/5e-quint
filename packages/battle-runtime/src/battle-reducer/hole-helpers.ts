@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
+// KERNEL-COVERAGE: runtime-owner BATTLE.HELP.ABILITY_CHECK_ASSIST
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
@@ -9,6 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
+import { helpAbilityCheckGrantsAdvantage } from "./help-ability-check.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -267,6 +269,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
     )
     .pipe(
+      byBattleHoleKind(
+        "helpAbilityCheckDecision",
+        () => "helpAbilityCheckDecision" as const,
+      ),
       byBattleHoleKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleHoleKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleHoleKind("skillChoice", () => "skillChoice" as const),
@@ -359,7 +365,9 @@ export function hideAbilityCheckHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleAbilityCheckHole {
-  const rollMode = requiredAbilityCheckRollMode(state, actorId, "dex");
+  const rollMode = requiredAbilityCheckRollMode(state, actorId, "dex", {
+    skill: "stealth",
+  });
   return {
     holeInstanceKey: HIDE_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: HIDE_ABILITY_CHECK_HOLE_ID,
@@ -404,7 +412,9 @@ export function escapeSpellRestraintAbilityCheckHole(
     effect.sourceCombatantId,
     effect.sourceProcedureRef,
   );
-  const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str");
+  const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str", {
+    skill: "athletics",
+  });
   const key = escapeSpellRestraintAbilityCheckHoleKey(
     spellActiveEffectExecutionRef(effect),
   );
@@ -477,14 +487,31 @@ export function requiredAbilityCheckRollMode(
       "advantage",
     ) ||
     (context?.skill !== undefined &&
-      activeTemporaryAbilityCheckRollModeAdvantageMatches(
-        state,
-        actorId,
-        ability,
-        context.skill,
-      )) ||
-    (context?.skill !== undefined &&
-      context.targetId !== undefined &&
+      skillAbilityCheckAdvantageMatches(state, actorId, ability, {
+        skill: context.skill,
+        ...optionalProperty("targetId", context.targetId),
+      }));
+  return mechanicalD20TestRollMode({
+    advantage: hasAdvantage,
+    disadvantage: hasDisadvantage,
+  });
+}
+
+/** Advantage sources that apply only to an ability check with a named skill. */
+function skillAbilityCheckAdvantageMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  context: { readonly skill: Skill; readonly targetId?: CombatantId },
+): boolean {
+  return (
+    activeTemporaryAbilityCheckRollModeAdvantageMatches(
+      state,
+      actorId,
+      ability,
+      context.skill,
+    ) ||
+    (context.targetId !== undefined &&
       activeMarkedDamageRiderFindingAdvantageMatches(
         state,
         actorId,
@@ -492,17 +519,14 @@ export function requiredAbilityCheckRollMode(
         context.skill,
         context.targetId,
       )) ||
-    (context?.skill !== undefined &&
-      activeRemarkableAthleteAbilityCheckAdvantageMatches(
-        state,
-        actorId,
-        ability,
-        context.skill,
-      ));
-  return mechanicalD20TestRollMode({
-    advantage: hasAdvantage,
-    disadvantage: hasDisadvantage,
-  });
+    activeRemarkableAthleteAbilityCheckAdvantageMatches(
+      state,
+      actorId,
+      ability,
+      context.skill,
+    ) ||
+    helpAbilityCheckGrantsAdvantage(state, actorId, context.skill)
+  );
 }
 
 export function requiredConditionEndAbilityCheckRollMode(

@@ -161,6 +161,7 @@ import {
   resolveShove,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
+import { resolveHelpAbilityCheck } from "./help-ability-check.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
@@ -225,6 +226,33 @@ function isEndConcentrationSubject(
   return (
     subject.tag === "runtimeCommand" && subject.command === "endConcentration"
   );
+}
+
+type HelpActionSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "action";
+    readonly action: "helpAttack" | "helpAbilityCheck";
+  }
+>;
+
+function isHelpActionSubject(
+  subject: BattleSubject,
+): subject is HelpActionSubject {
+  return (
+    subject.tag === "action" &&
+    (subject.action === "helpAttack" || subject.action === "helpAbilityCheck")
+  );
+}
+
+/** Help's two options, Assist an Attack Roll and Assist an Ability Check. */
+function resolveHelpAction(
+  input: AdmittedBattleResolutionInput,
+  subject: HelpActionSubject,
+): BattleResolutionResult {
+  return subject.action === "helpAttack"
+    ? resolveHelpAttack({ ...input, subject })
+    : resolveHelpAbilityCheck({ ...input, subject });
 }
 
 function isLongCastingCommandSubject(
@@ -759,8 +787,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       if (subject.action === "dodge") {
         return resolveDodge(input);
       }
-      if (subject.action === "helpAttack") {
-        return resolveHelpAttack({ ...input, subject });
+      if (isHelpActionSubject(subject)) {
+        return resolveHelpAction(input, subject);
       }
       if (subject.action === "hide") {
         return resolveHide({ ...input, subject: actionHideSubject(subject) });

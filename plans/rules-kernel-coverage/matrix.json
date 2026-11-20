@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 173,
-    "covered": 162,
+    "total": 174,
+    "covered": 163,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 133,
+      "battle": 134,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 162,
+      "covered": 163,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 195,
+    "total": 197,
     "bySubject": {
-      "battle-hole-family": 98,
-      "battle-fill-kind": 57,
+      "battle-hole-family": 99,
+      "battle-fill-kind": 58,
       "battle-subject-kind": 40
     },
     "byClassification": {
       "semantic-frontier": 151,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 44,
+      "table-owned-fact": 46,
       "unsupported-dead-branch": 0
     }
   },
@@ -6289,6 +6289,39 @@
         ".references/srd-5.2.1/rules-glossary.md#Concentration"
       ],
       "title": "Stat Block source concentration"
+    },
+    {
+      "id": "BATTLE.HELP.ABILITY_CHECK_ASSIST",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-help-ability-check.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
+      ],
+      "reason": "The QNT owner models Help's ability-check admission (another live creature, one of the helper's skill proficiencies, and the table's decision that the helper can assist that ally), Advantage on the ally's next check with the chosen skill, every matching benefit used by that check, and expiry at the start of the helper's next turn. Wild Shape joins the character's skill proficiencies with the form's, and a Stat Block's Skills entry lists its proficiencies. help-ability-check owns the decision hole, admission and benefit state; hole-helpers adds the Advantage source to every skill-named ability check hole; attack-resolution uses the benefit when Hide, Search or escaping a spell's Restraint resolves its check; turn-boundary-lifecycle expires it. Battle Runtime has no tool proficiency facts or tool checks, so the choice is among skills. The parity witness covers discovery, admission and its rejections, the Hide and Search routes, a check with another skill, two helpers, expiry and a Stat Block's skills.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/help-ability-check.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Help [Action]",
+        ".references/srd-5.2.1/monsters.md#Skills",
+        ".references/srd-5.2.1/classes.md#Wild Shape",
+        ".references/srd-5.2.1/playing-the-game.md#Ability Checks",
+        "UBIQUITOUS_LANGUAGE.md#Table Decisions",
+        "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage"
+      ],
+      "title": "Help's Assist an Ability Check option: the helper's skill proficiency and a table-decided ally give Advantage on that ally's next check with the skill, used by that check or expired at the start of the helper's next turn"
     }
   ],
   "battleHoleFrontier": [
@@ -8344,6 +8377,18 @@
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
+        "BATTLE.HELP.ABILITY_CHECK_ASSIST",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "helpAbilityCheckDecision",
+      "id": "BattleHelpAbilityCheckDecisionHole",
+      "reason": "The dedicated Help ability check decision hole offers every other live creature and the helper's skill proficiencies, and asks the table to name the ally and whether the helper can assist it, without storing an encounter-wide relationship partition or geometry.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
@@ -8376,6 +8421,18 @@
       "followUpTaskIds": [],
       "id": "helpAttackEnemyDecision",
       "reason": "The dedicated Help enemy fill answers the corresponding procedure-local enemy decision and Help proximity question without entering generic relationship facts.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.HELP.ABILITY_CHECK_ASSIST",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "helpAbilityCheckDecision",
+      "followUpTaskIds": [],
+      "id": "helpAbilityCheckDecision",
+      "reason": "The dedicated Help ability check fill answers the corresponding decision hole with the ally, the skill and the table's assistance decision, and is consumed only by that Help resolution.",
       "subject": "battle-fill-kind"
     },
     {
@@ -13083,6 +13140,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns Help's Assist an Ability Check admission, the Advantage it gives the ally's next check with the chosen skill, the use of every matching benefit by that check, expiry at the start of the helper's next turn, and the Wild Shape skill proficiency union, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.HELP.ABILITY_CHECK_ASSIST"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover Help ability check admission and its rejections, the chosen-skill Advantage, two helpers' benefits used by one check, and start-of-turn expiry for the Help ability check core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -14559,6 +14628,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -20317,6 +20396,32 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
+        "set-operators",
+        "size",
+        "membership",
+        "exists",
+        "filter"
+      ],
+      "obligationId": "BATTLE.HELP.ABILITY_CHECK_ASSIST",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
       ],
       "status": "generation-subset-clean"
     }
