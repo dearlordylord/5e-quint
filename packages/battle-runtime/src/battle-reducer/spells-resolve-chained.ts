@@ -78,10 +78,11 @@ import {
 } from "./damage-helpers.ts";
 import {
   attackRollAfterD20TestRerolls,
+  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
 } from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -544,6 +545,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
       attacker: actorBeforeSpellAttack,
       attackRoll: step.attackRoll.value,
       requiredRollMode,
+      admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
+        input.input.handledInterruptTrigger,
+      ),
     });
     if (d20TestRerolls.tag === "decisionsRequired") {
       return needsHolesResult(input.input.state, input.input.subject, [
@@ -606,7 +610,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           battleStateAfterHeroicInspirationReroll(
             replayState,
             input.actorId,
-            step.attackRoll.value.heroicInspirationReroll,
+            d20TestRerolls.heroicInspirationUse,
           ),
           input.actorId,
           target.combatantId,

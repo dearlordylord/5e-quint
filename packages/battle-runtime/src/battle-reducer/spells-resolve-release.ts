@@ -79,10 +79,11 @@ import {
 } from "./damage-helpers.ts";
 import {
   attackRollAfterD20TestRerolls,
+  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
 } from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -1210,6 +1211,9 @@ function prepareTargetedSpellAttackRoll(
     attacker: actorBeforeSpellAttack,
     attackRoll,
     requiredRollMode,
+    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
+      input.input.handledInterruptTrigger,
+    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -1271,7 +1275,7 @@ function prepareTargetedSpellAttackRoll(
         battleStateAfterHeroicInspirationReroll(
           input.input.state,
           input.input.subject.actorId,
-          attackRoll.heroicInspirationReroll,
+          d20TestRerolls.heroicInspirationUse,
         ),
         input.input.subject.actorId,
         input.target.combatantId,

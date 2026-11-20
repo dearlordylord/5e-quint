@@ -122,12 +122,16 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   attackRollAfterD20TestRerolls,
+  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
+  attackRollD20TestRerollTaken,
+  battleStateAfterHeroicInspirationReroll,
+  type AttackRollHeroicInspirationUse,
 } from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -408,6 +412,7 @@ type InitialSpellAttackRollResolution =
       readonly tag: "admitted";
       readonly actor: BattleCreatureState | undefined;
       readonly attackRoll: BattleAttackRollResult;
+      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
       readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
@@ -420,6 +425,7 @@ function resolveInitialSpellAttackRoll(input: {
   readonly targetId: CombatantId;
   readonly invocation: Parameters<typeof spellAttackRollHole>[2];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
 }): InitialSpellAttackRollResolution {
   const requiredRollMode = requiredSpellAttackRollMode(
     input.castingState,
@@ -470,6 +476,9 @@ function resolveInitialSpellAttackRoll(input: {
     attacker: actor,
     attackRoll: input.fillSet.attackRoll,
     requiredRollMode,
+    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
+      input.handledInterruptTrigger,
+    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -504,6 +513,7 @@ function resolveInitialSpellAttackRoll(input: {
     tag: "admitted",
     actor,
     attackRoll: input.fillSet.attackRoll,
+    heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
     requiredRollMode,
   };
 }
@@ -1654,6 +1664,7 @@ function spellAttackNeedsSeekingRerollDecision(input: {
     input.invocation.procedure === "spellAttackDamage" &&
     !input.originalHit &&
     input.attackRoll.spellAttackReroll === undefined &&
+    !attackRollD20TestRerollTaken(input.attackRoll) &&
     seekingApplication !== null &&
     seekingSpellCombinedUseIssue({
       actor: input.actor,
@@ -2443,6 +2454,7 @@ function resolveSpellActInternal(
       targetId: target.combatantId,
       invocation: invocationForResolution,
       fillSet,
+      handledInterruptTrigger: input.handledInterruptTrigger,
     });
     if (initialAttackRoll.tag === "result") {
       return initialAttackRoll.result;
@@ -2547,7 +2559,7 @@ function resolveSpellActInternal(
           battleStateAfterHeroicInspirationReroll(
             attackRollState,
             subject.actorId,
-            attackRoll.heroicInspirationReroll,
+            initialAttackRoll.heroicInspirationUse,
           ),
           subject.actorId,
           target.combatantId,

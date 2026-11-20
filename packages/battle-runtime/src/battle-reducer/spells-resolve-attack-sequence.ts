@@ -79,10 +79,11 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
   attackRollAfterD20TestRerolls,
+  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
 } from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellCastInterruptFrame,
@@ -506,6 +507,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     attacker: actorBeforeSpellAttack,
     attackRoll: input.partFill.attackRoll,
     requiredRollMode,
+    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
+      input.input.handledInterruptTrigger,
+    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
@@ -567,7 +571,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         battleStateAfterHeroicInspirationReroll(
           input.state,
           input.actorId,
-          input.partFill.attackRoll.heroicInspirationReroll,
+          d20TestRerolls.heroicInspirationUse,
         ),
         input.actorId,
         target.combatantId,
@@ -1178,6 +1182,9 @@ function resolveSpellAttackSequenceObjectPart(input: {
     attacker: actorBeforeSpellAttack,
     attackRoll: input.partFill.attackRoll,
     requiredRollMode,
+    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
+      input.input.handledInterruptTrigger,
+    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
@@ -1223,7 +1230,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
   const spentState = battleStateAfterHeroicInspirationReroll(
     input.state,
     input.actorId,
-    input.partFill.attackRoll.heroicInspirationReroll,
+    d20TestRerolls.heroicInspirationUse,
   );
   const attackRolledState = consumeSelfAttackRollEffects(
     {

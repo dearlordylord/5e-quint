@@ -4,7 +4,6 @@
 // it, and you must use the new roll." This owner offers it after an attack
 // roll and spends it when the reroll is taken.
 
-import { NO_HEROIC_INSPIRATION } from "@dnd/shared/game-facts";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Match } from "effect";
 
@@ -18,9 +17,8 @@ import {
   type BattleD20TestRollRerollDecision,
   type BattleHeroicInspirationRerollDecision,
   type BattleHeroicInspirationRerollOption,
-  type BattleState,
+  type BattleSpellAttackRerollDecision,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
 import {
   attackRollAfterD20TestRollReroll,
   d20TestRolledDieRollReplacementIssue,
@@ -53,7 +51,8 @@ const HEROIC_INSPIRATION_REROLL_OPTION = {
 } as const satisfies BattleHeroicInspirationRerollOption;
 
 type HeroicInspirationRollFacts = {
-  readonly actor: BattleCreatureState | undefined;
+  /** The roller may take the reroll: they have Heroic Inspiration, or spent it on this roll before a replay. */
+  readonly rerollAvailable: boolean;
   readonly total: number;
   readonly originalD20TestRoll: BattleD20TestRoll;
   readonly decision: BattleHeroicInspirationRerollDecision | undefined;
@@ -73,7 +72,10 @@ export function combatantHasHeroicInspiration(
 
 /** Whether a decision takes a reroll (as opposed to declining it). */
 export function d20TestRerollDecisionTakesReroll(
-  decision: BattleD20TestRollRerollDecision<string> | undefined,
+  decision:
+    | BattleD20TestRollRerollDecision<string>
+    | BattleSpellAttackRerollDecision
+    | undefined,
 ): boolean {
   return decision !== undefined && decision.kind !== "decline";
 }
@@ -85,7 +87,7 @@ export function heroicInspirationRerollRollIssue(
   },
 ): string | null {
   const decision = input.decision;
-  if (!combatantHasHeroicInspiration(input.actor)) {
+  if (!input.rerollAvailable) {
     return decision === undefined
       ? null
       : HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE;
@@ -146,27 +148,6 @@ export function effectiveHeroicInspirationRerollAttackRoll(
     attackRoll,
     attackRoll.heroicInspirationReroll,
   );
-}
-
-/** Spends the attacker's Heroic Inspiration when the attack roll's decision takes the reroll. */
-export function battleStateAfterHeroicInspirationReroll(
-  state: BattleState,
-  actorId: CombatantId,
-  decision: BattleHeroicInspirationRerollDecision | undefined,
-): BattleState {
-  if (!d20TestRerollDecisionTakesReroll(decision)) {
-    return state;
-  }
-  const actor = state.combatants.get(actorId);
-  /* v8 ignore next -- @preserve -- A validated Heroic Inspiration reroll belongs to a character who has it. */
-  if (actor?.origin.kind !== "character") return state;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
-      ...actor,
-      origin: { ...actor.origin, heroicInspiration: NO_HEROIC_INSPIRATION },
-    }),
-  };
 }
 
 function anyD20Face(): boolean {

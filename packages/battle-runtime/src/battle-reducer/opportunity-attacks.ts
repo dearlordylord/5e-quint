@@ -43,10 +43,13 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
+  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+  type AttackRollD20TestRerolls,
+  type AttackRollHeroicInspirationUse,
 } from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
@@ -184,6 +187,7 @@ type ReactionAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
+      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
       readonly hiddenBeforeAttack: BattleHiddenState | null;
       readonly attackRollRelationshipFacts: Exclude<
         ReturnType<typeof parseAttackRollRelationshipFacts>,
@@ -287,14 +291,14 @@ function reactionAttackRerollResult(input: {
   readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
 }):
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
-  | {
-      readonly tag: "resolved";
-      readonly effectiveAttackRoll: BattleAttackRollResult;
-    } {
+  | Extract<AttackRollD20TestRerolls, { readonly tag: "resolved" }> {
   const d20TestRerolls = attackRollD20TestRerolls({
     attacker: input.reactor,
     attackRoll: input.attackRoll,
     requiredRollMode: input.requiredRollMode,
+    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
+      input.context.input.handledInterruptTrigger,
+    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -394,6 +398,7 @@ function prepareReactionAttackRoll(
   return {
     tag: "ready",
     effectiveAttackRoll: rerollResult.effectiveAttackRoll,
+    heroicInspirationUse: rerollResult.heroicInspirationUse,
     hiddenBeforeAttack:
       input.input.state.combatants.get(input.input.subject.reactorId)?.hidden ??
       null,
@@ -625,7 +630,7 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
         battleStateAfterHeroicInspirationReroll(
           input.state,
           subject.reactorId,
-          effectiveAttackRoll.heroicInspirationReroll,
+          afterRollInput.rollPreparation.heroicInspirationUse,
         ),
         subject.reactorId,
       ),
