@@ -388,7 +388,7 @@ function battleResolutionWithExecutionSnapshot(
  * a checkpoint below a continuation frame, still holds the interrupted
  * subject, which replays later.
  */
-function turnResourcesAfterResolution(
+export function turnResourcesAfterResolution(
   result: Exclude<BattleResolutionResult, { readonly tag: "invalid" }>,
   resolvedSubjectPhase: BattleState["subjectResolutionPhase"] | undefined,
 ): BattleState["currentTurnResources"] {

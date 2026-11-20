@@ -6,7 +6,7 @@ import {
   HEROIC_INSPIRATION_AVAILABLE,
   NO_HEROIC_INSPIRATION,
 } from "@dnd/shared/game-facts";
-import { classLevel, DieRollResult } from "@dnd/shared/types";
+import { classLevel, damageAmount, DieRollResult } from "@dnd/shared/types";
 import {
   armorClass,
   defaultArmorClassState,
@@ -36,6 +36,10 @@ import {
   battleMechanicalFrontier,
   type BattleMechanicalFrontier,
 } from "./battle-mechanical-frontier.ts";
+import {
+  snapshotBattle,
+  turnResourcesAfterResolution,
+} from "./battle-execution-composition.ts";
 import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
 import {
   attackInitialTargetHole,
@@ -1691,6 +1695,38 @@ describe("battle runtime transaction completion unwind", () => {
     expect(
       heroicInspirationOf(opened.resolution.session.state, fighterId),
     ).toEqual(NO_HEROIC_INSPIRATION);
+    const openedState = opened.resolution.session.state;
+    const spentRecord = {
+      actorId: fighterId,
+      attackRollHoleId: attackRoll.holeId,
+    };
+    expect(
+      openedState.currentTurnResources.heroicInspirationAttackRollReroll,
+    ).toEqual(spentRecord);
+    const resolvedWithStack = (
+      interruptStack: BattleState["interruptStack"],
+    ) => {
+      const resolvedState = { ...openedState, interruptStack };
+      return turnResourcesAfterResolution(
+        {
+          tag: "resolved",
+          state: resolvedState,
+          snapshot: snapshotBattle(resolvedState),
+        },
+        undefined,
+      ).heroicInspirationAttackRollReroll;
+    };
+    expect(
+      resolvedWithStack([
+        ...openedState.interruptStack,
+        {
+          kind: "fallDamageLandingMitigation",
+          targetId: goblinId,
+          reductionAmount: damageAmount(1),
+        },
+      ]),
+    ).toEqual(spentRecord);
+    expect(resolvedWithStack([])).toBeUndefined();
     const releaseChoice = openedFrontier.choices.find(
       (choice) =>
         choice.kind === "nestedProcedure" &&
