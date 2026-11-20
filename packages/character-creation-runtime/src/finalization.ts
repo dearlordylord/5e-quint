@@ -496,12 +496,10 @@ export function executableSupportIssues(
           { tag: "unsupportedProgression" },
         )
       : []),
-    ...(dependencies.classFactsByUnitId.issues.length === 0
-      ? rolledHitDieResultIssues(
-          selections.progression,
-          dependencies.classFactsByUnitId.value,
-        )
-      : []),
+    ...draftRolledHitDieResultIssues(
+      selections.progression,
+      dependencies.classFactsByUnitId,
+    ),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
         selections.abilityScoreGeneration.method,
@@ -2391,6 +2389,19 @@ function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
     ) +
     facts.hitPointMaximumBonus
   );
+}
+
+/**
+ * A draft's rolled Hit Die results above their Hit Dice, once every class has
+ * its facts. A class without facts already has its own finalization issue.
+ */
+function draftRolledHitDieResultIssues(
+  progression: CharacterBuild["progression"],
+  classFacts: SupportDependencyCollection<ClassFactsByUnitId>,
+): readonly CharacterBuildProjectionIssue[] {
+  return classFacts.issues.length === 0
+    ? rolledHitDieResultIssues(progression, classFacts.value)
+    : [];
 }
 
 /**
