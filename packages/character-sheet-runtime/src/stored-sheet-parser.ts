@@ -875,6 +875,21 @@ const decodeStoredHigherLevelHitPointRule = Schema.decodeUnknownResult(
   HigherLevelClassHitPointRuleSchema,
 );
 
+function parseStoredProgressionAdvancement(
+  value: unknown,
+): CharacterBuild["progression"]["advancements"][number] | undefined {
+  if (!isRecord(value) || typeof value.classUnitId !== "string") {
+    return undefined;
+  }
+  const hitPointRule = decodeStoredHigherLevelHitPointRule(value.hitPointRule);
+  return Result.isFailure(hitPointRule)
+    ? undefined
+    : {
+        classUnitId: classUnitId(authoredUnitId(value.classUnitId)),
+        hitPointRule: hitPointRule.success,
+      };
+}
+
 function parseStoredProgression(
   value: unknown,
 ): Result.Result<CharacterBuild["progression"], CharacterSheetIssue> {
@@ -888,23 +903,13 @@ function parseStoredProgression(
   }
   const advancements = [];
   for (const advancement of value.advancements) {
-    const hitPointRule = isRecord(advancement)
-      ? decodeStoredHigherLevelHitPointRule(advancement.hitPointRule)
-      : undefined;
-    if (
-      !isRecord(advancement) ||
-      typeof advancement.classUnitId !== "string" ||
-      hitPointRule === undefined ||
-      Result.isFailure(hitPointRule)
-    ) {
+    const parsed = parseStoredProgressionAdvancement(advancement);
+    if (parsed === undefined) {
       return characterSheetIssue(
         "Character Build progression advancement is invalid.",
       );
     }
-    advancements.push({
-      classUnitId: classUnitId(authoredUnitId(advancement.classUnitId)),
-      hitPointRule: hitPointRule.success,
-    });
+    advancements.push(parsed);
   }
   const totalLevel = 1 + advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === totalLevel)) {
