@@ -212,7 +212,10 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
-import { BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES } from "../battle-state-execution.ts";
+import {
+  BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
+  HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+} from "../battle-state-execution.ts";
 import type {
   BattleCreatureOriginSnapshot,
   BattleCreatureSnapshot,
@@ -1723,6 +1726,24 @@ const D20TestNaturalOneRerollHoleOptionsFields = (() => {
   };
 })();
 
+const HeroicInspirationRerollHoleOptionsFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(HEROIC_INSPIRATION_REROLL_EFFECT_KIND),
+  });
+  return {
+    labeled: {
+      heroicInspirationRerolls: Schema.optionalKey(
+        Schema.Tuple([member.labeled]),
+      ),
+    },
+    mechanical: {
+      heroicInspirationRerolls: Schema.optionalKey(
+        Schema.Tuple([member.mechanical]),
+      ),
+    },
+  };
+})();
+
 const AttackRollFeatureActivationFields = (() => {
   const schemas = pairedBattleHoleNestedMemberVariants(
     {
@@ -2602,7 +2623,10 @@ const BattleHolePayloadMembers = [
       ),
       mergeBattleHoleFieldPairs(
         AttackRollMissToHitReplacementFields,
-        D20TestNaturalOneRerollHoleOptionsFields,
+        mergeBattleHoleFieldPairs(
+          D20TestNaturalOneRerollHoleOptionsFields,
+          HeroicInspirationRerollHoleOptionsFields,
+        ),
       ),
     ),
   ),
@@ -3658,22 +3682,31 @@ const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
   result: BattleD20TestRollReplacementSchema,
 }).annotate({ parseOptions: { onExcessProperty: "error" } });
 
-const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("decline"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("reroll"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: BattleD20TestRollReplacementSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("rerollRolledDie"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: BattleD20TestRolledDieRollReplacementSchema,
-  }),
-]);
+function battleD20TestRollRerollDecisionSchema<const EffectKind extends string>(
+  effectKind: EffectKind,
+) {
+  return Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("decline"),
+      effectKind: Schema.Literal(effectKind),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("reroll"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: BattleD20TestRollReplacementSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rerollRolledDie"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: BattleD20TestRolledDieRollReplacementSchema,
+    }),
+  ]);
+}
+
+const BattleD20TestNaturalOneRerollDecisionSchema =
+  battleD20TestRollRerollDecisionSchema("d20_test_natural_one_reroll");
+const BattleHeroicInspirationRerollDecisionSchema =
+  battleD20TestRollRerollDecisionSchema(HEROIC_INSPIRATION_REROLL_EFFECT_KIND);
 
 const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
@@ -3779,6 +3812,9 @@ const BattleAttackRollResultSchema = Schema.Struct({
   ),
   d20TestNaturalOneReroll: Schema.optionalKey(
     BattleD20TestNaturalOneRerollDecisionSchema,
+  ),
+  heroicInspirationReroll: Schema.optionalKey(
+    BattleHeroicInspirationRerollDecisionSchema,
   ),
 }).annotate({ parseOptions: { onExcessProperty: "error" } });
 
