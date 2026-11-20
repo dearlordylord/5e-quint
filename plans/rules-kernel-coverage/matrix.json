@@ -5400,7 +5400,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
       ],
-      "reason": "The QNT owner models the attacker's Poisoned, Prone and Restrained conditions as Disadvantage sources and the target's Paralyzed, Restrained and Stunned conditions as Advantage sources, at any distance, joined with the mechanical sources and a Prone target's distance source before cancellation: a Restrained attacker against a Restrained target is Normal. d20-test-circumstance owns both condition source derivations from ConditionState; attack-roll applies the attacker source on the creature-target and object-target paths and the target source on the creature-target path, which every ordinary, spell, opportunity, and object attack roll uses. The executable parity witnesses cover both sources, their cancellation, the surfaced attack-roll hole mode for character and stat block attackers, rejection of a normal fill, the object-target path, direct removal, and a Stunned condition imposed and then ended by Stunning Strike.",
+      "reason": "The QNT owner models the attacker's Poisoned, Prone and Restrained conditions as Disadvantage sources and the target's Paralyzed, Petrified, Restrained and Stunned conditions as Advantage sources, at any distance, joined with the mechanical sources before cancellation, with a Prone target's distance source added only when the target is Prone: a Restrained attacker against a Restrained target is Normal. Separate attacker and target condition records keep side-meaningless flags unrepresentable. d20-test-circumstance owns both condition source derivations from ConditionState; attack-roll applies the attacker source on the creature-target and object-target paths and the target source on the creature-target path. The executable parity witnesses check each condition list against every Condition, and cover cancellation, the surfaced attack-roll hole mode for character, stat block, ranged Spell Attack and Opportunity Attack rolls, rejection of a normal fill, the object-target path, direct removal, and a Stunned condition imposed and then ended by Stunning Strike.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/d20-test-circumstance.ts",
@@ -5410,12 +5410,13 @@
       "surfaceEvidence": [
         ".references/srd-5.2.1/rules-glossary.md#Restrained",
         ".references/srd-5.2.1/rules-glossary.md#Paralyzed",
+        ".references/srd-5.2.1/rules-glossary.md#Petrified",
         ".references/srd-5.2.1/rules-glossary.md#Stunned",
         ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Conditions",
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
-      "title": "Restrained, Paralyzed and Stunned supply their attack-roll sources from canonical condition state, composed with every other source before cancellation"
+      "title": "Restrained, Paralyzed, Petrified and Stunned supply their attack-roll sources from canonical condition state, composed with every other source before cancellation"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",

@@ -53,11 +53,12 @@ export function proneAttackRollModeSources(
 }
 
 /**
- * Conditions whose own rules give the creature Disadvantage on its attack
- * rolls, at any distance and against any target (rules-glossary.md): Poisoned
- * ("You have Disadvantage on attack rolls and ability checks"), Prone ("You
- * have Disadvantage on attack rolls") and Restrained ("your attack rolls have
- * Disadvantage").
+ * Conditions that give the creature Disadvantage on its own attack rolls at
+ * any distance and against any target (rules-glossary.md): Poisoned ("You have
+ * Disadvantage on attack rolls and ability checks"), Prone ("You have
+ * Disadvantage on attack rolls") and Restrained ("your attack rolls have
+ * Disadvantage"). Blinded is not listed: its attack-roll effects come through
+ * the table-supplied sight facts (`attackAttackerCannotSeeTarget`).
  */
 export const ATTACKER_DISADVANTAGE_CONDITIONS = [
   "poisoned",
@@ -82,13 +83,17 @@ export function attackerConditionAttackRollModeSources(
 }
 
 /**
- * Conditions whose own rules say "Attack rolls against you have Advantage"
- * with no distance clause (rules-glossary.md): Paralyzed, Restrained and
- * Stunned. Prone's distance-dependent source is
- * {@link proneAttackRollModeSources}.
+ * Conditions that give attack rolls against the creature Advantage at any
+ * distance (rules-glossary.md, each "Attacks Affected." entry: "Attack rolls
+ * against you have Advantage"): Paralyzed, Petrified, Restrained and Stunned.
+ * Two conditions with the same benefit are not listed: Unconscious's
+ * Advantage joins the Prone target source in attack-roll.ts, and Blinded's
+ * comes through the table-supplied sight facts
+ * (`attackTargetCannotSeeAttacker`).
  */
 export const TARGET_ADVANTAGE_CONDITIONS = [
   "paralyzed",
+  "petrified",
   "restrained",
   "stunned",
 ] as const satisfies readonly Condition[];

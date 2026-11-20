@@ -115,69 +115,71 @@ module d20TestCircumstanceCoreExamples {
   }
 
   run d20TestCircumstanceConditionSources = {
-    val restrained = { ...noAttackRollConditions, restrained: true }
-    val paralyzed = { ...noAttackRollConditions, paralyzed: true }
-    val stunned = { ...noAttackRollConditions, stunned: true }
-    val poisoned = { ...noAttackRollConditions, poisoned: true }
+    val noAttacker = noAttackerAttackRollConditions
+    val noTarget = noTargetAttackRollConditions
+    val restrainedAttacker = { ...noAttacker, restrained: true }
+    val poisonedAttacker = { ...noAttacker, poisoned: true }
+    val restrainedTarget = { ...noTarget, restrained: true }
+    val paralyzedTarget = { ...noTarget, paralyzed: true }
+    val petrifiedTarget = { ...noTarget, petrified: true }
+    val stunnedTarget = { ...noTarget, stunned: true }
+    val proneTarget = { ...noTarget, prone: true }
     all {
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        restrained,
-        noAttackRollConditions,
-      ) == DisadvantageD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        noAttackRollConditions,
-        restrained,
-      ) == AdvantageD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        noAttackRollConditions,
-        paralyzed,
-      ) == AdvantageD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        noAttackRollConditions,
-        stunned,
-      ) == AdvantageD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        noAttackRollConditions,
-        poisoned,
-      ) == NormalD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        restrained,
-        restrained,
-      ) == NormalD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        mechanicalDisadvantage,
-        noAttackRollConditions,
-        stunned,
-      ) == NormalD20TestRoll),
-      assert(d20TestRollModeWithConditions(
-        noMechanicalSources,
-        noAttackRollConditions,
-        noAttackRollConditions,
-      ) == NormalD20TestRoll),
       assert(attackRollModeMatches(
-        d20TestRollModeWithConditionsAndProneTarget(
-          noMechanicalSources,
-          restrained,
-          noAttackRollConditions,
-          5,
-        ),
+        d20TestRollModeWithConditions(noMechanicalSources, restrainedAttacker, noTarget, 5),
+        DisadvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, poisonedAttacker, noTarget, 5),
+        DisadvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, restrainedTarget, 5),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, paralyzedTarget, 30),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, petrifiedTarget, 30),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, stunnedTarget, 30),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, restrainedAttacker, restrainedTarget, 5),
         NormalD20TestRoll,
       )),
       assert(attackRollModeMatches(
-        d20TestRollModeWithConditionsAndProneTarget(
-          noMechanicalSources,
-          noAttackRollConditions,
-          { ...paralyzed, prone: true },
-          6,
-        ),
+        d20TestRollModeWithConditions(mechanicalDisadvantage, noAttacker, stunnedTarget, 5),
         NormalD20TestRoll,
       )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, noTarget, 5),
+        NormalD20TestRoll,
+      )),
+      // A Prone target's distance source applies only when the target is Prone.
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, restrainedAttacker, proneTarget, 5),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, { ...paralyzedTarget, prone: true }, 6),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, paralyzedTarget, 6),
+        AdvantageD20TestRoll,
+      )),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttacker,
+        noTarget,
+        -1,
+      ) == AttackRollModeInvalidDistance),
     }
   }
 

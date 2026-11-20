@@ -16,10 +16,10 @@
 //   that combines with the target's sources before cancellation.
 // - .references/srd-5.2.1/rules-glossary.md#Restrained says "Attack rolls
 //   against you have Advantage, and your attack rolls have Disadvantage."
-// - .references/srd-5.2.1/rules-glossary.md#Paralyzed and #Stunned each say
-//   "Attack rolls against you have Advantage." These target sources and the
-//   attacker's own Poisoned, Prone and Restrained sources hold at any distance
-//   and join every other source before cancellation.
+// - .references/srd-5.2.1/rules-glossary.md#Paralyzed, #Petrified and
+//   #Stunned each say "Attack rolls against you have Advantage." These target
+//   sources and the attacker's own Poisoned, Prone and Restrained sources
+//   hold at any distance and join every other source before cancellation.
 // - .references/srd-5.2.1/rules-glossary.md#Unconscious says attack rolls
 //   against an Unconscious target have Advantage; Unconscious also implies
 //   Prone, so both sources are combined before cancellation.
@@ -157,40 +157,58 @@ module d20TestCircumstanceCore {
   ): AttackRollModeResult =
     d20TestRollModeWithProneTarget(withProneAttacker(mechanicalSources), distance)
 
-  type AttackRollConditionFlags = {
-    paralyzed: bool,
+  // The attacker's conditions that give its own attack rolls Disadvantage.
+  type AttackerAttackRollConditions = {
     poisoned: bool,
+    prone: bool,
+    restrained: bool,
+  }
+
+  // The target's conditions that bear on attack rolls against it: Prone's
+  // distance source, and the distance-independent Advantage sources.
+  type TargetAttackRollConditions = {
+    paralyzed: bool,
+    petrified: bool,
     prone: bool,
     restrained: bool,
     stunned: bool,
   }
 
-  pure val noAttackRollConditions: AttackRollConditionFlags = {
-    paralyzed: false,
+  pure val noAttackerAttackRollConditions: AttackerAttackRollConditions = {
     poisoned: false,
+    prone: false,
+    restrained: false,
+  }
+
+  pure val noTargetAttackRollConditions: TargetAttackRollConditions = {
+    paralyzed: false,
+    petrified: false,
     prone: false,
     restrained: false,
     stunned: false,
   }
 
   pure def attackerConditionAttackRollSources(
-    attacker: AttackRollConditionFlags,
+    attacker: AttackerAttackRollConditions,
   ): D20TestRollModeSources = {
     advantage: false,
     disadvantage: attacker.poisoned or attacker.prone or attacker.restrained,
   }
 
   pure def targetConditionAttackRollSources(
-    target: AttackRollConditionFlags,
+    target: TargetAttackRollConditions,
   ): D20TestRollModeSources = {
-    advantage: target.paralyzed or target.restrained or target.stunned,
+    advantage: target.paralyzed
+      or target.petrified
+      or target.restrained
+      or target.stunned,
     disadvantage: false,
   }
 
   pure def withConditionSources(
     mechanicalSources: D20TestRollModeSources,
-    attacker: AttackRollConditionFlags,
-    target: AttackRollConditionFlags,
+    attacker: AttackerAttackRollConditions,
+    target: TargetAttackRollConditions,
   ): D20TestRollModeSources = {
     advantage: mechanicalSources.advantage
       or attackerConditionAttackRollSources(attacker).advantage
@@ -200,25 +218,27 @@ module d20TestCircumstanceCore {
       or targetConditionAttackRollSources(target).disadvantage,
   }
 
+  // Every condition source, with a Prone target's distance source only when
+  // the target is Prone.
   pure def d20TestRollModeWithConditions(
     mechanicalSources: D20TestRollModeSources,
-    attacker: AttackRollConditionFlags,
-    target: AttackRollConditionFlags,
-  ): D20TestRollMode =
-    d20TestRollModeFromSources(
-      withConditionSources(mechanicalSources, attacker, target)
-    )
-
-  pure def d20TestRollModeWithConditionsAndProneTarget(
-    mechanicalSources: D20TestRollModeSources,
-    attacker: AttackRollConditionFlags,
-    target: AttackRollConditionFlags,
+    attacker: AttackerAttackRollConditions,
+    target: TargetAttackRollConditions,
     distance: AttackRollTargetDistance,
   ): AttackRollModeResult =
-    d20TestRollModeWithProneTarget(
-      withConditionSources(mechanicalSources, attacker, target),
-      distance,
-    )
+    if (target.prone)
+      d20TestRollModeWithProneTarget(
+        withConditionSources(mechanicalSources, attacker, target),
+        distance,
+      )
+    else if (distance < 0)
+      AttackRollModeInvalidDistance
+    else
+      AttackRollModeResolved({
+        mode: d20TestRollModeFromSources(
+          withConditionSources(mechanicalSources, attacker, target)
+        ),
+      })
 
   pure def d20TestRollModeWithUnconsciousTarget(
     mechanicalSources: D20TestRollModeSources,
