@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { Schema } from "effect";
+import { combatantId } from "@dnd/battle-runtime";
 import { unitId } from "@dnd/shared/game-facts";
 import {
   buildUnitCatalog,
@@ -12,6 +13,8 @@ import {
   creationChoiceOptionId,
   discoverCreationHoles,
   fillCreationHoles,
+  GNOMISH_LINEAGE_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   progressionOptionId,
 } from "@dnd/character-creation-runtime";
 import {
@@ -75,9 +78,10 @@ test("a finalized Forest Gnome Wizard retains Gnomish Cunning and enters Battle 
           cha: 10,
         },
         fixtureOptionIds: (source) =>
-          source.choiceKey === "gnome_lineage"
+          source.choiceKey === GNOMISH_LINEAGE_CHOICE_KEY
             ? [creationChoiceOptionId("forest_gnome")]
-            : source.choiceKey === "gnomish_lineage_spellcasting_ability"
+            : source.choiceKey ===
+                GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY
               ? [creationChoiceOptionId("int")]
               : manifestFixtureOptionIds(source),
       }),
@@ -150,6 +154,32 @@ test("a finalized Forest Gnome Wizard retains Gnomish Cunning and enters Battle 
           }),
         ]),
       },
+    },
+  });
+  expect(
+    root.sessionStore.battleSession?.state.combatants.get(
+      combatantId("character"),
+    )?.origin,
+  ).toMatchObject({
+    kind: "character",
+    execution: {
+      procedureBindings: expect.arrayContaining([
+        expect.objectContaining({
+          procedure: expect.objectContaining({
+            kind: "unitSupportProfile",
+            execution: {
+              kind: "passiveSavingThrowRollMode",
+              savingThrow: {
+                mode: "advantage",
+                scope: {
+                  kind: "savingThrowAbilities",
+                  abilities: ["int", "wis", "cha"],
+                },
+              },
+            },
+          }),
+        }),
+      ]),
     },
   });
 });
