@@ -1146,7 +1146,7 @@ describe("character creation hole discovery", () => {
       [
         "abilityScores",
         "cc:draft:draft.abilityScoreGeneration",
-        ["standardArray", "pointBuy"],
+        ["standardArray", "pointBuy", "randomGeneration"],
       ],
       [
         "choice",
