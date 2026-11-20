@@ -1,10 +1,14 @@
-import { Brand, Result, Match, Schema } from "effect";
+import { Brand, Match, Option, Result, Schema } from "effect";
 import {
   CHARACTER_CLASS_LEVELS,
   characterClassLevel,
   type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  DieRollResultSchema,
+  type DieRollResult,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 export type ClassUnitId = UnitRecord["id"] & Brand.Brand<"ClassUnitId">;
@@ -27,19 +31,13 @@ export type LevelOneClassHitPointRule = {
   readonly tag: "levelOneMaximumHitDie";
 };
 
-const HitDieResultSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
-  Schema.brand("PositiveInteger"),
-  Schema.brand("DieRollResult"),
-);
-
 export const FixedHigherLevelClassHitPointRuleSchema = Schema.Struct({
   tag: Schema.Literal("fixedHigherLevelGain"),
 });
 
 export const RolledHigherLevelClassHitPointRuleSchema = Schema.Struct({
   tag: Schema.Literal("rolledHigherLevelGain"),
-  hitDieResult: HitDieResultSchema,
+  hitDieResult: DieRollResultSchema,
 });
 
 export const HigherLevelClassHitPointRuleSchema = Schema.Union([
@@ -222,10 +220,41 @@ export function hitPointRuleLabel(
   );
 }
 
-export function hitPointsAfterLevelOneMultiplier(
-  progression: CharacterProgression,
-): number {
-  return progression.advancements.length;
+/** A level's rolled Hit Die result that is above the class's Hit Die. */
+export type RolledHitDieResultAboveHitDie = {
+  readonly classUnitId: UnitRecord["id"];
+  readonly hitDieResult: DieRollResult;
+  readonly hitDieSize: number;
+};
+
+/**
+ * The roll a level's Hit Point rule records, when it is above the class's Hit
+ * Die. A fixed gain records no roll.
+ */
+export function rolledHitDieResultAboveHitDie(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly hitPointRule: HigherLevelClassHitPointRule;
+  readonly hitPointDie: number;
+}): Option.Option<RolledHitDieResultAboveHitDie> {
+  return Match.value(input.hitPointRule).pipe(
+    Match.when({ tag: "fixedHigherLevelGain" }, () => Option.none()),
+    Match.when({ tag: "rolledHigherLevelGain" }, ({ hitDieResult }) =>
+      hitDieResult > input.hitPointDie
+        ? Option.some({
+            classUnitId: input.classUnitId,
+            hitDieResult,
+            hitDieSize: input.hitPointDie,
+          })
+        : Option.none(),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function rolledHitDieResultAboveHitDieMessage(
+  issue: RolledHitDieResultAboveHitDie,
+): string {
+  return `Rolled Hit Die result ${issue.hitDieResult} exceeds the d${issue.hitDieSize} Hit Die of class ${issue.classUnitId}.`;
 }
 
 export function computeTotalLevel(

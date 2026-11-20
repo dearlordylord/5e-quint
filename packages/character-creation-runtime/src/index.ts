@@ -299,7 +299,6 @@ export {
   characterTotalLevelHitPointRule,
   hitPointRuleLabel,
   hitPointRuleOptionSuffix,
-  hitPointsAfterLevelOneMultiplier,
   startingClassUnitId,
   type CharacterProgressionClassLevel,
   type CharacterProgressionEntry,

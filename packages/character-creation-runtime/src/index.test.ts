@@ -28,7 +28,11 @@ import type {
   ToolProficiencyGrant,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { abilityScore, PositiveInteger } from "@dnd/shared/types";
+import {
+  abilityScore,
+  DieRollResult,
+  PositiveInteger,
+} from "@dnd/shared/types";
 
 import {
   characterDraftId,
@@ -4773,6 +4777,81 @@ describe("character creation finalization", () => {
         `${progressionOptionId(progression)}: ${JSON.stringify(result)}`,
       ).toBe("ready");
     }
+  });
+
+  test("finalizes a draft's rolled Hit Die and refuses one above the Hit Die", () => {
+    const fighterLevelTwo = supportedCharacterProgressions(
+      CHARACTER_CREATION_SUPPORT_PROFILE,
+    ).find(
+      (progression) =>
+        progression.startingClass === "class_fighter" &&
+        progression.advancements.length === 1 &&
+        progression.advancements[0]?.classUnitId === "class_fighter",
+    );
+    if (fighterLevelTwo === undefined) {
+      expect.fail("The support profile offers Fighter 2.");
+    }
+    const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      draftId: "draft:rolled-fighter-2",
+      progression: fighterLevelTwo,
+      standardArrayAssignment: {
+        str: 15,
+        dex: 13,
+        con: 14,
+        int: 8,
+        wis: 12,
+        cha: 10,
+      },
+    });
+    const withRolledHitDie = (hitDieResult: number): CharacterDraft => ({
+      ...draft,
+      selections: {
+        ...draft.selections,
+        progression: {
+          ...fighterLevelTwo,
+          advancements: fighterLevelTwo.advancements.map((advancement) => ({
+            ...advancement,
+            hitPointRule: {
+              tag: "rolledHigherLevelGain" as const,
+              hitDieResult: DieRollResult(hitDieResult),
+            },
+          })),
+        },
+      },
+    });
+
+    const ready = finalizeCharacterDraft({
+      draft: withRolledHitDie(9),
+      unitLibrary,
+    });
+    expect(ready.tag, JSON.stringify(ready)).toBe("ready");
+    if (ready.tag === "ready") {
+      expect(ready.build.progression.advancements[0]?.hitPointRule).toEqual({
+        tag: "rolledHigherLevelGain",
+        hitDieResult: 9,
+      });
+      expect(characterBuildHitPoints(ready.build, unitLibrary)).toMatchObject({
+        _tag: "Success",
+        success: { maximum: 10 + 2 + 9 + 2 },
+      });
+    }
+
+    expect(
+      finalizeCharacterDraft({ draft: withRolledHitDie(11), unitLibrary }),
+    ).toEqual({
+      tag: "invalid",
+      issues: [
+        expect.objectContaining({
+          cause: {
+            tag: "rolledHitDieResultAboveHitDie",
+            classUnitId: "class_fighter",
+            hitDieResult: 11,
+            hitDieSize: 10,
+          },
+        }),
+      ],
+    });
   });
 
   test("finalizes fixed class-feature language grants without changing origin languages", () => {

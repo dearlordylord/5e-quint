@@ -3,6 +3,7 @@ import { Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  DieRollResult,
   NonNegativeInteger,
   PositiveInteger,
   abilityScore,
@@ -560,6 +561,37 @@ describe("Character Creation owner facts", () => {
     const fact = characterBuildFact(syntheticBuild());
 
     expect(fact.spellcasting).toBeUndefined();
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
+  });
+
+  test("projects fixed and rolled Hit Point rules for levels after 1", () => {
+    const startingClass = classUnitId(authoredUnitId("class_synthetic"));
+    const fact = characterBuildFact({
+      ...syntheticBuild(),
+      progression: {
+        startingClass,
+        advancements: [
+          {
+            classUnitId: startingClass,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+          {
+            classUnitId: startingClass,
+            hitPointRule: {
+              tag: "rolledHigherLevelGain",
+              hitDieResult: DieRollResult(5),
+            },
+          },
+        ],
+      },
+    });
+
+    expect(
+      fact.progression.advancements.map((entry) => entry.hitPointRule),
+    ).toEqual([
+      { tag: "fixedHigherLevelGain" },
+      { tag: "rolledHigherLevelGain", hitDieResult: 5 },
+    ]);
     expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
   });
 
@@ -1297,7 +1329,7 @@ describe("Character Creation owner facts", () => {
         {
           tag: "rolledHitDieResultAboveHitDie",
           classUnitId: syntheticUnitId,
-          hitDieResult: 11,
+          hitDieResult: DieRollResult(11),
           hitDieSize: 10,
         },
         {

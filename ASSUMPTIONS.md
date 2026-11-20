@@ -223,20 +223,25 @@ requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
 
-## A56: A level's Hit Point gain is recomputed from the current Constitution modifier
+## A56: A level's Hit Point gain is derived from the current Constitution modifier
 
-**Assumption:** Each level after 1 keeps its Hit Point rule, either the fixed
-value or the Hit Die as rolled, and never a stored total. The Hit Point
-maximum adds, for each such level, that value plus the current Constitution
-modifier, with a minimum of 1. A rolled level and a fixed level follow the
-same rule.
+**Assumption:** A build records each level's Hit Point rule, either the fixed
+value or the Hit Die as rolled, and the current ability scores. It doesn't
+record the Constitution modifier each level was gained with. The Hit Point
+maximum adds, for each level after 1, that value plus the current
+Constitution modifier, with a minimum of 1. A rolled level and a fixed level
+follow the same rule.
 
 **Rules basis / gap:** `.references/srd-5.2.1/character-creation.md`, "Level
 Advancement," step 2, adds the rolled or fixed value plus the Constitution
 modifier, "minimum of 1," when the level is gained. Step 5, "Adjust Ability
 Modifiers," says that when the Constitution modifier increases by 1, the Hit
-Point maximum increases by 1 for each level attained. The SRD doesn't say what
-a later change does to a level whose total was raised to the minimum of 1, nor
-what a decrease does. Recomputing every level from the current modifier gives
-the step 5 result whenever no level is at the minimum, and keeps each level at
-1 or more.
+Point maximum increases by 1 for each level attained. The derivation gives
+the step 5 result for every level whose total was above the minimum when it
+was gained. For a level whose total was raised to 1 when it was gained, step
+5 adds 1 for each later increase, while the derivation adds only what lifts
+the level's own total above 1, because the build doesn't know the modifier
+the level was gained with. A level reaches that case when its value plus the
+modifier was below 1, for example a rolled 1 with a negative modifier. The
+SRD doesn't say what a decrease does. The derivation lowers each level's gain with the
+modifier, never below 1.

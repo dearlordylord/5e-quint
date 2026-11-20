@@ -14,6 +14,8 @@ module characterSheetHitPointMaximumMbt {
     | CharacterSheetHitPointMaximumDwarfWizardLevelFour
     | CharacterSheetHitPointMaximumSorcererDraconicResilience
     | CharacterSheetHitPointMaximumReducedEffectiveMaximum
+    | CharacterSheetHitPointMaximumRolledMinimumHigherLevelGain
+    | CharacterSheetHitPointMaximumRolledMulticlass
 
   type CharacterSheetHitPointMaximumState = {
     outcome: CharacterSheetHitPointMaximumOutcome,
@@ -185,6 +187,38 @@ module characterSheetHitPointMaximumMbt {
     ),
   }
 
+  action doProjectRolledMinimumHigherLevelGain = all {
+    qState.replayIndex == 8,
+    recordProjection(
+      CharacterSheetHitPointMaximumRolledMinimumHigherLevelGain,
+      {
+      startingHitPointDie: 6,
+      constitutionModifier: -1,
+      higherLevelHitPointGains: [rolledHigherLevelHitPointGainFor(6, 1)],
+      hitPointMaximumBonus: 0,
+      hitPointMaximumReduction: 0,
+    },
+      2,
+      9,
+    ),
+  }
+
+  action doProjectRolledMulticlass = all {
+    qState.replayIndex == 9,
+    recordProjection(
+      CharacterSheetHitPointMaximumRolledMulticlass,
+      {
+      startingHitPointDie: 10,
+      constitutionModifier: 1,
+      higherLevelHitPointGains: [rolledHigherLevelHitPointGainFor(6, 5), rolledHigherLevelHitPointGainFor(10, 8)],
+      hitPointMaximumBonus: 0,
+      hitPointMaximumReduction: 0,
+    },
+      3,
+      10,
+    ),
+  }
+
   action step = any {
     doProjectFighterLevelOne,
     doProjectFighterLevelTwo,
@@ -194,5 +228,7 @@ module characterSheetHitPointMaximumMbt {
     doProjectDwarfWizardLevelFour,
     doProjectSorcererDraconicResilience,
     doProjectReducedEffectiveMaximum,
+    doProjectRolledMinimumHigherLevelGain,
+    doProjectRolledMulticlass,
   }
 }

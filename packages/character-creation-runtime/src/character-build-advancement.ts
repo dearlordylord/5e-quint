@@ -77,6 +77,9 @@ import {
   type CharacterProgressionLevelIssue,
   type ClassUnitId,
   type HigherLevelClassHitPointRule,
+  rolledHitDieResultAboveHitDie,
+  rolledHitDieResultAboveHitDieMessage,
+  type RolledHitDieResultAboveHitDie,
 } from "./character-progression-types.ts";
 import {
   creationChoiceOptionId,
@@ -338,13 +341,10 @@ void (true satisfies [MissingClassLevelGainTags] extends [never]
 
 export type CharacterBuildAdvancementIssue =
   | { readonly code: "invalidFeatChoiceGains"; readonly message: string }
-  | {
+  | ({
       readonly code: "rolledHitDieResultAboveHitDie";
-      readonly classUnitId: UnitRecord["id"];
-      readonly hitDieResult: number;
-      readonly hitDieSize: number;
       readonly message: string;
-    }
+    } & RolledHitDieResultAboveHitDie)
   | {
       readonly code: "invalidWizardSpellcastingGains";
       readonly message: string;
@@ -1258,11 +1258,18 @@ export function advanceCharacterBuildClassLevel(input: {
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
-  const rolledHitDieIssue = rolledHitDieResultIssue(
-    input.levelGain,
-    classUnit.success,
-  );
-  if (rolledHitDieIssue !== undefined) return Result.fail(rolledHitDieIssue);
+  const rolledAboveHitDie = rolledHitDieResultAboveHitDie({
+    classUnitId: input.levelGain.classUnitId,
+    hitPointRule: input.levelGain.hitPointRule,
+    hitPointDie: classUnit.success.hitPointDie,
+  });
+  if (Option.isSome(rolledAboveHitDie)) {
+    return Result.fail({
+      code: "rolledHitDieResultAboveHitDie",
+      ...rolledAboveHitDie.value,
+      message: rolledHitDieResultAboveHitDieMessage(rolledAboveHitDie.value),
+    });
+  }
 
   const spellcasting = updateSpellcastingForClassLevelGain(input);
   if (Result.isFailure(spellcasting)) return Result.fail(spellcasting.failure);
@@ -1759,23 +1766,6 @@ function updateListPreparedSpellcasting(input: {
       },
     },
   });
-}
-
-function rolledHitDieResultIssue(
-  levelGain: CharacterBuildClassLevelGain,
-  classUnit: ClassRecord,
-): CharacterBuildAdvancementIssue | undefined {
-  const rule = levelGain.hitPointRule;
-  return rule.tag === "rolledHigherLevelGain" &&
-    rule.hitDieResult > classUnit.hitPointDie
-    ? {
-        code: "rolledHitDieResultAboveHitDie",
-        classUnitId: levelGain.classUnitId,
-        hitDieResult: rule.hitDieResult,
-        hitDieSize: classUnit.hitPointDie,
-        message: `Rolled Hit Die result ${rule.hitDieResult} exceeds the d${classUnit.hitPointDie} Hit Die of class ${levelGain.classUnitId}.`,
-      }
-    : undefined;
 }
 
 function classUnitRecord(input: {

@@ -72,6 +72,8 @@ import {
   progressionClassLevels,
   startingClassUnitId,
   type HigherLevelClassHitPointRule,
+  rolledHitDieResultAboveHitDie,
+  rolledHitDieResultAboveHitDieMessage,
 } from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
@@ -494,6 +496,10 @@ export function executableSupportIssues(
           { tag: "unsupportedProgression" },
         )
       : []),
+    ...rolledHitDieResultIssues(
+      selections.progression,
+      dependencies.classFactsByUnitId.value,
+    ),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
         selections.abilityScoreGeneration.method,
@@ -1718,8 +1724,7 @@ function characterBuildProjectionCauseMessageRemaining(
     ),
     Match.when(
       { tag: "rolledHitDieResultAboveHitDie" },
-      ({ classUnitId, hitDieResult, hitDieSize }) =>
-        `Rolled Hit Die result ${hitDieResult} exceeds the d${hitDieSize} Hit Die of class ${classUnitId}.`,
+      ({ tag: _tag, ...issue }) => rolledHitDieResultAboveHitDieMessage(issue),
     ),
     Match.exhaustive,
   );
@@ -2386,26 +2391,34 @@ function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
   );
 }
 
+/**
+ * A level's rolled Hit Die result above its class's Hit Die. A draft, a level
+ * gain and a stored sheet are all checked against the class facts.
+ */
 function rolledHitDieResultIssues(
   progression: CharacterBuild["progression"],
   classFactsByUnitId: ClassFactsByUnitId,
 ): readonly CharacterBuildProjectionIssue[] {
   return progression.advancements.flatMap((advancement) => {
-    const hitPointDie = classFactsByUnitId.get(
-      advancement.classUnitId,
-    )?.hitPointDie;
-    return advancement.hitPointRule.tag === "rolledHigherLevelGain" &&
-      hitPointDie !== undefined &&
-      advancement.hitPointRule.hitDieResult > hitPointDie
-      ? [
+    const classFacts = classFactsByUnitId.get(advancement.classUnitId);
+    /* v8 ignore next -- @preserve -- Callers collect class facts for every class in the same progression. */
+    if (classFacts === undefined) return [];
+    return Option.match(
+      rolledHitDieResultAboveHitDie({
+        classUnitId: advancement.classUnitId,
+        hitPointRule: advancement.hitPointRule,
+        hitPointDie: classFacts.hitPointDie,
+      }),
+      {
+        onNone: () => [],
+        onSome: (issue) => [
           characterBuildProjectionIssue({
             tag: "rolledHitDieResultAboveHitDie",
-            classUnitId: advancement.classUnitId,
-            hitDieResult: advancement.hitPointRule.hitDieResult,
-            hitDieSize: hitPointDie,
+            ...issue,
           }),
-        ]
-      : [];
+        ],
+      },
+    );
   });
 }
 

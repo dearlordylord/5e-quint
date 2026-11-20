@@ -12,7 +12,7 @@ import {
   copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
-import { Hp } from "@dnd/shared/types";
+import { DieRollResult, Hp } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -37,6 +37,8 @@ const hitPointMaximumScenarios = [
   "dwarf-wizard-level-four",
   "sorcerer-draconic-resilience",
   "reduced-effective-maximum",
+  "rolled-minimum-higher-level-gain",
+  "rolled-multiclass",
 ] as const;
 type HitPointMaximumScenario = (typeof hitPointMaximumScenarios)[number];
 const hitPointMaximumReplayStepCount = hitPointMaximumScenarios.length - 1;
@@ -68,6 +70,8 @@ const driverSchema = {
   doProjectDwarfWizardLevelFour: {},
   doProjectSorcererDraconicResilience: {},
   doProjectReducedEffectiveMaximum: {},
+  doProjectRolledMinimumHigherLevelGain: {},
+  doProjectRolledMulticlass: {},
   step: {},
 } as const;
 
@@ -179,6 +183,31 @@ function createHitPointMaximumDriver() {
           replayIndex: 8,
         });
       },
+      doProjectRolledMinimumHigherLevelGain: () => {
+        projection = projectHitPointMaximum({
+          outcome: "rolled-minimum-higher-level-gain",
+          build: buildFixture({
+            startingClass: "class_wizard",
+            constitutionScore: 8,
+            advancements: [{ classUnitId: "class_wizard", hitDieResult: 1 }],
+          }),
+          replayIndex: 9,
+        });
+      },
+      doProjectRolledMulticlass: () => {
+        projection = projectHitPointMaximum({
+          outcome: "rolled-multiclass",
+          build: buildFixture({
+            startingClass: "class_fighter",
+            constitutionScore: 13,
+            advancements: [
+              { classUnitId: "class_wizard", hitDieResult: 5 },
+              { classUnitId: "class_fighter", hitDieResult: 8 },
+            ],
+          }),
+          replayIndex: 10,
+        });
+      },
       step: () => {},
       getState: () => projection,
     };
@@ -274,16 +303,30 @@ function projectHitPointMaximum(input: {
 function buildFixture(input: {
   readonly startingClass: string;
   readonly constitutionScore: number;
-  readonly advancements?: readonly string[];
+  /** A class alone takes the fixed value; a class with a result rolled it. */
+  readonly advancements?: readonly (
+    | string
+    | { readonly classUnitId: string; readonly hitDieResult: number }
+  )[];
   readonly species?: string;
 }): CharacterBuild {
   return {
     progression: {
       startingClass: classUnitId(authoredUnitId(input.startingClass)),
-      advancements: (input.advancements ?? []).map((advancement) => ({
-        classUnitId: classUnitId(authoredUnitId(advancement)),
-        hitPointRule: { tag: "fixedHigherLevelGain" },
-      })),
+      advancements: (input.advancements ?? []).map((advancement) =>
+        typeof advancement === "string"
+          ? {
+              classUnitId: classUnitId(authoredUnitId(advancement)),
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+            }
+          : {
+              classUnitId: classUnitId(authoredUnitId(advancement.classUnitId)),
+              hitPointRule: {
+                tag: "rolledHigherLevelGain",
+                hitDieResult: DieRollResult(advancement.hitDieResult),
+              },
+            },
+      ),
     },
     background: authoredUnitId("background_soldier"),
     species: authoredUnitId(input.species ?? "species_orc"),
@@ -378,6 +421,9 @@ const qntOutcomeByVariant = {
     "sorcerer-draconic-resilience",
   CharacterSheetHitPointMaximumReducedEffectiveMaximum:
     "reduced-effective-maximum",
+  CharacterSheetHitPointMaximumRolledMinimumHigherLevelGain:
+    "rolled-minimum-higher-level-gain",
+  CharacterSheetHitPointMaximumRolledMulticlass: "rolled-multiclass",
 } as const;
 
 function outcomeField(

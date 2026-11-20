@@ -60,7 +60,10 @@ import type {
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-import type { CharacterProgression } from "./character-progression-types.ts";
+import type {
+  CharacterProgression,
+  RolledHitDieResultAboveHitDie,
+} from "./character-progression-types.ts";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS, abilityScoreAssignment };
 export type { SupportedAbilityScoreMethod };
@@ -1122,12 +1125,9 @@ export type CharacterBuildProjectionCause =
       readonly tag: "missingHitPointMaximumGrantSourceUnit";
       readonly sourceUnitId: UnitRecord["id"];
     }
-  | {
+  | ({
       readonly tag: "rolledHitDieResultAboveHitDie";
-      readonly classUnitId: UnitRecord["id"];
-      readonly hitDieResult: number;
-      readonly hitDieSize: number;
-    }
+    } & RolledHitDieResultAboveHitDie)
   | {
       readonly tag: "unsupportedHitPointMaximumGrant";
       readonly sourceUnitId: UnitRecord["id"];
