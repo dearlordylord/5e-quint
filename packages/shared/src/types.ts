@@ -332,18 +332,23 @@ export function exhaustionLevel(n: number): ExhaustionLevel {
   return ExhaustionLevel.make(EXHAUSTION_LEVELS[index]!);
 }
 
+/** The lowest and highest ability scores. */
+export const ABILITY_SCORE_MIN = 1;
+export const ABILITY_SCORE_MAX = 30;
+
 export const AbilityScore = Schema.Number.pipe(
   Schema.check(
     Schema.isInt(),
-    Schema.isGreaterThanOrEqualTo(1),
-    Schema.isLessThanOrEqualTo(30),
+    Schema.isGreaterThanOrEqualTo(ABILITY_SCORE_MIN),
+    Schema.isLessThanOrEqualTo(ABILITY_SCORE_MAX),
   ),
   Schema.brand("AbilityScore"),
 );
 export type AbilityScore = typeof AbilityScore.Type;
 export function abilityScore(n: number): AbilityScore {
-  const MAX = 30;
-  return AbilityScore.make(Math.max(1, Math.min(MAX, Math.floor(n))));
+  return AbilityScore.make(
+    Math.max(ABILITY_SCORE_MIN, Math.min(ABILITY_SCORE_MAX, Math.floor(n))),
+  );
 }
 
 export const PROFICIENCY_BONUSES = [2, 3, 4, 5, 6] as const;

@@ -10,6 +10,7 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { LOWEST_ABILITY_MODIFIER } from "@dnd/shared-algebras/ability-score-algebra";
 
 export type ClassUnitId = UnitRecord["id"] & Brand.Brand<"ClassUnitId">;
 const ClassUnitId = Brand.nominal<ClassUnitId>();
@@ -79,9 +80,15 @@ export type CharacterProgression = {
   readonly advancements: readonly CharacterProgressionEntry[];
 };
 
-/** Decodes the Constitution modifier a level records: a whole number. */
+/**
+ * Decodes the Constitution modifier a level records: a whole number no lower
+ * than the lowest ability score's modifier.
+ */
 export const ConstitutionModifierAtGainSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(LOWEST_ABILITY_MODIFIER),
+  ),
 );
 
 /**
@@ -305,16 +312,67 @@ export function constitutionModifiersAtGainAboveCurrent(
       constitutionModifierAtGain > constitutionModifier
         ? [
             {
-              characterLevel: computeTotalLevel({
-                ...progression,
-                advancements: progression.advancements.slice(0, index + 1),
-              }),
+              characterLevel: advancementCharacterLevel(progression, index),
               constitutionModifierAtGain,
               constitutionModifier,
             },
           ]
         : [],
   );
+}
+
+/**
+ * A level that records a lower Constitution modifier than an earlier level. A
+ * built character's scores only rise, so a later level can't have gained with
+ * a lower modifier.
+ */
+export type ConstitutionModifierAtGainBelowEarlier = {
+  readonly characterLevel: CharacterClassLevel;
+  readonly constitutionModifierAtGain: number;
+  readonly earlierCharacterLevel: CharacterClassLevel;
+  readonly earlierConstitutionModifierAtGain: number;
+};
+
+/** The levels that record a lower Constitution modifier than the level before. */
+export function constitutionModifiersAtGainBelowEarlier(
+  progression: CharacterBuildProgression,
+): readonly ConstitutionModifierAtGainBelowEarlier[] {
+  return progression.advancements.flatMap((advancement, index) => {
+    const earlier = progression.advancements[index - 1];
+    return earlier !== undefined &&
+      advancement.constitutionModifierAtGain <
+        earlier.constitutionModifierAtGain
+      ? [
+          {
+            characterLevel: advancementCharacterLevel(progression, index),
+            constitutionModifierAtGain: advancement.constitutionModifierAtGain,
+            earlierCharacterLevel: advancementCharacterLevel(
+              progression,
+              index - 1,
+            ),
+            earlierConstitutionModifierAtGain:
+              earlier.constitutionModifierAtGain,
+          },
+        ]
+      : [];
+  });
+}
+
+export function constitutionModifierAtGainBelowEarlierMessage(
+  issue: ConstitutionModifierAtGainBelowEarlier,
+): string {
+  return `Character level ${issue.characterLevel} records Constitution modifier ${issue.constitutionModifierAtGain}, below the ${issue.earlierConstitutionModifierAtGain} that character level ${issue.earlierCharacterLevel} records.`;
+}
+
+/** The character level an advancement reaches: level 1 plus the advancements up to it. */
+function advancementCharacterLevel(
+  progression: CharacterBuildProgression,
+  index: number,
+): CharacterClassLevel {
+  return computeTotalLevel({
+    ...progression,
+    advancements: progression.advancements.slice(0, index + 1),
+  });
 }
 
 export function constitutionModifierAtGainAboveCurrentMessage(

@@ -2,6 +2,8 @@ import { Match, Option, Result } from "effect";
 import { traverseValidation } from "@dnd/shared/validation";
 import {
   ABILITIES,
+  ABILITY_SCORE_MAX,
+  ABILITY_SCORE_MIN,
   AbilityScore,
   type Ability,
   type ReadonlyNonEmptyArray,
@@ -74,7 +76,11 @@ function abilityScoreField(
   if (typeof score !== "number") {
     return Result.fail({ tag: "missingNumericAbilityScore", ability });
   }
-  if (!Number.isInteger(score) || score < 1 || score > 30) {
+  if (
+    !Number.isInteger(score) ||
+    score < ABILITY_SCORE_MIN ||
+    score > ABILITY_SCORE_MAX
+  ) {
     return Result.fail({
       tag: "invalidAbilityScore",
       ability,
@@ -88,6 +94,9 @@ function abilityScoreField(
 export function abilityScoreToMod(score: number): number {
   return Math.floor((score - 10) / 2);
 }
+
+/** The modifier of the lowest ability score. */
+export const LOWEST_ABILITY_MODIFIER = abilityScoreToMod(ABILITY_SCORE_MIN);
 
 export function pointBuyCost(score: number): Option.Option<number> {
   switch (score) {

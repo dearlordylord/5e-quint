@@ -78,15 +78,23 @@ module hitPointMaximum {
   pure def effectiveHitPointMaximum(facts: HitPointMaximumFacts): int =
     normalHitPointMaximum(facts) - facts.hitPointMaximumReduction
 
-  // A built character's scores only rise, so no level records a modifier above
-  // the current one.
+  // The modifier of the lowest ability score, 1.
+  pure val lowestAbilityModifier = -5
+
+  // A built character's scores only rise, so the recorded modifiers never fall
+  // from one level to the next, and none is above the current one.
   pure def legalHitPointMaximumFacts(facts: HitPointMaximumFacts): bool = all {
     facts.startingHitPointDie > 0,
-    facts.higherLevelHitPointGains.foldl(true, (legal, gain) =>
-      legal
-        and legalHigherLevelHitPointGain(gain)
-        and gain.constitutionModifierAtGain <= facts.constitutionModifier
-    ),
+    facts.higherLevelHitPointGains.foldl(
+      { legal: true, earlier: lowestAbilityModifier },
+      (state, gain) => {
+        legal: state.legal
+          and legalHigherLevelHitPointGain(gain)
+          and gain.constitutionModifierAtGain >= state.earlier
+          and gain.constitutionModifierAtGain <= facts.constitutionModifier,
+        earlier: gain.constitutionModifierAtGain,
+      }
+    ).legal,
     normalHitPointMaximum(facts) > 0,
     facts.hitPointMaximumReduction >= 0,
     facts.hitPointMaximumReduction < normalHitPointMaximum(facts),

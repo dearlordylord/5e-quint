@@ -64,6 +64,7 @@ import type {
   CharacterBuildProgression,
   CharacterProgression,
   ConstitutionModifierAtGainAboveCurrent,
+  ConstitutionModifierAtGainBelowEarlier,
   RolledHitDieResultAboveHitDie,
 } from "./character-progression-types.ts";
 
@@ -1133,6 +1134,9 @@ export type CharacterBuildProjectionCause =
   | ({
       readonly tag: "constitutionModifierAtGainAboveCurrent";
     } & ConstitutionModifierAtGainAboveCurrent)
+  | ({
+      readonly tag: "constitutionModifierAtGainBelowEarlier";
+    } & ConstitutionModifierAtGainBelowEarlier)
   | {
       readonly tag: "unsupportedHitPointMaximumGrant";
       readonly sourceUnitId: UnitRecord["id"];

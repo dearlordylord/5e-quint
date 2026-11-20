@@ -74,7 +74,9 @@ import {
   progressionClassUnitIds,
   progressionClassLevels,
   constitutionModifierAtGainAboveCurrentMessage,
+  constitutionModifierAtGainBelowEarlierMessage,
   constitutionModifiersAtGainAboveCurrent,
+  constitutionModifiersAtGainBelowEarlier,
   startingClassUnitId,
   type CharacterBuildProgression,
   type HigherLevelClassHitPointRule,
@@ -1720,7 +1722,8 @@ type RemainingCharacterBuildProjectionCause = Extract<
     readonly tag:
       | "invalidChoiceOption"
       | "rolledHitDieResultAboveHitDie"
-      | "constitutionModifierAtGainAboveCurrent";
+      | "constitutionModifierAtGainAboveCurrent"
+      | "constitutionModifierAtGainBelowEarlier";
   }
 >;
 
@@ -1741,6 +1744,11 @@ function characterBuildProjectionCauseMessageRemaining(
       { tag: "constitutionModifierAtGainAboveCurrent" },
       ({ tag: _tag, ...issue }) =>
         constitutionModifierAtGainAboveCurrentMessage(issue),
+    ),
+    Match.when(
+      { tag: "constitutionModifierAtGainBelowEarlier" },
+      ({ tag: _tag, ...issue }) =>
+        constitutionModifierAtGainBelowEarlierMessage(issue),
     ),
     Match.exhaustive,
   );
@@ -2523,7 +2531,8 @@ function draftRolledHitDieResultIssues(
 
 /**
  * A built character's levels that its Hit Point maximum can't count: a rolled
- * result above the Hit Die, or a recorded modifier above the current one.
+ * result above the Hit Die, or a recorded modifier below an earlier level's or
+ * above the current one.
  */
 function characterBuildHitPointLevelIssues(
   progression: CharacterBuildProgression,
@@ -2538,6 +2547,12 @@ function characterBuildHitPointLevelIssues(
     ).map((issue) =>
       characterBuildProjectionIssue({
         tag: "constitutionModifierAtGainAboveCurrent",
+        ...issue,
+      }),
+    ),
+    ...constitutionModifiersAtGainBelowEarlier(progression).map((issue) =>
+      characterBuildProjectionIssue({
+        tag: "constitutionModifierAtGainBelowEarlier",
         ...issue,
       }),
     ),

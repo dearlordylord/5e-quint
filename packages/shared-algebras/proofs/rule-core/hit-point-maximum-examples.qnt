@@ -123,6 +123,22 @@ module hitPointMaximumExamples {
     assert(not(legalHitPointMaximumFacts(facts)))
   }
 
+  run test_a_level_recording_a_modifier_below_the_lowest_is_illegal = {
+    val facts = fighterLevelTwoFacts(rolledHigherLevelHitPointGainFor(10, 1, -6), 2)
+    assert(not(legalHitPointMaximumFacts(facts)))
+  }
+
+  run test_a_level_recording_a_modifier_below_an_earlier_level_is_illegal = {
+    val facts = {
+      ...fighterLevelTwoFacts(fixedHigherLevelHitPointGainFor(10, 2), 2),
+      higherLevelHitPointGains: [
+        fixedHigherLevelHitPointGainFor(10, 2),
+        rolledHigherLevelHitPointGainFor(10, 1, 1),
+      ],
+    }
+    assert(not(legalHitPointMaximumFacts(facts)))
+  }
+
   run test_rolled_higher_level_gain_above_the_hit_die_is_illegal = {
     val facts = fighterLevelTwoFacts(rolledHigherLevelHitPointGainFor(10, 11, 0), 0)
     assert(not(legalHitPointMaximumFacts(facts)))

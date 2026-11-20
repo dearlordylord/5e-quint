@@ -943,6 +943,39 @@ describe("character finalization boundaries", () => {
         },
       ],
     });
+    const levelTwo = fighterLevelTwo(rolled(5), 14);
+    const [levelTwoGain] = levelTwo.progression.advancements;
+    expect(levelTwoGain).toBeDefined();
+    expect(
+      characterBuildHitPoints(
+        {
+          ...levelTwo,
+          progression: {
+            ...levelTwo.progression,
+            advancements: levelTwoGain
+              ? [
+                  levelTwoGain,
+                  { ...levelTwoGain, constitutionModifierAtGain: 1 },
+                ]
+              : [],
+          },
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          cause: {
+            tag: "constitutionModifierAtGainBelowEarlier",
+            characterLevel: 3,
+            constitutionModifierAtGain: 1,
+            earlierCharacterLevel: 2,
+            earlierConstitutionModifierAtGain: 2,
+          },
+        },
+      ],
+    });
   });
 
   test("omits unavailable feature grants and absent ordinary slot pools", () => {

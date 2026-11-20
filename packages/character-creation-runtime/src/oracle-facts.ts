@@ -634,6 +634,13 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union([
     constitutionModifier: Schema.Number,
   }),
   Schema.Struct({
+    tag: Schema.Literal("constitutionModifierAtGainBelowEarlier"),
+    characterLevel: Schema.Number,
+    constitutionModifierAtGain: Schema.Number,
+    earlierCharacterLevel: Schema.Number,
+    earlierConstitutionModifierAtGain: Schema.Number,
+  }),
+  Schema.Struct({
     tag: Schema.Literal("unsupportedHitPointMaximumGrant"),
     sourceUnitId: UnitIdSchema,
   }),
@@ -1788,7 +1795,8 @@ type RemainingCharacterBuildProjectionCause = Extract<
       | "abilityScoreCapExceeded"
       | "unsupportedToolProficiency"
       | "invalidChoiceOption"
-      | "constitutionModifierAtGainAboveCurrent";
+      | "constitutionModifierAtGainAboveCurrent"
+      | "constitutionModifierAtGainBelowEarlier";
   }
 >;
 
@@ -1885,6 +1893,26 @@ function characterBuildProjectionCauseFactRemaining(
           characterLevel,
           constitutionModifierAtGain,
           constitutionModifier,
+        };
+      },
+    ),
+    byTag(
+      "constitutionModifierAtGainBelowEarlier",
+      ({
+        tag,
+        characterLevel,
+        constitutionModifierAtGain,
+        earlierCharacterLevel,
+        earlierConstitutionModifierAtGain,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        return {
+          tag,
+          characterLevel,
+          constitutionModifierAtGain,
+          earlierCharacterLevel,
+          earlierConstitutionModifierAtGain,
         };
       },
     ),

@@ -1345,6 +1345,13 @@ describe("Character Creation owner facts", () => {
           constitutionModifier: 0,
         },
         {
+          tag: "constitutionModifierAtGainBelowEarlier",
+          characterLevel: characterClassLevel(3),
+          constitutionModifierAtGain: 1,
+          earlierCharacterLevel: characterClassLevel(2),
+          earlierConstitutionModifierAtGain: 2,
+        },
+        {
           tag: "unsupportedClassFeatureLanguage",
           featureUnitId: syntheticFeatureUnitId,
           languageId: "Synthetic",

@@ -1107,6 +1107,23 @@ describe("stored Character Build parser", () => {
       expected: "Character Build progression advancement is invalid.",
     },
     {
+      name: "a Constitution modifier at a level's gain below any score's",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+              constitutionModifierAtGain: -6,
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
       name: "a progression above level 20",
       value: {
         ...fighterBuild,
