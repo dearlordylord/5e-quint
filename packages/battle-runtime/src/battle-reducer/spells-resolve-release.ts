@@ -1227,15 +1227,13 @@ function prepareTargetedSpellAttackRoll(
       ]),
     };
   }
-  const d20TestRerollIssue =
-    d20TestRerolls.tag === "invalid" ? d20TestRerolls.issue : null;
-  if (d20TestRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     return {
       tag: "result",
       result: invalidResult(
         input.input.state,
         "invalidFill",
-        d20TestRerollIssue,
+        d20TestRerolls.issue,
       ),
     };
   }

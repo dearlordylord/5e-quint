@@ -548,9 +548,7 @@ export function battleCreatureInitFromCharacterBuild(
           : { offHandAttack: weaponAttackOptions.offHandAttack }),
         unitFeatures,
         resources,
-        ...(input.heroicInspiration === undefined
-          ? {}
-          : { heroicInspiration: input.heroicInspiration }),
+        ...heroicInspirationInit(input.heroicInspiration),
         ...(metamagic === undefined ? {} : { metamagic }),
         ...(spellcasting === undefined ? {} : { spellcasting }),
         ...(druidWildShapeAvailableForms === undefined
@@ -1224,4 +1222,10 @@ function characterBattleFeatures(
     }
   }
   return Result.succeed(features);
+}
+
+function heroicInspirationInit(
+  heroicInspiration: CharacterBattleCreatureInit["heroicInspiration"],
+): Pick<CharacterBattleCreatureInit, "heroicInspiration"> {
+  return heroicInspiration === undefined ? {} : { heroicInspiration };
 }

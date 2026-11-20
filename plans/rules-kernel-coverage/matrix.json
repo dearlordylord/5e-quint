@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 173,
-    "covered": 162,
+    "total": 174,
+    "covered": 163,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 133,
+      "battle": 134,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 162,
+      "covered": 163,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6289,6 +6289,34 @@
         ".references/srd-5.2.1/rules-glossary.md#Concentration"
       ],
       "title": "Stat Block source concentration"
+    },
+    {
+      "id": "BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/heroic-inspiration-reroll.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
+      ],
+      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it and when no other source rerolls the same roll; an admitted reroll replaces the roll, or under Advantage or Disadvantage one chosen d20 of any face, and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls checks it with the natural-1 reroll and Seeking Spell on every weapon, Unarmed Strike, Opportunity, additional and spell attack roll. The executable parity witness covers the offer, decline, reroll and spend on hit and miss, the chosen die under Advantage, the shared stacking rule with the natural-1 reroll, Opportunity and spell attacks, fill equality and the codec.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/heroic-inspiration-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Heroic-Inspiration",
+        ".references/srd-5.2.1/playing-the-game.md#Interactions-with-Rerolls",
+        "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
+        "ASSUMPTIONS.md#A55-A-D20-Test-roll-is-rerolled-at-most-once-whatever-its-sources"
+      ],
+      "title": "A player character who has Heroic Inspiration can expend it to reroll an attack roll and must use the new roll, with one reroll per roll"
     }
   ],
   "battleHoleFrontier": [
@@ -13083,6 +13111,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns Heroic Inspiration reroll admission, the effective roll after a whole-roll or chosen-die replacement, the one-reroll-per-roll rule and the spend, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover reroll, forced lower roll, decline, availability, stacking and the chosen die under Advantage and Disadvantage for the Heroic Inspiration reroll core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -14559,6 +14599,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/granted-choice-selection.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -20317,6 +20367,31 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block",
+        "let-binding"
+      ],
+      "obligationId": "BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

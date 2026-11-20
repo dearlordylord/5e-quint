@@ -487,17 +487,15 @@ function resolveInitialSpellAttackRoll(input: {
       ]),
     };
   }
-  const d20TestRerollIssue =
-    d20TestRerolls.tag === "invalid" ? d20TestRerolls.issue : null;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
         input.errorState,
         "invalidFill",
-        d20TestRerollIssue,
+        d20TestRerolls.issue,
       ),
     };
   }

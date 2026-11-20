@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
 // Every D20 Test reroll source on one attack roll: the natural-1 reroll and
 // Heroic Inspiration. Each source the attacker has for the roll needs an
 // explicit decision, and at most one of them (or a Spell Attack reroll) takes
@@ -73,8 +74,25 @@ export function attackRollD20TestRerolls(input: {
   ) {
     return { tag: "decisionsRequired", options };
   }
+  const issue = attackRollD20TestRerollIssue(input);
+  if (issue !== null) {
+    return { tag: "invalid", issue };
+  }
+  return {
+    tag: "resolved",
+    effectiveAttackRoll: attackRollAfterD20TestRerolls(attackRoll),
+  };
+}
+
+/** The first issue with an attack roll's reroll decisions, if any. */
+function attackRollD20TestRerollIssue(input: {
+  readonly attacker: BattleCreatureState | undefined;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly requiredRollMode: AttackRollMode | undefined;
+}): string | null {
+  const { attacker, attackRoll } = input;
   const spellAttackRerollPresent = attackRoll.spellAttackReroll !== undefined;
-  const issue =
+  return (
     d20TestNaturalOneRerollRollIssue({
       actor: attacker,
       total: attackRoll.total,
@@ -94,14 +112,8 @@ export function attackRollD20TestRerolls(input: {
       otherD20RerollPresent:
         spellAttackRerollPresent ||
         d20TestRerollDecisionTakesReroll(attackRoll.d20TestNaturalOneReroll),
-    });
-  if (issue !== null) {
-    return { tag: "invalid", issue };
-  }
-  return {
-    tag: "resolved",
-    effectiveAttackRoll: attackRollAfterD20TestRerolls(attackRoll),
-  };
+    })
+  );
 }
 
 /**
