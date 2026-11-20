@@ -20,9 +20,9 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 import {
   attackRollHoleWithHeroicInspirationRerollOption,
+  combatantHasHeroicInspiration,
   d20TestRerollDecisionTakesReroll,
   effectiveHeroicInspirationRerollAttackRoll,
-  heroicInspirationRerollRollDecisionRequired,
   heroicInspirationRerollRollIssue,
 } from "./heroic-inspiration-reroll.ts";
 
@@ -61,11 +61,7 @@ export function attackRollD20TestRerolls(input: {
       originalD20TestRoll: attackRoll.d20TestRoll,
       decision: undefined,
     }),
-    heroicInspiration: heroicInspirationRerollRollDecisionRequired({
-      actor: attacker,
-      originalD20TestRoll: attackRoll.d20TestRoll,
-      decision: undefined,
-    }),
+    heroicInspiration: combatantHasHeroicInspiration(attacker),
   } as const satisfies AttackRollD20TestRerollOptions;
   if (
     (options.naturalOne && attackRoll.d20TestNaturalOneReroll === undefined) ||
