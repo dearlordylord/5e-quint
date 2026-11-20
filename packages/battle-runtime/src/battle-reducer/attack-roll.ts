@@ -179,6 +179,7 @@ import {
   mechanicalD20TestRollModeSources,
   proneAttackRollModeSources,
   targetConditionAttackRollModeSources,
+  type D20TestRollModeSources,
 } from "../d20-test-circumstance.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
@@ -288,6 +289,32 @@ function proneTargetAttackRollModeSources(
   };
 }
 
+function targetCreatureConditionAttackRollModeSources(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption | undefined,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  spellTargetDistanceFeet: MovementFeet | null,
+): D20TestRollModeSources {
+  const proneSources = proneTargetAttackRollModeSources(
+    state,
+    attackerId,
+    targetId,
+    attack,
+    targetSpatialFacts,
+    spellTargetDistanceFeet,
+  );
+  return {
+    advantage:
+      proneSources.advantage ||
+      targetConditionAttackRollModeSources(
+        state.combatants.get(targetId)?.conditions,
+      ).advantage,
+    disadvantage: proneSources.disadvantage,
+  };
+}
+
 function combatantHasHiddenAttackRollBenefit(
   combatant: BattleCreatureState | undefined,
 ): boolean {
@@ -335,14 +362,15 @@ function attackRollSourceFlags(
     targetId,
     attack,
   );
-  const proneTargetRollModeSources = proneTargetAttackRollModeSources(
-    state,
-    attackerId,
-    targetId,
-    attack,
-    targetSpatialFacts,
-    spellTargetDistanceFeet,
-  );
+  const targetConditionRollModeSources =
+    targetCreatureConditionAttackRollModeSources(
+      state,
+      attackerId,
+      targetId,
+      attack,
+      targetSpatialFacts,
+      spellTargetDistanceFeet,
+    );
   const sightAdvantage = hasAttackSightFact(
     targetSpatialFacts,
     "attackTargetCannotSeeAttacker",
@@ -367,9 +395,7 @@ function attackRollSourceFlags(
     );
   const hasAdvantage =
     sightAdvantage ||
-    proneTargetRollModeSources.advantage ||
-    (target !== undefined &&
-      targetConditionAttackRollModeSources(target.conditions).advantage) ||
+    targetConditionRollModeSources.advantage ||
     grapplerAttackAdvantage ||
     combatantHasHiddenAttackRollBenefit(attacker) ||
     state.helpAttacks.some(
@@ -401,7 +427,7 @@ function attackRollSourceFlags(
       opportunityAttack: false,
     }) ||
     sightDisadvantage ||
-    proneTargetRollModeSources.disadvantage ||
+    targetConditionRollModeSources.disadvantage ||
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
