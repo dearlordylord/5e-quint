@@ -114,6 +114,73 @@ module d20TestCircumstanceCoreExamples {
     ) == AttackRollModeInvalidDistance),
   }
 
+  run d20TestCircumstanceConditionSources = {
+    val restrained = { ...noAttackRollConditions, restrained: true }
+    val paralyzed = { ...noAttackRollConditions, paralyzed: true }
+    val stunned = { ...noAttackRollConditions, stunned: true }
+    val poisoned = { ...noAttackRollConditions, poisoned: true }
+    all {
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        restrained,
+        noAttackRollConditions,
+      ) == DisadvantageD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttackRollConditions,
+        restrained,
+      ) == AdvantageD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttackRollConditions,
+        paralyzed,
+      ) == AdvantageD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttackRollConditions,
+        stunned,
+      ) == AdvantageD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttackRollConditions,
+        poisoned,
+      ) == NormalD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        restrained,
+        restrained,
+      ) == NormalD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        mechanicalDisadvantage,
+        noAttackRollConditions,
+        stunned,
+      ) == NormalD20TestRoll),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttackRollConditions,
+        noAttackRollConditions,
+      ) == NormalD20TestRoll),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditionsAndProneTarget(
+          noMechanicalSources,
+          restrained,
+          noAttackRollConditions,
+          5,
+        ),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditionsAndProneTarget(
+          noMechanicalSources,
+          noAttackRollConditions,
+          { ...paralyzed, prone: true },
+          6,
+        ),
+        NormalD20TestRoll,
+      )),
+    }
+  }
+
   run d20TestCircumstanceExactRequestBinding = {
     val abilityCheckRequest: D20TestRequestRef = {
       lineage: 7,

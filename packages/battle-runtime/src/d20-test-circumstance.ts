@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.CONDITION_ROLL_MODE
 import type { CombatantId } from "./identity.ts";
 import type {
   BattleAttackRollResult,
@@ -15,7 +16,11 @@ import {
   hasCondition,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
-import type { MovementFeet, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  Condition,
+  MovementFeet,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 
 export const D20_TEST_KINDS = [
   "abilityCheck",
@@ -48,29 +53,59 @@ export function proneAttackRollModeSources(
 }
 
 /**
- * The Prone condition's attacker-side source: "You have Disadvantage on attack
- * rolls" (rules-glossary.md#Prone), at any distance and against any target.
+ * Conditions whose own rules give the creature Disadvantage on its attack
+ * rolls, at any distance and against any target (rules-glossary.md): Poisoned
+ * ("You have Disadvantage on attack rolls and ability checks"), Prone ("You
+ * have Disadvantage on attack rolls") and Restrained ("your attack rolls have
+ * Disadvantage").
  */
-export const PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES: D20TestRollModeSources = {
-  advantage: false,
-  disadvantage: true,
-};
+export const ATTACKER_DISADVANTAGE_CONDITIONS = [
+  "poisoned",
+  "prone",
+  "restrained",
+] as const satisfies readonly Condition[];
 
 /**
- * The attack-roll sources an attacker's own conditions supply on their own:
- * Poisoned ("You have Disadvantage on attack rolls and ability checks") and
- * Prone. An absent attacker supplies none.
+ * The attack-roll sources an attacker's own conditions supply on their own.
+ * An absent attacker supplies none.
  */
 export function attackerConditionAttackRollModeSources(
   attackerConditions: ConditionState | undefined,
 ): D20TestRollModeSources {
   const conditions = attackerConditions ?? EMPTY_CONDITION_STATE;
-  return hasCondition(conditions, "prone")
-    ? PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES
-    : {
-        advantage: false,
-        disadvantage: hasCondition(conditions, "poisoned"),
-      };
+  return {
+    advantage: false,
+    disadvantage: ATTACKER_DISADVANTAGE_CONDITIONS.some((condition) =>
+      hasCondition(conditions, condition),
+    ),
+  };
+}
+
+/**
+ * Conditions whose own rules say "Attack rolls against you have Advantage"
+ * with no distance clause (rules-glossary.md): Paralyzed, Restrained and
+ * Stunned. Prone's distance-dependent source is
+ * {@link proneAttackRollModeSources}.
+ */
+export const TARGET_ADVANTAGE_CONDITIONS = [
+  "paralyzed",
+  "restrained",
+  "stunned",
+] as const satisfies readonly Condition[];
+
+/**
+ * The distance-independent attack-roll sources a target creature's own
+ * conditions supply.
+ */
+export function targetConditionAttackRollModeSources(
+  targetConditions: ConditionState,
+): D20TestRollModeSources {
+  return {
+    advantage: TARGET_ADVANTAGE_CONDITIONS.some((condition) =>
+      hasCondition(targetConditions, condition),
+    ),
+    disadvantage: false,
+  };
 }
 
 export const TABLE_D20_TEST_CIRCUMSTANCE_SOURCES = [

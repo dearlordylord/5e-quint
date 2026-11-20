@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.CONDITION_ROLL_MODE
 import fc from "fast-check";
 import { Result } from "effect";
 import { Schema } from "effect";
@@ -82,7 +83,7 @@ import {
   combineD20TestRollMode,
   proneAttackRollModeSources,
   attackerConditionAttackRollModeSources,
-  PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
+  targetConditionAttackRollModeSources,
   mechanicalD20TestRollModeSources,
   effectiveD20TestRollMode,
   d20TestResolutionId,
@@ -180,20 +181,26 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(combineD20TestRollMode(atSixFeet, "advantage")).toBe("normal");
   });
 
-  test("matches the QNT Prone attacker source", () => {
-    const prone = applyCondition(EMPTY_CONDITION_STATE, "prone");
-    expect(attackerConditionAttackRollModeSources(prone)).toEqual(
-      PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
-    );
-    expect(PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES).toEqual({
-      advantage: false,
-      disadvantage: true,
-    });
+  test("matches the QNT condition attacker and target sources", () => {
+    for (const condition of ["poisoned", "prone", "restrained"] as const) {
+      expect(
+        attackerConditionAttackRollModeSources(
+          applyCondition(EMPTY_CONDITION_STATE, condition),
+        ),
+      ).toEqual({ advantage: false, disadvantage: true });
+    }
+    for (const condition of ["paralyzed", "restrained", "stunned"] as const) {
+      expect(
+        targetConditionAttackRollModeSources(
+          applyCondition(EMPTY_CONDITION_STATE, condition),
+        ),
+      ).toEqual({ advantage: true, disadvantage: false });
+    }
     expect(
-      attackerConditionAttackRollModeSources(
+      targetConditionAttackRollModeSources(
         applyCondition(EMPTY_CONDITION_STATE, "poisoned"),
       ),
-    ).toEqual({ advantage: false, disadvantage: true });
+    ).toEqual({ advantage: false, disadvantage: false });
     expect(attackerConditionAttackRollModeSources(undefined)).toEqual({
       advantage: false,
       disadvantage: false,
@@ -204,11 +211,19 @@ describe("Table-authored per-test D20 circumstances", () => {
       advantage: false,
       disadvantage: false,
     });
+    expect(targetConditionAttackRollModeSources(EMPTY_CONDITION_STATE)).toEqual(
+      {
+        advantage: false,
+        disadvantage: false,
+      },
+    );
+    const restrained = applyCondition(EMPTY_CONDITION_STATE, "restrained");
     expect(
-      combineD20TestRollMode(
-        PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
-        "advantage",
-      ),
+      combineD20TestRollMode({
+        advantage: targetConditionAttackRollModeSources(restrained).advantage,
+        disadvantage:
+          attackerConditionAttackRollModeSources(restrained).disadvantage,
+      }),
     ).toBe("normal");
   });
 

@@ -11,6 +11,7 @@ import {
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.CONDITION_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
@@ -177,6 +178,7 @@ import {
   mechanicalD20TestRollMode,
   mechanicalD20TestRollModeSources,
   proneAttackRollModeSources,
+  targetConditionAttackRollModeSources,
 } from "../d20-test-circumstance.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
@@ -250,7 +252,7 @@ type AttackRollSourceFlags = {
   readonly hasDisadvantage: boolean;
 };
 
-function targetConditionAttackRollModeSources(
+function proneTargetAttackRollModeSources(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
@@ -333,7 +335,7 @@ function attackRollSourceFlags(
     targetId,
     attack,
   );
-  const targetConditionRollModeSources = targetConditionAttackRollModeSources(
+  const proneTargetRollModeSources = proneTargetAttackRollModeSources(
     state,
     attackerId,
     targetId,
@@ -365,7 +367,9 @@ function attackRollSourceFlags(
     );
   const hasAdvantage =
     sightAdvantage ||
-    targetConditionRollModeSources.advantage ||
+    proneTargetRollModeSources.advantage ||
+    (target !== undefined &&
+      targetConditionAttackRollModeSources(target.conditions).advantage) ||
     grapplerAttackAdvantage ||
     combatantHasHiddenAttackRollBenefit(attacker) ||
     state.helpAttacks.some(
@@ -397,7 +401,7 @@ function attackRollSourceFlags(
       opportunityAttack: false,
     }) ||
     sightDisadvantage ||
-    targetConditionRollModeSources.disadvantage ||
+    proneTargetRollModeSources.disadvantage ||
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
