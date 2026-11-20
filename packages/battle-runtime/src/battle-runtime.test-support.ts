@@ -4424,6 +4424,49 @@ export function testRangedCleaveLongbowUnitRef(): BattleUnitRef {
  * shipped weapon catalog has no Graze weapon, so the Greataxe record is renamed
  * and pointed at the SRD Graze mastery.
  */
+/** A Hunter's Prey unit ref with the chosen option's support profile. */
+export function huntersPreyUnitRef(
+  optionId: "colossusSlayer" | "hordeBreaker",
+): BattleUnitRef {
+  const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const huntersPrey =
+    optionId === "colossusSlayer"
+      ? {
+          kind: "woundedTargetWeaponDamage" as const,
+          trigger: "hitCreatureWithWeapon" as const,
+          targetPredicate: "missingAnyHitPoints" as const,
+          usageLimit: "oncePerTurn" as const,
+          damage: {
+            kind: "addAttackDamageDice" as const,
+            dice: { dice: 1 as const, dieSize: 8 as const },
+            damageType: "sameAsAttack" as const,
+          },
+        }
+      : {
+          kind: "nearbyDifferentTargetSameWeaponAttack" as const,
+          trigger: "makeWeaponAttack" as const,
+          usageLimit: "oncePerTurn" as const,
+          extraAttack: {
+            weapon: "sameWeapon" as const,
+            target: {
+              kind: "differentCreatureNearOriginalTarget" as const,
+              withinFeetOfOriginalTarget: movementFeet(5),
+              withinWeaponRange: true as const,
+              notAttackedThisTurn: true as const,
+            },
+          },
+        };
+  return {
+    unit: unitLibrary.requireUnit(unit.id),
+    supportProfiles: [
+      {
+        kind: "huntersPrey",
+        huntersPrey,
+      },
+    ],
+  };
+}
+
 export function testGrazeWeaponUnitRef(): BattleUnitRef {
   const weapon = unitLibrary.requireUnit("weapon_greataxe");
   if (weapon.kind !== "weapon") {

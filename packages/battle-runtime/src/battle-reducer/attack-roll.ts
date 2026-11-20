@@ -65,11 +65,9 @@ import {
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
-  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
-  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   weaponMasteryExecutionPropertyForSupportProfile,
   type WeaponMasteryPropertySupportProfile,
   type TacticalMasterReplacementMasteryProperty,
@@ -1428,34 +1426,23 @@ export function applyWeaponMasteryToppleSavingThrow(
   };
 }
 
-export function weaponMasteryToppleSelection(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): SelectedWeaponMasteryProperty | null {
-  return state.combatants.has(targetId)
+/**
+ * The attacker's selected, unlocked Weapon Mastery property with the given
+ * support profile on this attack, while the target is still in the battle.
+ */
+export function weaponMasterySelectionAgainstTarget(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly supportProfile: WeaponMasteryPropertySupportProfile;
+}): SelectedWeaponMasteryProperty | null {
+  return input.state.combatants.has(input.targetId)
     ? selectedWeaponMasteryProperty({
-        state,
-        attackerId,
-        attack,
-        supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-      })
-    : null;
-}
-
-export function weaponMasteryGrazeSelection(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): SelectedWeaponMasteryProperty | null {
-  return state.combatants.has(targetId)
-    ? selectedWeaponMasteryProperty({
-        state,
-        attackerId,
-        attack,
-        supportProfile: WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
+        state: input.state,
+        attackerId: input.attackerId,
+        attack: input.attack,
+        supportProfile: input.supportProfile,
       })
     : null;
 }

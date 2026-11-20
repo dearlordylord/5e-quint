@@ -4,20 +4,40 @@ import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  attackDamageDispositionFill,
   attackDamageHoleAfterHit,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
   battleAbilityModifier,
+  battleFrontierInterruptDecisionForState,
+  battleId,
   battleProcedureExecutionRefForTest,
+  battleResolutionHolesForTest,
+  characterSeed,
+  concentrationSavingThrowFill,
+  endTurn,
   fighterAttackSubject,
+  fighterId,
   fighterVsGoblinBattle,
+  findHole,
   goblinId,
   grazeWeaponMasterySelections,
+  huntersPreyUnitRef,
+  interruptDecisionFill,
   masteryGrazeUnitRefs,
+  movementFeet,
+  movementFill,
+  opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
   requireHole,
   requireResolved,
+  resolveBattleInterrupt,
   resolveBattleSubject,
+  skeletonId,
+  startBattleRight,
+  statBlockCreatureInit,
   targetFill,
   testGrazeWeaponAttack,
   testGrazeWeaponUnitRef,
@@ -129,6 +149,24 @@ function withGoblin(
   };
 }
 
+function withGoblinDefense(
+  state: BattleState,
+  defense: "resistances" | "vulnerabilities",
+): BattleState {
+  return withGoblin(state, (goblin) => {
+    if (goblin.origin.kind !== "statBlock") {
+      throw new Error("Expected a Stat Block Goblin.");
+    }
+    return {
+      ...goblin,
+      origin: {
+        ...goblin.origin,
+        mechanics: { ...goblin.origin.mechanics, [defense]: ["slashing"] },
+      },
+    };
+  });
+}
+
 describe("battle runtime: Weapon Mastery Graze", () => {
   test("admits the SRD Graze mastery and a weapon whose mastery is Graze", () => {
     const graze = unitLibrary.requireUnit("mastery_graze");
@@ -230,21 +268,7 @@ describe("battle runtime: Weapon Mastery Graze", () => {
   });
 
   test("the target's Resistance to the weapon's damage type still halves Graze damage", () => {
-    const state = withGoblin(grazeBattle(), (goblin) => {
-      if (goblin.origin.kind !== "statBlock") {
-        throw new Error("Expected a Stat Block Goblin.");
-      }
-      return {
-        ...goblin,
-        origin: {
-          ...goblin.origin,
-          mechanics: {
-            ...goblin.origin.mechanics,
-            resistances: ["slashing"],
-          },
-        },
-      };
-    });
+    const state = withGoblinDefense(grazeBattle(), "resistances");
     const hpBefore = goblinHp(state);
 
     const resolved = requireResolved(
@@ -257,7 +281,73 @@ describe("battle runtime: Weapon Mastery Graze", () => {
     expect(goblinHp(resolved.state)).toBe(hpBefore - 1);
   });
 
-  test("Graze damage asks a concentrating target for its Concentration save", () => {
+  // ASSUMPTIONS.md A54: Vulnerability still doubles Graze damage.
+  test("the target's Vulnerability to the weapon's damage type doubles Graze damage", () => {
+    const state = withGoblinDefense(grazeBattle(), "vulnerabilities");
+    const hpBefore = goblinHp(state);
+
+    const resolved = requireResolved(
+      resolveGrazeAttack(state, [
+        ...rollFills(state, MISS),
+        grazeDecisionFill("use"),
+      ]),
+    );
+
+    expect(goblinHp(resolved.state)).toBe(hpBefore - 6);
+  });
+
+  test("a natural 1 misses and still asks whether to use Graze", () => {
+    const state = grazeBattle();
+
+    expect(
+      requireHole(
+        resolveGrazeAttack(
+          state,
+          rollFills(state, { total: 4, naturalD20: 1 }),
+        ),
+        "unitFeatureDecision",
+      ),
+    ).toMatchObject({ holeId: WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID });
+  });
+
+  test("Graze damage that drops a creature to 0 Hit Points asks whether to knock it out", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-graze-knock-out"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: [
+            ...masteryGrazeUnitRefs(),
+            testGrazeWeaponUnitRef(),
+          ],
+          weaponMasteries: grazeWeaponMasterySelections(),
+          attack: testGrazeWeaponAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10, currentHp: 3 }),
+      ],
+    });
+    const fills = [...rollFills(state, MISS), grazeDecisionFill("use")];
+    const disposition = requireHole(
+      resolveGrazeAttack(state, fills),
+      "attackDamageDisposition",
+    );
+    expect(disposition).toMatchObject({
+      attackerId: fighterId,
+      targetId: goblinId,
+      choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+    });
+
+    const resolved = requireResolved(
+      resolveGrazeAttack(state, [
+        ...fills,
+        attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+      ]),
+    );
+    expect(goblinHp(resolved.state)).toBe(0);
+    expect(actionSpent(resolved.state)).toBe(true);
+  });
+
+  test("Graze damage asks a concentrating target for its Concentration save, then completes the attack", () => {
     const state = withGoblin(grazeBattle(), (goblin) => ({
       ...goblin,
       concentration: {
@@ -265,14 +355,130 @@ describe("battle runtime: Weapon Mastery Graze", () => {
         effectKind: "spellEffect" as const,
       },
     }));
+    const hpBefore = goblinHp(state);
+    const fills = [...rollFills(state, MISS), grazeDecisionFill("use")];
 
-    const result = resolveGrazeAttack(state, [
-      ...rollFills(state, MISS),
-      grazeDecisionFill("use"),
-    ]);
+    const saveHole = requireHole(
+      resolveGrazeAttack(state, fills),
+      "concentrationSavingThrow",
+    );
+    const resolved = requireResolved(
+      resolveGrazeAttack(state, [
+        ...fills,
+        concentrationSavingThrowFill(saveHole, true),
+      ]),
+    );
 
-    expect(requireHole(result, "concentrationSavingThrow")).toMatchObject({
-      kind: "concentrationSavingThrow",
+    expect(goblinHp(resolved.state)).toBe(hpBefore - 3);
+    expect(actionSpent(resolved.state)).toBe(true);
+    expect(
+      resolved.state.combatants.get(goblinId)?.concentration,
+    ).toBeDefined();
+  });
+
+  test("after Graze damage a Hunter's Prey Ranger is still offered Horde Breaker", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-graze-horde-breaker"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: [
+            ...masteryGrazeUnitRefs(),
+            testGrazeWeaponUnitRef(),
+            huntersPreyUnitRef("hordeBreaker"),
+          ],
+          weaponMasteries: grazeWeaponMasterySelections(),
+          attack: testGrazeWeaponAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          statBlockName: "Second Target",
+          initiative: 9,
+        }),
+      ],
+    });
+    const hpBefore = goblinHp(state);
+    const fills = [...rollFills(state, MISS), grazeDecisionFill("use")];
+
+    const hordeBreaker = requireHole(
+      resolveGrazeAttack(state, fills),
+      "unitFeatureDecision",
+    );
+    expect(hordeBreaker).toMatchObject({ label: "Use Horde Breaker" });
+
+    const resolved = requireResolved(
+      resolveGrazeAttack(state, [
+        ...fills,
+        unitFeatureDecisionFill(hordeBreaker, "decline"),
+      ]),
+    );
+    expect(goblinHp(resolved.state)).toBe(hpBefore - 3);
+    expect(actionSpent(resolved.state)).toBe(true);
+  });
+
+  test("an Opportunity Attack with a Graze weapon rejects a Graze decision", () => {
+    const fighterTurn = grazeBattle();
+    const goblinTurn = endTurn({ state: fighterTurn, actorId: fighterId });
+    if (goblinTurn.tag !== "resolved") {
+      throw new Error("Expected the Goblin's turn.");
+    }
+    const state = goblinTurn.state;
+    const subject = {
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "move",
+    } as const;
+    const movement = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const awaiting = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: fighterId,
+              distanceFeet: movementFeet(5),
+              ...attackExecutionSelectionForSubjectForTest(
+                fighterAttackSubject(fighterTurn, GRAZE_WEAPON_ID),
+              ),
+            },
+          ],
+        }),
+      ],
+    });
+    if (awaiting.tag !== "needsHoles") {
+      throw new Error("Expected an Opportunity Attack window.");
+    }
+    const pending = battleFrontierInterruptDecisionForState(awaiting.state);
+    if (pending === null) throw new Error("Expected a pending Reaction.");
+    const choice = reactionChoiceWithSubject(pending.choices);
+    const started = resolveBattleInterrupt({
+      state: awaiting.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: opportunityAttackProcedureSelectionForTest(choice),
+      }),
+    });
+    if (started.tag !== "needsHoles") {
+      throw new Error("Expected the Opportunity Attack roll.");
+    }
+    const roll = findHole(battleResolutionHolesForTest(started), "attackRoll");
+
+    expect(
+      resolveBattleSubject({
+        state: started.state,
+        subject: choice.subject,
+        fills: [attackRollFill(roll, MISS), grazeDecisionFill("use")],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Opportunity Attack doesn't resolve Weapon Mastery Graze.",
     });
   });
 

@@ -28,7 +28,9 @@ module weaponMasteryGrazeCore {
     damageType: str,
   }
 
-  // A modifier of 0 or less deals no damage, so Graze has nothing to offer.
+  // A modifier of 0 or less would deal 0 damage (Damage Rolls: "it's possible to
+  // deal 0 damage but not negative damage"), so Graze isn't offered then
+  // (ASSUMPTIONS.md A53).
   pure def grazeOffered(roll: GrazeAttackRoll): bool = all {
     roll.weaponMasteryIsGraze,
     roll.masteryUnlocked,

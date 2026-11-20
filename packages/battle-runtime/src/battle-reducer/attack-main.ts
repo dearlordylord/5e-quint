@@ -3762,6 +3762,7 @@ function attackPostDuplicateHitInterceptionFillsArePresent(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
 ): boolean {
   return (
+    weaponMasteryFillsArePresent(fillSet) ||
     fillSet.damageRoll !== undefined ||
     fillSet.damageDispositionFilled ||
     fillSet.brutalStrikeEffectDecision !== undefined ||
@@ -3770,7 +3771,6 @@ function attackPostDuplicateHitInterceptionFillsArePresent(
     fillSet.attackDamageReductionRedirectTarget !== undefined ||
     fillSet.attackDamageReductionRedirectSave !== undefined ||
     fillSet.attackDamageReductionRedirectDamage !== undefined ||
-    fillSet.weaponMasteryToppleSavingThrow !== undefined ||
     fillSet.brutalStrikeForcefulBlowMovementDecision !== undefined ||
     fillSet.brutalStrikeForcefulBlowMovement !== undefined ||
     fillSet.openHandTechniqueDecision !== undefined ||
@@ -3779,15 +3779,6 @@ function attackPostDuplicateHitInterceptionFillsArePresent(
     fillSet.stunningStrikeSavingThrow !== undefined ||
     fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.weaponMasteryCleaveDecision !== undefined ||
-    fillSet.weaponMasteryCleaveTarget !== undefined ||
-    fillSet.weaponMasteryCleaveAttackRoll !== undefined ||
-    fillSet.weaponMasteryCleaveDamageRoll !== undefined ||
-    fillSet.weaponMasteryCleaveDamageDispositionFilled ||
-    fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
-      undefined ||
-    fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovement !==
-      undefined ||
     fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovement !== undefined ||
     fillSet.huntersPreyHordeBreakerDecision !== undefined ||
@@ -3797,6 +3788,36 @@ function attackPostDuplicateHitInterceptionFillsArePresent(
     fillSet.huntersPreyHordeBreakerDamageDispositionFilled ||
     fillSet.grapplerPunchAndGrabDecision !== undefined ||
     fillSet.grapplerPunchAndGrabOutcome !== undefined
+  );
+}
+
+/**
+ * Whether any Weapon Mastery fill (Topple, Graze or Cleave) is present. None of
+ * them applies once duplicate-hit interception redirects the hit.
+ */
+function weaponMasteryFillsArePresent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.weaponMasteryToppleSavingThrow !== undefined ||
+    fillSet.weaponMasteryGrazeDecision !== undefined ||
+    weaponMasteryCleaveFillsArePresent(fillSet)
+  );
+}
+
+function weaponMasteryCleaveFillsArePresent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.weaponMasteryCleaveDecision !== undefined ||
+    fillSet.weaponMasteryCleaveTarget !== undefined ||
+    fillSet.weaponMasteryCleaveAttackRoll !== undefined ||
+    fillSet.weaponMasteryCleaveDamageRoll !== undefined ||
+    fillSet.weaponMasteryCleaveDamageDispositionFilled ||
+    fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
+      undefined ||
+    fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovement !==
+      undefined
   );
 }
 
