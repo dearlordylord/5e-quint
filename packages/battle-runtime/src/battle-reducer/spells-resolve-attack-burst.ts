@@ -72,7 +72,6 @@ import {
 } from "./damage-helpers.ts";
 import {
   attackRollAfterD20TestRerolls,
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -466,16 +465,12 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.input.state.combatants.get(
-    input.actorId,
-  );
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: actorBeforeSpellAttack,
+    state: input.input.state,
+    attackerId: input.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.fillSet.attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -538,7 +533,6 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       recordAttackRollOngoingFeatures(
         battleStateAfterHeroicInspirationReroll(
           input.input.state,
-          input.actorId,
           d20TestRerolls.heroicInspirationUse,
         ),
         input.actorId,

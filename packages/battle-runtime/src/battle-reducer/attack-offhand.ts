@@ -41,7 +41,6 @@ import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -372,12 +371,11 @@ function resolveBonusActionAttack(
   /* v8 ignore stop -- @preserve */
   const attacker = input.state.combatants.get(input.subject.actorId);
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker,
+    state: input.state,
+    attackerId: input.subject.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: fillSet.attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.subject, [
@@ -418,7 +416,6 @@ function resolveBonusActionAttack(
       revealHidden(
         battleStateAfterHeroicInspirationReroll(
           input.state,
-          input.subject.actorId,
           d20TestRerolls.heroicInspirationUse,
         ),
         input.subject.actorId,

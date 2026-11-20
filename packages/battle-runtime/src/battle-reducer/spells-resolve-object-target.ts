@@ -15,6 +15,7 @@ import {
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
 import {
   nonEmptyArrayProperty,
   optionalProperty,
@@ -22,7 +23,6 @@ import {
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
 import {
   attackRollAfterD20TestRerolls,
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -326,12 +326,11 @@ function resolveObjectTargetSpellAttackCore(
   }
   /* v8 ignore stop -- @preserve */
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: input.input.state.combatants.get(input.actorId),
+    state: input.input.state,
+    attackerId: input.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.fillSet.attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -373,7 +372,6 @@ function resolveObjectTargetSpellAttackCore(
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const spentState = battleStateAfterHeroicInspirationReroll(
     input.input.state,
-    input.actorId,
     d20TestRerolls.heroicInspirationUse,
   );
   const attackRolledState = consumeSelfAttackRollEffects(

@@ -79,7 +79,6 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
   attackRollAfterD20TestRerolls,
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -502,14 +501,15 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: actorBeforeSpellAttack,
+    state: input.state,
+    attackerId: input.actorId,
+    attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+      input.invocation,
+      input.partIndex,
+    ),
     attackRoll: input.partFill.attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
@@ -570,7 +570,6 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       recordAttackRollOngoingFeatures(
         battleStateAfterHeroicInspirationReroll(
           input.state,
-          input.actorId,
           d20TestRerolls.heroicInspirationUse,
         ),
         input.actorId,
@@ -1177,14 +1176,15 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: actorBeforeSpellAttack,
+    state: input.state,
+    attackerId: input.actorId,
+    attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+      input.invocation,
+      input.partIndex,
+    ),
     attackRoll: input.partFill.attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
@@ -1229,7 +1229,6 @@ function resolveSpellAttackSequenceObjectPart(input: {
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const spentState = battleStateAfterHeroicInspirationReroll(
     input.state,
-    input.actorId,
     d20TestRerolls.heroicInspirationUse,
   );
   const attackRolledState = consumeSelfAttackRollEffects(

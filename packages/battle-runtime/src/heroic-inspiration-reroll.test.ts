@@ -40,6 +40,7 @@ import {
   statBlockCreatureInit,
   targetFill,
   testShortswordAttack,
+  wizardSpellcasting,
   type BattleState,
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -461,6 +462,118 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     expect(heroicInspiration(declinedMiss.state, spellCasterId)).toEqual(
       HEROIC_INSPIRATION_AVAILABLE,
     );
+  });
+
+  test("after a reaction, only the roll that spent Heroic Inspiration keeps its reroll", () => {
+    const scorchingRay = spellRecord("scorching_ray");
+    const session = sessionWithHeroicInspiration(
+      spellBattle({
+        preparedSpells: [scorchingRay],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        targetHp: 30,
+        targetMaxHp: 30,
+        targetSpellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("shield")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      spellCasterId,
+    );
+    const act = spellAct({
+      session,
+      spellId: scorchingRay.id,
+      slotLevel: 2,
+    });
+    const targetSelections = act.initialHoles.flatMap((hole) =>
+      hole.kind === "targetChoice"
+        ? [spellTargetFill(hole, scorchingRay.id, spellCasterId, spellTargetId)]
+        : [],
+    );
+    const firstRay = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: targetSelections,
+      }),
+      "attackRoll",
+    );
+    const firstRayRerolled = attackRollFill(firstRay, {
+      total: 4,
+      naturalD20: 2,
+      heroicInspirationReroll: reroll({ total: 14, naturalD20: 12 }),
+    });
+    const awaitingShield = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [...targetSelections, firstRayRerolled],
+    });
+    if (awaitingShield.tag !== "needsHoles") {
+      throw new Error("Expected the rerolled ray's hit to open Shield.");
+    }
+    const decision = battleFrontierInterruptDecisionForState(
+      awaitingShield.state,
+    );
+    const shield = decision?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell",
+    );
+    if (
+      decision === null ||
+      decision === undefined ||
+      shield?.kind !== "nestedProcedure" ||
+      shield.subject.command !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected the Shield reaction choice.");
+    }
+    const afterShield = resolveBattleInterrupt({
+      state: awaitingShield.state,
+      fill: interruptDecisionFill(decision.decisionHole, {
+        kind: "resolve",
+        responderId: spellTargetId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          procedureRef: shield.subject.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+    if (afterShield.tag !== "needsHoles") {
+      throw new Error("Expected the second ray's attack roll after Shield.");
+    }
+    const secondRay = requireHole(afterShield, "attackRoll");
+    expect(secondRay.holeId).not.toBe(firstRay.holeId);
+    expect(secondRay).not.toHaveProperty("heroicInspirationRerolls");
+    expect(heroicInspiration(afterShield.state, spellCasterId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
+    const resolveSecondRay = (
+      value: Parameters<typeof attackRollFill>[1],
+    ): BattleResolutionResult =>
+      resolveBattleSubject({
+        state: afterShield.state,
+        subject: act.subject,
+        fills: [
+          ...targetSelections,
+          firstRayRerolled,
+          attackRollFill(secondRay, value),
+        ],
+      });
+
+    expect(
+      resolveSecondRay({
+        total: 4,
+        naturalD20: 2,
+        heroicInspirationReroll: reroll({ total: 20, naturalD20: 18 }),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+    });
+    expect(holeKinds(resolveSecondRay({ total: 4, naturalD20: 2 }))).toEqual([
+      "attackRoll",
+    ]);
   });
 
   test("an Opportunity Attack offers the reactor's Heroic Inspiration and spends it", () => {

@@ -78,7 +78,6 @@ import {
 } from "./damage-helpers.ts";
 import {
   attackRollAfterD20TestRerolls,
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -540,14 +539,15 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const actorBeforeSpellAttack = replayState.combatants.get(input.actorId);
     const d20TestRerolls = attackRollD20TestRerolls({
-      attacker: actorBeforeSpellAttack,
+      state: replayState,
+      attackerId: input.actorId,
+      attackRollHoleId: chainedSpellAttackRollHoleId(
+        input.invocation,
+        stepIndex,
+      ),
       attackRoll: step.attackRoll.value,
       requiredRollMode,
-      admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-        input.input.handledInterruptTrigger,
-      ),
     });
     if (d20TestRerolls.tag === "decisionsRequired") {
       return needsHolesResult(input.input.state, input.input.subject, [
@@ -609,7 +609,6 @@ export function resolveChainedSpellAttackDamageAct(input: {
         recordAttackRollOngoingFeatures(
           battleStateAfterHeroicInspirationReroll(
             replayState,
-            input.actorId,
             d20TestRerolls.heroicInspirationUse,
           ),
           input.actorId,

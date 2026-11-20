@@ -43,7 +43,6 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -293,12 +292,11 @@ function reactionAttackRerollResult(input: {
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
   | Extract<AttackRollD20TestRerolls, { readonly tag: "resolved" }> {
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: input.reactor,
+    state: input.context.input.state,
+    attackerId: input.context.input.subject.reactorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.attackRoll,
     requiredRollMode: input.requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.context.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -629,7 +627,6 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
       revealHidden(
         battleStateAfterHeroicInspirationReroll(
           input.state,
-          subject.reactorId,
           afterRollInput.rollPreparation.heroicInspirationUse,
         ),
         subject.reactorId,

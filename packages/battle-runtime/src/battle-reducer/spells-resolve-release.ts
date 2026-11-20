@@ -1,4 +1,5 @@
 import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
+import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -79,7 +80,6 @@ import {
 } from "./damage-helpers.ts";
 import {
   attackRollAfterD20TestRerolls,
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -1204,16 +1204,12 @@ function prepareTargetedSpellAttackRoll(
       result: invalidResult(input.input.state, "invalidFill", attackRollError),
     };
   }
-  const actorBeforeSpellAttack = input.input.state.combatants.get(
-    input.input.subject.actorId,
-  );
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: actorBeforeSpellAttack,
+    state: input.input.state,
+    attackerId: input.input.subject.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -1274,7 +1270,6 @@ function prepareTargetedSpellAttackRoll(
       recordAttackRollOngoingFeatures(
         battleStateAfterHeroicInspirationReroll(
           input.input.state,
-          input.input.subject.actorId,
           d20TestRerolls.heroicInspirationUse,
         ),
         input.input.subject.actorId,

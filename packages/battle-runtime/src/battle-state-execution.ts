@@ -4143,6 +4143,12 @@ export type PendingAttackRollMissToHitReplacementContext = {
   readonly targetId: CombatantId;
   readonly attackRoll: BattleAttackRollResult;
 };
+/** The attack roll that spent a creature's Heroic Inspiration on its reroll. */
+export type BattleHeroicInspirationAttackRollReroll = {
+  readonly actorId: CombatantId;
+  readonly attackRollHoleId: HoleId;
+};
+
 type PendingAttackRollMissToHitReplacementSelection = {
   readonly attackerId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -4182,6 +4188,12 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
+  /**
+   * The attack roll whose reroll spent Heroic Inspiration in the subject still
+   * being resolved. A replay of that subject admits that roll's decision again;
+   * no other roll can use it. Absent when no pending subject spent it.
+   */
+  readonly heroicInspirationAttackRollReroll?: BattleHeroicInspirationAttackRollReroll;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: BattleObjectId;
   };

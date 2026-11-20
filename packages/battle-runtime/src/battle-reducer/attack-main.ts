@@ -39,7 +39,6 @@ import {
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
 import {
-  attackRollAdmittedBeforeInterrupt,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
@@ -1360,12 +1359,11 @@ function prepareOrdinaryObjectAttackRoll<
   }
   const attacker = input.input.state.combatants.get(input.attackerId);
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker,
+    state: input.input.state,
+    attackerId: input.attackerId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -1462,7 +1460,6 @@ function resolveOrdinaryObjectAttackRoll<
       input.input.state,
       input.attackerId,
     ),
-    input.attackerId,
     input.rollPreparation.heroicInspirationUse,
   );
   const attackRollObservedState = {
@@ -2162,12 +2159,11 @@ export function resolveSelectedAttackProcedure<
   /* v8 ignore stop -- @preserve */
   const attacker = input.state.combatants.get(attackerId);
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker,
+    state: input.state,
+    attackerId: attackerId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: fillSet.attackRoll,
     requiredRollMode: resolvedRequiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.subject, [
@@ -2229,7 +2225,6 @@ export function resolveSelectedAttackProcedure<
   /* v8 ignore stop -- @preserve */
   const attackRollState = battleStateAfterHeroicInspirationReroll(
     battleStateAfterTargetActionEarlyEndForActor(input.state, attackerId),
-    attackerId,
     d20TestRerolls.heroicInspirationUse,
   );
   const hiddenBeforeAttack =
@@ -4172,7 +4167,6 @@ function resolveAdditionalWeaponAttackRoll(input: {
   readonly targetId: CombatantId;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly attackRollHole: BattleAttackRollHole;
-  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): AdditionalWeaponAttackRollResolution {
   const { attackRoll } = input.family.fills;
   if (attackRoll === undefined) {
@@ -4227,12 +4221,11 @@ function resolveAdditionalWeaponAttackRoll(input: {
   }
   /* v8 ignore stop -- @preserve */
   const d20TestRerolls = attackRollD20TestRerolls({
-    attacker: input.state.combatants.get(input.subject.actorId),
+    state: input.state,
+    attackerId: input.subject.actorId,
+    attackRollHoleId: input.attackRollHole.holeId,
     attackRoll: attackRoll.value,
     requiredRollMode,
-    admittedBeforeInterrupt: attackRollAdmittedBeforeInterrupt(
-      input.handledInterruptTrigger,
-    ),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
@@ -4515,7 +4508,6 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         revealHidden(
           battleStateAfterHeroicInspirationReroll(
             input.state,
-            input.subject.actorId,
             cleaveAttackRoll.heroicInspirationUse,
           ),
           input.subject.actorId,
@@ -4835,7 +4827,6 @@ function prepareWeaponMasteryCleaveAttack(input: {
   readonly firstTargetId: BattleCreatureState["combatantId"];
   readonly attack: SupportedAttackActionOption;
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
-  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): WeaponMasteryCleavePreparation {
   const decision = resolveAdditionalWeaponAttackDecision({
     kind: "weaponMasteryTurn",
@@ -4904,7 +4895,6 @@ function prepareWeaponMasteryCleaveAttack(input: {
       cleaveAttack,
       cleaveTargetFacts,
     ),
-    handledInterruptTrigger: input.handledInterruptTrigger,
   });
   if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
   const secondTarget = input.state.combatants.get(secondTargetId);
@@ -5153,7 +5143,6 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       revealHidden(
         battleStateAfterHeroicInspirationReroll(
           input.state,
-          input.subject.actorId,
           hordeBreakerAttackRoll.heroicInspirationUse,
         ),
         input.subject.actorId,
@@ -5506,7 +5495,6 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   readonly firstTargetId: BattleCreatureState["combatantId"];
   readonly attack: SupportedAttackActionOption;
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
-  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): HuntersPreyHordeBreakerPreparation {
   const decision = resolveAdditionalWeaponAttackDecision({
     kind: "procedureExecution",
@@ -5582,7 +5570,6 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
       hordeBreakerAttack,
       targetFacts,
     ),
-    handledInterruptTrigger: input.handledInterruptTrigger,
   });
   if (hordeBreakerAttackRoll.tag === "result") {
     return hordeBreakerAttackRoll;

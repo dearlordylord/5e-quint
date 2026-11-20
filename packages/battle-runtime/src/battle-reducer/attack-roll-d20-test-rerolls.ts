@@ -5,16 +5,18 @@
 // the reroll. See ASSUMPTIONS.md on one reroll per roll.
 
 import { NO_HEROIC_INSPIRATION } from "@dnd/shared/game-facts";
-import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Brand, Match } from "effect";
+import type {
+  AttackRollMode,
+  HoleId,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
+import { Brand } from "effect";
 
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   BattleAttackRollHole,
   BattleAttackRollResult,
-  BattleCreatureState,
   BattleSpellAttackRollHole,
   BattleState,
+  BattleTurnResources,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -42,7 +44,12 @@ export type AttackRollD20TestRerollOptions = {
  * attackRollD20TestRerolls makes one, so the spend follows a checked decision.
  */
 export type AttackRollHeroicInspirationUse = Brand.Branded<
-  { readonly spends: boolean },
+  | { readonly spends: false }
+  | {
+      readonly spends: true;
+      readonly actorId: CombatantId;
+      readonly attackRollHoleId: HoleId;
+    },
   "AttackRollHeroicInspirationUse"
 >;
 const AttackRollHeroicInspirationUse =
@@ -62,34 +69,46 @@ export type AttackRollD20TestRerolls =
     };
 
 type AttackRollD20TestRerollInput = {
-  readonly attacker: BattleCreatureState | undefined;
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  /** The hole this attack roll fills, which names the roll within its subject. */
+  readonly attackRollHoleId: HoleId;
   readonly attackRoll: BattleAttackRollResult;
   readonly requiredRollMode: AttackRollMode | undefined;
-  /** See attackRollAdmittedBeforeInterrupt. */
-  readonly admittedBeforeInterrupt: boolean;
 };
 
 /**
- * Whether a replay follows a reaction window that opened after this attack
- * roll was admitted. Its reroll decisions were checked, and Heroic
- * Inspiration spent, before that window, and the replay keeps the same fill.
+ * Whether this roll is the one that spent the attacker's Heroic Inspiration
+ * earlier in the subject being resolved. A replay after a reaction window
+ * resolves that roll again from the state after the spend.
  */
-export function attackRollAdmittedBeforeInterrupt(
-  handledInterruptTrigger: BattleInterruptTrigger | undefined,
+function heroicInspirationSpentOnAttackRoll(
+  input: AttackRollD20TestRerollInput,
 ): boolean {
-  return handledInterruptTrigger === undefined
-    ? false
-    : Match.value(handledInterruptTrigger).pipe(
-        Match.when("attackHit", () => true),
-        Match.when("attackDamage", () => true),
-        Match.when("afterDamage", () => true),
-        Match.when("saveFailed", () => true),
-        Match.when("creatureFalls", () => true),
-        Match.when("spellCast", () => false),
-        Match.when("opportunityAttack", () => false),
-        Match.when("reportedReadyTrigger", () => false),
-        Match.exhaustive,
-      );
+  const spent =
+    input.state.currentTurnResources.heroicInspirationAttackRollReroll;
+  return (
+    spent?.actorId === input.attackerId &&
+    spent.attackRollHoleId === input.attackRollHoleId
+  );
+}
+
+/**
+ * Whether the attacker can take Heroic Inspiration's reroll on this roll: it
+ * has Heroic Inspiration, or this roll already spent it and takes it again.
+ */
+function heroicInspirationRerollAvailableForRoll(
+  input: AttackRollD20TestRerollInput,
+): boolean {
+  return (
+    combatantHasHeroicInspiration(
+      input.state.combatants.get(input.attackerId),
+    ) ||
+    (d20TestRerollDecisionTakesReroll(
+      input.attackRoll.heroicInspirationReroll,
+    ) &&
+      heroicInspirationSpentOnAttackRoll(input))
+  );
 }
 
 /**
@@ -100,11 +119,10 @@ export function attackRollAdmittedBeforeInterrupt(
 export function attackRollD20TestRerolls(
   input: AttackRollD20TestRerollInput,
 ): AttackRollD20TestRerolls {
-  const { attacker, attackRoll } = input;
+  const { attackRoll } = input;
+  const attacker = input.state.combatants.get(input.attackerId);
   const heroicInspirationRerollAvailable =
-    combatantHasHeroicInspiration(attacker) ||
-    (input.admittedBeforeInterrupt &&
-      d20TestRerollDecisionTakesReroll(attackRoll.heroicInspirationReroll));
+    heroicInspirationRerollAvailableForRoll(input);
   const options = {
     naturalOne: d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
@@ -130,11 +148,15 @@ export function attackRollD20TestRerolls(
   return {
     tag: "resolved",
     effectiveAttackRoll: attackRollAfterD20TestRerolls(attackRoll),
-    heroicInspirationUse: AttackRollHeroicInspirationUse({
-      spends: d20TestRerollDecisionTakesReroll(
-        attackRoll.heroicInspirationReroll,
-      ),
-    }),
+    heroicInspirationUse: AttackRollHeroicInspirationUse(
+      d20TestRerollDecisionTakesReroll(attackRoll.heroicInspirationReroll)
+        ? {
+            spends: true,
+            actorId: input.attackerId,
+            attackRollHoleId: input.attackRollHoleId,
+          }
+        : { spends: false },
+    ),
   };
 }
 
@@ -151,25 +173,52 @@ export function attackRollD20TestRerollTaken(
   );
 }
 
-/** Spends the attacker's Heroic Inspiration when the admitted attack roll took its reroll. */
+/**
+ * Spends the attacker's Heroic Inspiration when the admitted attack roll took
+ * its reroll, and records the roll for the rest of the subject. On a replay
+ * of the subject the same roll finds it already spent and changes nothing.
+ */
 export function battleStateAfterHeroicInspirationReroll(
   state: BattleState,
-  actorId: CombatantId,
   use: AttackRollHeroicInspirationUse,
 ): BattleState {
   if (!use.spends) {
     return state;
   }
-  const actor = state.combatants.get(actorId);
+  const actor = state.combatants.get(use.actorId);
   /* v8 ignore next -- @preserve -- A validated Heroic Inspiration reroll belongs to a character. */
   if (actor?.origin.kind !== "character") return state;
+  if (actor.origin.heroicInspiration.tag === "none") {
+    return state;
+  }
   return {
     ...state,
-    combatants: new Map(state.combatants).set(actorId, {
+    combatants: new Map(state.combatants).set(use.actorId, {
       ...actor,
       origin: { ...actor.origin, heroicInspiration: NO_HEROIC_INSPIRATION },
     }),
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      heroicInspirationAttackRollReroll: {
+        actorId: use.actorId,
+        attackRollHoleId: use.attackRollHoleId,
+      },
+    },
   };
+}
+
+/**
+ * Turn resources once no subject is pending: the record of the roll that spent
+ * Heroic Inspiration belongs to the subject that made it.
+ */
+export function turnResourcesWithoutHeroicInspirationAttackRollReroll(
+  resources: BattleTurnResources,
+): BattleTurnResources {
+  const {
+    heroicInspirationAttackRollReroll: _completedSubjectReroll,
+    ...withoutReroll
+  } = resources;
+  return withoutReroll;
 }
 
 /** The first issue with an attack roll's reroll decisions, if any. */
@@ -177,7 +226,8 @@ function attackRollD20TestRerollIssue(
   input: AttackRollD20TestRerollInput,
   heroicInspirationRerollAvailable: boolean,
 ): string | null {
-  const { attacker, attackRoll } = input;
+  const { attackRoll } = input;
+  const attacker = input.state.combatants.get(input.attackerId);
   const spellAttackRerollPresent = d20TestRerollDecisionTakesReroll(
     attackRoll.spellAttackReroll,
   );
