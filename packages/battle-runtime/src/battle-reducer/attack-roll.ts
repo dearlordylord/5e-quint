@@ -10,6 +10,7 @@ import {
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
@@ -68,6 +69,7 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   weaponMasteryExecutionPropertyForSupportProfile,
   type WeaponMasteryPropertySupportProfile,
   type TacticalMasterReplacementMasteryProperty,
@@ -1438,6 +1440,22 @@ export function weaponMasteryToppleSelection(
         attackerId,
         attack,
         supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+      })
+    : null;
+}
+
+export function weaponMasteryGrazeSelection(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): SelectedWeaponMasteryProperty | null {
+  return state.combatants.has(targetId)
+    ? selectedWeaponMasteryProperty({
+        state,
+        attackerId,
+        attack,
+        supportProfile: WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
       })
     : null;
 }

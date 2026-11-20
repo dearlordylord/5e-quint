@@ -222,3 +222,17 @@ someone else uses an Action to shake the creature out of its stupor. Unlike
 requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
+
+## A52: Graze with an ability modifier of 0 or less is not offered
+
+**Assumption:** After a missed attack roll with a Graze weapon, the attacker is
+offered Graze only when the ability modifier used for the attack roll is 1 or
+more. With a modifier of 0 or less the miss deals no damage and no Graze
+decision is asked.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Graze" lets
+the attacker deal damage equal to the ability modifier used for the attack
+roll. The SRD does not say what a modifier of 0 or less deals. Dealing 0 or
+negative damage would have no Hit Point effect, so the model does not offer a
+choice that cannot change the battle, and no zero-damage event reaches rules
+such as Concentration that react to taking damage.

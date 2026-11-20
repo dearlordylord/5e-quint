@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 173,
-    "covered": 162,
+    "total": 174,
+    "covered": 163,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 133,
+      "battle": 134,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 162,
+      "covered": 163,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6289,6 +6289,33 @@
         ".references/srd-5.2.1/rules-glossary.md#Concentration"
       ],
       "title": "Stat Block source concentration"
+    },
+    {
+      "id": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+        }
+      ],
+      "profiles": ["unit-feature.weapon-mastery-graze"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+      ],
+      "reason": "The QNT owner models when Graze is offered (an unlocked Graze weapon, a missed attack roll against a creature, and a positive attack ability modifier) and the optional damage it deals: the ability modifier the attack roll used, in the weapon's damage type, with no damage bonus added. The runtime offers the use-or-decline decision after the miss and routes the chosen damage through the attack's fixed-damage application, so the target's damage adjustments, zero-hit-point disposition, Concentration and after-damage reactions apply as for any other attack damage.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/procedure-admission/weapon-mastery.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/equipment.md#Graze",
+        ".references/srd-5.2.1/equipment.md#Mastery Properties"
+      ],
+      "title": "Weapon Mastery Graze: a missed attack roll against a creature with an unlocked Graze weapon may deal the attack's ability modifier as the weapon's damage type"
     }
   ],
   "battleHoleFrontier": [
@@ -9346,6 +9373,13 @@
     {
       "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "profileId": "unit-feature.ongoing-feature-activation-movement-rider"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-graze"
     }
   ],
   "qntOwnerRoles": [
@@ -13083,6 +13117,24 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns when Weapon Mastery Graze is offered after an attack roll and the miss damage it deals, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
+          "profileId": "unit-feature.weapon-mastery-graze"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the Graze offer and its rejections (a hit, another mastery, no unlock, a non-creature target, a modifier of 0 or less), the use and decline choices, and that a damage bonus does not add to Graze damage.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15329,6 +15381,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
       "role": "semantic-core"
     },
@@ -15916,6 +15978,16 @@
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-mastery-graze",
+      "qntOwners": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -20319,6 +20391,29 @@
         "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
+        "if-expression",
+        "variant"
+      ],
+      "obligationId": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -20749,6 +20844,7 @@
     "unit-feature.weapon-critical-range-19",
     "unit-feature.weapon-damage-dice-roll-choice",
     "unit-feature.weapon-mastery-cleave",
+    "unit-feature.weapon-mastery-graze",
     "unit-feature.weapon-mastery-push",
     "unit-feature.weapon-mastery-sap",
     "unit-feature.weapon-mastery-slow",

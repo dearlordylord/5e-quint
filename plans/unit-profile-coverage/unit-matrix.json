@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 170,
-      "numerator": 165,
+      "denominator": 171,
+      "numerator": 166,
       "percent": "97.1%"
     },
     "qntProofCoverage": {
-      "denominator": 170,
-      "numerator": 162,
+      "denominator": 171,
+      "numerator": 163,
       "percent": "95.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 215,
-      "numerator": 190,
+      "denominator": 216,
+      "numerator": 191,
       "percent": "88.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 215,
-      "numerator": 213,
+      "denominator": 216,
+      "numerator": 214,
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "81.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 170,
-      "numerator": 165,
+      "denominator": 171,
+      "numerator": 166,
       "percent": "97.1%"
     },
     "runtimeParityCoverage": {
-      "denominator": 170,
-      "numerator": 165,
+      "denominator": 171,
+      "numerator": 166,
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
@@ -8301,19 +8301,47 @@
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.weapon-mastery-graze",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices and the retained Graze support profile. Runtime gates Graze on the selected weapon kind, the attacked weapon's current mastery property, a missed attack roll against a creature, a positive attack ability modifier, and the Graze support profile; after the attacker chooses to use it, the attack's ability modifier in the weapon's damage type goes through the attack's fixed-damage application with no damage bonus or rider.",
+      "taskRefs": [
+        "GH530-WEAPON-MASTERY-GRAZE"
+      ],
+      "title": "Weapon Mastery Graze optionally deals the attack's ability modifier as the weapon's damage type to a creature the attack roll missed",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 215,
-        "numerator": 190,
+        "denominator": 216,
+        "numerator": 191,
         "percent": "88.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 215,
-        "numerator": 213,
+        "denominator": 216,
+        "numerator": 214,
         "percent": "99.1%"
       }
     },
@@ -12017,6 +12045,28 @@
         "profileKind": "bonus-action",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          },
+          {
+            "obligationId": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Weapon Mastery Graze: a missed attack roll against a creature with an unlocked Graze weapon may deal the attack's ability modifier as the weapon's damage type"
+          }
+        ],
+        "profileId": "unit-feature.weapon-mastery-graze",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
         ]
       }
     ],
@@ -23383,6 +23433,22 @@
         "unit-feature.ongoing-feature-activation-movement-rider"
       ],
       "taskId": "FACTORY-579"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "The Graze rule-core slice covers the offer after a missed attack roll against a creature with an unlocked Graze weapon and a positive attack ability modifier, its rejections, the use and decline choices, and that a damage bonus does not add to the damage.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-graze"
+      ],
+      "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Graze support admission, the use-or-decline decision after a miss, damage equal to the attack ability modifier in the weapon's damage type, no added damage bonus, target Resistance, the Concentration save it triggers, and rejection of a Graze decision after a hit, without the mastery, without the weapon's mastery selected, or with an ability modifier of 0 or less.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-graze"
+      ],
+      "taskId": "GH530-WEAPON-MASTERY-GRAZE"
     }
   ],
   "unitGroupDenominatorAudit": {
