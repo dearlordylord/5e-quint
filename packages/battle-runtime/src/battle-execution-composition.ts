@@ -382,12 +382,18 @@ function battleResolutionWithExecutionSnapshot(
   };
 }
 
-/** Turn resources after a resolution: a completed subject drops its own records. */
+/**
+ * Turn resources after a resolution: a completed subject drops its own
+ * records. A resolved result with an interrupt checkpoint still holds the
+ * interrupted subject, which replays later.
+ */
 function turnResourcesAfterResolution(
   result: Exclude<BattleResolutionResult, { readonly tag: "invalid" }>,
   resolvedSubjectPhase: BattleState["subjectResolutionPhase"] | undefined,
 ): BattleState["currentTurnResources"] {
-  return result.tag === "resolved" && resolvedSubjectPhase === undefined
+  return result.tag === "resolved" &&
+    resolvedSubjectPhase === undefined &&
+    currentInterruptCheckpoint(result.state) === null
     ? turnResourcesWithoutHeroicInspirationAttackRollReroll(
         result.state.currentTurnResources,
       )
