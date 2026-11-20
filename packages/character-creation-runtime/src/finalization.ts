@@ -496,10 +496,12 @@ export function executableSupportIssues(
           { tag: "unsupportedProgression" },
         )
       : []),
-    ...rolledHitDieResultIssues(
-      selections.progression,
-      dependencies.classFactsByUnitId.value,
-    ),
+    ...(dependencies.classFactsByUnitId.issues.length === 0
+      ? rolledHitDieResultIssues(
+          selections.progression,
+          dependencies.classFactsByUnitId.value,
+        )
+      : []),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
         selections.abilityScoreGeneration.method,
@@ -2401,7 +2403,7 @@ function rolledHitDieResultIssues(
 ): readonly CharacterBuildProjectionIssue[] {
   return progression.advancements.flatMap((advancement) => {
     const classFacts = classFactsByUnitId.get(advancement.classUnitId);
-    /* v8 ignore next -- @preserve -- Callers collect class facts for every class in the same progression. */
+    /* v8 ignore next -- @preserve -- Both callers run this only once class facts exist for every class in the progression. */
     if (classFacts === undefined) return [];
     return Option.match(
       rolledHitDieResultAboveHitDie({
