@@ -1,5 +1,6 @@
 import type {
   BattleAttackRollResult,
+  BattleD20TestRollRerollDecision,
   BattleFill,
   BattleOpportunityAttackThreat,
   BattleRolledDiceFill,
@@ -166,6 +167,7 @@ type ComparableAttackRollResult = Pick<
       | "missToHitReplacementProcedureRef"
       | "spellAttackReroll"
       | "d20TestNaturalOneReroll"
+      | "heroicInspirationReroll"
     >
   >;
 
@@ -180,9 +182,13 @@ function attackRollResultsEqual(
       b.activatedOngoingFeatureProcedureRef &&
     a.missToHitReplacementProcedureRef === b.missToHitReplacementProcedureRef &&
     spellAttackRerollDecisionsEqual(a.spellAttackReroll, b.spellAttackReroll) &&
-    d20TestNaturalOneRerollDecisionsEqual(
+    d20TestRollRerollDecisionsEqual(
       a.d20TestNaturalOneReroll,
       b.d20TestNaturalOneReroll,
+    ) &&
+    d20TestRollRerollDecisionsEqual(
+      a.heroicInspirationReroll,
+      b.heroicInspirationReroll,
     )
   );
 }
@@ -203,9 +209,9 @@ function spellAttackRerollDecisionsEqual(
   return attackRollResultsEqual(a.replacement, b.replacement);
 }
 
-function d20TestNaturalOneRerollDecisionsEqual(
-  a: BattleAttackRollResult["d20TestNaturalOneReroll"],
-  b: BattleAttackRollResult["d20TestNaturalOneReroll"],
+function d20TestRollRerollDecisionsEqual<EffectKind extends string>(
+  a: BattleD20TestRollRerollDecision<EffectKind> | undefined,
+  b: BattleD20TestRollRerollDecision<EffectKind> | undefined,
 ): boolean {
   if (a === undefined || b === undefined) {
     return a === b;

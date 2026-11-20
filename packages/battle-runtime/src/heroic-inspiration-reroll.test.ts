@@ -10,6 +10,7 @@ import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import {
   HEROIC_INSPIRATION_REROLL_STACKING_MESSAGE,
@@ -418,6 +419,30 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     expect(heroicInspiration(rerolledMiss.state, goblinId)).toEqual(
       NO_HEROIC_INSPIRATION,
     );
+  });
+
+  test("continuation fill equality compares the Heroic Inspiration decision", () => {
+    const state = fighterBattle(HEROIC_INSPIRATION_AVAILABLE);
+    const { roll } = longswordRollHole(state);
+    const declined = attackRollFill(roll, {
+      total: 3,
+      naturalD20: 2,
+      heroicInspirationReroll: declineReroll(),
+    });
+    const rerolled = attackRollFill(roll, {
+      total: 3,
+      naturalD20: 2,
+      heroicInspirationReroll: reroll({ total: 20, naturalD20: 15 }),
+    });
+
+    expect(battleContinuationFillEquals(declined, { ...declined })).toBe(true);
+    expect(battleContinuationFillEquals(declined, rerolled)).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        declined,
+        attackRollFill(roll, { total: 3, naturalD20: 2 }),
+      ),
+    ).toBe(false);
   });
 
   test("the attack roll fill codec keeps the Heroic Inspiration decision", () => {
