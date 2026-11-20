@@ -69,6 +69,7 @@ export {
 } from "./battle-snapshot.ts";
 import {
   type BattleSubject,
+  type BattleSubjectAction,
   type ActionHideSubject,
   type ActionSearchSubject,
 } from "../battle-subjects.ts";
@@ -228,11 +229,17 @@ function isEndConcentrationSubject(
   );
 }
 
+/** Help's two options, Assist an Attack Roll and Assist an Ability Check. */
+const HELP_ACTIONS = [
+  "helpAttack",
+  "helpAbilityCheck",
+] as const satisfies readonly BattleSubjectAction[];
+
 type HelpActionSubject = Extract<
   BattleSubject,
   {
     readonly tag: "action";
-    readonly action: "helpAttack" | "helpAbilityCheck";
+    readonly action: (typeof HELP_ACTIONS)[number];
   }
 >;
 
@@ -241,18 +248,23 @@ function isHelpActionSubject(
 ): subject is HelpActionSubject {
   return (
     subject.tag === "action" &&
-    (subject.action === "helpAttack" || subject.action === "helpAbilityCheck")
+    HELP_ACTIONS.some((action) => action === subject.action)
   );
 }
 
-/** Help's two options, Assist an Attack Roll and Assist an Ability Check. */
 function resolveHelpAction(
   input: AdmittedBattleResolutionInput,
   subject: HelpActionSubject,
 ): BattleResolutionResult {
-  return subject.action === "helpAttack"
-    ? resolveHelpAttack({ ...input, subject })
-    : resolveHelpAbilityCheck({ ...input, subject });
+  return Match.value(subject).pipe(
+    Match.when({ action: "helpAttack" }, (helpAttack) =>
+      resolveHelpAttack({ ...input, subject: helpAttack }),
+    ),
+    Match.when({ action: "helpAbilityCheck" }, (helpAbilityCheck) =>
+      resolveHelpAbilityCheck({ ...input, subject: helpAbilityCheck }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function isLongCastingCommandSubject(

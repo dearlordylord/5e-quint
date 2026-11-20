@@ -118,12 +118,12 @@ import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
-  escapeSpellRestraintAbilityCheckHole,
+  escapeSpellRestraintSkillCheck,
   grappleOutcomeHole,
   grappleTargetHole,
-  hideAbilityCheckHole,
+  hideSkillCheck,
   saveGatedAreaControlShakeAwakeTargetHole,
-  searchAbilityCheckHole,
+  searchSkillCheck,
   searchTargetHole,
   shoveOutcomeHole,
   shoveTargetHole,
@@ -266,7 +266,6 @@ import {
   helpAttackTargetChoices,
   helpAttackTargetHole,
 } from "./help-attack.ts";
-import { consumeHelpAbilityChecks } from "./help-ability-check.ts";
 import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 
 type BonusActionStandardActionResolverInputBase =
@@ -982,7 +981,8 @@ export function resolveHide(
       "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
-  const checkHole = hideAbilityCheckHole(input.state, input.subject.actorId);
+  const { hole: checkHole, stateAfterCheck: stateAfterSkillCheck } =
+    hideSkillCheck(input.state, input.subject.actorId);
   const check = abilityCheckFill(
     input.fills,
     HIDE_ABILITY_CHECK_HOLE_ID,
@@ -1019,11 +1019,7 @@ export function resolveHide(
       : null;
   const nextActor = { ...actor, hidden };
   const nextState = normalizeBattleGrapples({
-    ...consumeHelpAbilityChecks(
-      input.state,
-      input.subject.actorId,
-      checkHole.skill,
-    ),
+    ...stateAfterSkillCheck,
     combatants: new Map(input.state.combatants).set(
       input.subject.actorId,
       nextActor,
@@ -1180,12 +1176,13 @@ export function resolveSearch(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const checkHole = searchAbilityCheckHole(
-    target.hidden.discoveryDc,
-    input.state,
-    input.subject.actorId,
-    target.combatantId,
-  );
+  const { hole: checkHole, stateAfterCheck: stateAfterSkillCheck } =
+    searchSkillCheck(
+      target.hidden.discoveryDc,
+      input.state,
+      input.subject.actorId,
+      target.combatantId,
+    );
   const check = abilityCheckFill(
     input.fills.filter((fill) => fill.kind !== "targetChoice"),
     SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -1213,11 +1210,7 @@ export function resolveSearch(
   const found = check.value.value.total >= target.hidden.discoveryDc;
   const nextTarget = found ? { ...target, hidden: null } : target;
   const nextState = normalizeBattleGrapples({
-    ...consumeHelpAbilityChecks(
-      input.state,
-      input.subject.actorId,
-      checkHole.skill,
-    ),
+    ...stateAfterSkillCheck,
     combatants: new Map(input.state.combatants).set(
       target.combatantId,
       nextTarget,
@@ -1311,7 +1304,8 @@ export function resolveStatBlockBonusActionHide(
       "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
-  const checkHole = hideAbilityCheckHole(input.state, input.subject.actorId);
+  const { hole: checkHole, stateAfterCheck: stateAfterSkillCheck } =
+    hideSkillCheck(input.state, input.subject.actorId);
   const check = abilityCheckFill(
     input.fills,
     HIDE_ABILITY_CHECK_HOLE_ID,
@@ -1344,11 +1338,7 @@ export function resolveStatBlockBonusActionHide(
       : null;
   const nextState = updateStatBlockActorResources(
     normalizeBattleGrapples({
-      ...consumeHelpAbilityChecks(
-        input.state,
-        input.subject.actorId,
-        checkHole.skill,
-      ),
+      ...stateAfterSkillCheck,
       currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(actor.combatantId, {
         ...actor,
@@ -1735,10 +1725,11 @@ export function resolveEscapeSpellRestraint(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const checkHole = escapeSpellRestraintAbilityCheckHole(input.state, effect, {
-    actorId: input.subject.actorId,
-    targetId: input.subject.targetId,
-  });
+  const { hole: checkHole, stateAfterCheck: stateAfterSkillCheck } =
+    escapeSpellRestraintSkillCheck(input.state, effect, {
+      actorId: input.subject.actorId,
+      targetId: input.subject.targetId,
+    });
   const check = abilityCheckFill(
     input.fills,
     checkHole.holeId,
@@ -1782,11 +1773,7 @@ export function resolveEscapeSpellRestraint(
   }
   /* v8 ignore stop -- @preserve */
   const stateAfterCheck = {
-    ...consumeHelpAbilityChecks(
-      input.state,
-      input.subject.actorId,
-      checkHole.skill,
-    ),
+    ...stateAfterSkillCheck,
     currentTurnResources: spent.success,
   };
   const nextState =

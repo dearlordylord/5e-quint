@@ -1,9 +1,12 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.HELP.ABILITY_CHECK_ASSIST
+import { classLevel } from "@dnd/shared/types";
 import type { Skill } from "@dnd/surface/surface/types";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   abilityCheckFill,
   battleId,
+  characterBattleFeatureInitForTest,
   characterSeed,
   combatantId,
   difficultyClass,
@@ -13,8 +16,12 @@ import {
   findHole,
   goblinId,
   hidePrerequisites,
+  interruptDecisionFill,
+  readyDeclarationFillForTest,
+  removeBattleCombatantsRight,
   requireHole,
   requireResolved,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
@@ -35,8 +42,15 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
+import { HELP_ABILITY_CHECK_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { combatantSkillProficiencies } from "./battle-reducer/druid-wild-shape.ts";
+import { temporaryAbilityCheckRollModeInfluenceAbilityCheckHole } from "./battle-reducer/hole-helpers.ts";
 import type { CombatantId } from "./identity.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  fighterRemarkableAthleteUnitId,
+  unitLibrary,
+} from "./unit-profile-admission.test-support.ts";
 
 // RAW: .references/srd-5.2.1/rules-glossary.md, Help [Action], "Assist an
 // Ability Check.": "Choose one of your skill or tool proficiencies and one
@@ -137,6 +151,80 @@ const hideSubject: BattleSubject = {
 
 function hideCheckHole(state: BattleState) {
   return findHole(findAct(state, hideSubject).initialHoles, "abilityCheck");
+}
+
+type BattleContext = Parameters<
+  typeof battleRuntimeSessionForTest
+>[0]["context"];
+
+/**
+ * Druid (20) casts Entangle and `restrained` (5) fails its save; returns the
+ * start of the Fighter's (15) turn. The Fighter is proficient in Athletics.
+ */
+function entangledFighterTurn(restrained: ReturnType<typeof characterSeed>): {
+  readonly state: BattleState;
+  readonly context: BattleContext;
+} {
+  const session = startBattleSessionRight({
+    battleId: battleId("battle-help-ability-check-entangle"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Druid",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("entangle")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      characterSeed({
+        initiative: 15,
+        d20Statistics: proficientIn("athletics"),
+      }),
+      restrained,
+    ],
+  });
+  const entangle = findAct(session, magicSubject("entangle")).subject;
+  const savingThrows = requireHole(
+    resolveBattleSubject({
+      state: session.state,
+      subject: entangle,
+      fills: [],
+    }),
+    "savingThrowOutcome",
+  );
+  const entangled = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: entangle,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: rogueId, succeeded: false, withoutRoll: true as const },
+        ]),
+      ],
+    }),
+  ).state;
+  return {
+    state: endTurns(entangled, [wizardId]),
+    context: session.context,
+  };
+}
+
+function escapeRestraintAct(state: BattleState, context: BattleContext) {
+  const escape = discoverBattleActs(
+    battleRuntimeSessionForTest({ state, context }),
+  ).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "escapeSpellRestraint",
+  );
+  if (escape === undefined) throw new Error("Expected Entangle escape action.");
+  return {
+    subject: escape.subject,
+    check: findHole(escape.initialHoles, "abilityCheck"),
+  };
 }
 
 describe("Help: Assist an Ability Check", () => {
@@ -272,76 +360,28 @@ describe("Help: Assist an Ability Check", () => {
   });
 
   test("helps the ally escape Entangle with a Strength (Athletics) check", () => {
-    const session = startBattleSessionRight({
-      battleId: battleId("battle-help-ability-check-entangle"),
-      combatants: [
-        characterSeed({
-          combatantId: wizardId,
-          displayName: "Druid",
-          initiative: 20,
-          attack: null,
-          spellcasting: wizardSpellcasting({
-            cantrips: [],
-            preparedSpells: [spellRecord("entangle")],
-            spellSlots: [{ spellLevel: 1, count: 1 }],
-          }),
-        }),
-        characterSeed({
-          initiative: 15,
-          d20Statistics: proficientIn("athletics"),
-        }),
-        characterSeed({
-          combatantId: rogueId,
-          displayName: "Rogue",
-          initiative: 5,
-        }),
-      ],
-    });
-    const entangle = findAct(session, magicSubject("entangle")).subject;
-    const savingThrows = requireHole(
-      resolveBattleSubject({
-        state: session.state,
-        subject: entangle,
-        fills: [],
+    const { state, context } = entangledFighterTurn(
+      characterSeed({
+        combatantId: rogueId,
+        displayName: "Rogue",
+        initiative: 5,
       }),
-      "savingThrowOutcome",
     );
-    const entangled = requireResolved(
-      resolveBattleSubject({
-        state: session.state,
-        subject: entangle,
-        fills: [
-          savingThrowOutcomeFill(savingThrows, [
-            { targetId: rogueId, succeeded: false, withoutRoll: true as const },
-          ]),
-        ],
-      }),
-    ).state;
-    const fighterTurn = endTurns(entangled, [wizardId]);
-    const helped = help(fighterTurn, fighterId, {
+    const helped = help(state, fighterId, {
       allyId: rogueId,
       skill: "athletics",
     });
     const rogueTurn = endTurns(helped, [fighterId]);
-    const escape = discoverBattleActs(
-      battleRuntimeSessionForTest({
-        state: rogueTurn,
-        context: session.context,
-      }),
-    ).find(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "escapeSpellRestraint",
-    );
-    if (escape === undefined)
-      throw new Error("Expected Entangle escape action.");
-    const check = findHole(escape.initialHoles, "abilityCheck");
-    expect(check).toMatchObject({ skill: "athletics", rollMode: "advantage" });
+    const escape = escapeRestraintAct(rogueTurn, context);
+    expect(escape.check).toMatchObject({
+      skill: "athletics",
+      rollMode: "advantage",
+    });
     const escaped = requireResolved(
       resolveBattleSubject({
         state: rogueTurn,
         subject: escape.subject,
-        fills: [abilityCheckFill(check, 14)],
+        fills: [abilityCheckFill(escape.check, 14)],
       }),
     );
     expect(escaped.snapshot.helpAbilityCheckMarkers).toEqual([]);
@@ -350,6 +390,37 @@ describe("Help: Assist an Ability Check", () => {
         restrained: true,
       },
     );
+  });
+
+  // RAW: .references/srd-5.2.1/classes.md, Fighter, "Level 3: Remarkable
+  // Athlete": "you have Advantage on Initiative rolls and Strength (Athletics)
+  // checks." Escaping Entangle now names its skill, so this source applies.
+  test("escaping Entangle also gets Remarkable Athlete's Advantage", () => {
+    const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
+    const unitRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: unit.id },
+      unit,
+    });
+    if (Result.isFailure(unitRef)) throw new Error(unitRef.failure.message);
+    const { state, context } = entangledFighterTurn(
+      characterSeed({
+        combatantId: rogueId,
+        displayName: "Champion",
+        initiative: 5,
+        classLevels: [{ className: "fighter", level: 3 }],
+        characterUnitRefs: [unitRef.success],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "fighter", level: classLevel(3) },
+          ]),
+        ],
+      }),
+    );
+    const championTurn = endTurns(state, [fighterId]);
+    expect(escapeRestraintAct(championTurn, context).check).toMatchObject({
+      skill: "athletics",
+      rollMode: "advantage",
+    });
   });
 
   test("expires at the start of the helper's next turn if the ally doesn't use it", () => {
@@ -446,6 +517,165 @@ describe("Help: Assist an Ability Check", () => {
         "helpAbilityCheckDecision",
       ),
     ).toMatchObject({ helperId: fighterId });
+  });
+
+  test("rejects an extra fill, or a decision for another hole", () => {
+    const state = helpBattle();
+    const decision = helpDecision(state, fighterId, {
+      allyId: rogueId,
+      skill: "stealth",
+    });
+    const helpAttackHole = findAct(state, {
+      tag: "action",
+      actorId: fighterId,
+      action: "helpAttack",
+    }).initialHoles[0];
+    if (helpAttackHole === undefined) throw new Error("Expected a Help hole.");
+    for (const fills of [
+      [decision, decision],
+      [{ ...decision, holeId: helpAttackHole.holeId }],
+    ]) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: helpSubject(fighterId),
+          fills,
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    }
+  });
+
+  test("is stale for a helper with no skill proficiency", () => {
+    expect(
+      resolveBattleSubject({
+        state: helpBattle({ helperSkills: [] }),
+        subject: helpSubject(fighterId),
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("an Influence check, which the runtime doesn't resolve, neither shows nor uses the benefit", () => {
+    const helped = help(
+      helpBattle({ helperSkills: ["intimidation"] }),
+      fighterId,
+      {
+        allyId: rogueId,
+        skill: "intimidation",
+      },
+    );
+    const rogueTurn = endTurns(helped, [fighterId, goblinId]);
+    expect(
+      temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
+        rogueTurn,
+        rogueId,
+        difficultyClass(10),
+      ),
+    ).not.toHaveProperty("rollMode");
+    expect(rogueTurn.helpAbilityChecks).toHaveLength(1);
+  });
+
+  test("a readied Help records the benefit when it is released", () => {
+    const state = helpBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const helpResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "action" &&
+        response.subject.action === "helpAbilityCheck",
+    );
+    if (helpResponse?.kind !== "action") {
+      throw new Error("Expected an offered Help (Ability Check) response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the rogue starts to sneak away",
+            helpResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a reported Ready trigger interrupt.");
+    }
+    const released = requireResolved(
+      resolveBattleInterrupt({
+        state: reported.state,
+        fill: interruptDecisionFill(
+          requireHole(reported, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: fighterId,
+            choice: {
+              kind: "releaseReadiedAction",
+              fills: [
+                {
+                  kind: "helpAbilityCheckDecision",
+                  holeId: HELP_ABILITY_CHECK_HOLE_ID,
+                  allyId: rogueId,
+                  skill: "stealth",
+                  allyCanBeAssisted: true,
+                },
+              ],
+            },
+          },
+        ),
+      }),
+    );
+    expect(released.state.helpAbilityChecks).toEqual([
+      {
+        helperId: fighterId,
+        allyId: rogueId,
+        skill: "stealth",
+        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+      },
+    ]);
+    expect(released.state.currentTurnResources).toEqual(
+      reported.state.currentTurnResources,
+    );
+  });
+
+  test("ends when the ally or the helper leaves the battle", () => {
+    const helped = help(helpBattle(), fighterId, {
+      allyId: rogueId,
+      skill: "stealth",
+    });
+    expect(
+      removeBattleCombatantsRight({ state: helped, combatantIds: [rogueId] })
+        .helpAbilityChecks,
+    ).toEqual([]);
+    const goblinTurn = endTurns(helped, [fighterId]);
+    expect(
+      removeBattleCombatantsRight({
+        state: goblinTurn,
+        combatantIds: [fighterId],
+      }).helpAbilityChecks,
+    ).toEqual([]);
   });
 
   test("a Stat Block's Skills entry gives its skill proficiencies", () => {

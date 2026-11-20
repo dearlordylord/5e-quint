@@ -83,11 +83,11 @@ import {
   bonusActionStandardActionActs,
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
-  escapeSpellRestraintAbilityCheckHole,
+  escapeSpellRestraintSkillCheck,
   grappleTargetChoices,
   grappleTargetHole,
   hiddenSearchTargetChoices,
-  hideAbilityCheckHole,
+  hideSkillCheck,
   saveGatedAreaControlShakeAwakeTargetHole,
   searchTargetHole,
   shoveTargetChoices,
@@ -545,7 +545,7 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "hide" },
-      initialHoles: [hideAbilityCheckHole(state, actorId)],
+      initialHoles: [hideSkillCheck(state, actorId).hole],
     });
   }
   const hiddenTargets = hiddenSearchTargetChoices(state, actorId);
@@ -619,10 +619,10 @@ function discoverBattleActsWithoutRouteEvents(
           effectRef: spellActiveEffectExecutionRef(effect),
         },
         initialHoles: [
-          escapeSpellRestraintAbilityCheckHole(state, effect, {
+          escapeSpellRestraintSkillCheck(state, effect, {
             actorId,
             targetId,
-          }),
+          }).hole,
         ],
       });
     }
@@ -2108,7 +2108,7 @@ export function statBlockBonusActionOptionActs(
             },
             initialHoles:
               standardAction === "hide"
-                ? [hideAbilityCheckHole(state, actorId)]
+                ? [hideSkillCheck(state, actorId).hole]
                 : [],
           },
         ];

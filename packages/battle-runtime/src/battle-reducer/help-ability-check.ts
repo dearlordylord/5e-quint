@@ -37,8 +37,8 @@ import {
   HELP_ABILITY_CHECK_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
-import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 import { combatantSkillProficiencies } from "./druid-wild-shape.ts";
+import { helpParticipantChoices } from "./help-attack.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 
@@ -46,11 +46,11 @@ import { invalidResult } from "./result-helpers.ts";
  * The Help (Assist an Ability Check) decision hole, or `undefined` when the
  * helper has no skill proficiency or no other live combatant to assist.
  */
-export function helpAbilityCheckHole(
+function helpAbilityCheckHole(
   state: BattleState,
   helperId: CombatantId,
 ): BattleHelpAbilityCheckDecisionHole | undefined {
-  const allyChoices = helpAbilityCheckAllyChoices(state, helperId);
+  const allyChoices = helpParticipantChoices(state, helperId);
   const skillChoices = helpAbilityCheckSkillChoices(state, helperId);
   if (!isReadonlyArrayNonEmpty(allyChoices)) return undefined;
   if (!isReadonlyArrayNonEmpty(skillChoices)) return undefined;
@@ -83,19 +83,7 @@ export function helpAbilityCheckActCandidates(
     : [];
 }
 
-export function helpAbilityCheckAllyChoices(
-  state: BattleState,
-  helperId: CombatantId,
-): readonly CombatantId[] {
-  return [...state.combatants]
-    .filter(
-      ([combatantId, combatant]) =>
-        combatantId !== helperId && !zeroHpLifecycleIsTerminal(combatant),
-    )
-    .map(([combatantId]) => combatantId);
-}
-
-export function helpAbilityCheckSkillChoices(
+function helpAbilityCheckSkillChoices(
   state: BattleState,
   helperId: CombatantId,
 ): readonly Skill[] {
@@ -141,6 +129,7 @@ export function resolveHelpAbilityCheck(
     return invalidResult(input.state, "invalidFill", accepted.failure);
   }
   const spent = spendAction(input.state.currentTurnResources, "help");
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Help here. */
   if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
@@ -148,6 +137,7 @@ export function resolveHelpAbilityCheck(
       "Help is no longer available.",
     );
   }
+  /* v8 ignore stop -- @preserve */
   const nextState: BattleState = {
     ...input.state,
     currentTurnResources: spent.success,
