@@ -223,7 +223,7 @@ requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
 
-## A52: Graze with an ability modifier of 0 or less is not offered
+## A53: Graze with an ability modifier of 0 or less is not offered
 
 **Assumption:** After a missed attack roll with a Graze weapon, the attacker is
 offered Graze only when the ability modifier used for the attack roll is 1 or
