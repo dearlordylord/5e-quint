@@ -12,8 +12,7 @@ import {
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
 } from "../test-support/battle-act-labels.ts";
 import {
   loadoutHoleId,
@@ -199,7 +198,9 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
@@ -254,6 +255,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
       "Nimble Escape",
@@ -581,7 +583,9 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Action Surge",
@@ -642,7 +646,9 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(surged)).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
