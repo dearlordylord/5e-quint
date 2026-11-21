@@ -90,7 +90,9 @@ export function stateWithThrownWeaponReleased(input: {
  * landed during this resolution, or it landed earlier in an attack that was
  * still in flight on the interrupt stack and has now ended. An attack needs its
  * weapon in hand, so a thrown weapon on the ground while its own attack is in
- * flight was thrown by that attack.
+ * flight was thrown by that attack. Only this public-result step reports
+ * thrown weapons, once per resolution, so it appends to the drops the result
+ * already reports.
  */
 export function withThrownWeaponDropsReported(input: {
   readonly stateBefore: BattleState;
@@ -98,20 +100,13 @@ export function withThrownWeaponDropsReported(input: {
 }): BattleResolutionResult {
   const { result } = input;
   if (result.tag !== "resolved") return result;
-  const reported = result.droppedObjects ?? [];
-  const drops = thrownWeaponDropsFinishedBy(
-    input.stateBefore,
-    result.state,
-  ).filter(
-    (drop) =>
-      !reported.some(
-        ({ actorId, objectId }) =>
-          actorId === drop.actorId && objectId === drop.objectId,
-      ),
-  );
+  const drops = thrownWeaponDropsFinishedBy(input.stateBefore, result.state);
   return drops.length === 0
     ? result
-    : { ...result, droppedObjects: [...reported, ...drops] };
+    : {
+        ...result,
+        droppedObjects: [...(result.droppedObjects ?? []), ...drops],
+      };
 }
 
 /** The thrown weapons on the ground whose attack ended between two states. */
@@ -183,20 +178,32 @@ function thrownWeaponAttackIsInFlight(
   });
 }
 
+/** The procedure an interrupt frame resumes, if it resumes one. */
 function interruptFrameProcedure(
   frame: BattleInterruptFrame,
 ): BattleInterruptedProcedure | undefined {
   return Match.value(frame).pipe(
     Match.discriminatorsExhaustive("kind")({
       interruptCheckpoint: ({ frame: checkpoint }) => checkpoint.continuation,
-      grantedFlightEndFallCleanup: () => undefined,
-      fallDamageLandingMitigation: () => undefined,
-      replayContinuation: ({ continuation }) => continuation,
-      attackDamageContinuationConcentration: ({ continuation }) => continuation,
-      attackDamageContinuationRepeatSave: ({ continuation }) => continuation,
-      attackDamageContinuationCunningStrike: ({ continuation }) => continuation,
+      grantedFlightEndFallCleanup: resumesNoProcedure,
+      fallDamageLandingMitigation: resumesNoProcedure,
+      replayContinuation: resumedContinuation,
+      attackDamageContinuationConcentration: resumedContinuation,
+      attackDamageContinuationRepeatSave: resumedContinuation,
+      attackDamageContinuationCunningStrike: resumedContinuation,
     }),
   );
+}
+
+function resumedContinuation(frame: {
+  readonly continuation: BattleInterruptedProcedure;
+}): BattleInterruptedProcedure {
+  return frame.continuation;
+}
+
+/** A fall-cleanup frame finishes a fall, not an interrupted procedure. */
+function resumesNoProcedure(): undefined {
+  return undefined;
 }
 
 /**

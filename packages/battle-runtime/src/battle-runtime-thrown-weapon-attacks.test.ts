@@ -22,6 +22,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
   type BattleTargetSpatialFact,
@@ -31,7 +32,18 @@ import {
   attackRollFill,
   attackTargetSpatialFact,
   battleAbilityModifier,
+  battleFrontierInterruptDecisionForState,
   battleResolutionHolesForTest,
+  characterBattleFeatureInitForTest,
+  combatantId,
+  findHole,
+  interruptDecisionFill,
+  reactionModifierChoice,
+  reactionModifierUnitRef,
+  requireCharacterSpellProcedureRefForTest,
+  resolveBattleInterrupt,
+  spellSlotInvocationRef,
+  uncannyDodgeUnit,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
@@ -51,6 +63,7 @@ import {
   THROWN_WEAPON_LANDING_POSITION_FOR_TEST,
   thrownWeaponLandingFactsForTest,
   unitLibrary,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   spellCasterId,
@@ -964,6 +977,151 @@ describe("battle runtime: thrown weapon attacks", () => {
     expect(missed.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
   });
 
+  test("a thrown Dagger whose hit opens a Reaction window is reported by the attack's end", () => {
+    const state = battleWithUncannyDodgeTarget();
+    const subject = attackSubjectFor(state, "thrown");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = targetFill(targetHole, rogueId);
+    const rollHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target] }),
+      "attackRoll",
+    );
+    const roll = attackRollFill(rollHole, { total: 20, naturalD20: 10 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [target, roll],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the thrown Dagger hit's Reaction window.");
+    }
+    const pending = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    if (pending === null) {
+      throw new Error("Expected a pending Reaction decision.");
+    }
+    const uncannyDodge = reactionModifierChoice(
+      pending.choices,
+      "rogue_uncanny_dodge",
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
+        {
+          kind: "resolve",
+          responderId: rogueId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            procedureRef: uncannyDodge.modifier.procedureRef,
+            modifierKind: "attackDamageReduction",
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected the damage roll after Uncanny Dodge.");
+    }
+    const completed = requireResolved(
+      resolveBattleSubject({
+        state: afterReaction.state,
+        subject,
+        fills: [
+          target,
+          roll,
+          damageRollFill(requireHole(afterReaction, "rolledDice"), 4),
+        ],
+      }),
+    );
+
+    expect(completed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
+    expect(
+      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+        ?.positionId,
+    ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
+  });
+
+  test("a thrown Dagger whose damage opens an after-damage Reaction window is reported once, when the window closes", () => {
+    const session = battleWithHellishRebukeTarget();
+    const state = session.state;
+    const subject = attackSubjectFor(state, "thrown");
+    const rebuke = requireCharacterSpellProcedureRefForTest(
+      session,
+      rebukerId,
+      spellSlotInvocationRef("hellish_rebuke", 2, "saveGatedDamage"),
+    );
+    const defaultTarget = targetFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      ),
+      rebukerId,
+    );
+    const target: BattleFill = {
+      ...defaultTarget,
+      spatialFacts: [
+        ...(defaultTarget.spatialFacts ?? []),
+        {
+          kind: "reactionSpellDamagerVisibleWithinRange",
+          reactorId: rebukerId,
+          damageSourceId: fighterId,
+          sourceProcedureRef: rebuke,
+          rangeFeet: movementFeet(60),
+        },
+      ],
+    };
+    const roll = attackRollFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [target] }),
+        "attackRoll",
+      ),
+      { total: 20, naturalD20: 10 },
+    );
+    const damage = damageRollFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [target, roll] }),
+        "rolledDice",
+      ),
+      3,
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [target, roll, damage],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the Hellish Rebuke after-damage window.");
+    }
+
+    const declined = requireResolved(
+      resolveBattleInterrupt({
+        state: awaitingReaction.state,
+        fill: interruptDecisionFill(
+          findHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
+          { kind: "decline", responderId: rebukerId },
+        ),
+      }),
+    );
+
+    expect(declined.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
+    expect(
+      declined.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+        ?.positionId,
+    ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
+  });
+
   test("the test helper's default landing fact lands at its default position", () => {
     const state = battleWithDaggers({ mainHand: "dagger" });
     const subject = attackSubjectFor(state, "thrown");
@@ -977,6 +1135,76 @@ describe("battle runtime: thrown weapon attacks", () => {
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
 });
+
+const rogueId = combatantId("thrown-dagger-rogue-target");
+
+/** A fighter with a Dagger, and a Rogue target who can use Uncanny Dodge. */
+function battleWithUncannyDodgeTarget(): BattleState {
+  return startBattleSessionRight({
+    battleId: battleId("battle-thrown-dagger-uncanny-dodge"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: testDaggerAttack(),
+        selectedLoadout: {
+          weapon: {
+            itemId: mainDaggerId,
+            unitId: parseSharedUnitId("weapon_dagger"),
+            grip: "one_handed",
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 15 }),
+      characterSeed({
+        combatantId: rogueId,
+        displayName: "Rogue Target",
+        initiative: 10,
+        classLevels: [{ className: "rogue", level: 5 }],
+        attack: null,
+        unitFeatures: [
+          characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+            { className: "rogue", level: classLevel(5) },
+          ]),
+        ],
+        characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+      }),
+    ],
+  }).state;
+}
+
+const rebukerId = combatantId("thrown-dagger-hellish-rebuke-target");
+
+/** A fighter with a Dagger, and a target who can cast Hellish Rebuke. */
+function battleWithHellishRebukeTarget(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-thrown-dagger-hellish-rebuke"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: testDaggerAttack(),
+        selectedLoadout: {
+          weapon: {
+            itemId: mainDaggerId,
+            unitId: parseSharedUnitId("weapon_dagger"),
+            grip: "one_handed",
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 15 }),
+      characterSeed({
+        combatantId: rebukerId,
+        displayName: "Hellish Rebuke caster",
+        initiative: 10,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("hellish_rebuke")],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+      }),
+    ],
+  });
+}
 
 const dartId = battleObjectId("main:weapon_dart");
 
