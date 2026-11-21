@@ -1047,7 +1047,7 @@ const TriggeredArmorDefenseInvocationSchema = spellProcedureExecutionSchema(
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("triggeredArmorDefense"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
-    armorClassBonus: Schema.Number,
+    armorClassBonus: Schema.Finite,
     negatesRepeatedDamageAllocation: Schema.Literal(true),
   }),
 );

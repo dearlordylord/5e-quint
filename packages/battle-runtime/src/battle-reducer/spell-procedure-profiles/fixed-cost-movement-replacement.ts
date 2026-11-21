@@ -774,7 +774,7 @@ const FixedCostMovementReplacementInvocationSchema =
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
+        maxTargets: Schema.Finite,
         requiredTargetDisposition: Schema.Literal("willing"),
       }),
       activeEffect: Schema.Struct({

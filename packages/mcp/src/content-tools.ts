@@ -21,6 +21,7 @@ import { statBlockSummary } from "./stat-block-content-projection.ts";
 export { statBlockSummary } from "./stat-block-content-projection.ts";
 import {
   decodeToolArgs,
+  McpEmptyArgumentsSchema,
   mcpObjectJsonSchema,
   mcpOutputJsonSchema,
   schemaJsonContent,
@@ -31,7 +32,6 @@ import {
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
-const EmptyArgsSchema = Schema.Struct({});
 const StringArraySchema = Schema.Array(Schema.String);
 const WorkflowGuideOutputSchema = Schema.Struct({
   lifecycle: StringArraySchema,
@@ -67,9 +67,9 @@ const StatBlockDiscoveryEntrySchema = Schema.Struct({
   size: StatBlockSizeSummarySchema,
   creatureType: Schema.String,
   challengeRating: ChallengeRatingSchema,
-  armorClass: Schema.Number,
-  hitPoints: Schema.Number,
-  initiativeModifier: Schema.Number,
+  armorClass: Schema.Finite,
+  hitPoints: Schema.Finite,
+  initiativeModifier: Schema.Finite,
 });
 const DEFAULT_STAT_BLOCK_PAGE_SIZE = 20;
 const MAX_STAT_BLOCK_PAGE_SIZE = 50;
@@ -93,12 +93,12 @@ const ListStatBlocksInputSchema = Schema.Struct({
 });
 const ListStatBlocksOutputSchema = Schema.Struct({
   statBlocks: Schema.Array(StatBlockDiscoveryEntrySchema),
-  total: Schema.Number,
-  nextOffset: Schema.NullOr(Schema.Number),
+  total: Schema.Finite,
+  nextOffset: Schema.NullOr(Schema.Finite),
   next: Schema.String,
 });
 
-const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+const emptyInputSchema = mcpObjectJsonSchema(McpEmptyArgumentsSchema);
 const workflowGuideOutputSchema = mcpOutputJsonSchema(
   WorkflowGuideOutputSchema,
 );
@@ -195,7 +195,7 @@ export function decodeContentToolCall(input: {
     Match.when(contentToolNames.describeMcpWorkflow, () =>
       Result.map(
         decodeToolArgs(
-          EmptyArgsSchema,
+          McpEmptyArgumentsSchema,
           input.args,
           contentToolNames.describeMcpWorkflow,
         ),
@@ -221,7 +221,7 @@ export function decodeContentToolCall(input: {
     Match.when(contentToolNames.listCatalogUnits, () =>
       Result.map(
         decodeToolArgs(
-          EmptyArgsSchema,
+          McpEmptyArgumentsSchema,
           input.args,
           contentToolNames.listCatalogUnits,
         ),

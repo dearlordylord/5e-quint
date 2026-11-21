@@ -39,7 +39,7 @@
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
     "@xstate/react": "^6.1.0",
-    "effect": "4.0.0-rc.112",
+    "effect": "4.1.4",
     "lucide-react": "^0.545.0",
     "motion": "^12.38.0",
     "nuqs": "^2.8.9",

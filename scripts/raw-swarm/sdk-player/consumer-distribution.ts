@@ -24,7 +24,7 @@ import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
 import ts from "typescript";
 
 import {
-  validatedPackageEffectCompilerSupportDirectories,
+  validatedPackageEffectCompilerSupportDirectory,
   validatedPackageEffectRuntimeEntries,
 } from "#dnd-package-effect-runtime";
 import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
@@ -110,12 +110,12 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
   },
   measure: {
     files: 386,
-    bytes: 9_596_658,
+    bytes: 9_674_600,
   },
   pathLedgerSha256:
     "9bc8b7ca5413bf466395028ce1f0347d1193e38cd092a8553473fd526274ad1e",
   contentLedgerSha256:
-    "af7f44e6749a4df5749e5025d9b0d316f5aff50c748d158a316e8b4dc8335e39",
+    "8179b6937c8b29e961e6d39a1c342cc25dc40a349be45d53a989ef43a52f91ca",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
@@ -153,17 +153,14 @@ const PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS = [
 
 export const EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST = {
   versions: {
-    effect: "4.0.0-rc.112",
-    "fast-check": "4.9.0",
-    msgpackr: "2.1.0",
-    "pure-rand": "8.4.2",
+    effect: "4.1.4",
   },
-  files: 498,
-  bytes: 10_598_459,
+  files: 597,
+  bytes: 11_784_469,
   pathLedgerSha256:
-    "01e202db91ee798780a0dd9af282f2281895d34f70c87f203b189c44cf7db6ef",
+    "5709909ecf7a627ea87eaccdccc02030c261c057d0d148ccc733157eef8ccba5",
   contentLedgerSha256:
-    "b1df9fbfcd1513fcb19cbcd37c100a008a906f97ea622c9941c60eabe94b4560",
+    "dfd230f4cc44ed0faf46a0f2e7699617b52b3c41d2a9486472d13e04752637b0",
 } as const;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
@@ -373,6 +370,7 @@ function compilerSupportFiles(directory: string): readonly string[] {
         ) ||
         (packageRelativePath !== "LICENSE" &&
           packageRelativePath !== "package.json" &&
+          packageRelativePath !== "THIRD_PARTY_NOTICES.md" &&
           !packageRelativePath.endsWith(".d.ts") &&
           !packageRelativePath.endsWith(".d.cts"))
       ) {
@@ -429,7 +427,7 @@ export function assertEffectDeclarationCompilerSupport(
 export function copyEffectDeclarationCompilerSupport(
   destination: string,
 ): void {
-  const sources = validatedPackageEffectCompilerSupportDirectories(
+  const source = validatedPackageEffectCompilerSupportDirectory(
     CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS,
   );
   const cohortTarget = resolve(destination, "node_modules");
@@ -460,20 +458,16 @@ export function copyEffectDeclarationCompilerSupport(
       }
     }
   };
-  for (const packageName of [
-    "effect",
-    "fast-check",
-    "msgpackr",
-    "pure-rand",
+  const target = resolve(cohortTarget, "effect");
+  mkdirSync(target, { recursive: true });
+  for (const fileName of [
+    "LICENSE",
+    "package.json",
+    "THIRD_PARTY_NOTICES.md",
   ] as const) {
-    const source = sources[packageName];
-    const target = resolve(cohortTarget, packageName);
-    mkdirSync(target, { recursive: true });
-    for (const fileName of ["LICENSE", "package.json"] as const) {
-      copyFileSync(resolve(source, fileName), resolve(target, fileName));
-    }
-    copyDeclarations(source, source, target);
+    copyFileSync(resolve(source, fileName), resolve(target, fileName));
   }
+  copyDeclarations(source, source, target);
   assertEffectDeclarationCompilerSupport(cohortTarget);
 }
 

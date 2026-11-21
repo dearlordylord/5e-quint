@@ -1,8 +1,9 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import Ajv2020 from "ajv/dist/2020.js";
 
@@ -45,10 +46,13 @@ const syntheticMagicItemVariantsInput = {
   ],
 };
 
+const authoredUnits = (aggregate: PublishedSrdSurface) =>
+  aggregate.units.map(({ rulesExcerpt: _rulesExcerpt, ...unit }) => unit);
+
 const canonicalVariantInputs = (
   aggregate: PublishedSrdSurface,
 ): ReadonlyArray<unknown> => [
-  ...aggregate.units,
+  ...authoredUnits(aggregate),
   bagOfHoldingInput,
   cloakOfProtectionInput,
   syntheticMagicItemVariantsInput,
@@ -69,9 +73,10 @@ const readPublishedAggregate = () => {
 
 describe("committed SRD Surface publication", () => {
   test("publishes generated rules excerpts without canonical descriptions", () => {
-    const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-      readPublishedAggregate(),
-    );
+    const aggregate = Schema.decodeUnknownSync(
+      PublishedSrdSurfaceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(readPublishedAggregate());
 
     for (const record of [...aggregate.units, ...aggregate.statBlocks]) {
       expect(record).not.toHaveProperty("description");
@@ -80,15 +85,21 @@ describe("committed SRD Surface publication", () => {
   });
 
   test("specializes and decodes every canonical concrete UnitRecord member", () => {
-    const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-      readPublishedAggregate(),
-    );
+    const aggregate = Schema.decodeUnknownSync(
+      PublishedSrdSurfaceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(readPublishedAggregate());
     const inputs = canonicalVariantInputs(aggregate);
 
     expect(UNIT_RECORD_MEMBER_SCHEMAS).toHaveLength(42);
     for (const [index, memberSchema] of UNIT_RECORD_MEMBER_SCHEMAS.entries()) {
       const input = inputs.find((candidate) =>
-        Schema.is(memberSchema)(candidate),
+        Result.isSuccess(
+          Schema.decodeUnknownResult(
+            memberSchema,
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )(candidate),
+        ),
       );
       expect(
         input,
@@ -96,20 +107,27 @@ describe("committed SRD Surface publication", () => {
       ).toBeDefined();
       if (input === undefined) continue;
 
-      const record = Schema.decodeUnknownSync(UnitRecordSchema)(input);
+      const record = Schema.decodeUnknownSync(
+        UnitRecordSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(input);
       if (record.provenance.kind === "srd-5.2.1") {
         expect(() =>
-          Schema.decodeUnknownSync(SrdUnitRecordSchema)(input),
+          Schema.decodeUnknownSync(
+            SrdUnitRecordSchema,
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )(input),
         ).not.toThrow();
       }
     }
   });
 
   test("retains list-prepared and Pact Magic class progression checks", () => {
-    const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-      readPublishedAggregate(),
-    );
-    const listPreparedClass = aggregate.units.find(
+    const aggregate = Schema.decodeUnknownSync(
+      PublishedSrdSurfaceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(readPublishedAggregate());
+    const listPreparedClass = authoredUnits(aggregate).find(
       (record) =>
         record.kind === "class" &&
         record.className === "bard" &&
@@ -134,10 +152,13 @@ describe("committed SRD Surface publication", () => {
       },
     };
     expect(() =>
-      Schema.decodeUnknownSync(SrdUnitRecordSchema)(invalidListPreparedClass),
+      Schema.decodeUnknownSync(
+        SrdUnitRecordSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(invalidListPreparedClass),
     ).toThrow();
 
-    const pactMagicClass = aggregate.units.find(
+    const pactMagicClass = authoredUnits(aggregate).find(
       (record) =>
         record.kind === "class" &&
         record.className === "warlock" &&
@@ -163,21 +184,33 @@ describe("committed SRD Surface publication", () => {
       },
     };
     expect(() =>
-      Schema.decodeUnknownSync(SrdUnitRecordSchema)(invalidPactMagicClass),
+      Schema.decodeUnknownSync(
+        SrdUnitRecordSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(invalidPactMagicClass),
     ).toThrow();
   });
 
   test("allocates fresh arrays for decoding defaults", () => {
-    const firstPassive = Schema.decodeUnknownSync(PassiveMechanicsSchema)({
+    const firstPassive = Schema.decodeUnknownSync(
+      PassiveMechanicsSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       family: "passive",
     });
-    const secondPassive = Schema.decodeUnknownSync(PassiveMechanicsSchema)({
+    const secondPassive = Schema.decodeUnknownSync(
+      PassiveMechanicsSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       family: "passive",
     });
     expect(firstPassive.grants).toEqual([]);
     expect(firstPassive.grants).not.toBe(secondPassive.grants);
 
-    const firstSubclass = Schema.decodeUnknownSync(SubclassRecordSchema)({
+    const firstSubclass = Schema.decodeUnknownSync(
+      SubclassRecordSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       id: "synthetic_subclass",
       name: "Synthetic Subclass",
       provenance: {
@@ -187,7 +220,10 @@ describe("committed SRD Surface publication", () => {
       kind: "subclass",
       className: "barbarian",
     });
-    const secondSubclass = Schema.decodeUnknownSync(SubclassRecordSchema)({
+    const secondSubclass = Schema.decodeUnknownSync(
+      SubclassRecordSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       id: "synthetic_subclass",
       name: "Synthetic Subclass",
       provenance: {
@@ -202,9 +238,11 @@ describe("committed SRD Surface publication", () => {
 
     const firstAnchored = Schema.decodeUnknownSync(
       AnchoredTriggerMechanicsSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(magicMouthInput.mechanics);
     const secondAnchored = Schema.decodeUnknownSync(
       AnchoredTriggerMechanicsSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(magicMouthInput.mechanics);
     expect(firstAnchored.filters).toEqual([]);
     expect(firstAnchored.filters).not.toBe(secondAnchored.filters);
@@ -212,19 +250,27 @@ describe("committed SRD Surface publication", () => {
 
   test("round-trips the encoded publication wire shape", () => {
     const encoded = readPublishedAggregate();
-    const decoded = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-      encoded,
-    );
-    expect(Schema.encodeSync(PublishedSrdSurfaceSchema)(decoded)).toEqual(
-      encoded,
-    );
+    const decoded = Schema.decodeUnknownSync(
+      PublishedSrdSurfaceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(encoded);
+    expect(
+      Schema.encodeSync(
+        PublishedSrdSurfaceSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(decoded),
+    ).toEqual(encoded);
   });
 
   test("validates the encoded aggregate with the generated JSON schema", () => {
-    const decoded = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-      readPublishedAggregate(),
-    );
-    const encoded = Schema.encodeSync(PublishedSrdSurfaceSchema)(decoded);
+    const decoded = Schema.decodeUnknownSync(
+      PublishedSrdSurfaceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(readPublishedAggregate());
+    const encoded = Schema.encodeSync(
+      PublishedSrdSurfaceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(decoded);
     const validate = new Ajv2020({
       strict: false,
       inlineRefs: false,

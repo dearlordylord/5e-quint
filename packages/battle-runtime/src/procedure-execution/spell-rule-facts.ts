@@ -126,8 +126,8 @@ export const SpellDefinitionRuleFactsSchema = Schema.Struct({
   }),
   twinnedTargetCount: Schema.Union([
     Schema.Struct({
-      base: Schema.Number,
-      baseLevel: Schema.Number,
+      base: Schema.Finite,
+      baseLevel: Schema.Finite,
     }),
     Schema.Null,
   ]),

@@ -1,5 +1,6 @@
+import { jsonSchemaDocument } from "../../packages/shared/src/json-schema.ts";
 import { writeFileSync } from "node:fs";
-import { JsonSchema, Schema } from "effect";
+import { JsonSchema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
 
@@ -12,7 +13,7 @@ writeFileSync(
   `${JSON.stringify(
     (() => {
       const document = JsonSchema.toDocumentDraft07(
-        Schema.toJsonSchemaDocument(ReviewOutputSchema),
+        jsonSchemaDocument(ReviewOutputSchema),
       );
       return {
         $schema: JsonSchema.META_SCHEMA_URI_DRAFT_07,

@@ -1,6 +1,44 @@
 import { describe, expect, it } from "vitest";
+import { Result, Schema } from "effect";
 
-import { stripNestedJsonSchemaIds } from "./json-schema.ts";
+import {
+  jsonSchemaDocument,
+  jsonSchemaPattern,
+  stripNestedJsonSchemaIds,
+} from "./json-schema.ts";
+
+describe("encoded JSON Schema publication", () => {
+  it("closes objects and keeps numeric fields numeric", () => {
+    const schema = Schema.Struct({ value: Schema.Finite });
+    expect(jsonSchemaDocument(schema).schema).toEqual({
+      type: "object",
+      properties: { value: { type: "number" } },
+      required: ["value"],
+      additionalProperties: false,
+    });
+  });
+
+  it("publishes portable patterns and rejects flags the document cannot preserve", () => {
+    for (const pattern of [/^synthetic$/, /^synthetic$/u]) {
+      const schema = Schema.String.check(jsonSchemaPattern(pattern));
+      expect(
+        Result.isSuccess(Schema.decodeUnknownResult(schema)("synthetic")),
+      ).toBe(true);
+      expect(jsonSchemaDocument(schema).schema).toMatchObject({
+        type: "string",
+        pattern: "^synthetic$",
+      });
+    }
+    expect(() => jsonSchemaPattern(/^synthetic$/i)).toThrow(/flags/);
+  });
+
+  it("retains explicit schema identifiers through reference allocation", () => {
+    const schema = Schema.String.annotate({ identifier: "SyntheticText" });
+    const document = jsonSchemaDocument(schema);
+    expect(document.schema).toEqual({ $ref: "#/$defs/SyntheticText" });
+    expect(document.definitions).toEqual({ SyntheticText: { type: "string" } });
+  });
+});
 
 describe("JSON Schema id projection", () => {
   it("strips nested schema ids without changing data property names or examples", () => {

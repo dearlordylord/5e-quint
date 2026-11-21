@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { EquippedWeaponBattleBlockersSchema } from "./equipped-weapon-battle-blockers.ts";
 import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
 import { CreationInputGuidanceSchema } from "./creation-input-guidance-schema.ts";
@@ -20,10 +21,6 @@ import {
 import { UnitId } from "@dnd/shared/game-facts";
 import { Result, Schema } from "effect";
 
-import {
-  CharacterSessionQueryOutputSchema,
-  type CharacterSessionQueryOutput,
-} from "./character-session-query-tool-output.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
 const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
@@ -230,8 +227,8 @@ export const CharacterSessionRowSchema = Schema.Union([
     displayName: Schema.String,
     build: JsonObjectSchema,
     hitPoints: Schema.Struct({
-      current: Schema.Number,
-      maximum: Schema.Number,
+      current: Schema.Finite,
+      maximum: Schema.Finite,
       state: JsonObjectSchema,
     }),
     hitDice: Schema.Array(CharacterSheetHitDieDisplayRowSchema),
@@ -388,7 +385,10 @@ export type CharacterSessionSheetProjection = Schema.Schema.Type<
 export function parseCharacterSessionSheetProjection(
   candidate: Schema.Codec.Encoded<typeof CharacterSessionSheetProjectionSchema>,
 ): Result.Result<CharacterSessionSheetProjection, Schema.SchemaError> {
-  return Schema.decodeResult(CharacterSessionSheetProjectionSchema)(candidate);
+  return Schema.decodeResult(
+    CharacterSessionSheetProjectionSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(candidate);
 }
 
 const CharacterSessionDetailSchema = Schema.Union([
@@ -425,8 +425,10 @@ export const CharacterSessionDetailOutputSchema = Schema.Struct({
   session: McpSessionSummarySchema,
 });
 
-export { CharacterSessionQueryOutputSchema };
-export type { CharacterSessionQueryOutput };
+export {
+  CharacterSessionQueryOutputSchema,
+  type CharacterSessionQueryOutput,
+} from "./character-session-query-tool-output.ts";
 
 export type CharacterSessionRow = Schema.Schema.Type<
   typeof CharacterSessionRowSchema

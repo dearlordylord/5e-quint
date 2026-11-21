@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -88,7 +89,7 @@ export const GitHubIssueNumberSchema = Schema.Number.pipe(
 type GitHubIssueNumber = Schema.Schema.Type<typeof GitHubIssueNumberSchema>;
 
 export const SwarmFingerprintSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[a-f0-9]{64}$/)),
   Schema.brand("SwarmFingerprint"),
 );
 type SwarmFingerprint = Schema.Schema.Type<typeof SwarmFingerprintSchema>;
@@ -334,7 +335,7 @@ const PersistedExecutionIdentitySchema = Schema.Struct({
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,
   transcriptSha256: Schema.String.pipe(
-    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+    Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   ),
 });
 type PersistedExecutionIdentity = Schema.Schema.Type<
@@ -344,7 +345,7 @@ const PersistedExecutionAuditSchema = Schema.Struct({
   ...PersistedExecutionIdentitySchema.fields,
   findingsPath: Schema.String,
   findingsSha256: Schema.String.pipe(
-    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+    Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   ),
   findingsByteLength: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
@@ -363,7 +364,7 @@ const PersistedCampaignAuditSchema = Schema.Struct({
   startedAt: StartedAtSchema,
   findingsPath: Schema.String,
   findingsSha256: Schema.String.pipe(
-    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+    Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   ),
   findingsByteLength: Schema.Number.pipe(
     Schema.check(Schema.isInt()),

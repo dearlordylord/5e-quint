@@ -26,6 +26,7 @@ import {
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 import {
   mcpModelOutputJsonSchema,
+  McpEmptyArgumentsSchema,
   mcpObjectJsonSchema,
   mcpOutputJsonSchema,
   canonicalMcpOutputSchema,
@@ -39,11 +40,10 @@ import {
   type PlaySessionNextOperationName,
 } from "./play-session-tool-names.ts";
 
-const EmptyArgsSchema = Schema.Struct({});
 const PlaySessionArgsSchema = Schema.Struct({
   playSessionId: PlaySessionIdSchema,
 });
-export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+export const emptyInputSchema = mcpObjectJsonSchema(McpEmptyArgumentsSchema);
 export const playSessionInputSchema = mcpObjectJsonSchema(
   PlaySessionArgsSchema,
 );
