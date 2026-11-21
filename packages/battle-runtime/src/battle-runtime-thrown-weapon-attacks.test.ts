@@ -22,8 +22,10 @@ import {
   type BattleTargetSpatialFact,
 } from "./index.ts";
 import {
+  admitCharacterWeaponAttackExecutionWeapon,
   attackRollFill,
   attackTargetSpatialFact,
+  battleAbilityModifier,
   battleId,
   characterSeed,
   damageRollFill,
@@ -38,6 +40,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   THROWN_WEAPON_LANDING_POSITION_FOR_TEST,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
 
 const mainDaggerId = battleObjectId("main:weapon_dagger");
@@ -76,6 +79,41 @@ function battleWithDaggers(input: {
           offHandWeapon: {
             itemId: offHandDaggerId,
             unitId: parseSharedUnitId("weapon_dagger"),
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  }).state;
+}
+
+const spearId = battleObjectId("main:weapon_spear");
+
+/**
+ * A Spear goes through Battle's own weapon admission, with no synthetic
+ * mastery: of the published Thrown weapons, it is the one Battle admits today.
+ */
+function battleWithSpear(): BattleState {
+  const spear = unitLibrary.requireUnit("weapon_spear");
+  if (spear.kind !== "weapon") {
+    throw new Error("Expected Spear weapon Unit.");
+  }
+  return startBattleSessionRight({
+    battleId: battleId("battle-thrown-spear"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: {
+          kind: "weapon",
+          ...admitCharacterWeaponAttackExecutionWeapon(spear, spearId),
+          ability: "str",
+          abilityModifier: battleAbilityModifier(3),
+        },
+        selectedLoadout: {
+          weapon: {
+            itemId: spearId,
+            unitId: parseSharedUnitId("weapon_spear"),
+            grip: "one_handed",
           },
         },
       }),
@@ -317,6 +355,41 @@ describe("battle runtime: thrown weapon attacks", () => {
         .filter((attack) => attack.kind === "weapon")
         .map((attack) => attack.weaponDelivery),
     ).toEqual([undefined, "thrown"]);
+  });
+
+  test("a Spear admitted without a synthetic mastery is thrown at 20/60 and lands out of the hand", () => {
+    const state = battleWithSpear();
+    const subject = attackSubjectFor(state, "thrown");
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    expect(hole.attack).toMatchObject({
+      targetConstraint: {
+        kind: "rangedRange",
+        normalFeet: movementFeet(20),
+        longFeet: movementFeet(60),
+      },
+      requiresThrownWeaponLanding: true,
+    });
+
+    const landingPosition = battleTablePositionId("goblin-space");
+    const completed = requireResolved(
+      throwToCompletion({
+        state,
+        subject,
+        facts: [noEnemyNear(subject), landingFact(subject, landingPosition)],
+        attackTotal: 20,
+      }),
+    );
+    expect(
+      completed.state.groundObjects.get(fighterId)?.get(spearId)?.positionId,
+    ).toBe(landingPosition);
+    expect(
+      attackActionOptionsForActor(completed.state, fighterId).map(
+        (attack) => attack.kind,
+      ),
+    ).not.toContain("weapon");
   });
 
   test("a thrown Dagger also leaves the hand on a miss", () => {
