@@ -1,3 +1,4 @@
+import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
 import {
   attackRollDefenseGrantsDisadvantage,
@@ -1771,6 +1772,9 @@ export function huntersPreyHordeBreakerSelection(
 ): HuntersPreyHordeBreakerSelection | null {
   if (
     attack.kind !== "weapon" ||
+    // Horde Breaker's second attack uses the same weapon, which a throw has
+    // already sent out of the attacker's hand.
+    weaponAttackIsThrown(attack) ||
     currentActorId(state) !== attackerId ||
     !state.combatants.has(targetId)
   ) {

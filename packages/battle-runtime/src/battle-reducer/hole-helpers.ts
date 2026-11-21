@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
+import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -45,6 +46,7 @@ import {
 } from "../character-execution-queries.ts";
 import {
   attackExecutionSelectionForOption,
+  type BoundCharacterWeaponAttackActionOption,
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
@@ -763,6 +765,9 @@ export function attackTargetHole(
       actorId,
       selection: attackExecutionSelectionForOption(attack),
       targetConstraint: attackTargetConstraint(attack),
+      ...(weaponAttackIsThrown(attack)
+        ? { requiresThrownWeaponLanding: true as const }
+        : {}),
     },
     choices: attackTargetChoices(state, actorId, attack),
   };
@@ -782,6 +787,14 @@ export function ordinaryAttackTargetHole(
     : hole;
 }
 
+// A thrown attack's landing is a creature-target fact; object targets take
+// only their own object fact. Weapon Mastery riders aren't object outcomes.
+function weaponAttackHasOrdinaryObjectAttackShape(
+  attack: BoundCharacterWeaponAttackActionOption,
+): boolean {
+  return !weaponAttackIsThrown(attack) && !("masteryProperty" in attack.weapon);
+}
+
 export function ordinaryObjectAttackOptionIsSupported(
   state: BattleState,
   actorId: CombatantId,
@@ -792,7 +805,7 @@ export function ordinaryObjectAttackOptionIsSupported(
       const actor = state.combatants.get(actorId);
       return (
         actor?.origin.kind === "character" &&
-        !("masteryProperty" in option.weapon) &&
+        weaponAttackHasOrdinaryObjectAttackShape(option) &&
         activeSpellWeaponDamageRiders(actor, option).length === 0 &&
         eligibleWeaponDamageDiceRollChoiceProcedureRefs(state, actorId, option)
           .length === 0 &&

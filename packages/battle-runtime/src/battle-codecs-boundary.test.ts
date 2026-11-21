@@ -3863,7 +3863,8 @@ describe("battle codec act ownership boundaries", () => {
       (act) =>
         act.subject.tag === "bonusAction" &&
         act.subject.action === "offHandAttack" &&
-        act.subject.actorId === wizardId,
+        act.subject.actorId === wizardId &&
+        !("weaponDelivery" in act.subject),
       skeletonId,
     );
     expectEnvelopeDecodeFailure(malformed);

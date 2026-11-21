@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 
 import { Match } from "effect";
 import {
@@ -119,7 +120,9 @@ export function attackTargetConstraint(
       statBlockAttackTargetConstraint(option),
     ),
     Match.when({ kind: "weapon" }, (option) =>
-      weaponTargetConstraint(option.weapon),
+      option.weaponDelivery === "thrown"
+        ? thrownWeaponTargetConstraint(option.weapon)
+        : weaponTargetConstraint(option.weapon),
     ),
     Match.when({ kind: "unarmedStrike" }, () => ({
       kind: "meleeReach" as const,
@@ -163,6 +166,31 @@ export function weaponTargetConstraint(
   };
 }
 
+/**
+ * SRD 5.2.1 "Thrown" and "Range": a thrown weapon makes a ranged attack with
+ * the normal and long range in its Thrown property.
+ */
+function thrownWeaponTargetConstraint(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+): AttackTargetConstraint {
+  const range = weaponThrownRange(weapon);
+  if (range === undefined) {
+    throw new Error("Thrown Battle Attack requires a Thrown weapon range.");
+  }
+  return {
+    kind: "rangedRange",
+    normalFeet: movementFeet(range.normal),
+    longFeet: movementFeet(range.long),
+  };
+}
+
+function weaponThrownRange(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+): { readonly normal: number; readonly long: number } | undefined {
+  return weapon.properties.find((property) => property.kind === "thrown")
+    ?.range;
+}
+
 export function selectedWeaponDamage(
   weapon: CharacterWeaponAttackActionOption["weapon"],
 ): BattleWeaponDamage {
@@ -199,9 +227,29 @@ export function attackActionVariantOptions(
   if (attack.kind !== "weapon") {
     return [attack];
   }
-  return characterWeaponAttackAbilityOptions(attack).flatMap((abilityOption) =>
-    characterWeaponAttackDamageTypeOptions(abilityOption),
+  return characterWeaponAttackDeliveryOptions(attack).flatMap(
+    (deliveryOption) =>
+      characterWeaponAttackAbilityOptions(deliveryOption).flatMap(
+        (abilityOption) =>
+          characterWeaponAttackDamageTypeOptions(abilityOption),
+      ),
   );
+}
+
+/**
+ * SRD 5.2.1 "Thrown": a held Melee weapon with the Thrown property can also be
+ * thrown to make a ranged attack, with the same ability modifier as its melee
+ * attack. The thrown option copies the melee option, so its ability choices
+ * are the melee ones. A Ranged weapon's attack is already ranged.
+ */
+function characterWeaponAttackDeliveryOptions(
+  attack: CharacterWeaponAttackActionOption,
+): readonly CharacterWeaponAttackActionOption[] {
+  return attack.weaponDelivery === undefined &&
+    attack.weapon.usage === "melee" &&
+    weaponThrownRange(attack.weapon) !== undefined
+    ? [attack, { ...attack, weaponDelivery: "thrown" }]
+    : [attack];
 }
 
 function characterWeaponAttackAbilityOptions(
@@ -1147,9 +1195,7 @@ export function eligibleAttackDamageDieFloorProcedureRefsForAttacker(
 ): readonly BattleProcedureExecutionRef[] {
   if (
     attacker?.origin.kind !== "character" ||
-    attack.kind !== "weapon" ||
-    attack.weapon.usage !== "melee" ||
-    !weaponHasTwoHandedOrVersatileProperty(attack.weapon)
+    !isTwoHandedOrVersatileMeleeWeaponHeldAttack(attack)
   ) {
     return [];
   }
@@ -1166,6 +1212,22 @@ export function eligibleAttackDamageDieFloorProcedureRefsForAttacker(
     binding.procedure.execution === ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE
       ? [binding.procedureRef]
       : [],
+  );
+}
+
+/**
+ * A melee attack with a Two-Handed or Versatile Melee weapon, which stays in
+ * hand. ASSUMPTIONS A57: a thrown weapon isn't held with two hands when its
+ * damage is rolled.
+ */
+function isTwoHandedOrVersatileMeleeWeaponHeldAttack(
+  attack: SupportedAttackActionOption,
+): attack is CharacterWeaponAttackActionOption {
+  return (
+    attack.kind === "weapon" &&
+    attack.weapon.usage === "melee" &&
+    attack.weaponDelivery === undefined &&
+    weaponHasTwoHandedOrVersatileProperty(attack.weapon)
   );
 }
 

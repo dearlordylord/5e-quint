@@ -526,11 +526,9 @@ export function offHandAttackActionOptionsForActor(
   const main = actor.origin.attack;
   const offHand = actor.origin.offHandAttack;
   if (main === null || offHand === undefined) return [];
-  if (
-    (main.kind === "weapon" &&
-      battleObjectIsOnGround(state, actorId, main.weaponObjectId)) ||
-    battleObjectIsOnGround(state, actorId, offHand.weaponObjectId)
-  ) {
+  // The Light extra attack needs the off-hand weapon in hand, not the main one:
+  // a thrown main-hand Dagger has already made the Light attack it follows.
+  if (battleObjectIsOnGround(state, actorId, offHand.weaponObjectId)) {
     return [];
   }
   if (

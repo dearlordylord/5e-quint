@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 174
-- Covered obligations: 163
+- Total obligations: 175
+- Covered obligations: 164
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   163 |
+| covered                  |   164 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   134 |
+| battle             |   135 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -206,6 +206,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `CREATION.SPELL_ACCESS.WIZARD_PROGRESSION`                        | character-creation | covered                  | `character-creation.wizard-spellcasting-advancement`                                                                                                                                                                                                                                                                                                                                                                                             |
 | `BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME`                | battle             | covered                  | `stat-block.spell-invocation.unrestricted`                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION`                    | battle             | covered                  | `stat-block.spell-invocation.unrestricted`                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `BATTLE.ATTACK.THROWN_WEAPON_ATTACK`                              | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -943,6 +944,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle-examples.qnt`                       | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt`                    | semantic-core           | profile-scoped: `unit-feature.ongoing-feature-activation-movement-rider` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.passive-initiative-roll-mode` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt`           | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt`                                                | semantic-core           | `BATTLE.ATTACK.THROWN_WEAPON_ATTACK`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `packages/shared-algebras/proofs/rule-core/thrown-weapon-attack-tests.qnt`                                          | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1329,6 +1332,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-group.qnt`                                       | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt`                          | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt`                                   | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt`                                                | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt`                                             | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt`                                         | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt`                             | qnt-owner-role | proof-only                                                                                                                                                                                               |
@@ -1609,6 +1613,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP`                    | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `fold`, `list`, `map`, `set`, `membership`                                                                                                             |          |           |
 | `BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME`                | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`                                                                                                                                                         |          |           |
 | `BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION`                    | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`                                                                                                                                                         |          |           |
+| `BATTLE.ATTACK.THROWN_WEAPON_ATTACK`                              | generation-subset-clean | `variant`, `record`, `pure-def`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `all-block`, `set`                                                                                                                                                                                                   |          |           |
 
 ### Generator Readiness Backlog
 

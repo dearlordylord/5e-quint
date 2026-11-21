@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 174,
-    "covered": 163,
+    "total": 175,
+    "covered": 164,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 134,
+      "battle": 135,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 163,
+      "covered": 164,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6318,6 +6318,37 @@
         ".references/srd-5.2.1/rules-glossary.md#Concentration"
       ],
       "title": "Stat Block source concentration"
+    },
+    {
+      "id": "BATTLE.ATTACK.THROWN_WEAPON_ATTACK",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-thrown-weapon-attacks.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt"
+      ],
+      "reason": "The QNT owner models the thrown option a Melee weapon with Thrown adds beside its melee one, that the throw is a ranged attack using the melee ability, that an accepted throw (but not one prevented before its roll, nor a melee or Ammunition attack) leaves the weapon on the ground, and that the Light extra attack needs only its own weapon in hand. statblock-attacks adds the thrown variant and its Thrown range; thrown-weapon-attack owns the one thrownWeaponLanding fact, scoped by attacker and procedure ref, and the release onto the owner's ground objects; attack-main and attack-offhand release it when an Attack action or Light extra attack roll is accepted. The executable parity witness covers the thrown option and its range, a hit and a miss landing and the pickup, a melee attack keeping its weapon, the missing, misscoped or stray landing fact, long range and close-combat Disadvantage, and a thrown Light extra attack before and after a main-hand throw.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/thrown-weapon-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/equipment.md#Thrown",
+        ".references/srd-5.2.1/equipment.md#Range",
+        ".references/srd-5.2.1/equipment.md#Light",
+        ".references/srd-5.2.1/equipment.md#Melee or Ranged",
+        "UBIQUITOUS_LANGUAGE.md#Equipment"
+      ],
+      "title": "A held Melee weapon with the Thrown property also offers a thrown ranged attack with its Thrown range and melee ability, and an accepted thrown attack roll, hit or miss, puts the weapon on the ground at one required table-supplied landing position"
     }
   ],
   "battleHoleFrontier": [
@@ -13113,6 +13144,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns the thrown delivery a Melee weapon with Thrown adds, the throw's ranged attack and melee ability, the accepted-throw release onto the ground, and the Light extra attack's own-weapon custody.",
+      "obligationIds": ["BATTLE.ATTACK.THROWN_WEAPON_ATTACK"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-block proof evidence for thrown deliveries, ranged thrown attacks with the melee ability, release on an accepted roll only, a Dart's release, and the Light extra attack after a throw.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15040,6 +15083,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt",
       "role": "semantic-core"
     },
     {
@@ -20373,6 +20421,28 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-concentration-source-lifecycle.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set"
+      ],
+      "obligationId": "BATTLE.ATTACK.THROWN_WEAPON_ATTACK",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt"
       ],
       "status": "generation-subset-clean"
     }

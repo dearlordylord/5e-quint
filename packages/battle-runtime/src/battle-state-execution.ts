@@ -1776,6 +1776,16 @@ export type BattleTargetSpatialFact =
       }[];
     }
   | {
+      /**
+       * Table-supplied ground position where a thrown weapon comes to rest
+       * once its attack roll is accepted, hit or miss.
+       */
+      readonly kind: "thrownWeaponLanding";
+      readonly attackerId: CombatantId;
+      readonly procedureRef: BattleAttackProcedureExecutionRef;
+      readonly positionId: BattleTablePositionId;
+    }
+  | {
       readonly kind: "unitFeatureVisibleTargetWithinRange";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
@@ -4935,6 +4945,8 @@ export type BattleTargetChoiceHole = Extract<
     readonly selection: BattleAttackExecutionSelection;
     readonly targetConstraint: AttackTargetConstraint;
     readonly acceptsObjectTarget?: true;
+    /** The attack throws its weapon: the fill needs a thrownWeaponLanding fact. */
+    readonly requiresThrownWeaponLanding?: true;
   };
 };
 export type BattleHelpAttackAllyDecisionHole = {
@@ -5281,6 +5293,11 @@ export type BattleDroppedObjectSource =
       readonly kind: "druidWildShape";
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
+    }
+  | {
+      /** SRD 5.2.1 "Thrown": the weapon left its owner's hand in an attack. */
+      readonly kind: "thrownWeaponAttack";
+      readonly procedureRef: BattleAttackProcedureExecutionRef;
     };
 export type BattleGroundObjectState = {
   readonly positionId: BattleTablePositionId;
@@ -7300,6 +7317,7 @@ export type BattleFill =
             | "spellObjectTarget"
             | "spellObjectTargetSight"
             | "rangedAttackEnemyProximity"
+            | "thrownWeaponLanding"
             | "attackObjectTarget";
         }
       >[];
