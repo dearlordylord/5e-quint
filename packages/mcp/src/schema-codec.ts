@@ -5,7 +5,7 @@ import {
   jsonSchemaDocument,
   stripNestedJsonSchemaIds,
 } from "@dnd/shared/json-schema";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Result, Schema, SchemaAST } from "effect";
 
 import {
   errorContent,
@@ -262,15 +262,21 @@ function jsonSchemaFromCodec<A, I>(
   schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
   // Extract repeated anonymous composites before JSON tree traversal can expand
-  // the codec's shared AST graph. Declared schema identifier requests stay
-  // unchanged; Effect disambiguates reference-name collisions deterministically.
+  // the codec's shared AST graph. Keep impossible leaves inline so optional
+  // forbidden properties can be omitted from closed objects.
   const document = jsonSchemaDocument(schema, {
-    referencePolicy: ({ ast, occurrences, identifier }) =>
-      identifier ??
-      (occurrences > 1 &&
-      (ast._tag === "Objects" || ast._tag === "Arrays" || ast._tag === "Union")
-        ? "McpShared"
-        : undefined),
+    referencePolicy: ({ ast, occurrences, identifier }) => {
+      if (SchemaAST.isNever(ast)) return undefined;
+      return (
+        identifier ??
+        (occurrences > 1 &&
+        (ast._tag === "Objects" ||
+          ast._tag === "Arrays" ||
+          ast._tag === "Union")
+          ? "McpShared"
+          : undefined)
+      );
+    },
   });
   return stripNestedJsonSchemaIds(
     {

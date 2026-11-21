@@ -26,6 +26,21 @@ const schemaProperties = fc.uniqueArray(
 );
 
 describe("MCP output JSON Schema identity", () => {
+  test("omits optional named impossible fields while retaining required constraints", () => {
+    const forbidden = Schema.Never.annotate({
+      identifier: "ForbiddenTestValue",
+    });
+    const optional = mcpOutputJsonSchema(
+      Schema.Struct({ forbidden: Schema.optionalKey(forbidden) }),
+    );
+    expect(optional.properties).toEqual({});
+    expect(JSON.stringify(optional)).not.toContain('"not":{}');
+    expect(mcpOutputJsonSchema(Schema.Struct({ forbidden }))).toMatchObject({
+      required: ["forbidden"],
+      properties: { forbidden: { not: {} } },
+    });
+  });
+
   test("advertises and decodes only an empty object for argument-free tools", () => {
     expect(mcpObjectJsonSchema(McpEmptyArgumentsSchema)).toMatchObject({
       type: "object",
