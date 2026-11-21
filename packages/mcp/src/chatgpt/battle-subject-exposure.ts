@@ -57,6 +57,7 @@ export const BATTLE_SUBJECT_EXPOSURE = {
     "adjust_spell_altitude",
   ),
   "runtimeCommand.creatureFalls": tool("report_creature_fall"),
+  "runtimeCommand.dropProne": tool("drop_prone"),
   "runtimeCommand.creatureTypeProtectionConditionAttempt": tool(
     "report_condition_attempt",
   ),

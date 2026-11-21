@@ -10,6 +10,7 @@ import {
   markMovementSpentForMovementActionBonusActionExclusion,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import {
+  applyCondition,
   isIncapacitated,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
@@ -107,6 +108,7 @@ import {
   opportunityAttackThreatsForMovement,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
+import { dropProneAvailable } from "./drop-prone-policy.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -120,6 +122,7 @@ const MOVEMENT_PROCEDURE_COMMANDS = [
   "move",
   "fixedCostMovementReplacement",
   "standFromProne",
+  "dropProne",
 ] as const satisfies ReadonlyArray<BattleRuntimeCommand>;
 
 type MovementProcedureSubject = Extract<
@@ -157,6 +160,9 @@ export function resolveMovementProcedure(
     ),
     Match.when({ command: "standFromProne" }, (subject) =>
       resolveStandFromProneCommand({ ...input, subject }),
+    ),
+    Match.when({ command: "dropProne" }, (subject) =>
+      resolveDropProneCommand({ ...input, subject }),
     ),
     Match.exhaustive,
   );
@@ -498,6 +504,46 @@ function resolveStandFromProneCommand(
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveDropProneCommand(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Drop Prone accepts no fills.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    actor === undefined ||
+    !dropProneAvailable(input.state, input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Drop Prone is no longer available.",
+    );
+  }
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      actor.combatantId,
+      battleCreatureStateWithKnockOutPreservedConditions(
+        actor,
+        applyCondition(actor.conditions, "prone"),
+      ),
     ),
   };
   return {
