@@ -1278,9 +1278,9 @@ function spellTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: casterId,
-              sourceProcedureRef:
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: casterId,
+              procedureRef:
                 hole.spellTargetSpatialFactRequest.sourceProcedureRef,
               enemies: [],
             },

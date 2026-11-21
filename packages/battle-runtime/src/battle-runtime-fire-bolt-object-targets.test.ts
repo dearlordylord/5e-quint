@@ -319,14 +319,14 @@ describe("battle runtime: Fire Bolt object targets", () => {
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
         },
         {
-          kind: "rangedSpellAttackEnemyProximity",
-          casterId: wizardId,
-          sourceProcedureRef,
+          kind: "rangedAttackEnemyProximity",
+          attackerId: wizardId,
+          procedureRef: sourceProcedureRef,
           enemies: [
             {
               enemyId: skeletonId,
               distanceFeet: movementFeet(5),
-              enemyCanSeeCaster: true,
+              enemyCanSeeAttacker: true,
             },
           ],
         },
@@ -348,7 +348,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
           {
             ...objectTargetFillForObject,
             spatialFacts: objectTargetFillForObject.spatialFacts.filter(
-              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+              (fact) => fact.kind !== "rangedAttackEnemyProximity",
             ),
           },
         ],
@@ -473,14 +473,14 @@ describe("battle runtime: Fire Bolt object targets", () => {
         distanceFeet: movementFeet(30),
       },
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: wizardId,
-        sourceProcedureRef,
+        kind: "rangedAttackEnemyProximity",
+        attackerId: wizardId,
+        procedureRef: sourceProcedureRef,
         enemies: [
           {
             enemyId: skeletonId,
             distanceFeet: movementFeet(5),
-            enemyCanSeeCaster: true,
+            enemyCanSeeAttacker: true,
           },
         ],
       },

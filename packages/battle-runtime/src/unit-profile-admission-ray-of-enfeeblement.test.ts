@@ -1192,7 +1192,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           enemyId: spellCasterId,
           distanceFeet: movementFeet(30),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         },
       ],
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(10) },

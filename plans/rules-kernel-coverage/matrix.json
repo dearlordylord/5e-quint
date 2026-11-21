@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 173,
-    "covered": 162,
+    "total": 174,
+    "covered": 163,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 133,
+      "battle": 134,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 162,
+      "covered": 163,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5378,6 +5378,35 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "A Prone attacker's attack rolls have Disadvantage against creature and object targets, composed with every other source before cancellation"
+    },
+    {
+      "id": "BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-ranged-close-combat.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "reason": "The QNT owner models each listed enemy as a Disadvantage source when it is within 5 feet, can see the attacker and isn't Incapacitated, joined with the other mechanical sources, including a Prone target's, before cancellation. ranged-attack-close-combat owns the one rangedAttackEnemyProximity fact, scoped by attacker and procedure ref, which every ranged attack requires (enemies: [] means checked-none) and the Disadvantage it gives; attack-spatial applies it to weapon and Stat Block attacks on creatures, and attack-roll to them and to ranged Spell Attacks. The executable parity witness covers a qualifying target and a non-target enemy, a Prone target cancelling it, an enemy too far, unseeing or Incapacitated, the missing, duplicated or misscoped fact, and a melee attack needing none.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/ranged-attack-close-combat.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-spatial.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Ranged Attacks in Close Combat",
+        ".references/srd-5.2.1/rules-glossary.md#Incapacitated [Condition]",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
+      ],
+      "title": "A ranged attack roll on a creature, with a weapon, a Stat Block attack or a spell, has Disadvantage while an enemy within 5 feet can see the attacker and isn't Incapacitated, from one required table-supplied enemy proximity fact, composed with every other source before cancellation"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
@@ -12565,6 +12594,7 @@
       "obligationIds": [
         "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
         "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
+        "BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE",
         "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt",
@@ -19726,6 +19756,32 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
       ],

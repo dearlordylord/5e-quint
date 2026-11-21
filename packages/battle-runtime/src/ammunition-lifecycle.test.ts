@@ -392,6 +392,12 @@ describe("ammunition lifecycle", () => {
           attackSelection,
           movementFeet(5),
         ),
+        {
+          kind: "rangedAttackEnemyProximity" as const,
+          attackerId: skeletonId,
+          procedureRef: shortbow.procedureRef,
+          enemies: [],
+        },
       ],
     };
     const state = {
@@ -425,6 +431,7 @@ describe("ammunition lifecycle", () => {
           attackSelection,
           movementFeet(400),
         ),
+        ...targetSpatialFacts.spatialFacts.slice(1),
       ],
     };
     expect(

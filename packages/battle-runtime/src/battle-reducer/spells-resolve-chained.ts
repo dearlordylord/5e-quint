@@ -1,4 +1,4 @@
-import { rangedSpellAttackEnemyProximityQualificationIssue } from "./spells-targeting.ts";
+import { rangedAttackEnemyProximityQualificationIssue } from "./ranged-attack-close-combat.ts";
 // Chained spell attack-damage resolution, currently Chromatic Orb.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -1266,8 +1266,10 @@ export function chainedSpellFillSet(
         const spatialFacts = fill.spatialFacts ?? [];
         const spatialValidation = chainedSpellAttackSpatialFactValidation({
           state,
-          casterId: actorId,
-          sourceProcedureRef: invocation.sourceProcedureRef,
+          scope: {
+            attackerId: actorId,
+            procedureRef: invocation.sourceProcedureRef,
+          },
           facts: spatialFacts,
         });
         if (spatialValidation !== null) return spatialValidation;
@@ -1395,12 +1397,9 @@ export function chainedSpellFillSet(
 }
 
 function chainedSpellAttackSpatialFactValidation(
-  input: Parameters<
-    typeof rangedSpellAttackEnemyProximityQualificationIssue
-  >[0],
+  input: Parameters<typeof rangedAttackEnemyProximityQualificationIssue>[0],
 ): Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> | null {
-  const proximityIssue =
-    rangedSpellAttackEnemyProximityQualificationIssue(input);
+  const proximityIssue = rangedAttackEnemyProximityQualificationIssue(input);
   if (proximityIssue !== null) return proximityIssue;
   const message = validateUniqueAttackSightFacts(input.facts);
   return message === null ? null : { tag: "invalid", message };

@@ -100,8 +100,8 @@ import {
   spatialMeleeSpellAttackProxyPositionInvalidReason,
   spellTargetRequiresAttackRollRelationshipFact,
   spellAttackRequiresExactDistance,
-  rangedSpellAttackEnemyProximityQualificationIssue,
 } from "./spells-targeting.ts";
+import { rangedAttackEnemyProximityQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
 import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
 import {
@@ -139,7 +139,7 @@ export type SpellAttackSequencePartTargetFill =
           readonly kind:
             | "spellObjectTarget"
             | "spellObjectTargetSight"
-            | "rangedSpellAttackEnemyProximity";
+            | "rangedAttackEnemyProximity";
         }
       >[];
     };
@@ -172,7 +172,7 @@ type SpellObjectTargetFact = Extract<
       | "spellManufacturedMetalObjectTarget"
       | "spellObjectTarget"
       | "spellObjectTargetSight"
-      | "rangedSpellAttackEnemyProximity";
+      | "rangedAttackEnemyProximity";
   }
 >;
 const SPELL_OBJECT_TARGET_FACT_KINDS = new Set<SpellObjectTargetFact["kind"]>([
@@ -184,7 +184,7 @@ const SPELL_OBJECT_TARGET_FACT_KINDS = new Set<SpellObjectTargetFact["kind"]>([
   "spellManufacturedMetalObjectTarget",
   "spellObjectTarget",
   "spellObjectTargetSight",
-  "rangedSpellAttackEnemyProximity",
+  "rangedAttackEnemyProximity",
 ]);
 
 function isSpellObjectTargetFact(
@@ -201,7 +201,7 @@ type SpellAttackSequenceObjectTargetSpatialFact = Extract<
     readonly kind:
       | "spellObjectTarget"
       | "spellObjectTargetSight"
-      | "rangedSpellAttackEnemyProximity";
+      | "rangedAttackEnemyProximity";
   }
 >;
 const SPELL_ATTACK_SEQUENCE_OBJECT_TARGET_SPATIAL_FACT_KINDS = new Set<
@@ -209,7 +209,7 @@ const SPELL_ATTACK_SEQUENCE_OBJECT_TARGET_SPATIAL_FACT_KINDS = new Set<
 >([
   "spellObjectTarget",
   "spellObjectTargetSight",
-  "rangedSpellAttackEnemyProximity",
+  "rangedAttackEnemyProximity",
 ]);
 
 function isSpellAttackSequenceObjectTargetSpatialFact(
@@ -2410,10 +2410,12 @@ function spellAttackFillQualificationIssue(input: {
 }): Extract<SpellFillSet, { readonly tag: "invalid" }> | null {
   const { fill, invocation } = input;
   if (isSpellAttackProximityTargetFill(fill, invocation)) {
-    const proximityIssue = rangedSpellAttackEnemyProximityQualificationIssue({
+    const proximityIssue = rangedAttackEnemyProximityQualificationIssue({
       state: input.state,
-      casterId: input.actorId,
-      sourceProcedureRef: input.sourceProcedureRef,
+      scope: {
+        attackerId: input.actorId,
+        procedureRef: input.sourceProcedureRef,
+      },
       facts: fill.spatialFacts ?? [],
     });
     if (proximityIssue !== null) return proximityIssue;

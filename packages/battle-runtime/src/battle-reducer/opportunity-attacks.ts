@@ -98,7 +98,10 @@ import {
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
-import { attackTargetIsLegal } from "./attack-spatial.ts";
+import {
+  attackEnemyProximityQualificationIssue,
+  attackTargetIsLegal,
+} from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -541,24 +544,37 @@ function reactionAttackTargetSpatialFacts(input: {
         "Fixed-target reaction attacks require an exact attack target distance fact.",
     };
   }
-  if (
-    !attackTargetIsLegal(
-      input.state,
-      input.subject.reactorId,
-      input.subject.targetId,
-      input.attack,
+  return (
+    reactionAttackTargetIssue(input, facts) ?? {
+      tag: "ok",
       facts,
-    )
-  ) {
-    return {
-      tag: "invalid",
-      message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
-    };
-  }
-  return {
-    tag: "ok",
+    }
+  );
+}
+
+function reactionAttackTargetIssue(
+  input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
+  facts: readonly BattleTargetSpatialFact[],
+): { readonly tag: "invalid"; readonly message: string } | null {
+  const proximityIssue = attackEnemyProximityQualificationIssue(
+    input.state,
+    input.subject.reactorId,
+    input.attack,
     facts,
-  };
+  );
+  if (proximityIssue !== null) return proximityIssue;
+  return attackTargetIsLegal(
+    input.state,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+    facts,
+  )
+    ? null
+    : {
+        tag: "invalid",
+        message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
+      };
 }
 
 function reactionAttackDistanceFact(input: {
