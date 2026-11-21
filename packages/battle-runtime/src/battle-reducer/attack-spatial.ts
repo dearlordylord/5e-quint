@@ -46,9 +46,7 @@ export function attackTargetIsLegal(
     distanceFeet !== null &&
     (constraint.kind === "meleeReach"
       ? Number(distanceFeet) <= Number(constraint.reachFeet)
-      : attackTargetRangeBand(facts, actorId, targetId, attack) !== null) &&
-    attackEnemyProximityQualificationIssue(state, actorId, attack, facts) ===
-      null
+      : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
   );
 }
 

@@ -2328,6 +2328,31 @@ function isScenarioCreatureSpellTargetFill(
   );
 }
 
+/**
+ * Whether a ranged attack fill carries exactly one enemy proximity fact for
+ * this attacker and procedure. The runtime checks the enemies themselves.
+ */
+function hasOneScopedEnemyProximityFact(
+  facts: readonly BattleTargetSpatialFact[],
+  scope: Pick<
+    Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "rangedAttackEnemyProximity" }
+    >,
+    "attackerId" | "procedureRef"
+  >,
+): boolean {
+  const qualifications = facts.filter(
+    (fact) => fact.kind === "rangedAttackEnemyProximity",
+  );
+  const [qualification] = qualifications;
+  return (
+    qualifications.length === 1 &&
+    qualification?.attackerId === scope.attackerId &&
+    qualification.procedureRef === scope.procedureRef
+  );
+}
+
 export function scenarioCreatureSpellTargetFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;
@@ -2414,15 +2439,11 @@ export function scenarioCreatureSpellTargetFills(input: {
       canonicalFacts.length > 0 &&
       request.requiresEnemyProximityQualification === true
     ) {
-      const qualifications = (fill.spatialFacts ?? []).filter(
-        (fact) => fact.kind === "rangedAttackEnemyProximity",
-      );
-      const qualification = qualifications[0];
       if (
-        qualifications.length !== 1 ||
-        qualification === undefined ||
-        qualification.attackerId !== request.casterId ||
-        qualification.procedureRef !== request.sourceProcedureRef
+        !hasOneScopedEnemyProximityFact(fill.spatialFacts ?? [], {
+          attackerId: request.casterId,
+          procedureRef: request.sourceProcedureRef,
+        })
       ) {
         return Result.fail({
           tag: "spell-target-projection",
@@ -2974,15 +2995,11 @@ export function scenarioAttackTargetFills(input: {
       });
     }
     if (attack.targetConstraint.kind === "rangedRange") {
-      const qualifications = (fill.spatialFacts ?? []).filter(
-        (fact) => fact.kind === "rangedAttackEnemyProximity",
-      );
-      const qualification = qualifications[0];
       if (
-        qualifications.length !== 1 ||
-        qualification === undefined ||
-        qualification.attackerId !== attack.actorId ||
-        qualification.procedureRef !== attack.selection.procedureRef
+        !hasOneScopedEnemyProximityFact(fill.spatialFacts ?? [], {
+          attackerId: attack.actorId,
+          procedureRef: attack.selection.procedureRef,
+        })
       ) {
         return Result.fail({
           tag: "attack-target-projection",

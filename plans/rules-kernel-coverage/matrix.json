@@ -5406,7 +5406,7 @@
         ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
-      "title": "A ranged attack roll, with a weapon, a Stat Block attack or a spell, has Disadvantage while an enemy within 5 feet can see the attacker and isn't Incapacitated, from one required table-supplied enemy proximity fact, composed with every other source before cancellation"
+      "title": "A ranged attack roll on a creature, with a weapon, a Stat Block attack or a spell, has Disadvantage while an enemy within 5 feet can see the attacker and isn't Incapacitated, from one required table-supplied enemy proximity fact, composed with every other source before cancellation"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",

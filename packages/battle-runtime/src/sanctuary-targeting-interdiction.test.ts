@@ -332,52 +332,7 @@ describe("Sanctuary targeting interdiction", () => {
   });
 
   test("an attack prevented by Sanctuary before its roll does not expend ammunition", () => {
-    const warded = advanceToAttacker(
-      castSanctuary(
-        battleWithSanctuary({ ammunitionAttacker: true }),
-        wardedId,
-      ),
-    );
-    const shortbow = attackActionOptionsForActor(warded.state, attackerId).find(
-      (option) =>
-        option.kind === "statBlockAttack" &&
-        option.attack.ammunition === "arrow",
-    );
-    if (shortbow === undefined) {
-      throw new Error("Expected the ammunition attacker Shortbow option.");
-    }
-    const attack = discoverBattleActCandidates(warded.state).find(
-      (candidate) =>
-        candidate.subject.tag === "action" &&
-        candidate.subject.action === "attack" &&
-        candidate.subject.procedureRef === shortbow.procedureRef,
-    );
-    if (
-      attack === undefined ||
-      attack.subject.tag !== "action" ||
-      attack.subject.action !== "attack"
-    ) {
-      throw new Error("Expected the ammunition attacker Shortbow act.");
-    }
-    const targetFill = {
-      ...attackTargetFill(
-        requireHole(attack.initialHoles, "targetChoice"),
-        wardedId,
-        attack.subject,
-      ),
-      spatialFacts: [
-        {
-          kind: "attackTargetDistance" as const,
-          actorId: attackerId,
-          targetId: wardedId,
-          ...attackExecutionSelectionForSubjectForTest(attack.subject),
-          distanceFeet: movementFeet(5),
-        },
-        ...rangedAttackEnemyProximityFactsForTest(
-          requireHole(attack.initialHoles, "targetChoice"),
-        ),
-      ],
-    };
+    const { warded, attack, targetFill } = wardedShortbowAttack();
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
       subject: attack.subject,
@@ -405,6 +360,58 @@ describe("Sanctuary targeting interdiction", () => {
     expect(combatant(lost.state, attackerId).ammunitionStocks).toEqual([
       { ammunition: "arrow", remaining: resourceCount(20) },
     ]);
+  });
+
+  test("a ranged attack moved to a new target keeps the attacker's close-combat Disadvantage", () => {
+    const { warded, attack, targetFill } = wardedShortbowAttack([
+      {
+        enemyId: wardedId,
+        distanceFeet: movementFeet(5),
+        enemyCanSeeAttacker: true,
+      },
+    ]);
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const retargeted = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [
+        targetFill,
+        sanctuaryOutcomeFill(
+          requireHole(
+            battleResolutionHolesForTest(needsSanctuary),
+            "targetingSaveInterdictionOutcome",
+          ),
+          {
+            saveSucceeded: false,
+            outcome: {
+              kind: "newTarget",
+              targetId: replacementId,
+              spatialFacts: [
+                {
+                  ...attackTargetFact(replacementId, attack.subject),
+                  distanceFeet: movementFeet(30),
+                },
+              ],
+              replacementTargetKind: "attackRoll",
+            },
+          },
+        ),
+      ],
+    });
+    if (retargeted.tag !== "needsHoles") {
+      throw new Error("Expected the retargeted attack's roll hole.");
+    }
+    expect(
+      requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+        .rollMode,
+    ).toBe("disadvantage");
   });
 
   test("successful save proceeds to the attack roll", () => {
@@ -2222,6 +2229,43 @@ function spellDamageTypeChoiceFill(
   value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
 ): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
+function wardedShortbowAttack(
+  enemies: Parameters<typeof rangedAttackEnemyProximityFactsForTest>[2] = [],
+) {
+  const warded = advanceToAttacker(
+    castSanctuary(battleWithSanctuary({ ammunitionAttacker: true }), wardedId),
+  );
+  const shortbow = attackActionOptionsForActor(warded.state, attackerId).find(
+    (option) =>
+      option.kind === "statBlockAttack" && option.attack.ammunition === "arrow",
+  );
+  if (shortbow === undefined) {
+    throw new Error("Expected the ammunition attacker Shortbow option.");
+  }
+  const attack = discoverBattleActCandidates(warded.state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef === shortbow.procedureRef,
+  );
+  if (
+    attack === undefined ||
+    attack.subject.tag !== "action" ||
+    attack.subject.action !== "attack"
+  ) {
+    throw new Error("Expected the ammunition attacker Shortbow act.");
+  }
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = {
+    ...attackTargetFill(targetHole, wardedId, attack.subject),
+    spatialFacts: [
+      attackTargetFact(wardedId, attack.subject),
+      ...rangedAttackEnemyProximityFactsForTest(targetHole, [], enemies),
+    ],
+  };
+  return { warded, attack: { ...attack, subject: attack.subject }, targetFill };
 }
 
 function attackTargetFact(

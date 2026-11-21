@@ -2576,11 +2576,12 @@ function bindSelectedSpellSpatialFactsForTest(
       return {
         ...fill,
         spatialFacts: fill.spatialFacts.map((fact) =>
-          fact.kind === "spellTarget" ||
-          fact.kind === "spellLeapTargetWithinRange" ||
           fact.kind === "rangedAttackEnemyProximity"
-            ? { ...fact, sourceProcedureRef: procedureRef }
-            : fact,
+            ? { ...fact, procedureRef }
+            : fact.kind === "spellTarget" ||
+                fact.kind === "spellLeapTargetWithinRange"
+              ? { ...fact, sourceProcedureRef: procedureRef }
+              : fact,
         ),
       };
     }
@@ -2588,10 +2589,11 @@ function bindSelectedSpellSpatialFactsForTest(
       return {
         ...fill,
         spatialFacts: fill.spatialFacts.map((fact) =>
-          fact.kind === "spellObjectTarget" ||
           fact.kind === "rangedAttackEnemyProximity"
-            ? { ...fact, sourceProcedureRef: procedureRef }
-            : fact,
+            ? { ...fact, procedureRef }
+            : fact.kind === "spellObjectTarget"
+              ? { ...fact, sourceProcedureRef: procedureRef }
+              : fact,
         ),
       };
     }

@@ -154,6 +154,7 @@ import {
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { attackEnemyProximityQualificationIssue } from "./attack-spatial.ts";
+import { withAttackEnemyProximityFrom } from "./ranged-attack-close-combat.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 
 import { attackFillSet, selectedAttackFillSet } from "./attack-fill-set.ts";
@@ -5586,7 +5587,10 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   const secondTargetId = targetFill.value;
-  const targetFacts = additionalWeaponAttackTargetSpatialFacts(targetFill);
+  const targetFacts = withAttackEnemyProximityFrom(
+    input.fillSet.targetSpatialFacts,
+    additionalWeaponAttackTargetSpatialFacts(targetFill),
+  );
   /* v8 ignore start -- @preserve -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
   if (
     !huntersPreyHordeBreakerTargetIsLegal({
@@ -5604,7 +5608,7 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
       result: invalidResult(
         input.state,
         "invalidFill",
-        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
+        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn, with at most the attack's one enemy proximity qualification.",
       ),
     };
   }

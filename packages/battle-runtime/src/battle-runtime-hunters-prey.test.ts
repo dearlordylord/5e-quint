@@ -2115,7 +2115,7 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
+        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn, with at most the attack's one enemy proximity qualification.",
     });
   });
 
