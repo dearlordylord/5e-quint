@@ -182,6 +182,7 @@ function levelTwoClassBuild(input: {
         {
           classUnitId: classUnitId(input.classUnitId),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },

@@ -15,7 +15,7 @@ import {
   type CharacterProgression,
   type CharacterProgressionLevelIssue,
   type ClassUnitId,
-  type FixedHigherLevelClassHitPointRule,
+  type HigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
 
 export type { CharacterProgression } from "./character-progression-types.ts";
@@ -37,7 +37,7 @@ export function parseCharacterProgressionShape(input: {
   readonly startingClass: ClassUnitId;
   readonly advancements: readonly {
     readonly classUnitId: ClassUnitId;
-    readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+    readonly hitPointRule: HigherLevelClassHitPointRule;
   }[];
 }): Result.Result<
   CharacterProgression,
