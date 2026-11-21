@@ -56,6 +56,7 @@ import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
 import { resolvePactOfTheChainFamiliarReactionAttack } from "./companion-reaction-attack.ts";
 import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolvers.ts";
+import { turnResourcesWithoutHeroicInspirationAttackRollReroll } from "./battle-reducer/attack-roll-d20-test-rerolls.ts";
 
 const BATTLE_ATTACK_ROUTE_RESOLVERS = {
   ...ATTACK_RESOLVERS,
@@ -366,6 +367,10 @@ function battleResolutionWithExecutionSnapshot(
                 : (resolvedSubjectPhase ?? {
                     kind: "subjectSelection" as const,
                   }),
+            currentTurnResources: turnResourcesAfterResolution(
+              result,
+              resolvedSubjectPhase,
+            ),
           },
         };
   const snapshotState =
@@ -375,6 +380,25 @@ function battleResolutionWithExecutionSnapshot(
     ...phasedResult,
     snapshot,
   };
+}
+
+/**
+ * Turn resources after a resolution: a completed subject drops its own
+ * records. A resolved result with any interrupt frame still pending, such as
+ * a checkpoint below a continuation frame, still holds the interrupted
+ * subject, which replays later.
+ */
+export function turnResourcesAfterResolution(
+  result: Exclude<BattleResolutionResult, { readonly tag: "invalid" }>,
+  resolvedSubjectPhase: BattleState["subjectResolutionPhase"] | undefined,
+): BattleState["currentTurnResources"] {
+  return result.tag === "resolved" &&
+    resolvedSubjectPhase === undefined &&
+    result.state.interruptStack.length === 0
+    ? turnResourcesWithoutHeroicInspirationAttackRollReroll(
+        result.state.currentTurnResources,
+      )
+    : result.state.currentTurnResources;
 }
 
 function pendingSubjectForResolution(

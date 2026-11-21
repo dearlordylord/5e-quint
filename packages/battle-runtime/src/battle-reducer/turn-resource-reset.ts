@@ -5,8 +5,11 @@ import type { BattleTurnResources } from "../battle-state-execution.ts";
 export function resetBattleTurnResources(
   resources: BattleTurnResources,
 ): BattleTurnResources {
-  const { lightWeaponAttackMade: _lightWeaponAttackMade, ...base } =
-    resetTurnActionEconomy(resources);
+  const {
+    lightWeaponAttackMade: _lightWeaponAttackMade,
+    heroicInspirationAttackRollReroll: _heroicInspirationAttackRollReroll,
+    ...base
+  } = resetTurnActionEconomy(resources);
   return {
     ...base,
     compelledHalt: null,

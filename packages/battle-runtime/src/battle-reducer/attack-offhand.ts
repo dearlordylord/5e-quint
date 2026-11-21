@@ -41,11 +41,10 @@ import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+} from "./attack-roll-d20-test-rerolls.ts";
 
 import {
   applyAttackDamageAmount,
@@ -371,15 +370,16 @@ function resolveBonusActionAttack(
   }
   /* v8 ignore stop -- @preserve */
   const attacker = input.state.combatants.get(input.subject.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: attacker,
-      originalD20TestRoll: fillSet.attackRoll.d20TestRoll,
-      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.state,
+    attackerId: input.subject.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: fillSet.attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         attackRollHole(
           attacker,
           attack,
@@ -390,28 +390,16 @@ function resolveBonusActionAttack(
             attack,
           ),
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: attacker,
-    total: fillSet.attackRoll.total,
-    originalD20TestRoll: fillSet.attackRoll.d20TestRoll,
-    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      d20TestNaturalOneRerollIssue,
-    );
+  if (d20TestRerolls.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", d20TestRerolls.issue);
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    fillSet.attackRoll,
-  );
+  const effectiveAttackRoll = d20TestRerolls.effectiveAttackRoll;
   const hiddenBeforeAttack =
     input.state.combatants.get(input.subject.actorId)?.hidden ?? null;
   const criticalThreshold = criticalThresholdForAttack(
@@ -425,7 +413,13 @@ function resolveBonusActionAttack(
   );
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
-      revealHidden(input.state, input.subject.actorId),
+      revealHidden(
+        battleStateAfterHeroicInspirationReroll(
+          input.state,
+          d20TestRerolls.heroicInspirationUse,
+        ),
+        input.subject.actorId,
+      ),
       input.subject.actorId,
       target.combatantId,
       activatedOngoingFeatureProfile,

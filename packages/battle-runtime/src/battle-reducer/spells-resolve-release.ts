@@ -1,4 +1,5 @@
 import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
+import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -78,11 +79,11 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+} from "./attack-roll-d20-test-rerolls.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -1142,7 +1143,7 @@ type TargetedSpellAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: ReturnType<
-        typeof effectiveD20TestNaturalOneRerollAttackRoll
+        typeof attackRollAfterD20TestRerolls
       >;
       readonly ordinaryHit: boolean;
       readonly missToHitReplacement: ReturnType<
@@ -1203,49 +1204,40 @@ function prepareTargetedSpellAttackRoll(
       result: invalidResult(input.input.state, "invalidFill", attackRollError),
     };
   }
-  const actorBeforeSpellAttack = input.input.state.combatants.get(
-    input.input.subject.actorId,
-  );
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: attackRoll.d20TestRoll,
-      decision: attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.input.state,
+    attackerId: input.input.subject.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.input.state, input.input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHoleWithD20TestRerollOptions(
           spellAttackRollHole(
             input.input.state,
             input.input.subject.actorId,
             input.invocation,
             requiredRollMode,
           ),
+          d20TestRerolls.options,
         ),
       ]),
     };
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: attackRoll.total,
-    originalD20TestRoll: attackRoll.d20TestRoll,
-    decision: attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     return {
       tag: "result",
       result: invalidResult(
         input.input.state,
         "invalidFill",
-        d20TestNaturalOneRerollIssue,
+        d20TestRerolls.issue,
       ),
     };
   }
-  const effectiveAttackRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
   const ordinaryHit = attackRollHits(
     effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(input.input.state, input.target)),
@@ -1276,7 +1268,10 @@ function prepareTargetedSpellAttackRoll(
   const releaseAttackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        input.input.state,
+        battleStateAfterHeroicInspirationReroll(
+          input.input.state,
+          d20TestRerolls.heroicInspirationUse,
+        ),
         input.input.subject.actorId,
         input.target.combatantId,
         null,
@@ -1583,7 +1578,7 @@ function prepareTargetedSpellDamage(
 
 function targetedSpellReleaseAttackRoll(
   input: TargetedSpellDamageInput,
-): ReturnType<typeof effectiveD20TestNaturalOneRerollAttackRoll> | undefined {
+): ReturnType<typeof attackRollAfterD20TestRerolls> | undefined {
   if (
     input.invocation.procedure !== "spellAttackDamage" &&
     input.invocation.procedure !== "spatialMeleeSpellAttackProxy"
@@ -1593,7 +1588,7 @@ function targetedSpellReleaseAttackRoll(
   const attackRoll = input.fillSet.attackRoll;
   return attackRoll == null
     ? undefined
-    : effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
+    : attackRollAfterD20TestRerolls(attackRoll);
 }
 
 function prepareTargetedSpellDamageWithRoll(

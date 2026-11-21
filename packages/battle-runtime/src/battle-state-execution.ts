@@ -164,7 +164,10 @@ import {
   type RolledDiceGroup,
   type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { type CreatureType } from "@dnd/shared/game-facts";
+import {
+  type CreatureType,
+  type HeroicInspiration,
+} from "@dnd/shared/game-facts";
 import {
   AbilityModifier,
   AttackBonus,
@@ -4140,6 +4143,12 @@ export type PendingAttackRollMissToHitReplacementContext = {
   readonly targetId: CombatantId;
   readonly attackRoll: BattleAttackRollResult;
 };
+/** The attack roll that spent a creature's Heroic Inspiration on its reroll. */
+export type BattleHeroicInspirationAttackRollReroll = {
+  readonly actorId: CombatantId;
+  readonly attackRollHoleId: HoleId;
+};
+
 type PendingAttackRollMissToHitReplacementSelection = {
   readonly attackerId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -4179,6 +4188,12 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
+  /**
+   * The attack roll whose reroll spent Heroic Inspiration in the subject still
+   * being resolved. A replay of that subject admits that roll's decision again;
+   * no other roll can use it. Absent when no pending subject spent it.
+   */
+  readonly heroicInspirationAttackRollReroll?: BattleHeroicInspirationAttackRollReroll;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: BattleObjectId;
   };
@@ -4391,6 +4406,7 @@ type BattleCreatureStateCommon = {
         readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
+        readonly heroicInspiration: HeroicInspiration;
         readonly metamagic?: CharacterBattleMetamagicState;
         readonly spellcasting?: CharacterBattleSpellcastingExecutionState;
       }
@@ -5390,6 +5406,9 @@ export type BattleAttackRollHole = Extract<
   readonly ongoingFeatureActivations?: ReadonlyNonEmptyArray<AttackRollFeatureActivation>;
   readonly missToHitReplacements?: ReadonlyNonEmptyArray<AttackRollMissToHitReplacement>;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleAttackRollRelationshipFactRequest;
 };
 export type AttackRollFeatureActivation = {
@@ -5427,21 +5446,38 @@ export type BattleD20TestRolledDieRollReplacement = {
   readonly die: BattleD20TestRolledDieKey;
   readonly result: BattleD20TestRollReplacement;
 };
-export type BattleD20TestNaturalOneRerollDecision =
+/**
+ * A decision on one D20 Test reroll source after a roll: decline it, replace
+ * the roll, or (under Advantage or Disadvantage) replace one rolled die.
+ * `EffectKind` names the source.
+ */
+export type BattleD20TestRollRerollDecision<EffectKind extends string> =
   | {
       readonly kind: "decline";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
     }
   | {
       readonly kind: "reroll";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestRollReplacement;
     }
   | {
       readonly kind: "rerollRolledDie";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestRolledDieRollReplacement;
     };
+export type BattleD20TestNaturalOneRerollDecision =
+  BattleD20TestRollRerollDecision<
+    typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND
+  >;
+export const HEROIC_INSPIRATION_REROLL_EFFECT_KIND =
+  "heroic_inspiration_reroll";
+export type BattleHeroicInspirationRerollOption = {
+  readonly effectKind: typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND;
+  readonly label: string;
+};
+export type BattleHeroicInspirationRerollDecision =
+  BattleD20TestRollRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
 export type BattleD20TestOutcomeReplacement = {
   readonly succeeded: boolean;
   readonly d20TestRoll: BattleD20TestRoll;
@@ -5504,6 +5540,9 @@ export type BattleSpellAttackRollHole = Extract<
   readonly missToHitReplacements?: ReadonlyNonEmptyArray<AttackRollMissToHitReplacement>;
   readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleCunningStrikeOptionSelection = {
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -6979,6 +7018,7 @@ export type BattleAttackRollResult = AttackRollResult & {
   readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
   readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
   readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
+  readonly heroicInspirationReroll?: BattleHeroicInspirationRerollDecision;
 };
 export type BattleRolledDiceFill = {
   readonly kind: "rolledDice";
@@ -8149,6 +8189,7 @@ export type BattleCreatureOriginSnapshot =
         readonly offHandAttackProcedureRef: BattleAttackProcedureExecutionRef | null;
       };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
+      readonly heroicInspiration: HeroicInspiration;
       readonly druidWildShapeAvailableForms: readonly {
         readonly statBlockId: StatBlockId;
         readonly execution: StatBlockExecutionSnapshot;

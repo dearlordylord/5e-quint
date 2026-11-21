@@ -123,11 +123,13 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  attackRollD20TestRerollTaken,
+  battleStateAfterHeroicInspirationReroll,
+  type AttackRollHeroicInspirationUse,
+} from "./attack-roll-d20-test-rerolls.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -408,6 +410,7 @@ type InitialSpellAttackRollResolution =
       readonly tag: "admitted";
       readonly actor: BattleCreatureState | undefined;
       readonly attackRoll: BattleAttackRollResult;
+      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
       readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
@@ -466,45 +469,38 @@ function resolveInitialSpellAttackRoll(input: {
   }
   /* v8 ignore stop -- @preserve */
   const actor = input.castingState.combatants.get(input.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor,
-      originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
-      decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.castingState,
+    attackerId: input.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: input.fillSet.attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.castingState, input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHoleWithD20TestRerollOptions(
           spellAttackRollHole(
             input.castingState,
             input.actorId,
             input.invocation,
             requiredRollMode,
           ),
+          d20TestRerolls.options,
         ),
       ]),
     };
   }
-  const naturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor,
-    total: input.fillSet.attackRoll.total,
-    originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
-    decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-    otherD20RerollPresent:
-      input.fillSet.attackRoll.spellAttackReroll !== undefined,
-  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (naturalOneRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
         input.errorState,
         "invalidFill",
-        naturalOneRerollIssue,
+        d20TestRerolls.issue,
       ),
     };
   }
@@ -513,6 +509,7 @@ function resolveInitialSpellAttackRoll(input: {
     tag: "admitted",
     actor,
     attackRoll: input.fillSet.attackRoll,
+    heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
     requiredRollMode,
   };
 }
@@ -1588,27 +1585,25 @@ function spellAttackPostDuplicateHitInterceptionFillsArePresent(
 function effectiveSpellAttackRoll(
   attackRoll: BattleAttackRollResult,
 ): BattleAttackRollResult {
-  const naturalOneEffectiveRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
-  return naturalOneEffectiveRoll.spellAttackReroll?.kind === "reroll"
+  const d20TestRerolledRoll = attackRollAfterD20TestRerolls(attackRoll);
+  return d20TestRerolledRoll.spellAttackReroll?.kind === "reroll"
     ? {
-        ...naturalOneEffectiveRoll.spellAttackReroll.replacement,
-        ...(naturalOneEffectiveRoll.activatedOngoingFeatureProcedureRef ===
+        ...d20TestRerolledRoll.spellAttackReroll.replacement,
+        ...(d20TestRerolledRoll.activatedOngoingFeatureProcedureRef ===
         undefined
           ? {}
           : {
               activatedOngoingFeatureProcedureRef:
-                naturalOneEffectiveRoll.activatedOngoingFeatureProcedureRef,
+                d20TestRerolledRoll.activatedOngoingFeatureProcedureRef,
             }),
-        ...(naturalOneEffectiveRoll.missToHitReplacementProcedureRef ===
-        undefined
+        ...(d20TestRerolledRoll.missToHitReplacementProcedureRef === undefined
           ? {}
           : {
               missToHitReplacementProcedureRef:
-                naturalOneEffectiveRoll.missToHitReplacementProcedureRef,
+                d20TestRerolledRoll.missToHitReplacementProcedureRef,
             }),
       }
-    : naturalOneEffectiveRoll;
+    : d20TestRerolledRoll;
 }
 
 /* v8 ignore start -- @preserve -- Malformed Seeking Spell decision: discovery offers reroll or decline only for an eligible missed single spell attack with compatible Metamagic, replacement, and roll-mode facts. */
@@ -1665,6 +1660,7 @@ function spellAttackNeedsSeekingRerollDecision(input: {
     input.invocation.procedure === "spellAttackDamage" &&
     !input.originalHit &&
     input.attackRoll.spellAttackReroll === undefined &&
+    !attackRollD20TestRerollTaken(input.attackRoll) &&
     seekingApplication !== null &&
     seekingSpellCombinedUseIssue({
       actor: input.actor,
@@ -2461,16 +2457,15 @@ function resolveSpellActInternal(
     const requiredRollMode = initialAttackRoll.requiredRollMode;
     const actorBeforeSpellAttack = initialAttackRoll.actor;
     const attackRoll = initialAttackRoll.attackRoll;
-    const naturalOneEffectiveAttackRoll =
-      effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
+    const d20TestRerolledAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
     const originalHit = attackRollHits(
-      naturalOneEffectiveAttackRoll,
+      d20TestRerolledAttackRoll,
       currentArmorClass(activeEffectArmorClass(input.state, target)),
     );
     const spellAttackRerollIssue = spellAttackRerollValidationIssue({
       actor: actorBeforeSpellAttack,
       invocation: invocationForResolution,
-      originalAttackRoll: naturalOneEffectiveAttackRoll,
+      originalAttackRoll: d20TestRerolledAttackRoll,
       originalHit,
       requiredRollMode,
       castMetamagicApplications: metamagicApplicationsForResolution ?? [],
@@ -2485,7 +2480,7 @@ function resolveSpellActInternal(
       spellAttackNeedsSeekingRerollDecision({
         actor: actorBeforeSpellAttack,
         invocation: invocationForResolution,
-        attackRoll: naturalOneEffectiveAttackRoll,
+        attackRoll: d20TestRerolledAttackRoll,
         originalHit,
         castMetamagicApplications: metamagicApplicationsForResolution ?? [],
       })
@@ -2556,7 +2551,10 @@ function resolveSpellActInternal(
     const attackRolledState = recordAttackRollMissToHitReplacementUsed(
       consumeHelpAttackForAttackRoll(
         recordAttackRollOngoingFeatures(
-          attackRollState,
+          battleStateAfterHeroicInspirationReroll(
+            attackRollState,
+            initialAttackRoll.heroicInspirationUse,
+          ),
           subject.actorId,
           target.combatantId,
           null,

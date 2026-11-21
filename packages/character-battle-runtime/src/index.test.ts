@@ -19,7 +19,11 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
-import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import {
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
+  statBlockId as authoredStatBlockId,
+} from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import type {
   BattleFill,
@@ -489,11 +493,10 @@ describe("Character Sheet battle handoff", () => {
 
   test.each([
     {
-      name: "non-spellcasting exhaustion and Heroic Inspiration",
+      name: "non-spellcasting exhaustion",
       input: () => ({
         build: defenseBuild({ wearingArmor: false }),
         exhaustionLevel: 2 as const,
-        heroicInspiration: { tag: "available" as const },
       }),
     },
     {
@@ -601,6 +604,81 @@ describe("Character Sheet battle handoff", () => {
     expect(characterSheetCurrentHp(settled)).toBe(8);
     expect(characterSheetTempHp(settled)).toBe(3);
     expect({ ...settled, hitPoints: sheet.hitPoints }).toEqual(sheet);
+  });
+
+  test("carries the Sheet's Heroic Inspiration into battle", () => {
+    for (const heroicInspiration of [
+      HEROIC_INSPIRATION_AVAILABLE,
+      NO_HEROIC_INSPIRATION,
+    ]) {
+      const sheet = expectSuccess(
+        rebuildCharacterSheetFixture({
+          characterId: characterSheetId("character:heroic-inspiration-entry"),
+          build: defenseBuild({ wearingArmor: false }),
+          currentHp: Hp(10),
+          tempHp: Hp(0),
+          heroicInspiration,
+          unitLibrary,
+          statBlockCatalog,
+        }),
+      );
+      const init = expectSuccess(
+        characterSheetBattleInit({
+          sheet,
+          unitLibrary,
+          statBlockCatalog,
+          combatantId: combatantId("combatant:heroic-inspiration-entry"),
+          displayName: "Fighter",
+          initiative: initiativeScore(20),
+          ammunitionStocks: [],
+        }),
+      );
+      expect(init.creatureInit.heroicInspiration).toEqual(heroicInspiration);
+    }
+  });
+
+  test.each([
+    {
+      name: "spent in battle",
+      sheet: HEROIC_INSPIRATION_AVAILABLE,
+      battle: NO_HEROIC_INSPIRATION,
+    },
+    {
+      name: "gained in battle",
+      sheet: NO_HEROIC_INSPIRATION,
+      battle: HEROIC_INSPIRATION_AVAILABLE,
+    },
+  ])("settles Heroic Inspiration $name onto the Sheet", (input) => {
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:heroic-inspiration-settle"),
+        build: defenseBuild({ wearingArmor: false }),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        heroicInspiration: input.sheet,
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+    const settled = expectSuccess(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:heroic-inspiration-settle"),
+            heroicInspiration: input.battle,
+          },
+          hp: Hp(10),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(settled.heroicInspiration).toEqual(input.battle);
   });
 
   test("projects every State init leaf into a structured handoff fact", () => {
@@ -14660,6 +14738,7 @@ function handoffBranchCombatant(
     origin: {
       classLevels: [{ className: "fighter", level: classLevel(1) }],
       resources: [],
+      heroicInspiration: NO_HEROIC_INSPIRATION,
       ...combatant.origin,
     },
   } as BattleCreatureState;

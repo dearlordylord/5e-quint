@@ -35,7 +35,11 @@ import {
   resetDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
-import type { UnitId } from "@dnd/shared/game-facts";
+import {
+  NO_HEROIC_INSPIRATION,
+  type HeroicInspiration,
+  type UnitId,
+} from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
@@ -680,6 +684,7 @@ export function battleCreatureStateAdmissionFromInit(
           attackExecution.execution.offHandAttack,
         ),
         resources,
+        heroicInspiration: heroicInspirationAtBattleEntry(creatureInit),
         ...optionalProperty("metamagic", metamagic),
         ...(spellcastingPresentationSource === undefined
           ? {}
@@ -1433,4 +1438,11 @@ export function combatantKnockedOutUnconscious(
   }
   /* v8 ignore stop -- @preserve */
   return Result.succeed(combatant.positiveHpUnconscious);
+}
+
+/** A character init that omits Heroic Inspiration enters battle without it. */
+function heroicInspirationAtBattleEntry(
+  creatureInit: Pick<CharacterBattleCreatureInit, "heroicInspiration">,
+): HeroicInspiration {
+  return creatureInit.heroicInspiration ?? NO_HEROIC_INSPIRATION;
 }

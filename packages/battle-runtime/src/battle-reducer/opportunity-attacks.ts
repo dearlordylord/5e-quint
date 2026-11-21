@@ -43,11 +43,12 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+  type AttackRollD20TestRerolls,
+  type AttackRollHeroicInspirationUse,
+} from "./attack-roll-d20-test-rerolls.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
@@ -185,6 +186,7 @@ type ReactionAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
+      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
       readonly hiddenBeforeAttack: BattleHiddenState | null;
       readonly attackRollRelationshipFacts: Exclude<
         ReturnType<typeof parseAttackRollRelationshipFacts>,
@@ -286,41 +288,48 @@ function reactionAttackRerollResult(input: {
   readonly attackRoll: BattleAttackRollResult;
   readonly reactor: BattleCreatureState | undefined;
   readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
-}): BattleResolutionResult | null {
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: input.reactor,
-      originalD20TestRoll: input.attackRoll.d20TestRoll,
-      decision: input.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
-    return needsHolesResult(
-      input.context.input.state,
-      input.context.input.subject,
-      [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
-          reactionAttackRollHoleWithRelationshipFacts({
-            state: input.context.input.state,
-            reactorId: input.context.input.subject.reactorId,
-            targetId: input.context.input.subject.targetId,
-            attack: input.context.attack,
-            reactor: input.reactor,
-            requiredRollMode: input.requiredRollMode,
-          }),
-        ),
-      ],
-    );
-  }
-  const rerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: input.reactor,
-    total: input.attackRoll.total,
-    originalD20TestRoll: input.attackRoll.d20TestRoll,
-    decision: input.attackRoll.d20TestNaturalOneReroll,
+}):
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | Extract<AttackRollD20TestRerolls, { readonly tag: "resolved" }> {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.context.input.state,
+    attackerId: input.context.input.subject.reactorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: input.attackRoll,
     requiredRollMode: input.requiredRollMode,
   });
-  return rerollIssue === null
-    ? null
-    : invalidResult(input.context.input.state, "invalidFill", rerollIssue);
+  if (d20TestRerolls.tag === "decisionsRequired") {
+    return {
+      tag: "result",
+      result: needsHolesResult(
+        input.context.input.state,
+        input.context.input.subject,
+        [
+          attackRollHoleWithD20TestRerollOptions(
+            reactionAttackRollHoleWithRelationshipFacts({
+              state: input.context.input.state,
+              reactorId: input.context.input.subject.reactorId,
+              targetId: input.context.input.subject.targetId,
+              attack: input.context.attack,
+              reactor: input.reactor,
+              requiredRollMode: input.requiredRollMode,
+            }),
+            d20TestRerolls.options,
+          ),
+        ],
+      ),
+    };
+  }
+  return d20TestRerolls.tag === "invalid"
+    ? {
+        tag: "result",
+        result: invalidResult(
+          input.context.input.state,
+          "invalidFill",
+          d20TestRerolls.issue,
+        ),
+      }
+    : d20TestRerolls;
 }
 
 function prepareReactionAttackRoll(
@@ -361,8 +370,8 @@ function prepareReactionAttackRoll(
     reactor,
     requiredRollMode,
   });
-  if (rerollResult !== null) {
-    return { tag: "result", result: rerollResult };
+  if (rerollResult.tag === "result") {
+    return rerollResult;
   }
   const attackRollRelationshipFacts = parseAttackRollRelationshipFacts(
     input.fillSet.attackRollRelationshipFacts,
@@ -386,7 +395,8 @@ function prepareReactionAttackRoll(
   }
   return {
     tag: "ready",
-    effectiveAttackRoll: effectiveD20TestNaturalOneRerollAttackRoll(attackRoll),
+    effectiveAttackRoll: rerollResult.effectiveAttackRoll,
+    heroicInspirationUse: rerollResult.heroicInspirationUse,
     hiddenBeforeAttack:
       input.input.state.combatants.get(input.input.subject.reactorId)?.hidden ??
       null,
@@ -614,7 +624,13 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
   );
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
-      revealHidden(input.state, subject.reactorId),
+      revealHidden(
+        battleStateAfterHeroicInspirationReroll(
+          input.state,
+          afterRollInput.rollPreparation.heroicInspirationUse,
+        ),
+        subject.reactorId,
+      ),
       subject.reactorId,
       subject.targetId,
       null,

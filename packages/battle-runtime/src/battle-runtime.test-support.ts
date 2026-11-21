@@ -3234,6 +3234,10 @@ export function attackRollFill(
       BattleFill,
       { readonly kind: "attackRoll" }
     >["value"]["d20TestNaturalOneReroll"];
+    readonly heroicInspirationReroll?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["heroicInspirationReroll"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
@@ -3277,6 +3281,9 @@ export function attackRollFill(
       ...(value.d20TestNaturalOneReroll === undefined
         ? {}
         : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+      ...(value.heroicInspirationReroll === undefined
+        ? {}
+        : { heroicInspirationReroll: value.heroicInspirationReroll }),
     },
   };
 }
@@ -3996,6 +4003,10 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly size?: Size;
+  readonly heroicInspiration?: Extract<
+    CharacterBattleCombatantInit["creatureInit"],
+    { readonly kind: "character" }
+  >["heroicInspiration"];
 }): CharacterBattleCombatantInit {
   const selectedLoadout =
     input.selectedLoadout ??
@@ -4138,6 +4149,9 @@ export function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
+      ...(input.heroicInspiration === undefined
+        ? {}
+        : { heroicInspiration: input.heroicInspiration }),
       characterUnitRefs,
       classLevels,
       knownLanguages: input.knownLanguages ?? ["Common"],
