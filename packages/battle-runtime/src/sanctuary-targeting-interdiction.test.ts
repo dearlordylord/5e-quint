@@ -55,6 +55,7 @@ import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   skeletonCreatureInit,
+  rangedAttackEnemyProximityFactsForTest,
 } from "./battle-runtime.test-support.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 
@@ -85,16 +86,16 @@ const spellAttackTableEnemies = [
   {
     enemyId: wardedId,
     distanceFeet: movementFeet(30),
-    enemyCanSeeCaster: true,
+    enemyCanSeeAttacker: true,
   },
   {
     enemyId: replacementId,
     distanceFeet: movementFeet(30),
-    enemyCanSeeCaster: true,
+    enemyCanSeeAttacker: true,
   },
 ] satisfies Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "rangedSpellAttackEnemyProximity" }
+  { readonly kind: "rangedAttackEnemyProximity" }
 >["enemies"];
 
 type NeedsHolesResult = Extract<
@@ -372,6 +373,9 @@ describe("Sanctuary targeting interdiction", () => {
           ...attackExecutionSelectionForSubjectForTest(attack.subject),
           distanceFeet: movementFeet(5),
         },
+        ...rangedAttackEnemyProximityFactsForTest(
+          requireHole(attack.initialHoles, "targetChoice"),
+        ),
       ],
     };
     const needsSanctuary = resolveBattleSubject({
@@ -2071,7 +2075,7 @@ function spellTargetFill(
   targetId: CombatantId,
   enemies: Extract<
     BattleTargetSpatialFact,
-    { readonly kind: "rangedSpellAttackEnemyProximity" }
+    { readonly kind: "rangedAttackEnemyProximity" }
   >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const distanceFeet =
@@ -2096,10 +2100,9 @@ function spellTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: casterIdValue,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        kind: "rangedAttackEnemyProximity",
+        attackerId: casterIdValue,
+        procedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
         enemies,
       },
       {
@@ -2120,7 +2123,7 @@ function spellLeapTargetFill(
   targetId: CombatantId,
   enemies: Extract<
     BattleTargetSpatialFact,
-    { readonly kind: "rangedSpellAttackEnemyProximity" }
+    { readonly kind: "rangedAttackEnemyProximity" }
   >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const casterId = hole.spellTargetSpatialFactRequest?.casterId;
@@ -2145,10 +2148,9 @@ function spellLeapTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: casterId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        kind: "rangedAttackEnemyProximity",
+        attackerId: casterId,
+        procedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
         enemies,
       },
       {

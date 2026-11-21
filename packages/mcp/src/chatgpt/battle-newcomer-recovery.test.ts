@@ -113,6 +113,12 @@ describe("ChatGPT newcomer battle recovery", () => {
           ...target.attack.selection,
           distanceFeet: 55,
         },
+        {
+          kind: "rangedAttackEnemyProximity",
+          attackerId: target.attack.actorId,
+          procedureRef: target.attack.selection.procedureRef,
+          enemies: [],
+        },
       ],
     };
     const validateFill = createDraft2020JsonSchemaValidator().getValidator(
@@ -182,6 +188,7 @@ describe("ChatGPT newcomer battle recovery", () => {
               }),
             ),
         },
+        ...validFill.spatialFacts.slice(1),
       ],
     };
     const duplicateDistanceRejected = Schema.decodeUnknownSync(
@@ -305,9 +312,9 @@ describe("ChatGPT newcomer battle recovery", () => {
       distanceFeet: 30,
     };
     const qualification = {
-      kind: "rangedSpellAttackEnemyProximity",
-      casterId: request.casterId,
-      sourceProcedureRef: request.sourceProcedureRef,
+      kind: "rangedAttackEnemyProximity",
+      attackerId: request.casterId,
+      procedureRef: request.sourceProcedureRef,
       enemies: [],
     };
     const fill = {

@@ -14,6 +14,7 @@ import {
   unitLibrary,
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   nonSpellExecutableProcedureEntry,
+  rangedAttackEnemyProximityFactsForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
@@ -580,8 +581,9 @@ function targetChoiceFill(
         actorId,
         targetId,
         ...hole.attack.selection,
-        distanceFeet: movementFeet(5),
+        distanceFeet: movementFeet(30),
       },
+      ...rangedAttackEnemyProximityFactsForTest(hole),
     ],
   };
 }

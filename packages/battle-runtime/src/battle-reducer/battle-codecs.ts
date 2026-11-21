@@ -897,14 +897,14 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     distanceFeet: Schema.optionalKey(MovementFeet),
   }),
   Schema.Struct({
-    kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-    casterId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
+    kind: Schema.Literal("rangedAttackEnemyProximity"),
+    attackerId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
     enemies: Schema.Array(
       Schema.Struct({
         enemyId: CombatantId,
         distanceFeet: MovementFeet,
-        enemyCanSeeCaster: Schema.Boolean,
+        enemyCanSeeAttacker: Schema.Boolean,
       }),
     ),
   }),
@@ -4027,13 +4027,13 @@ type BattleFillEncoded =
             readonly attackerCanSeeObject: boolean;
           }
         | {
-            readonly kind: "rangedSpellAttackEnemyProximity";
-            readonly casterId: string;
-            readonly sourceProcedureRef: string;
+            readonly kind: "rangedAttackEnemyProximity";
+            readonly attackerId: string;
+            readonly procedureRef: string;
             readonly enemies: readonly {
               readonly enemyId: string;
               readonly distanceFeet: number;
-              readonly enemyCanSeeCaster: boolean;
+              readonly enemyCanSeeAttacker: boolean;
             }[];
           }
         | {
@@ -5255,14 +5255,14 @@ export const BattleFillSchema: Schema.Codec<
             attackerCanSeeObject: Schema.Boolean,
           }),
           Schema.Struct({
-            kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-            casterId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
+            kind: Schema.Literal("rangedAttackEnemyProximity"),
+            attackerId: CombatantId,
+            procedureRef: BattleProcedureExecutionRef,
             enemies: Schema.Array(
               Schema.Struct({
                 enemyId: CombatantId,
                 distanceFeet: MovementFeet,
-                enemyCanSeeCaster: Schema.Boolean,
+                enemyCanSeeAttacker: Schema.Boolean,
               }),
             ),
           }),

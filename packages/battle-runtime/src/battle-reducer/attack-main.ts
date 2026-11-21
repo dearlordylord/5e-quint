@@ -153,6 +153,7 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
+import { attackEnemyProximityQualificationIssue } from "./attack-spatial.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 
 import { attackFillSet, selectedAttackFillSet } from "./attack-fill-set.ts";
@@ -1686,6 +1687,33 @@ function ordinaryObjectAttackDamage<
     ),
   };
 }
+// The table's target facts must qualify the ranged attack's enemy proximity
+// and place the target inside the attack's target constraint.
+function selectedAttackTargetFactsIssue(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: Parameters<typeof attackTargetIsLegal>[3],
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+): string | null {
+  const proximityIssue = attackEnemyProximityQualificationIssue(
+    state,
+    attackerId,
+    attack,
+    targetSpatialFacts,
+  );
+  if (proximityIssue !== null) return proximityIssue.message;
+  return attackTargetIsLegal(
+    state,
+    attackerId,
+    targetId,
+    attack,
+    targetSpatialFacts,
+  )
+    ? null
+    : /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      "Attack target is outside the selected attack's supported target constraint.";
+}
 
 export function resolveSelectedAttackProcedure<
   Attack extends BoundSupportedAttackActionOption,
@@ -1763,24 +1791,16 @@ export function resolveSelectedAttackProcedure<
     );
   }
   /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !attackTargetIsLegal(
-      input.state,
-      attackerId,
-      target.combatantId,
-      attack,
-      fillSet.targetSpatialFacts,
-    )
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Attack target is outside the selected attack's supported target constraint.",
-    );
+  const targetFactsIssue = selectedAttackTargetFactsIssue(
+    input.state,
+    attackerId,
+    target.combatantId,
+    attack,
+    fillSet.targetSpatialFacts,
+  );
+  if (targetFactsIssue !== null) {
+    return invalidResult(input.state, "invalidFill", targetFactsIssue);
   }
-  /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.damageDisposition.kind === "knockOut" &&

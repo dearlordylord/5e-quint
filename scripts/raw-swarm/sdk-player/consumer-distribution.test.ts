@@ -1674,6 +1674,12 @@ export const continueBattle: PlayerContinuation = (context) => {
         ...targetHole.attack.selection,
         distanceFeet: targetHole.attack.targetConstraint.normalFeet,
       },
+      {
+        kind: "rangedAttackEnemyProximity" as const,
+        attackerId: targetHole.attack.actorId,
+        procedureRef: targetHole.attack.selection.procedureRef,
+        enemies: [],
+      },
     ],
   };
   const resolved = context.sdk.resolveBattleRuntimeSubject({
@@ -1763,6 +1769,7 @@ export const continueBattle: PlayerContinuation = (context) => {
                       expect.objectContaining({ notation: "static" }),
                     ],
                   },
+                  { kind: "rangedAttackEnemyProximity", enemies: [] },
                 ],
               },
             ],

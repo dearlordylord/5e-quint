@@ -697,38 +697,6 @@ function ordinarySpellTargetSpatialFactRequest(
       };
 }
 
-export function rangedSpellAttackEnemyProximityQualificationIssue(input: {
-  readonly state: BattleState;
-  readonly casterId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly facts: readonly BattleTargetSpatialFact[];
-}): { readonly tag: "invalid"; readonly message: string } | null {
-  const qualifications = input.facts.filter(
-    (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
-  );
-  const qualification = qualifications[0];
-  if (
-    qualifications.length !== 1 ||
-    qualification === undefined ||
-    qualification.casterId !== input.casterId ||
-    qualification.sourceProcedureRef !== input.sourceProcedureRef ||
-    new Set(qualification.enemies.map((enemy) => enemy.enemyId)).size !==
-      qualification.enemies.length ||
-    qualification.enemies.some(
-      (enemy) =>
-        enemy.enemyId === input.casterId ||
-        !input.state.combatants.has(enemy.enemyId),
-    )
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "Ranged Spell Attack target requires one scoped enemy proximity qualification; supply enemies: [] only after checking no enemies qualify.",
-    };
-  }
-  return null;
-}
-
 export function spellAttackRequiresExactDistance(
   invocation: RuntimeSpellProcedure,
 ): invocation is RuntimeSpellProcedure & {
@@ -738,7 +706,7 @@ export function spellAttackRequiresExactDistance(
   // Spell Attacks expose one canonical maximum range, unlike ordinary ranged
   // weapon attacks' normal/long bands. The exact table distance is therefore
   // checked against this single range; close-combat Disadvantage is handled by
-  // the separate rangedSpellAttackEnemyProximity fact.
+  // the separate rangedAttackEnemyProximity fact.
   return (
     "attackKind" in invocation &&
     invocation.attackKind === "ranged_spell_attack" &&

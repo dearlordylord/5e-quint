@@ -2415,18 +2415,18 @@ export function scenarioCreatureSpellTargetFills(input: {
       request.requiresEnemyProximityQualification === true
     ) {
       const qualifications = (fill.spatialFacts ?? []).filter(
-        (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+        (fact) => fact.kind === "rangedAttackEnemyProximity",
       );
       const qualification = qualifications[0];
       if (
         qualifications.length !== 1 ||
         qualification === undefined ||
-        qualification.casterId !== request.casterId ||
-        qualification.sourceProcedureRef !== request.sourceProcedureRef
+        qualification.attackerId !== request.casterId ||
+        qualification.procedureRef !== request.sourceProcedureRef
       ) {
         return Result.fail({
           tag: "spell-target-projection",
-          message: `requiresEnemyProximityQualification is true for casterId ${String(request.casterId)} and sourceProcedureRef ${String(request.sourceProcedureRef)}. Supply exactly one rangedSpellAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeCaster. Use enemies: [] only after checking none qualify. The retained initial enemy relationships do not establish this cast's complete qualification.`,
+          message: `requiresEnemyProximityQualification is true for casterId ${String(request.casterId)} and sourceProcedureRef ${String(request.sourceProcedureRef)}. Supply exactly one rangedAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeAttacker. Use enemies: [] only after checking none qualify. The retained initial enemy relationships do not establish this cast's complete qualification.`,
         });
       }
     }
@@ -2972,6 +2972,23 @@ export function scenarioAttackTargetFills(input: {
         tag: "attack-target-projection",
         message: eligibility.success.message,
       });
+    }
+    if (attack.targetConstraint.kind === "rangedRange") {
+      const qualifications = (fill.spatialFacts ?? []).filter(
+        (fact) => fact.kind === "rangedAttackEnemyProximity",
+      );
+      const qualification = qualifications[0];
+      if (
+        qualifications.length !== 1 ||
+        qualification === undefined ||
+        qualification.attackerId !== attack.actorId ||
+        qualification.procedureRef !== attack.selection.procedureRef
+      ) {
+        return Result.fail({
+          tag: "attack-target-projection",
+          message: `A ranged attack by ${String(attack.actorId)} with procedureRef ${String(attack.selection.procedureRef)} needs exactly one rangedAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeAttacker. Use enemies: [] only after checking none qualify.`,
+        });
+      }
     }
     const { relation } = eligibility.success;
     const distanceFact = {

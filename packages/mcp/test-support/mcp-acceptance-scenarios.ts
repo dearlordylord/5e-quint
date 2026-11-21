@@ -4282,9 +4282,9 @@ function targetFill(hole: JsonObject, value: string, distanceFeet?: number) {
       ...(request?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity",
-              casterId: "wizard",
-              sourceProcedureRef: sourceProcedureRefFromHole(hole),
+              kind: "rangedAttackEnemyProximity",
+              attackerId: "wizard",
+              procedureRef: sourceProcedureRefFromHole(hole),
               enemies: [],
             },
           ]
@@ -4318,9 +4318,9 @@ function spellTargetFill(
         ? []
         : [
             {
-              kind: "rangedSpellAttackEnemyProximity",
-              casterId,
-              sourceProcedureRef,
+              kind: "rangedAttackEnemyProximity",
+              attackerId: casterId,
+              procedureRef: sourceProcedureRef,
               enemies: [],
             },
           ]),

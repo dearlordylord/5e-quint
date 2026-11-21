@@ -2578,7 +2578,7 @@ function bindSelectedSpellSpatialFactsForTest(
         spatialFacts: fill.spatialFacts.map((fact) =>
           fact.kind === "spellTarget" ||
           fact.kind === "spellLeapTargetWithinRange" ||
-          fact.kind === "rangedSpellAttackEnemyProximity"
+          fact.kind === "rangedAttackEnemyProximity"
             ? { ...fact, sourceProcedureRef: procedureRef }
             : fact,
         ),
@@ -2589,7 +2589,7 @@ function bindSelectedSpellSpatialFactsForTest(
         ...fill,
         spatialFacts: fill.spatialFacts.map((fact) =>
           fact.kind === "spellObjectTarget" ||
-          fact.kind === "rangedSpellAttackEnemyProximity"
+          fact.kind === "rangedAttackEnemyProximity"
             ? { ...fact, sourceProcedureRef: procedureRef }
             : fact,
         ),
@@ -2859,30 +2859,31 @@ export function targetFill(
   const qualifiedSpatialFacts =
     qualification?.requiresEnemyProximityQualification === true &&
     !selectedSpatialFacts.some(
-      (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+      (fact) => fact.kind === "rangedAttackEnemyProximity",
     )
       ? [
           ...selectedSpatialFacts,
           {
-            kind: "rangedSpellAttackEnemyProximity" as const,
-            casterId: qualification.casterId,
-            sourceProcedureRef: qualification.sourceProcedureRef,
+            kind: "rangedAttackEnemyProximity" as const,
+            attackerId: qualification.casterId,
+            procedureRef: qualification.sourceProcedureRef,
             enemies: [],
           },
         ]
-      : selectedSpatialFacts;
+      : [
+          ...selectedSpatialFacts,
+          ...rangedAttackEnemyProximityFactsForTest(hole, selectedSpatialFacts),
+        ];
   const executionBoundSpatialFacts = qualifiedSpatialFacts.map((fact) => {
-    if (
-      (fact.kind !== "spellTarget" &&
-        fact.kind !== "rangedSpellAttackEnemyProximity") ||
-      hole.spellTargetSpatialFactRequest === undefined
-    ) {
-      return fact;
+    const request = hole.spellTargetSpatialFactRequest;
+    if (request === undefined) return fact;
+    if (fact.kind === "spellTarget") {
+      return { ...fact, sourceProcedureRef: request.sourceProcedureRef };
     }
-    return {
-      ...fact,
-      sourceProcedureRef: hole.spellTargetSpatialFactRequest.sourceProcedureRef,
-    };
+    if (fact.kind === "rangedAttackEnemyProximity") {
+      return { ...fact, procedureRef: request.sourceProcedureRef };
+    }
+    return fact;
   });
   return {
     kind: "targetChoice",
@@ -2972,13 +2973,13 @@ function qualifySpellObjectTargetFactsForTest(
 ): ObjectTargetChoiceFill["spatialFacts"] {
   const request = hole.spellObjectTargetSpatialFactRequest;
   return request?.requiresEnemyProximityQualification === true &&
-    !facts.some((fact) => fact.kind === "rangedSpellAttackEnemyProximity")
+    !facts.some((fact) => fact.kind === "rangedAttackEnemyProximity")
     ? [
         ...facts,
         {
-          kind: "rangedSpellAttackEnemyProximity",
-          casterId: request.casterId,
-          sourceProcedureRef: request.sourceProcedureRef,
+          kind: "rangedAttackEnemyProximity",
+          attackerId: request.casterId,
+          procedureRef: request.sourceProcedureRef,
           enemies: [],
         },
       ]
@@ -3080,8 +3081,43 @@ export function attackTargetFill(
       targetDistanceFeet,
     ),
     ...commonAdjacentAllySpatialFacts(actorId, targetId),
+    ...rangedAttackEnemyProximityFactsForTest(hole, extraFacts ?? []),
     ...(extraFacts ?? []),
   ]);
+}
+
+type AttackTargetSpatialFactForTest = NonNullable<
+  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+>[number];
+
+/**
+ * A ranged attack target hole's default enemy proximity fact: the table checked
+ * and found no qualifying enemy. Absent for a melee attack, or when the test
+ * supplies its own proximity fact.
+ */
+export function rangedAttackEnemyProximityFactsForTest(
+  hole: BattleHole,
+  suppliedFacts: readonly AttackTargetSpatialFactForTest[] = [],
+  enemies: Extract<
+    AttackTargetSpatialFactForTest,
+    { readonly kind: "rangedAttackEnemyProximity" }
+  >["enemies"] = [],
+): readonly Extract<
+  AttackTargetSpatialFactForTest,
+  { readonly kind: "rangedAttackEnemyProximity" }
+>[] {
+  return hole.kind === "targetChoice" &&
+    hole.attack?.targetConstraint.kind === "rangedRange" &&
+    !suppliedFacts.some((fact) => fact.kind === "rangedAttackEnemyProximity")
+    ? [
+        {
+          kind: "rangedAttackEnemyProximity",
+          attackerId: hole.attack.actorId,
+          procedureRef: hole.attack.selection.procedureRef,
+          enemies,
+        },
+      ]
+    : [];
 }
 
 export function attackTargetSpatialFact(

@@ -1766,13 +1766,13 @@ export type BattleTargetSpatialFact =
        * An empty enemies array means checked-none; omission is unqualified.
        * Enemies are contextual and independent of the selected target.
        */
-      readonly kind: "rangedSpellAttackEnemyProximity";
-      readonly casterId: CombatantId;
-      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly kind: "rangedAttackEnemyProximity";
+      readonly attackerId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
       readonly enemies: readonly {
         readonly enemyId: CombatantId;
         readonly distanceFeet: MovementFeet;
-        readonly enemyCanSeeCaster: boolean;
+        readonly enemyCanSeeAttacker: boolean;
       }[];
     }
   | {
@@ -4886,7 +4886,7 @@ export const RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS = [
   "spellObjectTarget",
   "spellObjectTargetSight",
   "spellObjectIgnition",
-  "rangedSpellAttackEnemyProximity",
+  "rangedAttackEnemyProximity",
   "spellLeapTargetWithinRange",
   "spellTargetKnownWilling",
   "reactionSpellDamagerVisibleWithinRange",
@@ -7299,7 +7299,7 @@ export type BattleFill =
             | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"
             | "spellObjectTargetSight"
-            | "rangedSpellAttackEnemyProximity"
+            | "rangedAttackEnemyProximity"
             | "attackObjectTarget";
         }
       >[];
