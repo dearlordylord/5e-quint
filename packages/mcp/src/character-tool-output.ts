@@ -1,3 +1,4 @@
+import { JsonSerializableObjectSchema as JsonObjectSchema } from "./tool-content.ts";
 import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { EquippedWeaponBattleBlockersSchema } from "./equipped-weapon-battle-blockers.ts";
 import { CharacterBattleSpellSupportSchema } from "./character-battle-spell-support-schema.ts";
@@ -18,12 +19,10 @@ import {
   FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
-import { UnitId } from "@dnd/shared/game-facts";
+import { CharacterClassLevelSchema, UnitId } from "@dnd/shared/game-facts";
 import { Result, Schema } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
-
-const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
@@ -163,6 +162,7 @@ const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
 const UnitChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("unitChoice"),
   unitId: UnitId,
+  grantLevel: Schema.optionalKey(CharacterClassLevelSchema),
   choiceKey: Schema.Literals(UNIT_CHOICE_KEYS),
 });
 const LoadoutCreationHoleSourceSchema = Schema.Struct({
@@ -430,6 +430,4 @@ export {
   type CharacterSessionQueryOutput,
 } from "./character-session-query-tool-output.ts";
 
-export type CharacterSessionRow = Schema.Schema.Type<
-  typeof CharacterSessionRowSchema
->;
+export type CharacterSessionRow = typeof CharacterSessionRowSchema.Type;
