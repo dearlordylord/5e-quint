@@ -316,7 +316,12 @@ the boundary where the procedure needs them:
   constraints and the accepted decisions are not stored as an encounter-wide
   relationship partition. Help attack proximity is a separate table-supplied
   spatial fact; battle owns the resulting help link, expiry, and consumption by
-  the later qualifying attack.
+  the later qualifying attack. Help's ability check option takes the ally and
+  the Help Assistance decision in one Table Decision hole, offers the helper's
+  skill proficiencies, and battle owns the benefit's expiry and its use by the
+  ally's next ability check with that skill. One operation builds a skill
+  check's hole, with the benefit's Advantage, and the state with the benefit
+  used up, so whoever resolves the check continues from that state.
 
 For one exact pending spatial question, an adapter-derived witness and a
 Table-authored spatial decision are alternative sources. The session supplies

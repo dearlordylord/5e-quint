@@ -3703,6 +3703,7 @@ describe("MCP server route", () => {
         .map(({ label }) => label),
     ).toEqual([
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
       "Nimble Escape",
@@ -8134,7 +8135,9 @@ describe("MCP server route", () => {
     ).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
@@ -8241,6 +8244,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
       "Nimble Escape",

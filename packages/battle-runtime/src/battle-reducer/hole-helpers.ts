@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
+// KERNEL-COVERAGE: runtime-owner BATTLE.HELP.ABILITY_CHECK_ASSIST
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
@@ -9,6 +10,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
+import {
+  consumeHelpAbilityChecks,
+  helpAbilityCheckGrantsAdvantage,
+} from "./help-ability-check.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -17,6 +22,7 @@ import {
   holeId,
   holeInstanceKey,
   type AttackRollMode,
+  type HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleFillKind } from "../battle-protocol-kinds.ts";
 import {
@@ -69,6 +75,7 @@ import {
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
   type BattleFill,
+  type BattleHoleId,
   type BattleCreatureState,
   type BattleGrappleLink,
   type BattleGrappleOutcomeHole,
@@ -267,6 +274,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
     )
     .pipe(
+      byBattleHoleKind(
+        "helpAbilityCheckDecision",
+        () => "helpAbilityCheckDecision" as const,
+      ),
       byBattleHoleKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleHoleKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleHoleKind("skillChoice", () => "skillChoice" as const),
@@ -355,93 +366,157 @@ export function bonusActionDashSubjectForSpeedKind(
   };
 }
 
-export function hideAbilityCheckHole(
+/**
+ * An ability check with a skill: the hole that asks for it, and the state once
+ * the check is made. A Help benefit for the skill gives the check Advantage and
+ * is used up by it, so the hole's roll mode and the used-up benefit come from
+ * this one operation. Whoever resolves the check continues from
+ * `stateAfterCheck`.
+ */
+export interface BattleSkillCheck {
+  readonly hole: BattleAbilityCheckHole;
+  /** The state after the check, without the Help benefits it used up. */
+  readonly stateAfterCheck: BattleState;
+}
+
+function skillCheck(
   state: BattleState,
   actorId: CombatantId,
-): BattleAbilityCheckHole {
-  const rollMode = requiredAbilityCheckRollMode(state, actorId, "dex");
+  check: {
+    readonly ability: Ability;
+    readonly skill: Skill;
+    readonly targetId?: CombatantId;
+  },
+  hole: {
+    readonly holeInstanceKey: HoleInstanceKey;
+    readonly holeId: BattleHoleId;
+    readonly label: string;
+    readonly dc: DifficultyClass;
+    readonly requiresTableSpatialFact?: true;
+  },
+): BattleSkillCheck {
+  const sources = abilityCheckRollModeSources(
+    state,
+    actorId,
+    check.ability,
+    check,
+  );
+  const rollMode = mechanicalD20TestRollMode({
+    advantage:
+      sources.advantage ||
+      helpAbilityCheckGrantsAdvantage(state, actorId, check.skill),
+    disadvantage: sources.disadvantage,
+  });
   return {
-    holeInstanceKey: HIDE_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: HIDE_ABILITY_CHECK_HOLE_ID,
-    kind: "abilityCheck",
-    label: `Hide Dexterity (Stealth) check (DC ${HIDE_DC})`,
-    ability: "dex",
-    skill: "stealth",
-    dc: HIDE_DC,
-    ...optionalProperty("rollMode", rollMode),
+    hole: {
+      holeInstanceKey: hole.holeInstanceKey,
+      holeId: hole.holeId,
+      kind: "abilityCheck",
+      label: hole.label,
+      ability: check.ability,
+      skill: check.skill,
+      dc: hole.dc,
+      ...optionalProperty("rollMode", rollMode),
+      ...optionalProperty(
+        "requiresTableSpatialFact",
+        hole.requiresTableSpatialFact,
+      ),
+    },
+    stateAfterCheck: consumeHelpAbilityChecks(state, actorId, check.skill),
   };
 }
 
-export function searchAbilityCheckHole(
+export function hideSkillCheck(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleSkillCheck {
+  return skillCheck(
+    state,
+    actorId,
+    { ability: "dex", skill: "stealth" },
+    {
+      holeInstanceKey: HIDE_ABILITY_CHECK_HOLE_INSTANCE,
+      holeId: HIDE_ABILITY_CHECK_HOLE_ID,
+      label: `Hide Dexterity (Stealth) check (DC ${HIDE_DC})`,
+      dc: HIDE_DC,
+    },
+  );
+}
+
+export function searchSkillCheck(
   dc: DifficultyClass,
   state: BattleState,
   actorId: CombatantId,
   targetId?: CombatantId,
-): BattleAbilityCheckHole {
-  const rollMode = requiredAbilityCheckRollMode(state, actorId, "wis", {
-    skill: "perception",
-    ...optionalProperty("targetId", targetId),
-  });
-  return {
-    holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
-    kind: "abilityCheck",
-    label: `Search Wisdom (Perception) check (DC ${dc})`,
-    ability: "wis",
-    skill: "perception",
-    dc,
-    ...optionalProperty("rollMode", rollMode),
-  };
+): BattleSkillCheck {
+  return skillCheck(
+    state,
+    actorId,
+    {
+      ability: "wis",
+      skill: "perception",
+      ...optionalProperty("targetId", targetId),
+    },
+    {
+      holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
+      holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
+      label: `Search Wisdom (Perception) check (DC ${dc})`,
+      dc,
+    },
+  );
 }
 
-export function escapeSpellRestraintAbilityCheckHole(
+export function escapeSpellRestraintSkillCheck(
   state: BattleState,
   effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
   input: { readonly actorId: CombatantId; readonly targetId: CombatantId },
-): BattleAbilityCheckHole {
+): BattleSkillCheck {
   const dc = spellSaveDcForCaster(
     state,
     effect.sourceCombatantId,
     effect.sourceProcedureRef,
   );
-  const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str");
   const key = escapeSpellRestraintAbilityCheckHoleKey(
     spellActiveEffectExecutionRef(effect),
   );
-  return {
-    holeInstanceKey: holeInstanceKey(key),
-    holeId: holeId(key),
-    kind: "abilityCheck",
-    label: `Escape spell restraint Strength (Athletics) check (DC ${dc ?? 1})`,
-    ability: "str",
-    skill: "athletics",
-    dc: dc ?? difficultyClass(1),
-    ...optionalProperty("rollMode", rollMode),
-    ...(input.actorId === input.targetId
-      ? {}
-      : { requiresTableSpatialFact: true }),
-  };
+  return skillCheck(
+    state,
+    input.actorId,
+    { ability: "str", skill: "athletics" },
+    {
+      holeInstanceKey: holeInstanceKey(key),
+      holeId: holeId(key),
+      label: `Escape spell restraint Strength (Athletics) check (DC ${dc ?? 1})`,
+      dc: dc ?? difficultyClass(1),
+      ...(input.actorId === input.targetId
+        ? {}
+        : { requiresTableSpatialFact: true }),
+    },
+  );
 }
 
-export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
+/**
+ * The Influence Charisma (Intimidation) check that a temporary ability-check
+ * roll mode (Booming Voice) applies to. The host resolves it, then continues
+ * from `stateAfterCheck`.
+ */
+export function temporaryAbilityCheckRollModeInfluenceSkillCheck(
   state: BattleState,
   actorId: CombatantId,
   dc: DifficultyClass,
-): BattleAbilityCheckHole {
-  const rollMode = requiredAbilityCheckRollMode(state, actorId, "cha", {
-    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
-  });
-  return {
-    holeInstanceKey:
-      MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
-    kind: "abilityCheck",
-    label: `Influence Charisma (Intimidation) check (DC ${dc})`,
-    ability: "cha",
-    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
-    dc,
-    ...optionalProperty("rollMode", rollMode),
-  };
+): BattleSkillCheck {
+  return skillCheck(
+    state,
+    actorId,
+    { ability: "cha", skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL },
+    {
+      holeInstanceKey:
+        MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+      holeId: MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+      label: `Influence Charisma (Intimidation) check (DC ${dc})`,
+      dc,
+    },
+  );
 }
 
 export function requiredAbilityCheckRollMode(
@@ -453,6 +528,25 @@ export function requiredAbilityCheckRollMode(
     readonly targetId?: CombatantId;
   },
 ): AttackRollMode | undefined {
+  return mechanicalD20TestRollMode(
+    abilityCheckRollModeSources(state, actorId, ability, context),
+  );
+}
+
+/**
+ * Whether an ability check has a source of Advantage and of Disadvantage,
+ * leaving out a Help benefit: a check uses that benefit up, so only
+ * `skillCheck`, which also returns the state after the check, counts it.
+ */
+function abilityCheckRollModeSources(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  context?: {
+    readonly skill?: Skill;
+    readonly targetId?: CombatantId;
+  },
+): { readonly advantage: boolean; readonly disadvantage: boolean } {
   const hasDisadvantage =
     activeAbilityCheckRollModeEffectMatches(
       state,
@@ -477,14 +571,28 @@ export function requiredAbilityCheckRollMode(
       "advantage",
     ) ||
     (context?.skill !== undefined &&
-      activeTemporaryAbilityCheckRollModeAdvantageMatches(
-        state,
-        actorId,
-        ability,
-        context.skill,
-      )) ||
-    (context?.skill !== undefined &&
-      context.targetId !== undefined &&
+      skillAbilityCheckAdvantageMatches(state, actorId, ability, {
+        skill: context.skill,
+        ...optionalProperty("targetId", context.targetId),
+      }));
+  return { advantage: hasAdvantage, disadvantage: hasDisadvantage };
+}
+
+/** Advantage sources that apply only to an ability check with a named skill. */
+function skillAbilityCheckAdvantageMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  context: { readonly skill: Skill; readonly targetId?: CombatantId },
+): boolean {
+  return (
+    activeTemporaryAbilityCheckRollModeAdvantageMatches(
+      state,
+      actorId,
+      ability,
+      context.skill,
+    ) ||
+    (context.targetId !== undefined &&
       activeMarkedDamageRiderFindingAdvantageMatches(
         state,
         actorId,
@@ -492,17 +600,13 @@ export function requiredAbilityCheckRollMode(
         context.skill,
         context.targetId,
       )) ||
-    (context?.skill !== undefined &&
-      activeRemarkableAthleteAbilityCheckAdvantageMatches(
-        state,
-        actorId,
-        ability,
-        context.skill,
-      ));
-  return mechanicalD20TestRollMode({
-    advantage: hasAdvantage,
-    disadvantage: hasDisadvantage,
-  });
+    activeRemarkableAthleteAbilityCheckAdvantageMatches(
+      state,
+      actorId,
+      ability,
+      context.skill,
+    )
+  );
 }
 
 export function requiredConditionEndAbilityCheckRollMode(
@@ -1053,7 +1157,7 @@ export function bonusActionStandardActionActs(
         return speedKinds.map((speedKind): BattleActDiscoveryCandidate => {
           const execution = {
             initialHoles:
-              action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
+              action === "hide" ? [hideSkillCheck(state, actorId).hole] : [],
           };
           if (entry.source.kind === "spellEffect") {
             return {

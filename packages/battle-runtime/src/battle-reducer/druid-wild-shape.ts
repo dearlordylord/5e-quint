@@ -19,7 +19,12 @@ import {
   proficiencyBonusForCharacterLevel,
   type D6RollResult,
 } from "@dnd/shared/types";
-import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
+import {
+  SKILLS,
+  type Ability,
+  type Size,
+  type Skill,
+} from "@dnd/surface/surface/types";
 import * as Result from "effect/Result";
 import { characterBattleLevel } from "../character-class-level.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
@@ -269,6 +274,32 @@ export function combatantSkillModifier(
     ability: SKILL_ABILITIES[skill],
     skill,
   });
+}
+
+/**
+ * The skills a combatant is proficient in, in canonical skill order. A
+ * character's own proficiencies join an active Wild Shape form's ("you also
+ * retain your skill and saving throw proficiencies ... in addition to gaining
+ * the proficiencies of the creature"); a Stat Block's Skills entry "specifies
+ * a monster's skill proficiencies".
+ */
+export function combatantSkillProficiencies(
+  combatant: BattleCreatureState,
+): readonly Skill[] {
+  const activeForm = activeDruidWildShapeForm(combatant);
+  const statBlockSkillModifiers =
+    combatant.origin.kind === "statBlock"
+      ? combatant.origin.mechanics.skillModifiers
+      : (activeForm?.statBlock.skillModifiers ?? []);
+  const characterSkills =
+    combatant.origin.kind === "character"
+      ? combatant.origin.d20Statistics.skillProficiencies
+      : [];
+  return SKILLS.filter(
+    (skill) =>
+      characterSkills.includes(skill) ||
+      statBlockSkillModifiers.some((modifier) => modifier.skill === skill),
+  );
 }
 
 export function combatantSavingThrowModifier(

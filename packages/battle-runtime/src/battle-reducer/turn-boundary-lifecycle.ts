@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED
+// KERNEL-COVERAGE: runtime-owner BATTLE.HELP.ABILITY_CHECK_ASSIST
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
@@ -1172,6 +1173,9 @@ function resolveEndTurn({
   const helpAttacks = state.helpAttacks.filter(
     (help) => help.expiresAt.combatantId !== nextActorId,
   );
+  const helpAbilityChecks = state.helpAbilityChecks.filter(
+    (help) => help.expiresAt.combatantId !== nextActorId,
+  );
   const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   let combatantsAfterExpiredReadiedSpells: ReadonlyMap<
@@ -1205,6 +1209,7 @@ function resolveEndTurn({
         readiedSpells,
         readiedResponses,
         helpAttacks,
+        helpAbilityChecks,
       },
       currentActorId(state),
       state.initiative.round,
@@ -1370,6 +1375,7 @@ function resolveEndTurn({
       readiedSpells,
       readiedResponses,
       helpAttacks,
+      helpAbilityChecks,
       legendaryActionWindow: {
         afterTurnActorId: currentActorId(state),
         consumed: false,

@@ -746,6 +746,7 @@ const INTRINSIC_ACTION_LABELS = {
   disengage: "Disengage",
   dodge: "Dodge",
   helpAttack: "Help",
+  helpAbilityCheck: "Help (Ability Check)",
   hide: "Hide",
   multiattack: "Multiattack",
   ready: "Ready",

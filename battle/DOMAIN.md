@@ -27,6 +27,7 @@ Terms and definitions for the multi-creature battle layer. Extends `UBIQUITOUS_L
 **Transaction** — A cross-creature event where one creature's action affects another creature's state. The atomic unit of multi-creature interaction.
 
 Examples:
+
 - Attack: attacker spends action/extra attack, target takes damage
 - Heal: healer expends slot, target gains HP
 - Buff: caster expends slot + starts concentration, target gains effect
@@ -35,6 +36,7 @@ Examples:
 A transaction may touch 1 creature (self-buff), 2 creatures (attack), or N creatures (Fireball, aura).
 
 Transaction shapes:
+
 - **1-to-1 attack**: attacker rolls, target may react, damage applied. (R20)
 - **1-to-1 save**: caster's DC, target rolls save, effect on fail. (R31)
 - **1-to-many AoE**: caster acts once, each target saves/takes damage independently. (R32)
@@ -51,6 +53,7 @@ Transaction shapes:
 **Reaction Stack** — When a reaction itself creates a trigger (e.g., Counterspell is a spell, so it can be Counterspelled), reactions nest. The stack resolves innermost-first. Depth bounded by number of creatures with unused reactions.
 
 **Reaction Window** — At each interrupt point, the set of creatures eligible to react:
+
 - Has reaction available (not yet used this round)
 - Has a valid reaction for this trigger type
 - Meets the reaction's specific conditions (range, visibility, etc.)
@@ -121,6 +124,8 @@ For battle action tokens, `ResourceCost` is limited to the immediate up-front co
 
 **Help-Attack Proximity** — A caller-owned yes/no fact for whether the enemy distracted by the Help action is within 5 feet of the helper at the time of the action. The battle layer owns the action spend and resulting help link, not the geometry check.
 
+**Help Assistance** — A caller-owned yes/no fact for whether the helper is near enough to assist the chosen ally's ability check verbally or physically; the SRD gives the GM final say. The battle layer owns the action spend, the benefit for the chosen skill, its expiry and its use by the ally's next check with that skill, not the judgment.
+
 **Threatened** — A creature is threatened by an enemy if within that enemy's reach and the enemy can see them. Leaving a threatened area triggers an opportunity attack.
 
 ## State Dependencies
@@ -130,6 +135,7 @@ For battle action tokens, `ResourceCost` is limited to the immediate up-front co
 **Link** — A persistent connection between two creatures' states. Breaking the link (incapacitation, distance, death) affects both sides. Links are the mechanism for concentration break propagation.
 
 Link types:
+
 - **Concentration link**: caster concentrates on spell → target(s) have effect. Caster's concentration breaks → effects end on all targets. One-to-many.
 - **Grapple link**: grappler and target. Grappler's speed halved, target's speed 0. Ends if either is incapacitated or moved out of reach. One-to-one, bidirectional.
 - **Help link**: helper → beneficiary. Expires on beneficiary's next relevant roll. One-to-one, ephemeral.
