@@ -15,7 +15,8 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { weaponMasteryToppleSelection } from "./attack-roll.ts";
+import { weaponMasterySelectionAgainstTarget } from "./attack-roll.ts";
+import { WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE } from "../unit-feature-execution-constants.ts";
 
 export function weaponMasteryToppleSavingThrowHole(
   state: BattleState,
@@ -23,12 +24,13 @@ export function weaponMasteryToppleSavingThrowHole(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleUnitFeatureSavingThrowOutcomeHole | null {
-  const selection = weaponMasteryToppleSelection(
+  const selection = weaponMasterySelectionAgainstTarget({
     state,
     attackerId,
     targetId,
     attack,
-  );
+    supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  });
   if (selection === null) {
     return null;
   }

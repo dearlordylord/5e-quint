@@ -457,16 +457,10 @@ function resolveReactionAttackCommand(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.targetId !== undefined) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} target is fixed by the reaction trigger.`,
-    );
+  const reactionFillIssue = reactionAttackFillIssue(fillSet, commandLabel);
+  if (reactionFillIssue !== null) {
+    return invalidResult(input.state, "invalidFill", reactionFillIssue);
   }
-  /* v8 ignore stop -- @preserve */
   const targetSpatialFacts = reactionAttackTargetSpatialFacts({
     state: input.state,
     commandLabel,
@@ -1502,4 +1496,23 @@ function resolveReactionAttackDamageTransaction(input: {
     state: afterDamagePath.state,
     snapshot: snapshotBattle(afterDamagePath.state),
   };
+}
+
+/**
+ * A fill a reaction attack can't take: a target, which the trigger fixes, or a
+ * Weapon Mastery Graze decision, which reaction attacks don't resolve.
+ */
+function reactionAttackFillIssue(
+  fillSet: ResolvedAttackFillSet,
+  attackLabel: string,
+): string | null {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (fillSet.targetId !== undefined) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return `${attackLabel} target is fixed by the reaction trigger.`;
+  }
+  /* v8 ignore stop -- @preserve */
+  return fillSet.weaponMasteryGrazeDecision === undefined
+    ? null
+    : `${attackLabel} doesn't resolve Weapon Mastery Graze.`;
 }

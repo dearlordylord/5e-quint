@@ -314,6 +314,7 @@ import {
   TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
@@ -1403,6 +1404,18 @@ export function masteryCleaveUnitRefs(): Extract<
   ];
 }
 
+export function masteryGrazeUnitRefs(): Extract<
+  CharacterBattleCombatantInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  return [
+    {
+      unit: unitLibrary.requireUnit("mastery_graze"),
+      supportProfiles: [WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE],
+    },
+  ];
+}
+
 export function tacticalMasterReplacementUnitRefs(): Extract<
   CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
@@ -1499,6 +1512,17 @@ export function longbowWeaponMasterySelections(): Extract<
   return [
     {
       weaponUnitId: parseUnitId("weapon_longbow"),
+    },
+  ];
+}
+
+export function grazeWeaponMasterySelections(): Extract<
+  CharacterBattleCombatantInit["creatureInit"],
+  { readonly kind: "character" }
+>["weaponMasteries"] {
+  return [
+    {
+      weaponUnitId: testGrazeWeaponUnitRef().unit.id,
     },
   ];
 }
@@ -1779,6 +1803,7 @@ export function characterAttackSubjectForTest(
         .find((entry) => entry.id === candidate.weapon.weaponUnitId);
       return (
         unit?.name === attackName ||
+        candidate.weapon.weaponUnitId === attackName ||
         candidate.weapon.weaponUnitId ===
           `weapon_${attackName.toLowerCase().replaceAll(" ", "_")}`
       );
@@ -4391,6 +4416,99 @@ export function testRangedCleaveLongbowUnitRef(): BattleUnitRef {
       masteryUnitId: parseUnitId("mastery_cleave"),
     } satisfies WeaponRecord,
     supportProfiles: [],
+  };
+}
+
+/** A Hunter's Prey unit ref with the chosen option's support profile. */
+export function huntersPreyUnitRef(
+  optionId: "colossusSlayer" | "hordeBreaker",
+): BattleUnitRef {
+  const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const huntersPrey =
+    optionId === "colossusSlayer"
+      ? {
+          kind: "woundedTargetWeaponDamage" as const,
+          trigger: "hitCreatureWithWeapon" as const,
+          targetPredicate: "missingAnyHitPoints" as const,
+          usageLimit: "oncePerTurn" as const,
+          damage: {
+            kind: "addAttackDamageDice" as const,
+            dice: { dice: 1 as const, dieSize: 8 as const },
+            damageType: "sameAsAttack" as const,
+          },
+        }
+      : {
+          kind: "nearbyDifferentTargetSameWeaponAttack" as const,
+          trigger: "makeWeaponAttack" as const,
+          usageLimit: "oncePerTurn" as const,
+          extraAttack: {
+            weapon: "sameWeapon" as const,
+            target: {
+              kind: "differentCreatureNearOriginalTarget" as const,
+              withinFeetOfOriginalTarget: movementFeet(5),
+              withinWeaponRange: true as const,
+              notAttackedThisTurn: true as const,
+            },
+          },
+        };
+  return {
+    unit: unitLibrary.requireUnit(unit.id),
+    supportProfiles: [
+      {
+        kind: "huntersPrey",
+        huntersPrey,
+      },
+    ],
+  };
+}
+
+/**
+ * A synthetic heavy, two-handed slashing weapon whose mastery is Graze. The
+ * shipped weapon catalog has no Graze weapon, so the Greataxe record is renamed
+ * and pointed at the SRD Graze mastery.
+ */
+export function testGrazeWeaponUnitRef(): BattleUnitRef {
+  const weapon = unitLibrary.requireUnit("weapon_greataxe");
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Greataxe weapon Unit.");
+  }
+  const grazeWeapon = decodeUnitRecordSync({
+    ...weapon,
+    id: parseUnitId("synthetic:battle-fixture-graze-weapon"),
+    name: "Synthetic Graze Weapon",
+    masteryUnitId: parseUnitId("mastery_graze"),
+    provenance: {
+      kind: "synthetic-test",
+      section: "battle Graze weapon fixture",
+    },
+  });
+  if (grazeWeapon.kind !== "weapon") {
+    throw new Error("Expected a synthetic Graze weapon test fixture.");
+  }
+  return { unit: grazeWeapon, supportProfiles: [] };
+}
+
+export function testGrazeWeaponAttack(
+  ability = battleAbilityModifier(3),
+): TestCharacterWeaponAttack {
+  const unit = testGrazeWeaponUnitRef().unit;
+  if (unit.kind !== "weapon") {
+    throw new Error("Expected the synthetic Graze weapon Unit.");
+  }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(unit, unitLibrary),
+  );
+  return {
+    kind: "weapon",
+    ...Result.getOrThrow(
+      admitResolvedCharacterWeaponAttackExecutionWeapon(
+        resolution,
+        battleObjectId(`main:${unit.id}`),
+        [{ weaponUnitId: unit.id }],
+      ),
+    ),
+    ability: "str",
+    abilityModifier: ability,
   };
 }
 

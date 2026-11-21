@@ -1,6 +1,8 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
@@ -10,6 +12,7 @@ import {
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleAmmunitionStock,
@@ -490,6 +493,75 @@ describe("manual MCP battle surface coverage", () => {
               kind: "attackRoll",
               label: "Cleave attack roll",
             }),
+          ],
+        },
+      },
+    });
+  });
+
+  test("uses Weapon Mastery Graze decision through MCP battle tools", () => {
+    const root = createMcpPlaySessionRoot();
+    const grazeWeapon = syntheticGrazeWeaponUnit(root);
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          initiative: 20,
+          attack: syntheticGrazeWeaponAttack(root, grazeWeapon),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId(`main:${grazeWeapon.id}`),
+              unitId: grazeWeapon.id,
+              grip: "two_handed",
+            },
+          },
+          characterUnitRefs: [
+            { unit: grazeWeapon, supportProfiles: [] },
+            {
+              unit: root.unitLibrary.requireUnit("mastery_graze"),
+              supportProfiles: [WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE],
+            },
+          ],
+          weaponMasteries: [{ weaponUnitId: grazeWeapon.id }],
+        }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
+
+    const afterMiss = resolveAttackThroughRoll(
+      root,
+      SYNTHETIC_GRAZE_WEAPON_NAME,
+      "goblin",
+      10,
+      8,
+    );
+    const grazeDecision = requireHole(
+      requireBattleHoles(afterMiss).holes,
+      "unitFeatureDecision",
+    );
+    expect(grazeDecision).toMatchObject({
+      label: "Use Graze",
+      choices: ["use", "decline"],
+    });
+    const afterGrazeDecision = call(root, "fill_battle_hole", {
+      subject: requireBattleHoles(afterMiss).replaySubject,
+      fill: {
+        kind: "unitFeatureDecision",
+        holeId: grazeDecision.holeId,
+        value: "use",
+      },
+    });
+    if (afterGrazeDecision.result.tag === "invalid") {
+      throw new Error(JSON.stringify(afterGrazeDecision.result));
+    }
+
+    expect(afterGrazeDecision).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({ combatantId: "fighter" }),
+            expect.objectContaining({ combatantId: "goblin", hp: 7 }),
           ],
         },
       },
@@ -2023,6 +2095,54 @@ function weaponAttack(
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),
     damageAbilityModifier: abilityModifier(mod),
+  };
+}
+
+const SYNTHETIC_GRAZE_WEAPON_NAME = "Synthetic Graze Weapon";
+
+function syntheticGrazeWeaponUnit(
+  root: Root,
+): Extract<UnitRecord, { readonly kind: "weapon" }> {
+  const greataxe = root.unitLibrary.requireUnit("weapon_greataxe");
+  const weapon = decodeUnitRecordSync({
+    ...greataxe,
+    id: authoredUnitId("synthetic:mcp-graze-weapon"),
+    name: SYNTHETIC_GRAZE_WEAPON_NAME,
+    masteryUnitId: authoredUnitId("mastery_graze"),
+    provenance: {
+      kind: "synthetic-test",
+      section: "MCP Graze weapon fixture",
+    },
+  });
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected the synthetic Graze weapon Unit.");
+  }
+  return weapon;
+}
+
+function syntheticGrazeWeaponAttack(
+  root: Root,
+  weapon: Extract<UnitRecord, { readonly kind: "weapon" }>,
+): CharacterWeaponAttackActionOption {
+  const definition = admitWeaponDefinition({
+    weapon,
+    unitCatalog: root.unitLibrary,
+  });
+  if (definition.tag === "rejected") {
+    throw new Error(definition.issues.map(({ message }) => message).join(" "));
+  }
+  return {
+    kind: "weapon",
+    ...bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition,
+      objectId: battleObjectId(`main:${weapon.id}`),
+      weaponMasteries: [{ weaponUnitId: weapon.id }],
+    }),
+    ability: "str",
+    abilityModifier: abilityModifier(3),
+    attackBonus: attackBonus(5),
+    damageAbilityModifier: abilityModifier(3),
   };
 }
 

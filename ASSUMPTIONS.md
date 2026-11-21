@@ -222,3 +222,33 @@ someone else uses an Action to shake the creature out of its stupor. Unlike
 requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
+
+## A53: Graze is not offered when it would deal 0 damage
+
+**Assumption:** After a missed attack roll with a Graze weapon, the attacker is
+asked whether to use Graze only when the ability modifier used for the attack
+roll is 1 or more. With a modifier of 0 or less, the miss ends the attack and no
+Graze decision is asked.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Graze" lets
+the attacker deal damage equal to the ability modifier used for the attack
+roll, and `.references/srd-5.2.1/playing-the-game.md`, "Damage Rolls" says
+"it's possible to deal 0 damage but not negative damage". So the SRD fixes the
+amount: a modifier of 0 or less deals 0. It doesn't say whether the attacker is
+still asked to choose. Since either answer leaves the battle unchanged, the
+model doesn't ask.
+
+## A54: Graze damage is still doubled by Vulnerability
+
+**Assumption:** A target with Vulnerability to the weapon's damage type takes
+double Graze damage, as it does any other damage of that type. Resistance and
+Immunity also apply as usual.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Graze" says
+"the damage can be increased only by increasing the ability modifier". The SRD
+doesn't say whether that limit covers the target's Vulnerability.
+`.references/srd-5.2.1/playing-the-game.md`, "Order of Application" applies
+"bonuses, penalties, or multipliers" first and Vulnerability last, as part of
+the damage the target takes. The model reads Graze's limit as excluding the
+first step (damage bonuses and riders on the attacker's side) and leaves the
+target's Resistance and Vulnerability as the general rule applies them.
