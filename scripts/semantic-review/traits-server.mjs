@@ -5,7 +5,16 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseEnv } from "node:util";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-process.chdir(root);
+const projectFlag = process.argv.indexOf("--project");
+if (projectFlag !== -1) {
+  const project = process.argv[projectFlag + 1];
+  if (!project || project.startsWith("--"))
+    throw new Error("--project requires a directory");
+  process.chdir(resolve(project));
+  process.argv.splice(projectFlag, 2);
+} else {
+  process.chdir(root);
+}
 const credentials = join(
   process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"),
   "hapsland/.env",

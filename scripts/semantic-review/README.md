@@ -53,6 +53,11 @@ node scripts/semantic-review/traits-client.mjs check_traits /path/to/input.json
 }
 ```
 
+For a separate review checkout, pass `--project /absolute/review-checkout` to
+both launchers. The target needs its own `traits.ts` exporting this runtime’s
+configuration and `.agents/traits` pointing to the owning rules directory.
+Dependencies resolve from the runtime; source and results belong to the target.
+
 `examples/missing-target.ts` should produce a finding; the other examples
 should not. They are deliberate classifier inputs. Inspect selections and
 omissions: a skipped check is untested. Hapsland exits zero even with findings;
