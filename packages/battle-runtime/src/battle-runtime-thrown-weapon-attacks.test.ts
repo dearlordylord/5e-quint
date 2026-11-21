@@ -20,6 +20,8 @@ import {
 import {
   applyBattleHeldWeaponPickup,
   type BattleFill,
+  type BattleHole,
+  type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
   type BattleTargetSpatialFact,
@@ -29,6 +31,7 @@ import {
   attackRollFill,
   attackTargetSpatialFact,
   battleAbilityModifier,
+  battleResolutionHolesForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
@@ -46,8 +49,28 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   THROWN_WEAPON_LANDING_POSITION_FOR_TEST,
+  thrownWeaponLandingFactsForTest,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import {
+  spellCasterId,
+  spellTargetId,
+  trueStrikeUnitId,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  attackTargetFill,
+  damageRollFillWithGroups,
+  requireHole as requireFixtureHole,
+  weaponAttackSubject,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  classLevel,
+  proficiencyBonus,
+} from "./unit-profile-admission.test-support.ts";
 
 const mainDaggerId = battleObjectId("main:weapon_dagger");
 const offHandDaggerId = battleObjectId("off:weapon_dagger");
@@ -952,5 +975,147 @@ describe("battle runtime: thrown weapon attacks", () => {
       completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
+  });
+});
+
+const dartId = battleObjectId("main:weapon_dart");
+
+/** A Wizard holding a Dart, who knows True Strike. */
+function dartBattle() {
+  return spellBattle({
+    cantrips: [spellRecord(trueStrikeUnitId)],
+    spellSlots: [],
+    attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dart"),
+    selectedLoadout: {
+      weapon: {
+        itemId: dartId,
+        unitId: parseSharedUnitId("weapon_dart"),
+        grip: "one_handed",
+      },
+    },
+    casterClassLevels: [{ className: "wizard", level: classLevel(5) }],
+    casterProficiencyBonus: proficiencyBonus(3),
+    casterWeaponProficiencies: [
+      { kind: "weapon_category", category: "simple" },
+    ],
+    targetHp: 20,
+    targetMaxHp: 20,
+  });
+}
+
+function dartTargetFill(holes: readonly BattleHole[]) {
+  const hole = requireFixtureHole(holes, "targetChoice");
+  expect(hole.attack?.requiresThrownWeaponLanding).toBe(true);
+  return attackTargetFill(hole, spellCasterId, spellTargetId, [
+    ...thrownWeaponLandingFactsForTest(hole),
+  ]);
+}
+
+/** The open holes of a Dart attack that still waits on input. */
+function dartHoles(result: BattleResolutionResult): readonly BattleHole[] {
+  if (result.tag !== "needsHoles") {
+    throw new Error(
+      `Expected the Dart attack to need input, got ${result.tag}.`,
+    );
+  }
+  return battleResolutionHolesForTest(result);
+}
+
+/** The Dart on the ground, and the result's one report of it. */
+function expectDartLandedAndReported(result: BattleResolutionResult) {
+  const resolved = requireResolved(result);
+  const landed = resolved.state.groundObjects.get(spellCasterId)?.get(dartId);
+  expect(landed?.positionId).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
+  expect(resolved.droppedObjects).toEqual([
+    {
+      kind: "objectDropped",
+      actorId: spellCasterId,
+      objectId: dartId,
+      source: landed?.source,
+    },
+  ]);
+}
+
+// SRD 5.2.1 Dart: a Ranged weapon with the Thrown property and no Ammunition,
+// so its every attack is a throw.
+describe("battle runtime: a thrown Dart", () => {
+  test("an Attack action with a Dart needs a landing fact and lands the Dart", () => {
+    const session = dartBattle();
+    const subject = weaponAttackSubject(session, "Dart");
+    const target = dartTargetFill(
+      dartHoles(
+        resolveBattleSubject({ state: session.state, subject, fills: [] }),
+      ),
+    );
+    const roll = requireFixtureHole(
+      dartHoles(
+        resolveBattleSubject({
+          state: session.state,
+          subject,
+          fills: [target],
+        }),
+      ),
+      "attackRoll",
+    );
+    expectDartLandedAndReported(
+      resolveBattleSubject({
+        state: session.state,
+        subject,
+        fills: [target, attackRollFill(roll, { total: 2, naturalD20: 2 })],
+      }),
+    );
+  });
+
+  test("a True Strike attack with a Dart lands the Dart and reports it", () => {
+    const session = dartBattle();
+    const act = spellAct({ session, spellId: trueStrikeUnitId });
+    const damageType: BattleFill = {
+      kind: "damageTypeChoice",
+      holeId: requireFixtureHole(act.initialHoles, "damageTypeChoice").holeId,
+      value: "radiant",
+    };
+    const state = session.state;
+    const target = dartTargetFill(
+      dartHoles(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [damageType],
+        }),
+      ),
+    );
+    const roll = attackRollFill(
+      requireFixtureHole(
+        dartHoles(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [damageType, target],
+          }),
+        ),
+        "attackRoll",
+      ),
+      { total: 20, naturalD20: 12 },
+    );
+    const damage = damageRollFillWithGroups(
+      requireFixtureHole(
+        dartHoles(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [damageType, target, roll],
+          }),
+        ),
+        "rolledDice",
+      ),
+      [[2], [3]],
+    );
+    expectDartLandedAndReported(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageType, target, roll, damage],
+      }),
+    );
   });
 });
