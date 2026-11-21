@@ -21,6 +21,7 @@ import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import { withAttackEnemyProximityFrom } from "./ranged-attack-close-combat.ts";
+import { withThrownWeaponLandingFrom } from "./thrown-weapon-attack.ts";
 import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import {
@@ -80,9 +81,12 @@ export function targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
   const replacementFill = {
     ...input.fill,
     value: input.replacement.targetId,
-    spatialFacts: withAttackEnemyProximityFrom(
+    spatialFacts: withThrownWeaponLandingFrom(
       input.fill.spatialFacts ?? [],
-      input.replacement.spatialFacts,
+      withAttackEnemyProximityFrom(
+        input.fill.spatialFacts ?? [],
+        input.replacement.spatialFacts,
+      ),
     ),
   };
   const [firstRelationshipFact, ...remainingRelationshipFacts] =

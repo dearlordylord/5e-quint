@@ -424,13 +424,16 @@ export function attackKindForDeflectRedirect(
     : "ranged";
 }
 
+/**
+ * The kind of attack a hit came from, for triggers that name a weapon
+ * category ("a Melee weapon"). A weapon's category comes from the weapon, so a
+ * thrown Melee weapon still hits as a Melee weapon (SRD 5.2.1 "Thrown").
+ */
 export function attackHitTriggerKind(
   attack: SupportedAttackActionOption,
 ): BattleAttackHitTriggerKind {
   if (attack.kind === "weapon") {
-    return attackTargetConstraint(attack).kind === "meleeReach"
-      ? "meleeWeapon"
-      : "rangedWeapon";
+    return attack.weapon.usage === "melee" ? "meleeWeapon" : "rangedWeapon";
   }
   return attack.kind === "unarmedStrike" &&
     attackTargetConstraint(attack).kind === "meleeReach"

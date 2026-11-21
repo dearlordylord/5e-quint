@@ -14,6 +14,7 @@ import {
   enemyProximityConstraint,
   pinFact,
   targetFactMembers,
+  thrownWeaponLandingConstraint,
 } from "./battle-target-fact-schema.ts";
 
 const ATTACK_SUPPLEMENTAL_FACT_DEFINITION = "AttackSupplementalSpatialFact";
@@ -78,19 +79,19 @@ function attackTargetSchemas(
   attack: AttackTargetRequest,
   definitions: McpOutputSchema,
 ): readonly McpOutputSchema[] {
-  const proximity =
-    attack.targetConstraint.kind === "rangedRange"
-      ? [
-          enemyProximityConstraint(
-            targetFactMembers(member, definitions),
-            definitions,
-            {
-              attackerId: attack.actorId,
-              procedureRef: attack.selection.procedureRef,
-            },
-          ),
-        ]
-      : [];
+  const scope = {
+    attackerId: attack.actorId,
+    procedureRef: attack.selection.procedureRef,
+  };
+  const facts = targetFactMembers(member, definitions);
+  const supplemental = [
+    ...(attack.targetConstraint.kind === "rangedRange"
+      ? [enemyProximityConstraint(facts, definitions, scope)]
+      : []),
+    ...(attack.requiresThrownWeaponLanding === true
+      ? [thrownWeaponLandingConstraint(facts, definitions, scope)]
+      : []),
+  ];
   return hole.choices.flatMap((targetId) =>
     attackDistanceWitnesses(member, attack, targetId, definitions).map(
       (witness) => ({
@@ -106,10 +107,10 @@ function attackTargetSchemas(
           value: { const: targetId },
           spatialFacts: {
             type: "array",
-            minItems: proximity.length === 0 ? 1 : 2,
+            minItems: 1 + supplemental.length,
             prefixItems: [witness],
             items: { $ref: `#/$defs/${ATTACK_SUPPLEMENTAL_FACT_DEFINITION}` },
-            ...(proximity.length === 0 ? {} : { allOf: proximity }),
+            ...(supplemental.length === 0 ? {} : { allOf: supplemental }),
           },
         },
       }),

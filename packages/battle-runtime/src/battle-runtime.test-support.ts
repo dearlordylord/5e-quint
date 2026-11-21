@@ -1829,6 +1829,9 @@ export function attackExecutionSelectionForSubjectForTest(
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
         attackDamageType: subject.attackDamageType,
+        ...(subject.weaponDelivery === undefined
+          ? {}
+          : { weaponDelivery: subject.weaponDelivery }),
       };
 }
 

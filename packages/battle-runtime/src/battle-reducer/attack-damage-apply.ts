@@ -631,7 +631,9 @@ function wildShapeWornWeaponAttackOption(input: {
     input.objectKind,
     input.attack,
   );
-  return item === undefined
+  // A worn weapon thrown in this form rests on the ground until picked up.
+  return item === undefined ||
+    battleObjectIsOnGround(input.state, input.actor.combatantId, item.objectId)
     ? []
     : [
         ...attackActionVariantOptions(

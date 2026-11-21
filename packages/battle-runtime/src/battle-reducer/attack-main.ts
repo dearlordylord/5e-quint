@@ -133,10 +133,7 @@ import {
 } from "./attack-resolvers.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import {
-  withThrownWeaponDroppedOutcome,
-  withThrownWeaponReleased,
-} from "./thrown-weapon-attack.ts";
+import { withThrownWeaponReleased } from "./thrown-weapon-release.ts";
 import { attackTargetFactsIssue } from "./attack-spatial.ts";
 
 import {
@@ -302,12 +299,7 @@ export function resolveAttack(
       "Attack resolution requires a supported Attack action option.",
     );
   }
-  return withThrownWeaponDroppedOutcome({
-    stateBefore: input.state,
-    result: resolveSelectedAttackProcedure(input, attack, spendAttackAction),
-    attackerId: input.subject.actorId,
-    attack,
-  });
+  return resolveSelectedAttackProcedure(input, attack, spendAttackAction);
 }
 
 type AttackProcedureResolutionInput = Omit<
@@ -2932,7 +2924,10 @@ export function resolveSelectedAttackProcedure<
         return needsAttackDamageConcentrationResult({
           state: grapplerPunchAndGrab.state,
           subject: input.subject,
-          attack,
+          spendAcceptedAttack: (state) =>
+            spendAttackProcedure(state, attackerId, attack, {
+              kind: "acceptedAttack",
+            }),
           continuation: attackDamageInterruptionFrame({
             participant: input.subject,
             targetId: target.combatantId,
@@ -3477,7 +3472,10 @@ export function resolveSelectedAttackProcedure<
         return needsAttackDamageConcentrationResult({
           state: grapplerPunchAndGrab.state,
           subject: input.subject,
-          attack,
+          spendAcceptedAttack: (state) =>
+            spendAttackProcedure(state, attackerId, attack, {
+              kind: "acceptedAttack",
+            }),
           continuation: attackDamageInterruptionFrame({
             participant: input.subject,
             targetId: target.combatantId,

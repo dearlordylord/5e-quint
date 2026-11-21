@@ -9,6 +9,9 @@ import {
   attackActionOptionsForActor,
   offHandAttackActionOptionsForActor,
 } from "./battle-reducer/attack-damage-apply.ts";
+import { discoverBattleActs } from "./battle-act-composition.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import { attackHitTriggerKind } from "./battle-reducer/movement-speed.ts";
 import {
   type BattleAttackProcedureExecutionRef,
   battleObjectId,
@@ -27,11 +30,14 @@ import {
   attackTargetSpatialFact,
   battleAbilityModifier,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
+  concentrationSavingThrowFill,
   damageRollFill,
   fighterId,
   goblinId,
   requireHole,
+  readyTriggerDescriptionForTest,
   requireResolved,
   resolveBattleSubject,
   startBattleSessionRight,
@@ -50,9 +56,17 @@ function offHandDaggerAttack() {
   return { ...testDaggerAttack(), weaponObjectId: offHandDaggerId };
 }
 
-function battleWithDaggers(input: {
+type DaggerBattleInput = {
   readonly mainHand: "dagger" | "shortsword";
-}): BattleState {
+  /** The Goblin acts first, so the fighter can react on the Goblin's turn. */
+  readonly goblinActsFirst?: true;
+};
+
+function battleWithDaggers(input: DaggerBattleInput): BattleState {
+  return sessionWithDaggers(input).state;
+}
+
+function sessionWithDaggers(input: DaggerBattleInput) {
   return startBattleSessionRight({
     battleId: battleId("battle-thrown-weapons"),
     combatants: [
@@ -82,9 +96,11 @@ function battleWithDaggers(input: {
           },
         },
       }),
-      statBlockCreatureInit({ initiative: 10 }),
+      statBlockCreatureInit({
+        initiative: input.goblinActsFirst === true ? 30 : 10,
+      }),
     ],
-  }).state;
+  });
 }
 
 const spearId = battleObjectId("main:weapon_spear");
@@ -256,6 +272,68 @@ function throwToCompletion(input: {
   });
 }
 
+function thrownDaggerDrop(subject: {
+  readonly procedureRef: BattleAttackProcedureExecutionRef;
+}) {
+  return {
+    kind: "objectDropped",
+    actorId: fighterId,
+    objectId: mainDaggerId,
+    source: {
+      kind: "thrownWeaponAttack",
+      procedureRef: subject.procedureRef,
+    },
+  } as const;
+}
+
+function withConcentratingGoblin(state: BattleState): BattleState {
+  const goblin = state.combatants.get(goblinId);
+  if (goblin === undefined) {
+    throw new Error("Expected the Goblin target.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(goblinId, {
+      ...goblin,
+      concentration: {
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-thrown-target-concentration",
+        ),
+        effectKind: "spellEffect",
+      },
+    }),
+  };
+}
+
+function withReadiedThrownDagger(state: BattleState) {
+  const subject = attackSubjectFor(state, "thrown");
+  const readied: BattleState = {
+    ...state,
+    readiedResponses: new Map(state.readiedResponses).set(fighterId, {
+      trigger: readyTriggerDescriptionForTest("the Goblin moves"),
+      response: {
+        kind: "attack",
+        selection: {
+          procedureRef: subject.procedureRef,
+          attackAbility: subject.attackAbility,
+          attackDamageType: subject.attackDamageType,
+          weaponDelivery: "thrown",
+        },
+      },
+      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+    }),
+  };
+  const release = {
+    tag: "runtimeCommand",
+    actorId: goblinId,
+    command: "releaseReadiedAttack",
+    reactorId: fighterId,
+    targetId: goblinId,
+    procedureRef: subject.procedureRef,
+  } as const satisfies BattleSubject;
+  return { state: readied, attack: subject, release };
+}
+
 describe("battle runtime: thrown weapon attacks", () => {
   test("a held Dagger offers a thrown ranged attack beside its melee attack, with the same ability", () => {
     const state = battleWithDaggers({ mainHand: "dagger" });
@@ -298,6 +376,23 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(meleeHole.attack?.targetConstraint.kind).toBe("meleeReach");
     expect(meleeHole.attack?.requiresThrownWeaponLanding).toBeUndefined();
+  });
+
+  test("the thrown Dagger act names the throw beside the melee Dagger act", () => {
+    const acts = discoverBattleActs(sessionWithDaggers({ mainHand: "dagger" }));
+    const summaries = acts.flatMap((act) =>
+      act.subject.tag === "bonusAction" ||
+      (act.subject.tag === "action" && act.subject.action === "attack")
+        ? [act.summary]
+        : [],
+    );
+
+    expect(summaries).toEqual(
+      expect.arrayContaining([
+        "Take the Attack action with Dagger.",
+        "Take the Attack action by throwing Dagger.",
+      ]),
+    );
   });
 
   test("a thrown Dagger lands at the table's position on a hit, out of the hand, and its owner can pick it up", () => {
@@ -619,6 +714,17 @@ describe("battle runtime: thrown weapon attacks", () => {
       kind: "thrownWeaponAttack",
       procedureRef: subject.procedureRef,
     });
+    expect(completed.droppedObjects).toEqual([
+      {
+        kind: "objectDropped",
+        actorId: fighterId,
+        objectId: offHandDaggerId,
+        source: {
+          kind: "thrownWeaponAttack",
+          procedureRef: subject.procedureRef,
+        },
+      },
+    ]);
     expect(completed.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
   });
 
@@ -642,6 +748,197 @@ describe("battle runtime: thrown weapon attacks", () => {
       [offHandDaggerId, undefined],
       [offHandDaggerId, "thrown"],
     ]);
+  });
+
+  test("a thrown Dagger hit counts as a Melee weapon hit for after-hit triggers", () => {
+    const state = battleWithDaggers({ mainHand: "dagger" });
+    const thrown = attackActionOptionsForActor(state, fighterId).find(
+      (attack) =>
+        attack.kind === "weapon" && attack.weaponDelivery === "thrown",
+    );
+    if (thrown === undefined) {
+      throw new Error("Expected the thrown Dagger option.");
+    }
+
+    expect(attackHitTriggerKind(thrown)).toBe("meleeWeapon");
+  });
+
+  test("a thrown Dagger that waits on its target's Concentration save lands once and is reported once", () => {
+    const state = withConcentratingGoblin(
+      battleWithDaggers({ mainHand: "dagger" }),
+    );
+    const subject = attackSubjectFor(state, "thrown");
+    const target = thrownTargetFill(state, subject, [
+      noEnemyNear(subject),
+      landingFact(subject),
+    ]);
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target] }),
+      "attackRoll",
+    );
+    const hit = attackRollFill(roll, { total: 20, naturalD20: 10 });
+    const damage = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target, hit] }),
+      "rolledDice",
+    );
+    const attackFills = [target, hit, damageRollFill(damage, 3)];
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject,
+      fills: attackFills,
+    });
+    const save = requireHole(awaitingSave, "concentrationSavingThrow");
+    if (awaitingSave.tag !== "needsHoles") {
+      throw new Error("Expected the Concentration save.");
+    }
+
+    const resumed = requireResolved(
+      resolveBattleSubject({
+        state: awaitingSave.state,
+        subject,
+        fills: [concentrationSavingThrowFill(save, true)],
+      }),
+    );
+    expect(resumed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
+    expect(
+      resumed.state.groundObjects.get(fighterId)?.get(mainDaggerId)?.positionId,
+    ).toBe(battleTablePositionId("goblin-space"));
+
+    const replayed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...attackFills, concentrationSavingThrowFill(save, true)],
+      }),
+    );
+    expect(replayed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
+  });
+
+  test("Ready offers the thrown Dagger as its own response beside the melee Dagger", () => {
+    const state = battleWithDaggers({ mainHand: "dagger" });
+    const thrown = attackSubjectFor(state, "thrown");
+    const hole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "action", actorId: fighterId, action: "ready" },
+        fills: [],
+      }),
+      "readyDeclaration",
+    );
+
+    expect(
+      hole.responseChoices.filter(
+        (response) =>
+          response.kind === "attack" &&
+          response.selection.procedureRef === thrown.procedureRef,
+      ),
+    ).toEqual([
+      {
+        kind: "attack",
+        selection: {
+          procedureRef: thrown.procedureRef,
+          attackAbility: thrown.attackAbility,
+          attackDamageType: thrown.attackDamageType,
+        },
+      },
+      {
+        kind: "attack",
+        selection: {
+          procedureRef: thrown.procedureRef,
+          attackAbility: thrown.attackAbility,
+          attackDamageType: thrown.attackDamageType,
+          weaponDelivery: "thrown",
+        },
+      },
+    ]);
+  });
+
+  test("a readied thrown Dagger needs a landing fact, stays in hand until its damage, then lands", () => {
+    const { state, attack, release } = withReadiedThrownDagger(
+      battleWithDaggers({ mainHand: "dagger", goblinActsFirst: true }),
+    );
+    const targetFacts = (facts: readonly BattleTargetSpatialFact[]) => ({
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetSpatialFact(fighterId, goblinId, attack, movementFeet(15)),
+        noEnemyNear(attack),
+        ...facts,
+      ],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: release,
+        fills: [targetFacts([])],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Thrown weapon attack target requires one thrown weapon landing fact scoped to the attacker and procedure.",
+    });
+
+    const target = targetFacts([landingFact(attack)]);
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject: release, fills: [target] }),
+      "attackRoll",
+    );
+    const hit = attackRollFill(roll, { total: 20, naturalD20: 15 });
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: release,
+      fills: [target, hit],
+    });
+    const damage = requireHole(awaitingDamage, "rolledDice");
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected the readied attack's damage hole.");
+    }
+    expect(awaitingDamage.state.groundObjects.has(fighterId)).toBe(false);
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: awaitingDamage.state,
+        subject: release,
+        fills: [target, hit, damageRollFill(damage, 3)],
+      }),
+    );
+    expect(resolved.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
+    expect(
+      resolved.state.groundObjects.get(fighterId)?.get(mainDaggerId)?.source,
+    ).toEqual({
+      kind: "thrownWeaponAttack",
+      procedureRef: attack.procedureRef,
+    });
+  });
+
+  test("a readied thrown Dagger also lands on a miss", () => {
+    const { state, attack, release } = withReadiedThrownDagger(
+      battleWithDaggers({ mainHand: "dagger", goblinActsFirst: true }),
+    );
+    const target = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetSpatialFact(fighterId, goblinId, attack, movementFeet(15)),
+        noEnemyNear(attack),
+        landingFact(attack),
+      ],
+    };
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject: release, fills: [target] }),
+      "attackRoll",
+    );
+    const missed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: release,
+        fills: [target, attackRollFill(roll, { total: 2, naturalD20: 2 })],
+      }),
+    );
+
+    expect(missed.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
   });
 
   test("the test helper's default landing fact lands at its default position", () => {

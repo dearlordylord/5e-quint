@@ -43,18 +43,35 @@ export function enemyProximityConstraint(
   definitions: McpOutputSchema,
   scope: { readonly attackerId: string; readonly procedureRef: string },
 ): McpOutputSchema {
-  const qualification = facts.filter((fact) =>
-    hasKind(fact, "rangedAttackEnemyProximity", definitions),
+  return exactlyOneScopedFact(
+    "rangedAttackEnemyProximity",
+    facts,
+    definitions,
+    scope,
   );
-  if (qualification.length === 0)
-    throw new Error(
-      "The canonical target fill must contain the ranged attack enemy proximity fact.",
-    );
+}
+
+/** A thrown weapon attack needs exactly one landing fact scoped to it. */
+export function thrownWeaponLandingConstraint(
+  facts: readonly McpOutputSchema[],
+  definitions: McpOutputSchema,
+  scope: { readonly attackerId: string; readonly procedureRef: string },
+): McpOutputSchema {
+  return exactlyOneScopedFact("thrownWeaponLanding", facts, definitions, scope);
+}
+
+function exactlyOneScopedFact(
+  kind: "rangedAttackEnemyProximity" | "thrownWeaponLanding",
+  facts: readonly McpOutputSchema[],
+  definitions: McpOutputSchema,
+  scope: { readonly attackerId: string; readonly procedureRef: string },
+): McpOutputSchema {
+  const scoped = facts.filter((fact) => hasKind(fact, kind, definitions));
+  if (scoped.length === 0)
+    throw new Error(`The canonical target fill must contain the ${kind} fact.`);
   return {
     contains: {
-      anyOf: qualification.map((fact) =>
-        pinFact(fact, { kind: "rangedAttackEnemyProximity", ...scope }),
-      ),
+      anyOf: scoped.map((fact) => pinFact(fact, { kind, ...scope })),
     },
     maxContains: 1,
   };
