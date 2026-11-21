@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.CONDITION_ROLL_MODE
 import fc from "fast-check";
 import { Result } from "effect";
 import { Schema } from "effect";
@@ -14,10 +15,12 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  CONDITIONS,
   DieRollResult,
   classLevel,
   difficultyClass,
   movementFeet,
+  type Condition,
 } from "@dnd/shared/types";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { combatantId } from "./identity.ts";
@@ -81,8 +84,10 @@ import {
   battleHolesWithTableD20TestCircumstances,
   combineD20TestRollMode,
   proneAttackRollModeSources,
+  ATTACKER_DISADVANTAGE_CONDITIONS,
+  TARGET_ADVANTAGE_CONDITIONS,
   attackerConditionAttackRollModeSources,
-  PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
+  targetConditionAttackRollModeSources,
   mechanicalD20TestRollModeSources,
   effectiveD20TestRollMode,
   d20TestResolutionId,
@@ -180,35 +185,46 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(combineD20TestRollMode(atSixFeet, "advantage")).toBe("normal");
   });
 
-  test("matches the QNT Prone attacker source", () => {
-    const prone = applyCondition(EMPTY_CONDITION_STATE, "prone");
-    expect(attackerConditionAttackRollModeSources(prone)).toEqual(
-      PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
-    );
-    expect(PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES).toEqual({
-      advantage: false,
-      disadvantage: true,
-    });
-    expect(
-      attackerConditionAttackRollModeSources(
-        applyCondition(EMPTY_CONDITION_STATE, "poisoned"),
-      ),
-    ).toEqual({ advantage: false, disadvantage: true });
-    expect(attackerConditionAttackRollModeSources(undefined)).toEqual({
-      advantage: false,
-      disadvantage: false,
-    });
-    expect(
+  test("matches the QNT condition attacker and target sources", () => {
+    const attackerConditions: readonly Condition[] =
+      ATTACKER_DISADVANTAGE_CONDITIONS;
+    const targetConditions: readonly Condition[] = TARGET_ADVANTAGE_CONDITIONS;
+    expect(attackerConditions).toEqual(["poisoned", "prone", "restrained"]);
+    expect(targetConditions).toEqual([
+      "paralyzed",
+      "petrified",
+      "restrained",
+      "stunned",
+    ]);
+    for (const condition of CONDITIONS) {
+      const state = applyCondition(EMPTY_CONDITION_STATE, condition);
+      // Unconscious implies Prone, so it is an attacker Disadvantage source.
+      const attackerSource =
+        attackerConditions.includes(condition) || condition === "unconscious";
+      expect(attackerConditionAttackRollModeSources(state)).toEqual({
+        advantage: false,
+        disadvantage: attackerSource,
+      });
+      expect(targetConditionAttackRollModeSources(state)).toEqual({
+        advantage: targetConditions.includes(condition),
+        disadvantage: false,
+      });
+    }
+    for (const sources of [
+      attackerConditionAttackRollModeSources(undefined),
       attackerConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
-    ).toEqual({
-      advantage: false,
-      disadvantage: false,
-    });
+      targetConditionAttackRollModeSources(undefined),
+      targetConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
+    ]) {
+      expect(sources).toEqual({ advantage: false, disadvantage: false });
+    }
+    const restrained = applyCondition(EMPTY_CONDITION_STATE, "restrained");
     expect(
-      combineD20TestRollMode(
-        PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
-        "advantage",
-      ),
+      combineD20TestRollMode({
+        advantage: targetConditionAttackRollModeSources(restrained).advantage,
+        disadvantage:
+          attackerConditionAttackRollModeSources(restrained).disadvantage,
+      }),
     ).toBe("normal");
   });
 
