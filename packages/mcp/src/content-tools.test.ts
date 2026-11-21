@@ -1,7 +1,6 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
-  SrdStatBlockRecordSchema,
   decodeCreatureImmunityDeclarationSync,
   decodeStatBlockRecordSync,
 } from "@dnd/surface/surface/schema";
@@ -396,12 +395,14 @@ describe("read-only Stat Block inspection", () => {
   test("reads the canonical record without selecting it and rejects Unit ids", () => {
     const root = createMcpPlaySessionRoot();
     const before = root.sessionStore.snapshot();
-    const statBlock = srdStatBlockCollection.statBlocks[0];
+    const statBlock = srdStatBlockCollection.statBlocks.find(
+      ({ id }) => id === "stat_block_giant_vulture",
+    );
     if (statBlock === undefined)
       throw new Error("Expected installed Stat Block");
     const detail = Schema.decodeUnknownSync(
       Schema.Struct({
-        statBlockRecordJson: Schema.fromJsonString(SrdStatBlockRecordSchema),
+        statBlockRecordJson: Schema.String,
       }),
     )(
       payload(
@@ -410,7 +411,7 @@ describe("read-only Stat Block inspection", () => {
         }),
       ),
     );
-    expect(detail.statBlockRecordJson).toEqual(statBlock);
+    expect(JSON.parse(detail.statBlockRecordJson)).toEqual(statBlock);
     expect(root.sessionStore.snapshot()).toEqual(before);
     expect(
       payload(

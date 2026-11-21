@@ -1,4 +1,5 @@
 import { Result, Schema } from "effect";
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -50,6 +51,39 @@ describe("battle snapshot frontier presentation", () => {
       { combatantId: fighterId, displayName: "Fighter" },
       { combatantId: goblinId, displayName: "Goblin Warrior" },
     ]);
+  });
+
+  test("keeps reducer route evidence out of the presented Acts contract", () => {
+    const mechanical = currentBattleCheckpointFrontierEnvelope(session);
+    if (mechanical.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
+    const acts = mechanical.frontier.acts.map((act) => ({
+      ...act,
+      routeEvents: [
+        { kind: "startBattle", owner: "battleActionEconomy" },
+      ] as const,
+    }));
+    expect(acts.length).toBeGreaterThan(0);
+    const presented = presentBattleCheckpointFrontierEnvelope(session, {
+      ...mechanical,
+      frontier: { kind: "acts", acts },
+    });
+    if (Result.isFailure(presented)) {
+      throw new Error("Expected a presented Acts frontier.");
+    }
+    expect(presented.success.frontier.kind).toBe("acts");
+    if (presented.success.frontier.kind !== "acts") return;
+    for (const act of presented.success.frontier.acts) {
+      expect(act).not.toHaveProperty("routeEvents");
+    }
+    expect(acts[0]).toHaveProperty("routeEvents");
+    expect(() =>
+      Schema.encodeSync(
+        BattlePresentedCheckpointFrontierEnvelopeSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(presented.success),
+    ).not.toThrow();
   });
 
   test("preserves canonical act subjects and holes while joining presentation", () => {

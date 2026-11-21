@@ -152,7 +152,7 @@ export type BattlePresentedCheckpointFrontierEnvelope = {
   readonly frontier:
     | {
         readonly kind: "acts";
-        readonly acts: readonly AvailableBattleAct[];
+        readonly acts: readonly Omit<AvailableBattleAct, "routeEvents">[];
       }
     | Extract<BattleCheckpointFrontierEnvelope["frontier"], { kind: "holes" }>
     | (Omit<BattleInterruptDecisionFrontier, "choices"> & {
@@ -222,7 +222,15 @@ function presentFrontier(
   if (frontier.kind === "acts") {
     return Result.succeed({
       kind: "acts",
-      acts: presentBattleActs(session, frontier.acts),
+      acts: presentBattleActs(session, frontier.acts).map(
+        ({ subject, initialHoles, label, summary, presentation }) => ({
+          subject,
+          initialHoles,
+          label,
+          summary,
+          presentation,
+        }),
+      ),
     });
   }
   if (frontier.kind === "holes") {

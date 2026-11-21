@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -648,9 +649,10 @@ function frontierInput(result: NeedsHolesResult) {
 
 describe("battle mechanical frontier", () => {
   test("round-trips a presentation-free mechanical hole", () => {
-    const decoded = Schema.decodeUnknownResult(BattleMechanicalHoleSchema)(
-      mechanicalHole,
-    );
+    const decoded = Schema.decodeUnknownResult(
+      BattleMechanicalHoleSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(mechanicalHole);
 
     expect(Result.isSuccess(decoded)).toBe(true);
     if (Result.isSuccess(decoded))
@@ -659,7 +661,10 @@ describe("battle mechanical frontier", () => {
   });
 
   test("rejects presentation fields at the mechanical boundary", () => {
-    const decoded = Schema.decodeUnknownResult(BattleMechanicalHoleSchema)({
+    const decoded = Schema.decodeUnknownResult(
+      BattleMechanicalHoleSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       ...mechanicalHole,
       label: "must not cross the boundary",
     });
@@ -668,9 +673,10 @@ describe("battle mechanical frontier", () => {
   });
 
   test("accepts recursively mechanical nested options without presentation labels", () => {
-    const decoded = Schema.decodeUnknownResult(BattleMechanicalHoleSchema)(
-      mechanicalNestedHole,
-    );
+    const decoded = Schema.decodeUnknownResult(
+      BattleMechanicalHoleSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(mechanicalNestedHole);
 
     expect(Result.isSuccess(decoded)).toBe(true);
     if (Result.isSuccess(decoded))
@@ -679,7 +685,10 @@ describe("battle mechanical frontier", () => {
   });
 
   test("rejects presentation labels inside recursively mechanical nested options", () => {
-    const decoded = Schema.decodeUnknownResult(BattleMechanicalHoleSchema)({
+    const decoded = Schema.decodeUnknownResult(
+      BattleMechanicalHoleSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       ...mechanicalNestedHole,
       d20TestNaturalOneRerolls: [
         {
@@ -695,6 +704,7 @@ describe("battle mechanical frontier", () => {
   test("accepts interrupt choices with recursively mechanical initial holes", () => {
     const decoded = Schema.decodeUnknownResult(
       BattleMechanicalInterruptChoiceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(mechanicalInterruptChoice);
 
     expect(Result.isSuccess(decoded)).toBe(true);
@@ -706,6 +716,7 @@ describe("battle mechanical frontier", () => {
   test("rejects presentation labels in interrupt choice initial holes", () => {
     const decoded = Schema.decodeUnknownResult(
       BattleMechanicalInterruptChoiceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )({
       ...mechanicalInterruptChoice,
       initialHoles: [
@@ -727,30 +738,34 @@ describe("battle mechanical frontier", () => {
   test("keeps ordinary and interrupt hole schemas structurally exclusive", () => {
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(BattleMechanicalOrdinaryHoleSchema)(
-          mechanicalHole,
-        ),
+        Schema.decodeUnknownResult(
+          BattleMechanicalOrdinaryHoleSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(mechanicalHole),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalOrdinaryHoleSchema)(
-          mechanicalInterruptHole,
-        ),
+        Schema.decodeUnknownResult(
+          BattleMechanicalOrdinaryHoleSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(mechanicalInterruptHole),
       ),
     ).toBe(true);
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(BattleMechanicalInterruptDecisionHoleSchema)(
-          mechanicalInterruptHole,
-        ),
+        Schema.decodeUnknownResult(
+          BattleMechanicalInterruptDecisionHoleSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(mechanicalInterruptHole),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalInterruptDecisionHoleSchema)(
-          mechanicalHole,
-        ),
+        Schema.decodeUnknownResult(
+          BattleMechanicalInterruptDecisionHoleSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(mechanicalHole),
       ),
     ).toBe(true);
   });
@@ -775,21 +790,26 @@ describe("battle mechanical frontier", () => {
 
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)(
-          ordinaryFrontier,
-        ),
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(ordinaryFrontier),
       ),
     ).toBe(true);
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)(
-          interruptFrontier,
-        ),
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(interruptFrontier),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           ...ordinaryFrontier,
           holes: [mechanicalInterruptHole],
         }),
@@ -797,7 +817,10 @@ describe("battle mechanical frontier", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           ...ordinaryFrontier,
           holes: [],
         }),
@@ -805,7 +828,10 @@ describe("battle mechanical frontier", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           ...interruptFrontier,
           decisionHole: mechanicalHole,
         }),
@@ -813,7 +839,10 @@ describe("battle mechanical frontier", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           ...ordinaryFrontier,
           label: "presentation must not cross the boundary",
         }),
@@ -821,7 +850,10 @@ describe("battle mechanical frontier", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
+        Schema.decodeUnknownResult(
+          BattleMechanicalFrontierSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           ...interruptFrontier,
           unknown: true,
         }),
