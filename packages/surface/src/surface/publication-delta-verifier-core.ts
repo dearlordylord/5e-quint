@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -45,7 +46,7 @@ type AggregateLabel = (typeof AGGREGATE_LABELS)[number];
 const SCHEMA_VALIDATION_OUTCOMES = ["accepted", "rejected"] as const;
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
 );
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
@@ -120,7 +121,7 @@ const SchemaCrossValidationExpectationSchema = Schema.Struct({
   outcome: Schema.Literals(SCHEMA_VALIDATION_OUTCOMES),
 });
 const SchemaNodeClassificationSchema = Schema.Struct({
-  pointer: Schema.String.pipe(Schema.check(Schema.isPattern(/^\//u))),
+  pointer: Schema.String.pipe(Schema.check(jsonSchemaPattern(/^\//u))),
   beforeNodeSha256: HashSchema,
   afterNodeSha256: HashSchema,
 });

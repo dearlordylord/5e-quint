@@ -1,4 +1,5 @@
-import { Schema } from "effect";
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
+import { Result, Schema } from "effect";
 
 const Index = Schema.Number.check(
   Schema.isInt(),
@@ -67,5 +68,9 @@ export const parseContinuationDescriptors = Schema.decodeUnknownSync(
 export function schemaPredicate(
   schema: Schema.Top,
 ): (value: unknown) => boolean {
-  return Schema.is(schema);
+  const decode = Schema.decodeUnknownResult(
+    Schema.toType(schema),
+    STRICT_OBJECT_PARSE_OPTIONS,
+  );
+  return (value) => Result.isSuccess(decode(value));
 }

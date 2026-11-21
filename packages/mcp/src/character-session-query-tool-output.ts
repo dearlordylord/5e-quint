@@ -21,7 +21,7 @@ const PositiveIntegerSchema = Schema.Number.pipe(
 );
 const IntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
 const MovementFeetOutputSchema = MovementFeet.pipe(
-  Schema.decodeTo(Schema.Number, {
+  Schema.decodeTo(Schema.Finite, {
     decode: SchemaGetter.transform<number, MovementFeet>((feet) =>
       Number(feet),
     ),
@@ -31,7 +31,7 @@ const MovementFeetOutputSchema = MovementFeet.pipe(
   }),
 );
 const ResourceCountOutputSchema = ResourceCount.pipe(
-  Schema.decodeTo(Schema.Number, {
+  Schema.decodeTo(Schema.Finite, {
     decode: SchemaGetter.transform<number, ResourceCount>((count) =>
       Number(count),
     ),
@@ -166,18 +166,18 @@ const CharacterSheetAbilityCheckProficiencyBonusProjectionSchema =
       Schema.Struct({
         tag: Schema.Literal("skillProficiency"),
         skill: SkillSchema,
-        bonus: Schema.Number,
+        bonus: Schema.Finite,
       }),
       Schema.Struct({
         tag: Schema.Literal("expertise"),
         skill: SkillSchema,
-        bonus: Schema.Number,
+        bonus: Schema.Finite,
       }),
       Schema.Struct({
         tag: Schema.Literal("jackOfAllTrades"),
         sourceUnitId: UnitId,
         skill: SkillSchema,
-        bonus: Schema.Number,
+        bonus: Schema.Finite,
       }),
     ]),
     qRoute: Schema.Tuple([CharacterSheetAbilityCheckProjectionRouteSchema]),

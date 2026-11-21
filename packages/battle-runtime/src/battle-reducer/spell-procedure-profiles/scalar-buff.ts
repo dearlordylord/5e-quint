@@ -215,7 +215,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
 const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
   sourceCombatantId: CombatantId,
   kind: Schema.Literal("hitPointMaximumIncrease"),
-  amount: Schema.Number,
+  amount: Schema.Finite,
   expiresAt: BattleActiveEffectExpirationSchema,
   ...BattleEffectOccurrenceTemplateSchemaFields,
 });
@@ -2088,7 +2088,7 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
       Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
+        maxTargets: Schema.Finite,
         requiredTargetDisposition: Schema.Literals(["unrestricted", "willing"]),
       }),
     ]),

@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { CharacterClassLevelSchema } from "@dnd/shared/game-facts";
 import { Result, Match, Schema } from "effect";
 
@@ -357,7 +358,7 @@ const characterEquipmentItemIdSchema = <
 ) =>
   Schema.String.pipe(
     Schema.check(
-      Schema.isPattern(
+      jsonSchemaPattern(
         new RegExp(
           slot === undefined
             ? "^(?:armor|shield|main|off):(?=\\S)[\\s\\S]*\\S$"

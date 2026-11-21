@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { Result, Match, Schema } from "effect";
 
 import { ScenarioIdSchema } from "./transcript.ts";
@@ -7,7 +8,7 @@ import {
 } from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 
 const ScenarioCharacterRequirementSchema = Schema.Union([

@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
 import type { McpToolSurface } from "./mcp-tool-surface.ts";
 import { chatGptBattleGuidance } from "./chatgpt/battle-guidance.ts";
@@ -327,7 +328,10 @@ function readBattleEnvelopeForRoot(root: McpPlaySessionRoot) {
     (payload) =>
       payload.envelope === null
         ? null
-        : Schema.encodeSync(BattlePresentationEnvelopeSchema)(payload.envelope),
+        : Schema.encodeSync(
+            BattlePresentationEnvelopeSchema,
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )(payload.envelope),
   );
 }
 

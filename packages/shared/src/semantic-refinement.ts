@@ -10,6 +10,7 @@ export const SEMANTIC_REFINEMENT_REASONS = [
   "creationFrontierCorrelation",
   "checkpointFrontierCorrelation",
   "corpusBatchTraceLengthCorrelation",
+  "statBlockDamageComponentRoleCorrelation",
   "constraintFreeBrand",
 ] as const;
 

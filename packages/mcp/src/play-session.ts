@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import type { ChatGptStateOperationName } from "./chatgpt/protocol-operation.ts";
 import { randomUUID } from "node:crypto";
 
@@ -25,7 +26,7 @@ export const PLAY_SESSION_RESTORATION_GUIDANCE =
 
 export const PlaySessionIdSchema = Schema.String.pipe(
   Schema.check(
-    Schema.isPattern(
+    jsonSchemaPattern(
       /^play-session:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
     ),
   ),

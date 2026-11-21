@@ -1058,6 +1058,22 @@ function runPublicationCheckWithWorkspace(
   const peerObservations: SurfacePublicationPeerObservation[] = [];
 
   try {
+    if (options.portableCasesPath !== undefined) {
+      checkPortableCasesArtifact(
+        issues,
+        repoRoot,
+        options.portableCasesPath,
+        options.portableCasesBuilder ?? buildSrdSurfacePortableCases,
+      );
+      if (issues.length > 0) {
+        return {
+          issues,
+          sourceCount: sources.length,
+          peerCount: peers.length,
+          peerObservations,
+        };
+      }
+    }
     for (const source of sources) {
       const peer = source.replace(/\.dhall$/, ".json");
       const sourcePath = join(contentDir, source);
@@ -1301,14 +1317,6 @@ function runPublicationCheckWithWorkspace(
       options.publicationDir,
       options.publicationSurface,
       options.publicationExcerptSource,
-    );
-  }
-  if (options.portableCasesPath !== undefined) {
-    checkPortableCasesArtifact(
-      issues,
-      repoRoot,
-      options.portableCasesPath,
-      options.portableCasesBuilder ?? buildSrdSurfacePortableCases,
     );
   }
 

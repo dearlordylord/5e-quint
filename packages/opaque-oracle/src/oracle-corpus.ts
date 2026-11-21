@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Result, Schema } from "effect";
 
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
@@ -29,7 +30,6 @@ const OracleCorpusShapeSchema = Schema.Struct({
   traces: Schema.NonEmptyArray(OracleTraceSchema),
 }).annotate({
   identifier: "OracleCorpus",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 const OracleCorpusWithPositionalLengthSchema = OracleCorpusShapeSchema.pipe(
@@ -49,7 +49,6 @@ export const OracleCorpusSchema = OracleCorpusWithPositionalLengthSchema.pipe(
   Schema.brand("OracleCorpus"),
 ).annotate({
   identifier: "OracleCorpus",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleCorpus = Schema.Schema.Type<typeof OracleCorpusSchema>;
 
@@ -113,7 +112,10 @@ export function buildOracleEvaluationCorpus(
 export function buildOracleCorpus(
   input: OracleCorpusEvaluationInput,
 ): Result.Result<OracleCorpus, OracleCorpusIssues> {
-  const batch = OracleEvaluationBatchSchema.make({ cases: input.cases });
+  const batch = OracleEvaluationBatchSchema.make(
+    { cases: input.cases },
+    { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+  );
   const evaluatedTraces = evaluateCorpusTraces({
     batch,
     services: input.services,
@@ -142,10 +144,13 @@ export function buildOracleCorpus(
     ]);
   }
   return Result.succeed(
-    OracleCorpusSchema.make({
-      batch,
-      traces: [firstTrace, ...remainingTraces],
-    }),
+    OracleCorpusSchema.make(
+      {
+        batch,
+        traces: [firstTrace, ...remainingTraces],
+      },
+      { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+    ),
   );
 }
 

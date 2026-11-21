@@ -1,6 +1,9 @@
 import { JsonSchema, Match, Result, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
-import { stripNestedJsonSchemaIds } from "@dnd/shared/json-schema";
+import {
+  jsonSchemaDocument,
+  stripNestedJsonSchemaIds,
+} from "@dnd/shared/json-schema";
 import {
   isSemanticRefinementReason,
   SemanticRefinementAnnotationId,
@@ -25,22 +28,8 @@ export type DocumentSchemaIssue =
       readonly annotationKeys: readonly string[];
     }
   | {
-      readonly tag: "invalidBrandIdentifiers";
-      readonly path: string;
-    }
-  | {
-      readonly tag: "unrepresentableBrandIdentifiers";
-      readonly path: string;
-      readonly count: number;
-    }
-  | {
       readonly tag: "invalidSemanticRefinementReason";
       readonly path: string;
-    }
-  | {
-      readonly tag: "conflictingRefinementIdentifiers";
-      readonly path: string;
-      readonly identifiers: readonly string[];
     }
   | {
       readonly tag: "invalidIdentifier";
@@ -91,93 +80,13 @@ function projectNonSemanticDocumentCheck(
   if (check.annotations?.toJsonSchema !== undefined) {
     return Result.succeed(check);
   }
-  const brandIdentifier = documentBrandedRefinementIdentifier(check, path);
-  if (Result.isFailure(brandIdentifier)) {
-    return documentSchemaFailure(brandIdentifier.failure);
-  }
-  return brandIdentifier.success === undefined
-    ? documentSchemaFailure([
-        {
-          tag: "unannotatedRefinement",
-          path,
-          annotationKeys: Reflect.ownKeys(check.annotations ?? {}).map(String),
-        },
-      ])
-    : Result.succeed(undefined);
-}
-
-function documentBrandedRefinementIdentifier(
-  check: AST.Check<unknown>,
-  path: string,
-): Result.Result<string | undefined, DocumentSchemaIssues> {
-  const brands = check.annotations?.brands;
-  if (brands === undefined) return Result.succeed(undefined);
-  if (
-    !Array.isArray(brands) ||
-    !brands.every((brand): brand is string => typeof brand === "string")
-  ) {
-    return documentSchemaFailure([{ tag: "invalidBrandIdentifiers", path }]);
-  }
-  if (brands.length === 1) return Result.succeed(brands[0]);
   return documentSchemaFailure([
     {
-      tag: "unrepresentableBrandIdentifiers",
+      tag: "unannotatedRefinement",
       path,
-      count: brands.length,
+      annotationKeys: Reflect.ownKeys(check.annotations ?? {}).map(String),
     },
   ]);
-}
-
-function documentCheckIdentifiers(
-  check: AST.Check<unknown>,
-  path: string,
-): Result.Result<readonly string[], DocumentSchemaIssues> {
-  const semantic = documentCheckIsSemantic(check, path);
-  if (Result.isFailure(semantic)) {
-    return documentSchemaFailure(semantic.failure);
-  }
-  if (semantic.success) return Result.succeed([]);
-  return nonSemanticDocumentCheckIdentifiers(check, path);
-}
-
-function nonSemanticDocumentCheckIdentifiers(
-  check: AST.Check<unknown>,
-  path: string,
-): Result.Result<readonly string[], DocumentSchemaIssues> {
-  if (check._tag === "FilterGroup") {
-    return documentFilterGroupIdentifiers(check, path);
-  }
-  if (check.annotations?.toJsonSchema !== undefined) return Result.succeed([]);
-  const identifier = documentBrandedRefinementIdentifier(check, path);
-  if (Result.isFailure(identifier)) {
-    return documentSchemaFailure(identifier.failure);
-  }
-  return Result.succeed(
-    identifier.success === undefined ? [] : [identifier.success],
-  );
-}
-
-function documentFilterGroupIdentifiers(
-  check: AST.FilterGroup<unknown>,
-  path: string,
-): Result.Result<readonly string[], DocumentSchemaIssues> {
-  const identifiers: string[] = [];
-  const issues: DocumentSchemaIssue[] = [];
-  for (const [index, nested] of check.checks.entries()) {
-    const nestedIdentifiers = documentCheckIdentifiers(
-      nested,
-      `${path}<${index}>`,
-    );
-    if (Result.isFailure(nestedIdentifiers)) {
-      issues.push(...nestedIdentifiers.failure);
-    } else {
-      identifiers.push(...nestedIdentifiers.success);
-    }
-  }
-  const failure = nonEmptyDocumentSchemaIssues(issues);
-  return failure === undefined
-    ? Result.succeed(identifiers)
-    : documentSchemaFailure(failure);
 }
 
 function documentCheckIsSemantic(
@@ -221,49 +130,11 @@ function projectDocumentFilterGroup(
   );
 }
 
-function documentAstIdentifier(
-  checks: readonly AST.Check<unknown>[] | undefined,
-  path: string,
-  annotatedIdentifier: string | undefined,
-): Result.Result<string | undefined, DocumentSchemaIssues> {
-  const checkIdentifiers: string[] = [];
-  const issues: DocumentSchemaIssue[] = [];
-  for (const [index, check] of (checks ?? []).entries()) {
-    const identifiers = documentCheckIdentifiers(
-      check,
-      `${path}<check:${index}>`,
-    );
-    if (Result.isFailure(identifiers)) {
-      issues.push(...identifiers.failure);
-    } else {
-      checkIdentifiers.push(...identifiers.success);
-    }
-  }
-  const checkFailure = nonEmptyDocumentSchemaIssues(issues);
-  if (checkFailure !== undefined) return documentSchemaFailure(checkFailure);
-  const identifiers = [
-    ...new Set([
-      ...(annotatedIdentifier === undefined ? [] : [annotatedIdentifier]),
-      ...checkIdentifiers,
-    ]),
-  ];
-  if (identifiers.length > 1) {
-    return documentSchemaFailure([
-      {
-        tag: "conflictingRefinementIdentifiers",
-        path,
-        identifiers,
-      },
-    ]);
-  }
-  return Result.succeed(identifiers[0]);
-}
-
 function documentAnnotatedIdentifier(
   ast: AST.AST,
   path: string,
 ): Result.Result<string | undefined, DocumentSchemaIssues> {
-  const identifier = ast.annotations?.identifier;
+  const identifier = AST.resolveAt<unknown>("identifier")(ast);
   if (identifier === undefined || typeof identifier === "string") {
     return Result.succeed(identifier);
   }
@@ -330,15 +201,7 @@ function projectDocumentAst(
     if (Result.isFailure(checks)) {
       return documentSchemaFailure(checks.failure);
     }
-    const annotatedIdentifier = documentAnnotatedIdentifier(nested, path);
-    if (Result.isFailure(annotatedIdentifier)) {
-      return documentSchemaFailure(annotatedIdentifier.failure);
-    }
-    const identifier = documentAstIdentifier(
-      nested.checks,
-      path,
-      annotatedIdentifier.success,
-    );
+    const identifier = documentAnnotatedIdentifier(nested, path);
     if (Result.isFailure(identifier)) {
       return documentSchemaFailure(identifier.failure);
     }
@@ -395,22 +258,13 @@ function validateDocumentAstNode(
   path: string,
 ): readonly DocumentSchemaIssue[] {
   const issues: DocumentSchemaIssue[] = [];
-  const annotatedIdentifier = documentAnnotatedIdentifier(ast, path);
-  if (Result.isFailure(annotatedIdentifier)) {
-    issues.push(...annotatedIdentifier.failure);
+  const identifier = documentAnnotatedIdentifier(ast, path);
+  if (Result.isFailure(identifier)) {
+    issues.push(...identifier.failure);
   }
   const checks = projectDocumentChecks(ast.checks, path);
   if (Result.isFailure(checks)) issues.push(...checks.failure);
-  if (Result.isFailure(annotatedIdentifier)) return issues;
-  const identifier = documentAstIdentifier(
-    ast.checks,
-    path,
-    annotatedIdentifier.success,
-  );
-  if (Result.isFailure(identifier)) {
-    issues.push(...identifier.failure);
-    return issues;
-  }
+  if (Result.isFailure(identifier)) return issues;
   const cloned = cloneDocumentAst(ast, ast.checks, identifier.success, path);
   if (Result.isFailure(cloned)) issues.push(...cloned.failure);
   return issues;
@@ -447,14 +301,11 @@ function cloneDocumentAst(
   if (!AST.isAST(candidate)) {
     return documentSchemaFailure([{ tag: "unsupportedAstShape", path }]);
   }
-  if (identifier !== undefined) {
-    Object.defineProperty(candidate, "annotations", {
-      configurable: true,
-      enumerable: true,
-      value: { ...ast.annotations, identifier },
-    });
-  }
-  return Result.succeed(candidate);
+  return Result.succeed(
+    identifier === undefined
+      ? candidate
+      : Schema.make<Schema.Top>(candidate).annotate({ identifier }).ast,
+  );
 }
 
 type DocumentAstChild = {
@@ -552,7 +403,7 @@ function requireAuthoredDocumentSchema<S extends Schema.Constraint>(
 }
 
 export function documentJsonSchema(schema: Schema.Constraint) {
-  const document = Schema.toJsonSchemaDocument(schema);
+  const document = jsonSchemaDocument(schema);
   return stripNestedJsonSchemaIds({
     $schema: JsonSchema.META_SCHEMA_URI_DRAFT_2020_12,
     ...(Object.keys(document.definitions).length === 0

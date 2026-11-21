@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import type { EventEmitter } from "node:events";
@@ -338,7 +339,7 @@ const CurrentModelInvocationSubjectSchema = Schema.Union([
     evidenceSetId: EvidenceSetIdSchema,
     candidateId: ScenarioCandidateIdSchema,
     candidateScenarioSha256: Schema.String.pipe(
-      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+      Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
     ),
     plannedScenarioId: PlannedScenarioIdSchema,
   }),
@@ -1182,7 +1183,7 @@ const CodexRawRetentionEventSchema = Schema.Union([
       CODEX_RAW_RETENTION_REASONS[1],
     ]),
     rawContentsSha256: Schema.String.pipe(
-      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+      Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
     ),
     rawContentsByteLength: NonNegativeIntegerSchema,
   }),
@@ -1194,7 +1195,7 @@ const CodexRawRetentionEventSchema = Schema.Union([
       `${CODEX_RAW_SIDECAR_SUFFIX}${CODEX_RAW_SNAPSHOT_SUFFIX}`,
     ),
     snapshotSha256: Schema.String.pipe(
-      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+      Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
     ),
     snapshotByteLength: NonNegativeIntegerSchema,
   }),
