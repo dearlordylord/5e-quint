@@ -35,7 +35,7 @@ CIMD, compatibility dynamic client registration, S256 PKCE, consent, and token
 issuance. The MCP resource remains the authority for token validation and Play
 Session ownership.
 
-The pinned Better Auth 1.7.1 dependency family requires
+The pinned Better Auth 1.7.2 dependency family requires
 `@better-auth/utils@0.4.2` and `jose@6.2.10` to keep every peer context on one
 type identity. The checked-in `better-call@1.4.0` patch adds `undefined` to the
 declared type of an optional OpenAPI `items` member; it changes declarations
