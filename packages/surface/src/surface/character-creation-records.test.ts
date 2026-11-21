@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -2181,7 +2182,10 @@ describe("character-creation Surface records", () => {
 
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema))({
+        Schema.decodeUnknownResult(
+          Schema.toType(EffectAtomSchema),
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           kind: "grant_spell_access",
           spellId: "thaumaturgy",
           spellList: "cleric",
@@ -2194,7 +2198,10 @@ describe("character-creation Surface records", () => {
 
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema))({
+        Schema.decodeUnknownResult(
+          Schema.toType(EffectAtomSchema),
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           kind: "grant_spell_access_choice",
           spellList: "fighter",
           spellLevel: 0,
@@ -2206,7 +2213,10 @@ describe("character-creation Surface records", () => {
 
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema))({
+        Schema.decodeUnknownResult(
+          Schema.toType(EffectAtomSchema),
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )({
           kind: "grant_spell_access_choice",
           spellId: "thaumaturgy",
           spellList: "cleric",
