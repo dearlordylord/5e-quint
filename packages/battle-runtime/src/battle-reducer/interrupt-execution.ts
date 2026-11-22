@@ -1,7 +1,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
-import { nonEmptyArrayProperty } from "../optional-property.ts";
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match, Option } from "effect";
 import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
@@ -933,6 +936,7 @@ export function opportunityAttackReactionChoices(
           reactorId,
           targetId: moverId,
           distanceFeet: threat.distanceFeet,
+          ...optionalProperty("cover", threat.cover),
           ...selection,
         },
       },

@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 175
-- Covered obligations: 164
+- Total obligations: 176
+- Covered obligations: 165
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   164 |
+| covered                  |   165 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   135 |
+| battle             |   136 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -207,6 +207,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME`                | battle             | covered                  | `stat-block.spell-invocation.unrestricted`                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION`                    | battle             | covered                  | `stat-block.spell-invocation.unrestricted`                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `BATTLE.HELP.ABILITY_CHECK_ASSIST`                                | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.ATTACK.TARGET_COVER`                                      | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -948,6 +949,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core-examples.qnt`           | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt`                                             | semantic-core           | `BATTLE.HELP.ABILITY_CHECK_ASSIST`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt`                                    | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt`                                                  | semantic-core           | `BATTLE.ATTACK.TARGET_COVER`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt`                                         | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1232,6 +1235,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt`                                            | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt`                                        | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt`                                          | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt`                                         | qnt-owner-role | proof-only                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt`                                                  | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/creature-size-order.qnt`                                                 | exempt         | leaf-type-vocabulary: Shared creature size order leaf imported by registered movement and Unit feature procedure owners.                                                                                 |
 | `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt`                                 | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt`                                          | qnt-owner-role | semantic-core                                                                                                                                                                                            |
@@ -1617,6 +1622,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.STAT_BLOCK.SPELLCASTING_LONG_CASTING_TIME`                | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`                                                                                                                                                         |          |           |
 | `BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION`                    | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`                                                                                                                                                         |          |           |
 | `BATTLE.HELP.ABILITY_CHECK_ASSIST`                                | generation-subset-clean | `record`, `pure-def`, `int`, `bool`, `comparison`, `boolean-connective`, `all-block`, `set`, `set-operators`, `size`, `membership`, `exists`, `filter`                                                                                                                                                             |          |           |
+| `BATTLE.ATTACK.TARGET_COVER`                                      | generation-subset-clean | `variant`, `pure-def`, `int`, `bool`, `pattern-match`, `arithmetic`, `all-block`                                                                                                                                                                                                                                   |          |           |
 
 ### Generator Readiness Backlog
 

@@ -13,7 +13,6 @@ import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-a
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import {
   damageAmount as toDamageAmount,
@@ -41,7 +40,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { weaponAttackArmorClass } from "./attack-target-cover.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -574,6 +573,7 @@ function reactionAttackDistanceFact(input: {
       targetId: subject.targetId,
       ...attackExecutionSelectionForOption(input.attack),
       distanceFeet: subject.distanceFeet,
+      ...optionalProperty("cover", subject.cover),
     })),
     Match.when({ command: "retaliationAttack" }, () => undefined),
     Match.when({ command: "releaseReadiedAttack" }, () => undefined),
@@ -607,9 +607,16 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     input.state.combatants.get(subject.reactorId),
     attack,
   );
+  const targetArmorClass = weaponAttackArmorClass(
+    input.state,
+    subject.reactorId,
+    target,
+    attack,
+    afterRollInput.context.targetSpatialFacts,
+  );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.state, target)),
+    targetArmorClass,
     criticalThreshold,
   );
   let attackRolledState = consumeHelpAttackForAttackRoll(

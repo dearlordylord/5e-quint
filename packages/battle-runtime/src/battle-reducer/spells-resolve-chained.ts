@@ -6,13 +6,16 @@ import { rangedSpellAttackEnemyProximityQualificationIssue } from "./spells-targ
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import { damageAmount as toDamageAmount, Index } from "@dnd/shared/types";
+import {
+  damageAmount as toDamageAmount,
+  Index,
+  type CoverType,
+} from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
@@ -60,7 +63,8 @@ import {
   DamageRelationshipDecisionsByHole,
   damageRelationshipDecisionFillCheck,
 } from "./damage-relationship-decisions.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
+import { spellAttackTargetStatedCover } from "./spells-targeting.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,
@@ -109,6 +113,8 @@ import {
   chainedSpellAttackRollHoleId,
   chainedSpellDamageRollHole,
   chainedSpellDamageRollHoleId,
+  chainedSpellLeapTargetStatedCover,
+  type ChainedSpellLeapInvocation,
   chainedSpellLeapTargetIsLegal,
   chainedSpellTargetHole,
   chainedSpellTargetHoleId,
@@ -580,9 +586,17 @@ export function resolveChainedSpellAttackDamageAct(input: {
       step.attackRoll.value,
     );
 
+    const stepCover = chainedSpellAttackStepStatedCover({
+      invocation: input.invocation,
+      actorId: input.actorId,
+      stepIndex,
+      previousTargetId: targeted[stepIndex - 1],
+      targetId: target.combatantId,
+      facts: step.target.spatialFacts,
+    });
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(replayState, target)),
+      armorClassAgainstAttack(replayState, target, stepCover),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: replayState,
@@ -1635,4 +1649,31 @@ export function applyChainedSpellDamage(
     saveGatedConditionDamageRepeatSave:
       context.saveGatedConditionDamageRepeatSave,
   });
+}
+
+/**
+ * The degree of cover a chained Spell Attack step meets: the first step is
+ * measured from the caster, and each leap from the previous target (A59).
+ */
+function chainedSpellAttackStepStatedCover(input: {
+  readonly invocation: ChainedSpellLeapInvocation;
+  readonly actorId: CombatantId;
+  readonly stepIndex: number;
+  readonly previousTargetId: CombatantId | undefined;
+  readonly targetId: CombatantId;
+  readonly facts: readonly BattleTargetSpatialFact[];
+}): CoverType | undefined {
+  return input.stepIndex === 0
+    ? spellAttackTargetStatedCover(
+        input.facts,
+        input.actorId,
+        input.targetId,
+        input.invocation,
+      )
+    : chainedSpellLeapTargetStatedCover(
+        input.invocation,
+        input.previousTargetId,
+        input.targetId,
+        input.facts,
+      );
 }

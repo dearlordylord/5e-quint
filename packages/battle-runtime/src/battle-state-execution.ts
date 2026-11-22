@@ -1698,6 +1698,11 @@ export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
   /** Distance at the reach-leaving trigger, before the mover's step. */
   readonly distanceFeet: MovementFeet;
+  /**
+   * The degree of cover the table rules between the reactor and the mover.
+   * Without it, no cover applies.
+   */
+  readonly cover?: CoverType;
 } & BattleOpportunityAttackSelection;
 export type BattleTargetSpatialFact =
   | {
@@ -1738,6 +1743,11 @@ export type BattleTargetSpatialFact =
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
       readonly distanceFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the actor and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: CoverType;
     } & BattleAttackExecutionSelection)
   | {
       readonly kind: "attackAttackerCannotSeeTarget";
@@ -1767,6 +1777,11 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly distanceFeet?: MovementFeet;
+      /**
+       * The degree of cover the table rules between the caster and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: CoverType;
     }
   | {
       /**
@@ -1796,6 +1811,11 @@ export type BattleTargetSpatialFact =
       readonly familiarId: CombatantId;
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      /**
+       * The degree of cover the table rules between the familiar and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: CoverType;
     }
   | {
       readonly kind: "spellTargetKnownWilling";
@@ -1815,6 +1835,11 @@ export type BattleTargetSpatialFact =
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly forcePositionId: BattleTablePositionId;
       readonly reachFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the force and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: CoverType;
     }
   | {
       readonly kind: "linkedEffectPairedWornComponents";
@@ -1836,6 +1861,11 @@ export type BattleTargetSpatialFact =
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly rangeFeet: MovementFeet;
       readonly distanceFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the caster and the object.
+       * Without it, no cover applies.
+       */
+      readonly cover?: CoverType;
       readonly armorClass: ArmorClass;
       readonly damageDisposition: BattleObjectDamageDisposition;
     }
@@ -1931,6 +1961,11 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly rangeFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the previous target and this one.
+       * Without it, no cover applies.
+       */
+      readonly cover?: CoverType;
     }
   | {
       readonly kind: "spellTargetsInPointOriginSphere";

@@ -9,7 +9,6 @@ import { isReadonlyArrayNonEmpty } from "effect/Array";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollResultIsValid,
@@ -54,7 +53,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { spellAttackArmorClass } from "./attack-target-cover.ts";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
@@ -507,10 +506,14 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     input.fillSet.attackRoll,
   );
 
-  const ordinaryHit = attackRollHits(
-    effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.input.state, target)),
+  const targetArmorClass = spellAttackArmorClass(
+    input.input.state,
+    input.actorId,
+    target,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
   );
+  const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.input.state,
     subject: input.input.subject,

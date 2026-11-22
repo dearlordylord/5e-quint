@@ -21,6 +21,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
+import { directTargetCover } from "@dnd/shared-algebras/cover-algebra";
 import {
   nonEmptyArrayProperty,
   optionalProperty,
@@ -34,7 +35,11 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
-import { type Condition, type DieRollResult } from "@dnd/shared/types";
+import {
+  type Condition,
+  type CoverType,
+  type DieRollResult,
+} from "@dnd/shared/types";
 import type { Ability, DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { passiveSavingThrowRollModeDisposition } from "../unit-feature-execution-constants.ts";
@@ -711,18 +716,65 @@ export function chainedSpellLeapTargetIsLegal(
   targetId: CombatantId,
   facts: readonly BattleTargetSpatialFact[],
 ): boolean {
-  return (
-    previousTargetId !== undefined &&
-    previousTargetId !== targetId &&
-    facts.some(
-      (fact) =>
-        fact.kind === "spellLeapTargetWithinRange" &&
-        fact.previousTargetId === previousTargetId &&
-        fact.targetId === targetId &&
-        fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.rangeFeet === invocation.leapRangeFeet,
-    )
+  const leap = chainedSpellLeapFact(
+    invocation,
+    previousTargetId,
+    targetId,
+    facts,
   );
+  return leap !== undefined && directTargetCover(leap.cover) !== null;
+}
+
+/** The invocation of a chained Spell Attack whose orb leaps between targets. */
+export type ChainedSpellLeapInvocation = BattleExecutableSpellInvocation<
+  Extract<
+    RuntimeSpellProcedure,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >
+>;
+
+function chainedSpellLeapFact(
+  invocation: ChainedSpellLeapInvocation,
+  previousTargetId: CombatantId | undefined,
+  targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
+):
+  | Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "spellLeapTargetWithinRange" }
+    >
+  | undefined {
+  if (previousTargetId === undefined || previousTargetId === targetId) {
+    return undefined;
+  }
+  return facts.find(
+    (
+      fact,
+    ): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "spellLeapTargetWithinRange" }
+    > =>
+      fact.kind === "spellLeapTargetWithinRange" &&
+      fact.previousTargetId === previousTargetId &&
+      fact.targetId === targetId &&
+      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
+      fact.rangeFeet === invocation.leapRangeFeet,
+  );
+}
+
+/**
+ * The degree of cover a leap's attack roll meets: the leap originates at the
+ * previous target, so its geometry fact states the degree (ASSUMPTIONS A59).
+ * Undefined when the table stated none.
+ */
+export function chainedSpellLeapTargetStatedCover(
+  invocation: ChainedSpellLeapInvocation,
+  previousTargetId: CombatantId | undefined,
+  targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
+): CoverType | undefined {
+  return chainedSpellLeapFact(invocation, previousTargetId, targetId, facts)
+    ?.cover;
 }
 
 export function spellDamageTypes(

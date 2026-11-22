@@ -2398,6 +2398,7 @@ export function scenarioCreatureSpellTargetFills(input: {
       }
       canonicalFacts.push({
         kind: "spellTarget" as const,
+        cover: relation.relation.cover,
         casterId: request.casterId,
         targetId,
         sourceProcedureRef: request.sourceProcedureRef,
@@ -2980,6 +2981,7 @@ export function scenarioAttackTargetFills(input: {
       targetId: fill.value,
       ...attack.selection,
       distanceFeet: movementFeet(Number(relation.distanceFeet)),
+      cover: relation.cover,
     };
     const canonicalSightFact = relation.attackerCanSeeTarget
       ? undefined
