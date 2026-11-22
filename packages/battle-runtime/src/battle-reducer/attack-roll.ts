@@ -11,6 +11,7 @@ import {
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.CONDITION_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
@@ -158,7 +159,7 @@ import {
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
-  attackTargetIsLegal,
+  creatureAttackTargetIsLegal,
   attackTargetDistanceFeet,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
@@ -171,12 +172,15 @@ import {
   savingThrowTargetsEnemy,
 } from "./roll-trigger-relationship-facts.ts";
 import {
+  D20TestRollModeSourcesMonoid,
   admittedAttackRollTableSource,
   attackerConditionAttackRollModeSources,
   combineD20TestRollMode,
   mechanicalD20TestRollMode,
   mechanicalD20TestRollModeSources,
   proneAttackRollModeSources,
+  targetConditionAttackRollModeSources,
+  type D20TestRollModeSources,
 } from "../d20-test-circumstance.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
@@ -220,15 +224,16 @@ export function attackRollHole(
 export function requiredAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   opportunityAttack = false,
 ): AttackRollMode | undefined {
+  const targetId = target.combatantId;
   const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
     null,
@@ -250,40 +255,39 @@ type AttackRollSourceFlags = {
   readonly hasDisadvantage: boolean;
 };
 
-function targetConditionAttackRollModeSources(
-  state: BattleState,
+function targetCreatureConditionAttackRollModeSources(
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
-) {
-  const target = state.combatants.get(targetId);
-  if (target === undefined || !hasCondition(target.conditions, "prone")) {
-    return { advantage: false, disadvantage: false };
-  }
+): D20TestRollModeSources {
+  const conditionSources = targetConditionAttackRollModeSources(
+    target.conditions,
+  );
+  if (!hasCondition(target.conditions, "prone")) return conditionSources;
+
   const distanceFeet =
     attack === undefined
       ? spellTargetDistanceFeet
       : attackTargetDistanceFeet(
           targetSpatialFacts,
           attackerId,
-          targetId,
+          target.combatantId,
           attack,
         );
-  if (distanceFeet === null) {
-    return {
+  return D20TestRollModeSourcesMonoid.combineAll([
+    conditionSources,
+    distanceFeet === null
+      ? D20TestRollModeSourcesMonoid.initialValue
+      : proneAttackRollModeSources(distanceFeet),
+    {
       advantage:
-        attack === undefined && hasCondition(target.conditions, "unconscious"),
+        hasCondition(target.conditions, "unconscious") &&
+        (distanceFeet !== null || attack === undefined),
       disadvantage: false,
-    };
-  }
-  const proneSources = proneAttackRollModeSources(distanceFeet);
-  return {
-    advantage:
-      proneSources.advantage || hasCondition(target.conditions, "unconscious"),
-    disadvantage: proneSources.disadvantage,
-  };
+    },
+  ]);
 }
 
 function combatantHasHiddenAttackRollBenefit(
@@ -312,18 +316,17 @@ function attackTargetIsLongRange(
 function attackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
 ): AttackRollSourceFlags {
+  const targetId = target.combatantId;
   const attacker = state.combatants.get(attackerId);
-  const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
   const hiddenTargetDisadvantage = combatantHasHiddenAttackRollBenefit(target);
   const dodgeDisadvantage =
     attacker !== undefined &&
-    target !== undefined &&
     hasDodgeAttackRollBenefit(state, target, attacker);
   const grappleDisadvantage =
     grapple !== undefined && grapple.grapplerId !== targetId;
@@ -333,14 +336,14 @@ function attackRollSourceFlags(
     targetId,
     attack,
   );
-  const targetConditionRollModeSources = targetConditionAttackRollModeSources(
-    state,
-    attackerId,
-    targetId,
-    attack,
-    targetSpatialFacts,
-    spellTargetDistanceFeet,
-  );
+  const targetConditionRollModeSources =
+    targetCreatureConditionAttackRollModeSources(
+      attackerId,
+      target,
+      attack,
+      targetSpatialFacts,
+      spellTargetDistanceFeet,
+    );
   const sightAdvantage = hasAttackSightFact(
     targetSpatialFacts,
     "attackTargetCannotSeeAttacker",
@@ -355,7 +358,6 @@ function attackRollSourceFlags(
   );
   const attackerCanSeeTarget =
     attacker !== undefined &&
-    target !== undefined &&
     !sightDisadvantage &&
     combatantCanSee(state, attacker.combatantId, target.combatantId);
   const grapplerAttackAdvantage =
@@ -660,15 +662,16 @@ function objectOutlineGrantsAttackRollAdvantage(
 export function requiredSpellAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   invocation: RuntimeSpellProcedure,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): AttackRollMode | undefined {
+  const targetId = target.combatantId;
   const attacker = state.combatants.get(attackerId);
   const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     undefined,
     targetSpatialFacts,
     spellAttackTargetDistanceFeet(
@@ -738,14 +741,14 @@ function attackRollModeFromSources(
 export function attackRollHasAdvantageSource(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): boolean {
   return attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
     null,
@@ -755,7 +758,7 @@ export function attackRollHasAdvantageSource(
 export function attackRollModeWithOptionalOngoingFeature(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   activatedOngoingFeatureProcedureRef: BattleProcedureExecutionRef | undefined,
@@ -763,7 +766,7 @@ export function attackRollModeWithOptionalOngoingFeature(
   const baseline = requiredAttackRollMode(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
   );
@@ -1498,7 +1501,7 @@ export function weaponMasteryCleaveTargetHole(
 export function weaponMasteryCleaveAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): BattleAttackRollHole {
@@ -1509,7 +1512,7 @@ export function weaponMasteryCleaveAttackRollHole(
       requiredAttackRollMode(
         state,
         attackerId,
-        targetId,
+        target,
         attack,
         targetSpatialFacts,
       ),
@@ -1625,7 +1628,7 @@ export function huntersPreyHordeBreakerTargetHole(
 export function huntersPreyHordeBreakerAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): BattleAttackRollHole {
@@ -1636,7 +1639,7 @@ export function huntersPreyHordeBreakerAttackRollHole(
       requiredAttackRollMode(
         state,
         attackerId,
-        targetId,
+        target,
         attack,
         targetSpatialFacts,
       ),
@@ -1702,20 +1705,18 @@ export function huntersPreyHordeBreakerDamageHole(
 }
 
 export function huntersPreyHordeBreakerTargetIsLegal(input: {
-  readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly firstTargetId: CombatantId;
-  readonly secondTargetId: CombatantId;
+  readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
-    input.secondTargetId !== input.firstTargetId &&
-    attackTargetIsLegal(
-      input.state,
+    input.secondTarget.combatantId !== input.firstTargetId &&
+    creatureAttackTargetIsLegal(
       input.attackerId,
-      input.secondTargetId,
+      input.secondTarget,
       input.attack,
       input.targetSpatialFacts,
     ) &&
@@ -1725,7 +1726,7 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
         fact.attackerId === input.attackerId &&
         fact.sourceProcedureRef === input.sourceProcedureRef &&
         fact.originalTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTargetId,
+        fact.secondTargetId === input.secondTarget.combatantId,
     )
   );
 }
@@ -1810,19 +1811,17 @@ function cleaveAbilityChoice(
 }
 
 export function weaponMasteryCleaveTargetIsLegal(input: {
-  readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly firstTargetId: CombatantId;
-  readonly secondTargetId: CombatantId;
+  readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
-    input.secondTargetId !== input.firstTargetId &&
-    attackTargetIsLegal(
-      input.state,
+    input.secondTarget.combatantId !== input.firstTargetId &&
+    creatureAttackTargetIsLegal(
       input.attackerId,
-      input.secondTargetId,
+      input.secondTarget,
       input.attack,
       input.targetSpatialFacts,
     ) &&
@@ -1831,7 +1830,7 @@ export function weaponMasteryCleaveTargetIsLegal(input: {
         fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
         fact.attackerId === input.attackerId &&
         fact.firstTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTargetId,
+        fact.secondTargetId === input.secondTarget.combatantId,
     )
   );
 }

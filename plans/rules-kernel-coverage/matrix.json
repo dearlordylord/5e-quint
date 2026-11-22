@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 173,
-    "covered": 162,
+    "total": 174,
+    "covered": 163,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 133,
+      "battle": 134,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 162,
+      "covered": 163,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5378,6 +5378,45 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "A Prone attacker's attack rolls have Disadvantage against creature and object targets, composed with every other source before cancellation"
+    },
+    {
+      "id": "BATTLE.ATTACK.CONDITION_ROLL_MODE",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-test-circumstance.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-attack-roll-sources.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stunning-strike.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "reason": "The QNT owner models the attacker's Poisoned, Prone and Restrained conditions as Disadvantage sources and the target's Paralyzed, Petrified, Restrained and Stunned conditions as Advantage sources, at any distance, joined with the mechanical sources before cancellation, with a Prone target's distance source added only when the target is Prone: a Restrained attacker against a Restrained target is Normal. Separate attacker and target condition records keep side-meaningless flags unrepresentable. d20-test-circumstance owns both condition source derivations from ConditionState; attack-roll applies the attacker source on the creature-target and object-target paths and the target source on the creature-target path. The executable parity witnesses check each condition list against every Condition, and cover cancellation, the surfaced attack-roll hole mode for character, stat block, ranged Spell Attack and Opportunity Attack rolls, rejection of a normal fill, the object-target path, direct removal, and a Stunned condition imposed and then ended by Stunning Strike.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/d20-test-circumstance.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Restrained",
+        ".references/srd-5.2.1/rules-glossary.md#Paralyzed",
+        ".references/srd-5.2.1/rules-glossary.md#Petrified",
+        ".references/srd-5.2.1/rules-glossary.md#Stunned",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
+      ],
+      "title": "Restrained, Paralyzed, Petrified and Stunned supply their attack-roll sources from canonical condition state, composed with every other source before cancellation"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
@@ -12563,6 +12602,7 @@
     {
       "evidence": "Owns the RAW three-kind D20 Test vocabulary, Advantage/Disadvantage source combination and cancellation, and exact pending-request equality independently of battle or authored identity.",
       "obligationIds": [
+        "BATTLE.ATTACK.CONDITION_ROLL_MODE",
         "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
         "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
         "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION"
@@ -19726,6 +19766,30 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.ATTACK.CONDITION_ROLL_MODE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
       ],

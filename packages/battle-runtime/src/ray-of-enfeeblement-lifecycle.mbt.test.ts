@@ -513,7 +513,7 @@ function rayOfEnfeeblementProjection(
       requiredAttackRollMode(
         state.battle.state,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(state.battle.state, spellCasterId),
         zeroAbilityWeaponAttack("weapon_longsword"),
         [],
       ) === "disadvantage",

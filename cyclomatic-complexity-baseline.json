@@ -91,7 +91,7 @@
       "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17,
       "module/binding:applyWeaponMasteryToppleSavingThrow": 9,
       "module/binding:attackRollOngoingFeatureActivationProfile": 13,
-      "module/binding:attackRollSourceFlags": 25,
+      "module/binding:attackRollSourceFlags": 23,
       "module/binding:tacticalMasterReplacementSelection": 9
     },
     "packages/battle-runtime/src/battle-reducer/attack-routes.ts": {
