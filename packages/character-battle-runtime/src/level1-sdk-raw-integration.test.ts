@@ -16,7 +16,7 @@ import {
   snapshotBattle,
   spellId,
   spellSaveDcForCaster,
-  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceSkillCheck,
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleFill,
@@ -3848,11 +3848,11 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     input.expectedSpellSlots,
   );
   expect(
-    temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
+    temporaryAbilityCheckRollModeInfluenceSkillCheck(
       resolved.state,
       input.casterId,
       difficultyClass(13),
-    ),
+    ).hole,
   ).toMatchObject({
     kind: "abilityCheck",
     ability: "cha",

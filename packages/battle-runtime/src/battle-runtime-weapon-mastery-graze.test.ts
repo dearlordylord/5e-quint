@@ -1,3 +1,4 @@
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection GH530-WEAPON-MASTERY-GRAZE mastery_graze
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.weapon-mastery-graze
 import { Result } from "effect";
@@ -10,30 +11,23 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackTargetSpatialFact,
+  battleProcedureExecutionRefForSpellHoleForTest,
+  Hp,
   battleAbilityModifier,
-  battleFrontierInterruptDecisionForState,
   battleId,
   battleProcedureExecutionRefForTest,
-  battleResolutionHolesForTest,
   characterSeed,
   concentrationSavingThrowFill,
-  endTurn,
   fighterAttackSubject,
   fighterId,
   fighterVsGoblinBattle,
-  findHole,
   goblinId,
   grazeWeaponMasterySelections,
   huntersPreyUnitRef,
-  interruptDecisionFill,
   masteryGrazeUnitRefs,
-  movementFeet,
-  movementFill,
-  opportunityAttackProcedureSelectionForTest,
-  reactionChoiceWithSubject,
   requireHole,
   requireResolved,
-  resolveBattleInterrupt,
   resolveBattleSubject,
   skeletonId,
   startBattleRight,
@@ -49,7 +43,10 @@ import type {
   BattleHole,
   BattleState,
 } from "./battle-runtime.test-support.ts";
-import { WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID } from "./battle-reducer/domain-constants.ts";
+import {
+  HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
+  WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
+} from "./battle-reducer/domain-constants.ts";
 import { admitWeaponMasteryProcedure } from "./procedure-admission/weapon-mastery.ts";
 import {
   battleUnitSupportProfilesForUnit,
@@ -417,70 +414,112 @@ describe("battle runtime: Weapon Mastery Graze", () => {
     expect(actionSpent(resolved.state)).toBe(true);
   });
 
-  test("an Opportunity Attack with a Graze weapon rejects a Graze decision", () => {
-    const fighterTurn = grazeBattle();
-    const goblinTurn = endTurn({ state: fighterTurn, actorId: fighterId });
-    if (goblinTurn.tag !== "resolved") {
-      throw new Error("Expected the Goblin's turn.");
-    }
-    const state = goblinTurn.state;
-    const subject = {
-      tag: "runtimeCommand",
-      actorId: goblinId,
-      command: "move",
-    } as const;
-    const movement = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
-      "movement",
-    );
-    const awaiting = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        movementFill(movement, {
-          movementCostFeet: 5,
-          provokedOpportunityAttacks: [
-            {
-              reactorId: fighterId,
-              distanceFeet: movementFeet(5),
-              ...attackExecutionSelectionForSubjectForTest(
-                fighterAttackSubject(fighterTurn, GRAZE_WEAPON_ID),
-              ),
-            },
-          ],
-        }),
-      ],
-    });
-    if (awaiting.tag !== "needsHoles") {
-      throw new Error("Expected an Opportunity Attack window.");
-    }
-    const pending = battleFrontierInterruptDecisionForState(awaiting.state);
-    if (pending === null) throw new Error("Expected a pending Reaction.");
-    const choice = reactionChoiceWithSubject(pending.choices);
-    const started = resolveBattleInterrupt({
-      state: awaiting.state,
-      fill: interruptDecisionFill(pending.decisionHole, {
-        kind: "resolve",
-        responderId: fighterId,
-        choice: opportunityAttackProcedureSelectionForTest(choice),
-      }),
-    });
-    if (started.tag !== "needsHoles") {
-      throw new Error("Expected the Opportunity Attack roll.");
-    }
-    const roll = findHole(battleResolutionHolesForTest(started), "attackRoll");
+  test.each([
+    ["use", "use"],
+    ["use", "decline"],
+    ["decline", "use"],
+    ["decline", "decline"],
+  ] as const)(
+    "primary Graze %s and Horde Breaker Graze %s are independent",
+    (primaryChoice, followupChoice) => {
+      const state = startBattleRight({
+        battleId: battleId("battle-graze-independent-horde-breaker"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: [
+              ...masteryGrazeUnitRefs(),
+              testGrazeWeaponUnitRef(),
+              huntersPreyUnitRef("hordeBreaker"),
+            ],
+            weaponMasteries: grazeWeaponMasterySelections(),
+            attack: { ...testGrazeWeaponAttack(), damageBonus: 9 },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+          statBlockCreatureInit({
+            combatantId: skeletonId,
+            statBlockName: "Second Target",
+            initiative: 9,
+          }),
+        ],
+      });
+      const primaryFills = [
+        ...rollFills(state, MISS),
+        grazeDecisionFill(primaryChoice),
+      ];
+      const horde = requireHole(
+        resolveGrazeAttack(state, primaryFills),
+        "unitFeatureDecision",
+      );
+      expect(horde).toMatchObject({ label: "Use Horde Breaker" });
+      const hordeFills = [
+        ...primaryFills,
+        unitFeatureDecisionFill(horde, "use"),
+      ];
+      const target = requireHole(
+        resolveGrazeAttack(state, hordeFills),
+        "targetChoice",
+      );
+      const hordeProcedureRef =
+        battleProcedureExecutionRefForSpellHoleForTest(target);
+      const secondTarget = targetFill(target, skeletonId, [
+        attackTargetSpatialFact(
+          fighterId,
+          skeletonId,
+          attackExecutionSelectionForSubjectForTest(
+            fighterAttackSubject(state, GRAZE_WEAPON_ID),
+          ),
+        ),
+        {
+          kind: "hordeBreakerSecondTargetEligible",
+          attackerId: fighterId,
+          sourceProcedureRef: hordeProcedureRef,
+          originalTargetId: goblinId,
+          secondTargetId: skeletonId,
+        },
+      ]);
+      const targetedFills = [...hordeFills, secondTarget];
+      const roll = requireHole(
+        resolveGrazeAttack(state, targetedFills),
+        "attackRoll",
+      );
+      const missedFills = [...targetedFills, attackRollFill(roll, MISS)];
+      const awaiting = resolveGrazeAttack(state, missedFills);
+      const followup = requireHole(awaiting, "unitFeatureDecision");
+      expect(followup).toMatchObject({
+        holeId: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
+        choices: ["use", "decline"],
+      });
+      expect(followup.holeId).not.toBe(WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID);
+      // Replay the same host with the additional choice; the primary choice is
+      // retained once and neither attack receives the weapon's damage bonus.
+      const resolved = requireResolved(
+        resolveGrazeAttack(state, [
+          ...missedFills,
+          unitFeatureDecisionFill(followup, followupChoice),
+        ]),
+      );
+      expect(goblinHp(resolved.state)).toBe(
+        goblinHp(state) - (primaryChoice === "use" ? 3 : 0),
+      );
+      expect(Number(resolved.state.combatants.get(skeletonId)?.hp)).toBe(
+        Number(state.combatants.get(skeletonId)?.hp) -
+          (followupChoice === "use" ? 3 : 0),
+      );
+      expect(
+        resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+      ).toEqual([{ attackerId: fighterId, procedureRef: hordeProcedureRef }]);
+      expect(actionSpent(resolved.state)).toBe(true);
 
-    expect(
-      resolveBattleSubject({
-        state: started.state,
-        subject: choice.subject,
-        fills: [attackRollFill(roll, MISS), grazeDecisionFill("use")],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      message: "Opportunity Attack doesn't resolve Weapon Mastery Graze.",
-    });
-  });
+      expect(
+        resolveGrazeAttack(state, [
+          ...targetedFills,
+          attackRollFill(roll, HIT),
+          unitFeatureDecisionFill(followup, "use"),
+        ]),
+      ).toMatchObject({ tag: "invalid" });
+    },
+  );
 
   test("a hit asks for weapon damage and rejects a Graze decision", () => {
     const state = grazeBattle();
@@ -507,8 +546,6 @@ describe("battle runtime: Weapon Mastery Graze", () => {
     const cases: readonly BattleState[] = [
       grazeBattle({ withMastery: false }),
       grazeBattle({ withSelection: false }),
-      grazeBattle({ abilityModifier: 0 }),
-      grazeBattle({ abilityModifier: -1 }),
     ];
     for (const state of cases) {
       const hpBefore = goblinHp(state);
@@ -526,6 +563,40 @@ describe("battle runtime: Weapon Mastery Graze", () => {
       ).toMatchObject({ tag: "invalid" });
     }
   });
+
+  test.each([0, -1])(
+    "modifier %s still offers Graze, and zero damage preserves HP, temporary HP, and Concentration",
+    (abilityModifier) => {
+      const state = withGoblin(grazeBattle({ abilityModifier }), (goblin) => ({
+        ...goblin,
+        tempHp: Hp(4),
+        concentration: {
+          sourceProcedureRef:
+            battleProcedureExecutionRefForTest("graze-zero-ward"),
+          effectKind: "spellEffect" as const,
+        },
+      }));
+      const decision = requireHole(
+        resolveGrazeAttack(state, rollFills(state, MISS)),
+        "unitFeatureDecision",
+      );
+      expect(decision).toMatchObject({ choices: ["use", "decline"] });
+      for (const choice of ["use", "decline"] as const) {
+        const resolved = requireResolved(
+          resolveGrazeAttack(state, [
+            ...rollFills(state, MISS),
+            unitFeatureDecisionFill(decision, choice),
+          ]),
+        );
+        expect(resolved.state.combatants.get(goblinId)).toMatchObject({
+          hp: state.combatants.get(goblinId)?.hp,
+          tempHp: Hp(4),
+          concentration: state.combatants.get(goblinId)?.concentration,
+        });
+        expect(actionSpent(resolved.state)).toBe(true);
+      }
+    },
+  );
 
   test("rejects a second Graze decision", () => {
     const state = grazeBattle();

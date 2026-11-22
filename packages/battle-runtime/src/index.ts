@@ -214,7 +214,8 @@ export {
 export {
   battleHoleAcceptsFill,
   battleHoleFamilyKind,
-  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceSkillCheck,
+  type BattleSkillCheck,
   type BattleHoleFamilyKind,
 } from "./battle-reducer/hole-helpers.ts";
 

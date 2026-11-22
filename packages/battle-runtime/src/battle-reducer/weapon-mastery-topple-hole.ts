@@ -3,8 +3,8 @@ import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type {
   BattleUnitFeatureSavingThrowOutcomeHole,
   BattleState,
+  BattleCreatureState,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
 import {
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
@@ -15,27 +15,27 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { weaponMasterySelectionAgainstTarget } from "./attack-roll.ts";
+import { selectedWeaponMasteryProperty } from "./attack-roll.ts";
 import { WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE } from "../unit-feature-execution-constants.ts";
 
-export function weaponMasteryToppleSavingThrowHole(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): BattleUnitFeatureSavingThrowOutcomeHole | null {
-  const selection = weaponMasterySelectionAgainstTarget({
-    state,
-    attackerId,
-    targetId,
+export function weaponMasteryToppleSavingThrowHole({
+  state,
+  attacker,
+  target,
+  attack,
+}: {
+  readonly state: BattleState;
+  readonly attacker: BattleCreatureState;
+  readonly target: BattleCreatureState;
+  readonly attack: SupportedAttackActionOption;
+}): BattleUnitFeatureSavingThrowOutcomeHole | null {
+  const attackerId = attacker.combatantId;
+  const selection = selectedWeaponMasteryProperty({
+    attacker,
     attack,
     supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   });
   if (selection === null) {
-    return null;
-  }
-  const attacker = state.combatants.get(attackerId);
-  if (attacker === undefined) {
     return null;
   }
   return {
@@ -64,7 +64,7 @@ export function weaponMasteryToppleSavingThrowHole(
           combatantProficiencyBonus(attacker),
       ),
     },
-    targetIds: [targetId],
+    targetIds: [target.combatantId],
     targetRollModes: savingThrowRollModeProjections(state, "con"),
     targetFlatBonuses: savingThrowFlatBonusProjections(state, "con"),
   };

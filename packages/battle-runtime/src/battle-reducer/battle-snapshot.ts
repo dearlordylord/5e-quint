@@ -98,6 +98,7 @@ function battleSnapshotProjectionFromCommittedState(state: BattleState): {
       ),
     },
     helpAttackMarkers: state.helpAttacks,
+    helpAbilityCheckMarkers: state.helpAbilityChecks,
   };
   return { snapshot };
 }

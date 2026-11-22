@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-command-halt-grovel spell.invocation-command-drop-held-object spell.invocation-command-approach-route spell.invocation-command-flee-route
 
 import { isDeepStrictEqual } from "node:util";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -367,6 +367,23 @@ function executeCompelledDropScenario(): CommandOptionNextTurnProjection {
 
 function compelledHaltScenario(): CommandOptionNextTurnProjection {
   const targetTurn = compelledHaltTargetTurn();
+  expect(
+    discoverBattleActCandidates(targetTurn.state).some(
+      ({ subject }) =>
+        subject.tag === "runtimeCommand" && subject.command === "dropProne",
+    ),
+  ).toBe(false);
+  const rejected = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: spellTargetId,
+      command: "dropProne",
+    },
+    fills: [],
+  });
+  expect(rejected.tag).toBe("invalid");
+  expect(rejected.snapshot).toEqual(snapshotBattle(targetTurn.state));
   return projectState({
     state: targetTurn.state,
     scenario: "halt-suppresses",

@@ -28,22 +28,22 @@ module weaponMasteryGrazeCore {
     damageType: str,
   }
 
-  // A modifier of 0 or less would deal 0 damage (Damage Rolls: "it's possible to
-  // deal 0 damage but not negative damage"), so Graze isn't offered then
-  // (ASSUMPTIONS.md A53).
   pure def grazeOffered(roll: GrazeAttackRoll): bool = all {
     roll.weaponMasteryIsGraze,
     roll.masteryUnlocked,
     roll.targetIsCreature,
     not(roll.hit),
-    roll.attackAbilityModifier > 0,
   }
 
   // "you can deal damage": the attacker chooses. The damage bonus of the attack
-  // never adds to it; only the ability modifier sets the amount.
+  // never adds to it; only the ability modifier sets the amount. Damage Rolls
+  // clamps damage at 0 rather than permitting negative damage.
   pure def grazeDamage(roll: GrazeAttackRoll, use: bool): Set[GrazeDamage] =
     if (grazeOffered(roll) and use)
-      Set({ amount: roll.attackAbilityModifier, damageType: roll.weaponDamageType })
+      Set({
+        amount: if (roll.attackAbilityModifier < 0) 0 else roll.attackAbilityModifier,
+        damageType: roll.weaponDamageType,
+      })
     else
       Set()
 }

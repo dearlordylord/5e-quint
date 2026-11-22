@@ -3,24 +3,19 @@
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type {
   BattleFill,
-  BattleState,
+  BattleCreatureState,
   BattleUnitFeatureDecisionHole,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
-import { weaponMasterySelectionAgainstTarget } from "./attack-roll.ts";
+import { selectedWeaponMasteryProperty } from "./attack-roll.ts";
 import { WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE } from "../unit-feature-execution-constants.ts";
 import type { DamageAmountByTypeEntry } from "./damage-helpers.ts";
-import {
-  WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
-  WEAPON_MASTERY_GRAZE_DECISION_HOLE_INSTANCE,
-} from "./domain-constants.ts";
 import { selectedWeaponDamage } from "./statblock-attacks.ts";
 
 /**
  * What Graze does after one attack roll against a creature.
  *
- * - `notApplicable`: the attack hit, the weapon's mastery isn't an unlocked
- *   Graze, or the attack's ability modifier is too low to deal any damage.
+ * - `notApplicable`: the attack hit or the weapon's mastery isn't an unlocked
+ *   Graze.
  * - `needsDecision`: Graze applies and the attacker hasn't chosen yet.
  * - `declined`: the attacker chose not to deal the damage.
  * - `damage`: the attacker chose to deal it; the one entry is the damage
@@ -49,14 +44,16 @@ export type WeaponMasteryGrazeOutcome =
  * The amount is the attack option's `abilityModifier`, the modifier of the
  * ability the attack roll used, not its damage modifier: an attack whose damage
  * leaves out a positive modifier still grazes for the whole modifier. A
- * modifier of 0 or less would deal 0 damage, so Graze isn't offered then
- * (ASSUMPTIONS.md A53). No damage bonus, rider or extra die adds to the amount;
+ * modifier of 0 or less deals 0 damage and still offers Use or Decline.
+ * No damage bonus, rider or extra die adds to the amount;
  * the target's Resistance and Vulnerability still apply (ASSUMPTIONS.md A54).
  */
 export function resolveWeaponMasteryGraze(input: {
-  readonly state: BattleState;
-  readonly attackerId: CombatantId;
-  readonly targetId: CombatantId;
+  readonly attacker: BattleCreatureState;
+  readonly decisionHole: Pick<
+    BattleUnitFeatureDecisionHole,
+    "holeId" | "holeInstanceKey"
+  >;
   readonly attack: SupportedAttackActionOption;
   readonly hit: boolean;
   readonly decision:
@@ -65,12 +62,7 @@ export function resolveWeaponMasteryGraze(input: {
 }): WeaponMasteryGrazeOutcome {
   const damageByType = input.hit
     ? null
-    : weaponMasteryGrazeDamageByType(
-        input.state,
-        input.attackerId,
-        input.targetId,
-        input.attack,
-      );
+    : weaponMasteryGrazeDamageByType(input.attacker, input.attack);
   if (damageByType === null) {
     return input.decision === undefined
       ? { tag: "notApplicable" }
@@ -81,7 +73,15 @@ export function resolveWeaponMasteryGraze(input: {
         };
   }
   if (input.decision === undefined) {
-    return { tag: "needsDecision", hole: weaponMasteryGrazeDecisionHole() };
+    return {
+      tag: "needsDecision",
+      hole: {
+        ...input.decisionHole,
+        kind: "unitFeatureDecision",
+        label: "Use Graze",
+        choices: ["use", "decline"],
+      },
+    };
   }
   if (input.decision.value === "decline") {
     return { tag: "declined" };
@@ -95,36 +95,21 @@ export function resolveWeaponMasteryGraze(input: {
 }
 
 function weaponMasteryGrazeDamageByType(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
+  attacker: BattleCreatureState,
   attack: SupportedAttackActionOption,
 ): readonly [DamageAmountByTypeEntry] | null {
-  const selection = weaponMasterySelectionAgainstTarget({
-    state,
-    attackerId,
-    targetId,
+  const selection = selectedWeaponMasteryProperty({
+    attacker,
     attack,
     supportProfile: WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   });
-  // ASSUMPTIONS.md A53: a modifier of 0 or less offers no Graze decision.
-  if (selection === null || Number(selection.attack.abilityModifier) <= 0) {
+  if (selection === null) {
     return null;
   }
   return [
     {
       damageType: selectedWeaponDamage(selection.attack.weapon).damageType,
-      amount: Number(selection.attack.abilityModifier),
+      amount: Math.max(0, Number(selection.attack.abilityModifier)),
     },
   ];
-}
-
-function weaponMasteryGrazeDecisionHole(): BattleUnitFeatureDecisionHole {
-  return {
-    kind: "unitFeatureDecision",
-    holeId: WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
-    holeInstanceKey: WEAPON_MASTERY_GRAZE_DECISION_HOLE_INSTANCE,
-    label: "Use Graze",
-    choices: ["use", "decline"],
-  };
 }

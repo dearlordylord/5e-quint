@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // UNIT-IDENTITY-REPLAY: FEATURE-585 ranger_defensive_tactics doResolveDefense
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay FEATURE-585 ranger_defensive_tactics
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.ATTACK_ROLL_DEFENSE
@@ -72,23 +73,43 @@ function defenseProjection() {
       requiredAttackRollMode(
         opportunity,
         goblinId,
-        fighterId,
+        requireCombatant(opportunity, fighterId),
         attack,
         [],
         true,
       ) === "disadvantage",
     ordinaryDisadvantage:
-      requiredAttackRollMode(opportunity, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      requiredAttackRollMode(
+        opportunity,
+        goblinId,
+        requireCombatant(opportunity, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
     repeatDisadvantage:
-      requiredAttackRollMode(hit, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      requiredAttackRollMode(
+        hit,
+        goblinId,
+        requireCombatant(hit, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
     missDisadvantage:
-      requiredAttackRollMode(miss, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      requiredAttackRollMode(
+        miss,
+        goblinId,
+        requireCombatant(miss, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
     nextTurnDisadvantage:
-      requiredAttackRollMode(nextTurn, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      requiredAttackRollMode(
+        nextTurn,
+        goblinId,
+        requireCombatant(nextTurn, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
   };
 }
 

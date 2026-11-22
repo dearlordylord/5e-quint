@@ -502,6 +502,11 @@ export const WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID = holeId(
 export const WEAPON_MASTERY_GRAZE_DECISION_HOLE_INSTANCE = holeInstanceKey(
   "battle:weapon-mastery-graze:decision",
 );
+export const HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID = holeId(
+  "battle:hunters-prey:horde-breaker:graze:decision",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_INSTANCE =
+  holeInstanceKey("battle:hunters-prey:horde-breaker:graze:decision");
 export const GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID = holeId(
   "battle:grappler:punch-and-grab:decision",
 );

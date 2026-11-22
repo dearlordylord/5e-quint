@@ -417,14 +417,14 @@ function resolveInitialSpellAttackRoll(input: {
   readonly errorState: BattleState;
   readonly subject: SpellActInternalInput["subject"];
   readonly actorId: CombatantId;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly invocation: Parameters<typeof spellAttackRollHole>[2];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): InitialSpellAttackRollResolution {
   const requiredRollMode = requiredSpellAttackRollMode(
     input.castingState,
     input.actorId,
-    input.targetId,
+    input.target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
   );
@@ -2210,7 +2210,7 @@ function resolveSpellActInternal(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const target = input.state.combatants.get(fillSet.targetId);
+  const target = castingState.combatants.get(fillSet.targetId);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target == null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -2451,7 +2451,7 @@ function resolveSpellActInternal(
       errorState: input.state,
       subject: input.subject,
       actorId: subject.actorId,
-      targetId: target.combatantId,
+      target,
       invocation: invocationForResolution,
       fillSet,
     });

@@ -18902,6 +18902,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Generic battle runtime MBT leaves Help enemy decisions to the focused Help witness.",
           );
         }),
+        Match.when({ kind: "helpAbilityCheckDecision" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Help ability check decisions to the focused Help witness.",
+          );
+        }),
         Match.when({ kind: "cunningStrikeEndTurnCoverFacts" }, () => {
           throw new Error(
             "Battle runtime MBT does not model Cunning Strike end-turn cover fact holes.",

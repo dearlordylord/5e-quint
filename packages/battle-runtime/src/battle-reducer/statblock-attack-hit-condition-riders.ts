@@ -46,24 +46,12 @@ function applyStatBlockAttackHitConditionRider(
       combatantEffectiveSize(target),
       rider.targetSizePredicate.maxCreatureSize,
     ) ||
-    statBlockAttackHitConditionPrevented(target, rider.condition)
+    conditionApplicationPreventedByConditionImmunity(target, rider.condition)
   ) {
     return target;
   }
   return battleCreatureStateWithKnockOutPreservedConditions(
     target,
     applyCondition(target.conditions, rider.condition),
-  );
-}
-
-function statBlockAttackHitConditionPrevented(
-  target: BattleCreatureState,
-  condition: "prone",
-): boolean {
-  return (
-    conditionApplicationPreventedByConditionImmunity(target, condition) ||
-    (target.origin.kind === "statBlock" &&
-      target.origin.mechanics.immunities.conditions.includes(condition) ===
-        true)
   );
 }
