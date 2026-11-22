@@ -1217,6 +1217,20 @@ function assertDeferredChecksGated(workflow, deferred) {
       text,
       `The quality workflow must run deferred ${id} in its ${job} job.`,
     );
+    const steps = text.split(/^ {6}- /m).slice(1);
+    const requiredSteps = [
+      ["build", /^\s*run: pnpm build\s*$/m],
+      [id, run],
+    ];
+    for (const [label, command] of requiredSteps) {
+      const step = steps.find((candidate) => command.test(candidate));
+      assert(step, `The ${job} job must run ${label}.`);
+      assert.doesNotMatch(
+        step,
+        /^ {8}(?:if|continue-on-error):/m,
+        `The ${job} ${label} step must not be conditional or tolerate failure.`,
+      );
+    }
     const checkStep = text.search(run);
     assert(checkStep >= 0, `The ${job} job must run the deferred ${id} check.`);
     const build = text.search(/^\s*run: pnpm build\s*$/m);
@@ -1311,6 +1325,27 @@ function selfTest() {
     "Every check the workflow defers must have its own job, and only those.",
   );
   assertDeferredChecksGated(qualityWorkflow, ciDeferred);
+  const requiredCommands = [
+    /^\s*run: pnpm build\s*$/m,
+    ...ciDeferred.map((id) => DEFERRED_CHECK_JOBS[id].run),
+  ];
+  for (const command of requiredCommands) {
+    for (const setting of [
+      "if: false",
+      "if: ${{ false }}",
+      "continue-on-error: true",
+    ]) {
+      const disabledCheck = qualityWorkflow.replace(
+        command,
+        (line) => `        ${setting}\n        ${line.trim()}`,
+      );
+      assert.throws(
+        () => assertDeferredChecksGated(disabledCheck, ciDeferred),
+        /must not be conditional or tolerate failure/,
+        `The workflow self-test must reject ${setting} on ${command}.`,
+      );
+    }
+  }
   assert.match(
     qualityWorkflow,
     /^\s*run: pnpm coverage --shard \$\{\{ matrix\.shard \}\}\s*$/m,
