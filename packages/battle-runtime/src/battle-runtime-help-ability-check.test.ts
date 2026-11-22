@@ -445,7 +445,7 @@ describe("Help: Assist an Ability Check", () => {
 
   // RAW: .references/srd-5.2.1/classes.md, Fighter, "Level 3: Remarkable
   // Athlete": "you have Advantage on Initiative rolls and Strength (Athletics)
-  // checks." Escaping Entangle now names its skill, so this source applies.
+  // checks." Escaping Entangle uses Strength (Athletics).
   test("escaping Entangle also gets Remarkable Athlete's Advantage", () => {
     const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
     const unitRef = battleUnitRefWithSupportProfiles({

@@ -775,10 +775,9 @@ export type BattleHelpAttack = {
   readonly targetEnemyId: CombatantId;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
-// SRD 5.2.1 Help [Action], "Assist an Ability Check": the helper chooses one
-// of its skill proficiencies and one ally it can assist; that ally has
-// Advantage on the next ability check it makes with the chosen skill. The
-// benefit expires if unused before the start of the helper's next turn.
+// The skill-assistance benefit stored by Battle. SRD 5.2.1 Help [Action]
+// permits choosing a skill or tool proficiency; this type represents a skill.
+// The unused benefit expires at the start of the helper's next turn.
 export type BattleHelpAbilityCheck = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
