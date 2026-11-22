@@ -24,7 +24,7 @@ module battleRuntimeSleetStormAreaHazard {
     state.fighter.activeEffects.exists(effect => match effect { | SleetStormAreaHazard(data) => data.areaId == areaId | _ => false })
 
   pure def sleetStormDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
-    battleRuntimeDifficultTerrainMovementCost(sleetStormAreaHazardActiveForTerrain(state, areaId), totalDistanceFeet, difficultTerrainDistanceFeet)
+    battleRuntimeDifficultTerrainMovementCost(sleetStormAreaHazardActiveForTerrain(state, areaId), state.fighter.prone, totalDistanceFeet, difficultTerrainDistanceFeet)
   pure def activeEffectsWithoutSleetStormAreaHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | SleetStormAreaHazard(data) => data.areaId != areaId

@@ -385,9 +385,9 @@ module battleRuntimeMovementBridge {
       targetIsGrappler,
     )
 
-  pure def battleRuntimeDifficultTerrainMovementCost(active: bool, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
+  pure def battleRuntimeDifficultTerrainMovementCost(active: bool, moverProne: bool, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
     if (active and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
-      totalDistanceFeet + difficultTerrainDistanceFeet
+      totalDistanceFeet + difficultTerrainDistanceFeet + MovementRule::crawlingExtraCostFeet(moverProne, totalDistanceFeet)
     else
       0
 
