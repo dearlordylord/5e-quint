@@ -4899,13 +4899,14 @@ function prepareWeaponMasteryCleaveAttack(input: {
   const secondTargetId = targetFill.value;
   const cleaveTargetFacts =
     additionalWeaponAttackTargetSpatialFacts(targetFill);
+  const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
   if (
+    secondTarget === undefined ||
     !weaponMasteryCleaveTargetIsLegal({
-      state: input.state,
       attackerId: input.subject.actorId,
       firstTargetId: input.firstTargetId,
-      secondTargetId,
+      secondTarget,
       attack: cleaveAttack,
       targetSpatialFacts: cleaveTargetFacts,
     })
@@ -4916,19 +4917,6 @@ function prepareWeaponMasteryCleaveAttack(input: {
         input.state,
         "invalidFill",
         "Weapon Mastery Cleave second target must be within 5 feet of the first target and within the attacker's reach.",
-      ),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- @preserve -- Stale subject: the chosen target may have been removed from the battle before this attack resumes. */
-  if (secondTarget === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave second target is no longer in this battle.",
       ),
     };
   }
@@ -5567,14 +5555,15 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   }
   const secondTargetId = targetFill.value;
   const targetFacts = additionalWeaponAttackTargetSpatialFacts(targetFill);
+  const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
   if (
+    secondTarget === undefined ||
     !huntersPreyHordeBreakerTargetIsLegal({
-      state: input.state,
       attackerId: input.subject.actorId,
       sourceProcedureRef: procedureRef,
       firstTargetId: input.firstTargetId,
-      secondTargetId,
+      secondTarget,
       attack: hordeBreakerAttack,
       targetSpatialFacts: targetFacts,
     })
@@ -5585,19 +5574,6 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
         input.state,
         "invalidFill",
         "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
-      ),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- @preserve -- Stale subject: the chosen target may have been removed from the battle before this attack resumes. */
-  if (secondTarget === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker second target is no longer in this battle.",
       ),
     };
   }

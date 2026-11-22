@@ -159,7 +159,7 @@ import {
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
-  attackTargetIsLegal,
+  creatureAttackTargetIsLegal,
   attackTargetDistanceFeet,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
@@ -1726,20 +1726,18 @@ export function huntersPreyHordeBreakerDamageHole(
 }
 
 export function huntersPreyHordeBreakerTargetIsLegal(input: {
-  readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly firstTargetId: CombatantId;
-  readonly secondTargetId: CombatantId;
+  readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
-    input.secondTargetId !== input.firstTargetId &&
-    attackTargetIsLegal(
-      input.state,
+    input.secondTarget.combatantId !== input.firstTargetId &&
+    creatureAttackTargetIsLegal(
       input.attackerId,
-      input.secondTargetId,
+      input.secondTarget,
       input.attack,
       input.targetSpatialFacts,
     ) &&
@@ -1749,7 +1747,7 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
         fact.attackerId === input.attackerId &&
         fact.sourceProcedureRef === input.sourceProcedureRef &&
         fact.originalTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTargetId,
+        fact.secondTargetId === input.secondTarget.combatantId,
     )
   );
 }
@@ -1834,19 +1832,17 @@ function cleaveAbilityChoice(
 }
 
 export function weaponMasteryCleaveTargetIsLegal(input: {
-  readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly firstTargetId: CombatantId;
-  readonly secondTargetId: CombatantId;
+  readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
-    input.secondTargetId !== input.firstTargetId &&
-    attackTargetIsLegal(
-      input.state,
+    input.secondTarget.combatantId !== input.firstTargetId &&
+    creatureAttackTargetIsLegal(
       input.attackerId,
-      input.secondTargetId,
+      input.secondTarget,
       input.attack,
       input.targetSpatialFacts,
     ) &&
@@ -1855,7 +1851,7 @@ export function weaponMasteryCleaveTargetIsLegal(input: {
         fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
         fact.attackerId === input.attackerId &&
         fact.firstTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTargetId,
+        fact.secondTargetId === input.secondTarget.combatantId,
     )
   );
 }
