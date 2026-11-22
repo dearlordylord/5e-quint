@@ -21324,6 +21324,11 @@
                   {
                     "tag": "action",
                     "actorId": "corpus:character",
+                    "action": "helpAbilityCheck"
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
                     "action": "grapple"
                   },
                   {
