@@ -51,11 +51,15 @@ export function enemyProximityConstraint(
       "The canonical target fill must contain the ranged attack enemy proximity fact.",
     );
   return {
-    contains: {
-      anyOf: qualification.map((fact) =>
-        pinFact(fact, { kind: "rangedAttackEnemyProximity", ...scope }),
-      ),
-    },
-    maxContains: 1,
+    allOf: [
+      { contains: { anyOf: qualification }, maxContains: 1 },
+      {
+        contains: {
+          anyOf: qualification.map((fact) =>
+            pinFact(fact, { kind: "rangedAttackEnemyProximity", ...scope }),
+          ),
+        },
+      },
+    ],
   };
 }

@@ -7,6 +7,7 @@ import { expect, test } from "vitest";
 import {
   attackTargetFill,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
   fighterAttackSubject,
   fighterId,
@@ -152,6 +153,40 @@ for (const actor of ["character", "statBlock"] as const) {
         }).valid,
       ).toBe(true);
       const before = root.sessionStore.snapshot();
+      for (const qualification of proximity) {
+        for (const change of [
+          { attackerId: targetId },
+          {
+            procedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-foreign-attack",
+            ),
+          },
+        ]) {
+          const invalidFill = {
+            ...fill,
+            spatialFacts: [
+              fact,
+              qualification,
+              { ...qualification, ...change },
+            ],
+          };
+          expect(validate(invalidFill).valid).toBe(false);
+          const rejected = Schema.decodeUnknownSync(
+            BattleResolutionOutputSchema,
+          )(
+            jsonContentPayload(
+              CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
+                fill: invalidFill,
+              }),
+            ),
+          );
+          expect(rejected.result).toMatchObject({
+            tag: "invalid",
+            reason: "invalidFill",
+          });
+          expect(root.sessionStore.snapshot()).toEqual(before);
+        }
+      }
       const selectionChange =
         "statBlockDamageSelection" in fact
           ? { statBlockDamageSelection: [] }
