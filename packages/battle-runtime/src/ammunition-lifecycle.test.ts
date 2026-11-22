@@ -19,6 +19,8 @@ import { BattleSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { snapshotBattle } from "./battle-execution-composition.ts";
 import {
   attackRollFill,
+  battleFrontierInterruptDecisionForState,
+  interruptDecisionFill,
   attackTargetDistanceSpatialFact,
   attackTargetFill,
   characterSeed,
@@ -39,7 +41,9 @@ import {
   combatantId,
   discoverBattleActs,
   resolveBattleSubject,
+  resolveBattleInterrupt,
   startBattle,
+  type BattleFill,
 } from "./index.ts";
 
 describe("ammunition lifecycle", () => {
@@ -414,14 +418,47 @@ describe("ammunition lifecycle", () => {
         },
       ),
     };
-    const subject = {
-      tag: "runtimeCommand" as const,
-      actorId: wizardId,
-      command: "releaseReadiedAttack" as const,
-      reactorId: skeletonId,
-      targetId: wizardId,
-      procedureRef: shortbow.procedureRef,
-    };
+    const awaiting = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: wizardId,
+        command: "reportReadyTrigger",
+        readiedActorId: skeletonId,
+      },
+      fills: [],
+    });
+    if (awaiting.tag !== "needsHoles") {
+      throw new Error("Expected the readied attack trigger checkpoint.");
+    }
+    const pending = battleFrontierInterruptDecisionForState(awaiting.state);
+    const choice = pending?.choices.find(
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedAttack",
+    );
+    if (
+      pending === null ||
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedAttack"
+    ) {
+      throw new Error("Expected the offered readied attack.");
+    }
+    const subject = choice.subject;
+    const beginAttack = (fills: readonly BattleFill[]) =>
+      resolveBattleInterrupt({
+        state: awaiting.state,
+        fill: interruptDecisionFill(pending.decisionHole, {
+          kind: "resolve",
+          responderId: skeletonId,
+          choice: {
+            kind: "releaseReadiedAttack",
+            targetId: wizardId,
+            procedureRef: subject.procedureRef,
+            fills,
+          },
+        }),
+      });
     const beyondLongRangeTargetSpatialFacts = {
       ...targetSpatialFacts,
       spatialFacts: [
@@ -434,27 +471,20 @@ describe("ammunition lifecycle", () => {
         ...targetSpatialFacts.spatialFacts.slice(1),
       ],
     };
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [beyondLongRangeTargetSpatialFacts],
-      }),
-    ).toMatchObject({
+    expect(beginAttack([beyondLongRangeTargetSpatialFacts])).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
       message: expect.stringContaining(
         "outside the selected attack's legal range",
       ),
     });
-    const rollRequest = resolveBattleSubject({
-      state,
-      subject,
-      fills: [targetSpatialFacts],
-    });
+    const rollRequest = beginAttack([targetSpatialFacts]);
+    if (rollRequest.tag !== "needsHoles") {
+      throw new Error("Expected the active readied attack roll.");
+    }
     const roll = requireHole(rollRequest, "attackRoll");
     const hit = resolveBattleSubject({
-      state,
+      state: rollRequest.state,
       subject,
       fills: [
         targetSpatialFacts,
