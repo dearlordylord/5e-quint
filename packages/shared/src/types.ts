@@ -98,6 +98,14 @@ export const WEAPON_PROPERTIES = [
 ] as const;
 export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
 
+/**
+ * How a creature holds its main weapon. A Two-Handed weapon needs the
+ * `two_handed` grip; a Versatile weapon can be held with either.
+ */
+export const WEAPON_GRIPS = ["one_handed", "two_handed"] as const;
+export type WeaponGrip = (typeof WEAPON_GRIPS)[number];
+export const WeaponGripSchema = Schema.Literals(WEAPON_GRIPS);
+
 export const ACTIVATION_TIMINGS = [
   "action",
   "bonusAction",

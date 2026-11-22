@@ -251,6 +251,85 @@ describe("Character Sheet equipment loadout ownership", () => {
     );
   });
 
+  test("holds a Two-Handed weapon with the two-handed grip", () => {
+    const weapon = equipmentItemId("main", "weapon_greataxe");
+    const loadout = setCharacterSheetEquipmentLoadout({
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        weapon: "weapon_greataxe",
+      }),
+      patch: { weapon: { itemId: weapon, grip: "two_handed" } },
+      unitLibrary,
+    });
+
+    expect(loadout).toEqual(
+      Result.succeed({ weapon: { itemId: weapon, grip: "two_handed" } }),
+    );
+  });
+
+  test("holds a Versatile weapon with either grip", () => {
+    const weapon = equipmentItemId("main", "weapon_longsword");
+    const build = armorClassBuild({
+      startingClass: "class_fighter",
+      weapon: "weapon_longsword",
+    });
+
+    for (const grip of ["one_handed", "two_handed"] as const) {
+      expect(
+        setCharacterSheetEquipmentLoadout({
+          build,
+          patch: { weapon: { itemId: weapon, grip } },
+          unitLibrary,
+        }),
+      ).toEqual(Result.succeed({ weapon: { itemId: weapon, grip } }));
+    }
+  });
+
+  test("rejects a two-handed grip beside a shield or an off-hand weapon", () => {
+    const weapon = equipmentItemId("main", "weapon_longsword");
+    const shield = equipmentItemId("shield", "equipment_shield");
+    const off = equipmentItemId("off", "weapon_dagger");
+    const build = armorClassBuild({
+      startingClass: "class_fighter",
+      weapon: "weapon_longsword",
+      shield: true,
+      offHandWeapon: "weapon_dagger",
+    });
+
+    for (const patch of [
+      { shield, offHandWeapon: null },
+      { shield: null, offHandWeapon: { itemId: off } },
+    ]) {
+      expect(
+        failureIssues(
+          setCharacterSheetEquipmentLoadout({
+            build,
+            patch: { ...patch, weapon: { itemId: weapon, grip: "two_handed" } },
+            unitLibrary,
+          }),
+        ),
+      ).toEqual([{ tag: "twoHandedGripHandConflict", itemId: weapon }]);
+    }
+  });
+
+  test("rejects a Two-Handed weapon in the off hand", () => {
+    const off = equipmentItemId("off", "weapon_greataxe");
+    const issues = failureIssues(
+      setCharacterSheetEquipmentLoadout({
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          offHandWeapon: "weapon_greataxe",
+        }),
+        patch: { offHandWeapon: { itemId: off } },
+        unitLibrary,
+      }),
+    );
+
+    expect(issues).toEqual([
+      { tag: "weaponCannotBeHeldOneHanded", itemId: off },
+    ]);
+  });
+
   test("rejects a shield and off-hand weapon occupying the same loadout", () => {
     const shield = equipmentItemId("shield", "equipment_shield");
     const off = equipmentItemId("off", "weapon_dagger");
@@ -352,6 +431,7 @@ describe("Character Sheet equipment loadout ownership", () => {
       { tag: "armorTrainingRequired", itemId: armor, category: "heavy" },
       { tag: "shieldTrainingRequired", itemId: shield },
       { tag: "weaponCannotBeHeldOneHanded", itemId: weapon },
+      { tag: "twoHandedGripHandConflict", itemId: weapon },
       { tag: "shieldAndOffHandWeaponConflict" },
       {
         tag: "equipmentQuantityInsufficient",
@@ -370,6 +450,7 @@ describe("Character Sheet equipment loadout ownership", () => {
       "Wearing armor armor:armor_chain_mail requires heavy armor training.",
       "Wielding shield shield:equipment_shield requires shield training.",
       "Weapon main:weapon_greataxe cannot be held one-handed.",
+      "Weapon main:weapon_greataxe is held two-handed, which leaves no hand for a shield or an off-hand weapon.",
       "A shield and an off-hand weapon cannot occupy the same loadout.",
       "Equipment item armor:armor_chain_mail has quantity 1, but this loadout requires 2.",
       "synthetic issue",

@@ -10859,6 +10859,48 @@ describe("Character Build battle projection", () => {
     },
   );
 
+  test.each([
+    {
+      label: "a Versatile weapon held one-handed",
+      weaponUnitId: "weapon_longsword",
+      grip: "one_handed",
+      dieSize: 8,
+    },
+    {
+      label: "a Versatile weapon held two-handed",
+      weaponUnitId: "weapon_longsword",
+      grip: "two_handed",
+      dieSize: 10,
+    },
+    {
+      label: "a Two-Handed weapon",
+      weaponUnitId: "weapon_greataxe",
+      grip: "two_handed",
+      dieSize: 12,
+    },
+  ] as const)(
+    "projects the weapon damage of $label from its grip",
+    ({ weaponUnitId, grip, dieSize }) => {
+      const attack = expectSuccess(
+        characterWeaponAttackActionOptions({
+          build: equippedFighterBuild({
+            weaponUnitId: authoredUnitId(weaponUnitId),
+            str: 16,
+            dex: 10,
+            grip,
+          }),
+          unitLibrary,
+          weaponMasteries: [],
+          classLevels: [{ className: "fighter", level: 1 }],
+        }),
+      ).attack;
+
+      expect(attack?.weapon.damage).toEqual(
+        expect.objectContaining({ kind: "dice", dice: 1, dieSize }),
+      );
+    },
+  );
+
   test("offers a tied finesse ability without adding proficiency to an untrained weapon", () => {
     const fighterBuild = equippedFighterBuild({
       weaponUnitId: syntheticFinesseWeaponUnitId,
@@ -13413,6 +13455,7 @@ function equippedFighterBuild(input: {
   readonly weaponUnitId: UnitRecord["id"];
   readonly str: number;
   readonly dex: number;
+  readonly grip?: "one_handed" | "two_handed";
 }): CharacterBuild {
   const weaponItemId = characterEquipmentItemId({
     slot: "main",
@@ -13433,7 +13476,9 @@ function equippedFighterBuild(input: {
     equipment: {
       startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [characterBuildCatalogEquipmentItem({ itemId: weaponItemId })],
-      loadout: { weapon: { itemId: weaponItemId, grip: "one_handed" } },
+      loadout: {
+        weapon: { itemId: weaponItemId, grip: input.grip ?? "one_handed" },
+      },
     },
   };
 }
@@ -13512,7 +13557,7 @@ function weaponMasteryGreataxeFighterBuild(): CharacterBuild {
       loadout: {
         weapon: {
           itemId: greataxeItemId,
-          grip: "one_handed",
+          grip: "two_handed",
         },
       },
     },
