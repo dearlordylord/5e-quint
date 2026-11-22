@@ -6,6 +6,7 @@ import type {
   BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
+import { canonicalStructuralKey } from "@dnd/shared/structural-value";
 import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
 import { d20TestRollsEqual } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -13,6 +14,7 @@ import { opportunityAttackThreatEqual } from "./opportunity-attack-equality.ts";
 
 export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
   "targetChoice",
+  "targetSpatialFacts",
   "attackRoll",
   "rolledDice",
   "attackDamageDisposition",
@@ -53,6 +55,16 @@ export function battleContinuationFillEquals(
         b.kind === "targetChoice" &&
         left.holeId === b.holeId &&
         left.value === b.value,
+      targetSpatialFacts: (left) =>
+        b.kind === "targetSpatialFacts" &&
+        left.holeId === b.holeId &&
+        sameMultisetBy(
+          left.spatialFacts,
+          b.spatialFacts,
+          (leftFact, rightFact) =>
+            canonicalStructuralKey(leftFact) ===
+            canonicalStructuralKey(rightFact),
+        ),
       attackRoll: (left) =>
         b.kind === "attackRoll" &&
         left.holeId === b.holeId &&
