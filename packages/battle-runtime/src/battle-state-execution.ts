@@ -794,7 +794,7 @@ export type GlyphStoredSpellReleaseReplayInput = {
 };
 export type BattleAttackDamageCriticalConsequence =
   | {
-      readonly kind: "ordinaryHit";
+      readonly kind: "nonCritical";
     }
   | {
       readonly kind: "criticalHit";

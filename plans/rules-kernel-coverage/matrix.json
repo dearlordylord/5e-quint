@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 176,
-    "covered": 165,
+    "total": 177,
+    "covered": 166,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 136,
+      "battle": 137,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 165,
+      "covered": 166,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -4722,6 +4722,10 @@
           "ownerPath": "packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts"
         }
       ],
       "profiles": [],
@@ -4740,7 +4744,7 @@
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
         "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt"
       ],
-      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects trigger-discriminated interrupt frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics. The focused attack-damage and triggered-reaction owners resume suspended non-spell procedures; the actor-parametric Opportunity Attack owner carries reactor and provoker direction through accepted movement continuations; the Hellish Rebuke owner carries damager and damaged-reactor direction through Reaction, Spell Slot, save-gated damage, close, and resume; Counterspell owners resume the exact triggering spell family; and the replay-equivalence owner combines the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Opportunity Attack, Critical Hit, damage, after-damage spell Reaction, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects trigger-discriminated interrupt frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics. The focused attack-damage and triggered-reaction owners resume suspended non-spell procedures; the actor-parametric Opportunity Attack owner carries reactor and provoker direction through accepted movement continuations; the Hellish Rebuke owner carries damager and damaged-reactor direction through Reaction, Spell Slot, save-gated damage, close, and resume; Counterspell owners resume the exact triggering spell family; and the replay-equivalence owner combines the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Opportunity Attack, Critical Hit, damage, after-damage spell Reaction, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation. The reaction Graze witness also checks fabricated and completed checkpoint-owned reaction subjects and nested resume without duplicate damage. Direct release of a held readied spell remains admitted without a checkpoint and is validated by its existing owner.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -6388,6 +6392,43 @@
         ".references/srd-5.2.1/rules-glossary.md#Concentration"
       ],
       "title": "Stat Block source concentration"
+    },
+    {
+      "id": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/mcp/src/manual-mcp-battle-surface.test.ts"
+        }
+      ],
+      "profiles": ["unit-feature.weapon-mastery-graze"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+      ],
+      "reason": "The QNT owner models eligibility for a missed weapon attack against a creature with an unlocked Graze mastery and the optional ability-modifier damage, clamped at zero without added bonuses. Ordinary attacks, Opportunity Attacks, readied attacks, Retaliation and Horde Breaker share that outcome rule. Independently identified primary and follow-up decisions feed the existing fixed-damage lifecycle, preserving miss status, exact-once resource spending, damage disposition, Concentration and nested after-damage reactions.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/procedure-admission/weapon-mastery.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/equipment.md#Graze",
+        ".references/srd-5.2.1/equipment.md#Mastery Properties"
+      ],
+      "title": "Weapon Mastery Graze: a missed attack roll against a creature with an unlocked Graze weapon may deal the attack's ability modifier as the weapon's damage type"
     },
     {
       "id": "BATTLE.HELP.ABILITY_CHECK_ASSIST",
@@ -9502,6 +9543,13 @@
     {
       "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "profileId": "unit-feature.ongoing-feature-activation-movement-rider"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-graze"
     }
   ],
   "qntOwnerRoles": [
@@ -13249,6 +13297,24 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns when Weapon Mastery Graze is offered after an attack roll and the miss damage it deals, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
+          "profileId": "unit-feature.weapon-mastery-graze"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the Graze offer and its rejections (a hit, another mastery, no unlock, a non-creature target, a modifier of 0 or less), the use and decline choices, and that a damage bonus does not add to Graze damage.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Owns Help's Assist an Ability Check admission, the Advantage it gives the ally's next check with the chosen skill, the use of every matching benefit by that check, expiry at the start of the helper's next turn, and the Wild Shape skill proficiency union, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.HELP.ABILITY_CHECK_ASSIST"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt",
@@ -15520,6 +15586,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
       "role": "semantic-core"
     },
@@ -16107,6 +16183,16 @@
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-mastery-graze",
+      "qntOwners": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -20575,6 +20661,29 @@
         "boolean-connective",
         "all-block",
         "set",
+        "if-expression",
+        "variant"
+      ],
+      "obligationId": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
         "set-operators",
         "size",
         "membership",
@@ -21019,6 +21128,7 @@
     "unit-feature.weapon-critical-range-19",
     "unit-feature.weapon-damage-dice-roll-choice",
     "unit-feature.weapon-mastery-cleave",
+    "unit-feature.weapon-mastery-graze",
     "unit-feature.weapon-mastery-push",
     "unit-feature.weapon-mastery-sap",
     "unit-feature.weapon-mastery-slow",

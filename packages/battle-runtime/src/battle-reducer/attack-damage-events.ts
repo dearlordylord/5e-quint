@@ -56,7 +56,7 @@ export function attackDamageInterruptionFrame(input: {
     damageInput: input.damageInput,
     criticalConsequence: input.critical
       ? { kind: "criticalHit" }
-      : { kind: "ordinaryHit" },
+      : { kind: "nonCritical" },
     phase: "attackDamage",
     continuation: input.continuation,
   };

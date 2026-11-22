@@ -76,6 +76,7 @@ const UNIT_PROCEDURE_EXPOSURE = {
   tacticalMasterReplacement: boundContinuation(),
   weaponDamageDiceRollChoice: boundContinuation(),
   weaponMasteryCleave: boundContinuation(),
+  weaponMasteryGraze: boundContinuation(),
   weaponMasteryPush: boundContinuation(),
   weaponMasterySap: internal(),
   weaponMasterySlow: internal(),
@@ -194,6 +195,7 @@ export const UNIT_SUPPORT_EXPOSURE = {
   tacticalMasterReplacement:
     UNIT_PROCEDURE_EXPOSURE["tacticalMasterReplacement"],
   weaponMasteryCleave: UNIT_PROCEDURE_EXPOSURE["weaponMasteryCleave"],
+  weaponMasteryGraze: UNIT_PROCEDURE_EXPOSURE["weaponMasteryGraze"],
   weaponMasteryPush: UNIT_PROCEDURE_EXPOSURE["weaponMasteryPush"],
   weaponMasterySap: UNIT_PROCEDURE_EXPOSURE["weaponMasterySap"],
   weaponMasterySlow: UNIT_PROCEDURE_EXPOSURE["weaponMasterySlow"],

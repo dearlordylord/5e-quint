@@ -12,6 +12,7 @@ import {
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.CONDITION_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -68,7 +69,6 @@ import {
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
-  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
@@ -1128,9 +1128,10 @@ export function applyWeaponMasterySapOnHit(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleState {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) return state;
   const selection = selectedWeaponMasteryProperty({
-    state,
-    attackerId,
+    attacker,
     attack,
     supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   });
@@ -1261,9 +1262,11 @@ export function applyWeaponMasteryPushOnHit(input: {
       readonly shovePushes: readonly BattleShovePushOutcome[];
     }
   | { readonly tag: "invalid"; readonly message: string } {
+  const attacker = input.state.combatants.get(input.attackerId);
+  if (attacker === undefined)
+    return { tag: "ok", state: input.state, shovePushes: [] };
   const selection = selectedWeaponMasteryProperty({
-    state: input.state,
-    attackerId: input.attackerId,
+    attacker,
     attack: input.attack,
     supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   });
@@ -1282,18 +1285,7 @@ export function applyWeaponMasteryPushOnHit(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const pushDisposition = input.targetSpatialFacts.find(
-    (
-      fact,
-    ): fact is Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "weaponMasteryPushDisposition" }
-    > =>
-      fact.kind === "weaponMasteryPushDisposition" &&
-      fact.attackerId === input.attackerId &&
-      fact.targetId === input.targetId &&
-      attackExecutionSelectionMatchesOption(fact, input.attack),
-  )?.disposition;
+  const pushDisposition = weaponMasteryPushDispositionForAttack(input);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (pushDisposition === undefined) {
     return {
@@ -1326,6 +1318,31 @@ export function applyWeaponMasteryPushOnHit(input: {
   };
 }
 
+function weaponMasteryPushDispositionForAttack(
+  input: Pick<
+    Parameters<typeof applyWeaponMasteryPushOnHit>[0],
+    "attackerId" | "targetId" | "attack" | "targetSpatialFacts"
+  >,
+):
+  | Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    >["disposition"]
+  | undefined {
+  return input.targetSpatialFacts.find(
+    (
+      fact,
+    ): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    > =>
+      fact.kind === "weaponMasteryPushDisposition" &&
+      fact.attackerId === input.attackerId &&
+      fact.targetId === input.targetId &&
+      attackExecutionSelectionMatchesOption(fact, input.attack),
+  )?.disposition;
+}
+
 export function applyWeaponMasterySlowAfterDamage(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
@@ -1336,9 +1353,10 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   if (input.damageAmount <= 0) {
     return input.state;
   }
+  const attacker = input.state.combatants.get(input.attackerId);
+  if (attacker === undefined) return input.state;
   const selection = selectedWeaponMasteryProperty({
-    state: input.state,
-    attackerId: input.attackerId,
+    attacker,
     attack: input.attack,
     supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   });
@@ -1445,22 +1463,6 @@ export function applyWeaponMasteryToppleSavingThrow(
       }),
     },
   };
-}
-
-export function weaponMasteryToppleSelection(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): SelectedWeaponMasteryProperty | null {
-  return state.combatants.has(targetId)
-    ? selectedWeaponMasteryProperty({
-        state,
-        attackerId,
-        attack,
-        supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-      })
-    : null;
 }
 
 export function weaponMasteryCleaveDecisionHole(
@@ -1893,9 +1895,10 @@ function weaponMasteryCleaveSelection(
   ) {
     return null;
   }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) return null;
   return selectedWeaponMasteryProperty({
-    state,
-    attackerId,
+    attacker,
     attack,
     supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   });
@@ -1966,9 +1969,8 @@ function creatureSizeIsAtMost(
   return SIZES.indexOf(actual) <= SIZES.indexOf(maximum);
 }
 
-function selectedWeaponMasteryProperty(input: {
-  readonly state: BattleState;
-  readonly attackerId: CombatantId;
+export function selectedWeaponMasteryProperty(input: {
+  readonly attacker: BattleCreatureState;
   readonly attack: SupportedAttackActionOption;
   readonly supportProfile: WeaponMasteryPropertySupportProfile;
 }): SelectedWeaponMasteryProperty | null {
@@ -1984,7 +1986,7 @@ function selectedWeaponMasteryProperty(input: {
   ) {
     return null;
   }
-  const attacker = input.state.combatants.get(input.attackerId);
+  const attacker = input.attacker;
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }

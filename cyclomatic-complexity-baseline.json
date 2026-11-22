@@ -59,7 +59,7 @@
       "module/binding:resolveCastAttackHitBonusActionSpellCommand": 33
     },
     "packages/battle-runtime/src/battle-reducer/attack-main.ts": {
-      "module/binding:attackPostDuplicateHitInterceptionFillsArePresent": 33,
+      "module/binding:attackPostDuplicateHitInterceptionFillsArePresent": 26,
       "module/binding:brutalStrikeSelection": 10,
       "module/binding:resolveAdditionalWeaponAttackDamage": 9,
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,

@@ -70,6 +70,7 @@ export {
 import {
   type BattleSubject,
   type BattleSubjectAction,
+  type BattleInterruptSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
 } from "../battle-subjects.ts";
@@ -395,17 +396,35 @@ function resolveBattleSubjectInternal(
   return resolveBattleSubjectAfterD20TestNaturalOneReroll(input, options);
 }
 
+const INTERRUPT_COMMAND_REQUIRES_CHECKPOINT = {
+  // Discovery also exposes direct release; its owner validates and consumes the held spell.
+  releaseReadiedSpell: false,
+  releaseReadiedMovement: true,
+  releaseReadiedAction: true,
+  releaseReadiedAttack: true,
+  castTriggeredReactionSpell: true,
+  castAttackHitBonusActionSpell: true,
+  opportunityAttack: true,
+  retaliationAttack: true,
+} as const satisfies Record<BattleInterruptSubject["command"], boolean>;
+
 function interruptSubjectRequiresCheckpoint(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): boolean {
+  const subject = input.subject;
+  const commandRequiresCheckpoint =
+    subject.tag === "runtimeCommand" &&
+    Object.entries(INTERRUPT_COMMAND_REQUIRES_CHECKPOINT).some(
+      ([command, required]) => required && command === subject.command,
+    );
   return (
-    input.state.interruptStack.length > 0 &&
+    (input.state.interruptStack.length > 0 || commandRequiresCheckpoint) &&
     options.interruptRouteOptions.replayingInterruptedProcedure !== true &&
     options.readiedActionActorId === undefined &&
     !(
-      input.subject.tag === "runtimeCommand" &&
-      input.subject.command === "reportReadyTrigger"
+      subject.tag === "runtimeCommand" &&
+      subject.command === "reportReadyTrigger"
     )
   );
 }
