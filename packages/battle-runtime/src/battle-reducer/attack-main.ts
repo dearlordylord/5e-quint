@@ -5808,13 +5808,9 @@ type HuntersPreyHordeBreakerPreparation =
       readonly secondTarget: BattleCreatureState;
     };
 
-function prepareHuntersPreyHordeBreakerAttack(input: {
-  readonly state: BattleState;
-  readonly subject: BattleAttackHostSubject;
-  readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: BoundSupportedAttackActionOption;
-  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
-}): HuntersPreyHordeBreakerPreparation {
+function resolveHuntersPreyHordeBreakerDecision(
+  input: Parameters<typeof prepareHuntersPreyHordeBreakerAttack>[0],
+): AdditionalWeaponAttackDecisionResolution<ProcedureExecutionAdditionalWeaponAttackFamily> {
   const decision = resolveAdditionalWeaponAttackDecision({
     kind: "procedureExecution",
     state: input.state,
@@ -5847,6 +5843,18 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     }
     return decision;
   }
+  return decision;
+}
+
+function prepareHuntersPreyHordeBreakerAttack(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}): HuntersPreyHordeBreakerPreparation {
+  const decision = resolveHuntersPreyHordeBreakerDecision(input);
+  if (decision.tag !== "use") return decision;
   const hordeBreakerAttack = decision.attack;
   const { procedureRef } = decision.family;
   const targetFill = input.fillSet.huntersPreyHordeBreakerTarget;
