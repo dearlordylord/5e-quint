@@ -701,7 +701,6 @@
       "module/binding:applyDraftFill": 9
     },
     "packages/character-creation-runtime/src/finalization.ts": {
-      "module/binding:applyClassFeatureAbilityScoreIncreases": 10,
       "module/binding:classFeatureAcquisitionAbilityCheckBonusFeature": 11,
       "module/binding:decodedUnitProficiencySubjects": 16,
       "module/binding:executableSupportIssues": 12,
