@@ -25,7 +25,7 @@ import {
   unitId as authoredUnitId,
   type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
-import { Array, Result, Match, Option } from "effect";
+import { Array as EffectArray, Result, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared/validation";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -2168,7 +2168,7 @@ function classFeatureAbilityScoreIncreaseAcquisitions(input: {
       });
     },
   );
-  return Result.mapError(acquisitions, Array.flatten);
+  return Result.mapError(acquisitions, EffectArray.flatten);
 }
 
 type CharacterBuildProjectionInput = {
