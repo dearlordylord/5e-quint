@@ -99,7 +99,7 @@ import {
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
 import {
-  attackEnemyProximityQualificationIssue,
+  qualifyAttackEnemyProximity,
   attackTargetIsLegal,
 } from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -180,6 +180,9 @@ type ReactionAttackCommandContext = {
   readonly target: BattleCreatureState;
   readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: ResolvedAttackFillSet;
+  readonly enemyProximity:
+    | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
+    | null;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 };
 
@@ -220,7 +223,10 @@ function reactionAttackRollHoleWithRelationshipFacts(input: {
   readonly targetId: BattleCreatureState["combatantId"];
   readonly attack: BoundSupportedAttackActionOption;
   readonly reactor: BattleCreatureState | undefined;
-  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): ReturnType<typeof attackRollHole> {
   return {
     ...attackRollHole(input.reactor, input.attack, input.requiredRollMode),
@@ -242,7 +248,10 @@ function reactionAttackRollHoleWithRelationshipFacts(input: {
 
 function reactionAttackMissingRollResult(
   input: ReactionAttackCommandContext,
-  requiredRollMode: ReturnType<typeof requiredAttackRollMode>,
+  requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >,
 ): BattleResolutionResult {
   if (
     input.fillSet.damageRoll != null ||
@@ -269,7 +278,10 @@ function reactionAttackMissingRollResult(
 function reactionAttackRollIssue(input: {
   readonly context: ReactionAttackCommandContext;
   readonly attackRoll: BattleAttackRollResult;
-  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): string | null {
   if (!attackRollResultIsValid(input.attackRoll)) {
     return `${input.context.commandLabel} attack roll result is outside the d20 attack-roll protocol.`;
@@ -288,7 +300,10 @@ function reactionAttackRerollResult(input: {
   readonly context: ReactionAttackCommandContext;
   readonly attackRoll: BattleAttackRollResult;
   readonly reactor: BattleCreatureState | undefined;
-  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): BattleResolutionResult | null {
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -335,8 +350,18 @@ function prepareReactionAttackRoll(
     input.target,
     input.attack,
     input.targetSpatialFacts,
+    input.enemyProximity,
     input.input.subject.command === "opportunityAttack",
   );
+  if (typeof requiredRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        requiredRollMode.message,
+      ),
+    };
   const attackRoll = input.fillSet.attackRoll;
   if (attackRoll == null) {
     return {
@@ -491,6 +516,7 @@ function resolveReactionAttackCommand(
     attack,
     fillSet,
     targetSpatialFacts: targetSpatialFacts.facts,
+    enemyProximity: targetSpatialFacts.enemyProximity,
   };
   const rollPreparation = prepareReactionAttackRoll(context);
   if (rollPreparation.tag === "result") return rollPreparation.result;
@@ -508,7 +534,13 @@ function reactionAttackTargetSpatialFacts(input: {
   readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: ResolvedAttackFillSet;
 }):
-  | { readonly tag: "ok"; readonly facts: readonly BattleTargetSpatialFact[] }
+  | {
+      readonly tag: "ok";
+      readonly facts: readonly BattleTargetSpatialFact[];
+      readonly enemyProximity:
+        | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
+        | null;
+    }
   | { readonly tag: "invalid"; readonly message: string } {
   const suppliedDistanceFeet = attackTargetDistanceFeet(
     input.fillSet.targetSpatialFacts,
@@ -544,25 +576,22 @@ function reactionAttackTargetSpatialFacts(input: {
         "Fixed-target reaction attacks require an exact attack target distance fact.",
     };
   }
-  return (
-    reactionAttackTargetIssue(input, facts) ?? {
-      tag: "ok",
-      facts,
-    }
+  const targetIssue = reactionAttackTargetIssue(input, facts);
+  if (targetIssue !== null) return targetIssue;
+  const enemyProximity = qualifyAttackEnemyProximity(
+    input.state,
+    input.subject.reactorId,
+    input.attack,
+    facts,
   );
+  if (enemyProximity?.tag === "invalid") return enemyProximity;
+  return { tag: "ok", facts, enemyProximity };
 }
 
 function reactionAttackTargetIssue(
   input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
   facts: readonly BattleTargetSpatialFact[],
 ): { readonly tag: "invalid"; readonly message: string } | null {
-  const proximityIssue = attackEnemyProximityQualificationIssue(
-    input.state,
-    input.subject.reactorId,
-    input.attack,
-    facts,
-  );
-  if (proximityIssue !== null) return proximityIssue;
   return attackTargetIsLegal(
     input.state,
     input.subject.reactorId,

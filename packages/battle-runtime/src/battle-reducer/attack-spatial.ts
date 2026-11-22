@@ -13,9 +13,10 @@ import {
 } from "../battle-action-options.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import {
-  rangedAttackCloseCombatDisadvantage,
-  rangedAttackEnemyProximityQualificationIssue,
+  qualifyRangedAttackEnemyProximity,
   type RangedAttackEnemyProximityScope,
+  type SpatialQualificationIssue,
+  type RangedAttackEnemyProximityEvidence,
 } from "./ranged-attack-close-combat.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 
@@ -75,31 +76,16 @@ function rangedAttackProximityScope(
     : null;
 }
 
-/** A ranged attack's missing or malformed enemy proximity fact. */
-export function attackEnemyProximityQualificationIssue(
+/** Admit proximity evidence for a ranged attack; melee attacks need none. */
+export function qualifyAttackEnemyProximity(
   state: BattleState,
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
   facts: readonly BattleTargetSpatialFact[],
-): { readonly tag: "invalid"; readonly message: string } | null {
+): RangedAttackEnemyProximityEvidence | SpatialQualificationIssue | null {
   const scope = rangedAttackProximityScope(actorId, attack);
-  return scope === null
-    ? null
-    : rangedAttackEnemyProximityQualificationIssue({ state, scope, facts });
-}
-
-/** Ranged Attacks in Close Combat Disadvantage for a weapon or stat block attack. */
-export function attackCloseCombatDisadvantage(
-  state: BattleState,
-  actorId: CombatantId,
-  attack: SupportedAttackActionOption | undefined,
-  facts: readonly BattleTargetSpatialFact[],
-): boolean {
-  const scope =
-    attack === undefined ? null : rangedAttackProximityScope(actorId, attack);
-  return (
-    scope !== null && rangedAttackCloseCombatDisadvantage(state, scope, facts)
-  );
+  if (scope === null) return null;
+  return qualifyRangedAttackEnemyProximity({ state, scope, facts });
 }
 
 export function attackTargetRangeBand(

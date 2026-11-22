@@ -1,4 +1,7 @@
-import { rangedAttackEnemyProximityQualificationIssue } from "./ranged-attack-close-combat.ts";
+import {
+  qualifyRangedAttackEnemyProximity,
+  type RangedAttackEnemyProximityEvidence,
+} from "./ranged-attack-close-combat.ts";
 // Chained spell attack-damage resolution, currently Chromatic Orb.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -138,6 +141,7 @@ type ChainedSpellTargetChoiceFill = Omit<
   BattleAttackTargetChoiceFill,
   "spatialFacts"
 > & {
+  readonly enemyProximity: RangedAttackEnemyProximityEvidence;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
 };
 
@@ -431,18 +435,23 @@ export function resolveChainedSpellAttackDamageAct(input: {
         );
       }
       /* v8 ignore stop -- @preserve */
+      const replacementTargetFill =
+        targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+          fill: originalTargetFill,
+          replacement: interdictionCheck,
+        });
+      if ("tag" in replacementTargetFill)
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          replacementTargetFill.message,
+        );
+
       const fills = input.input.fills
         .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map(
           (fill): BattleFill =>
-            fill === originalTargetFill
-              ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                  {
-                    fill,
-                    replacement: interdictionCheck,
-                  },
-                )
-              : fill,
+            fill === originalTargetFill ? replacementTargetFill : fill,
         );
       const replacementFillSet = chainedSpellFillSet(
         fills,
@@ -494,7 +503,14 @@ export function resolveChainedSpellAttackDamageAct(input: {
       target,
       input.invocation,
       step.target.spatialFacts,
+      step.target.enemyProximity,
     );
+    if (typeof requiredRollMode === "object")
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        requiredRollMode.message,
+      );
     if (step.attackRoll === undefined) {
       return needsHolesResult(replayState, input.input.subject, [
         chainedSpellAttackRollHole(
@@ -1264,7 +1280,7 @@ export function chainedSpellFillSet(
         }
         /* v8 ignore stop -- @preserve */
         const spatialFacts = fill.spatialFacts ?? [];
-        const spatialValidation = chainedSpellAttackSpatialFactValidation({
+        const spatialValidation = qualifyChainedSpellAttackSpatialFacts({
           state,
           scope: {
             attackerId: actorId,
@@ -1272,10 +1288,14 @@ export function chainedSpellFillSet(
           },
           facts: spatialFacts,
         });
-        if (spatialValidation !== null) return spatialValidation;
+        if (spatialValidation.tag === "invalid") return spatialValidation;
         steps[stepIndex] = {
           ...step,
-          target: { ...parsed.fill, spatialFacts },
+          target: {
+            ...parsed.fill,
+            spatialFacts,
+            enemyProximity: spatialValidation,
+          },
         };
         continue;
       }
@@ -1396,13 +1416,15 @@ export function chainedSpellFillSet(
   };
 }
 
-function chainedSpellAttackSpatialFactValidation(
-  input: Parameters<typeof rangedAttackEnemyProximityQualificationIssue>[0],
-): Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> | null {
-  const proximityIssue = rangedAttackEnemyProximityQualificationIssue(input);
-  if (proximityIssue !== null) return proximityIssue;
+function qualifyChainedSpellAttackSpatialFacts(
+  input: Parameters<typeof qualifyRangedAttackEnemyProximity>[0],
+):
+  | RangedAttackEnemyProximityEvidence
+  | Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> {
+  const proximityIssue = qualifyRangedAttackEnemyProximity(input);
+  if (proximityIssue.tag === "invalid") return proximityIssue;
   const message = validateUniqueAttackSightFacts(input.facts);
-  return message === null ? null : { tag: "invalid", message };
+  return message === null ? proximityIssue : { tag: "invalid", message };
 }
 
 export function chainedSpellStepIndexForFill(

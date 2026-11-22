@@ -9,6 +9,7 @@ import type {
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type { MovementFeet } from "@dnd/shared/types";
 import { RANGED_ATTACK_ENEMY_PROXIMITY_FEET } from "./domain-constants.ts";
 
 type RangedAttackEnemyProximityFact = Extract<
@@ -36,11 +37,21 @@ function rangedAttackEnemyProximityFacts(
  * procedure, naming each enemy once. `enemies: []` means the table checked and
  * found none; a missing fact is refused rather than read as "no enemy near".
  */
-export function rangedAttackEnemyProximityQualificationIssue(input: {
+export type SpatialQualificationIssue = {
+  readonly tag: "invalid";
+  readonly message: string;
+};
+
+export type RangedAttackEnemyProximityEvidence = {
+  readonly tag: "qualified";
+  readonly qualification: RangedAttackEnemyProximityFact;
+};
+
+export function qualifyRangedAttackEnemyProximity(input: {
   readonly state: BattleState;
   readonly scope: RangedAttackEnemyProximityScope;
   readonly facts: readonly BattleTargetSpatialFact[];
-}): { readonly tag: "invalid"; readonly message: string } | null {
+}): RangedAttackEnemyProximityEvidence | SpatialQualificationIssue {
   const qualifications = rangedAttackEnemyProximityFacts(input.facts);
   const qualification = qualifications[0];
   if (
@@ -55,53 +66,135 @@ export function rangedAttackEnemyProximityQualificationIssue(input: {
         enemy.enemyId === input.scope.attackerId ||
         !input.state.combatants.has(enemy.enemyId),
     )
-  ) {
+  )
     return {
       tag: "invalid",
       message:
         "Ranged attack target requires one scoped enemy proximity qualification; supply enemies: [] only after checking no enemies qualify.",
     };
+  const distanceIssue = attackSpatialDistanceIssue(input.scope, input.facts);
+  if (distanceIssue !== null) return distanceIssue;
+  return {
+    tag: "qualified",
+    qualification,
+  };
+}
+
+function attackSpatialDistanceIssue(
+  scope: RangedAttackEnemyProximityScope,
+  facts: readonly BattleTargetSpatialFact[],
+): SpatialQualificationIssue | null {
+  const distances = new Map<CombatantId, MovementFeet>();
+  for (const fact of facts) {
+    const distance =
+      fact.kind === "attackTargetDistance" &&
+      fact.actorId === scope.attackerId &&
+      fact.procedureRef === scope.procedureRef
+        ? { targetId: fact.targetId, feet: fact.distanceFeet }
+        : fact.kind === "spellTarget" &&
+            fact.casterId === scope.attackerId &&
+            fact.sourceProcedureRef === scope.procedureRef &&
+            fact.distanceFeet !== undefined
+          ? { targetId: fact.targetId, feet: fact.distanceFeet }
+          : null;
+    if (distance === null) continue;
+    const previous = distances.get(distance.targetId);
+    if (previous !== undefined && previous !== distance.feet)
+      return {
+        tag: "invalid",
+        message:
+          "Attack spatial facts give contradictory distances for the same attacker and target.",
+      };
+    distances.set(distance.targetId, distance.feet);
+  }
+  for (const fact of rangedAttackEnemyProximityFacts(facts)) {
+    if (
+      fact.attackerId !== scope.attackerId ||
+      fact.procedureRef !== scope.procedureRef
+    )
+      continue;
+    for (const enemy of fact.enemies) {
+      const distance = distances.get(enemy.enemyId);
+      if (distance !== undefined && distance !== enemy.distanceFeet)
+        return {
+          tag: "invalid",
+          message:
+            "Attack target and enemy proximity facts give contradictory distances for the same attacker and enemy.",
+        };
+      distances.set(enemy.enemyId, enemy.distanceFeet);
+    }
   }
   return null;
 }
 
-/**
- * SRD 5.2.1 "Ranged Attacks in Close Combat": Disadvantage when an enemy within
- * 5 feet can see the attacker and doesn't have the Incapacitated condition.
- */
+/** Only admitted evidence can contribute this source to roll-mode calculation. */
 export function rangedAttackCloseCombatDisadvantage(
   state: BattleState,
-  scope: RangedAttackEnemyProximityScope,
-  facts: readonly BattleTargetSpatialFact[],
-): boolean {
-  return rangedAttackEnemyProximityFacts(facts).some(
-    (fact) =>
-      fact.attackerId === scope.attackerId &&
-      fact.procedureRef === scope.procedureRef &&
-      fact.enemies.some((entry) => {
-        const enemy = state.combatants.get(entry.enemyId);
-        return (
-          entry.enemyId !== scope.attackerId &&
-          entry.distanceFeet <= RANGED_ATTACK_ENEMY_PROXIMITY_FEET &&
-          entry.enemyCanSeeAttacker &&
-          enemy !== undefined &&
-          !isIncapacitated(enemy.conditions)
-        );
-      }),
+  evidence: RangedAttackEnemyProximityEvidence,
+): boolean | SpatialQualificationIssue {
+  const enemies = evidence.qualification.enemies.map((entry) => ({
+    ...entry,
+    enemy: state.combatants.get(entry.enemyId),
+  }));
+  if (enemies.some((entry) => entry.enemy === undefined))
+    return {
+      tag: "invalid",
+      message: "Admitted ranged attack enemy is no longer in the battle.",
+    };
+  return enemies.some(
+    (entry) =>
+      entry.distanceFeet <= RANGED_ATTACK_ENEMY_PROXIMITY_FEET &&
+      entry.enemyCanSeeAttacker &&
+      entry.enemy !== undefined &&
+      !isIncapacitated(entry.enemy.conditions),
   );
 }
 
-/**
- * The target facts for a later roll of the same ranged attack, such as Horde
- * Breaker's second target or an attack-redirection ward's replacement target.
- * The attacker hasn't moved, so its enemy proximity carries over from the
- * attack's own target facts unless the later fill states it.
- */
-export function withAttackEnemyProximityFrom(
+/** Retain the same pre-roll attack's observation when its target is redirected. */
+export function withSameAttackEnemyProximityFrom(
   attackFacts: readonly BattleTargetSpatialFact[],
   facts: readonly BattleTargetSpatialFact[],
-): readonly BattleTargetSpatialFact[] {
-  return rangedAttackEnemyProximityFacts(facts).length > 0
-    ? facts
-    : [...facts, ...rangedAttackEnemyProximityFacts(attackFacts)];
+):
+  | {
+      readonly tag: "facts";
+      readonly facts: readonly BattleTargetSpatialFact[];
+    }
+  | SpatialQualificationIssue {
+  const inherited = rangedAttackEnemyProximityFacts(attackFacts);
+  const supplied = rangedAttackEnemyProximityFacts(facts);
+  for (const previous of inherited) {
+    for (const next of supplied) {
+      if (
+        previous.attackerId !== next.attackerId ||
+        previous.procedureRef !== next.procedureRef
+      )
+        continue;
+      if (
+        previous.enemies.length !== next.enemies.length ||
+        previous.enemies.some(
+          (enemy) =>
+            !next.enemies.some(
+              (entry) =>
+                entry.enemyId === enemy.enemyId &&
+                entry.distanceFeet === enemy.distanceFeet &&
+                entry.enemyCanSeeAttacker === enemy.enemyCanSeeAttacker,
+            ),
+        )
+      )
+        return {
+          tag: "invalid",
+          message:
+            "Replacement proximity must preserve inherited enemy membership, distance and sight facts.",
+        };
+    }
+  }
+  const combined = [...attackFacts, ...facts];
+  for (const proximity of [...inherited, ...supplied]) {
+    const issue = attackSpatialDistanceIssue(proximity, combined);
+    if (issue !== null) return issue;
+  }
+  return {
+    tag: "facts",
+    facts: [...facts, ...(supplied.length > 0 ? [] : inherited)],
+  };
 }

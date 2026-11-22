@@ -1,3 +1,4 @@
+import { isBattleAttackProcedureExecutionRef } from "../identity.ts";
 import * as Result from "effect/Result";
 // Main Attack action resolution extracted from attack-resolution.ts.
 
@@ -153,8 +154,7 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
-import { attackEnemyProximityQualificationIssue } from "./attack-spatial.ts";
-import { withAttackEnemyProximityFrom } from "./ranged-attack-close-combat.ts";
+import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 
 import { attackFillSet, selectedAttackFillSet } from "./attack-fill-set.ts";
@@ -1690,20 +1690,13 @@ function ordinaryObjectAttackDamage<
 }
 // The table's target facts must qualify the ranged attack's enemy proximity
 // and place the target inside the attack's target constraint.
-function selectedAttackTargetFactsIssue(
+function qualifySelectedAttackTarget(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
   attack: Parameters<typeof attackTargetIsLegal>[3],
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): string | null {
-  const proximityIssue = attackEnemyProximityQualificationIssue(
-    state,
-    attackerId,
-    attack,
-    targetSpatialFacts,
-  );
-  if (proximityIssue !== null) return proximityIssue.message;
+): ReturnType<typeof qualifyAttackEnemyProximity> {
   return attackTargetIsLegal(
     state,
     attackerId,
@@ -1711,9 +1704,13 @@ function selectedAttackTargetFactsIssue(
     attack,
     targetSpatialFacts,
   )
-    ? null
+    ? qualifyAttackEnemyProximity(state, attackerId, attack, targetSpatialFacts)
     : /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      "Attack target is outside the selected attack's supported target constraint.";
+      {
+        tag: "invalid",
+        message:
+          "Attack target is outside the selected attack's supported target constraint.",
+      };
 }
 
 export function resolveSelectedAttackProcedure<
@@ -1792,15 +1789,19 @@ export function resolveSelectedAttackProcedure<
     );
   }
   /* v8 ignore stop -- @preserve */
-  const targetFactsIssue = selectedAttackTargetFactsIssue(
+  const targetEnemyProximity = qualifySelectedAttackTarget(
     input.state,
     attackerId,
     target.combatantId,
     attack,
     fillSet.targetSpatialFacts,
   );
-  if (targetFactsIssue !== null) {
-    return invalidResult(input.state, "invalidFill", targetFactsIssue);
+  if (targetEnemyProximity?.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      targetEnemyProximity.message,
+    );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -1879,6 +1880,18 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop -- @preserve */
+    const replacementTargetFill =
+      targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+        fill: originalTargetFill,
+        replacement: interdictionCheck,
+      });
+    if ("tag" in replacementTargetFill)
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        replacementTargetFill.message,
+      );
+
     return resolveSelectedAttackProcedure(
       {
         ...input,
@@ -1886,14 +1899,7 @@ export function resolveSelectedAttackProcedure<
           ...input.fills
             .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
             .map((fill) =>
-              fill === originalTargetFill
-                ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                    {
-                      fill,
-                      replacement: interdictionCheck,
-                    },
-                  )
-                : fill,
+              fill === originalTargetFill ? replacementTargetFill : fill,
             ),
         ],
       },
@@ -2047,6 +2053,20 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
 
+  const initialRequiredRollMode = requiredAttackRollMode(
+    input.state,
+    attackerId,
+    target,
+    attack,
+    fillSet.targetSpatialFacts,
+    targetEnemyProximity,
+  );
+  if (typeof initialRequiredRollMode === "object")
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      initialRequiredRollMode.message,
+    );
   if (fillSet.attackRoll == null) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -2066,15 +2086,7 @@ export function resolveSelectedAttackProcedure<
       attackRollHole(
         input.state.combatants.get(attackerId),
         attack,
-        !brutalStrikeSelected
-          ? requiredAttackRollMode(
-              input.state,
-              attackerId,
-              target,
-              attack,
-              fillSet.targetSpatialFacts,
-            )
-          : undefined,
+        !brutalStrikeSelected ? initialRequiredRollMode : undefined,
         attackRollOngoingFeatureActivations(input.state, attackerId, attack),
       ),
     ]);
@@ -2123,20 +2135,11 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
-    input.state,
-    attackerId,
-    target,
-    attack,
-    fillSet.targetSpatialFacts,
+    initialRequiredRollMode,
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
   );
-  const baselineRequiredRollMode = requiredAttackRollMode(
-    input.state,
-    attackerId,
-    target,
-    attack,
-    fillSet.targetSpatialFacts,
-  );
+
+  const baselineRequiredRollMode = initialRequiredRollMode;
   const resolvedRequiredRollMode = brutalStrikeSelected
     ? undefined
     : requiredRollMode;
@@ -3941,7 +3944,7 @@ type AdditionalWeaponAttackDecisionResolution<
   | {
       readonly tag: "use";
       readonly attack: Extract<
-        SupportedAttackActionOption,
+        BoundSupportedAttackActionOption,
         { readonly kind: "weapon" }
       >;
       readonly family: Family;
@@ -4169,7 +4172,11 @@ function resolveAdditionalWeaponAttackDecisionForFamily(
     return { tag: "ok", state: input.state };
   }
   /* v8 ignore start -- @preserve -- Internal eligibility invariant: only a weapon attack can emit either additional-weapon-attack decision. */
-  if (input.attack.kind !== "weapon") {
+  if (
+    input.attack.kind !== "weapon" ||
+    !("procedureRef" in input.attack) ||
+    !isBattleAttackProcedureExecutionRef(input.attack.procedureRef)
+  ) {
     return {
       tag: "result",
       result: invalidResult(
@@ -4192,7 +4199,11 @@ function resolveAdditionalWeaponAttackDecisionForFamily(
     })),
     Match.exhaustive,
   );
-  return { tag: "use", attack: input.attack, family };
+  return {
+    tag: "use",
+    attack: { ...input.attack, procedureRef: input.attack.procedureRef },
+    family,
+  };
 }
 
 function additionalWeaponAttackActiveFills<
@@ -4228,6 +4239,9 @@ function resolveAdditionalWeaponAttackRoll(input: {
   >;
   readonly family: AdditionalWeaponAttackFamily;
   readonly target: BattleCreatureState;
+  readonly requiredRollMode:
+    | import("@dnd/shared-algebras/runtime-hole-algebra").AttackRollMode
+    | undefined;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly attackRollHole: BattleAttackRollHole;
 }): AdditionalWeaponAttackRollResolution {
@@ -4240,13 +4254,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
       ]),
     };
   }
-  const requiredRollMode = requiredAttackRollMode(
-    input.state,
-    input.subject.actorId,
-    input.target,
-    input.attack,
-    input.targetSpatialFacts,
-  );
+  const { requiredRollMode } = input;
   const { name } = additionalWeaponAttackMessages(input.family.kind);
   /* v8 ignore start -- @preserve -- Malformed fill: an additional-weapon-attack roll must satisfy the admitted d20 result schema. */
   if (!attackRollResultIsValid(attackRoll.value)) {
@@ -4942,19 +4950,47 @@ function prepareWeaponMasteryCleaveAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const cleaveProximity = qualifyAttackEnemyProximity(
+    input.state,
+    input.subject.actorId,
+    cleaveAttack,
+    cleaveTargetFacts,
+  );
+  if (cleaveProximity?.tag === "invalid")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        cleaveProximity.message,
+      ),
+    };
+  const cleaveRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    secondTarget,
+    cleaveAttack,
+    cleaveTargetFacts,
+    cleaveProximity,
+  );
+  if (typeof cleaveRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", cleaveRollMode.message),
+    };
   const cleaveAttackRoll = resolveAdditionalWeaponAttackRoll({
     state: input.state,
     subject: input.subject,
     attack: cleaveAttack,
     family: decision.family,
     target: secondTarget,
+    requiredRollMode: cleaveRollMode,
     targetSpatialFacts: cleaveTargetFacts,
     attackRollHole: weaponMasteryCleaveAttackRollHole(
       input.state,
       input.subject.actorId,
-      secondTarget,
       cleaveAttack,
-      cleaveTargetFacts,
+      cleaveRollMode,
     ),
   });
   if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
@@ -5570,15 +5606,13 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
           input.subject.actorId,
           input.firstTargetId,
           procedureRef,
+          hordeBreakerAttack,
         ),
       ]),
     };
   }
   const secondTargetId = targetFill.value;
-  const targetFacts = withAttackEnemyProximityFrom(
-    input.fillSet.targetSpatialFacts,
-    additionalWeaponAttackTargetSpatialFacts(targetFill),
-  );
+  const targetFacts = additionalWeaponAttackTargetSpatialFacts(targetFill);
   const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
   if (
@@ -5603,19 +5637,51 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const hordeBreakerProximity = qualifyAttackEnemyProximity(
+    input.state,
+    input.subject.actorId,
+    hordeBreakerAttack,
+    targetFacts,
+  );
+  if (hordeBreakerProximity?.tag === "invalid")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        hordeBreakerProximity.message,
+      ),
+    };
+  const hordeBreakerRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    secondTarget,
+    hordeBreakerAttack,
+    targetFacts,
+    hordeBreakerProximity,
+  );
+  if (typeof hordeBreakerRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        hordeBreakerRollMode.message,
+      ),
+    };
   const hordeBreakerAttackRoll = resolveAdditionalWeaponAttackRoll({
     state: input.state,
     subject: input.subject,
     attack: hordeBreakerAttack,
     family: decision.family,
     target: secondTarget,
+    requiredRollMode: hordeBreakerRollMode,
     targetSpatialFacts: targetFacts,
     attackRollHole: huntersPreyHordeBreakerAttackRollHole(
       input.state,
       input.subject.actorId,
-      secondTarget,
       hordeBreakerAttack,
-      targetFacts,
+      hordeBreakerRollMode,
     ),
   });
   if (hordeBreakerAttackRoll.tag === "result") {

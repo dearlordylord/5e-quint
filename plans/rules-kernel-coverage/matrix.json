@@ -5386,13 +5386,29 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-ranged-close-combat.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-spatial-consistency.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-prey.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/mcp/src/battle-spatial-consistency.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
       ],
-      "reason": "The QNT owner models each listed enemy as a Disadvantage source when it is within 5 feet, can see the attacker and isn't Incapacitated, joined with the other mechanical sources, including a Prone target's, before cancellation. ranged-attack-close-combat owns the one rangedAttackEnemyProximity fact, scoped by attacker and procedure ref, which every ranged attack requires (enemies: [] means checked-none) and the Disadvantage it gives; attack-spatial applies it to weapon and Stat Block attacks on creatures, and attack-roll to them and to ranged Spell Attacks. The executable parity witness covers a qualifying target and a non-target enemy, a Prone target cancelling it, an enemy too far, unseeing or Incapacitated, the missing, duplicated or misscoped fact, and a melee attack needing none.",
+      "reason": "The QNT owner models each listed enemy as a Disadvantage source when it is within 5 feet, can see the attacker and isn't Incapacitated, joined with the other mechanical sources, including a Prone target's, before cancellation. ranged-attack-close-combat owns the one rangedAttackEnemyProximity fact, scoped by attacker and procedure ref, which every ranged attack requires (enemies: [] means checked-none) and the Disadvantage it gives; attack-spatial applies it to weapon and Stat Block attacks on creatures, and attack-roll to them and to ranged Spell Attacks. The executable parity witness covers a qualifying target and a non-target enemy, a Prone target cancelling it, an enemy too far, unseeing or Incapacitated, the missing, duplicated or misscoped fact, and a melee attack needing none. The runtime qualification rejects conflicting same-pair exact distances across target and enemy proximity facts, including inherited same-attack replacement facts, and returns admitted evidence consumed by roll calculation; missing or invalid qualification remains a typed rejection. The added witnesses exercise MCP admission, ordinary/readied Spell Attacks, Sanctuary replacement targets, and Horde Breaker follow-ups. Horde Breaker is a distinct additional attack: its target hole requests fresh scoped proximity in the same fill, preserving historical primary-roll facts without inheriting their observation across reaction movement. The identity-free QNT core establishes source composition only; cross-record consistency is a runtime boundary contract covered by these executable witnesses.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/ranged-attack-close-combat.ts",

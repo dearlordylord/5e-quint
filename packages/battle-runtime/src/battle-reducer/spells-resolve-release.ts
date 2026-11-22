@@ -1155,7 +1155,10 @@ function targetedSpellAttackRollIssue(input: {
   readonly attackRoll: NonNullable<
     Extract<SpellFillSet, { readonly tag: "ok" }>["attackRoll"]
   >;
-  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): string | null {
   if (!attackRollResultIsValid(input.attackRoll)) {
     return "Spell attack roll result is outside the d20 attack-roll protocol.";
@@ -1178,7 +1181,17 @@ function prepareTargetedSpellAttackRoll(
     input.target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
+    input.fillSet.targetEnemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        requiredRollMode.message,
+      ),
+    };
   const attackRoll = input.fillSet.attackRoll;
   if (attackRoll === undefined) {
     return {
