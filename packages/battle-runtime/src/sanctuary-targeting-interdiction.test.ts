@@ -418,6 +418,37 @@ describe("Sanctuary targeting interdiction", () => {
     ).toBe("disadvantage");
   });
 
+  test("a thrown Dagger whose attack Sanctuary prevents before its roll stays in hand", () => {
+    const { warded, attack, targetFill } = wardedThrownDaggerAttack();
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const lost = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [
+        targetFill,
+        sanctuaryOutcomeFill(
+          requireHole(
+            battleResolutionHolesForTest(needsSanctuary),
+            "targetingSaveInterdictionOutcome",
+          ),
+          { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
+        ),
+      ],
+    });
+    if (lost.tag !== "resolved") {
+      throw new Error(`Expected the lost throw to resolve, got ${lost.tag}.`);
+    }
+    expect(lost.droppedObjects).toBeUndefined();
+    expect(lost.state.groundObjects.has(attackerId)).toBe(false);
+  });
+
   test("a thrown Dagger moved to a new target keeps its landing position", () => {
     const { warded, attack, targetFill, landing } = wardedThrownDaggerAttack();
     const needsSanctuary = resolveBattleSubject({

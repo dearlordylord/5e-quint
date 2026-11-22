@@ -39,6 +39,8 @@ import {
   combatantId,
   findHole,
   interruptDecisionFill,
+  attackExecutionSelectionForSubjectForTest,
+  movementFill,
   cuttingWordsDamageOnlyUnit,
   cuttingWordsResource,
   rolledDiceGroup,
@@ -1055,6 +1057,65 @@ describe("battle runtime: thrown weapon attacks", () => {
       completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
+  });
+
+  test("a thrown Dagger isn't offered against objects, though the melee Dagger is", () => {
+    const state = battleWithDaggers({ mainHand: "dagger" });
+    const targetHole = (weaponDelivery: "thrown" | undefined) =>
+      requireHole(
+        resolveBattleSubject({
+          state,
+          subject: attackSubjectFor(state, weaponDelivery),
+          fills: [],
+        }),
+        "targetChoice",
+      );
+
+    expect(targetHole(undefined).attack?.acceptsObjectTarget).toBe(true);
+    expect(targetHole("thrown").attack?.acceptsObjectTarget).toBeUndefined();
+  });
+
+  test("a thrown Dagger can't make an Opportunity Attack, but the melee Dagger can", () => {
+    const state = battleWithDaggers({
+      mainHand: "dagger",
+      goblinActsFirst: true,
+    });
+    const move = {
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "move",
+    } as const satisfies BattleSubject;
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: move, fills: [] }),
+      "movement",
+    );
+    const provokedBy = (weaponDelivery: "thrown" | undefined) =>
+      resolveBattleSubject({
+        state,
+        subject: move,
+        fills: [
+          movementFill(moveHole, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [
+              {
+                reactorId: fighterId,
+                distanceFeet: movementFeet(5),
+                ...attackExecutionSelectionForSubjectForTest(
+                  attackSubjectFor(state, weaponDelivery),
+                ),
+              },
+            ],
+          }),
+        ],
+      });
+
+    expect(provokedBy("thrown")).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Movement Opportunity Attack threat must name a melee attack option.",
+    });
+    expect(provokedBy(undefined).tag).toBe("needsHoles");
   });
 
   test("a readied thrown Dagger whose damage roll opens a Reaction window lands by the attack's end", () => {
