@@ -526,10 +526,7 @@ function resolveDropProneCommand(
   }
   /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
-  if (
-    actor === undefined ||
-    !dropProneAvailable(input.state, input.subject.actorId)
-  ) {
+  if (actor === undefined || !dropProneAvailable(input.state, actor)) {
     return invalidResult(
       input.state,
       "staleSubject",

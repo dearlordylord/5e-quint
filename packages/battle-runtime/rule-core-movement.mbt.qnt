@@ -284,7 +284,7 @@ module ruleCoreMovementMbt {
     not(qProne),
     qFighterMovementState.turn.currentActorOwnsTurn,
     effectiveSpeedFeet(qFighterMovementState) > 0,
-    recordFighterMovementState(dropProne(qFighterMovementState)),
+    recordFighterMovementState(dropProne(qFighterMovementState, { alive: true, proneImmune: false, commandHalt: false })),
   }
 
   action doDiscoverGrapple = all {

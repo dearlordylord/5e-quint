@@ -214,7 +214,11 @@ export function conditionApplicationPreventedByConditionImmunity(
   target: BattleCreatureState,
   condition: Condition,
 ): boolean {
-  return combatantActiveConditionImmunities(target).includes(condition);
+  return (
+    combatantActiveConditionImmunities(target).includes(condition) ||
+    (target.origin.kind === "statBlock" &&
+      target.origin.mechanics.immunities.conditions.includes(condition))
+  );
 }
 
 export function resolveBattlePossessionAttempt({
