@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 175,
-    "covered": 164,
+    "total": 176,
+    "covered": 165,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 135,
+      "battle": 136,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 164,
+      "covered": 165,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
