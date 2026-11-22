@@ -34,6 +34,7 @@ import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Match, Result } from "effect";
 import type {
   BattleMovementSpeedKind,
+  BattleRuntimeCommand,
   BattleSubject,
   CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
@@ -2144,20 +2145,25 @@ export function actorHasClassFeatureExtraAttackActionResource(
   );
 }
 
+const STAT_BLOCK_MULTIATTACK_CONTINUATION_COMMANDS = [
+  "endTurn",
+  "move",
+  "standFromProne",
+  "dropProne",
+] as const satisfies readonly BattleRuntimeCommand[];
+
 export function subjectAllowedDuringStatBlockMultiattackDispatch(
   state: BattleState,
   subject: BattleSubject,
 ): boolean {
   const actorId = currentActorId(state);
-  if (
-    subject.tag === "runtimeCommand" &&
-    subject.actorId === actorId &&
-    (subject.command === "endTurn" ||
-      subject.command === "move" ||
-      subject.command === "standFromProne" ||
-      subject.command === "dropProne")
-  ) {
-    return true;
+  if (subject.tag === "runtimeCommand") {
+    return (
+      subject.actorId === actorId &&
+      STAT_BLOCK_MULTIATTACK_CONTINUATION_COMMANDS.some(
+        (command) => command === subject.command,
+      )
+    );
   }
   if (
     subject.tag !== "action" ||
@@ -2167,16 +2173,14 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
     return false;
   }
   const actor = state.combatants.get(actorId);
-  const statBlockExecution =
-    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
-  if (statBlockExecution === null) return false;
+  if (!isStatBlockBattleCreatureState(actor)) return false;
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
       subject.procedureRef !== undefined &&
       statBlockMultiattackActionResourceMatchesProcedure(
         resource,
         actorId,
-        statBlockExecution,
+        actor.origin.execution,
         subject.procedureRef,
       ),
   );
