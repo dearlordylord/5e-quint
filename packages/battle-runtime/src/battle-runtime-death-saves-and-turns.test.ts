@@ -1364,7 +1364,7 @@ describe("battle runtime: death saves and turns", () => {
 
     expect(
       discoverBattleActCandidates(state).map((act) => subjectName(act.subject)),
-    ).toEqual(["move", "endTurn"]);
+    ).toEqual(["move", "dropProne", "endTurn"]);
   });
 
   test("endTurn advances to the next Initiative actor and refreshes turn resources", () => {

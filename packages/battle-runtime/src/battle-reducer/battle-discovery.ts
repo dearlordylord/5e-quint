@@ -35,6 +35,7 @@ import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Match, Result } from "effect";
 import type {
   BattleMovementSpeedKind,
+  BattleRuntimeCommand,
   BattleSubject,
   CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
@@ -148,6 +149,7 @@ import {
   compelledNextTurnBehaviorEffectsForActor,
   type CompelledNextTurnBehaviorEffect,
 } from "./compelled-behavior-discovery.ts";
+import { dropProneAvailable } from "./drop-prone-policy.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
@@ -433,7 +435,8 @@ function discoverBattleActsWithoutRouteEvents(
     hasOpenStatBlockMultiattackDispatch
       ? [...tableEventActs]
       : [...releaseGrappleActs(state), ...tableEventActs];
-  if (!state.combatants.has(actorId)) {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
     return acts;
   }
   const startTurnAreaControlActs =
@@ -462,6 +465,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...companionAttackActs(state, actorId));
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));
+    acts.push(...proneTransitionActs(state, actor));
     acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
     acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
     acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -687,12 +691,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...persistentAreaSaveConditionEscapeDepartureActs(state, actorId));
   acts.push(...movablePersistentAreaExitActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
-  if (standFromProneCostFeet(state, actorId) !== null) {
-    acts.push({
-      subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
-      initialHoles: [],
-    });
-  }
+  acts.push(...proneTransitionActs(state, actor));
   acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
   acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
   acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -2149,17 +2148,25 @@ export function actorHasClassFeatureExtraAttackActionResource(
   );
 }
 
+const STAT_BLOCK_MULTIATTACK_CONTINUATION_COMMANDS = [
+  "endTurn",
+  "move",
+  "standFromProne",
+  "dropProne",
+] as const satisfies readonly BattleRuntimeCommand[];
+
 export function subjectAllowedDuringStatBlockMultiattackDispatch(
   state: BattleState,
   subject: BattleSubject,
 ): boolean {
   const actorId = currentActorId(state);
-  if (
-    subject.tag === "runtimeCommand" &&
-    subject.actorId === actorId &&
-    (subject.command === "endTurn" || subject.command === "move")
-  ) {
-    return true;
+  if (subject.tag === "runtimeCommand") {
+    return (
+      subject.actorId === actorId &&
+      STAT_BLOCK_MULTIATTACK_CONTINUATION_COMMANDS.some(
+        (command) => command === subject.command,
+      )
+    );
   }
   if (
     subject.tag !== "action" ||
@@ -2169,16 +2176,14 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
     return false;
   }
   const actor = state.combatants.get(actorId);
-  const statBlockExecution =
-    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
-  if (statBlockExecution === null) return false;
+  if (!isStatBlockBattleCreatureState(actor)) return false;
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
       subject.procedureRef !== undefined &&
       statBlockMultiattackActionResourceMatchesProcedure(
         resource,
         actorId,
-        statBlockExecution,
+        actor.origin.execution,
         subject.procedureRef,
       ),
   );
@@ -2213,3 +2218,31 @@ export function isStatBlockBattleCreatureState(
 }
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
+
+/** Stand from Prone or Drop Prone, whichever the actor can take now. */
+function proneTransitionActs(
+  state: BattleState,
+  actor: BattleCreatureState,
+): BattleActDiscoveryCandidate[] {
+  const actorId = actor.combatantId;
+  if (standFromProneCostFeet(state, actorId) !== null) {
+    return [
+      {
+        subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
+        initialHoles: [],
+      },
+    ];
+  }
+  return dropProneAvailable(state, actor)
+    ? [
+        {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: actor.combatantId,
+            command: "dropProne",
+          },
+          initialHoles: [],
+        },
+      ]
+    : [];
+}

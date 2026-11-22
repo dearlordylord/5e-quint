@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { Match } from "effect";
 import {
   movementDeltaFeet,
@@ -208,6 +209,7 @@ export function battleTerminalSpeedZero(
 ): boolean {
   return (
     isGrappled ||
+    hasCondition(combatant.conditions, "grappled") ||
     combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
     combatant.activeEffects.some(
       (effect) => effect.kind === "spellSpeedZero",
@@ -218,7 +220,6 @@ export function battleTerminalSpeedZero(
     hasCondition(combatant.conditions, "paralyzed") ||
     hasCondition(combatant.conditions, "petrified") ||
     hasCondition(combatant.conditions, "restrained") ||
-    hasCondition(combatant.conditions, "stunned") ||
     hasCondition(combatant.conditions, "unconscious")
   );
 }

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 174,
-    "covered": 163,
+    "total": 175,
+    "covered": 164,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 134,
+      "battle": 135,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 163,
+      "covered": 164,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -66,6 +66,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
         }
       ],
       "profiles": [
@@ -88,7 +96,9 @@
         "packages/battle-runtime/src/battle-reducer/movement-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
-        "scripts/raw-swarm/sdk-player/scenario-session.ts"
+        "scripts/raw-swarm/sdk-player/scenario-session.ts",
+        "packages/battle-runtime/src/battle-reducer/drop-prone-policy.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5630,6 +5640,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-multiattack-drop-prone.test.ts"
         }
       ],
       "profiles": ["stat-block.multiattack"],

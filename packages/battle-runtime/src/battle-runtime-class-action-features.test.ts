@@ -244,6 +244,7 @@ describe("battle runtime: class action features", () => {
         ),
       }),
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
+      { tag: "runtimeCommand", actorId: fighterId, command: "dropProne" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
 
@@ -456,6 +457,7 @@ describe("battle runtime: class action features", () => {
       discoverBattleActCandidates(state).map((act) => act.subject),
     ).toEqual([
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
+      { tag: "runtimeCommand", actorId: fighterId, command: "dropProne" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(
