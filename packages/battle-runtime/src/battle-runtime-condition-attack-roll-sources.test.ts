@@ -292,9 +292,9 @@ describe("battle runtime: condition attack-roll sources", () => {
         distanceFeet: movementFeet(30),
       },
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: wizardId,
-        sourceProcedureRef,
+        kind: "rangedAttackEnemyProximity",
+        attackerId: wizardId,
+        procedureRef: sourceProcedureRef,
         enemies: [],
       },
     ]);
