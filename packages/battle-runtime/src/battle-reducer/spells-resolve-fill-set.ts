@@ -1,3 +1,4 @@
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -540,7 +541,7 @@ export function spellFillSet(
       actorId,
       sourceProcedureRef,
     });
-    if (enemyProximity?.tag === "invalid") return enemyProximity;
+    if (isSpatialQualificationIssue(enemyProximity)) return enemyProximity;
 
     if (fill.kind === "damageRelationshipDecisions") {
       continue;

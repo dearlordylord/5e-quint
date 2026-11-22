@@ -1,3 +1,4 @@
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // Shared object-target spell attack resolution for direct casts and readied releases.
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 
@@ -278,7 +279,7 @@ function resolveObjectTargetSpellAttackCore(
   }
   /* v8 ignore stop -- @preserve */
 
-  const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
+  const calculatedRollMode = requiredSpellObjectTargetAttackRollMode(
     input.input.state,
     input.actorId,
     input.invocation,
@@ -286,19 +287,19 @@ function resolveObjectTargetSpellAttackCore(
     sightFact?.attackerCanSeeObject,
     input.fillSet.targetEnemyProximity,
   );
-  if (typeof requiredRollMode === "object")
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      requiredRollMode.message,
-    );
-  if (input.fillSet.attackRoll == null) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellObjectAttackRollHole(input.invocation, requiredRollMode),
-    ]);
-  }
+  const rollInput = prepareAttackRollInput({
+    errorState: input.input.state,
+    requiredRollMode: calculatedRollMode,
+    attackRoll: input.fillSet.attackRoll,
+    requestRoll: (requiredRollMode) =>
+      needsHolesResult(input.input.state, input.input.subject, [
+        spellObjectAttackRollHole(input.invocation, requiredRollMode),
+      ]),
+  });
+  if (rollInput.tag === "result") return rollInput.result;
+  const { requiredRollMode, attackRoll } = rollInput;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(input.fillSet.attackRoll)) {
+  if (!attackRollResultIsValid(attackRoll)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -307,9 +308,7 @@ function resolveObjectTargetSpellAttackCore(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.fillSet.attackRoll,
-  );
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(attackRoll);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellAttackRerollIssue !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -321,7 +320,7 @@ function resolveObjectTargetSpellAttackCore(
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
+  if (!attackRollModeMatches(attackRoll, requiredRollMode)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -333,8 +332,8 @@ function resolveObjectTargetSpellAttackCore(
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: input.input.state.combatants.get(input.actorId),
-      originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
-      decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+      originalD20TestRoll: attackRoll.d20TestRoll,
+      decision: attackRoll.d20TestNaturalOneReroll,
     })
   ) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -345,12 +344,11 @@ function resolveObjectTargetSpellAttackCore(
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: input.input.state.combatants.get(input.actorId),
-    total: input.fillSet.attackRoll.total,
-    originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
-    decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    total: attackRoll.total,
+    originalD20TestRoll: attackRoll.d20TestRoll,
+    decision: attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
-    otherD20RerollPresent:
-      input.fillSet.attackRoll.spellAttackReroll !== undefined,
+    otherD20RerollPresent: attackRoll.spellAttackReroll !== undefined,
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (d20TestNaturalOneRerollIssue !== null) {
@@ -364,9 +362,8 @@ function resolveObjectTargetSpellAttackCore(
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.attackRoll.activatedOngoingFeatureProcedureRef !==
-      undefined ||
-    input.fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined
+    attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
+    attackRoll.missToHitReplacementProcedureRef !== undefined
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
@@ -377,9 +374,8 @@ function resolveObjectTargetSpellAttackCore(
   }
   /* v8 ignore stop -- @preserve */
 
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    input.fillSet.attackRoll,
-  );
+  const effectiveAttackRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
   const hit = attackRollHits(effectiveAttackRoll, objectFact.armorClass);
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = consumeSelfAttackRollEffects(

@@ -1,3 +1,4 @@
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import * as Result from "effect/Result";
 import { Match } from "effect";
 import {
@@ -559,16 +560,7 @@ function reactionAttackTargetSpatialFacts(input: {
         "Opportunity Attack target distance must match the reach-leaving trigger distance.",
     };
   }
-  const distanceFact = reactionAttackDistanceFact({
-    subject: input.subject,
-    attack: input.attack,
-  });
-  const facts =
-    suppliedDistanceFeet !== null
-      ? input.fillSet.targetSpatialFacts
-      : distanceFact === undefined
-        ? undefined
-        : [...input.fillSet.targetSpatialFacts, distanceFact];
+  const facts = reactionAttackDistanceFacts(input, suppliedDistanceFeet);
   if (facts === undefined) {
     return {
       tag: "invalid",
@@ -584,7 +576,7 @@ function reactionAttackTargetSpatialFacts(input: {
     input.attack,
     facts,
   );
-  if (enemyProximity?.tag === "invalid") return enemyProximity;
+  if (isSpatialQualificationIssue(enemyProximity)) return enemyProximity;
   return { tag: "ok", facts, enemyProximity };
 }
 
@@ -1547,4 +1539,18 @@ function resolveReactionAttackDamageTransaction(input: {
     state: afterDamagePath.state,
     snapshot: snapshotBattle(afterDamagePath.state),
   };
+}
+
+function reactionAttackDistanceFacts(
+  input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
+  suppliedDistanceFeet: ReturnType<typeof attackTargetDistanceFeet>,
+): readonly BattleTargetSpatialFact[] | undefined {
+  if (suppliedDistanceFeet !== null) return input.fillSet.targetSpatialFacts;
+  const distanceFact = reactionAttackDistanceFact({
+    subject: input.subject,
+    attack: input.attack,
+  });
+  return distanceFact === undefined
+    ? undefined
+    : [...input.fillSet.targetSpatialFacts, distanceFact];
 }

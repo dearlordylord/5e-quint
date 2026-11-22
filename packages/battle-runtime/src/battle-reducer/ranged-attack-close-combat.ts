@@ -72,7 +72,11 @@ export function qualifyRangedAttackEnemyProximity(input: {
       message:
         "Ranged attack target requires one scoped enemy proximity qualification; supply enemies: [] only after checking no enemies qualify.",
     };
-  const distanceIssue = attackSpatialConsistencyIssue(input.scope, input.facts);
+  const distanceIssue = attackSpatialConsistencyIssue(
+    input.scope,
+    input.facts,
+    qualification,
+  );
   if (distanceIssue !== null) return distanceIssue;
   return {
     tag: "qualified",
@@ -80,23 +84,38 @@ export function qualifyRangedAttackEnemyProximity(input: {
   };
 }
 
-function attackSpatialConsistencyIssue(
+type AttackTargetDistance = {
+  readonly targetId: CombatantId;
+  readonly feet: MovementFeet;
+};
+
+function scopedAttackTargetDistance(
+  scope: RangedAttackEnemyProximityScope,
+  fact: BattleTargetSpatialFact,
+): AttackTargetDistance | null {
+  if (
+    fact.kind === "attackTargetDistance" &&
+    fact.actorId === scope.attackerId &&
+    fact.procedureRef === scope.procedureRef
+  )
+    return { targetId: fact.targetId, feet: fact.distanceFeet };
+  if (
+    fact.kind === "spellTarget" &&
+    fact.casterId === scope.attackerId &&
+    fact.sourceProcedureRef === scope.procedureRef &&
+    fact.distanceFeet !== undefined
+  )
+    return { targetId: fact.targetId, feet: fact.distanceFeet };
+  return null;
+}
+
+function attackTargetDistances(
   scope: RangedAttackEnemyProximityScope,
   facts: readonly BattleTargetSpatialFact[],
-): SpatialQualificationIssue | null {
+): Map<CombatantId, MovementFeet> | SpatialQualificationIssue {
   const distances = new Map<CombatantId, MovementFeet>();
   for (const fact of facts) {
-    const distance =
-      fact.kind === "attackTargetDistance" &&
-      fact.actorId === scope.attackerId &&
-      fact.procedureRef === scope.procedureRef
-        ? { targetId: fact.targetId, feet: fact.distanceFeet }
-        : fact.kind === "spellTarget" &&
-            fact.casterId === scope.attackerId &&
-            fact.sourceProcedureRef === scope.procedureRef &&
-            fact.distanceFeet !== undefined
-          ? { targetId: fact.targetId, feet: fact.distanceFeet }
-          : null;
+    const distance = scopedAttackTargetDistance(scope, fact);
     if (distance === null) continue;
     const previous = distances.get(distance.targetId);
     if (previous !== undefined && previous !== distance.feet)
@@ -107,38 +126,62 @@ function attackSpatialConsistencyIssue(
       };
     distances.set(distance.targetId, distance.feet);
   }
-  for (const fact of rangedAttackEnemyProximityFacts(facts)) {
-    if (
-      fact.attackerId !== scope.attackerId ||
-      fact.procedureRef !== scope.procedureRef
+  return distances;
+}
+
+function enemyProximityConsistencyIssue(
+  scope: RangedAttackEnemyProximityScope,
+  facts: readonly BattleTargetSpatialFact[],
+  distances: ReadonlyMap<CombatantId, MovementFeet>,
+  enemy: RangedAttackEnemyProximityFact["enemies"][number],
+): SpatialQualificationIssue | null {
+  if (
+    enemy.enemyCanSeeAttacker &&
+    facts.some(
+      (fact) =>
+        fact.kind === "attackTargetCannotSeeAttacker" &&
+        fact.attackerId === scope.attackerId &&
+        fact.targetId === enemy.enemyId,
     )
-      continue;
-    for (const enemy of fact.enemies) {
-      if (
-        enemy.enemyCanSeeAttacker &&
-        facts.some(
-          (fact) =>
-            fact.kind === "attackTargetCannotSeeAttacker" &&
-            fact.attackerId === scope.attackerId &&
-            fact.targetId === enemy.enemyId,
-        )
-      )
-        return {
-          tag: "invalid",
-          message:
-            "Attack sight facts contradict whether the same enemy can see the attacker.",
-        };
-      const distance = distances.get(enemy.enemyId);
-      if (distance !== undefined && distance !== enemy.distanceFeet)
-        return {
-          tag: "invalid",
-          message:
-            "Attack target and enemy proximity facts give contradictory distances for the same attacker and enemy.",
-        };
-      distances.set(enemy.enemyId, enemy.distanceFeet);
-    }
+  )
+    return {
+      tag: "invalid",
+      message:
+        "Attack sight facts contradict whether the same enemy can see the attacker.",
+    };
+  const distance = distances.get(enemy.enemyId);
+  if (distance !== undefined && distance !== enemy.distanceFeet)
+    return {
+      tag: "invalid",
+      message:
+        "Attack target and enemy proximity facts give contradictory distances for the same attacker and enemy.",
+    };
+  return null;
+}
+
+function attackSpatialConsistencyIssue(
+  scope: RangedAttackEnemyProximityScope,
+  facts: readonly BattleTargetSpatialFact[],
+  qualification: RangedAttackEnemyProximityFact,
+): SpatialQualificationIssue | null {
+  const distances = attackTargetDistances(scope, facts);
+  if (!(distances instanceof Map)) return distances;
+  for (const enemy of qualification.enemies) {
+    const issue = enemyProximityConsistencyIssue(
+      scope,
+      facts,
+      distances,
+      enemy,
+    );
+    if (issue !== null) return issue;
   }
   return null;
+}
+
+export function isSpatialQualificationIssue(
+  value: RangedAttackEnemyProximityEvidence | SpatialQualificationIssue | null,
+): value is SpatialQualificationIssue {
+  return value?.tag === "invalid";
 }
 
 /** Only admitted evidence can contribute this source to roll-mode calculation. */

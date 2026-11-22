@@ -1,3 +1,4 @@
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-glyph-stored-summon-object-placement
@@ -1175,7 +1176,7 @@ function targetedSpellAttackRollIssue(input: {
 function prepareTargetedSpellAttackRoll(
   input: TargetedSpellReleaseAfterTargetInput,
 ): TargetedSpellAttackRollPreparation {
-  const requiredRollMode = requiredSpellAttackRollMode(
+  const calculatedRollMode = requiredSpellAttackRollMode(
     input.input.state,
     input.input.subject.actorId,
     input.target,
@@ -1183,20 +1184,12 @@ function prepareTargetedSpellAttackRoll(
     input.fillSet.targetSpatialFacts,
     input.fillSet.targetEnemyProximity,
   );
-  if (typeof requiredRollMode === "object")
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.input.state,
-        "invalidFill",
-        requiredRollMode.message,
-      ),
-    };
-  const attackRoll = input.fillSet.attackRoll;
-  if (attackRoll === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.input.state, input.input.subject, [
+  const rollInput = prepareAttackRollInput({
+    errorState: input.input.state,
+    requiredRollMode: calculatedRollMode,
+    attackRoll: input.fillSet.attackRoll,
+    requestRoll: (requiredRollMode) =>
+      needsHolesResult(input.input.state, input.input.subject, [
         spellAttackRollHole(
           input.input.state,
           input.input.subject.actorId,
@@ -1204,8 +1197,9 @@ function prepareTargetedSpellAttackRoll(
           requiredRollMode,
         ),
       ]),
-    };
-  }
+  });
+  if (rollInput.tag === "result") return rollInput;
+  const { requiredRollMode, attackRoll } = rollInput;
   const attackRollError = targetedSpellAttackRollIssue({
     attackRoll,
     requiredRollMode,

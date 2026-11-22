@@ -158,11 +158,7 @@ function contextualInputInstructions(
 ): readonly string[] {
   const { distanceFirst, requestedRelationship } = context;
   return [
-    ...(hole.kind === "targetingSaveInterdictionOutcome" &&
-    hole.replacementTargetKind === "attackRoll" &&
-    (hole.attack?.targetConstraint.kind === "rangedRange" ||
-      hole.spellTargetSpatialFactRequest
-        ?.requiresEnemyProximityQualification === true)
+    ...(replacementTargetNeedsFreshProximity(hole)
       ? [
           "A newTarget outcome needs its own fresh rangedAttackEnemyProximity fact for the returned attack scope; do not reuse the original target's observation. Supply it with the replacement target facts in this same fill.",
         ]
@@ -385,4 +381,14 @@ export function battleInputGuidance(hole: BattleHole) {
       ],
     },
   ];
+}
+
+function replacementTargetNeedsFreshProximity(hole: BattleHole): boolean {
+  return (
+    hole.kind === "targetingSaveInterdictionOutcome" &&
+    hole.replacementTargetKind === "attackRoll" &&
+    (hole.attack?.targetConstraint.kind === "rangedRange" ||
+      hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true)
+  );
 }

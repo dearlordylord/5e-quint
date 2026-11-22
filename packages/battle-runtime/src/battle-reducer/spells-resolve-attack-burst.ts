@@ -1,3 +1,4 @@
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import * as Result from "effect/Result";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 // Attack-burst save-damage spell resolution, currently Ice Knife.
@@ -414,7 +415,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     }
   }
 
-  const requiredRollMode = requiredSpellAttackRollMode(
+  const calculatedRollMode = requiredSpellAttackRollMode(
     input.input.state,
     input.actorId,
     target,
@@ -422,24 +423,24 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     input.fillSet.targetSpatialFacts,
     input.fillSet.targetEnemyProximity,
   );
-  if (typeof requiredRollMode === "object")
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      requiredRollMode.message,
-    );
-  if (input.fillSet.attackRoll === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellAttackRollHole(
-        input.input.state,
-        input.actorId,
-        input.invocation,
-        requiredRollMode,
-      ),
-    ]);
-  }
+  const rollInput = prepareAttackRollInput({
+    errorState: input.input.state,
+    requiredRollMode: calculatedRollMode,
+    attackRoll: input.fillSet.attackRoll,
+    requestRoll: (requiredRollMode) =>
+      needsHolesResult(input.input.state, input.input.subject, [
+        spellAttackRollHole(
+          input.input.state,
+          input.actorId,
+          input.invocation,
+          requiredRollMode,
+        ),
+      ]),
+  });
+  if (rollInput.tag === "result") return rollInput.result;
+  const { requiredRollMode, attackRoll } = rollInput;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(input.fillSet.attackRoll)) {
+  if (!attackRollResultIsValid(attackRoll)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -448,9 +449,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.fillSet.attackRoll,
-  );
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(attackRoll);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellAttackRerollIssue !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -462,7 +461,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
+  if (!attackRollModeMatches(attackRoll, requiredRollMode)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -477,8 +476,8 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: actorBeforeSpellAttack,
-      originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
-      decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+      originalD20TestRoll: attackRoll.d20TestRoll,
+      decision: attackRoll.d20TestNaturalOneReroll,
     })
   ) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -494,9 +493,9 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: actorBeforeSpellAttack,
-    total: input.fillSet.attackRoll.total,
-    originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
-    decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    total: attackRoll.total,
+    originalD20TestRoll: attackRoll.d20TestRoll,
+    decision: attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -509,9 +508,8 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    input.fillSet.attackRoll,
-  );
+  const effectiveAttackRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
 
   const ordinaryHit = attackRollHits(
     effectiveAttackRoll,
@@ -527,7 +525,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
+    attackRoll.missToHitReplacementProcedureRef !== undefined &&
     missToHitReplacement === null
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */

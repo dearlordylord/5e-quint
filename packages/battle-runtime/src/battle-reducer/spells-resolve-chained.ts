@@ -1,3 +1,4 @@
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import {
   qualifyRangedAttackEnemyProximity,
   type RangedAttackEnemyProximityEvidence,
@@ -491,7 +492,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       }
     }
 
-    const requiredRollMode = requiredSpellAttackRollMode(
+    const calculatedRollMode = requiredSpellAttackRollMode(
       replayState,
       input.actorId,
       target,
@@ -499,25 +500,25 @@ export function resolveChainedSpellAttackDamageAct(input: {
       step.target.spatialFacts,
       step.target.enemyProximity,
     );
-    if (typeof requiredRollMode === "object")
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        requiredRollMode.message,
-      );
-    if (step.attackRoll === undefined) {
-      return needsHolesResult(replayState, input.input.subject, [
-        chainedSpellAttackRollHole(
-          replayState,
-          input.actorId,
-          input.invocation,
-          stepIndex,
-          requiredRollMode,
-        ),
-      ]);
-    }
+    const rollInput = prepareAttackRollInput({
+      errorState: input.input.state,
+      requiredRollMode: calculatedRollMode,
+      attackRoll: step.attackRoll,
+      requestRoll: (requiredRollMode) =>
+        needsHolesResult(replayState, input.input.subject, [
+          chainedSpellAttackRollHole(
+            replayState,
+            input.actorId,
+            input.invocation,
+            stepIndex,
+            requiredRollMode,
+          ),
+        ]),
+    });
+    if (rollInput.tag === "result") return rollInput.result;
+    const { requiredRollMode, attackRoll } = rollInput;
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollResultIsValid(step.attackRoll.value)) {
+    if (!attackRollResultIsValid(attackRoll.value)) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
@@ -527,7 +528,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-      step.attackRoll.value,
+      attackRoll.value,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellAttackRerollIssue !== null) {
@@ -540,7 +541,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollModeMatches(step.attackRoll.value, requiredRollMode)) {
+    if (!attackRollModeMatches(attackRoll.value, requiredRollMode)) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
@@ -553,8 +554,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
     if (
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: actorBeforeSpellAttack,
-        originalD20TestRoll: step.attackRoll.value.d20TestRoll,
-        decision: step.attackRoll.value.d20TestNaturalOneReroll,
+        originalD20TestRoll: attackRoll.value.d20TestRoll,
+        decision: attackRoll.value.d20TestNaturalOneReroll,
       })
     ) {
       return needsHolesResult(input.input.state, input.input.subject, [
@@ -571,9 +572,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
       actor: actorBeforeSpellAttack,
-      total: step.attackRoll.value.total,
-      originalD20TestRoll: step.attackRoll.value.d20TestRoll,
-      decision: step.attackRoll.value.d20TestNaturalOneReroll,
+      total: attackRoll.value.total,
+      originalD20TestRoll: attackRoll.value.d20TestRoll,
+      decision: attackRoll.value.d20TestNaturalOneReroll,
       requiredRollMode,
     });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -587,7 +588,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-      step.attackRoll.value,
+      attackRoll.value,
     );
 
     const ordinaryHit = attackRollHits(
@@ -604,7 +605,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
-      step.attackRoll.value.missToHitReplacementProcedureRef !== undefined &&
+      attackRoll.value.missToHitReplacementProcedureRef !== undefined &&
       missToHitReplacement === null
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
