@@ -175,6 +175,10 @@ owns compilation and boundary installation before any verification phase.
 
 ## Declaration diagnostics
 
+Declaration compiler subprocesses default to a 6 GiB Go runtime memory target
+within the verification runner's 8 GiB container cap. An explicit `GOMEMLIMIT`
+overrides that target.
+
 Prepare the public declaration graph and compare it with the
 [reviewed manifest](sdk-player/public-declaration-manifest.json):
 
