@@ -4921,7 +4921,7 @@ function prepareWeaponMasteryCleaveAttack(input: {
   }
   /* v8 ignore stop -- @preserve */
   const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- @preserve -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
+  /* v8 ignore start -- @preserve -- Stale subject: the chosen target may have been removed from the battle before this attack resumes. */
   if (secondTarget === undefined) {
     return {
       tag: "result",
@@ -5590,7 +5590,7 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   }
   /* v8 ignore stop -- @preserve */
   const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- @preserve -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
+  /* v8 ignore start -- @preserve -- Stale subject: the chosen target may have been removed from the battle before this attack resumes. */
   if (secondTarget === undefined) {
     return {
       tag: "result",
