@@ -712,6 +712,9 @@ export function emitCachedDeclarations(
   input: DeclarationCacheInput,
 ): DeclarationCacheResult {
   try {
+    if (existsSync(input.destination))
+      return failure("Declaration destination already exists");
+    mkdirSync(dirname(input.destination), { recursive: true });
     const cacheRoot =
       input.cacheRoot ??
       join(
