@@ -2997,7 +2997,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -3202,7 +3203,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -3485,7 +3487,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -3952,7 +3955,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -9093,7 +9097,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -9985,7 +9990,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -10190,7 +10196,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -10473,7 +10480,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -10940,7 +10948,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -16081,7 +16090,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -16286,7 +16296,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -16569,7 +16580,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -17036,7 +17048,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -22212,7 +22225,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -22417,7 +22431,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -22700,7 +22715,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -23167,7 +23183,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -28178,7 +28195,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -28383,7 +28401,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -28666,7 +28685,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -29133,7 +29153,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -34370,7 +34391,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -34575,7 +34597,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -34858,7 +34881,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -35325,7 +35349,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -40564,7 +40589,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -40769,7 +40795,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -41052,7 +41079,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -41519,7 +41547,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -46825,7 +46854,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -47030,7 +47060,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -47313,7 +47344,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -47780,7 +47812,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -53166,7 +53199,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -53371,7 +53405,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -53654,7 +53689,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -54121,7 +54157,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -59125,7 +59162,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -60025,7 +60063,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -60230,7 +60269,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -60513,7 +60553,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -60980,7 +61021,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {

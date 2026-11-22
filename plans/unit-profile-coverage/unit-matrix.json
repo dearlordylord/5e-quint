@@ -62,8 +62,8 @@
       "value": 450
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 243,
-      "numerator": 235,
+      "denominator": 244,
+      "numerator": 236,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 229,
-      "numerator": 187,
+      "denominator": 230,
+      "numerator": 188,
       "percent": "81.7%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 206,
-      "numerator": 201,
+      "denominator": 207,
+      "numerator": 202,
       "percent": "97.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 399,
-      "numerator": 243,
-      "percent": "60.9%"
+      "numerator": 244,
+      "percent": "61.2%"
     }
   },
   "metricSemantics": [
@@ -7653,7 +7653,8 @@
       "taskRefs": [
         "SB-MULTIATTACK-INDUCTIVE",
         "SB-MULTIATTACK-MBT",
-        "SB-ACTIONS-RUNTIME-TEST"
+        "SB-ACTIONS-RUNTIME-TEST",
+        "SB-MULTIATTACK-PRONE-RUNTIME-TEST"
       ],
       "title": "Admitted attack-procedure Multiattack control and dispatch",
       "verificationOwners": [
@@ -7668,6 +7669,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-multiattack-drop-prone.test.ts"
         }
       ]
     },
@@ -8312,9 +8317,11 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts"
       ],
-      "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices and the retained Graze support profile. Runtime gates Graze on the selected weapon kind, the attacked weapon's current mastery property, a missed attack roll against a creature, a positive attack ability modifier, and the Graze support profile; after the attacker chooses to use it, the attack's ability modifier in the weapon's damage type goes through the attack's fixed-damage application with no damage bonus or rider.",
+      "sourceBoundary": "Battle admission retains selected weapon mastery and attack ability/damage-type facts. A single resolved-attacker Graze rule admits eligible misses, including zero modifiers, and returns optional fixed damage. Primary, reaction and Horde Breaker hosts preserve independent decision identity, miss status, ordinary damage lifecycle and their own resource completion.",
       "taskRefs": [
         "GH530-WEAPON-MASTERY-GRAZE"
       ],
@@ -8327,6 +8334,14 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/mcp/src/manual-mcp-battle-surface.test.ts"
         }
       ]
     }
@@ -12078,8 +12093,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 229,
-          "numerator": 187,
+          "denominator": 230,
+          "numerator": 188,
           "percent": "81.7%"
         }
       },
@@ -15549,6 +15564,34 @@
             }
           ],
           "unitId": "mastery_cleave"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                },
+                {
+                  "obligationId": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Weapon Mastery Graze: a missed attack roll against a creature with an unlocked Graze weapon may deal the attack's ability modifier as the weapon's damage type"
+                }
+              ],
+              "profileId": "unit-feature.weapon-mastery-graze",
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "mastery_graze"
         },
         {
           "joinStatus": "covered",
@@ -23435,8 +23478,16 @@
       "taskId": "FACTORY-579"
     },
     {
+      "claimKind": "runtime-evidence",
+      "note": "Public runtime discovery and resolution cover Drop Prone and Standing from Prone between completed Multiattack attacks, preserving pending dispatches and applying movement costs.",
+      "profileIds": [
+        "stat-block.multiattack"
+      ],
+      "taskId": "SB-MULTIATTACK-PRONE-RUNTIME-TEST"
+    },
+    {
       "claimKind": "qnt-proof",
-      "note": "The Graze rule-core slice covers the offer after a missed attack roll against a creature with an unlocked Graze weapon and a positive attack ability modifier, its rejections, the use and decline choices, and that a damage bonus does not add to the damage.",
+      "note": "Graze rule-core examples cover unlocked weapon misses, optional use/decline, zero and negative modifier clamping, bonus independence and independent choices across two misses.",
       "profileIds": [
         "unit-feature.weapon-mastery-graze"
       ],
@@ -23444,7 +23495,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Graze support admission, the use-or-decline decision after a miss, damage equal to the attack ability modifier in the weapon's damage type, no added damage bonus, target Resistance, the Concentration save it triggers, and rejection of a Graze decision after a hit, without the mastery, without the weapon's mastery selected, or with an ability modifier of 0 or less.",
+      "note": "Focused runtime and public MCP witnesses cover ordinary and reaction Graze, independent primary/Horde Breaker decisions, zero modifiers, unchanged miss status, damage lifecycle, rejection and exact-once completion through nested interrupts.",
       "profileIds": [
         "unit-feature.weapon-mastery-graze"
       ],
@@ -35476,20 +35527,69 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future weapon-attack miss-damage mastery owner",
-          "reason": "A future owner must gate Graze on an unlocked mastery for the attacking weapon, offer damage after a miss, derive the attack ability modifier and weapon damage type from the attack, and enforce that only an increase to that ability modifier can increase the damage without authored-identity dispatch."
-        },
-        "futureProfileOwner": "future weapon-attack miss-damage mastery owner",
-        "reason": "Graze is authored and installed, but Battle admission rejects its weapon-attack-miss damage mechanics because no promoted runtime profile owns optional miss damage equal to the attack ability modifier in the weapon's damage type.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.weapon-mastery-graze"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/weapon-mastery-graze-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "mastery",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-mastery-graze",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts"
+          ],
+          "sourceBoundary": "Battle admission retains selected weapon mastery and attack ability/damage-type facts. A single resolved-attacker Graze rule admits eligible misses, including zero modifiers, and returns optional fixed damage. Primary, reaction and Horde Breaker hosts preserve independent decision identity, miss status, ordinary damage lifecycle and their own resource completion.",
+          "taskRefs": [
+            "GH530-WEAPON-MASTERY-GRAZE"
+          ],
+          "title": "Weapon Mastery Graze optionally deals the attack's ability modifier as the weapon's damage type to a creature the attack roll missed",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/mcp/src/manual-mcp-battle-surface.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/mastery_graze.json",
       "unitId": "mastery_graze"
     },

@@ -1526,6 +1526,9 @@ describe("MCP server route", () => {
           {
             classUnitId: wizardClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: Math.floor(
+              (build.abilityScores.con - 10) / 2,
+            ),
           },
         ],
       },
@@ -12200,6 +12203,9 @@ function characterBuildForClassProgression(input: {
     advancements: Array.from({ length: classLevel - 1 }, () => ({
       classUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      constitutionModifierAtGain: Math.floor(
+        (input.base.abilityScores.con - 10) / 2,
+      ),
     })),
   };
   return {

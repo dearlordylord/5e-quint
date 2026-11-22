@@ -228,6 +228,7 @@ function paladinBuild(input: {
       advancements: Array.from({ length: input.paladinAdvancements }, () => ({
         classUnitId: classUnitId(authoredUnitId("class_paladin")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 1,
       })),
     },
   };

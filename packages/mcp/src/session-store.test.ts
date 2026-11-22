@@ -842,6 +842,7 @@ function druidWildShapeBuild(): CharacterBuild {
         {
           classUnitId: classUnitId(unitId("class_druid")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },
