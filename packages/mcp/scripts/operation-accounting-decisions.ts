@@ -318,6 +318,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "action.helpAbilityCheck": account(
+      "operation",
+      "action.helpAbilityCheck",
+      at(
+        "packages/battle-runtime/src/battle-reducer/help-ability-check.ts",
+        "resolveHelpAbilityCheck",
+      ),
+      REASONS.admittedSubject,
+    ),
     "action.helpAttack": account(
       "operation",
       "action.helpAttack",
@@ -1182,6 +1191,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       "Release resolves the retained action subject. The ChatGPT route must narrow that subject to its named action tool before calling the shared runtime resolver.",
     ),
+    "action.helpAbilityCheck": account(
+      "operation",
+      "action.helpAbilityCheck",
+      at(
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "resolveReleaseReadiedActionCommand",
+      ),
+      "Release resolves the retained action subject. The ChatGPT route must narrow that subject to its named action tool before calling the shared runtime resolver.",
+    ),
     "action.helpAttack": account(
       "operation",
       "action.helpAttack",
@@ -1450,6 +1468,15 @@ export const OPERATION_ACCOUNTING = {
     heldObjectFacts: account(
       "continuation",
       "heldObjectFacts",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
+    helpAbilityCheckDecision: account(
+      "continuation",
+      "helpAbilityCheckDecision",
       at(
         "packages/battle-runtime/src/battle-runtime-transaction.ts",
         "settleBattleRuntimeTransaction",

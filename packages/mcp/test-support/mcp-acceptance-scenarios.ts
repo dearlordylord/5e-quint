@@ -27,8 +27,7 @@ import { characterProgressionEntry } from "../../character-creation-runtime/src/
 
 import {
   GENERIC_COMBAT_ACTION_LABELS,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
 } from "./battle-act-labels.ts";
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 import { battleToolWireArgs } from "./battle-tool-wire-args.ts";
@@ -809,7 +808,9 @@ export async function verifyBaselineVertical(
   assert.deepEqual(actionLabels(fighterActs), [
     "Attack",
     "Attack",
-    ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+    ...GENERIC_COMBAT_ACTION_LABELS,
+    "Help (Ability Check)",
+    "Unarmed Strike (Shove)",
     "Adrenaline Rush: Dash",
     "Second Wind",
     "Move",
@@ -860,6 +861,7 @@ export async function verifyBaselineVertical(
     "Attack",
     "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS,
+    "Help (Ability Check)",
     "Unarmed Strike (Grapple)",
     "Unarmed Strike (Shove)",
     "Nimble Escape",
@@ -1270,7 +1272,9 @@ export async function verifyWidthVertical(client: Client) {
   assert.deepEqual(actionLabels(fighterActs), [
     "Attack",
     "Attack",
-    ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+    ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+    "Help (Ability Check)",
+    "Unarmed Strike (Shove)",
     "Adrenaline Rush: Dash",
     "Second Wind",
     "Action Surge",

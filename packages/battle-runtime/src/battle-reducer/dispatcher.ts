@@ -69,6 +69,7 @@ export {
 } from "./battle-snapshot.ts";
 import {
   type BattleSubject,
+  type BattleSubjectAction,
   type ActionHideSubject,
   type ActionSearchSubject,
 } from "../battle-subjects.ts";
@@ -161,6 +162,7 @@ import {
   resolveShove,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
+import { resolveHelpAbilityCheck } from "./help-ability-check.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
@@ -224,6 +226,44 @@ function isEndConcentrationSubject(
 ): subject is Parameters<typeof resolveEndConcentrationCommand>[0]["subject"] {
   return (
     subject.tag === "runtimeCommand" && subject.command === "endConcentration"
+  );
+}
+
+/** Help's two options, Assist an Attack Roll and Assist an Ability Check. */
+const HELP_ACTIONS = [
+  "helpAttack",
+  "helpAbilityCheck",
+] as const satisfies readonly BattleSubjectAction[];
+
+type HelpActionSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "action";
+    readonly action: (typeof HELP_ACTIONS)[number];
+  }
+>;
+
+function isHelpActionSubject(
+  subject: BattleSubject,
+): subject is HelpActionSubject {
+  return (
+    subject.tag === "action" &&
+    HELP_ACTIONS.some((action) => action === subject.action)
+  );
+}
+
+function resolveHelpAction(
+  input: AdmittedBattleResolutionInput,
+  subject: HelpActionSubject,
+): BattleResolutionResult {
+  return Match.value(subject).pipe(
+    Match.when({ action: "helpAttack" }, (helpAttack) =>
+      resolveHelpAttack({ ...input, subject: helpAttack }),
+    ),
+    Match.when({ action: "helpAbilityCheck" }, (helpAbilityCheck) =>
+      resolveHelpAbilityCheck({ ...input, subject: helpAbilityCheck }),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -759,8 +799,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       if (subject.action === "dodge") {
         return resolveDodge(input);
       }
-      if (subject.action === "helpAttack") {
-        return resolveHelpAttack({ ...input, subject });
+      if (isHelpActionSubject(subject)) {
+        return resolveHelpAction(input, subject);
       }
       if (subject.action === "hide") {
         return resolveHide({ ...input, subject: actionHideSubject(subject) });

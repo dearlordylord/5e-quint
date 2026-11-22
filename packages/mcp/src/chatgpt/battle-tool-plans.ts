@@ -99,6 +99,11 @@ export const CHATGPT_BATTLE_TOOLS = {
     family: "battleActions",
     description: "Attempt to grapple a creature.",
   },
+  help_ability_check: {
+    family: "battleActions",
+    description:
+      "Assist a specified ally's next ability check with one of the helper's skill proficiencies.",
+  },
   help_attack: {
     family: "battleActions",
     description: "Assist a specified ally attack against a specified enemy.",

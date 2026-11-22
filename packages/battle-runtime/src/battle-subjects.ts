@@ -74,6 +74,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "disengage",
   "dodge",
   "helpAttack",
+  "helpAbilityCheck",
   "hide",
   "multiattack",
   "ready",
@@ -726,6 +727,11 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
+    action: Schema.Literal("helpAbilityCheck"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
     action: Schema.Literal("hide"),
   }),
   Schema.Struct({
@@ -1341,6 +1347,7 @@ function battleActionSubjectProcedureRefs(
       disengage: noProcedureExecutionReferences,
       dodge: noProcedureExecutionReferences,
       helpAttack: noProcedureExecutionReferences,
+      helpAbilityCheck: noProcedureExecutionReferences,
       hide: noProcedureExecutionReferences,
       multiattack: (value) => [value.procedureRef],
       ready: noProcedureExecutionReferences,
@@ -1553,6 +1560,7 @@ function battleActionSubjectBoundExecutionReferences(
       disengage: noBoundExecutionReferences,
       dodge: noBoundExecutionReferences,
       helpAttack: noBoundExecutionReferences,
+      helpAbilityCheck: noBoundExecutionReferences,
       hide: noBoundExecutionReferences,
       multiattack: noBoundExecutionReferences,
       ready: noBoundExecutionReferences,
@@ -1973,6 +1981,9 @@ function battleSubjectKey(subject: BattleSubject): string {
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "helpAttack" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "helpAbilityCheck" }, (action) =>
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "hide" }, (action) =>

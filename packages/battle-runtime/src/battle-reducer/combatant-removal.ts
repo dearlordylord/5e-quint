@@ -156,6 +156,9 @@ export function removeBattleCombatants(input: {
           !removeIds.has(help.allyId) &&
           !removeIds.has(help.targetEnemyId),
       ),
+      helpAbilityChecks: input.state.helpAbilityChecks.filter(
+        (help) => !removeIds.has(help.helperId) && !removeIds.has(help.allyId),
+      ),
       grapples: input.state.grapples.filter(
         (grapple) =>
           !removeIds.has(grapple.grapplerId) &&

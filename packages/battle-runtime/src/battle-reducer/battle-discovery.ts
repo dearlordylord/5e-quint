@@ -10,6 +10,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.MULTIATTACK
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// KERNEL-COVERAGE: runtime-owner BATTLE.HELP.ABILITY_CHECK_ASSIST
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-gust-of-wind-line spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
@@ -63,6 +64,7 @@ import {
 } from "./attack-damage-apply.ts";
 import { readyDeclarationHole, readyResponseChoices } from "./ready.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
+import { helpAbilityCheckActCandidates } from "./help-ability-check.ts";
 import { helpAttackAllyChoices, helpAttackAllyHole } from "./help-attack.ts";
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
 import {
@@ -82,11 +84,11 @@ import {
   bonusActionStandardActionActs,
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
-  escapeSpellRestraintAbilityCheckHole,
+  escapeSpellRestraintSkillCheck,
   grappleTargetChoices,
   grappleTargetHole,
   hiddenSearchTargetChoices,
-  hideAbilityCheckHole,
+  hideSkillCheck,
   saveGatedAreaControlShakeAwakeTargetHole,
   searchTargetHole,
   shoveTargetChoices,
@@ -509,6 +511,7 @@ function discoverBattleActsWithoutRouteEvents(
       initialHoles: [helpAttackAllyHole(state, actorId)],
     });
   }
+  acts.push(...helpAbilityCheckActCandidates(state, actorId));
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     hasTurnActionResource(state.currentTurnResources) &&
@@ -546,7 +549,7 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "hide" },
-      initialHoles: [hideAbilityCheckHole(state, actorId)],
+      initialHoles: [hideSkillCheck(state, actorId).hole],
     });
   }
   const hiddenTargets = hiddenSearchTargetChoices(state, actorId);
@@ -620,10 +623,10 @@ function discoverBattleActsWithoutRouteEvents(
           effectRef: spellActiveEffectExecutionRef(effect),
         },
         initialHoles: [
-          escapeSpellRestraintAbilityCheckHole(state, effect, {
+          escapeSpellRestraintSkillCheck(state, effect, {
             actorId,
             targetId,
-          }),
+          }).hole,
         ],
       });
     }
@@ -2104,7 +2107,7 @@ export function statBlockBonusActionOptionActs(
             },
             initialHoles:
               standardAction === "hide"
-                ? [hideAbilityCheckHole(state, actorId)]
+                ? [hideSkillCheck(state, actorId).hole]
                 : [],
           },
         ];

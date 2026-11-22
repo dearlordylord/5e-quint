@@ -228,6 +228,8 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       helpAttackEnemyDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      helpAbilityCheckDecision: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       hitPointHealingDistribution: (value) =>
         projectHoleWithoutPresentationLabel(value),
       interruptDecision: (value) => projectHoleWithoutPresentationLabel(value),

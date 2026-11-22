@@ -19,6 +19,7 @@ export const CHATGPT_BATTLE_EXECUTION_TOOLS = {
     "focus_disengage_and_dodge",
   ),
   grapple: defineChatGptBattleTool("grapple"),
+  help_ability_check: defineChatGptBattleTool("help_ability_check"),
   help_attack: defineChatGptBattleTool("help_attack"),
   hide: defineChatGptBattleTool("hide"),
   move: defineChatGptBattleTool("move"),

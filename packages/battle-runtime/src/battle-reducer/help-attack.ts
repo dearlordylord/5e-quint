@@ -46,7 +46,7 @@ export function helpAttackAllyChoices(
   state: BattleState,
   helperId: CombatantId,
 ): readonly CombatantId[] {
-  const participants = helpAttackParticipantChoices(state, helperId);
+  const participants = helpParticipantChoices(state, helperId);
   return participants.length >= 2 ? participants : [];
 }
 
@@ -56,12 +56,16 @@ export function helpAttackTargetChoices(
   allyId: CombatantId,
 ): readonly CombatantId[] {
   if (!helpAttackAllyChoices(state, helperId).includes(allyId)) return [];
-  return helpAttackParticipantChoices(state, helperId).filter(
+  return helpParticipantChoices(state, helperId).filter(
     (combatantId) => combatantId !== allyId,
   );
 }
 
-function helpAttackParticipantChoices(
+/**
+ * The creatures a helper can pick in either of Help's options: every other
+ * combatant whose zero-HP state isn't terminal.
+ */
+export function helpParticipantChoices(
   state: BattleState,
   helperId: CombatantId,
 ): readonly CombatantId[] {
