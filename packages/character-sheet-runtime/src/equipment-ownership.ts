@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 import {
   characterEquipmentItemSourceFromId,
   type CharacterBuildEquipment,
@@ -86,7 +87,8 @@ export type EquipmentLoadoutStructureIssue =
  *
  * A Two-Handed weapon needs the main hand's `two_handed` grip, so it is
  * refused in the off hand or with a `one_handed` grip. A `two_handed` grip
- * uses both hands, so it leaves none for a shield or an off-hand weapon.
+ * uses both hands, so it leaves none for a shield or an off-hand weapon. Any
+ * weapon may take the `two_handed` grip (ASSUMPTIONS.md A58).
  */
 export function equipmentLoadoutStructureIssues(
   loadout: CharacterBuildLoadout,

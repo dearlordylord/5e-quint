@@ -3913,11 +3913,14 @@
         "packages/character-battle-runtime/src/index.ts",
         "packages/character-battle-runtime/src/battle-creature-init.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.ts",
-        "packages/character-battle-runtime/src/battle-support-profiles.ts"
+        "packages/character-battle-runtime/src/battle-support-profiles.ts",
+        "packages/character-sheet-runtime/src/equipment-ownership.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/character-creation.md#Fill In Numbers",
+        ".references/srd-5.2.1/equipment.md#Two-Handed",
+        ".references/srd-5.2.1/equipment.md#Versatile",
         ".references/srd-5.2.1/playing-the-game.md#The Order of Combat",
         ".references/srd-5.2.1/playing-the-game.md#Armor Class",
         ".references/srd-5.2.1/playing-the-game.md#Hit Points",
@@ -3925,7 +3928,8 @@
         ".references/srd-5.2.1/rules-glossary.md#Condition",
         ".references/srd-5.2.1/rules-glossary.md#Stable",
         ".references/srd-5.2.1/spells.md#Spell Slots",
-        "ASSUMPTIONS.md#a26-stable-recovery-timers-do-not-cross-the-battle-handoff-boundary"
+        "ASSUMPTIONS.md#a26-stable-recovery-timers-do-not-cross-the-battle-handoff-boundary",
+        "ASSUMPTIONS.md#a58-a-loadout-grip-holds-the-main-weapon-for-the-whole-battle"
       ],
       "title": "Character Sheet and Character Build projection into Battle initialization for identity, HP, Armor Class, conditions, Spell Slots, and supported Unit profiles"
     },
