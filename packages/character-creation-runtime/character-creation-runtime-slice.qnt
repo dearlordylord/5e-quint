@@ -124,7 +124,7 @@ module characterCreationRuntimeSlice {
     charisma: int,
   }
 
-  type SupportedAbilityScoreMethod = StandardArray | PointBuy
+  type SupportedAbilityScoreMethod = StandardArray | PointBuy | RandomGeneration
 
   type ProgressionClassUnit = FighterClassUnit | WizardClassUnit
 
@@ -407,9 +407,22 @@ module characterCreationRuntimeSlice {
       and isPointBuyScore(scores.charisma)
       and pointBuyTotalCost(scores) <= 27
 
+  // Random Generation: each score is the total of the highest three of four d6s.
+  pure def isRandomGenerationScore(score: int): bool =
+    score >= 3 and score <= 18
+
+  pure def isRandomGenerationAssignment(scores: AbilityScores): bool =
+    isRandomGenerationScore(scores.strength)
+      and isRandomGenerationScore(scores.dexterity)
+      and isRandomGenerationScore(scores.constitution)
+      and isRandomGenerationScore(scores.intelligence)
+      and isRandomGenerationScore(scores.wisdom)
+      and isRandomGenerationScore(scores.charisma)
+
   pure def isValidAbilityScoreAssignment(method: SupportedAbilityScoreMethod, scores: AbilityScores): bool = match method {
     | StandardArray => isStandardArrayAssignment(scores)
     | PointBuy => isPointBuyAssignment(scores)
+    | RandomGeneration => isRandomGenerationAssignment(scores)
   }
 
   pure def openCreationHoles(draft: Draft): Set[HoleId] = {

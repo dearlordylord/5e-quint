@@ -697,7 +697,6 @@
       "module/binding:applyDraftFill": 9
     },
     "packages/character-creation-runtime/src/finalization.ts": {
-      "module/binding:applyClassFeatureAbilityScoreIncreases": 10,
       "module/binding:classFeatureAcquisitionAbilityCheckBonusFeature": 11,
       "module/binding:decodedUnitProficiencySubjects": 16,
       "module/binding:executableSupportIssues": 12,
@@ -835,7 +834,6 @@
       "module/binding:parseStoredLoadout": 9,
       "module/binding:parseStoredPactSlots": 10,
       "module/binding:parseStoredProficiencyChoices": 16,
-      "module/binding:parseStoredProgression": 10,
       "module/binding:parseStoredSpellcastingSource": 12,
       "module/binding:parseStoredSpellSlotPools": 10,
       "module/binding:parseStoredSpellSlots": 17,

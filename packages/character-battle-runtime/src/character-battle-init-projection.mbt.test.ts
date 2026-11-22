@@ -605,6 +605,7 @@ function sorcererMetamagicBuild(): CharacterBuild {
       advancements: Array.from({ length: 4 }, () => ({
         classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 1,
       })),
     },
     background: authoredUnitId("background_soldier"),

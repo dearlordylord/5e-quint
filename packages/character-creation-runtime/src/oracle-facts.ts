@@ -46,6 +46,11 @@ import {
   type NonEmptyReadonlyArray,
 } from "./types.ts";
 import { holeIdForSource } from "./hole-factories.ts";
+import {
+  ConstitutionModifierAtGainSchema,
+  HigherLevelClassHitPointRuleSchema,
+  type HigherLevelClassHitPointRule,
+} from "./character-progression-types.ts";
 
 const UnitIdSchema = SharedUnitIdSchema;
 const AbilitySchema = Schema.Literals(ABILITIES);
@@ -224,9 +229,8 @@ const ProgressionSchema = Schema.Struct({
   advancements: Schema.Array(
     Schema.Struct({
       classUnitId: UnitIdSchema,
-      hitPointRule: Schema.Struct({
-        tag: Schema.Literal("fixedHigherLevelGain"),
-      }),
+      hitPointRule: HigherLevelClassHitPointRuleSchema,
+      constitutionModifierAtGain: ConstitutionModifierAtGainSchema,
     }),
   ),
 });
@@ -616,6 +620,25 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("missingHitPointMaximumGrantSourceUnit"),
     sourceUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("rolledHitDieResultAboveHitDie"),
+    classUnitId: UnitIdSchema,
+    hitDieResult: Schema.Number,
+    hitDieSize: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("constitutionModifierAtGainAboveCurrent"),
+    characterLevel: Schema.Number,
+    constitutionModifierAtGain: Schema.Number,
+    constitutionModifier: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("constitutionModifierAtGainBelowEarlier"),
+    characterLevel: Schema.Number,
+    constitutionModifierAtGain: Schema.Number,
+    earlierCharacterLevel: Schema.Number,
+    earlierConstitutionModifierAtGain: Schema.Number,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedHitPointMaximumGrant"),
@@ -1061,14 +1084,36 @@ function progressionFact(
   return {
     startingClass,
     advancements: advancements.map((advancement) => {
-      const { classUnitId, hitPointRule, ...unprojectedAdvancement } =
-        advancement;
+      const {
+        classUnitId,
+        hitPointRule,
+        constitutionModifierAtGain,
+        ...unprojectedAdvancement
+      } = advancement;
       noUnprojectedFields(unprojectedAdvancement);
-      const { tag, ...unprojectedHitPointRule } = hitPointRule;
-      noUnprojectedFields(unprojectedHitPointRule);
-      return { classUnitId, hitPointRule: { tag } };
+      return {
+        classUnitId,
+        hitPointRule: hitPointRuleFact(hitPointRule),
+        constitutionModifierAtGain,
+      };
     }),
   };
+}
+
+function hitPointRuleFact(
+  hitPointRule: HigherLevelClassHitPointRule,
+): HigherLevelClassHitPointRule {
+  return Match.value(hitPointRule).pipe(
+    byTag("fixedHigherLevelGain", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("rolledHigherLevelGain", ({ tag, hitDieResult, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, hitDieResult };
+    }),
+    Match.exhaustive,
+  );
 }
 
 function speciesChoiceFactsFact(
@@ -1614,6 +1659,13 @@ function characterBuildProjectionCauseFact(
       },
     ),
     byTag(
+      "rolledHitDieResultAboveHitDie",
+      ({ tag, classUnitId, hitDieResult, hitDieSize, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, classUnitId, hitDieResult, hitDieSize };
+      },
+    ),
+    byTag(
       "unsupportedHitPointMaximumGrant",
       ({ tag, sourceUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
@@ -1742,7 +1794,9 @@ type RemainingCharacterBuildProjectionCause = Extract<
       | "unknownUnit"
       | "abilityScoreCapExceeded"
       | "unsupportedToolProficiency"
-      | "invalidChoiceOption";
+      | "invalidChoiceOption"
+      | "constitutionModifierAtGainAboveCurrent"
+      | "constitutionModifierAtGainBelowEarlier";
   }
 >;
 
@@ -1821,6 +1875,44 @@ function characterBuildProjectionCauseFactRemaining(
           tag,
           optionId,
           reason: creationChoiceOptionDecodeCauseFact(reason),
+        };
+      },
+    ),
+    byTag(
+      "constitutionModifierAtGainAboveCurrent",
+      ({
+        tag,
+        characterLevel,
+        constitutionModifierAtGain,
+        constitutionModifier,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        return {
+          tag,
+          characterLevel,
+          constitutionModifierAtGain,
+          constitutionModifier,
+        };
+      },
+    ),
+    byTag(
+      "constitutionModifierAtGainBelowEarlier",
+      ({
+        tag,
+        characterLevel,
+        constitutionModifierAtGain,
+        earlierCharacterLevel,
+        earlierConstitutionModifierAtGain,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        return {
+          tag,
+          characterLevel,
+          constitutionModifierAtGain,
+          earlierCharacterLevel,
+          earlierConstitutionModifierAtGain,
         };
       },
     ),
