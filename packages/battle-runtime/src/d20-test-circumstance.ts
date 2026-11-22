@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.CONDITION_ROLL_MODE
 import type { CombatantId } from "./identity.ts";
 import type {
   BattleAttackRollResult,
@@ -15,7 +16,11 @@ import {
   hasCondition,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
-import type { MovementFeet, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  Condition,
+  MovementFeet,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 
 export const D20_TEST_KINDS = [
   "abilityCheck",
@@ -48,29 +53,65 @@ export function proneAttackRollModeSources(
 }
 
 /**
- * The Prone condition's attacker-side source: "You have Disadvantage on attack
- * rolls" (rules-glossary.md#Prone), at any distance and against any target.
+ * Conditions that give the creature Disadvantage on its own attack rolls at
+ * any distance and against any target (rules-glossary.md): Poisoned ("You have
+ * Disadvantage on attack rolls and ability checks"), Prone ("You have
+ * Disadvantage on attack rolls") and Restrained ("your attack rolls have
+ * Disadvantage"). Blinded is not listed: its attack-roll effects come through
+ * the table-supplied sight facts (`attackAttackerCannotSeeTarget`).
  */
-export const PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES: D20TestRollModeSources = {
-  advantage: false,
-  disadvantage: true,
-};
+export const ATTACKER_DISADVANTAGE_CONDITIONS = [
+  "poisoned",
+  "prone",
+  "restrained",
+] as const satisfies readonly Condition[];
 
 /**
- * The attack-roll sources an attacker's own conditions supply on their own:
- * Poisoned ("You have Disadvantage on attack rolls and ability checks") and
- * Prone. An absent attacker supplies none.
+ * The attack-roll sources an attacker's own conditions supply on their own.
+ * An absent attacker supplies none.
  */
 export function attackerConditionAttackRollModeSources(
   attackerConditions: ConditionState | undefined,
 ): D20TestRollModeSources {
   const conditions = attackerConditions ?? EMPTY_CONDITION_STATE;
-  return hasCondition(conditions, "prone")
-    ? PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES
-    : {
-        advantage: false,
-        disadvantage: hasCondition(conditions, "poisoned"),
-      };
+  return {
+    advantage: false,
+    disadvantage: ATTACKER_DISADVANTAGE_CONDITIONS.some((condition) =>
+      hasCondition(conditions, condition),
+    ),
+  };
+}
+
+/**
+ * Conditions that give attack rolls against the creature Advantage at any
+ * distance (rules-glossary.md, each "Attacks Affected." entry: "Attack rolls
+ * against you have Advantage"): Paralyzed, Petrified, Restrained and Stunned.
+ * Two conditions with the same benefit are not listed: Unconscious's
+ * Advantage joins the Prone target source in attack-roll.ts, and Blinded's
+ * comes through the table-supplied sight facts
+ * (`attackTargetCannotSeeAttacker`).
+ */
+export const TARGET_ADVANTAGE_CONDITIONS = [
+  "paralyzed",
+  "petrified",
+  "restrained",
+  "stunned",
+] as const satisfies readonly Condition[];
+
+/**
+ * The distance-independent attack-roll sources a target creature's own
+ * conditions supply. An absent target supplies none.
+ */
+export function targetConditionAttackRollModeSources(
+  targetConditions: ConditionState | undefined,
+): D20TestRollModeSources {
+  const conditions = targetConditions ?? EMPTY_CONDITION_STATE;
+  return {
+    advantage: TARGET_ADVANTAGE_CONDITIONS.some((condition) =>
+      hasCondition(conditions, condition),
+    ),
+    disadvantage: false,
+  };
 }
 
 export const TABLE_D20_TEST_CIRCUMSTANCE_SOURCES = [
