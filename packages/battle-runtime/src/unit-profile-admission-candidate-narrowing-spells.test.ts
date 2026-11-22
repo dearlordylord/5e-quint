@@ -441,7 +441,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           {
             enemyId: spellTargetId,
             distanceFeet: movementFeet(30),
-            enemyCanSeeCaster: true,
+            enemyCanSeeAttacker: true,
           },
         ],
         rangeFeet: movementFeet(120),
@@ -517,7 +517,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         {
           enemyId: spellTargetId,
           distanceFeet: movementFeet(30),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         },
       ],
       damageDisposition: { kind: "tableResolved" },

@@ -2807,10 +2807,28 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
   ),
 );
 
+EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
+  ...exactCollisionsAt(
+    "command",
+    "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+    [
+      {
+        identifier: "INTERRUPT_COMMAND_REQUIRES_CHECKPOINT",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "commandRequiresCheckpoint",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "command names the runtime interrupt protocol, not the Command spell",
+  ),
+);
+
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "129718eb17136e5dc08dc7bf571d0344561cc3907379a9657e4369f1e844715a",
-  siteCount: 1708,
-  violationCount: 1826,
+  sha256: "df0c109f709cc0196765172e33a984c8a947f6183b117c49a78341d178cc9acb",
+  siteCount: 1713,
+  violationCount: 1831,
 };
 
 function escapeForRegExp(text) {

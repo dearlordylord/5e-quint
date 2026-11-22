@@ -49,6 +49,7 @@ export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literals([
   "weaponMasteryCleave",
   "weaponMasteryPush",
   "weaponMasterySlow",
+  "weaponMasteryGraze",
   "zeroHitPointReplacement",
 ]);
 

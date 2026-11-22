@@ -4458,6 +4458,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitContinuation,
     ),
+    weaponMasteryGraze: account(
+      "continuation",
+      "weaponMasteryGraze",
+      at(
+        "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+        "resolveWeaponMasteryGraze",
+      ),
+      REASONS.unitContinuation,
+    ),
     weaponMasteryPush: account(
       "continuation",
       "weaponMasteryPush",

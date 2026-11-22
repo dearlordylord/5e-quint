@@ -4,6 +4,12 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleStateWithAllocatedEffectForTest,
   resolveBattleSubject,
+  battleFrontierInterruptDecisionForState,
+  interruptDecisionFill,
+  requireCharacterSpellProcedureRefForTest,
+  spellSlotInvocationRef,
+  spellTargetAllocationFill,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   magicSuppressionEmanationEffectTemplateForTest,
@@ -14,13 +20,7 @@ import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  classLevel,
-  Hp,
-  movementFeet,
-  Round,
-  NonNegativeInteger,
-} from "@dnd/shared/types";
+import { classLevel, Hp, movementFeet, Round } from "@dnd/shared/types";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -34,10 +34,7 @@ import {
   allocateBattleEffectExecutionRefForCreature,
   type BattleActiveEffectOccurrenceTemplate,
 } from "./effect-execution-ref.ts";
-import {
-  battleProcedureExecutionRef,
-  type BattleProcedureExecutionRef,
-} from "./identity.ts";
+import { type BattleProcedureExecutionRef } from "./identity.ts";
 import {
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
@@ -79,12 +76,13 @@ import {
   battleUnitRefWithSupportProfiles,
   combatantId,
   discoverBattleActs,
+  resolveBattleInterrupt,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   endTurn,
   startBattle,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
-  type BattleState,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
@@ -415,28 +413,111 @@ describe("Antimagic Field action interdiction", () => {
     });
   });
 
-  test("interdicts stale triggered Reaction spell subjects", () => {
-    const session = activeAntimagicAuraSession(
-      spellInterdictionBattle(),
+  test("interdicts an admitted Counterspell after its caster enters an Antimagic Field", () => {
+    const session = spellBattle({
+      preparedSpells: [spellRecord("magic_missile")],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [spellRecord("counterspell")],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
+    });
+    const subject = spellAct({
+      session,
+      spellId: "magic_missile",
+      slotLevel: 1,
+    }).subject;
+    const allocationRequest = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [],
+    });
+    if (allocationRequest.tag !== "needsHoles") {
+      throw new Error("Expected the Magic Missile target allocation.");
+    }
+    const allocation = requireHole(
+      battleResolutionHolesForTest(allocationRequest),
+      "spellTargetAllocation",
+    );
+    const pendingCast = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [
+        spellTargetAllocationFill(
+          allocation,
+          [{ targetId: spellTargetId, count: 3 }],
+          spellCasterId,
+        ),
+        {
+          kind: "targetSpatialFacts",
+          holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+          spatialFacts: [
+            {
+              kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
+              reactorId: spellTargetId,
+              casterId: spellCasterId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                spellTargetId,
+                spellSlotInvocationRef(
+                  "counterspell",
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        },
+      ],
+    });
+    if (pendingCast.tag !== "needsHoles")
+      throw new Error("Expected the Counterspell trigger checkpoint.");
+    const pending = battleFrontierInterruptDecisionForState(pendingCast.state);
+    const choice = pending?.choices.find(
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell",
+    );
+    if (
+      pending === null ||
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected the admitted Counterspell reaction.");
+    }
+    const decision = interruptDecisionFill(pending.decisionHole, {
+      kind: "resolve",
+      responderId: spellTargetId,
+      choice: {
+        kind: "castTriggeredReactionSpell",
+        procedureRef: choice.subject.procedureRef,
+        fills: [],
+      },
+    });
+    const control = resolveBattleInterrupt({
+      state: pendingCast.state,
+      fill: decision,
+    });
+    if (control.tag !== "needsHoles") {
+      throw new Error("Expected the admitted Counterspell saving throw.");
+    }
+    expect(
+      requireHole(battleResolutionHolesForTest(control), "savingThrowOutcome"),
+    ).toMatchObject({ ability: "con" });
+
+    const suppressed = activeAntimagicAuraSession(
+      battleRuntimeSessionForTest({ ...session, state: pendingCast.state }),
       magicSuppressionEmanationMembershipForTest({
-        sourceCombatantId: spellCasterId,
+        sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
       }),
     );
-
-    const result = resolveBattleSubject({
-      state: session.state,
-      subject: {
-        tag: "runtimeCommand",
-        actorId: spellCasterId,
-        command: "castTriggeredReactionSpell",
-        reactorId: spellCasterId,
-        procedureRef: requireCounterspellProcedureRef(session.state),
-      },
-      fills: [],
+    const result = resolveBattleInterrupt({
+      state: suppressed.state,
+      fill: decision,
     });
-
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
@@ -794,15 +875,4 @@ function preserveLifeUnitRefWithSupport() {
   }
   expect(unitRef.success.supportProfiles).toContainEqual(support);
   return unitRef.success;
-}
-
-function requireCounterspellProcedureRef(state: BattleState) {
-  const caster = state.combatants.get(spellCasterId);
-  if (!isCharacterBattleCreatureState(caster)) {
-    throw new Error("Expected the spell caster to be a character.");
-  }
-  return battleProcedureExecutionRef(
-    caster.origin.execution.scopeRef,
-    NonNegativeInteger(0),
-  );
 }

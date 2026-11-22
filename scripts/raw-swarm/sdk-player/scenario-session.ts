@@ -2328,6 +2328,31 @@ function isScenarioCreatureSpellTargetFill(
   );
 }
 
+/**
+ * Whether a ranged attack fill carries exactly one enemy proximity fact for
+ * this attacker and procedure. The runtime checks the enemies themselves.
+ */
+function hasOneScopedEnemyProximityFact(
+  facts: readonly BattleTargetSpatialFact[],
+  scope: Pick<
+    Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "rangedAttackEnemyProximity" }
+    >,
+    "attackerId" | "procedureRef"
+  >,
+): boolean {
+  const qualifications = facts.filter(
+    (fact) => fact.kind === "rangedAttackEnemyProximity",
+  );
+  const [qualification] = qualifications;
+  return (
+    qualifications.length === 1 &&
+    qualification?.attackerId === scope.attackerId &&
+    qualification.procedureRef === scope.procedureRef
+  );
+}
+
 export function scenarioCreatureSpellTargetFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;
@@ -2414,19 +2439,15 @@ export function scenarioCreatureSpellTargetFills(input: {
       canonicalFacts.length > 0 &&
       request.requiresEnemyProximityQualification === true
     ) {
-      const qualifications = (fill.spatialFacts ?? []).filter(
-        (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
-      );
-      const qualification = qualifications[0];
       if (
-        qualifications.length !== 1 ||
-        qualification === undefined ||
-        qualification.casterId !== request.casterId ||
-        qualification.sourceProcedureRef !== request.sourceProcedureRef
+        !hasOneScopedEnemyProximityFact(fill.spatialFacts ?? [], {
+          attackerId: request.casterId,
+          procedureRef: request.sourceProcedureRef,
+        })
       ) {
         return Result.fail({
           tag: "spell-target-projection",
-          message: `requiresEnemyProximityQualification is true for casterId ${String(request.casterId)} and sourceProcedureRef ${String(request.sourceProcedureRef)}. Supply exactly one rangedSpellAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeCaster. Use enemies: [] only after checking none qualify. The retained initial enemy relationships do not establish this cast's complete qualification.`,
+          message: `requiresEnemyProximityQualification is true for casterId ${String(request.casterId)} and sourceProcedureRef ${String(request.sourceProcedureRef)}. Supply exactly one rangedAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeAttacker. Use enemies: [] only after checking none qualify. The retained initial enemy relationships do not establish this cast's complete qualification.`,
         });
       }
     }
@@ -2972,6 +2993,19 @@ export function scenarioAttackTargetFills(input: {
         tag: "attack-target-projection",
         message: eligibility.success.message,
       });
+    }
+    if (attack.targetConstraint.kind === "rangedRange") {
+      if (
+        !hasOneScopedEnemyProximityFact(fill.spatialFacts ?? [], {
+          attackerId: attack.actorId,
+          procedureRef: attack.selection.procedureRef,
+        })
+      ) {
+        return Result.fail({
+          tag: "attack-target-projection",
+          message: `A ranged attack by ${String(attack.actorId)} with procedureRef ${String(attack.selection.procedureRef)} needs exactly one rangedAttackEnemyProximity spatial fact scoped to those references, with the complete Table-decided enemy list and each enemy's current distanceFeet and enemyCanSeeAttacker. Use enemies: [] only after checking none qualify.`,
+        });
+      }
     }
     const { relation } = eligibility.success;
     const distanceFact = {

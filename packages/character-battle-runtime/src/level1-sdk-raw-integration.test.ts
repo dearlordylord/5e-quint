@@ -9326,9 +9326,9 @@ function spellTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: casterId,
-              sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: casterId,
+              procedureRef: battleProcedureExecutionRefForHole(hole),
               enemies: [],
             },
           ]
@@ -9463,13 +9463,13 @@ function spellLeapTargetFill(
         distanceFeet: movementFeet(30),
       },
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId,
-        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+        kind: "rangedAttackEnemyProximity",
+        attackerId: casterId,
+        procedureRef: battleProcedureExecutionRefForHole(hole),
         enemies: [previousTargetId, targetId].map((enemyId) => ({
           enemyId,
           distanceFeet: movementFeet(30),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         })),
       },
       {

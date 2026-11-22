@@ -62,8 +62,8 @@
       "value": 450
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 243,
-      "numerator": 235,
+      "denominator": 244,
+      "numerator": 236,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 170,
-      "numerator": 165,
+      "denominator": 171,
+      "numerator": 166,
       "percent": "97.1%"
     },
     "qntProofCoverage": {
-      "denominator": 170,
-      "numerator": 162,
+      "denominator": 171,
+      "numerator": 163,
       "percent": "95.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 215,
-      "numerator": 190,
+      "denominator": 216,
+      "numerator": 191,
       "percent": "88.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 215,
-      "numerator": 213,
+      "denominator": 216,
+      "numerator": 214,
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 229,
-      "numerator": 187,
+      "denominator": 230,
+      "numerator": 188,
       "percent": "81.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 170,
-      "numerator": 165,
+      "denominator": 171,
+      "numerator": 166,
       "percent": "97.1%"
     },
     "runtimeParityCoverage": {
-      "denominator": 170,
-      "numerator": 165,
+      "denominator": 171,
+      "numerator": 166,
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 206,
-      "numerator": 201,
+      "denominator": 207,
+      "numerator": 202,
       "percent": "97.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 399,
-      "numerator": 243,
-      "percent": "60.9%"
+      "numerator": 244,
+      "percent": "61.2%"
     }
   },
   "metricSemantics": [
@@ -8306,19 +8306,57 @@
           "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.weapon-mastery-graze",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts"
+      ],
+      "sourceBoundary": "Battle admission retains selected weapon mastery and attack ability/damage-type facts. A single resolved-attacker Graze rule admits eligible misses, including zero modifiers, and returns optional fixed damage. Primary, reaction and Horde Breaker hosts preserve independent decision identity, miss status, ordinary damage lifecycle and their own resource completion.",
+      "taskRefs": [
+        "GH530-WEAPON-MASTERY-GRAZE"
+      ],
+      "title": "Weapon Mastery Graze optionally deals the attack's ability modifier as the weapon's damage type to a creature the attack roll missed",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/mcp/src/manual-mcp-battle-surface.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 215,
-        "numerator": 190,
+        "denominator": 216,
+        "numerator": 191,
         "percent": "88.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 215,
-        "numerator": 213,
+        "denominator": 216,
+        "numerator": 214,
         "percent": "99.1%"
       }
     },
@@ -12023,6 +12061,28 @@
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-initiative-activation-movement-core.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          },
+          {
+            "obligationId": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Weapon Mastery Graze: a missed attack roll against a creature with an unlocked Graze weapon may deal the attack's ability modifier as the weapon's damage type"
+          }
+        ],
+        "profileId": "unit-feature.weapon-mastery-graze",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -12033,8 +12093,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 229,
-          "numerator": 187,
+          "denominator": 230,
+          "numerator": 188,
           "percent": "81.7%"
         }
       },
@@ -15504,6 +15564,34 @@
             }
           ],
           "unitId": "mastery_cleave"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                },
+                {
+                  "obligationId": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Weapon Mastery Graze: a missed attack roll against a creature with an unlocked Graze weapon may deal the attack's ability modifier as the weapon's damage type"
+                }
+              ],
+              "profileId": "unit-feature.weapon-mastery-graze",
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "mastery_graze"
         },
         {
           "joinStatus": "covered",
@@ -23396,6 +23484,22 @@
         "stat-block.multiattack"
       ],
       "taskId": "SB-MULTIATTACK-PRONE-RUNTIME-TEST"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Graze rule-core examples cover unlocked weapon misses, optional use/decline, zero and negative modifier clamping, bonus independence and independent choices across two misses.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-graze"
+      ],
+      "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused runtime and public MCP witnesses cover ordinary and reaction Graze, independent primary/Horde Breaker decisions, zero modifiers, unchanged miss status, damage lifecycle, rejection and exact-once completion through nested interrupts.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-graze"
+      ],
+      "taskId": "GH530-WEAPON-MASTERY-GRAZE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -35423,20 +35527,69 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future weapon-attack miss-damage mastery owner",
-          "reason": "A future owner must gate Graze on an unlocked mastery for the attacking weapon, offer damage after a miss, derive the attack ability modifier and weapon damage type from the attack, and enforce that only an increase to that ability modifier can increase the damage without authored-identity dispatch."
-        },
-        "futureProfileOwner": "future weapon-attack miss-damage mastery owner",
-        "reason": "Graze is authored and installed, but Battle admission rejects its weapon-attack-miss damage mechanics because no promoted runtime profile owns optional miss damage equal to the attack ability modifier in the weapon's damage type.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.weapon-mastery-graze"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/weapon-mastery-graze-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "mastery",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-mastery-graze",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/weapon-mastery-graze.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts"
+          ],
+          "sourceBoundary": "Battle admission retains selected weapon mastery and attack ability/damage-type facts. A single resolved-attacker Graze rule admits eligible misses, including zero modifiers, and returns optional fixed damage. Primary, reaction and Horde Breaker hosts preserve independent decision identity, miss status, ordinary damage lifecycle and their own resource completion.",
+          "taskRefs": [
+            "GH530-WEAPON-MASTERY-GRAZE"
+          ],
+          "title": "Weapon Mastery Graze optionally deals the attack's ability modifier as the weapon's damage type to a creature the attack roll missed",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/mcp/src/manual-mcp-battle-surface.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/mastery_graze.json",
       "unitId": "mastery_graze"
     },

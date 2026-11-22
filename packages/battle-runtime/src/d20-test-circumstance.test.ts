@@ -832,6 +832,7 @@ describe("Table-authored per-test D20 circumstances", () => {
         requireCombatant(session.state, goblinId),
         undefined,
         [],
+        null,
       ),
     ).toBe(false);
 

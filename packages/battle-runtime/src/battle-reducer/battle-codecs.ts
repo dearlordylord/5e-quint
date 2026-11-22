@@ -898,14 +898,14 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     distanceFeet: Schema.optionalKey(MovementFeet),
   }),
   Schema.Struct({
-    kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-    casterId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
+    kind: Schema.Literal("rangedAttackEnemyProximity"),
+    attackerId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
     enemies: Schema.Array(
       Schema.Struct({
         enemyId: CombatantId,
         distanceFeet: MovementFeet,
-        enemyCanSeeCaster: Schema.Boolean,
+        enemyCanSeeAttacker: Schema.Boolean,
       }),
     ),
   }),
@@ -2268,6 +2268,22 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ),
 } as const;
 
+const BattleAttackTargetRequestFields = {
+  actorId: CombatantId,
+  selection: BattleAttackExecutionSelectionSchema,
+  targetConstraint: Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("meleeReach"),
+      reachFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rangedRange"),
+      normalFeet: MovementFeet,
+      longFeet: MovementFeet,
+    }),
+  ]),
+} as const;
+
 const BattleHolePayloadMembers = [
   BattleInterruptDecisionHolePayloadMember,
   pairedBattleHoleMember({
@@ -2336,19 +2352,7 @@ const BattleHolePayloadMembers = [
     ),
     attack: Schema.optionalKey(
       Schema.Struct({
-        actorId: CombatantId,
-        selection: BattleAttackExecutionSelectionSchema,
-        targetConstraint: Schema.Union([
-          Schema.Struct({
-            kind: Schema.Literal("meleeReach"),
-            reachFeet: MovementFeet,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("rangedRange"),
-            normalFeet: MovementFeet,
-            longFeet: MovementFeet,
-          }),
-        ]),
+        ...BattleAttackTargetRequestFields,
         acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
@@ -3487,6 +3491,7 @@ const BattleHolePayloadMembers = [
     dc: DcSourceSchema,
     choices: Schema.Array(CombatantId),
     replacementTargetKind: Schema.Literal("attackRoll"),
+    attack: Schema.optionalKey(Schema.Struct(BattleAttackTargetRequestFields)),
     relationshipFactRequest: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("attackRollTargetIsEnemy"),
@@ -4037,13 +4042,13 @@ type BattleFillEncoded =
             readonly attackerCanSeeObject: boolean;
           }
         | {
-            readonly kind: "rangedSpellAttackEnemyProximity";
-            readonly casterId: string;
-            readonly sourceProcedureRef: string;
+            readonly kind: "rangedAttackEnemyProximity";
+            readonly attackerId: string;
+            readonly procedureRef: string;
             readonly enemies: readonly {
               readonly enemyId: string;
               readonly distanceFeet: number;
-              readonly enemyCanSeeCaster: boolean;
+              readonly enemyCanSeeAttacker: boolean;
             }[];
           }
         | {
@@ -5272,14 +5277,14 @@ export const BattleFillSchema: Schema.Codec<
             attackerCanSeeObject: Schema.Boolean,
           }),
           Schema.Struct({
-            kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-            casterId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
+            kind: Schema.Literal("rangedAttackEnemyProximity"),
+            attackerId: CombatantId,
+            procedureRef: BattleProcedureExecutionRef,
             enemies: Schema.Array(
               Schema.Struct({
                 enemyId: CombatantId,
                 distanceFeet: MovementFeet,
-                enemyCanSeeCaster: Schema.Boolean,
+                enemyCanSeeAttacker: Schema.Boolean,
               }),
             ),
           }),
