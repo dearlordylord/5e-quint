@@ -829,8 +829,15 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Short Rest applies minimum healing to each spent Hit Die", () => {
+    const baseWizardBuild = wizardBuild({ wizardAdvancements: 1 });
     const lowConWizardBuild: CharacterBuild = {
-      ...wizardBuild({ wizardAdvancements: 1 }),
+      ...baseWizardBuild,
+      progression: {
+        ...baseWizardBuild.progression,
+        advancements: baseWizardBuild.progression.advancements.map(
+          (advancement) => ({ ...advancement, constitutionModifierAtGain: -1 }),
+        ),
+      },
       abilityScores: expectSuccess(
         abilityScoreAssignment({
           str: 13,

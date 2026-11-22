@@ -66,6 +66,7 @@ describe("character build display projection", () => {
           {
             classUnitId: classUnitId(authoredUnitId("class_wizard")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 0,
           },
         ],
       },

@@ -220,6 +220,54 @@ module characterCreationRuntimeSliceTests {
     }
   }
 
+  run test_random_generation_assignment_accepts_rolled_scores = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FAbilityScores({
+        hole: HAbilityScores,
+        method: RandomGeneration,
+        scores: {
+          strength: 18,
+          dexterity: 3,
+          constitution: 16,
+          intelligence: 9,
+          wisdom: 12,
+          charisma: 11,
+        },
+      }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.revision == 1),
+            assert(v.draft.abilityScores),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_random_generation_assignment_rejects_score_outside_three_to_eighteen = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FAbilityScores({
+        hole: HAbilityScores,
+        method: RandomGeneration,
+        scores: {
+          strength: 19,
+          dexterity: 3,
+          constitution: 16,
+          intelligence: 9,
+          wisdom: 12,
+          charisma: 11,
+        },
+      }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == emptyDraft),
+            assert(v.issues.fills == Set({ fillIndex: 0, hole: HAbilityScores, code: InvalidAbilityScores })),
+          }
+    }
+  }
+
   run test_valid_but_profile_unsupported_alignment_rejects_atomically = {
     match fillCreationHoles(emptyDraft, 0, [
       FChoice({ hole: HAlignment, options: [OAlignmentNeutralGood] }),
