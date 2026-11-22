@@ -340,7 +340,7 @@ test("a readied attack resumes to its damage after a Reaction to its hit, used o
   expect(dodgedDamage).toBe(Math.floor(declinedDamage / 2));
 });
 
-test("the attack-hit replay keeps a fixed target's spatial facts and compares them by value", () => {
+test("the attack-hit replay keeps a fixed target's spatial facts and compares them by value, in any order", () => {
   const driver = transactionDriver(
     startBattleSessionRight({
       battleId: battleId("readied-attack-replay-fills"),
@@ -377,4 +377,20 @@ test("the attack-hit replay keeps a fixed target's spatial facts and compares th
       targetSpatialFactsFill(goblinId, selection, 10),
     ),
   ).toBe(false);
+  const cannotSee = {
+    kind: "attackTargetCannotSeeAttacker" as const,
+    attackerId: fighterId,
+    targetId: goblinId,
+  };
+  const withTwoFacts = {
+    ...recorded,
+    spatialFacts: [...recorded.spatialFacts, cannotSee],
+  };
+  expect(
+    battleContinuationFillEquals(withTwoFacts, {
+      ...recorded,
+      spatialFacts: [cannotSee, ...recorded.spatialFacts],
+    }),
+  ).toBe(true);
+  expect(battleContinuationFillEquals(withTwoFacts, recorded)).toBe(false);
 });
