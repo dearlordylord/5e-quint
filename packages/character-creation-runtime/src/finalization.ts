@@ -25,7 +25,7 @@ import {
   unitId as authoredUnitId,
   type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
-import { Result, Match, Option } from "effect";
+import { Array, Result, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared/validation";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -2059,19 +2059,24 @@ function characterBuildScoresAndProgression(
   );
   if (Result.isFailure(backgroundScores))
     return Result.fail([backgroundScores.failure]);
+  const increases = classFeatureAbilityScoreIncreaseAcquisitions({
+    selections,
+    progression,
+    unitLibrary,
+  });
+  if (Result.isFailure(increases)) return Result.fail(increases.failure);
   const abilityScores = applyClassFeatureAbilityScoreIncreases(
     backgroundScores.success,
-    selections,
+    increases.success.flatMap(({ deltas }) => deltas),
   );
   if (Result.isFailure(abilityScores))
     return Result.fail(abilityScores.failure);
   return Result.succeed({
     abilityScores: abilityScores.success,
     progression: characterBuildProgression({
-      selections,
       progression,
       constitutionAfterBackground: backgroundScores.success.con,
-      unitLibrary,
+      increases: increases.success,
     }),
   });
 }
@@ -2081,12 +2086,10 @@ function characterBuildScoresAndProgression(
  * its own class-feature score increases (Level Advancement steps 2 and 5).
  */
 function characterBuildProgression(input: {
-  readonly selections: FinalizedCharacterSelections;
   readonly progression: CharacterProgression;
   readonly constitutionAfterBackground: number;
-  readonly unitLibrary: UnitCatalog;
+  readonly increases: readonly ClassFeatureAbilityScoreIncreaseAcquisition[];
 }): CharacterBuildProgression {
-  const increases = constitutionIncreaseAcquisitions(input);
   return {
     ...input.progression,
     advancements: input.progression.advancements.map((advancement, index) => {
@@ -2097,8 +2100,10 @@ function characterBuildProgression(input: {
       return {
         ...advancement,
         constitutionModifierAtGain: abilityModifier(
-          increases
+          input.increases
             .filter(({ acquiredAtLevel }) => acquiredAtLevel < characterLevel)
+            .flatMap(({ deltas }) => deltas)
+            .filter(({ ability }) => ability === "con")
             .reduce(
               (score, { increase }) => score + increase,
               input.constitutionAfterBackground,
@@ -2109,41 +2114,61 @@ function characterBuildProgression(input: {
   };
 }
 
-type ConstitutionIncreaseAcquisition = {
+type ClassFeatureAbilityScoreIncreaseAcquisition = {
   readonly acquiredAtLevel: CharacterClassLevel;
-  readonly increase: number;
+  readonly deltas: readonly AbilityScoreIncreaseDeltaWithCap[];
 };
 
-/** Each class-feature Constitution increase with the character level that chose it. */
-function constitutionIncreaseAcquisitions(input: {
+function classFeatureAbilityScoreIncreaseAcquisitions(input: {
   readonly selections: FinalizedCharacterSelections;
   readonly progression: CharacterProgression;
   readonly unitLibrary: UnitCatalog;
-}): readonly ConstitutionIncreaseAcquisition[] {
-  return unitChoiceSelections(input.selections)
-    .filter(
-      (selection) =>
-        selection.source.choiceKey ===
-        CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
-    )
-    .flatMap((selection) => {
+}): Result.Result<
+  readonly ClassFeatureAbilityScoreIncreaseAcquisition[],
+  FinalizationIssues
+> {
+  const selections = unitChoiceSelections(input.selections).filter(
+    (selection) =>
+      selection.source.choiceKey ===
+      CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  );
+  const acquisitions = traverseValidation(
+    selections,
+    (
+      selection,
+    ): Result.Result<
+      ClassFeatureAbilityScoreIncreaseAcquisition,
+      FinalizationIssues
+    > => {
       const acquisition = selectedFeatAcquisitionProgression(
         selection,
         input.progression,
         input.unitLibrary,
       );
-      /* v8 ignore next -- @preserve -- The feat prerequisite gate placed this score choice's class feature in the progression. */
-      if (acquisition === undefined) return [];
-      const acquiredAtLevel = computeTotalLevel(acquisition);
-      return choiceSelectionOptionIds(selection).flatMap((optionId) => {
-        const deltas = decodeAbilityScoreIncreaseOptionId(optionId);
-        /* v8 ignore next -- @preserve -- Supported class-feature score choices retain codec-emitted ids. */
-        if (Result.isFailure(deltas)) return [];
-        return deltas.success.flatMap(({ ability, increase }) =>
-          ability === "con" ? [{ acquiredAtLevel, increase }] : [],
-        );
+      /* v8 ignore next -- @preserve -- The feat prerequisite gate resolves the acquisition of each supported score choice. */
+      if (acquisition === undefined)
+        return Result.fail([
+          unsupportedFinalizationIssue({
+            tag: "selectedFeatPrerequisitesNotMet",
+          }),
+        ]);
+      const deltas = traverseValidation(
+        choiceSelectionOptionIds(selection),
+        (optionId) =>
+          Result.mapError(
+            decodeAbilityScoreIncreaseOptionId(optionId),
+            choiceOptionCodecProjectionIssue,
+          ),
+      );
+      /* v8 ignore next -- @preserve -- Supported score choices retain codec-emitted ids. */
+      if (Result.isFailure(deltas)) return Result.fail(deltas.failure);
+      return Result.succeed({
+        acquiredAtLevel: computeTotalLevel(acquisition),
+        deltas: deltas.success.flat(),
       });
-    });
+    },
+  );
+  return Result.mapError(acquisitions, Array.flatten);
 }
 
 type CharacterBuildProjectionInput = {
@@ -5649,37 +5674,8 @@ export function applyBackgroundAbilityScoreIncrease(
 
 function applyClassFeatureAbilityScoreIncreases(
   baseScores: AbilityScoreAssignment,
-  selections: FinalizedCharacterSelections,
+  deltasWithCaps: readonly AbilityScoreIncreaseDeltaWithCap[],
 ): Result.Result<AbilityScoreAssignment, ProjectionIssues> {
-  const deltasWithCaps: AbilityScoreIncreaseDeltaWithCap[] = [];
-  const decodingIssues: CharacterBuildProjectionIssue[] = [];
-  for (const selection of selections.choices) {
-    if (
-      selection.kind !== "unitChoice" ||
-      selection.source.choiceKey !==
-        CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY
-    ) {
-      continue;
-    }
-
-    for (const optionId of choiceSelectionOptionIds(selection)) {
-      const decoded = decodeAbilityScoreIncreaseOptionId(optionId);
-      /* v8 ignore start -- @preserve -- Supported class-feature score choices are decoded before finalization and retain codec-emitted ids. */
-      if (Result.isFailure(decoded)) {
-        decodingIssues.push(choiceOptionCodecProjectionIssue(decoded.failure));
-        continue;
-      }
-      /* v8 ignore stop -- @preserve */
-      deltasWithCaps.push(...decoded.success);
-    }
-  }
-  const collectedDecodingIssues = nonEmptyReadonlyArray(decodingIssues);
-  /* v8 ignore start -- @preserve -- Supported score-increase choices retain only ids emitted by the score-increase codec. */
-  if (collectedDecodingIssues != null) {
-    return Result.fail(collectedDecodingIssues);
-  }
-  /* v8 ignore stop -- @preserve */
-
   const capIssues: CharacterBuildProjectionIssue[] = [];
   let scores = baseScores;
   for (const delta of deltasWithCaps) {
