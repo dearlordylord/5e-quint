@@ -2049,7 +2049,7 @@ export function resolveSelectedAttackProcedure<
           ? requiredAttackRollMode(
               input.state,
               attackerId,
-              target.combatantId,
+              target,
               attack,
               fillSet.targetSpatialFacts,
             )
@@ -2104,7 +2104,7 @@ export function resolveSelectedAttackProcedure<
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
     attackerId,
-    target.combatantId,
+    target,
     attack,
     fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
@@ -2112,7 +2112,7 @@ export function resolveSelectedAttackProcedure<
   const baselineRequiredRollMode = requiredAttackRollMode(
     input.state,
     attackerId,
-    target.combatantId,
+    target,
     attack,
     fillSet.targetSpatialFacts,
   );
@@ -4206,7 +4206,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
     { readonly kind: "weapon" }
   >;
   readonly family: AdditionalWeaponAttackFamily;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly attackRollHole: BattleAttackRollHole;
 }): AdditionalWeaponAttackRollResolution {
@@ -4222,7 +4222,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
   const requiredRollMode = requiredAttackRollMode(
     input.state,
     input.subject.actorId,
-    input.targetId,
+    input.target,
     input.attack,
     input.targetSpatialFacts,
   );
@@ -4920,22 +4920,6 @@ function prepareWeaponMasteryCleaveAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const cleaveAttackRoll = resolveAdditionalWeaponAttackRoll({
-    state: input.state,
-    subject: input.subject,
-    attack: cleaveAttack,
-    family: decision.family,
-    targetId: secondTargetId,
-    targetSpatialFacts: cleaveTargetFacts,
-    attackRollHole: weaponMasteryCleaveAttackRollHole(
-      input.state,
-      input.subject.actorId,
-      secondTargetId,
-      cleaveAttack,
-      cleaveTargetFacts,
-    ),
-  });
-  if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
   const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
   if (secondTarget === undefined) {
@@ -4949,6 +4933,22 @@ function prepareWeaponMasteryCleaveAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const cleaveAttackRoll = resolveAdditionalWeaponAttackRoll({
+    state: input.state,
+    subject: input.subject,
+    attack: cleaveAttack,
+    family: decision.family,
+    target: secondTarget,
+    targetSpatialFacts: cleaveTargetFacts,
+    attackRollHole: weaponMasteryCleaveAttackRollHole(
+      input.state,
+      input.subject.actorId,
+      secondTarget,
+      cleaveAttack,
+      cleaveTargetFacts,
+    ),
+  });
+  if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
   return {
     tag: "prepared",
     decision,
@@ -5589,24 +5589,6 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const hordeBreakerAttackRoll = resolveAdditionalWeaponAttackRoll({
-    state: input.state,
-    subject: input.subject,
-    attack: hordeBreakerAttack,
-    family: decision.family,
-    targetId: secondTargetId,
-    targetSpatialFacts: targetFacts,
-    attackRollHole: huntersPreyHordeBreakerAttackRollHole(
-      input.state,
-      input.subject.actorId,
-      secondTargetId,
-      hordeBreakerAttack,
-      targetFacts,
-    ),
-  });
-  if (hordeBreakerAttackRoll.tag === "result") {
-    return hordeBreakerAttackRoll;
-  }
   const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
   if (secondTarget === undefined) {
@@ -5620,6 +5602,24 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const hordeBreakerAttackRoll = resolveAdditionalWeaponAttackRoll({
+    state: input.state,
+    subject: input.subject,
+    attack: hordeBreakerAttack,
+    family: decision.family,
+    target: secondTarget,
+    targetSpatialFacts: targetFacts,
+    attackRollHole: huntersPreyHordeBreakerAttackRollHole(
+      input.state,
+      input.subject.actorId,
+      secondTarget,
+      hordeBreakerAttack,
+      targetFacts,
+    ),
+  });
+  if (hordeBreakerAttackRoll.tag === "result") {
+    return hordeBreakerAttackRoll;
+  }
   return {
     tag: "prepared",
     decision,

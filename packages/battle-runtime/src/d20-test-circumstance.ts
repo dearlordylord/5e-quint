@@ -100,12 +100,11 @@ export const TARGET_ADVANTAGE_CONDITIONS = [
 
 /**
  * The distance-independent attack-roll sources a target creature's own
- * conditions supply. An absent target supplies none.
+ * conditions supply.
  */
 export function targetConditionAttackRollModeSources(
-  targetConditions: ConditionState | undefined,
+  conditions: ConditionState,
 ): D20TestRollModeSources {
-  const conditions = targetConditions ?? EMPTY_CONDITION_STATE;
   return {
     advantage: TARGET_ADVANTAGE_CONDITIONS.some((condition) =>
       hasCondition(conditions, condition),

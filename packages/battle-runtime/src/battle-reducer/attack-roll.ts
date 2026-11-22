@@ -223,15 +223,16 @@ export function attackRollHole(
 export function requiredAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   opportunityAttack = false,
 ): AttackRollMode | undefined {
+  const targetId = target.combatantId;
   const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
     null,
@@ -254,15 +255,14 @@ type AttackRollSourceFlags = {
 };
 
 function proneTargetAttackRollModeSources(
-  state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
 ) {
-  const target = state.combatants.get(targetId);
-  if (target === undefined || !hasCondition(target.conditions, "prone")) {
+  const targetId = target.combatantId;
+  if (!hasCondition(target.conditions, "prone")) {
     return { advantage: false, disadvantage: false };
   }
   const distanceFeet =
@@ -290,17 +290,15 @@ function proneTargetAttackRollModeSources(
 }
 
 function targetCreatureConditionAttackRollModeSources(
-  state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
 ): D20TestRollModeSources {
   const proneSources = proneTargetAttackRollModeSources(
-    state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
     spellTargetDistanceFeet,
@@ -308,9 +306,7 @@ function targetCreatureConditionAttackRollModeSources(
   return {
     advantage:
       proneSources.advantage ||
-      targetConditionAttackRollModeSources(
-        state.combatants.get(targetId)?.conditions,
-      ).advantage,
+      targetConditionAttackRollModeSources(target.conditions).advantage,
     disadvantage: proneSources.disadvantage,
   };
 }
@@ -341,18 +337,17 @@ function attackTargetIsLongRange(
 function attackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
 ): AttackRollSourceFlags {
+  const targetId = target.combatantId;
   const attacker = state.combatants.get(attackerId);
-  const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
   const hiddenTargetDisadvantage = combatantHasHiddenAttackRollBenefit(target);
   const dodgeDisadvantage =
     attacker !== undefined &&
-    target !== undefined &&
     hasDodgeAttackRollBenefit(state, target, attacker);
   const grappleDisadvantage =
     grapple !== undefined && grapple.grapplerId !== targetId;
@@ -364,9 +359,8 @@ function attackRollSourceFlags(
   );
   const targetConditionRollModeSources =
     targetCreatureConditionAttackRollModeSources(
-      state,
       attackerId,
-      targetId,
+      target,
       attack,
       targetSpatialFacts,
       spellTargetDistanceFeet,
@@ -385,7 +379,6 @@ function attackRollSourceFlags(
   );
   const attackerCanSeeTarget =
     attacker !== undefined &&
-    target !== undefined &&
     !sightDisadvantage &&
     combatantCanSee(state, attacker.combatantId, target.combatantId);
   const grapplerAttackAdvantage =
@@ -690,15 +683,16 @@ function objectOutlineGrantsAttackRollAdvantage(
 export function requiredSpellAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   invocation: RuntimeSpellProcedure,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): AttackRollMode | undefined {
+  const targetId = target.combatantId;
   const attacker = state.combatants.get(attackerId);
   const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     undefined,
     targetSpatialFacts,
     spellAttackTargetDistanceFeet(
@@ -768,14 +762,14 @@ function attackRollModeFromSources(
 export function attackRollHasAdvantageSource(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): boolean {
   return attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
     null,
@@ -785,7 +779,7 @@ export function attackRollHasAdvantageSource(
 export function attackRollModeWithOptionalOngoingFeature(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   activatedOngoingFeatureProcedureRef: BattleProcedureExecutionRef | undefined,
@@ -793,7 +787,7 @@ export function attackRollModeWithOptionalOngoingFeature(
   const baseline = requiredAttackRollMode(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
   );
@@ -1528,7 +1522,7 @@ export function weaponMasteryCleaveTargetHole(
 export function weaponMasteryCleaveAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): BattleAttackRollHole {
@@ -1539,7 +1533,7 @@ export function weaponMasteryCleaveAttackRollHole(
       requiredAttackRollMode(
         state,
         attackerId,
-        targetId,
+        target,
         attack,
         targetSpatialFacts,
       ),
@@ -1655,7 +1649,7 @@ export function huntersPreyHordeBreakerTargetHole(
 export function huntersPreyHordeBreakerAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): BattleAttackRollHole {
@@ -1666,7 +1660,7 @@ export function huntersPreyHordeBreakerAttackRollHole(
       requiredAttackRollMode(
         state,
         attackerId,
-        targetId,
+        target,
         attack,
         targetSpatialFacts,
       ),

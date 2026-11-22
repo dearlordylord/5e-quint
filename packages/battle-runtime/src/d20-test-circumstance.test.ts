@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
@@ -213,7 +214,6 @@ describe("Table-authored per-test D20 circumstances", () => {
     for (const sources of [
       attackerConditionAttackRollModeSources(undefined),
       attackerConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
-      targetConditionAttackRollModeSources(undefined),
       targetConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
     ]) {
       expect(sources).toEqual({ advantage: false, disadvantage: false });
@@ -805,7 +805,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       attackRollHasAdvantageSource(
         session.state,
         fighterId,
-        goblinId,
+        requireCombatant(session.state, goblinId),
         undefined,
         [],
       ),

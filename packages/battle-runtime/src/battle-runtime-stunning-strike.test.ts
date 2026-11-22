@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.CONDITION_ROLL_MODE
@@ -159,7 +160,7 @@ describe("battle runtime: Stunning Strike", () => {
       requiredAttackRollMode(
         resolved.state,
         fighterId,
-        goblinId,
+        requireCombatant(resolved.state, goblinId),
         undefined,
         [],
       ),
@@ -173,7 +174,13 @@ describe("battle runtime: Stunning Strike", () => {
     }
     expect(hasCondition(monkTurnTarget.conditions, "stunned")).toBe(false);
     expect(
-      requiredAttackRollMode(monkTurn, fighterId, goblinId, undefined, []),
+      requiredAttackRollMode(
+        monkTurn,
+        fighterId,
+        requireCombatant(monkTurn, goblinId),
+        undefined,
+        [],
+      ),
     ).toBeUndefined();
   });
 
@@ -224,7 +231,7 @@ describe("battle runtime: Stunning Strike", () => {
       requiredAttackRollMode(
         resolved.state,
         fighterId,
-        goblinId,
+        requireCombatant(resolved.state, goblinId),
         undefined,
         [],
       ),
@@ -247,7 +254,7 @@ describe("battle runtime: Stunning Strike", () => {
       requiredAttackRollMode(
         nextMonkTurn.state,
         fighterId,
-        goblinId,
+        requireCombatant(nextMonkTurn.state, goblinId),
         undefined,
         [],
       ),

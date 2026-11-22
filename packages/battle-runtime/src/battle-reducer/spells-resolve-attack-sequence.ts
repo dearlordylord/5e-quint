@@ -369,7 +369,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const requiredRollMode = requiredSpellAttackRollMode(
     input.state,
     input.actorId,
-    target.combatantId,
+    target,
     input.invocation,
     input.target.spatialFacts,
   );

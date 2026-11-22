@@ -418,7 +418,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   const requiredRollMode = requiredSpellAttackRollMode(
     input.input.state,
     input.actorId,
-    target.combatantId,
+    target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
   );
