@@ -5,6 +5,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleExecutableSpellInvocation,
+  BattleAttackTargetRequest,
   BattleAttackRollRelationshipFact,
   BattleCreatureState,
   BattleFill,
@@ -20,7 +21,6 @@ import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
-import { withSameAttackEnemyProximityFrom } from "./ranged-attack-close-combat.ts";
 import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import {
@@ -76,18 +76,11 @@ type AttackRollInterdictionNewTargetOutcome = Extract<
 export function targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(input: {
   readonly fill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
   readonly replacement: AttackRollInterdictionReplacementTarget;
-}):
-  | Extract<BattleFill, { readonly kind: "targetChoice" }>
-  | import("./ranged-attack-close-combat.ts").SpatialQualificationIssue {
-  const inherited = withSameAttackEnemyProximityFrom(
-    input.fill.spatialFacts ?? [],
-    input.replacement.spatialFacts,
-  );
-  if (inherited.tag === "invalid") return inherited;
+}): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const replacementFill = {
     ...input.fill,
     value: input.replacement.targetId,
-    spatialFacts: inherited.facts,
+    spatialFacts: input.replacement.spatialFacts,
   };
   const [firstRelationshipFact, ...remainingRelationshipFacts] =
     input.replacement.relationshipFacts;
@@ -127,6 +120,7 @@ type NonAttackTargetingSaveInterdictionCheck =
     };
 
 type TargetingSaveInterdictionInput = {
+  readonly attack?: BattleAttackTargetRequest;
   readonly state: BattleState;
   readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
@@ -179,6 +173,7 @@ export function targetingSaveInterdictionCheck(
             input.spellLeapTargetSpatialFactRequest,
         }),
     replacementTargetKind: input.replacementTargetKind,
+    ...(input.attack === undefined ? {} : { attack: input.attack }),
     effect,
   });
   const matchingFills = input.fills.filter(
@@ -307,6 +302,7 @@ function attackRollTargetingSaveInterdictionOutcomeCheck(
 }
 
 type TargetingSaveInterdictionOutcomeHoleInput = {
+  readonly attack?: BattleAttackTargetRequest;
   readonly state: BattleState;
   readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
@@ -374,6 +370,7 @@ function targetingSaveInterdictionOutcomeHole(
     ? {
         ...base,
         replacementTargetKind: "attackRoll",
+        ...(input.attack === undefined ? {} : { attack: input.attack }),
         ...(input.spellTargetSpatialFactRequest === undefined
           ? {}
           : {

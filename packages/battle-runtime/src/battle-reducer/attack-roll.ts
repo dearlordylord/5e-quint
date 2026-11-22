@@ -1557,6 +1557,12 @@ export function weaponMasteryCleaveDamageHole(
 }
 
 export function weaponMasteryCleaveExtraAttack(
+  attack: BoundCharacterWeaponAttackActionOption,
+): BoundCharacterWeaponAttackActionOption;
+export function weaponMasteryCleaveExtraAttack(
+  attack: CharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption;
+export function weaponMasteryCleaveExtraAttack(
   attack: CharacterWeaponAttackActionOption,
 ): CharacterWeaponAttackActionOption {
   return {

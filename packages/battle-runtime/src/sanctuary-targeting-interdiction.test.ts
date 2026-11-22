@@ -365,18 +365,16 @@ describe("Sanctuary targeting interdiction", () => {
 
   test.each([
     "coherent",
-    "inheritedConflict",
-    "restatedConflict",
-    "erased",
+    "contradictory",
+    "refreshed",
+    "checkedEmpty",
+    "missing",
   ] as const)(
-    "a ranged attack moved to a new target keeps the attacker's close-combat Disadvantage",
+    "Sanctuary ranged replacement independently qualifies proximity: %s",
     (scenario) => {
       const { warded, attack, targetFill } = wardedShortbowAttack([
         {
-          enemyId:
-            scenario === "coherent" || scenario === "erased"
-              ? wardedId
-              : replacementId,
+          enemyId: scenario === "refreshed" ? replacementId : wardedId,
           distanceFeet: movementFeet(5),
           enemyCanSeeAttacker: true,
         },
@@ -389,6 +387,13 @@ describe("Sanctuary targeting interdiction", () => {
       if (needsSanctuary.tag !== "needsHoles") {
         throw new Error("Expected Sanctuary interdiction hole.");
       }
+      const request = requireHole(
+        battleResolutionHolesForTest(needsSanctuary),
+        "targetingSaveInterdictionOutcome",
+      );
+      if (request.replacementTargetKind !== "attackRoll")
+        throw new Error("Expected attack replacement.");
+      expect(request.attack?.targetConstraint.kind).toBe("rangedRange");
       const retargeted = resolveBattleSubject({
         state: warded.state,
         subject: attack.subject,
@@ -409,26 +414,26 @@ describe("Sanctuary targeting interdiction", () => {
                     ...attackTargetFact(replacementId, attack.subject),
                     distanceFeet: movementFeet(30),
                   },
-                  ...(scenario === "erased"
-                    ? rangedAttackEnemyProximityFactsForTest(
+                  ...(scenario === "missing"
+                    ? []
+                    : rangedAttackEnemyProximityFactsForTest(
                         requireHole(attack.initialHoles, "targetChoice"),
                         [],
-                        [],
-                      )
-                    : []),
-                  ...(scenario === "restatedConflict"
-                    ? rangedAttackEnemyProximityFactsForTest(
-                        requireHole(attack.initialHoles, "targetChoice"),
-                        [],
-                        [
-                          {
-                            enemyId: replacementId,
-                            distanceFeet: movementFeet(30),
-                            enemyCanSeeAttacker: true,
-                          },
-                        ],
-                      )
-                    : []),
+                        scenario === "checkedEmpty"
+                          ? []
+                          : [
+                              {
+                                enemyId:
+                                  scenario === "coherent"
+                                    ? wardedId
+                                    : replacementId,
+                                distanceFeet: movementFeet(
+                                  scenario === "refreshed" ? 30 : 5,
+                                ),
+                                enemyCanSeeAttacker: true,
+                              },
+                            ],
+                      )),
                 ],
                 replacementTargetKind: "attackRoll",
               },
@@ -443,11 +448,20 @@ describe("Sanctuary targeting interdiction", () => {
           requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
             .rollMode,
         ).toBe("disadvantage");
+      } else if (scenario === "refreshed" || scenario === "checkedEmpty") {
+        if (retargeted.tag !== "needsHoles")
+          throw new Error("Expected replacement attack roll.");
+        expect(
+          requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+            .rollMode,
+        ).toBeUndefined();
       } else {
         expect(retargeted).toMatchObject({
           tag: "invalid",
           reason: "invalidFill",
-          message: expect.stringMatching(/distance/i),
+          message: expect.stringMatching(
+            scenario === "missing" ? /qualification/i : /distance/i,
+          ),
         });
         expect(combatant(warded.state, attackerId).ammunitionStocks).toEqual([
           { ammunition: "arrow", remaining: resourceCount(20) },

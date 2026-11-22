@@ -464,12 +464,6 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         fill: originalTargetFill,
         replacement: interdictionCheck,
       });
-    if ("tag" in replacementTargetFill)
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        replacementTargetFill.message,
-      );
 
     const fills = input.input.fills
       .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")

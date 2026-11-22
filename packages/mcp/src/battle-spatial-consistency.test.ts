@@ -1,3 +1,8 @@
+import type { BattleHole } from "../../battle-runtime/src/battle-state-execution.ts";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleInputGuidance } from "./chatgpt/battle-input-guidance.ts";
 import { huntersPreyHordeBreakerTargetHole } from "../../battle-runtime/src/battle-reducer/attack-roll.ts";
 import { attackActionOptionForSubject } from "../../battle-runtime/src/battle-reducer/attack-damage-apply.ts";
@@ -280,3 +285,157 @@ test("Horde Breaker's emitted target contract requires its own scoped proximity 
     }).valid,
   ).toBe(false);
 });
+
+test.each(["contradictory", "coherentCannotSee", "differentEnemy"] as const)(
+  "ranged target sight consistency: %s",
+  (scenario) => {
+    const { root, hole, scope } = openAttack();
+    const fill = attackTargetFill(
+      hole,
+      goblinId,
+      fighterId,
+      hole.attack.selection,
+      [
+        proximity(scope, [
+          {
+            enemyId: scenario === "differentEnemy" ? second : fighterId,
+            distanceFeet: movementFeet(5),
+            enemyCanSeeAttacker: scenario !== "coherentCannotSee",
+          },
+        ]),
+        {
+          kind: "attackTargetCannotSeeAttacker",
+          attackerId: goblinId,
+          targetId: fighterId,
+        },
+      ],
+      movementFeet(5),
+    );
+    const before = root.sessionStore.snapshot();
+    const output = submit(root, fill);
+    if (scenario === "contradictory") {
+      expect(output.result).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message: expect.stringMatching(/sight/i),
+      });
+      expect(root.sessionStore.snapshot()).toEqual(before);
+    } else {
+      assert(output.envelope.frontier.kind === "holes");
+      expect(
+        output.envelope.frontier.holes.find((h) => h.kind === "attackRoll")
+          ?.rollMode,
+      ).toBe(scenario === "coherentCannotSee" ? "advantage" : "normal");
+    }
+  },
+);
+
+test.each(["weapon", "spell"] as const)(
+  "ranged %s replacement schema requires fresh scoped proximity only for newTarget",
+  (kind) => {
+    const { hole, scope } = openAttack();
+    const request: Extract<
+      BattleHole,
+      {
+        readonly kind: "targetingSaveInterdictionOutcome";
+        readonly replacementTargetKind: "attackRoll";
+      }
+    > = {
+      kind: "targetingSaveInterdictionOutcome",
+      holeId: holeId("synthetic-replacement"),
+      holeInstanceKey: holeInstanceKey("synthetic-replacement"),
+      label: "Synthetic replacement",
+      sourceProcedureRef: battleProcedureExecutionRefForTest("synthetic-ward"),
+      triggeringProcedureRef: scope.procedureRef,
+      sourceCombatantId: second,
+      wardedCombatantId: fighterId,
+      triggeringCombatantId: goblinId,
+      triggeringTargetEventId: hole.holeId,
+      ability: "wis",
+      dc: { kind: "fixed", dc: 13 },
+      choices: [second],
+      replacementTargetKind: "attackRoll",
+      ...(kind === "weapon"
+        ? { attack: hole.attack }
+        : {
+            spellTargetSpatialFactRequest: {
+              casterId: goblinId,
+              sourceProcedureRef: scope.procedureRef,
+              rangeFeet: movementFeet(60),
+              visibility: "notSpecifiedByProcedure",
+              requiresExactDistance: true,
+              requiresEnemyProximityQualification: true,
+            },
+          }),
+    };
+    const guidance = battleInputGuidance(request)[0];
+    assert(guidance);
+    const validate = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(guidance.fillSchema, "replacement target"),
+    );
+    const targetFacts =
+      kind === "weapon"
+        ? (
+            attackTargetFill(
+              hole,
+              goblinId,
+              second,
+              hole.attack.selection,
+              [],
+              movementFeet(30),
+            ).spatialFacts ?? []
+          ).filter((f) => f.kind !== "rangedAttackEnemyProximity")
+        : [
+            {
+              kind: "spellTarget",
+              casterId: goblinId,
+              targetId: second,
+              sourceProcedureRef: scope.procedureRef,
+              distanceFeet: movementFeet(30),
+            },
+          ];
+    const makeFill = (facts: readonly object[]) => ({
+      kind: request.kind,
+      holeId: request.holeId,
+      value: {
+        saveSucceeded: false,
+        outcome: {
+          kind: "newTarget",
+          targetId: second,
+          replacementTargetKind: "attackRoll",
+          spatialFacts: facts,
+        },
+      },
+    });
+    const qualification = proximity(scope, []);
+    expect(validate(makeFill([...targetFacts, qualification])).valid).toBe(
+      true,
+    );
+    expect(validate(makeFill(targetFacts)).valid).toBe(false);
+    expect(
+      validate(makeFill([...targetFacts, qualification, qualification])).valid,
+    ).toBe(false);
+    expect(
+      validate(
+        makeFill([
+          ...targetFacts,
+          { ...qualification, procedureRef: request.sourceProcedureRef },
+        ]),
+      ).valid,
+    ).toBe(false);
+    expect(
+      validate({
+        kind: request.kind,
+        holeId: request.holeId,
+        value: { saveSucceeded: true },
+      }).valid,
+    ).toBe(true);
+    expect(
+      validate({
+        kind: request.kind,
+        holeId: request.holeId,
+        value: { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
+      }).valid,
+    ).toBe(true);
+  },
+);

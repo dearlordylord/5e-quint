@@ -72,7 +72,7 @@ export function qualifyRangedAttackEnemyProximity(input: {
       message:
         "Ranged attack target requires one scoped enemy proximity qualification; supply enemies: [] only after checking no enemies qualify.",
     };
-  const distanceIssue = attackSpatialDistanceIssue(input.scope, input.facts);
+  const distanceIssue = attackSpatialConsistencyIssue(input.scope, input.facts);
   if (distanceIssue !== null) return distanceIssue;
   return {
     tag: "qualified",
@@ -80,7 +80,7 @@ export function qualifyRangedAttackEnemyProximity(input: {
   };
 }
 
-function attackSpatialDistanceIssue(
+function attackSpatialConsistencyIssue(
   scope: RangedAttackEnemyProximityScope,
   facts: readonly BattleTargetSpatialFact[],
 ): SpatialQualificationIssue | null {
@@ -114,6 +114,20 @@ function attackSpatialDistanceIssue(
     )
       continue;
     for (const enemy of fact.enemies) {
+      if (
+        enemy.enemyCanSeeAttacker &&
+        facts.some(
+          (fact) =>
+            fact.kind === "attackTargetCannotSeeAttacker" &&
+            fact.attackerId === scope.attackerId &&
+            fact.targetId === enemy.enemyId,
+        )
+      )
+        return {
+          tag: "invalid",
+          message:
+            "Attack sight facts contradict whether the same enemy can see the attacker.",
+        };
       const distance = distances.get(enemy.enemyId);
       if (distance !== undefined && distance !== enemy.distanceFeet)
         return {
@@ -148,53 +162,4 @@ export function rangedAttackCloseCombatDisadvantage(
       entry.enemy !== undefined &&
       !isIncapacitated(entry.enemy.conditions),
   );
-}
-
-/** Retain the same pre-roll attack's observation when its target is redirected. */
-export function withSameAttackEnemyProximityFrom(
-  attackFacts: readonly BattleTargetSpatialFact[],
-  facts: readonly BattleTargetSpatialFact[],
-):
-  | {
-      readonly tag: "facts";
-      readonly facts: readonly BattleTargetSpatialFact[];
-    }
-  | SpatialQualificationIssue {
-  const inherited = rangedAttackEnemyProximityFacts(attackFacts);
-  const supplied = rangedAttackEnemyProximityFacts(facts);
-  for (const previous of inherited) {
-    for (const next of supplied) {
-      if (
-        previous.attackerId !== next.attackerId ||
-        previous.procedureRef !== next.procedureRef
-      )
-        continue;
-      if (
-        previous.enemies.length !== next.enemies.length ||
-        previous.enemies.some(
-          (enemy) =>
-            !next.enemies.some(
-              (entry) =>
-                entry.enemyId === enemy.enemyId &&
-                entry.distanceFeet === enemy.distanceFeet &&
-                entry.enemyCanSeeAttacker === enemy.enemyCanSeeAttacker,
-            ),
-        )
-      )
-        return {
-          tag: "invalid",
-          message:
-            "Replacement proximity must preserve inherited enemy membership, distance and sight facts.",
-        };
-    }
-  }
-  const combined = [...attackFacts, ...facts];
-  for (const proximity of [...inherited, ...supplied]) {
-    const issue = attackSpatialDistanceIssue(proximity, combined);
-    if (issue !== null) return issue;
-  }
-  return {
-    tag: "facts",
-    facts: [...facts, ...(supplied.length > 0 ? [] : inherited)],
-  };
 }
