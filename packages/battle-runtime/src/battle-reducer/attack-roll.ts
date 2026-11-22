@@ -172,6 +172,7 @@ import {
   savingThrowTargetsEnemy,
 } from "./roll-trigger-relationship-facts.ts";
 import {
+  D20TestRollModeSourcesMonoid,
   admittedAttackRollTableSource,
   attackerConditionAttackRollModeSources,
   combineD20TestRollMode,
@@ -254,41 +255,6 @@ type AttackRollSourceFlags = {
   readonly hasDisadvantage: boolean;
 };
 
-function proneTargetAttackRollModeSources(
-  attackerId: CombatantId,
-  target: BattleCreatureState,
-  attack: SupportedAttackActionOption | undefined,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  spellTargetDistanceFeet: MovementFeet | null,
-) {
-  const targetId = target.combatantId;
-  if (!hasCondition(target.conditions, "prone")) {
-    return { advantage: false, disadvantage: false };
-  }
-  const distanceFeet =
-    attack === undefined
-      ? spellTargetDistanceFeet
-      : attackTargetDistanceFeet(
-          targetSpatialFacts,
-          attackerId,
-          targetId,
-          attack,
-        );
-  if (distanceFeet === null) {
-    return {
-      advantage:
-        attack === undefined && hasCondition(target.conditions, "unconscious"),
-      disadvantage: false,
-    };
-  }
-  const proneSources = proneAttackRollModeSources(distanceFeet);
-  return {
-    advantage:
-      proneSources.advantage || hasCondition(target.conditions, "unconscious"),
-    disadvantage: proneSources.disadvantage,
-  };
-}
-
 function targetCreatureConditionAttackRollModeSources(
   attackerId: CombatantId,
   target: BattleCreatureState,
@@ -296,19 +262,32 @@ function targetCreatureConditionAttackRollModeSources(
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
 ): D20TestRollModeSources {
-  const proneSources = proneTargetAttackRollModeSources(
-    attackerId,
-    target,
-    attack,
-    targetSpatialFacts,
-    spellTargetDistanceFeet,
+  const conditionSources = targetConditionAttackRollModeSources(
+    target.conditions,
   );
-  return {
-    advantage:
-      proneSources.advantage ||
-      targetConditionAttackRollModeSources(target.conditions).advantage,
-    disadvantage: proneSources.disadvantage,
-  };
+  if (!hasCondition(target.conditions, "prone")) return conditionSources;
+
+  const distanceFeet =
+    attack === undefined
+      ? spellTargetDistanceFeet
+      : attackTargetDistanceFeet(
+          targetSpatialFacts,
+          attackerId,
+          target.combatantId,
+          attack,
+        );
+  return D20TestRollModeSourcesMonoid.combineAll([
+    conditionSources,
+    distanceFeet === null
+      ? D20TestRollModeSourcesMonoid.initialValue
+      : proneAttackRollModeSources(distanceFeet),
+    {
+      advantage:
+        hasCondition(target.conditions, "unconscious") &&
+        (distanceFeet !== null || attack === undefined),
+      disadvantage: false,
+    },
+  ]);
 }
 
 function combatantHasHiddenAttackRollBenefit(
