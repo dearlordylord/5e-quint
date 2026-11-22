@@ -9,7 +9,7 @@ import type {
   BattleHole,
   BattleOrdinaryHole,
 } from "./battle-state-execution.ts";
-import { Brand, Result } from "effect";
+import { Boolean, Brand, Result, Struct } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
 import {
   EMPTY_CONDITION_STATE,
@@ -40,6 +40,12 @@ export type D20TestRollModeSources = Readonly<{
   readonly advantage: boolean;
   readonly disadvantage: boolean;
 }>;
+
+export const D20TestRollModeSourcesMonoid =
+  Struct.makeReducer<D20TestRollModeSources>({
+    advantage: Boolean.ReducerOr,
+    disadvantage: Boolean.ReducerOr,
+  });
 
 export function proneAttackRollModeSources(
   distanceFeet: MovementFeet,
@@ -100,12 +106,11 @@ export const TARGET_ADVANTAGE_CONDITIONS = [
 
 /**
  * The distance-independent attack-roll sources a target creature's own
- * conditions supply. An absent target supplies none.
+ * conditions supply.
  */
 export function targetConditionAttackRollModeSources(
-  targetConditions: ConditionState | undefined,
+  conditions: ConditionState,
 ): D20TestRollModeSources {
-  const conditions = targetConditions ?? EMPTY_CONDITION_STATE;
   return {
     advantage: TARGET_ADVANTAGE_CONDITIONS.some((condition) =>
       hasCondition(conditions, condition),

@@ -265,7 +265,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       requiredAttackRollMode(
         cast.state,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(cast.state, spellCasterId),
         zeroAbilityWeaponAttack("weapon_longsword"),
         [],
       ),

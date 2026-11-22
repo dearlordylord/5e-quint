@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.CONDITION_ROLL_MODE
 import {
   applyCondition,
@@ -337,7 +338,7 @@ describe("battle runtime: condition attack-roll sources", () => {
       return requiredAttackRollMode(
         state,
         fighterId,
-        goblinId,
+        requireCombatant(state, goblinId),
         fighter.origin.attack,
         [
           attackTargetDistanceSpatialFact(
