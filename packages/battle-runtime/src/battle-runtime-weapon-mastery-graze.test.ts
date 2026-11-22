@@ -6,6 +6,8 @@ import { describe, expect, test } from "vitest";
 
 import {
   attackDamageDispositionFill,
+  battleEffectExecutionRefForTest,
+  damageRollFillWithGroups,
   attackDamageHoleAfterHit,
   attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
@@ -30,6 +32,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   skeletonId,
+  snapshotBattle,
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
@@ -47,6 +50,7 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
   WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
 } from "./battle-reducer/domain-constants.ts";
+import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { admitWeaponMasteryProcedure } from "./procedure-admission/weapon-mastery.ts";
 import {
   battleUnitSupportProfilesForUnit,
@@ -597,6 +601,39 @@ describe("battle runtime: Weapon Mastery Graze", () => {
       }
     },
   );
+
+  test("rejects a primary source damage roll penalty on fixed Graze damage", () => {
+    const state = grazeBattle();
+    const damageRoll = requireHole(
+      resolveGrazeAttack(state, rollFills(state, HIT)),
+      "rolledDice",
+    );
+    // Deliberately malformed: the primary miss has no damage roll to penalize.
+    const penalty = sourceDamageRollPenaltyRollHole({
+      effectRef: battleEffectExecutionRefForTest(
+        "synthetic:graze-stale-penalty",
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic:source-penalty",
+      ),
+      sourceCombatantId: goblinId,
+      affectedCombatantId: fighterId,
+      damageRollHoleId: damageRoll.holeId,
+      amount: { dice: 1, dieSize: 8 },
+    });
+    const result = resolveGrazeAttack(state, [
+      ...rollFills(state, MISS),
+      grazeDecisionFill("use"),
+      damageRollFillWithGroups(penalty, [[1]]),
+    ]);
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Fixed attack damage does not use a damage roll or a source damage roll penalty.",
+    });
+    expect(result.snapshot).toEqual(snapshotBattle(state));
+  });
 
   test("rejects a second Graze decision", () => {
     const state = grazeBattle();

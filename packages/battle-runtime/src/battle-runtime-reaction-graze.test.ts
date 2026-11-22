@@ -227,7 +227,7 @@ function beginReaction(
   const choice = pending?.choices.find(
     (c) => c.kind === "nestedProcedure" && c.subject.command === kind,
   );
-  if (pending === undefined || choice?.kind !== "nestedProcedure")
+  if (pending == null || choice?.kind !== "nestedProcedure")
     throw new Error("Expected reaction choice.");
   const selected =
     kind === "opportunityAttack"
@@ -272,6 +272,8 @@ describe("reaction attack Graze", () => {
         subject,
         fills,
       });
+      if (offered.tag !== "needsHoles")
+        throw new Error("Expected Graze decision frontier.");
       const decision = requireHole(offered, "unitFeatureDecision");
       expect(decision).toMatchObject({ label: "Use Graze" });
       expect(offered.state.combatants.get(goblinId)?.hp).toBe(
@@ -321,6 +323,8 @@ describe("reaction attack Graze", () => {
         subject,
         fills: [facts, attackRollFill(roll, HIT)],
       });
+      if (hit.tag !== "needsHoles")
+        throw new Error("Expected hit damage frontier.");
       expect(
         battleResolutionHolesForTest(hit).some((h) => h.kind === "rolledDice"),
       ).toBe(true);
@@ -394,7 +398,8 @@ describe("reaction attack Graze", () => {
       "opportunityAttack",
       (state) => {
         const target = state.combatants.get(goblinId);
-        if (target === undefined) throw new Error("Expected target.");
+        if (target === undefined || target.positiveHpUnconscious !== null)
+          throw new Error("Expected conscious target.");
         return {
           ...state,
           combatants: new Map(state.combatants).set(goblinId, {
@@ -472,6 +477,8 @@ describe("reaction attack Graze", () => {
       subject,
       fills: rolled,
     });
+    if (offered.tag !== "needsHoles")
+      throw new Error("Expected Graze decision frontier.");
     expect(battleResolutionHolesForTest(offered)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -496,7 +503,7 @@ describe("reaction attack Graze", () => {
           c.subject.command === "retaliationAttack",
       ),
     ).toBe(true);
-    if (pending === undefined) throw new Error("Expected nested Retaliation.");
+    if (pending == null) throw new Error("Expected nested Retaliation.");
     const resolved = requireResolved(
       resolveBattleInterrupt({
         state: damaged.state,

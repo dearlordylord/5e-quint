@@ -2131,7 +2131,7 @@ function call<const Name extends keyof BattleToolOutputByName>(
     throw new Error(`Expected ${toolName} to return a tool result.`);
   }
   const parsed: unknown = JSON.parse(result.content[0]?.text ?? "null");
-  if (result.isError) {
+  if ("isError" in result && result.isError) {
     throw new Error(
       `${toolName} failed: ${JSON.stringify({ request: args, response: parsed })}`,
     );

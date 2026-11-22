@@ -2750,12 +2750,15 @@ export function resolveSelectedAttackProcedure<
     fixedDamageByTypeBeforeTargetAdjustments !== null
   ) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fillSet.damageRoll != null) {
+    if (
+      fillSet.damageRoll != null ||
+      primaryAttackSourceDamageRollPenaltyRolls(input.fills).length > 0
+    ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
-        "Fixed attack damage does not use a rolled damage fill.",
+        "Fixed attack damage does not use a damage roll or a source damage roll penalty.",
       );
     }
     /* v8 ignore stop -- @preserve */

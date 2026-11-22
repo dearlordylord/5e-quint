@@ -738,6 +738,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "resolveMoveCommand",
     "resolveFixedCostMovementReplacementCommand",
     "resolveStandFromProneCommand",
+    "resolveDropProneCommand",
     "resolveOpportunityAttackCommand",
     "resolveReactionAttackCommand",
     "resolvePersistentSpatialSpellProcedureCommand",
@@ -2803,6 +2804,24 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
     "packages/battle-runtime/src/spell-procedure-execution-admission.ts",
     [{ identifier: "selfTeleport", roles: ["registry-key"] }],
     "selfTeleport is a parsed procedure discriminant",
+  ),
+);
+
+EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
+  ...exactCollisionsAt(
+    "command",
+    "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+    [
+      {
+        identifier: "INTERRUPT_COMMAND_REQUIRES_CHECKPOINT",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "commandRequiresCheckpoint",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "command names the runtime interrupt protocol, not the Command spell",
   ),
 );
 
