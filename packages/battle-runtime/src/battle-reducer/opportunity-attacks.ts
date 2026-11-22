@@ -1347,8 +1347,16 @@ function resolveReactionAttackDamageTransaction(input: {
     Match.exhaustive,
   );
 
+  // The attack-damage window resumes from its own frame and finishes the attack
+  // there, never returning here, so a thrown weapon leaves the hand as the
+  // window opens. The public result reports it once the attack is over.
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
-    spellReducedState,
+    stateWithThrownWeaponReleased({
+      state: spellReducedState,
+      attackerId: subject.reactorId,
+      attack,
+      facts: targetSpatialFacts,
+    }),
     {
       trigger: "attackDamage",
       continuation: attackDamageInterruptionFrame({
@@ -1504,8 +1512,9 @@ function resolveReactionAttackDamageTransaction(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  // The subject ends here, so a thrown weapon leaves the hand now: a needsHoles
-  // state above is resumed, and the resumed attack still needs its weapon.
+  // Without an attack-damage window the subject ends here, so a thrown weapon
+  // leaves the hand now: a needsHoles state above is resumed, and the resumed
+  // attack still needs its weapon.
   const resolvedState = stateWithThrownWeaponReleased({
     state: afterDamagePath.state,
     attackerId: subject.reactorId,

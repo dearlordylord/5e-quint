@@ -16,6 +16,7 @@ import {
   type BattleAttackProcedureExecutionRef,
   battleObjectId,
   battleTablePositionId,
+  type CombatantId,
 } from "./identity.ts";
 import {
   applyBattleHeldWeaponPickup,
@@ -38,6 +39,9 @@ import {
   combatantId,
   findHole,
   interruptDecisionFill,
+  cuttingWordsDamageOnlyUnit,
+  cuttingWordsResource,
+  rolledDiceGroup,
   reactionModifierChoice,
   reactionModifierUnitRef,
   requireCharacterSpellProcedureRefForTest,
@@ -341,12 +345,15 @@ function withConcentratingGoblin(state: BattleState): BattleState {
   };
 }
 
-function withReadiedThrownDagger(state: BattleState) {
+function withReadiedThrownDagger(
+  state: BattleState,
+  targetId: CombatantId = goblinId,
+) {
   const subject = attackSubjectFor(state, "thrown");
   const readied: BattleState = {
     ...state,
     readiedResponses: new Map(state.readiedResponses).set(fighterId, {
-      trigger: readyTriggerDescriptionForTest("the Goblin moves"),
+      trigger: readyTriggerDescriptionForTest("the target moves"),
       response: {
         kind: "attack",
         selection: {
@@ -361,10 +368,10 @@ function withReadiedThrownDagger(state: BattleState) {
   };
   const release = {
     tag: "runtimeCommand",
-    actorId: goblinId,
+    actorId: targetId,
     command: "releaseReadiedAttack",
     reactorId: fighterId,
-    targetId: goblinId,
+    targetId,
     procedureRef: subject.procedureRef,
   } as const satisfies BattleSubject;
   return { state: readied, attack: subject, release };
@@ -1050,6 +1057,94 @@ describe("battle runtime: thrown weapon attacks", () => {
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
 
+  test("a readied thrown Dagger whose damage roll opens a Reaction window lands by the attack's end", () => {
+    const { state, attack, release } = withReadiedThrownDagger(
+      battleWithCuttingWordsTarget(),
+      bardId,
+    );
+    const target = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetSpatialFact(fighterId, bardId, attack, movementFeet(15)),
+        noEnemyNear(attack),
+        landingFact(attack),
+      ],
+    };
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject: release, fills: [target] }),
+      "attackRoll",
+    );
+    const hit = attackRollFill(roll, { total: 20, naturalD20: 10 });
+    const damage = requireHole(
+      resolveBattleSubject({ state, subject: release, fills: [target, hit] }),
+      "rolledDice",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: release,
+      fills: [target, hit, damageRollFill(damage, 4)],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the readied damage roll's Reaction window.");
+    }
+    expect(awaitingReaction.frontier).toMatchObject({
+      kind: "interruptDecision",
+      trigger: "attackDamage",
+    });
+    expect(
+      awaitingReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+    ).toBe(true);
+    const pending = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    if (pending === null) {
+      throw new Error("Expected a pending Reaction decision.");
+    }
+    const cuttingWords = reactionModifierChoice(
+      pending.choices,
+      cuttingWordsDamageOnlyUnit().id,
+      "damageRollReduction",
+    );
+    const reductionHole = cuttingWords.initialHoles[0];
+    if (reductionHole === undefined) {
+      throw new Error("Expected the Cutting Words roll.");
+    }
+    const completed = requireResolved(
+      resolveBattleInterrupt({
+        state: awaitingReaction.state,
+        fill: interruptDecisionFill(
+          findHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
+          {
+            kind: "resolve",
+            responderId: bardId,
+            choice: {
+              kind: "reactionRollOrDamageReduction",
+              procedureRef: cuttingWords.modifier.procedureRef,
+              modifierKind: "damageRollReduction",
+              fills: [
+                {
+                  kind: "rolledDice",
+                  holeId: reductionHole.holeId,
+                  value: [rolledDiceGroup([3])],
+                },
+              ],
+            },
+          },
+        ),
+      }),
+    );
+
+    expect(completed.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
+    expect(
+      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+        ?.positionId,
+    ).toBe(battleTablePositionId("goblin-space"));
+  });
+
   test("a thrown Dagger whose damage opens an after-damage Reaction window is reported once, when the window closes", () => {
     const session = battleWithHellishRebukeTarget();
     const state = session.state;
@@ -1167,6 +1262,44 @@ function battleWithUncannyDodgeTarget(): BattleState {
           ]),
         ],
         characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+      }),
+    ],
+  }).state;
+}
+
+const bardId = combatantId("thrown-dagger-cutting-words-target");
+
+/** A fighter with a Dagger, and a Bard target who acts first and can use Cutting Words on damage. */
+function battleWithCuttingWordsTarget(): BattleState {
+  const cuttingWords = cuttingWordsDamageOnlyUnit();
+  return startBattleSessionRight({
+    battleId: battleId("battle-thrown-dagger-cutting-words"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: testDaggerAttack(),
+        selectedLoadout: {
+          weapon: {
+            itemId: mainDaggerId,
+            unitId: parseSharedUnitId("weapon_dagger"),
+            grip: "one_handed",
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 15 }),
+      characterSeed({
+        combatantId: bardId,
+        displayName: "Bard Target",
+        initiative: 25,
+        classLevels: [{ className: "bard", level: 3 }],
+        attack: null,
+        resources: [cuttingWordsResource({ unit: cuttingWords })],
+        characterUnitRefs: [
+          {
+            unit: cuttingWords,
+            supportProfiles: ["reactionRollOrDamageReduction"],
+          },
+        ],
       }),
     ],
   }).state;
