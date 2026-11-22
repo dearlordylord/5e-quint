@@ -1948,15 +1948,18 @@ function validateMovementCostFacts(
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
   }
-  if (Number(crawlingExtraCostFeet) > 0) {
-    return "Movement while Prone is crawling and must also spend 1 extra foot for every foot moved.";
-  }
-  return movementCostMismatchMessage({
+  const mismatch = movementCostMismatchMessage({
     grappleDrag: grappleDrag.tag === "ok",
     areaDifficultTerrain: difficultTerrain.tag === "ok",
     directionalPersistentArea: gust.tag === "ok",
   });
+  return Number(crawlingExtraCostFeet) > 0
+    ? `${mismatch} ${PRONE_CRAWLING_MOVEMENT_COST_MESSAGE}`
+    : mismatch;
 }
+
+const PRONE_CRAWLING_MOVEMENT_COST_MESSAGE =
+  "A Prone mover is crawling and also spends 1 extra foot for every foot moved.";
 
 /**
  * SRD 5.2.1 "Crawling": "each foot of movement costs 1 extra foot (2 extra

@@ -1845,7 +1845,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(crawl(15)).toMatchObject({
       tag: "invalid",
       message:
-        "Movement while Prone is crawling and must also spend 1 extra foot for every foot moved.",
+        "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain. A Prone mover is crawling and also spends 1 extra foot for every foot moved.",
     });
     expect(
       requireResolved(crawl(25)).state.combatants.get(wizardId),
@@ -3753,6 +3753,57 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       reason: "staleSubject",
       message: "No Grapple is available to escape.",
     });
+  });
+
+  test("a Prone grappler dragging its target also spends the crawling cost", () => {
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+    const fighter = grappled.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const prone: BattleState = {
+      ...grappled,
+      combatants: new Map(grappled.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "prone"),
+        ),
+      ),
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: prone, subject, fills: [] }),
+      "movement",
+    );
+    // SRD 5.2.1 "Crawling" and "Grappled": 10 feet + 10 crawling + 10 drag.
+    const drag = (movementCostFeet: number) =>
+      resolveBattleSubject({
+        state: prone,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet,
+            provokedOpportunityAttacks: [],
+            grappleDrag: {
+              kind: "grappleDrag",
+              totalDistanceFeet: movementFeet(10),
+              targets: [{ targetId: goblinId, distanceFeet: movementFeet(10) }],
+            },
+          }),
+        ],
+      });
+
+    expect(drag(20)).toMatchObject({
+      tag: "invalid",
+      message:
+        "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged. A Prone mover is crawling and also spends 1 extra foot for every foot moved.",
+    });
+    expect(
+      requireResolved(drag(30)).state.combatants.get(fighterId),
+    ).toMatchObject({ movementSpentFeet: movementFeet(30) });
   });
 
   test("grapple drag movement enforces extra cost unless Fast Wrestler exempts the target", () => {
