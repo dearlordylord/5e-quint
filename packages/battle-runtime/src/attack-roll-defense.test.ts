@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.ATTACK_ROLL_DEFENSE
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-defense
 import type { AttackRollDefenseSelection } from "@dnd/shared/game-facts";
@@ -155,7 +156,7 @@ describe("selected attack-roll defenses", () => {
       requiredAttackRollMode(
         state,
         goblinId,
-        fighterId,
+        requireCombatant(state, fighterId),
         testLongswordAttack(),
         [],
       ),
@@ -164,7 +165,7 @@ describe("selected attack-roll defenses", () => {
       requiredAttackRollMode(
         state,
         goblinId,
-        fighterId,
+        requireCombatant(state, fighterId),
         testLongswordAttack(),
         [],
         true,
@@ -188,7 +189,7 @@ describe("selected attack-roll defenses", () => {
       requiredAttackRollMode(
         state,
         goblinId,
-        fighterId,
+        requireCombatant(state, fighterId),
         testLongswordAttack(),
         [],
         true,
@@ -217,7 +218,7 @@ describe("selected attack-roll defenses", () => {
       requiredAttackRollMode(
         hit,
         goblinId,
-        fighterId,
+        requireCombatant(hit, fighterId),
         testLongswordAttack(),
         [],
       ),
@@ -226,7 +227,7 @@ describe("selected attack-roll defenses", () => {
       requiredAttackRollMode(
         hit,
         fighterId,
-        goblinId,
+        requireCombatant(hit, goblinId),
         testLongswordAttack(),
         [],
       ),
@@ -243,7 +244,7 @@ describe("selected attack-roll defenses", () => {
       requiredAttackRollMode(
         ended,
         goblinId,
-        fighterId,
+        requireCombatant(ended, fighterId),
         testLongswordAttack(),
         [],
       ),

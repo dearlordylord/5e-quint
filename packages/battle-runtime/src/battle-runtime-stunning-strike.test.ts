@@ -1,5 +1,7 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.CONDITION_ROLL_MODE
 import {
   characterLevel,
   classLevel,
@@ -152,6 +154,17 @@ describe("battle runtime: Stunning Strike", () => {
       throw new Error("Expected Stunning Strike target after Monk turn.");
     }
     expect(hasCondition(goblinTurnTarget.conditions, "stunned")).toBe(true);
+    // RAW rules-glossary.md#Stunned: "Attack rolls against you have
+    // Advantage." The Stunned condition supplies it however it was imposed.
+    expect(
+      requiredAttackRollMode(
+        resolved.state,
+        fighterId,
+        requireCombatant(resolved.state, goblinId),
+        undefined,
+        [],
+      ),
+    ).toBe("advantage");
     const monkTurn = requireResolved(
       endTurn({ state: goblinTurn, actorId: goblinId }),
     ).state;
@@ -160,6 +173,15 @@ describe("battle runtime: Stunning Strike", () => {
       throw new Error("Expected Stunning Strike target after target turn.");
     }
     expect(hasCondition(monkTurnTarget.conditions, "stunned")).toBe(false);
+    expect(
+      requiredAttackRollMode(
+        monkTurn,
+        fighterId,
+        requireCombatant(monkTurn, goblinId),
+        undefined,
+        [],
+      ),
+    ).toBeUndefined();
   });
 
   test("successful save halves Speed and gives the next attack roll against the target Advantage", () => {
@@ -209,7 +231,7 @@ describe("battle runtime: Stunning Strike", () => {
       requiredAttackRollMode(
         resolved.state,
         fighterId,
-        goblinId,
+        requireCombatant(resolved.state, goblinId),
         undefined,
         [],
       ),
@@ -232,7 +254,7 @@ describe("battle runtime: Stunning Strike", () => {
       requiredAttackRollMode(
         nextMonkTurn.state,
         fighterId,
-        goblinId,
+        requireCombatant(nextMonkTurn.state, goblinId),
         undefined,
         [],
       ),

@@ -1175,7 +1175,7 @@ function prepareTargetedSpellAttackRoll(
   const requiredRollMode = requiredSpellAttackRollMode(
     input.input.state,
     input.input.subject.actorId,
-    input.target.combatantId,
+    input.target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
   );

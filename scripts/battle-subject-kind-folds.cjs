@@ -137,6 +137,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         case "dodge":
           return "actionAvoidance";
         case "helpAttack":
+        case "helpAbilityCheck":
           return "actionSupport";
         case "hide":
         case "search":
