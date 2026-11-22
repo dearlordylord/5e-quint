@@ -4,6 +4,7 @@ import type {
   BattleAttackExecutionSelection,
   BattleAttackRangeBand,
   BattleState,
+  BattleCreatureState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 import {
@@ -34,6 +35,20 @@ export function attackTargetIsLegal(
   attack: SupportedAttackActionOption,
   facts: readonly BattleTargetSpatialFact[],
 ): boolean {
+  const target = state.combatants.get(targetId);
+  return (
+    target !== undefined &&
+    creatureAttackTargetIsLegal(actorId, target, attack, facts)
+  );
+}
+
+export function creatureAttackTargetIsLegal(
+  actorId: CombatantId,
+  target: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
+): boolean {
+  const targetId = target.combatantId;
   const constraint = attackTargetConstraint(attack);
   const distanceFeet = attackTargetDistanceFeet(
     facts,
@@ -43,7 +58,6 @@ export function attackTargetIsLegal(
   );
   return (
     actorId !== targetId &&
-    state.combatants.has(targetId) &&
     distanceFeet !== null &&
     (constraint.kind === "meleeReach"
       ? Number(distanceFeet) <= Number(constraint.reachFeet)

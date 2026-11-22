@@ -491,7 +491,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     const requiredRollMode = requiredSpellAttackRollMode(
       replayState,
       input.actorId,
-      target.combatantId,
+      target,
       input.invocation,
       step.target.spatialFacts,
     );

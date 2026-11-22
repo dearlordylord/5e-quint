@@ -2065,7 +2065,7 @@ export function resolveSelectedAttackProcedure<
           ? requiredAttackRollMode(
               input.state,
               attackerId,
-              target.combatantId,
+              target,
               attack,
               fillSet.targetSpatialFacts,
             )
@@ -2120,7 +2120,7 @@ export function resolveSelectedAttackProcedure<
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
     attackerId,
-    target.combatantId,
+    target,
     attack,
     fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
@@ -2128,7 +2128,7 @@ export function resolveSelectedAttackProcedure<
   const baselineRequiredRollMode = requiredAttackRollMode(
     input.state,
     attackerId,
-    target.combatantId,
+    target,
     attack,
     fillSet.targetSpatialFacts,
   );
@@ -4228,7 +4228,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
     { readonly kind: "weapon" }
   >;
   readonly family: AdditionalWeaponAttackFamily;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly attackRollHole: BattleAttackRollHole;
 }): AdditionalWeaponAttackRollResolution {
@@ -4244,7 +4244,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
   const requiredRollMode = requiredAttackRollMode(
     input.state,
     input.subject.actorId,
-    input.targetId,
+    input.target,
     input.attack,
     input.targetSpatialFacts,
   );
@@ -4921,13 +4921,14 @@ function prepareWeaponMasteryCleaveAttack(input: {
   const secondTargetId = targetFill.value;
   const cleaveTargetFacts =
     additionalWeaponAttackTargetSpatialFacts(targetFill);
+  const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
   if (
+    secondTarget === undefined ||
     !weaponMasteryCleaveTargetIsLegal({
-      state: input.state,
       attackerId: input.subject.actorId,
       firstTargetId: input.firstTargetId,
-      secondTargetId,
+      secondTarget,
       attack: cleaveAttack,
       targetSpatialFacts: cleaveTargetFacts,
     })
@@ -4947,30 +4948,17 @@ function prepareWeaponMasteryCleaveAttack(input: {
     subject: input.subject,
     attack: cleaveAttack,
     family: decision.family,
-    targetId: secondTargetId,
+    target: secondTarget,
     targetSpatialFacts: cleaveTargetFacts,
     attackRollHole: weaponMasteryCleaveAttackRollHole(
       input.state,
       input.subject.actorId,
-      secondTargetId,
+      secondTarget,
       cleaveAttack,
       cleaveTargetFacts,
     ),
   });
   if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- @preserve -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
-  if (secondTarget === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave second target is no longer in this battle.",
-      ),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
   return {
     tag: "prepared",
     decision,
@@ -5592,14 +5580,16 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     input.fillSet.targetSpatialFacts,
     additionalWeaponAttackTargetSpatialFacts(targetFill),
   );
+  const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- @preserve -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
   if (
+    secondTarget === undefined ||
     !huntersPreyHordeBreakerTargetIsLegal({
       state: input.state,
       attackerId: input.subject.actorId,
       sourceProcedureRef: procedureRef,
       firstTargetId: input.firstTargetId,
-      secondTargetId,
+      secondTarget,
       attack: hordeBreakerAttack,
       targetSpatialFacts: targetFacts,
     })
@@ -5619,12 +5609,12 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     subject: input.subject,
     attack: hordeBreakerAttack,
     family: decision.family,
-    targetId: secondTargetId,
+    target: secondTarget,
     targetSpatialFacts: targetFacts,
     attackRollHole: huntersPreyHordeBreakerAttackRollHole(
       input.state,
       input.subject.actorId,
-      secondTargetId,
+      secondTarget,
       hordeBreakerAttack,
       targetFacts,
     ),
@@ -5632,19 +5622,6 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   if (hordeBreakerAttackRoll.tag === "result") {
     return hordeBreakerAttackRoll;
   }
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- @preserve -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
-  if (secondTarget === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker second target is no longer in this battle.",
-      ),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
   return {
     tag: "prepared",
     decision,

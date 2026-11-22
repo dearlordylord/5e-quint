@@ -334,7 +334,7 @@ function prepareReactionAttackRoll(
   const requiredRollMode = requiredAttackRollMode(
     input.input.state,
     input.input.subject.reactorId,
-    input.input.subject.targetId,
+    input.target,
     input.attack,
     input.targetSpatialFacts,
     input.input.subject.command === "opportunityAttack",

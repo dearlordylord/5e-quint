@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -594,13 +595,19 @@ describe("battle runtime: attack pipeline boundaries", () => {
       combatants: new Map(state.combatants).set(fighterId, poisonedFighter),
     };
     expect(
-      requiredAttackRollMode(poisonedState, fighterId, goblinId, attack, []),
+      requiredAttackRollMode(
+        poisonedState,
+        fighterId,
+        requireCombatant(poisonedState, goblinId),
+        attack,
+        [],
+      ),
     ).toBe("disadvantage");
     expect(
       attackRollModeWithOptionalOngoingFeature(
         poisonedState,
         fighterId,
-        goblinId,
+        requireCombatant(poisonedState, goblinId),
         attack,
         [],
         activationRef,
@@ -648,7 +655,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       requiredAttackRollMode(
         helpedState,
         fighterId,
-        goblinId,
+        requireCombatant(helpedState, goblinId),
         helpedAttack,
         [],
       ),
@@ -657,7 +664,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       attackRollModeWithOptionalOngoingFeature(
         helpedState,
         fighterId,
-        goblinId,
+        requireCombatant(helpedState, goblinId),
         helpedAttack,
         [],
         activationRef,
@@ -667,7 +674,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       attackRollModeWithOptionalOngoingFeature(
         state,
         fighterId,
-        goblinId,
+        requireCombatant(state, goblinId),
         attack,
         [],
         activationRef,
@@ -714,7 +721,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
         requiredAttackRollMode(
           proneState,
           fighterId,
-          goblinId,
+          requireCombatant(proneState, goblinId),
           fighter.origin.attack,
           [
             attackTargetDistanceSpatialFact(
@@ -753,23 +760,39 @@ describe("battle runtime: attack pipeline boundaries", () => {
       requiredAttackRollMode(
         proneState,
         fighterId,
-        goblinId,
+        requireCombatant(proneState, goblinId),
         fighter.origin.attack,
         [],
       ),
-    ).toBeUndefined();
-    expect(
-      requiredAttackRollMode(proneState, fighterId, goblinId, undefined, []),
     ).toBeUndefined();
     expect(
       requiredAttackRollMode(
         proneState,
         fighterId,
-        combatantId("absent-target"),
-        fighter.origin.attack,
+        requireCombatant(proneState, goblinId),
+        undefined,
         [],
       ),
     ).toBeUndefined();
+  });
+
+  test("rejects a removed creature target before requesting an attack roll", () => {
+    const state = fighterVsGoblinBattle();
+    const subject = fighterAttackSubject(state);
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const selectedTarget = attackTargetFill(targetHole, fighterId, goblinId);
+    const combatants = new Map(state.combatants);
+    combatants.delete(goblinId);
+    expect(
+      resolveBattleSubject({
+        state: { ...state, combatants },
+        subject,
+        fills: [selectedTarget],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("requires an exact attack selection for target distance", () => {
@@ -951,7 +974,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       requiredAttackRollMode(
         composedState,
         fighterId,
-        goblinId,
+        requireCombatant(composedState, goblinId),
         fighter.origin.attack,
         [
           attackTargetDistanceSpatialFact(
@@ -978,7 +1001,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       requiredAttackRollMode(
         helpedState,
         fighterId,
-        goblinId,
+        requireCombatant(helpedState, goblinId),
         fighter.origin.attack,
         [
           attackTargetDistanceSpatialFact(
