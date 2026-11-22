@@ -1,3 +1,4 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-MULTIATTACK-001
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.MULTIATTACK
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.multiattack
 import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";

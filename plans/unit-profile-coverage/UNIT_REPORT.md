@@ -2374,6 +2374,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | FACTORY-578 | completed-runtime-parity | `unit-feature.passive-initiative-roll-mode` |
 | FACTORY-579 | qnt-proof | `unit-feature.ongoing-feature-activation-movement-rider` |
 | FACTORY-579 | completed-runtime-parity | `unit-feature.ongoing-feature-activation-movement-rider` |
+| SB-MULTIATTACK-PRONE-RUNTIME-TEST | runtime-evidence | `stat-block.multiattack` |
 
 ## Supported Profiles Lacking Runtime Parity
 

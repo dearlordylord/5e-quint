@@ -7653,7 +7653,8 @@
       "taskRefs": [
         "SB-MULTIATTACK-INDUCTIVE",
         "SB-MULTIATTACK-MBT",
-        "SB-ACTIONS-RUNTIME-TEST"
+        "SB-ACTIONS-RUNTIME-TEST",
+        "SB-MULTIATTACK-PRONE-RUNTIME-TEST"
       ],
       "title": "Admitted attack-procedure Multiattack control and dispatch",
       "verificationOwners": [
@@ -23387,6 +23388,14 @@
         "unit-feature.ongoing-feature-activation-movement-rider"
       ],
       "taskId": "FACTORY-579"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "note": "Public runtime discovery and resolution cover Drop Prone and Standing from Prone between completed Multiattack attacks, preserving pending dispatches and applying movement costs.",
+      "profileIds": [
+        "stat-block.multiattack"
+      ],
+      "taskId": "SB-MULTIATTACK-PRONE-RUNTIME-TEST"
     }
   ],
   "unitGroupDenominatorAudit": {
