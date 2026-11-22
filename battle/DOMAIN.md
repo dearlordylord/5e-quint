@@ -1,12 +1,12 @@
 # Battle State — Domain Language
 
-Terms and definitions for the multi-creature battle layer. Extends `UBIQUITOUS_LANGUAGE.md` (single-creature terms).
+Terms and definitions for the multi-creature battle layer. Uses the shared terms in [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
 
 ---
 
 ## Creatures and Identity
 
-**Creature** — Any participant in combat: PC, NPC, or monster. Each has a `CreatureState` (the existing `DndContext`).
+**Creature** — Any participant in combat: PC, NPC, or monster.
 
 **CreatureId** — Unique identifier for a creature within a battle. Stable across rounds.
 
@@ -18,7 +18,7 @@ Terms and definitions for the multi-creature battle layer. Extends `UBIQUITOUS_L
 
 **Round** — One full pass through the initiative order. Every creature gets exactly one turn per round.
 
-**Turn** — One creature's opportunity to act (move, action, bonus action, free interaction). Corresponds to the existing single-creature state machine's START_TURN → actions → END_TURN cycle.
+**Turn** — One creature's opportunity to act (move, action, bonus action, free interaction).
 
 **Initiative Order** — The sequence in which creatures take turns. Determined once at combat start (DEX check). Ties broken by DM.
 
@@ -58,27 +58,10 @@ Transaction shapes:
 - Has a valid reaction for this trigger type
 - Meets the reaction's specific conditions (range, visibility, etc.)
 
-**Pass** — Historical term for a creature declining to react. Prefer **Decline** for per-creature windows.
+## Resolution vocabulary
 
-## Resolve / Commit Doctrine
-
-The repo separates pure outcome resolution from runtime state commitment across
-two independent implementations:
-
-- **Resolve layer**: focused battle-runtime QNT and shared rule-core QNT
-  compute rule consequences over immutable battle records.
-- **Commit layer**: battle-runtime reducers commit those same outcomes as
-  runtime state transitions for actors, UI, and tooling.
-- **Parity proof**: MBT replays Quint traces against the runtime commit layer
-  and checks that it reproduces the resolve layer.
-
-Within the interrupt-resolution pipeline, use this vocabulary:
-
-- **resolve**: compute the outcome
-- **offer**: open a reaction window
-- **decline**: an eligible reactor chooses not to react
-- **apply**: build the new state
-- **advance**: move to the next phase boundary
+Resolve, Offer, Decline, Apply, and Advance use the shared
+[Action Lifecycle definitions](../UBIQUITOUS_LANGUAGE.md#action-lifecycle).
 
 ## Timing Categories
 
@@ -94,37 +77,28 @@ Reactions have four distinct timing relationships to their triggers (derived fro
 
 ## Resource Consumption Terms
 
-The battle layer uses the shared support-language terms from `UBIQUITOUS_LANGUAGE.md` for action costs:
-
-- **Quota** covers immediate turn-economy spends such as action, bonus action, reaction, and movement.
-- **Pool** covers rest- or feature-recharged stocks such as spell slots, Rage uses, Bardic Inspiration uses, and Action Surge.
-- **Lock** covers exclusive holds such as concentration.
-- **Timer** covers ongoing countdowns such as Rage duration.
-
-For battle action tokens, `ResourceCost` is limited to the immediate up-front costs a player chooses to pay now. Lock displacement and timer consequences remain outcome semantics, not selectable token costs. Examples:
-
-- Readying a spell spends an action quota and a spell-slot pool now; the later reaction release is a separate quota spend.
-- A Counterspell refund restores the spent spell-slot pool if the spell is negated, but it does not restore the per-turn slot-expended quota gate.
+Quota, Pool, Lock, and Timer use the shared
+[Resource Consumption definitions](../UBIQUITOUS_LANGUAGE.md#resource-consumption).
 
 ## Spatial Concepts
 
-**Distance** — Always in feet (SRD). The battle layer does not define zones. Theatre of mind vs. grid is a caller concern — both produce feet.
+**Distance** — The separation between locations, measured in feet.
 
 **Reach** — The distance at which a creature can make melee attacks (5ft standard, 10ft for reach weapons). Also defines the boundary for opportunity attacks.
 
-**Range** — The distances at which a ranged attack or spell can target: normal range (no penalty) and long range (disadvantage, see `AttackContext.beyondNormalRange`).
+**Range** — The maximum distance at which an attack or spell can target something. For an attack with both a normal and a long range, attacking beyond normal range imposes Disadvantage.
 
-**Movement Step** — One engine-level movement segment. The current battle layer spends movement in 5-foot chunks and receives the caller-computed threatened set for that chunk, plus caller-owned provocation kind for whether that step can trigger opportunity attacks at all.
+**Movement Step** — One segment of a creature's movement between two locations.
 
 **Reach-Exit Checkpoint** — The exact movement boundary where a mover is still in a threat source's reach before the step and would be outside that reach after the step. Opportunity attacks are offered at this checkpoint, before the move completes.
 
-**Threat Set** — The caller-provided set of creatures whose reach-exit checkpoints are crossed by the current movement step. The battle engine filters this set by reaction availability and incapacitation, but it does not compute geometry itself.
+**Threat Set** — The creatures whose reach-exit checkpoints a movement step crosses.
 
-**Visibility Relation** — A caller-owned yes/no fact for whether one creature can currently see another. The battle layer consumes this for opportunity attacks and attack legality, but it does not derive line of sight from positions, cover, or obscuration.
+**Visibility Relation** — Whether one creature can see another.
 
-**Help-Attack Proximity** — A caller-owned yes/no fact for whether the enemy distracted by the Help action is within 5 feet of the helper at the time of the action. The battle layer owns the action spend and resulting help link, not the geometry check.
+**Help-Attack Proximity** — Whether the enemy distracted by the Help action is within 5 feet of the helper at the time of the action.
 
-**Help Assistance** — A caller-owned yes/no fact for whether the helper is near enough to assist the chosen ally's ability check verbally or physically; the SRD gives the GM final say. The battle layer owns the action spend, the benefit for the chosen skill, its expiry and its use by the ally's next check with that skill, not the judgment.
+**Help Assistance** — Whether a helper is near enough to assist an ally's ability check verbally or physically. The GM has final say on whether assistance is possible.
 
 **Threatened** — A creature is threatened by an enemy if within that enemy's reach and the enemy can see them. Leaving a threatened area triggers an opportunity attack.
 

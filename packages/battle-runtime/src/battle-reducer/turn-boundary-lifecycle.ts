@@ -1174,7 +1174,7 @@ function resolveEndTurn({
     (help) => help.expiresAt.combatantId !== nextActorId,
   );
   const helpAbilityChecks = state.helpAbilityChecks.filter(
-    (help) => help.expiresAt.combatantId !== nextActorId,
+    (help) => help.helperId !== nextActorId,
   );
   const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];

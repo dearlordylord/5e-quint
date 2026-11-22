@@ -1,11 +1,13 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.HELP.ABILITY_CHECK_ASSIST
 import { classLevel } from "@dnd/shared/types";
 import type { Skill } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   abilityCheckFill,
   battleId,
+  BattleSnapshotSchema,
+  snapshotBattle,
   characterBattleFeatureInitForTest,
   characterSeed,
   combatantId,
@@ -43,6 +45,10 @@ import {
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
 import { HELP_ABILITY_CHECK_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import {
+  helpAbilityCheckActCandidates,
+  resolveHelpAbilityCheck,
+} from "./battle-reducer/help-ability-check.ts";
 import { combatantSkillProficiencies } from "./battle-reducer/druid-wild-shape.ts";
 import { temporaryAbilityCheckRollModeInfluenceSkillCheck } from "./battle-reducer/hole-helpers.ts";
 import type { CombatantId } from "./identity.ts";
@@ -252,6 +258,52 @@ describe("Help: Assist an Ability Check", () => {
     ).toBe(false);
   });
 
+  test("a missing helper is rejected rather than treated as an untrained helper", () => {
+    const state = helpBattle();
+    const missingHelperId = combatantId("missing-helper");
+    expect(helpAbilityCheckActCandidates(state, missingHelperId)).toEqual([]);
+    expect(
+      resolveHelpAbilityCheck({
+        state,
+        subject: {
+          tag: "action",
+          actorId: missingHelperId,
+          action: "helpAbilityCheck",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "The helper is no longer in battle.",
+    });
+  });
+
+  test("snapshot derives Help lifetime from its helper and rejects independent expiration", () => {
+    const helped = help(helpBattle(), fighterId, {
+      allyId: rogueId,
+      skill: "stealth",
+    });
+    const snapshot = snapshotBattle(helped);
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
+    expect(Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded)).toEqual(
+      snapshot,
+    );
+    for (const expiresAt of [
+      { kind: "startOfTurn", combatantId: rogueId },
+      { kind: "endOfTurn", combatantId: rogueId },
+      { kind: "startOfTurn", combatantId: fighterId },
+    ]) {
+      const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)({
+        ...encoded,
+        helpAbilityCheckMarkers: encoded.helpAbilityCheckMarkers.map(
+          (help) => ({ ...help, expiresAt }),
+        ),
+      });
+      expect(Result.isFailure(decoded)).toBe(true);
+    }
+  });
+
   test("takes the Help action and gives the ally Advantage on its next check with that skill", () => {
     const state = helpBattle();
     const helped = help(state, fighterId, {
@@ -264,7 +316,6 @@ describe("Help: Assist an Ability Check", () => {
         helperId: fighterId,
         allyId: rogueId,
         skill: "stealth",
-        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
       },
     ]);
 
@@ -394,7 +445,7 @@ describe("Help: Assist an Ability Check", () => {
 
   // RAW: .references/srd-5.2.1/classes.md, Fighter, "Level 3: Remarkable
   // Athlete": "you have Advantage on Initiative rolls and Strength (Athletics)
-  // checks." Escaping Entangle now names its skill, so this source applies.
+  // checks." Escaping Entangle uses Strength (Athletics).
   test("escaping Entangle also gets Remarkable Athlete's Advantage", () => {
     const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
     const unitRef = battleUnitRefWithSupportProfiles({
@@ -651,7 +702,6 @@ describe("Help: Assist an Ability Check", () => {
         helperId: fighterId,
         allyId: rogueId,
         skill: "stealth",
-        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
       },
     ]);
     expect(released.state.currentTurnResources).toEqual(

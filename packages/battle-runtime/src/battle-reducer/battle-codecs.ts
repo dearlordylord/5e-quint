@@ -7473,8 +7473,7 @@ const BattleHelpAbilityCheckSnapshotSchema = Schema.Struct({
   helperId: CombatantId,
   allyId: CombatantId,
   skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
-  expiresAt: OngoingFeatureExpirationSchema,
-});
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({

@@ -33,7 +33,11 @@ import {
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
-import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
+import {
+  D20TestRollModeSourcesMonoid,
+  mechanicalD20TestRollMode,
+  type D20TestRollModeSources,
+} from "../d20-test-circumstance.ts";
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleEffectExecutionRef,
@@ -401,12 +405,15 @@ function skillCheck(
     check.ability,
     check,
   );
-  const rollMode = mechanicalD20TestRollMode({
-    advantage:
-      sources.advantage ||
-      helpAbilityCheckGrantsAdvantage(state, actorId, check.skill),
-    disadvantage: sources.disadvantage,
-  });
+  const rollMode = mechanicalD20TestRollMode(
+    D20TestRollModeSourcesMonoid.combineAll([
+      sources,
+      {
+        advantage: helpAbilityCheckGrantsAdvantage(state, actorId, check.skill),
+        disadvantage: false,
+      },
+    ]),
+  );
   return {
     hole: {
       holeInstanceKey: hole.holeInstanceKey,
@@ -546,7 +553,7 @@ function abilityCheckRollModeSources(
     readonly skill?: Skill;
     readonly targetId?: CombatantId;
   },
-): { readonly advantage: boolean; readonly disadvantage: boolean } {
+): D20TestRollModeSources {
   const hasDisadvantage =
     activeAbilityCheckRollModeEffectMatches(
       state,
