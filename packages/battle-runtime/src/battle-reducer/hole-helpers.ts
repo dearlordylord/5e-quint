@@ -34,7 +34,7 @@ import {
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import {
-  combineD20TestRollModeSources,
+  D20TestRollModeSourcesMonoid,
   mechanicalD20TestRollMode,
   type D20TestRollModeSources,
 } from "../d20-test-circumstance.ts";
@@ -406,10 +406,13 @@ function skillCheck(
     check,
   );
   const rollMode = mechanicalD20TestRollMode(
-    combineD20TestRollModeSources(sources, {
-      advantage: helpAbilityCheckGrantsAdvantage(state, actorId, check.skill),
-      disadvantage: false,
-    }),
+    D20TestRollModeSourcesMonoid.combineAll([
+      sources,
+      {
+        advantage: helpAbilityCheckGrantsAdvantage(state, actorId, check.skill),
+        disadvantage: false,
+      },
+    ]),
   );
   return {
     hole: {

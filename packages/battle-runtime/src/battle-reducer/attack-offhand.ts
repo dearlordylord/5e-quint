@@ -292,7 +292,7 @@ function resolveBonusActionAttack(
         requiredAttackRollMode(
           input.state,
           input.subject.actorId,
-          target.combatantId,
+          target,
           attack,
           fillSet.targetSpatialFacts,
         ),
@@ -344,7 +344,7 @@ function resolveBonusActionAttack(
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
     input.subject.actorId,
-    target.combatantId,
+    target,
     attack,
     fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef,

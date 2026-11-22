@@ -978,7 +978,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAttackRollMode(
         resolved.state,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(resolved.state, spellCasterId),
         undefined,
         [],
       ),
@@ -1020,7 +1020,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAttackRollMode(
         afterMiss,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(afterMiss, spellCasterId),
         undefined,
         [],
       ),
@@ -1039,7 +1039,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAttackRollMode(
         casterTurn.state,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(casterTurn.state, spellCasterId),
         undefined,
         [],
       ),
@@ -1157,7 +1157,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAttackRollMode(
         resolved.state,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(resolved.state, spellCasterId),
         undefined,
         [],
       ),
