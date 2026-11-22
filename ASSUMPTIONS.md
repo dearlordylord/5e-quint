@@ -244,3 +244,22 @@ SRD doesn't say whether lowering yourself to the ground counts as moving. The
 model reads "doesn't move" as covering any voluntary change of the target's
 position, so Halt suppresses Drop Prone as it suppresses Movement and Stand from
 Prone.
+
+## A55: Different reroll sources may apply sequentially to the same die
+
+**Assumption:** A die rerolled by one source may be rerolled again by a
+different source, provided each source's triggering conditions, timing,
+resource costs, and usage limits are satisfied. "Must use the new roll"
+prevents choosing the previous result; it does not prevent another eligible
+source from replacing the new result. This does not grant additional uses of
+the same source.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`,
+"Heroic Inspiration," permits rerolling any die immediately after rolling it
+and requires using the new roll. `.references/srd-5.2.1/character-origins.md`,
+"Halfling," uses the same requirement for Luck. Neither passage explicitly
+addresses a subsequent reroll by a different source. The model permits that
+sequence rather than imposing a shared one-reroll limit across sources.
+`.references/srd-5.2.1/playing-the-game.md`, "Interactions with Rerolls,"
+still limits each reroll with Advantage or Disadvantage to one chosen die,
+not both.
