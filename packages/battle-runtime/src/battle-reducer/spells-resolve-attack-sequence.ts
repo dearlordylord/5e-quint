@@ -372,7 +372,14 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     target,
     input.invocation,
     input.target.spatialFacts,
+    input.target.enemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      requiredRollMode.message,
+    );
   const originalTargetHole = spellAttackSequencePartTargetHole(
     input.state,
     input.actorId,
@@ -452,16 +459,23 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
+    const replacementTargetFill =
+      targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+        fill: originalTargetFill,
+        replacement: interdictionCheck,
+      });
+    if ("tag" in replacementTargetFill)
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        replacementTargetFill.message,
+      );
+
     const fills = input.input.fills
       .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
       .map(
         (fill): BattleFill =>
-          fill === originalTargetFill
-            ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
-                fill,
-                replacement: interdictionCheck,
-              })
-            : fill,
+          fill === originalTargetFill ? replacementTargetFill : fill,
       );
     const fillSet = spellFillSet(
       fills,
@@ -1155,8 +1169,14 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.invocation,
     input.target.objectId,
     sightFact?.attackerCanSeeObject,
-    input.target.spatialFacts,
+    input.target.enemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      requiredRollMode.message,
+    );
   if (input.partFill.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [
       spellAttackSequencePartAttackRollHole(

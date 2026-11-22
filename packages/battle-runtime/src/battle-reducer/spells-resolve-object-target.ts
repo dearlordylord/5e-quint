@@ -284,8 +284,14 @@ function resolveObjectTargetSpellAttackCore(
     input.invocation,
     input.fillSet.objectTarget.objectId,
     sightFact?.attackerCanSeeObject,
-    input.fillSet.objectTarget.spatialFacts,
+    input.fillSet.targetEnemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      requiredRollMode.message,
+    );
   if (input.fillSet.attackRoll == null) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellObjectAttackRollHole(input.invocation, requiredRollMode),

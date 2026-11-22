@@ -360,18 +360,23 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         );
       }
       /* v8 ignore stop -- @preserve */
+      const replacementTargetFill =
+        targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+          fill: originalTargetFill,
+          replacement: interdictionCheck,
+        });
+      if ("tag" in replacementTargetFill)
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          replacementTargetFill.message,
+        );
+
       const fills = input.input.fills
         .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map(
           (fill): BattleFill =>
-            fill === originalTargetFill
-              ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                  {
-                    fill,
-                    replacement: interdictionCheck,
-                  },
-                )
-              : fill,
+            fill === originalTargetFill ? replacementTargetFill : fill,
         );
       const fillSet = spellFillSet(
         fills,
@@ -421,7 +426,14 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
+    input.fillSet.targetEnemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      requiredRollMode.message,
+    );
   if (input.fillSet.attackRoll === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAttackRollHole(

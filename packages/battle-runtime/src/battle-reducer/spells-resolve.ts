@@ -408,7 +408,10 @@ type InitialSpellAttackRollResolution =
       readonly tag: "admitted";
       readonly actor: BattleCreatureState | undefined;
       readonly attackRoll: BattleAttackRollResult;
-      readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+      readonly requiredRollMode: Exclude<
+        ReturnType<typeof requiredSpellAttackRollMode>,
+        { readonly tag: "invalid" }
+      >;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
 
@@ -427,7 +430,17 @@ function resolveInitialSpellAttackRoll(input: {
     input.target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
+    input.fillSet.targetEnemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.errorState,
+        "invalidFill",
+        requiredRollMode.message,
+      ),
+    };
   if (input.fillSet.attackRoll == null) {
     return {
       tag: "result",
@@ -1617,7 +1630,10 @@ function spellAttackRerollValidationIssue(input: {
   readonly invocation: BattleExecutableSpellInvocation;
   readonly originalAttackRoll: BattleAttackRollResult;
   readonly originalHit: boolean;
-  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
   readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
 }): string | null {
   const decision = input.originalAttackRoll.spellAttackReroll;
@@ -1688,7 +1704,10 @@ function spellAttackRollHoleWithSeekingOption(
         | "spellAttackDamage";
     }
   >,
-  rollMode: ReturnType<typeof requiredSpellAttackRollMode>,
+  rollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >,
 ): ReturnType<typeof spellAttackRollHole> {
   const actor = state.combatants.get(attackerId);
   const seeking = seekingSpellAttackRerollOption({ actor });
@@ -2380,6 +2399,18 @@ function resolveSpellActInternal(
         );
       }
       /* v8 ignore stop -- @preserve */
+      const replacementTargetFill =
+        targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+          fill: originalTargetFill,
+          replacement: interdictionCheck,
+        });
+      if ("tag" in replacementTargetFill)
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          replacementTargetFill.message,
+        );
+
       return resolveSpellActInternal(
         {
           ...input,
@@ -2389,14 +2420,7 @@ function resolveSpellActInternal(
                 (fill) => fill.kind !== "targetingSaveInterdictionOutcome",
               )
               .map((fill) =>
-                fill === originalTargetFill
-                  ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                      {
-                        fill,
-                        replacement: interdictionCheck,
-                      },
-                    )
-                  : fill,
+                fill === originalTargetFill ? replacementTargetFill : fill,
               ),
           ],
         },

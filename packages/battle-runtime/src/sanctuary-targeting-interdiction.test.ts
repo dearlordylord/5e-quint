@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -362,57 +363,98 @@ describe("Sanctuary targeting interdiction", () => {
     ]);
   });
 
-  test("a ranged attack moved to a new target keeps the attacker's close-combat Disadvantage", () => {
-    const { warded, attack, targetFill } = wardedShortbowAttack([
-      {
-        enemyId: wardedId,
-        distanceFeet: movementFeet(5),
-        enemyCanSeeAttacker: true,
-      },
-    ]);
-    const needsSanctuary = resolveBattleSubject({
-      state: warded.state,
-      subject: attack.subject,
-      fills: [targetFill],
-    });
-    if (needsSanctuary.tag !== "needsHoles") {
-      throw new Error("Expected Sanctuary interdiction hole.");
-    }
-    const retargeted = resolveBattleSubject({
-      state: warded.state,
-      subject: attack.subject,
-      fills: [
-        targetFill,
-        sanctuaryOutcomeFill(
-          requireHole(
-            battleResolutionHolesForTest(needsSanctuary),
-            "targetingSaveInterdictionOutcome",
-          ),
-          {
-            saveSucceeded: false,
-            outcome: {
-              kind: "newTarget",
-              targetId: replacementId,
-              spatialFacts: [
-                {
-                  ...attackTargetFact(replacementId, attack.subject),
-                  distanceFeet: movementFeet(30),
-                },
-              ],
-              replacementTargetKind: "attackRoll",
+  test.each([
+    "coherent",
+    "inheritedConflict",
+    "restatedConflict",
+    "erased",
+  ] as const)(
+    "a ranged attack moved to a new target keeps the attacker's close-combat Disadvantage",
+    (scenario) => {
+      const { warded, attack, targetFill } = wardedShortbowAttack([
+        {
+          enemyId:
+            scenario === "coherent" || scenario === "erased"
+              ? wardedId
+              : replacementId,
+          distanceFeet: movementFeet(5),
+          enemyCanSeeAttacker: true,
+        },
+      ]);
+      const needsSanctuary = resolveBattleSubject({
+        state: warded.state,
+        subject: attack.subject,
+        fills: [targetFill],
+      });
+      if (needsSanctuary.tag !== "needsHoles") {
+        throw new Error("Expected Sanctuary interdiction hole.");
+      }
+      const retargeted = resolveBattleSubject({
+        state: warded.state,
+        subject: attack.subject,
+        fills: [
+          targetFill,
+          sanctuaryOutcomeFill(
+            requireHole(
+              battleResolutionHolesForTest(needsSanctuary),
+              "targetingSaveInterdictionOutcome",
+            ),
+            {
+              saveSucceeded: false,
+              outcome: {
+                kind: "newTarget",
+                targetId: replacementId,
+                spatialFacts: [
+                  {
+                    ...attackTargetFact(replacementId, attack.subject),
+                    distanceFeet: movementFeet(30),
+                  },
+                  ...(scenario === "erased"
+                    ? rangedAttackEnemyProximityFactsForTest(
+                        requireHole(attack.initialHoles, "targetChoice"),
+                        [],
+                        [],
+                      )
+                    : []),
+                  ...(scenario === "restatedConflict"
+                    ? rangedAttackEnemyProximityFactsForTest(
+                        requireHole(attack.initialHoles, "targetChoice"),
+                        [],
+                        [
+                          {
+                            enemyId: replacementId,
+                            distanceFeet: movementFeet(30),
+                            enemyCanSeeAttacker: true,
+                          },
+                        ],
+                      )
+                    : []),
+                ],
+                replacementTargetKind: "attackRoll",
+              },
             },
-          },
-        ),
-      ],
-    });
-    if (retargeted.tag !== "needsHoles") {
-      throw new Error("Expected the retargeted attack's roll hole.");
-    }
-    expect(
-      requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
-        .rollMode,
-    ).toBe("disadvantage");
-  });
+          ),
+        ],
+      });
+      if (scenario === "coherent") {
+        if (retargeted.tag !== "needsHoles")
+          throw new Error("Expected the retargeted attack's roll hole.");
+        expect(
+          requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+            .rollMode,
+        ).toBe("disadvantage");
+      } else {
+        expect(retargeted).toMatchObject({
+          tag: "invalid",
+          reason: "invalidFill",
+          message: expect.stringMatching(/distance/i),
+        });
+        expect(combatant(warded.state, attackerId).ammunitionStocks).toEqual([
+          { ammunition: "arrow", remaining: resourceCount(20) },
+        ]);
+      }
+    },
+  );
 
   test("successful save proceeds to the attack roll", () => {
     const warded = advanceToAttacker(
