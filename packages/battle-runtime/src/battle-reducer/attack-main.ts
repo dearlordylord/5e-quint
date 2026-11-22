@@ -1,4 +1,3 @@
-import { isBattleAttackProcedureExecutionRef } from "../identity.ts";
 import * as Result from "effect/Result";
 // Main Attack action resolution extracted from attack-resolution.ts.
 
@@ -1819,6 +1818,7 @@ export function resolveSelectedAttackProcedure<
 
   const interdictionCheck = targetingSaveInterdictionCheck({
     state: input.state,
+    attack: attackTargetHole(input.state, attackerId, attack).attack,
     triggeringProcedureRef: input.subject.procedureRef,
     triggeringCombatantId: attackerId,
     wardedCombatantId: target.combatantId,
@@ -1885,12 +1885,6 @@ export function resolveSelectedAttackProcedure<
         fill: originalTargetFill,
         replacement: interdictionCheck,
       });
-    if ("tag" in replacementTargetFill)
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        replacementTargetFill.message,
-      );
 
     return resolveSelectedAttackProcedure(
       {
@@ -3766,7 +3760,7 @@ function attackFollowUpAfterPrimaryDamageContinuation(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
 }): BattleInterruptedProcedure {
@@ -3781,7 +3775,7 @@ export function resolveWeaponMasteryCleaveContinuation(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
@@ -3834,7 +3828,7 @@ function weaponMasteryCleaveAfterPrimaryDamageContinuation(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
 }): BattleInterruptedProcedure {
@@ -3909,7 +3903,7 @@ type AdditionalWeaponAttackDecisionCommon = {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly decisionHole: BattleUnitFeatureDecisionHole | null;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
 };
 
 type WeaponMasteryTurnAdditionalWeaponAttackDecisionInput =
@@ -4172,11 +4166,7 @@ function resolveAdditionalWeaponAttackDecisionForFamily(
     return { tag: "ok", state: input.state };
   }
   /* v8 ignore start -- @preserve -- Internal eligibility invariant: only a weapon attack can emit either additional-weapon-attack decision. */
-  if (
-    input.attack.kind !== "weapon" ||
-    !("procedureRef" in input.attack) ||
-    !isBattleAttackProcedureExecutionRef(input.attack.procedureRef)
-  ) {
+  if (input.attack.kind !== "weapon") {
     return {
       tag: "result",
       result: invalidResult(
@@ -4201,7 +4191,7 @@ function resolveAdditionalWeaponAttackDecisionForFamily(
   );
   return {
     tag: "use",
-    attack: { ...input.attack, procedureRef: input.attack.procedureRef },
+    attack: input.attack,
     family,
   };
 }
@@ -4520,7 +4510,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
   readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
@@ -4878,7 +4868,7 @@ type WeaponMasteryCleavePreparation =
       readonly tag: "prepared";
       readonly decision: WeaponMasteryCleaveDecisionUse;
       readonly primaryAttack: WeaponMasteryCleaveDecisionUse["attack"];
-      readonly cleaveAttack: ReturnType<typeof weaponMasteryCleaveExtraAttack>;
+      readonly cleaveAttack: WeaponMasteryCleaveDecisionUse["attack"];
       readonly secondTargetId: CombatantId;
       readonly cleaveTargetFacts: readonly BattleTargetSpatialFact[];
       readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
@@ -4893,7 +4883,7 @@ function prepareWeaponMasteryCleaveAttack(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
 }): WeaponMasteryCleavePreparation {
   const decision = resolveAdditionalWeaponAttackDecision({
@@ -5115,7 +5105,7 @@ export function resolveHuntersPreyHordeBreakerContinuation(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
@@ -5168,7 +5158,7 @@ function huntersPreyHordeBreakerAfterPrimaryDamageContinuation(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
 }): BattleInterruptedProcedure {
@@ -5194,7 +5184,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
   readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
@@ -5571,7 +5561,7 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
 }): HuntersPreyHordeBreakerPreparation {
   const decision = resolveAdditionalWeaponAttackDecision({

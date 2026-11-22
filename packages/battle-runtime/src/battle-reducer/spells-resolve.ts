@@ -2404,12 +2404,6 @@ function resolveSpellActInternal(
           fill: originalTargetFill,
           replacement: interdictionCheck,
         });
-      if ("tag" in replacementTargetFill)
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          replacementTargetFill.message,
-        );
 
       return resolveSpellActInternal(
         {

@@ -158,6 +158,15 @@ function contextualInputInstructions(
 ): readonly string[] {
   const { distanceFirst, requestedRelationship } = context;
   return [
+    ...(hole.kind === "targetingSaveInterdictionOutcome" &&
+    hole.replacementTargetKind === "attackRoll" &&
+    (hole.attack?.targetConstraint.kind === "rangedRange" ||
+      hole.spellTargetSpatialFactRequest
+        ?.requiresEnemyProximityQualification === true)
+      ? [
+          "A newTarget outcome needs its own fresh rangedAttackEnemyProximity fact for the returned attack scope; do not reuse the original target's observation. Supply it with the replacement target facts in this same fill.",
+        ]
+      : []),
     ...(!distanceFirst
       ? []
       : [
@@ -344,7 +353,9 @@ export function battleInputGuidance(hole: BattleHole) {
     "relationshipFactRequest" in hole &&
     hole.relationshipFactRequest !== undefined;
   const target =
-    hole.kind === "targetChoice" || hole.kind === "objectTargetChoice"
+    hole.kind === "targetChoice" ||
+    hole.kind === "objectTargetChoice" ||
+    hole.kind === "targetingSaveInterdictionOutcome"
       ? targetInputSchemas(members, hole, canonicalDefinitions)
       : { members, definitions: canonicalDefinitions, distanceFirst: false };
   const { members: requestedMembers, definitions, distanceFirst } = target;

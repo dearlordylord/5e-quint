@@ -1,4 +1,9 @@
 import {
+  RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS,
+  type BattleHole,
+} from "@dnd/battle-runtime";
+import { Match } from "effect";
+import {
   resolveLocalSchemaReference,
   jsonSchemaRecord as record,
   jsonSchemaAlternatives as alternatives,
@@ -61,5 +66,296 @@ export function enemyProximityConstraint(
         },
       },
     ],
+  };
+}
+
+export type AttackTargetRequest = NonNullable<
+  Extract<BattleHole, { readonly kind: "targetChoice" }>["attack"]
+>;
+
+type CreatureTargetSpatialRequest = Pick<
+  Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  | "choices"
+  | "attack"
+  | "spellTargetSpatialFactRequest"
+  | "spellLeapTargetSpatialFactRequest"
+>;
+type RangedTargetHole =
+  | Extract<
+      BattleHole,
+      { readonly kind: "targetChoice" | "objectTargetChoice" }
+    >
+  | Extract<
+      BattleHole,
+      {
+        readonly kind: "targetingSaveInterdictionOutcome";
+        readonly replacementTargetKind: "attackRoll";
+      }
+    >;
+
+export function attackDistanceWitnesses(
+  member: McpOutputSchema,
+  attack: AttackTargetRequest,
+  targetId: AttackTargetRequest["actorId"],
+  definitions: McpOutputSchema,
+): readonly McpOutputSchema[] {
+  const selectionField = Match.value(attack.selection).pipe(
+    Match.when(
+      { statBlockDamageSelection: Match.defined },
+      (): "statBlockDamageSelection" => "statBlockDamageSelection",
+    ),
+    Match.when(
+      { attackAbility: Match.defined },
+      (): "attackAbility" => "attackAbility",
+    ),
+    Match.exhaustive,
+  );
+  const candidates = targetFactMembers(member, definitions).filter(
+    (candidate) =>
+      hasKind(candidate, "attackTargetDistance", definitions) &&
+      Array.isArray(candidate.required) &&
+      candidate.required.includes(selectionField),
+  );
+  if (candidates.length === 0)
+    throw new Error(
+      "The canonical target fill must contain its attack selection.",
+    );
+  const maximum = Match.value(attack.targetConstraint).pipe(
+    Match.when({ kind: "meleeReach" }, ({ reachFeet }) => reachFeet),
+    Match.when({ kind: "rangedRange" }, ({ longFeet }) => longFeet),
+    Match.exhaustive,
+  );
+  return candidates.map((candidate) => {
+    const pinned = pinFact(candidate, {
+      kind: "attackTargetDistance",
+      actorId: attack.actorId,
+      targetId,
+      ...attack.selection,
+    });
+    const fields = record(pinned.properties);
+    return {
+      ...pinned,
+      properties: {
+        ...fields,
+        distanceFeet: { ...record(fields.distanceFeet), maximum },
+      },
+    };
+  });
+}
+
+export function targetSpatialConstraints(
+  member: McpOutputSchema,
+  hole: CreatureTargetSpatialRequest,
+  definitions: McpOutputSchema,
+  targetField: "value" | "targetId",
+): McpOutputSchema {
+  if (
+    hole.attack === undefined &&
+    hole.spellTargetSpatialFactRequest === undefined
+  )
+    return member;
+  const properties = record(member.properties);
+  const spatial = resolveLocalSchemaReference(
+    record(properties.spatialFacts),
+    definitions,
+  );
+  const factMembers = alternatives(record(spatial.items), definitions);
+  const fact = <const Pins extends object>(kind: string, pins: Pins) => {
+    const candidates = factMembers.filter((candidate) =>
+      hasKind(candidate, kind, definitions),
+    );
+    if (candidates.length === 0)
+      throw new Error(
+        "The canonical target fill must contain its requested spatial fact.",
+      );
+    return { anyOf: candidates.map((candidate) => pinFact(candidate, pins)) };
+  };
+  return {
+    ...member,
+    properties: { ...properties, [targetField]: { enum: hole.choices } },
+    required: [
+      ...new Set([
+        ...(Array.isArray(member.required) ? member.required : []),
+        "spatialFacts",
+      ]),
+    ],
+    allOf: hole.choices.map((targetId) => {
+      const requiredFacts: McpOutputSchema[] = [];
+      if (hole.attack !== undefined) {
+        const attack = hole.attack;
+        requiredFacts.push({
+          anyOf: attackDistanceWitnesses(member, attack, targetId, definitions),
+        });
+        requiredFacts.push(
+          fact("attackTargetDistance", {
+            kind: "attackTargetDistance",
+            actorId: attack.actorId,
+            targetId,
+            procedureRef: attack.selection.procedureRef,
+          }),
+        );
+      }
+      const request = hole.spellTargetSpatialFactRequest;
+      if (request !== undefined) {
+        const spell = fact("spellTarget", {
+          kind: "spellTarget",
+          casterId: request.casterId,
+          sourceProcedureRef: request.sourceProcedureRef,
+          targetId,
+        });
+        requiredFacts.push({
+          ...spell,
+          allOf: [
+            {
+              ...(request.requiresExactDistance === true
+                ? { required: ["distanceFeet"] }
+                : {}),
+              properties: { distanceFeet: { maximum: request.rangeFeet } },
+            },
+          ],
+        });
+        if (
+          request.requiresKnownWillingTarget === true &&
+          targetId !== request.casterId
+        )
+          requiredFacts.push(
+            fact("spellTargetKnownWilling", {
+              kind: "spellTargetKnownWilling",
+              casterId: request.casterId,
+              sourceProcedureRef: request.sourceProcedureRef,
+              targetId,
+            }),
+          );
+        const leap = hole.spellLeapTargetSpatialFactRequest;
+        if (leap !== undefined)
+          requiredFacts.push(
+            fact("spellLeapTargetWithinRange", {
+              kind: "spellLeapTargetWithinRange",
+              previousTargetId: leap.previousTargetId,
+              sourceProcedureRef: request.sourceProcedureRef,
+              targetId,
+              rangeFeet: leap.rangeFeet,
+            }),
+          );
+      }
+      return {
+        if: {
+          required: [targetField],
+          properties: { [targetField]: { const: targetId } },
+        },
+        then: {
+          properties: {
+            spatialFacts: {
+              allOf: requiredFacts.map((witness) => ({
+                contains: witness,
+                ...(hole.attack === undefined ? {} : { maxContains: 1 }),
+              })),
+            },
+          },
+        },
+      };
+    }),
+  };
+}
+
+function rangedSpellFactKinds(hole: RangedTargetHole) {
+  return RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS.filter((kind) => {
+    if (kind === "spellLeapTargetWithinRange")
+      return (
+        hole.kind !== "objectTargetChoice" &&
+        hole.spellLeapTargetSpatialFactRequest !== undefined
+      );
+    if (kind === "spellTargetKnownWilling")
+      return (
+        hole.kind !== "objectTargetChoice" &&
+        hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget === true
+      );
+    return true;
+  });
+}
+
+export function rangedSpellTargetSchema(
+  member: McpOutputSchema,
+  hole: RangedTargetHole,
+  definitions: McpOutputSchema,
+): McpOutputSchema {
+  const request = Match.value(hole).pipe(
+    Match.when(
+      { kind: "targetChoice" },
+      (request) => request.spellTargetSpatialFactRequest,
+    ),
+    Match.when(
+      { kind: "targetingSaveInterdictionOutcome" },
+      (request) => request.spellTargetSpatialFactRequest,
+    ),
+    Match.when(
+      { kind: "objectTargetChoice" },
+      (request) => request.spellObjectTargetSpatialFactRequest,
+    ),
+    Match.exhaustive,
+  );
+  if (request?.requiresEnemyProximityQualification !== true) return member;
+  const properties = record(member.properties);
+  const spatial = resolveLocalSchemaReference(
+    record(properties.spatialFacts),
+    definitions,
+  );
+  const allowedKinds = rangedSpellFactKinds(hole);
+  const facts = targetFactMembers(member, definitions).filter(
+    (candidate) =>
+      allowedKinds.some((kind) => hasKind(candidate, kind, definitions)) &&
+      (hole.kind === "objectTargetChoice" ||
+        !("objectId" in record(candidate.properties))),
+  );
+  return {
+    ...member,
+    required: [
+      ...new Set([
+        ...(Array.isArray(member.required) ? member.required : []),
+        "spatialFacts",
+      ]),
+    ],
+    properties: {
+      ...properties,
+      spatialFacts: {
+        ...spatial,
+        items: { anyOf: facts },
+        allOf: [
+          ...(Array.isArray(spatial.allOf) ? spatial.allOf : []),
+          enemyProximityConstraint(facts, definitions, {
+            attackerId: request.casterId,
+            procedureRef: request.sourceProcedureRef,
+          }),
+          ...(hole.kind === "objectTargetChoice"
+            ? [
+                {
+                  contains: {
+                    anyOf: facts
+                      .filter((fact) =>
+                        hasKind(fact, "spellObjectTarget", definitions),
+                      )
+                      .map((fact) => ({
+                        ...pinFact(fact, {
+                          kind: "spellObjectTarget",
+                          casterId: request.casterId,
+                          sourceProcedureRef: request.sourceProcedureRef,
+                          rangeFeet: request.rangeFeet,
+                        }),
+                        allOf: [
+                          {
+                            properties: {
+                              distanceFeet: { maximum: request.rangeFeet },
+                            },
+                          },
+                        ],
+                      })),
+                  },
+                  maxContains: 1,
+                },
+              ]
+            : []),
+        ],
+      },
+    },
   };
 }
