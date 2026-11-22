@@ -26,6 +26,7 @@ import {
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   bindCharacterWeaponExecutionWeapon,
+  weaponMasteryIsSelectedForWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
@@ -812,6 +813,17 @@ function projectCharacterWeaponLoadoutRequest(
   if (admitted.success.definition === null)
     return Result.succeed({ slot: "main", attack: null });
   const { weapon, definition } = admitted.success.definition;
+  if (
+    definition.masterySupport === "unsupported" &&
+    weaponMasteryIsSelectedForWeapon(weapon.id, input.weaponMasteries)
+  ) {
+    return battleCreatureInitIssueFromLeaves(
+      battleWeaponDefinitionAdmissionIssues(
+        weapon.id,
+        definition.resolvedMastery.issues,
+      ),
+    );
+  }
   const executionWeapon = bindCharacterWeaponExecutionWeapon({
     weaponUnitId: weapon.id,
     definition,

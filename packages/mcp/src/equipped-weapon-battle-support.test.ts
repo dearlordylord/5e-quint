@@ -37,22 +37,31 @@ function fixture(includeSyntheticFlatWeapon = false) {
     damage: { kind: "flat", amount: 1, damageType: "piercing" },
     properties: [],
   } satisfies WeaponRecord;
-  const root = createMcpPlaySessionRoot(
-    includeSyntheticFlatWeapon
-      ? {
-          ...services,
-          unitLibrary: {
-            getUnit: (id) =>
-              id === flatWeapon.id
-                ? Option.some(flatWeapon)
-                : catalog.getUnit(id),
-            listUnits: () => [...catalog.listUnits(), flatWeapon],
-            requireUnit: (id) =>
-              id === flatWeapon.id ? flatWeapon : catalog.requireUnit(id),
-          },
-        }
-      : services,
-  );
+  // Battle can't resolve this weapon's mastery reference, so it refuses the
+  // weapon itself.
+  const unresolvedMasteryWeapon = {
+    ...spearRecord,
+    id: unitId("weapon_synthetic_unresolved_mastery"),
+    name: "Synthetic Unresolved Mastery Weapon",
+    provenance: { kind: "synthetic-test", section: "synthetic-test" },
+    masteryUnitId: unitId("synthetic:mastery-missing"),
+  } satisfies WeaponRecord;
+  const syntheticWeapons: readonly WeaponRecord[] = includeSyntheticFlatWeapon
+    ? [unresolvedMasteryWeapon, flatWeapon]
+    : [unresolvedMasteryWeapon];
+  const syntheticWeapon = (id: string) =>
+    syntheticWeapons.find((weapon) => weapon.id === id);
+  const root = createMcpPlaySessionRoot({
+    ...services,
+    unitLibrary: {
+      getUnit: (id) =>
+        Option.orElse(Option.fromNullishOr(syntheticWeapon(id)), () =>
+          catalog.getUnit(id),
+        ),
+      listUnits: () => [...catalog.listUnits(), ...syntheticWeapons],
+      requireUnit: (id) => syntheticWeapon(id) ?? catalog.requireUnit(id),
+    },
+  });
   const draft = completeSupportedProgressionDraft({
     draftId: "draft:weapon-battle-disclosure",
     unitLibrary: root.unitLibrary,
@@ -74,17 +83,19 @@ function fixture(includeSyntheticFlatWeapon = false) {
     assert(Result.isSuccess(parsed));
     return characterEquipmentItemId({ slot, unitId: parsed.success });
   };
+  const unresolved = item("weapon_synthetic_unresolved_mastery", "main");
   const dagger = item("weapon_dagger", "main");
   const spear = item("weapon_spear", "main");
   const quarterstaff = item("weapon_quarterstaff", "main");
-  const offDagger = item("weapon_dagger", "off");
+  const offUnresolved = item("weapon_synthetic_unresolved_mastery", "off");
   const offFlatWeapon = item("weapon_synthetic_flat", "off");
   const mainFlatWeapon = item("weapon_synthetic_flat", "main");
   const owned = [
+    unresolved,
     dagger,
     spear,
     quarterstaff,
-    offDagger,
+    offUnresolved,
     ...(includeSyntheticFlatWeapon ? [offFlatWeapon, mainFlatWeapon] : []),
   ].map((itemId) => characterBuildCatalogEquipmentItem({ itemId }));
   const withOwnedWeapons = rebuildCharacterSheetForOperation(root, {
@@ -105,10 +116,11 @@ function fixture(includeSyntheticFlatWeapon = false) {
     root,
     characterId,
     draft,
+    unresolved,
     dagger,
     spear,
     quarterstaff,
-    offDagger,
+    offUnresolved,
     offFlatWeapon,
     mainFlatWeapon,
     equip,
@@ -116,8 +128,11 @@ function fixture(includeSyntheticFlatWeapon = false) {
 }
 
 test("equipping an owned unsupported weapon discloses its canonical Battle blocker before starting Battle", () => {
-  const { root, characterId, dagger, spear, quarterstaff, equip } = fixture();
-  const equipped = equip({ weapon: { itemId: dagger, grip: "one_handed" } });
+  const { root, characterId, unresolved, dagger, spear, quarterstaff, equip } =
+    fixture();
+  const equipped = equip({
+    weapon: { itemId: unresolved, grip: "one_handed" },
+  });
   expect(equipped, JSON.stringify(equipped)).not.toHaveProperty(
     "isError",
     true,
@@ -129,15 +144,15 @@ test("equipping an owned unsupported weapon discloses its canonical Battle block
         equippedWeaponBattleBlockers: [
           {
             slot: "main",
-            itemId: dagger,
-            weaponUnitId: "weapon_dagger",
+            itemId: unresolved,
+            weaponUnitId: "weapon_synthetic_unresolved_mastery",
             nextStep: {
               tag: "reviewWeaponDefinitionAdmittedOwnedAlternatives",
-              itemIds: [spear, quarterstaff],
+              itemIds: [dagger, spear, quarterstaff],
             },
             messages: expect.arrayContaining([
               expect.stringContaining(
-                "referenced Weapon Mastery procedure is unsupported by Battle",
+                "synthetic:mastery-missing is missing from the Unit catalog",
               ),
             ]),
           },
@@ -147,7 +162,7 @@ test("equipping an owned unsupported weapon discloses its canonical Battle block
   });
   const retained = root.sessionStore.characters.get(characterId);
   assert(retained?.tag === "available");
-  expect(retained.build.equipment.loadout.weapon?.itemId).toBe(dagger);
+  expect(retained.build.equipment.loadout.weapon?.itemId).toBe(unresolved);
   const before = retained.build;
   const inspected = handleToolCall(root, "inspect_character_session", {
     characterId,
@@ -184,7 +199,7 @@ test("equipping an owned unsupported weapon discloses its canonical Battle block
   expect(JSON.stringify(jsonContentPayload(battleStart))).toContain(
     blocker.messages[0],
   );
-  for (const itemId of [spear, quarterstaff]) {
+  for (const itemId of [dagger, spear, quarterstaff]) {
     const replacement = equip({ weapon: { itemId, grip: "one_handed" } });
     expect(replacement).not.toHaveProperty("isError", true);
     expect(jsonContentPayload(replacement)).toMatchObject({
@@ -211,9 +226,21 @@ test("equipping an owned unsupported weapon discloses its canonical Battle block
   );
 });
 
+test("an owned weapon whose mastery Battle lacks has no Battle blocker", () => {
+  const { dagger, equip } = fixture();
+  const equipped = equip({ weapon: { itemId: dagger, grip: "one_handed" } });
+  expect(equipped, JSON.stringify(equipped)).not.toHaveProperty(
+    "isError",
+    true,
+  );
+  expect(jsonContentPayload(equipped)).toMatchObject({
+    detail: { sheetProjection: { equippedWeaponBattleBlockers: [] } },
+  });
+});
+
 test("off-hand blockers have no invented alternatives and clearing a slot removes its blocker", () => {
-  const { root, characterId, offDagger, equip } = fixture();
-  const equipped = equip({ offHandWeapon: { itemId: offDagger } });
+  const { root, characterId, offUnresolved, equip } = fixture();
+  const equipped = equip({ offHandWeapon: { itemId: offUnresolved } });
   expect(equipped, JSON.stringify(equipped)).not.toHaveProperty(
     "isError",
     true,
@@ -224,7 +251,7 @@ test("off-hand blockers have no invented alternatives and clearing a slot remove
         equippedWeaponBattleBlockers: [
           {
             slot: "offHand",
-            itemId: offDagger,
+            itemId: offUnresolved,
             nextStep: { tag: "inspectCatalogForAdmittedWeapon" },
           },
         ],
@@ -242,10 +269,10 @@ test("off-hand blockers have no invented alternatives and clearing a slot remove
 });
 
 test("creation finalization guidance discloses an already-selected weapon before sheet initialization", () => {
-  const { root, characterId, draft, dagger, equip } = fixture();
+  const { root, characterId, draft, unresolved, equip } = fixture();
   const equipped = Schema.decodeUnknownSync(CharacterSessionDetailOutputSchema)(
     jsonContentPayload(
-      equip({ weapon: { itemId: dagger, grip: "one_handed" } }),
+      equip({ weapon: { itemId: unresolved, grip: "one_handed" } }),
     ),
   );
   assert(equipped.detail.tag === "available");

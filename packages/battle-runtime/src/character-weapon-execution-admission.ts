@@ -13,19 +13,26 @@ export type CharacterWeaponAttackExecutionAdmission = {
   readonly weaponObjectId: BattleObjectId;
 };
 
-/** Bind admitted definition facts to the character's selected authored weapon. */
+/**
+ * Bind admitted definition facts to the character's selected authored weapon.
+ * The weapon carries its mastery property only when the character selected
+ * that weapon's mastery and Battle supports it.
+ */
 export function bindCharacterWeaponExecutionWeapon(input: {
   readonly weaponUnitId: UnitId;
   readonly definition: AdmittedWeaponDefinition;
   readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
 }): CharacterWeaponAttackExecutionWeapon {
+  const definition = input.definition;
+  if (definition.masterySupport === "unsupported") {
+    return { weaponUnitId: input.weaponUnitId, ...definition.facts };
+  }
   if (
     weaponMasteryIsSelectedForWeapon(input.weaponUnitId, input.weaponMasteries)
   ) {
-    return { weaponUnitId: input.weaponUnitId, ...input.definition.facts };
+    return { weaponUnitId: input.weaponUnitId, ...definition.facts };
   }
-  const { masteryProperty: _masteryProperty, ...facts } =
-    input.definition.facts;
+  const { masteryProperty: _masteryProperty, ...facts } = definition.facts;
   return { weaponUnitId: input.weaponUnitId, ...facts };
 }
 

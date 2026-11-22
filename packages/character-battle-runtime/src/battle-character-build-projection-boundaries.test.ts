@@ -68,19 +68,46 @@ function projectionLibraryReplacingUnit(
   };
 }
 
+/**
+ * The catalog with each named weapon's mastery reference pointing at a
+ * missing Unit, so Battle refuses the weapon itself.
+ */
+function projectionLibraryWithUnresolvedMasteries(
+  weaponUnitIds: readonly UnitRecord["id"][],
+): UnitCatalog {
+  const replaced = new Map(
+    weaponUnitIds.map((id) => {
+      const weapon = unitLibrary.requireUnit(id);
+      if (weapon.kind !== "weapon") {
+        throw new Error(`Expected ${id} to be a weapon Unit.`);
+      }
+      return [
+        id,
+        {
+          ...weapon,
+          masteryUnitId: authoredUnitId(`synthetic:missing-mastery-of-${id}`),
+        },
+      ] as const;
+    }),
+  );
+  return {
+    getUnit: (id) => {
+      const replacement = replaced.get(id);
+      return replacement === undefined
+        ? unitLibrary.getUnit(id)
+        : Option.some(replacement);
+    },
+    listUnits: () => unitLibrary.listUnits(),
+    requireUnit: (id) => replaced.get(id) ?? unitLibrary.requireUnit(id),
+  };
+}
+
 describe("Character Build battle spell projection boundaries", () => {
   test("accumulates selected and equipped weapon-definition rejections through public initialization", () => {
-    const dagger = unitLibrary.requireUnit("weapon_dagger");
-    if (dagger.kind !== "weapon") {
-      throw new Error("Expected the Dagger fixture to be a weapon Unit.");
-    }
-    const missingMasteryUnitId = authoredUnitId(
-      "synthetic:missing-selected-weapon-mastery",
-    );
-    const projectionLibrary = projectionLibraryReplacingUnit(dagger.id, {
-      ...dagger,
-      masteryUnitId: missingMasteryUnitId,
-    });
+    const projectionLibrary = projectionLibraryWithUnresolvedMasteries([
+      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_shortbow"),
+    ]);
     const build = {
       ...levelFiveMartialBuild({
         classUnitId: authoredUnitId("class_fighter"),
@@ -125,7 +152,7 @@ describe("Character Build battle spell projection boundaries", () => {
       expect.objectContaining({
         tag: "battleWeaponDefinitionAdmissionIssue",
         root: { kind: "unit", id: "weapon_shortbow" },
-        admissionReason: "unsupported_mechanics",
+        admissionReason: "incomplete_graph",
         mechanicsPath: {
           family: "unit",
           nodes: [
@@ -259,9 +286,13 @@ describe("Character Build battle spell projection boundaries", () => {
         },
       },
     };
+    const projectionLibrary = projectionLibraryWithUnresolvedMasteries([
+      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_shortbow"),
+    ]);
     const result = characterWeaponAttackActionOptions({
       build: equippedBuild,
-      unitLibrary,
+      unitLibrary: projectionLibrary,
       weaponMasteries: [],
       classLevels: [{ className: "fighter", level: 5 }],
     });
@@ -272,17 +303,17 @@ describe("Character Build battle spell projection boundaries", () => {
       expect.objectContaining({
         tag: "battleWeaponDefinitionAdmissionIssue",
         root: { kind: "unit", id: "weapon_dagger" },
-        admissionReason: "unsupported_mechanics",
+        admissionReason: "incomplete_graph",
       }),
       expect.objectContaining({
         tag: "battleWeaponDefinitionAdmissionIssue",
         root: { kind: "unit", id: "weapon_shortbow" },
-        admissionReason: "unsupported_mechanics",
+        admissionReason: "incomplete_graph",
       }),
     ]);
     const blockers = characterBuildEquippedWeaponBattleBlockers({
       build: equippedBuild,
-      unitLibrary,
+      unitLibrary: projectionLibrary,
     });
     expect(blockers).toEqual([
       {

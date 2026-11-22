@@ -1057,15 +1057,24 @@ export function admitResolvedCharacterWeaponExecutionWeapon(
     weapon: resolution.weapon,
     unitCatalog: catalogForResolvedWeaponDefinition(resolution),
   });
-  return definition.tag === "rejected"
-    ? Result.fail({
-        tag: "battleUnitSupportProfileIssue" as const,
-        message: definition.issues.map(({ message }) => message).join(" "),
-      })
-    : Result.succeed({
-        weaponUnitId: resolution.weapon.id,
-        ...definition.facts,
-      });
+  if (definition.tag === "rejected") {
+    return Result.fail({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: definition.issues.map(({ message }) => message).join(" "),
+    });
+  }
+  if (definition.masterySupport === "unsupported") {
+    return Result.fail({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: definition.resolvedMastery.issues
+        .map(({ message }) => message)
+        .join(" "),
+    });
+  }
+  return Result.succeed({
+    weaponUnitId: resolution.weapon.id,
+    ...definition.facts,
+  });
 }
 
 export function admitResolvedCharacterWeaponAttackExecutionWeapon(
