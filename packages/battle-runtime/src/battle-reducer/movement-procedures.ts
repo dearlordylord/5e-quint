@@ -10,10 +10,14 @@ import {
   markMovementSpentForMovementActionBonusActionExclusion,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import {
+  hasCondition,
   isIncapacitated,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { ordinaryMovementCost } from "@dnd/shared-algebras/movement-cost-algebra";
+import {
+  movementCost as activityMovementCost,
+  ordinaryMovementCost,
+} from "@dnd/shared-algebras/movement-cost-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
@@ -1888,30 +1892,79 @@ function validateMovementCostFacts(
   ) {
     return null;
   }
+  const crawlingExtraCostFeet = crawlingMovementExtraCostFeet(
+    state,
+    moverId,
+    firstCost.totalDistanceFeet,
+  );
   const expectedCostFeet = movementFeet(
     Number(firstCost.totalDistanceFeet) +
+      Number(crawlingExtraCostFeet) +
       allCosts.reduce((total, cost) => total + Number(cost.extraCostFeet), 0),
   );
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
   }
+  if (Number(crawlingExtraCostFeet) > 0) {
+    return "Movement while Prone is crawling and must also spend 1 extra foot for every foot moved.";
+  }
+  return movementCostMismatchMessage({
+    grappleDrag: grappleDrag.tag === "ok",
+    areaDifficultTerrain: difficultTerrain.tag === "ok",
+    directionalPersistentArea: gust.tag === "ok",
+  });
+}
+
+/**
+ * SRD 5.2.1 "Crawling": "each foot of movement costs 1 extra foot (2 extra
+ * feet in Difficult Terrain)". A Prone creature's only movement is to crawl
+ * ("Prone", Restricted Movement), so every foot of its move costs 1 extra
+ * foot, and each foot of Difficult Terrain adds its own extra foot on top.
+ */
+function crawlingMovementExtraCostFeet(
+  state: BattleState,
+  moverId: CombatantId,
+  totalDistanceFeet: MovementFeet,
+): MovementFeet {
+  const mover = state.combatants.get(moverId);
+  if (mover === undefined || !hasCondition(mover.conditions, "prone")) {
+    return movementFeet(0);
+  }
+  const crawl = activityMovementCost({
+    distanceFeet: totalDistanceFeet,
+    activity: { kind: "crawling", speedType: "walk" },
+    difficultTerrain: false,
+    squeezing: false,
+    grappleDragExtraCost: false,
+  });
+  return movementFeet(Number(crawl.costFeet) - Number(crawl.distanceFeet));
+}
+
+function movementCostMismatchMessage(costs: {
+  readonly grappleDrag: boolean;
+  readonly areaDifficultTerrain: boolean;
+  readonly directionalPersistentArea: boolean;
+}): string {
   /* v8 ignore start -- @preserve -- Malformed combined-cost projection: the table adapter computes total distance plus every non-exempt area and Grapple increment before submitting the movement fill. */
-  if (grappleDrag.tag === "ok" && areaCosts.length > 0) {
+  if (
+    costs.grappleDrag &&
+    (costs.areaDifficultTerrain || costs.directionalPersistentArea)
+  ) {
     return "Combined movement-cost facts must spend total distance plus all area and non-exempt grapple drag extra movement costs.";
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed Grapple-cost projection: the table adapter computes one extra foot per non-exempt dragged foot. */
-  if (grappleDrag.tag === "ok") {
+  if (costs.grappleDrag) {
     return "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.";
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed combined-area projection: the table adapter sums Difficult Terrain and directional persistent area increments over their shared path. */
-  if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
+  if (costs.areaDifficultTerrain && costs.directionalPersistentArea) {
     return "Combined area Difficult Terrain and directional persistent area movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore next -- @preserve -- Malformed single-area projection: after the typed area facts above, this tail only reports which caller-supplied movement-cost total was inconsistent. */
-  return difficultTerrain.tag === "ok"
+  return costs.areaDifficultTerrain
     ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
     : "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
 }

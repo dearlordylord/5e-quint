@@ -21,7 +21,7 @@ module battleRuntimeWebRestraintAreaHazard {
     state.fighter.activeEffects.exists(effect => match effect { | WebRestraintHazard(data) => data.areaId == areaId | _ => false })
 
   pure def webDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
-    battleRuntimeDifficultTerrainMovementCost(webAreaHazardActiveForTerrain(state, areaId), totalDistanceFeet, difficultTerrainDistanceFeet)
+    battleRuntimeDifficultTerrainMovementCost(webAreaHazardActiveForTerrain(state, areaId), state.fighter.prone, totalDistanceFeet, difficultTerrainDistanceFeet)
 
   pure def activeEffectsWithoutWebRestraintHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {

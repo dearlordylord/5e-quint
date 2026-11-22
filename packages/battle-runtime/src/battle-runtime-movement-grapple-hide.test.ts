@@ -1781,6 +1781,77 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(effect).not.toHaveProperty("shape");
   });
 
+  test("a Prone creature crawling through Grease spends 1 extra foot for every foot of the move", () => {
+    const areaId = battleAreaId("test-crawling-grease-area");
+    const greased = castGroundHazardForMovementTest(areaId);
+    const wizard = greased.combatants.get(wizardId);
+    const greaseEffect = wizard?.activeEffects.find(
+      (effect) => effect.kind === "persistentAreaSaveCondition",
+    );
+    if (
+      wizard === undefined ||
+      greaseEffect === undefined ||
+      greaseEffect.areaId !== areaId
+    ) {
+      throw new Error("Expected the admitted Grease ground hazard.");
+    }
+    const prone: BattleState = {
+      ...greased,
+      combatants: new Map(greased.combatants).set(
+        wizardId,
+        testBattleCreatureStateWithConditions(
+          wizard,
+          applyCondition(wizard.conditions, "prone"),
+        ),
+      ),
+    };
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: wizardId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: prone, subject, fills: [] }),
+      "movement",
+    );
+    // SRD 5.2.1 "Crawling": 5 feet in the open cost 10, and 5 feet of
+    // Difficult Terrain cost 15, so the 10-foot crawl costs 25.
+    const crawl = (movementCostFeet: number) =>
+      resolveBattleSubject({
+        state: prone,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet,
+            provokedOpportunityAttacks: [],
+            areaDifficultTerrain: {
+              kind: "areaDifficultTerrain",
+              sources: [
+                {
+                  kind: "persistentAreaSaveCondition",
+                  effectRef: greaseEffect.effectRef,
+                  sourceCombatantId: wizardId,
+                  sourceProcedureRef: greaseEffect.sourceProcedureRef,
+                  areaId,
+                },
+              ],
+              totalDistanceFeet: movementFeet(10),
+              difficultTerrainDistanceFeet: movementFeet(5),
+            },
+          }),
+        ],
+      });
+
+    expect(crawl(15)).toMatchObject({
+      tag: "invalid",
+      message:
+        "Movement while Prone is crawling and must also spend 1 extra foot for every foot moved.",
+    });
+    expect(
+      requireResolved(crawl(25)).state.combatants.get(wizardId),
+    ).toMatchObject({ movementSpentFeet: movementFeet(25) });
+  });
+
   test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
     const areaId = battleAreaId("test-expiring-grease-area");
     const greased = castGroundHazardForMovementTest(areaId);

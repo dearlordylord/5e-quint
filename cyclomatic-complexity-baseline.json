@@ -253,7 +253,7 @@
       "module/binding:resolveMovementEffectsAfterMovement": 16,
       "module/binding:validateAreaDifficultTerrainMovementFact": 18,
       "module/binding:validateGrappleDragMovementFact": 13,
-      "module/binding:validateMovementCostFacts": 26
+      "module/binding:validateMovementCostFacts": 21
     },
     "packages/battle-runtime/src/battle-reducer/movement-routes.ts": {
       "module/binding:creatureSpaceMovementPermissionRouteForResolution": 12,
