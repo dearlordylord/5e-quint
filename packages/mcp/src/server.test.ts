@@ -3096,6 +3096,22 @@ describe("MCP server route", () => {
                 distanceFeet: movementFeet(5),
                 ...battleAttackSelection(subject, attackName),
               },
+              ...(attackName === "Shortbow"
+                ? [
+                    {
+                      kind: "rangedAttackEnemyProximity",
+                      attackerId: "goblin",
+                      procedureRef: subject.procedureRef,
+                      enemies: [
+                        {
+                          enemyId: "fighter",
+                          distanceFeet: movementFeet(5),
+                          enemyCanSeeAttacker: true,
+                        },
+                      ],
+                    },
+                  ]
+                : []),
             ],
           },
         }),
