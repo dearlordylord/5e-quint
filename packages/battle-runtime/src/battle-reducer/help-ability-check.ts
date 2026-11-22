@@ -15,6 +15,7 @@
 import type {
   BattleActDiscoveryCandidate,
   BattleFill,
+  BattleCreatureState,
   BattleHelpAbilityCheck,
   BattleHelpAbilityCheckDecisionHole,
   BattleOrdinaryNeedsHolesResult,
@@ -48,10 +49,11 @@ import { invalidResult } from "./result-helpers.ts";
  */
 function helpAbilityCheckHole(
   state: BattleState,
-  helperId: CombatantId,
+  helper: BattleCreatureState,
 ): BattleHelpAbilityCheckDecisionHole | undefined {
+  const helperId = helper.combatantId;
   const allyChoices = helpParticipantChoices(state, helperId);
-  const skillChoices = helpAbilityCheckSkillChoices(state, helperId);
+  const skillChoices = combatantSkillProficiencies(helper);
   if (!isReadonlyArrayNonEmpty(allyChoices)) return undefined;
   if (!isReadonlyArrayNonEmpty(skillChoices)) return undefined;
   return {
@@ -70,9 +72,11 @@ export function helpAbilityCheckActCandidates(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  const hole = helpAbilityCheckHole(state, actorId);
+  const helper = state.combatants.get(actorId);
+  if (helper === undefined) return [];
+  const hole = helpAbilityCheckHole(state, helper);
   return hole !== undefined &&
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    combatantCanTakeActions(helper) &&
     canSpendAction(state.currentTurnResources, "help")
     ? [
         {
@@ -81,14 +85,6 @@ export function helpAbilityCheckActCandidates(
         },
       ]
     : [];
-}
-
-function helpAbilityCheckSkillChoices(
-  state: BattleState,
-  helperId: CombatantId,
-): readonly Skill[] {
-  const helper = state.combatants.get(helperId);
-  return helper === undefined ? [] : combatantSkillProficiencies(helper);
 }
 
 type HelpAbilityCheckResolutionInput = BattleResolutionInputForSubject<
@@ -112,7 +108,15 @@ export function resolveHelpAbilityCheck(
       HelpAbilityCheckResolutionInput["subject"]
     > {
   const helperId = input.subject.actorId;
-  const hole = helpAbilityCheckHole(input.state, helperId);
+  const helper = input.state.combatants.get(helperId);
+  if (helper === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The helper is no longer in battle.",
+    );
+  }
+  const hole = helpAbilityCheckHole(input.state, helper);
   if (hole === undefined) {
     return invalidResult(
       input.state,
@@ -147,7 +151,6 @@ export function resolveHelpAbilityCheck(
         helperId,
         allyId: accepted.success.allyId,
         skill: accepted.success.skill,
-        expiresAt: { kind: "startOfTurn", combatantId: helperId },
       },
     ],
   };

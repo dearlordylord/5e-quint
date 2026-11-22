@@ -36,6 +36,15 @@ export type D20TestRollModeSources = Readonly<{
   readonly disadvantage: boolean;
 }>;
 
+export function combineD20TestRollModeSources(
+  ...sources: readonly D20TestRollModeSources[]
+): D20TestRollModeSources {
+  return {
+    advantage: sources.some((source) => source.advantage),
+    disadvantage: sources.some((source) => source.disadvantage),
+  };
+}
+
 export function proneAttackRollModeSources(
   distanceFeet: MovementFeet,
 ): D20TestRollModeSources {

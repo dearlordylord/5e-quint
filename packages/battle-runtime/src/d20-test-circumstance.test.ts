@@ -80,6 +80,8 @@ import {
   battleD20TestCircumstanceRequests,
   battleHolesWithTableD20TestCircumstances,
   combineD20TestRollMode,
+  combineD20TestRollModeSources,
+  mechanicalD20TestRollMode,
   proneAttackRollModeSources,
   attackerConditionAttackRollModeSources,
   PRONE_ATTACKER_ATTACK_ROLL_MODE_SOURCES,
@@ -90,6 +92,25 @@ import {
   type TableD20TestCircumstanceDecision,
   type TableD20TestCircumstanceSource,
 } from "./d20-test-circumstance.ts";
+
+test("opposing sources cancel without losing either source when another benefit applies", () => {
+  const sources = combineD20TestRollModeSources(
+    { advantage: true, disadvantage: false },
+    { advantage: false, disadvantage: true },
+  );
+  expect(mechanicalD20TestRollMode(sources)).toBe("normal");
+  expect(
+    mechanicalD20TestRollMode(
+      combineD20TestRollModeSources(sources, {
+        advantage: true,
+        disadvantage: false,
+      }),
+    ),
+  ).toBe("normal");
+  expect(
+    mechanicalD20TestRollMode(combineD20TestRollModeSources()),
+  ).toBeUndefined();
+});
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x279 } as const;
 const resolutionId = d20TestResolutionId("synthetic-resolution");

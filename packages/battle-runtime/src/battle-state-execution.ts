@@ -783,7 +783,6 @@ export type BattleHelpAbilityCheck = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
   readonly skill: Skill;
-  readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
 export type GlyphStoredSpellReleaseReplayContext = {
   readonly profile: GlyphStoredSpellReleaseProfile;

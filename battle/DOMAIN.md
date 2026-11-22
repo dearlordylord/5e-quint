@@ -124,7 +124,7 @@ For battle action tokens, `ResourceCost` is limited to the immediate up-front co
 
 **Help-Attack Proximity** — A caller-owned yes/no fact for whether the enemy distracted by the Help action is within 5 feet of the helper at the time of the action. The battle layer owns the action spend and resulting help link, not the geometry check.
 
-**Help Assistance** — A caller-owned yes/no fact for whether the helper is near enough to assist the chosen ally's ability check verbally or physically; the SRD gives the GM final say. The battle layer owns the action spend, the benefit for the chosen skill, its expiry and its use by the ally's next check with that skill, not the judgment.
+**Help Assistance** — A caller-owned yes/no fact for whether the helper is near enough to assist the chosen ally's ability check verbally or physically; the SRD gives the GM final say. The battle layer owns the action spend, the benefit for the chosen skill, its expiry and its use by the ally's next check with that skill, not the judgment. Battle currently applies this benefit to Hide, Search, escaping spell restraint, and the exported Influence check. Escape Grapple and tool checks are not yet connected to this benefit.
 
 **Threatened** — A creature is threatened by an enemy if within that enemy's reach and the enemy can see them. Leaving a threatened area triggers an opportunity attack.
 
