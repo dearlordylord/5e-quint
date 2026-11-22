@@ -129,14 +129,21 @@ ordering of the SRD's damage adjustments.
 
 **Assumption:** Once a Stat Block Multiattack is selected, its named attack
 dispatches remain the open Attack action. Until the dispatches are spent or the
-turn ends, Movement between attacks and turn completion remain available; unrelated
+turn ends, Movement (including Standing from Prone), voluntary Dropping Prone
+between completed attacks, and turn completion remain available; unrelated
 actions, Bonus Actions, spells, features, and unrelated reaction or Legendary
 Action subjects are not part of that continuation.
 
 **Rules basis / gap:** `.references/srd-5.2.1/monsters.md`,
 "Multiattack" says that the listed attacks and additional abilities are part of
 the Attack action. `.references/srd-5.2.1/rules-glossary.md`, "Attack [Action]"
-allows movement between multiple attacks, while
+allows movement between multiple attacks. Its "Prone" entry identifies
+righting yourself by spending half your Speed as a movement option, so Standing
+from Prone retains that permission when enough movement remains.
+`.references/srd-5.2.1/playing-the-game.md`, "Dropping Prone," permits voluntarily
+becoming Prone on the creature's turn without an action or any Speed expenditure;
+the continuation preserves that permission between fully resolved attacks.
+Meanwhile,
 `.references/srd-5.2.1/playing-the-game.md`, "Bonus Actions" leaves the timing
 of an available Bonus Action to the creature unless specified. The SRD does
 not define a replay or interleaving protocol for a partially resolved named
@@ -222,3 +229,18 @@ someone else uses an Action to shake the creature out of its stupor. Unlike
 requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
+
+## A52: Command's Halt prevents Dropping Prone
+
+**Assumption:** While Command's Halt applies on its turn, the target can't drop
+Prone, even though its Speed isn't 0.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Command," says that
+under Halt the target "doesn't move and takes no action or Bonus Action."
+`.references/srd-5.2.1/playing-the-game.md`, "Dropping Prone," lets a creature
+give itself the Prone condition "without using an action or any of your Speed,
+but you can't do so if your Speed is 0." Halt doesn't set Speed to 0, and the
+SRD doesn't say whether lowering yourself to the ground counts as moving. The
+model reads "doesn't move" as covering any voluntary change of the target's
+position, so Halt suppresses Drop Prone as it suppresses Movement and Stand from
+Prone.

@@ -738,6 +738,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "resolveMoveCommand",
     "resolveFixedCostMovementReplacementCommand",
     "resolveStandFromProneCommand",
+    "resolveDropProneCommand",
     "resolveOpportunityAttackCommand",
     "resolveReactionAttackCommand",
     "resolvePersistentSpatialSpellProcedureCommand",
@@ -2807,9 +2808,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "eda919ae6489de571332aa782dc2104bd8d0ca9a270f3c46180c9b1148e78f86",
-  siteCount: 1703,
-  violationCount: 1819,
+  sha256: "129718eb17136e5dc08dc7bf571d0344561cc3907379a9657e4369f1e844715a",
+  siteCount: 1708,
+  violationCount: 1826,
 };
 
 function escapeForRegExp(text) {

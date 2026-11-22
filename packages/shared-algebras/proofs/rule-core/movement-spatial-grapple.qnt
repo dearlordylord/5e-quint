@@ -60,6 +60,12 @@ module movementSpatialGrapple {
     grapple: GrappleState,
   }
 
+  type DropProneFacts = {
+    alive: bool,
+    proneImmune: bool,
+    commandHalt: bool,
+  }
+
   pure def initialMovementGrappleState: MovementGrappleState = {
     turn: initialTurnProcedureState,
     speedFeet: 30,
@@ -194,8 +200,18 @@ module movementSpatialGrapple {
     }
   }
 
-  pure def dropProne(state: MovementGrappleState): MovementGrappleState =
-    if (not(state.turn.currentActorOwnsTurn) or effectiveSpeedFeet(state) == 0) state
+  // SRD Dropping Prone, Immunity, and Dead; Command: Halt follows A52.
+  pure def canDropProne(state: MovementGrappleState, facts: DropProneFacts): bool = all {
+    state.turn.currentActorOwnsTurn,
+    effectiveSpeedFeet(state) > 0,
+    not(state.prone),
+    facts.alive,
+    not(facts.proneImmune),
+    not(facts.commandHalt),
+  }
+
+  pure def dropProne(state: MovementGrappleState, facts: DropProneFacts): MovementGrappleState =
+    if (not(canDropProne(state, facts))) state
     else {
       turn: state.turn,
       speedFeet: state.speedFeet,
