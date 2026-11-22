@@ -10,6 +10,7 @@ export const CHATGPT_BATTLE_EXECUTION_TOOLS = {
   disengage: defineChatGptBattleTool("disengage"),
   disperse_spell_area: defineChatGptBattleTool("disperse_spell_area"),
   dodge: defineChatGptBattleTool("dodge"),
+  drop_prone: defineChatGptBattleTool("drop_prone"),
   end_turn: defineChatGptBattleTool("end_turn"),
   escape_grapple: defineChatGptBattleTool("escape_grapple"),
   escape_spell_restraint: defineChatGptBattleTool("escape_spell_restraint"),

@@ -485,6 +485,7 @@ function runtimeCommandSubjectKind(
         () => "runtimeAltitudeControl" as const,
       ),
       byCommand("creatureFalls", () => "runtimeMovement" as const),
+      byCommand("dropProne", () => "runtimeMovement" as const),
       Match.exhaustive,
     );
 }

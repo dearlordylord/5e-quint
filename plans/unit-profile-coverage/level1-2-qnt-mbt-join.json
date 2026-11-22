@@ -2567,6 +2567,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3082,6 +3090,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3987,6 +4003,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -5443,6 +5467,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",

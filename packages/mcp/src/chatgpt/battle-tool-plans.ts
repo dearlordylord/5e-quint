@@ -57,6 +57,11 @@ export const CHATGPT_BATTLE_TOOLS = {
     family: "battleActions",
     description: "Take Dodge at the admitted action cost.",
   },
+  drop_prone: {
+    family: "battleActions",
+    description:
+      "Use when the active combatant chooses to drop Prone. It costs no action or movement and updates its condition in the saved battle.",
+  },
   end_battle: {
     family: "battleLifecycle",
     description:
