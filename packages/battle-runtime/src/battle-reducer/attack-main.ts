@@ -253,6 +253,7 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleGrappleLink,
+  BattleHoleId,
   BattleMovementHole,
   BattleInterruptedProcedure,
   BattleResolutionResult,
@@ -2486,11 +2487,12 @@ export function resolveSelectedAttackProcedure<
     : null;
   // A miss deals damage only through Graze, whose fixed amount takes no riders.
   const fixedDamageByTypeBeforeTargetAdjustments = hit
-    ? eligibleDamageRiders.length > 0 ||
-      spellMarkedDamageRiders.length > 0 ||
-      spellWeaponDamageRiders.length > 0
-      ? null
-      : fixedBaseDamageByTypeEntries
+    ? eligibleFixedHitDamage({
+        baseDamage: fixedBaseDamageByTypeEntries,
+        attackDamageRiders: eligibleDamageRiders,
+        spellMarkedDamageRiders,
+        spellWeaponDamageRiders,
+      })
     : grazeMissDamage.damageByType;
   const fixedDamageAmount =
     fixedDamageByTypeBeforeTargetAdjustments === null
@@ -3709,6 +3711,21 @@ export function resolveSelectedAttackProcedure<
   );
 }
 
+function eligibleFixedHitDamage(input: {
+  readonly baseDamage: readonly DamageAmountByTypeEntry[] | null;
+  readonly attackDamageRiders: ReturnType<typeof eligibleAttackDamageRiders>;
+  readonly spellMarkedDamageRiders: ReturnType<typeof activeMarkedDamageRiders>;
+  readonly spellWeaponDamageRiders: ReturnType<
+    typeof activeSpellWeaponDamageRiders
+  >;
+}): readonly DamageAmountByTypeEntry[] | null {
+  return input.attackDamageRiders.length > 0 ||
+    input.spellMarkedDamageRiders.length > 0 ||
+    input.spellWeaponDamageRiders.length > 0
+    ? null
+    : input.baseDamage;
+}
+
 /**
  * The damage a missed attack roll deals through Weapon Mastery Graze, or the
  * result that stops the attack first: the Graze decision hole, or a Graze fill
@@ -3804,12 +3821,7 @@ function attackPostDuplicateHitInterceptionFillsArePresent(
     fillSet.concentrationSavingThrows.length > 0 ||
     fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovement !== undefined ||
-    fillSet.huntersPreyHordeBreakerDecision !== undefined ||
-    fillSet.huntersPreyHordeBreakerTarget !== undefined ||
-    fillSet.huntersPreyHordeBreakerAttackRoll !== undefined ||
-    fillSet.huntersPreyHordeBreakerDamageRoll !== undefined ||
-    fillSet.huntersPreyHordeBreakerGrazeDecision !== undefined ||
-    fillSet.huntersPreyHordeBreakerDamageDispositionFilled ||
+    !hordeBreakerFillIsAbsent(fillSet) ||
     fillSet.grapplerPunchAndGrabDecision !== undefined ||
     fillSet.grapplerPunchAndGrabOutcome !== undefined
   );
@@ -4487,6 +4499,16 @@ type AdditionalWeaponAttackDamageSource =
       >;
     };
 
+function additionalWeaponAttackDamageSourceHoleId(
+  source: AdditionalWeaponAttackDamageSource,
+): BattleHoleId {
+  return Match.value(source).pipe(
+    byKind("rolled", ({ damageRoll }) => damageRoll.holeId),
+    byKind("fixed", ({ holeId }) => holeId),
+    Match.exhaustive,
+  );
+}
+
 type AdditionalWeaponAttackDamageInput = {
   readonly family: AdditionalWeaponAttackFamily;
   readonly state: BattleState;
@@ -4536,10 +4558,9 @@ function resolveAdditionalWeaponAttackDamage(
   );
   const relationshipCheck = damageRelationshipDecisionFillCheck({
     state: input.state,
-    damageEventHoleId:
-      input.damageSource.kind === "rolled"
-        ? input.damageSource.damageRoll.holeId
-        : input.damageSource.holeId,
+    damageEventHoleId: additionalWeaponAttackDamageSourceHoleId(
+      input.damageSource,
+    ),
     damageSourceId: input.subject.actorId,
     targets:
       Number(damageAmount) <= 0
@@ -5258,6 +5279,113 @@ function huntersPreyHordeBreakerAfterPrimaryDamageContinuation(input: {
   };
 }
 
+function resolveHuntersPreyHordeBreakerMiss(input: {
+  readonly state: BattleState;
+  readonly rolledState: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly fillSet: ParsedAttackFillSet;
+  readonly attack: SupportedAttackActionOption;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly target: BattleCreatureState;
+  readonly targetFacts: readonly BattleTargetSpatialFact[];
+  readonly family: ProcedureExecutionAdditionalWeaponAttackFamily;
+  readonly hit: boolean;
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
+}): ReturnType<typeof resolveMissedAdditionalWeaponAttack> {
+  const { rolledState, attack, attackRoll, target, targetFacts, family, hit } =
+    input;
+  const attacker = rolledState.combatants.get(input.subject.actorId);
+  if (attacker === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        "Attack actor is no longer in the battle.",
+      ),
+    };
+  }
+  const grazeMissDamage = weaponMasteryGrazeMissDamage({
+    invalidFillState: input.state,
+    state: rolledState,
+    subject: input.subject,
+    attacker,
+    attack,
+    hit,
+    decision: input.fillSet.huntersPreyHordeBreakerGrazeDecision,
+    decisionHole: {
+      holeId: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
+      holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_INSTANCE,
+    },
+  });
+  if (grazeMissDamage.tag === "result") return grazeMissDamage;
+  if (grazeMissDamage.damageByType !== null) {
+    if (
+      family.fills.damageRoll !== undefined ||
+      family.fills.sourceDamageRollPenaltyRolls.length > 0
+    ) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Fixed Graze damage does not use a damage roll or a source damage roll penalty.",
+        ),
+      };
+    }
+    const damageEvent = {
+      kind: "aggregateDamage" as const,
+      damageByTypeBeforeTargetAdjustments: grazeMissDamage.damageByType,
+    } satisfies BattleAttackDamageEvent;
+    const damageAmount = attackDamageEventAmountForTarget(
+      rolledState,
+      target,
+      damageEvent,
+    );
+    return {
+      tag: "result",
+      result: resolveAdditionalWeaponAttackDamage({
+        state: rolledState,
+        invalidFillState: input.state,
+        subject: input.subject,
+        target,
+        targetSpatialFacts: targetFacts,
+        attackRoll,
+        damageSource: {
+          kind: "fixed",
+          holeId: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
+          event: damageEvent,
+        },
+        family,
+        damageDispositionHole: huntersPreyHordeBreakerDamageDispositionHole({
+          attack,
+          attackerId: input.subject.actorId,
+          target,
+          damageAmount,
+        }),
+        damageDispositionFilled:
+          input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
+        damageDisposition:
+          input.fillSet.huntersPreyHordeBreakerDamageDisposition,
+        concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+        saveGatedConditionWithRepeatDamageRepeatSaves:
+          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        relationshipDecisions: input.fillSet.damageRelationshipDecisions,
+        attackDamageRiders: [],
+        critical: false,
+        handledInterruptTrigger: input.handledInterruptTrigger,
+      }),
+    };
+  }
+  return resolveMissedAdditionalWeaponAttack({
+    state: rolledState,
+    invalidFillState: input.state,
+    attackerId: input.subject.actorId,
+    hit,
+    family,
+  });
+}
+
 function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
@@ -5400,95 +5528,15 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       return { tag: "result", result: attackHitReactionWindow };
     }
   }
-  const attacker = rolledState.combatants.get(input.subject.actorId);
-  if (attacker === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "staleSubject",
-        "Attack actor is no longer in the battle.",
-      ),
-    };
-  }
-  const grazeMissDamage = weaponMasteryGrazeMissDamage({
-    invalidFillState: input.state,
-    state: rolledState,
-    subject: input.subject,
-    attacker,
+  const hordeBreakerMiss = resolveHuntersPreyHordeBreakerMiss({
+    ...input,
+    rolledState,
     attack: hordeBreakerAttack,
-    hit,
-    decision: input.fillSet.huntersPreyHordeBreakerGrazeDecision,
-    decisionHole: {
-      holeId: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
-      holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_INSTANCE,
-    },
-  });
-  if (grazeMissDamage.tag === "result") return grazeMissDamage;
-  if (!hit && grazeMissDamage.damageByType !== null) {
-    if (
-      decision.family.fills.damageRoll !== undefined ||
-      decision.family.fills.sourceDamageRollPenaltyRolls.length > 0
-    ) {
-      return {
-        tag: "result",
-        result: invalidResult(
-          input.state,
-          "invalidFill",
-          "Fixed Graze damage does not use a damage roll or a source damage roll penalty.",
-        ),
-      };
-    }
-    const damageEvent = {
-      kind: "aggregateDamage" as const,
-      damageByTypeBeforeTargetAdjustments: grazeMissDamage.damageByType,
-    } satisfies BattleAttackDamageEvent;
-    const damageAmount = attackDamageEventAmountForTarget(
-      rolledState,
-      secondTarget,
-      damageEvent,
-    );
-    return {
-      tag: "result",
-      result: resolveAdditionalWeaponAttackDamage({
-        state: rolledState,
-        invalidFillState: input.state,
-        subject: input.subject,
-        target: secondTarget,
-        targetSpatialFacts: targetFacts,
-        attackRoll: effectiveHordeBreakerAttackRoll,
-        damageSource: {
-          kind: "fixed",
-          holeId: HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
-          event: damageEvent,
-        },
-        family: decision.family,
-        damageDispositionHole: huntersPreyHordeBreakerDamageDispositionHole({
-          attack: hordeBreakerAttack,
-          attackerId: input.subject.actorId,
-          target: secondTarget,
-          damageAmount,
-        }),
-        damageDispositionFilled:
-          input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
-        damageDisposition:
-          input.fillSet.huntersPreyHordeBreakerDamageDisposition,
-        concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
-        saveGatedConditionWithRepeatDamageRepeatSaves:
-          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-        relationshipDecisions: input.fillSet.damageRelationshipDecisions,
-        attackDamageRiders: [],
-        critical: false,
-        handledInterruptTrigger: input.handledInterruptTrigger,
-      }),
-    };
-  }
-  const hordeBreakerMiss = resolveMissedAdditionalWeaponAttack({
-    state: rolledState,
-    invalidFillState: input.state,
-    attackerId: input.subject.actorId,
-    hit,
+    attackRoll: effectiveHordeBreakerAttackRoll,
+    target: secondTarget,
+    targetFacts,
     family: decision.family,
+    hit,
   });
   if (hordeBreakerMiss.tag !== "hit") return hordeBreakerMiss;
   const hordeBreakerDamageDieFloorChoiceUnitIds =

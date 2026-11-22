@@ -415,49 +415,9 @@ function resolveReactionAttackCommand(
     Match.when("releaseReadiedAttack", () => "Readied" as const),
     Match.exhaustive,
   );
-  const target = input.state.combatants.get(subject.targetId);
-  const reactor = input.state.combatants.get(subject.reactorId);
-  if (reactor === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      `${commandLabel} reactor is no longer in the battle.`,
-    );
-  }
-  const attack = Match.value(subject).pipe(
-    Match.when({ command: "retaliationAttack" }, (reaction) =>
-      meleeWeaponOrUnarmedStrikeOptionForReactor(
-        input.state,
-        reaction.reactorId,
-        reaction.targetId,
-        reaction,
-      ),
-    ),
-    Match.when({ command: "opportunityAttack" }, (reaction) =>
-      opportunityAttackOptionForReactor(
-        input.state,
-        reaction.reactorId,
-        reaction.targetId,
-        reaction,
-      ),
-    ),
-    Match.when({ command: "releaseReadiedAttack" }, (reaction) =>
-      readiedAttackOption(
-        input.state,
-        reaction.reactorId,
-        reaction.targetId,
-        reaction.procedureRef,
-      ),
-    ),
-    Match.exhaustive,
-  );
-  if (target === undefined || attack === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      `${commandLabel} attack is no longer available.`,
-    );
-  }
+  const binding = reactionAttackBinding(input, commandLabel);
+  if (binding.tag === "result") return binding.result;
+  const { reactor, target, attack } = binding;
   const fillSet = attackFillSet(
     input.fills,
     subject.reactorId,
@@ -508,6 +468,74 @@ function resolveReactionAttackCommand(
     pendingAttackDamageReductions,
     rollPreparation,
   });
+}
+
+function reactionAttackBinding(
+  input: OpportunityAttackResolutionInput,
+  commandLabel: ReactionAttackCommandContext["commandLabel"],
+):
+  | ({ readonly tag: "ready" } & Pick<
+      ReactionAttackCommandContext,
+      "reactor" | "target" | "attack"
+    >)
+  | {
+      readonly tag: "result";
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    } {
+  const subject = input.subject;
+  const target = input.state.combatants.get(subject.targetId);
+  const reactor = input.state.combatants.get(subject.reactorId);
+  if (reactor === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        `${commandLabel} reactor is no longer in the battle.`,
+      ),
+    };
+  }
+  const attack = Match.value(subject).pipe(
+    Match.when({ command: "retaliationAttack" }, (reaction) =>
+      meleeWeaponOrUnarmedStrikeOptionForReactor(
+        input.state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction,
+      ),
+    ),
+    Match.when({ command: "opportunityAttack" }, (reaction) =>
+      opportunityAttackOptionForReactor(
+        input.state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction,
+      ),
+    ),
+    Match.when({ command: "releaseReadiedAttack" }, (reaction) =>
+      readiedAttackOption(
+        input.state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction.procedureRef,
+      ),
+    ),
+    Match.exhaustive,
+  );
+  if (target === undefined || attack === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        `${commandLabel} attack is no longer available.`,
+      ),
+    };
+  }
+  return { tag: "ready", reactor, target, attack };
 }
 
 function reactionAttackTargetSpatialFacts(input: {

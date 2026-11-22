@@ -1267,18 +1267,7 @@ export function applyWeaponMasteryPushOnHit(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const pushDisposition = input.targetSpatialFacts.find(
-    (
-      fact,
-    ): fact is Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "weaponMasteryPushDisposition" }
-    > =>
-      fact.kind === "weaponMasteryPushDisposition" &&
-      fact.attackerId === input.attackerId &&
-      fact.targetId === input.targetId &&
-      attackExecutionSelectionMatchesOption(fact, input.attack),
-  )?.disposition;
+  const pushDisposition = weaponMasteryPushDispositionForAttack(input);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (pushDisposition === undefined) {
     return {
@@ -1309,6 +1298,31 @@ export function applyWeaponMasteryPushOnHit(input: {
       },
     ],
   };
+}
+
+function weaponMasteryPushDispositionForAttack(
+  input: Pick<
+    Parameters<typeof applyWeaponMasteryPushOnHit>[0],
+    "attackerId" | "targetId" | "attack" | "targetSpatialFacts"
+  >,
+):
+  | Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    >["disposition"]
+  | undefined {
+  return input.targetSpatialFacts.find(
+    (
+      fact,
+    ): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    > =>
+      fact.kind === "weaponMasteryPushDisposition" &&
+      fact.attackerId === input.attackerId &&
+      fact.targetId === input.targetId &&
+      attackExecutionSelectionMatchesOption(fact, input.attack),
+  )?.disposition;
 }
 
 export function applyWeaponMasterySlowAfterDamage(input: {
