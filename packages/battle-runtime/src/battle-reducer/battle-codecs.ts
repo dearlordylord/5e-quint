@@ -3813,11 +3813,13 @@ const BattleAttackRollResultSchema = Schema.Struct({
       }),
     ]),
   ),
-  d20TestNaturalOneReroll: Schema.optionalKey(
-    BattleD20TestNaturalOneRerollDecisionSchema,
-  ),
-  heroicInspirationReroll: Schema.optionalKey(
-    BattleHeroicInspirationRerollDecisionSchema,
+  d20TestRerolls: Schema.optionalKey(
+    Schema.NonEmptyArray(
+      Schema.Union([
+        BattleD20TestNaturalOneRerollDecisionSchema,
+        BattleHeroicInspirationRerollDecisionSchema,
+      ]),
+    ),
   ),
 }).annotate({ parseOptions: { onExcessProperty: "error" } });
 
@@ -3838,6 +3840,9 @@ type BattleD20TestRollEncoded = Schema.Codec.Encoded<
 type BattleD20TestNaturalOneRerollDecisionEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestNaturalOneRerollDecisionSchema
 >;
+type BattleAttackRollD20TestRerollDecisionEncoded =
+  | BattleD20TestNaturalOneRerollDecisionEncoded
+  | Schema.Codec.Encoded<typeof BattleHeroicInspirationRerollDecisionSchema>;
 type BattleD20TestRolledOutcomeEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestRolledOutcomeSchema
 >;
@@ -4523,7 +4528,10 @@ type BattleFillEncoded =
         readonly d20TestRoll: BattleD20TestRollEncoded;
         readonly activatedOngoingFeatureProcedureRef?: string;
         readonly missToHitReplacementProcedureRef?: string;
-        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
+        readonly d20TestRerolls?: readonly [
+          BattleAttackRollD20TestRerollDecisionEncoded,
+          ...BattleAttackRollD20TestRerollDecisionEncoded[],
+        ];
       };
       readonly relationshipFacts?: BattleAttackRollRelationshipFactsEncoded;
     }

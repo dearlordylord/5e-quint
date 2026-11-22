@@ -3230,14 +3230,10 @@ export function attackRollFill(
       BattleFill,
       { readonly kind: "attackRoll" }
     >["value"]["spellAttackReroll"];
-    readonly d20TestNaturalOneReroll?: Extract<
+    readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
-    >["value"]["d20TestNaturalOneReroll"];
-    readonly heroicInspirationReroll?: Extract<
-      BattleFill,
-      { readonly kind: "attackRoll" }
-    >["value"]["heroicInspirationReroll"];
+    >["value"]["d20TestRerolls"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
@@ -3278,12 +3274,9 @@ export function attackRollFill(
       ...(value.spellAttackReroll === undefined
         ? {}
         : { spellAttackReroll: value.spellAttackReroll }),
-      ...(value.d20TestNaturalOneReroll === undefined
+      ...(value.d20TestRerolls === undefined
         ? {}
-        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
-      ...(value.heroicInspirationReroll === undefined
-        ? {}
-        : { heroicInspirationReroll: value.heroicInspirationReroll }),
+        : { d20TestRerolls: value.d20TestRerolls }),
     },
   };
 }

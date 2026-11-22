@@ -223,20 +223,21 @@ requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
 
-## A55: A D20 Test roll is rerolled at most once, whatever its sources
+## A55: Different reroll sources may apply sequentially to the same die
 
-**Assumption:** When more than one reroll source applies to the same D20 Test
-roll (Heroic Inspiration, a natural-1 reroll trait, Seeking Spell), the roller
-may take at most one of them. Each source the roller has is offered for the
-original roll, and a decision that takes a second reroll of that roll is
-rejected. Heroic Inspiration is spent only when its reroll is taken.
+**Assumption:** A die rerolled by one source may be rerolled again by a
+different source, provided each source's triggering conditions, timing,
+resource costs, and usage limits are satisfied. "Must use the new roll"
+prevents choosing the previous result; it does not prevent another eligible
+source from replacing the new result. This does not grant additional uses of
+the same source.
 
-**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Heroic
-Inspiration" lets a player character "reroll any die immediately after rolling
-it" and use the new roll. `.references/srd-5.2.1/playing-the-game.md`,
-"Interactions with Rerolls" says that with Advantage or Disadvantage only one
-of the two d20s is rerolled or replaced, chosen by the roller. Neither passage
-says whether a die produced by one reroll can be rerolled again by another
-source, and "immediately after rolling it" reads either way. The runtime keeps
-the existing one-reroll-per-roll rule that the natural-1 reroll and Seeking
-Spell already follow.
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`,
+"Heroic Inspiration," permits rerolling any die immediately after rolling it
+and requires using the new roll. `.references/srd-5.2.1/character-origins.md`,
+"Halfling," uses the same requirement for Luck. Neither passage explicitly
+addresses a subsequent reroll by a different source. The model permits that
+sequence rather than imposing a shared one-reroll limit across sources.
+`.references/srd-5.2.1/playing-the-game.md`, "Interactions with Rerolls,"
+still limits each reroll with Advantage or Disadvantage to one chosen die,
+not both.

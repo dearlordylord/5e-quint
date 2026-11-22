@@ -11,12 +11,14 @@ import { describe, expect, test } from "vitest";
 
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
-import { D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
-import {
-  HEROIC_INSPIRATION_REROLL_STACKING_MESSAGE,
-  HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
-} from "./battle-reducer/heroic-inspiration-reroll.ts";
+import { ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE } from "./battle-reducer/attack-roll-d20-test-rerolls.ts";
+import { D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
+import { HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/heroic-inspiration-reroll.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  settleBattleRuntimeTransaction,
+  type BattleRuntimeTransactionResult,
+} from "./battle-runtime-transaction.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
@@ -37,6 +39,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   testShortswordAttack,
@@ -47,7 +50,9 @@ import {
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+  type BattleD20TestNaturalOneRerollDecision,
   type BattleFill,
+  type BattleHeroicInspirationRerollDecision,
   type BattleHole,
   type BattleResolutionResult,
 } from "./battle-state-execution.ts";
@@ -99,7 +104,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           attackRollFill(roll, {
             total: 20,
             naturalD20: 15,
-            heroicInspirationReroll: declineReroll(),
+            d20TestRerolls: [declineReroll()],
           }),
         ],
       }),
@@ -147,7 +152,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           attackRollFill(roll, {
             total: 3,
             naturalD20: 2,
-            heroicInspirationReroll: declineReroll(),
+            d20TestRerolls: [declineReroll()],
           }),
         ],
       }),
@@ -165,7 +170,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     const rerolledRoll = attackRollFill(roll, {
       total: 3,
       naturalD20: 2,
-      heroicInspirationReroll: reroll({ total: 20, naturalD20: 15 }),
+      d20TestRerolls: [reroll({ total: 16, naturalD20: 15 })],
     });
 
     const rerolledHit = resolveBattleSubject({
@@ -200,7 +205,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           attackRollFill(roll, {
             total: 20,
             naturalD20: 15,
-            heroicInspirationReroll: reroll({ total: 3, naturalD20: 2 }),
+            d20TestRerolls: [reroll({ total: 7, naturalD20: 2 })],
           }),
         ],
       }),
@@ -243,11 +248,13 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           naturalD20: 4,
           rollMode: "advantage",
           rolledD20s,
-          heroicInspirationReroll: rerollRolledDie({
-            die: "first",
-            naturalD20: 18,
-            total: 23,
-          }),
+          d20TestRerolls: [
+            rerollRolledDie({
+              die: "first",
+              naturalD20: 18,
+              total: 23,
+            }),
+          ],
         }),
       ],
     });
@@ -264,17 +271,28 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
             naturalD20: 4,
             rollMode: "advantage",
             rolledD20s,
-            heroicInspirationReroll: reroll({ total: 23, naturalD20: 18 }),
+            d20TestRerolls: [reroll({ total: 23, naturalD20: 18 })],
           }),
         ],
       }),
     ).toMatchObject({ tag: "invalid" });
   });
 
-  test("a natural 1 offers both rerolls, and only one of them can be taken", () => {
+  test("a natural 1 offers both rerolls, and the roller decides in turn (A55)", () => {
     const state = halflingFighterBattle(HEROIC_INSPIRATION_AVAILABLE);
     const { subject, targetSelection, roll } = longswordRollHole(state);
     const naturalOne = { total: 2, naturalD20: 1 } as const;
+    const resolveWith = (
+      d20TestRerolls: NonNullable<AttackRollValue["d20TestRerolls"]>,
+    ) =>
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetSelection,
+          attackRollFill(roll, { ...naturalOne, d20TestRerolls }),
+        ],
+      });
 
     const asked = resolveBattleSubject({
       state,
@@ -290,102 +308,104 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       ],
     });
 
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          targetSelection,
-          attackRollFill(roll, {
-            ...naturalOne,
-            d20TestNaturalOneReroll: {
-              kind: "decline",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            },
-          }),
-        ],
-      }),
-    ).toMatchObject({
-      tag: "needsHoles",
-      frontier: {
-        holes: [
-          expect.objectContaining({
-            kind: "attackRoll",
-            d20TestNaturalOneRerolls: [expect.anything()],
-            heroicInspirationRerolls: [expect.anything()],
-          }),
-        ],
-      },
+    const afterLuckDeclined = requireHole(
+      resolveWith([declineNaturalOneReroll()]),
+      "attackRoll",
+    );
+    expect(afterLuckDeclined).toMatchObject({
+      heroicInspirationRerolls: [
+        { effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND },
+      ],
     });
+    expect(afterLuckDeclined).not.toHaveProperty("d20TestNaturalOneRerolls");
+
+    const luckThenInspiration = requireResolved(
+      resolveWith([
+        naturalOneReroll({ total: 3, naturalD20: 2 }),
+        reroll({ total: 4, naturalD20: 3 }),
+      ]),
+    );
+    expect(heroicInspiration(luckThenInspiration.state, fighterId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
+
+    const luckThenDecline = requireResolved(
+      resolveWith([
+        naturalOneReroll({ total: 3, naturalD20: 2 }),
+        declineReroll(),
+      ]),
+    );
+    expect(heroicInspiration(luckThenDecline.state, fighterId)).toEqual(
+      HEROIC_INSPIRATION_AVAILABLE,
+    );
+
+    const inspirationRollsAnotherOne = requireHole(
+      resolveWith([reroll({ total: 2, naturalD20: 1 })]),
+      "attackRoll",
+    );
+    expect(inspirationRollsAnotherOne).toMatchObject({
+      d20TestNaturalOneRerolls: [
+        { effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND },
+      ],
+    });
+    expect(inspirationRollsAnotherOne).not.toHaveProperty(
+      "heroicInspirationRerolls",
+    );
+
+    const inspirationThenLuck = requireResolved(
+      resolveWith([
+        reroll({ total: 2, naturalD20: 1 }),
+        naturalOneReroll({ total: 3, naturalD20: 2 }),
+      ]),
+    );
+    expect(heroicInspiration(inspirationThenLuck.state, fighterId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
 
     expect(
+      resolveWith([
+        reroll({ total: 6, naturalD20: 5 }),
+        naturalOneReroll({ total: 3, naturalD20: 2 }),
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
+    });
+    expect(
+      resolveWith([
+        naturalOneReroll({ total: 2, naturalD20: 1 }),
+        naturalOneReroll({ total: 3, naturalD20: 2 }),
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE,
+    });
+  });
+
+  test("a later reroll keeps the modifiers of the roll it replaces", () => {
+    const state = halflingFighterBattle(HEROIC_INSPIRATION_AVAILABLE);
+    const { subject, targetSelection, roll } = longswordRollHole(state);
+    expect(
       resolveBattleSubject({
         state,
         subject,
         fills: [
           targetSelection,
           attackRollFill(roll, {
-            ...naturalOne,
-            d20TestNaturalOneReroll: naturalOneReroll({
-              total: 20,
-              naturalD20: 15,
-            }),
-            heroicInspirationReroll: reroll({ total: 20, naturalD20: 15 }),
+            total: 2,
+            naturalD20: 1,
+            d20TestRerolls: [
+              naturalOneReroll({ total: 3, naturalD20: 2 }),
+              reroll({ total: 5, naturalD20: 3 }),
+            ],
           }),
         ],
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
+      message:
+        "Heroic Inspiration replacement roll must keep the original roll's modifiers; only the d20 changes.",
     });
-
-    const luckOnly = requireResolved(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          targetSelection,
-          attackRollFill(roll, {
-            ...naturalOne,
-            d20TestNaturalOneReroll: naturalOneReroll({
-              total: 3,
-              naturalD20: 2,
-            }),
-            heroicInspirationReroll: declineReroll(),
-          }),
-        ],
-      }),
-    );
-    expect(heroicInspiration(luckOnly.state, fighterId)).toEqual(
-      HEROIC_INSPIRATION_AVAILABLE,
-    );
-
-    const inspirationOnly = requireResolved(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          targetSelection,
-          attackRollFill(roll, {
-            ...naturalOne,
-            d20TestNaturalOneReroll: {
-              kind: "decline",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            },
-            heroicInspirationReroll: reroll({ total: 3, naturalD20: 2 }),
-          }),
-        ],
-      }),
-    );
-    expect(heroicInspiration(inspirationOnly.state, fighterId)).toEqual(
-      NO_HEROIC_INSPIRATION,
-    );
-  });
-
-  test("the Heroic Inspiration stacking message names its own source", () => {
-    expect(HEROIC_INSPIRATION_REROLL_STACKING_MESSAGE).toContain(
-      "Heroic Inspiration",
-    );
   });
 
   test("a Spell Attack offers the caster's Heroic Inspiration and spends it", () => {
@@ -437,7 +457,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     const rerolledHit = resolveRoll({
       total: 4,
       naturalD20: 2,
-      heroicInspirationReroll: reroll({ total: 25, naturalD20: 20 }),
+      d20TestRerolls: [reroll({ total: 22, naturalD20: 20 })],
     });
     expect(holeKinds(rerolledHit)).toEqual(["rolledDice"]);
 
@@ -445,7 +465,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       resolveRoll({
         total: 4,
         naturalD20: 2,
-        heroicInspirationReroll: reroll({ total: 5, naturalD20: 3 }),
+        d20TestRerolls: [reroll({ total: 5, naturalD20: 3 })],
       }),
     );
     expect(heroicInspiration(rerolledMiss.state, spellCasterId)).toEqual(
@@ -456,7 +476,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       resolveRoll({
         total: 4,
         naturalD20: 2,
-        heroicInspirationReroll: declineReroll(),
+        d20TestRerolls: [declineReroll()],
       }),
     );
     expect(heroicInspiration(declinedMiss.state, spellCasterId)).toEqual(
@@ -501,7 +521,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     const firstRayRerolled = attackRollFill(firstRay, {
       total: 4,
       naturalD20: 2,
-      heroicInspirationReroll: reroll({ total: 14, naturalD20: 12 }),
+      d20TestRerolls: [reroll({ total: 14, naturalD20: 12 })],
     });
     const awaitingShield = resolveBattleSubject({
       state: session.state,
@@ -565,7 +585,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       resolveSecondRay({
         total: 4,
         naturalD20: 2,
-        heroicInspirationReroll: reroll({ total: 20, naturalD20: 18 }),
+        d20TestRerolls: [reroll({ total: 20, naturalD20: 18 })],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -574,6 +594,181 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     expect(holeKinds(resolveSecondRay({ total: 4, naturalD20: 2 }))).toEqual([
       "attackRoll",
     ]);
+  });
+
+  test("a reroll must keep the original roll's modifiers", () => {
+    const state = fighterBattle(HEROIC_INSPIRATION_AVAILABLE);
+    const { subject, targetSelection, roll } = longswordRollHole(state);
+    const rerolledTo = (total: number) =>
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetSelection,
+          attackRollFill(roll, {
+            total: 7,
+            naturalD20: 2,
+            d20TestRerolls: [reroll({ total, naturalD20: 3 })],
+          }),
+        ],
+      });
+
+    expect(requireResolved(rerolledTo(8)).state).toBeDefined();
+    const inflated = rerolledTo(30);
+    expect(inflated).toMatchObject({
+      tag: "invalid",
+      message:
+        "Heroic Inspiration replacement roll must keep the original roll's modifiers; only the d20 changes.",
+    });
+  });
+
+  test("a decision submitted once the roll is asked again replaces that roll's fill", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("heroic-inspiration-transaction"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = fighterAttackSubject(session.state, "Longsword");
+    const settle = (
+      previous: NeedsHolesTransactionResult | null,
+      fills: readonly BattleFill[],
+    ) =>
+      settleBattleRuntimeTransaction({
+        session: previous?.resolution.session ?? session,
+        transaction: previous?.transaction ?? null,
+        operation: { kind: "ordinarySubject", subject, fills },
+      });
+    const started = requireTransactionNeedsHoles(settle(null, []));
+    const targeted = requireTransactionNeedsHoles(
+      settle(started, [
+        targetFill(transactionHole(started, "targetChoice"), goblinId),
+      ]),
+    );
+    const rolled = requireTransactionNeedsHoles(
+      settle(targeted, [
+        attackRollFill(transactionHole(targeted, "attackRoll"), {
+          total: 7,
+          naturalD20: 2,
+        }),
+      ]),
+    );
+    const askedAgain = transactionHole(rolled, "attackRoll");
+    expect(askedAgain).toMatchObject({
+      heroicInspirationRerolls: [
+        { effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND },
+      ],
+    });
+
+    for (const decision of [
+      declineReroll(),
+      reroll({ total: 8, naturalD20: 3 }),
+    ]) {
+      expect(
+        settle(rolled, [
+          attackRollFill(askedAgain, {
+            total: 7,
+            naturalD20: 2,
+            d20TestRerolls: [decision],
+          }),
+        ]),
+      ).toMatchObject({ tag: "settled" });
+    }
+  });
+
+  test("an earlier roll's decline stays valid when a replay finds Heroic Inspiration spent", () => {
+    const scorchingRay = spellRecord("scorching_ray");
+    const session = sessionWithHeroicInspiration(
+      spellBattle({
+        preparedSpells: [scorchingRay],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        targetHp: 30,
+        targetMaxHp: 30,
+        targetSpellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("shield")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      spellCasterId,
+    );
+    const act = spellAct({
+      session,
+      spellId: scorchingRay.id,
+      slotLevel: 2,
+    });
+    const targetSelections = act.initialHoles.flatMap((hole) =>
+      hole.kind === "targetChoice"
+        ? [spellTargetFill(hole, scorchingRay.id, spellCasterId, spellTargetId)]
+        : [],
+    );
+    const resolve = (fills: readonly BattleFill[]) =>
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [...targetSelections, ...fills],
+      });
+    const firstRayRoll = requireHole(resolve([]), "attackRoll");
+    const firstRayDeclined = attackRollFill(firstRayRoll, {
+      total: 4,
+      naturalD20: 2,
+      d20TestRerolls: [declineReroll()],
+    });
+    const secondRayRoll = requireHole(
+      resolve([firstRayDeclined]),
+      "attackRoll",
+    );
+    expect(secondRayRoll.holeId).not.toBe(firstRayRoll.holeId);
+    const secondRayRerolled = attackRollFill(secondRayRoll, {
+      total: 4,
+      naturalD20: 2,
+      d20TestRerolls: [reroll({ total: 20, naturalD20: 18 })],
+    });
+    const awaitingShield = resolve([firstRayDeclined, secondRayRerolled]);
+    if (awaitingShield.tag !== "needsHoles") {
+      throw new Error("Expected the rerolled ray's hit to open Shield.");
+    }
+    const decision = battleFrontierInterruptDecisionForState(
+      awaitingShield.state,
+    );
+    const shield = decision?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell",
+    );
+    if (
+      decision === null ||
+      decision === undefined ||
+      shield?.kind !== "nestedProcedure" ||
+      shield.subject.command !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected the Shield reaction choice.");
+    }
+    const afterShield = resolveBattleInterrupt({
+      state: awaitingShield.state,
+      fill: interruptDecisionFill(decision.decisionHole, {
+        kind: "resolve",
+        responderId: spellTargetId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          procedureRef: shield.subject.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+
+    if (afterShield.tag === "invalid" || !("state" in afterShield)) {
+      throw new Error(
+        `Expected the replay to accept the decline: ${JSON.stringify(afterShield)}`,
+      );
+    }
+    expect(heroicInspiration(afterShield.state, spellCasterId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
   });
 
   test("an Opportunity Attack offers the reactor's Heroic Inspiration and spends it", () => {
@@ -611,7 +806,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           attackRollFill(opportunity.attackRoll, {
             total: 3,
             naturalD20: 2,
-            heroicInspirationReroll: reroll({ total: 4, naturalD20: 3 }),
+            d20TestRerolls: [reroll({ total: 4, naturalD20: 3 })],
           }),
         ],
       }),
@@ -627,12 +822,12 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
     const declined = attackRollFill(roll, {
       total: 3,
       naturalD20: 2,
-      heroicInspirationReroll: declineReroll(),
+      d20TestRerolls: [declineReroll()],
     });
     const rerolled = attackRollFill(roll, {
       total: 3,
       naturalD20: 2,
-      heroicInspirationReroll: reroll({ total: 20, naturalD20: 15 }),
+      d20TestRerolls: [reroll({ total: 16, naturalD20: 15 })],
     });
 
     expect(battleContinuationFillEquals(declined, { ...declined })).toBe(true);
@@ -653,11 +848,13 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       naturalD20: 4,
       rollMode: "advantage",
       rolledD20s: { first: 2, second: 4 },
-      heroicInspirationReroll: rerollRolledDie({
-        die: "first",
-        naturalD20: 18,
-        total: 23,
-      }),
+      d20TestRerolls: [
+        rerollRolledDie({
+          die: "first",
+          naturalD20: 18,
+          total: 23,
+        }),
+      ],
     });
 
     const encoded = Schema.encodeSync(BattleFillSchema)(fill);
@@ -668,11 +865,18 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           ...fill,
           value: {
             ...fill.value,
-            heroicInspirationReroll: {
-              kind: "decline",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            },
+            d20TestRerolls: [
+              { kind: "decline", effectKind: "missed_spell_attack_reroll" },
+            ],
           },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          ...fill,
+          value: { ...fill.value, d20TestRerolls: [] },
         }),
       ),
     ).toBe(true);
@@ -805,6 +1009,41 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
   };
 }
 
+type NeedsHolesTransactionResult = Extract<
+  BattleRuntimeTransactionResult,
+  { readonly tag: "needsHoles" }
+>;
+
+function requireTransactionNeedsHoles(
+  result: BattleRuntimeTransactionResult,
+): NeedsHolesTransactionResult {
+  if (result.tag !== "needsHoles") {
+    throw new Error(
+      `Expected the transaction to need holes, got ${result.tag}.`,
+    );
+  }
+  return result;
+}
+
+function transactionHole<Kind extends BattleHole["kind"]>(
+  result: NeedsHolesTransactionResult,
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
+  const frontier = result.resolution.envelope.frontier;
+  const holes: readonly BattleHole[] =
+    frontier.kind === "interruptDecision"
+      ? [frontier.decisionHole]
+      : frontier.holes;
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: Kind }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected a ${kind} hole in the transaction result.`);
+  }
+  return hole;
+}
+
 function holeKinds(
   result: BattleResolutionResult,
 ): readonly BattleHole["kind"][] {
@@ -830,7 +1069,7 @@ function heroicInspiration(
 function reroll(input: {
   readonly total: number;
   readonly naturalD20: number;
-}): NonNullable<AttackRollValue["heroicInspirationReroll"]> {
+}): BattleHeroicInspirationRerollDecision {
   return {
     kind: "reroll",
     effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
@@ -847,7 +1086,7 @@ function reroll(input: {
 function naturalOneReroll(input: {
   readonly total: number;
   readonly naturalD20: number;
-}): NonNullable<AttackRollValue["d20TestNaturalOneReroll"]> {
+}): BattleD20TestNaturalOneRerollDecision {
   return {
     kind: "reroll",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
@@ -865,7 +1104,7 @@ function rerollRolledDie(input: {
   readonly die: "first" | "second";
   readonly naturalD20: number;
   readonly total: number;
-}): NonNullable<AttackRollValue["heroicInspirationReroll"]> {
+}): BattleHeroicInspirationRerollDecision {
   return {
     kind: "rerollRolledDie",
     effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
@@ -884,8 +1123,13 @@ function rerollRolledDie(input: {
   };
 }
 
-function declineReroll(): NonNullable<
-  AttackRollValue["heroicInspirationReroll"]
-> {
+function declineNaturalOneReroll(): BattleD20TestNaturalOneRerollDecision {
+  return {
+    kind: "decline",
+    effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+  };
+}
+
+function declineReroll(): BattleHeroicInspirationRerollDecision {
   return { kind: "decline", effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND };
 }

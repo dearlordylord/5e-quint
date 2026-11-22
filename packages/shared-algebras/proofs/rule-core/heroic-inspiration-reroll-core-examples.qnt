@@ -10,7 +10,6 @@ module heroicInspirationRerollCoreExamples {
     original: { naturalD20: 4, total: 9 },
     rolledD20s: OneD20,
     decision: HeroicInspirationRerollDeclined,
-    otherRerollTaken: false,
   }
 
   run test_reroll_uses_new_roll_and_spends_heroic_inspiration = {
@@ -40,6 +39,21 @@ module heroicInspirationRerollCoreExamples {
       assert(result.admitted),
       assert(result.effective == { naturalD20: 2, total: 7 }),
       assert(result.inspirationAfter == NoHeroicInspiration),
+    }
+  }
+
+  run test_reroll_must_keep_the_original_modifiers = {
+    val result = resolveHeroicInspirationReroll({
+      ...inspiredRoll,
+      decision: HeroicInspirationRerollSelected({
+        replacement: { naturalD20: 3, total: 30 },
+      }),
+    })
+    all {
+      assert(not(result.admitted)),
+      assert(result.invalid),
+      assert(result.effective == inspiredRoll.original),
+      assert(result.inspirationAfter == HeroicInspirationAvailable),
     }
   }
 
@@ -76,23 +90,36 @@ module heroicInspirationRerollCoreExamples {
     }
   }
 
-  run test_one_reroll_per_roll = {
-    val result = resolveHeroicInspirationReroll({
+  // A55: Heroic Inspiration may reroll the die another source just rerolled.
+  run test_rerolls_the_roll_another_source_left = {
+    val luck = resolveD20TestNaturalOneReroll({
+      hasFeature: true,
+      original: { naturalD20: 1, total: 6 },
+      decision: D20TestNaturalOneRerollSelected({
+        replacement: { naturalD20: 3, total: 8 },
+      }),
+    })
+    val inspired = resolveHeroicInspirationReroll({
       ...inspiredRoll,
-      otherRerollTaken: true,
+      original: luck.effective,
       decision: HeroicInspirationRerollSelected({
         replacement: { naturalD20: 17, total: 22 },
       }),
     })
-    val declined = resolveHeroicInspirationReroll({
+    val changedModifiers = resolveHeroicInspirationReroll({
       ...inspiredRoll,
-      otherRerollTaken: true,
+      original: luck.effective,
+      decision: HeroicInspirationRerollSelected({
+        replacement: { naturalD20: 17, total: 23 },
+      }),
     })
     all {
-      assert(result.invalid),
-      assert(result.effective == inspiredRoll.original),
-      assert(result.inspirationAfter == HeroicInspirationAvailable),
-      assert(not(declined.invalid)),
+      assert(luck.admitted),
+      assert(inspired.admitted),
+      assert(inspired.effective == { naturalD20: 17, total: 22 }),
+      assert(inspired.inspirationAfter == NoHeroicInspiration),
+      assert(changedModifiers.invalid),
+      assert(changedModifiers.effective == luck.effective),
     }
   }
 

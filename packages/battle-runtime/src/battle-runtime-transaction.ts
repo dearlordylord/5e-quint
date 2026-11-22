@@ -1686,7 +1686,11 @@ function resolveOperation(input: {
             return resolvePendingTransactionSubject({
               transaction: pending,
               subject: pending.subject,
-              fills: appendFills(pending.fills, fills),
+              fills: fillsAnsweringPendingFrontier(
+                pending.fills,
+                fills,
+                pending.frontier,
+              ),
               ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
             });
           }
@@ -1884,7 +1888,11 @@ function transactionForNeedsHoles(
               baseSession: pending.baseSession,
               currentSession: resolution.session,
               subject: requestedSubject,
-              fills: appendFills(pending.fills, fills),
+              fills: fillsAnsweringPendingFrontier(
+                pending.fills,
+                fills,
+                pending.frontier,
+              ),
               frontier,
               completion: pending.completion,
             });
@@ -2681,6 +2689,32 @@ function appendFills(
   submitted: readonly BattleFill[],
 ): readonly BattleFill[] {
   return Object.freeze([...accepted, ...submitted]);
+}
+
+/**
+ * The fills after answering the pending ordinary frontier. When that frontier
+ * asks a hole again (an attack roll asked again with its reroll decision), the
+ * submitted fill for that hole replaces the accepted one instead of filling
+ * the hole twice.
+ */
+function fillsAnsweringPendingFrontier(
+  accepted: readonly BattleFill[],
+  submitted: readonly BattleFill[],
+  frontier: BattlePendingTransactionFrontier,
+): readonly BattleFill[] {
+  if (frontier.kind !== "ordinaryHoles") {
+    return appendFills(accepted, submitted);
+  }
+  const askedHoleIds = new Set(frontier.holes.map((hole) => hole.holeId));
+  const answeredHoleIds = new Set(
+    submitted
+      .map((fill) => fill.holeId)
+      .filter((holeId) => askedHoleIds.has(holeId)),
+  );
+  return appendFills(
+    accepted.filter((fill) => !answeredHoleIds.has(fill.holeId)),
+    submitted,
+  );
 }
 
 function nonEmpty<T>(

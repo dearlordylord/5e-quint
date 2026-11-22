@@ -1982,14 +1982,16 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       fills: [
         attackRollFill(startedReaction.attackRoll, {
           ...originalRoll,
-          d20TestNaturalOneReroll: {
-            kind: "reroll",
-            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            replacement: {
-              total: 20,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
+          d20TestRerolls: [
+            {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                total: 22,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
+              },
             },
-          },
+          ],
         }),
       ],
     });

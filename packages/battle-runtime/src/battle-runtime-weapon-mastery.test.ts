@@ -1127,10 +1127,12 @@ describe("battle runtime: Weapon Mastery", () => {
           targetFillValue,
           attackRollFill(naturalOneDecision, {
             ...naturalOneRoll,
-            d20TestNaturalOneReroll: {
-              kind: "decline",
-              effectKind: rerollOffer.effectKind,
-            },
+            d20TestRerolls: [
+              {
+                kind: "decline",
+                effectKind: rerollOffer.effectKind,
+              },
+            ],
           }),
         ],
       }),

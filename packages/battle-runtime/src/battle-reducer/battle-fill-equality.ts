@@ -166,8 +166,7 @@ type ComparableAttackRollResult = Pick<
       | "activatedOngoingFeatureProcedureRef"
       | "missToHitReplacementProcedureRef"
       | "spellAttackReroll"
-      | "d20TestNaturalOneReroll"
-      | "heroicInspirationReroll"
+      | "d20TestRerolls"
     >
   >;
 
@@ -182,13 +181,24 @@ function attackRollResultsEqual(
       b.activatedOngoingFeatureProcedureRef &&
     a.missToHitReplacementProcedureRef === b.missToHitReplacementProcedureRef &&
     spellAttackRerollDecisionsEqual(a.spellAttackReroll, b.spellAttackReroll) &&
-    d20TestRollRerollDecisionsEqual(
-      a.d20TestNaturalOneReroll,
-      b.d20TestNaturalOneReroll,
-    ) &&
-    d20TestRollRerollDecisionsEqual(
-      a.heroicInspirationReroll,
-      b.heroicInspirationReroll,
+    attackRollD20TestRerollDecisionListsEqual(
+      a.d20TestRerolls,
+      b.d20TestRerolls,
+    )
+  );
+}
+
+function attackRollD20TestRerollDecisionListsEqual(
+  a: BattleAttackRollResult["d20TestRerolls"],
+  b: BattleAttackRollResult["d20TestRerolls"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return (
+    a.length === b.length &&
+    a.every((decision, index) =>
+      d20TestRollRerollDecisionsEqual(decision, b[index]),
     )
   );
 }

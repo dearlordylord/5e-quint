@@ -4515,14 +4515,16 @@ describe("Find Familiar lifecycle", () => {
           value: {
             total: 5,
             d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
-            d20TestNaturalOneReroll: {
-              kind: "reroll",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-              replacement: {
-                total: 18,
-                d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+                replacement: {
+                  total: 18,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+                },
               },
-            },
+            ],
           },
         },
       ],

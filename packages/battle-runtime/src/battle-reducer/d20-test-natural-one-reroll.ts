@@ -4,7 +4,6 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleFill,
-  BattleAttackRollResult,
   BattleAttackRollHole,
   BattleCreatureState,
   BattleD20TestNaturalOneRerollDieDecision,
@@ -21,7 +20,6 @@ import type {
 } from "../battle-state-execution.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import {
-  attackRollAfterD20TestRollReroll,
   d20TestRollAfterRolledDieReplacement,
   d20TestRolledDieProjectionIssue,
   d20TestRolledDieRollReplacementIssue,
@@ -38,8 +36,6 @@ export const D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE =
   "D20 Test natural-1 replacement roll is outside the d20 protocol.";
 export const D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE =
   "D20 Test natural-1 replacement roll mode does not match the current D20 Test rule.";
-export const D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE =
-  "D20 Test natural-1 reroll cannot be combined with another d20 reroll on the same roll.";
 export const D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE =
   "D20 Test natural-1 reroll requires an explicit reroll or decline decision.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE =
@@ -50,16 +46,18 @@ export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE =
   "D20 Test natural-1 rolled-die reroll requires an explicit raw die selection.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_MESSAGE =
   "D20 Test natural-1 rolled-die reroll must select a rolled natural 1.";
+export const D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE =
+  "D20 Test natural-1 replacement roll must keep the original roll's modifiers; only the d20 changes.";
 export const D20_TEST_NATURAL_ONE_REROLL_PROJECTION_MESSAGE =
   "D20 Test natural-1 rolled-die replacement does not match the projected D20 Test result.";
 const D20_TEST_NATURAL_ONE_REROLL_MESSAGES = {
   replacement: D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE,
   mode: D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
-  stacking: D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
   dieSelectionRequired:
     D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
   dieSelection: D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_MESSAGE,
   projection: D20_TEST_NATURAL_ONE_REROLL_PROJECTION_MESSAGE,
+  modifier: D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
 } as const satisfies D20TestRollRerollMessages;
 const D20_TEST_NATURAL_ONE_REROLL_OPTION = {
   effectKind: "d20_test_natural_one_reroll",
@@ -226,7 +224,6 @@ export function d20TestNaturalOneRerollRollIssue(input: {
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleD20TestNaturalOneRerollDecision | undefined;
   readonly requiredRollMode?: AttackRollMode | undefined;
-  readonly otherD20RerollPresent?: boolean;
 }): string | null {
   const { facts, gate } = d20TestNaturalOneRerollDecisionState(input);
   if (gate.tag === "finished") {
@@ -241,14 +238,12 @@ export function d20TestNaturalOneRerollRollIssue(input: {
       facts,
       replacement: decision.replacement,
       requiredRollMode: input.requiredRollMode,
-      otherD20RerollPresent: input.otherD20RerollPresent,
     });
   }
   return d20TestNaturalOneRerollReplacementRollIssue({
     facts,
     replacement: decision.replacement,
     requiredRollMode: input.requiredRollMode,
-    otherD20RerollPresent: input.otherD20RerollPresent,
   });
 }
 
@@ -318,15 +313,6 @@ export function d20TestNaturalOneRerollDieIssue(input: {
     : D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
 }
 /* v8 ignore stop -- @preserve */
-
-export function effectiveD20TestNaturalOneRerollAttackRoll(
-  attackRoll: BattleAttackRollResult,
-): BattleAttackRollResult {
-  return attackRollAfterD20TestRollReroll(
-    attackRoll,
-    attackRoll.d20TestNaturalOneReroll,
-  );
-}
 
 export function effectiveD20TestNaturalOneRerollAbilityCheckValue<
   T extends {
@@ -468,7 +454,6 @@ function d20TestNaturalOneRerollRolledDieRollIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRolledDieRollReplacement;
   readonly requiredRollMode?: AttackRollMode | undefined;
-  readonly otherD20RerollPresent?: boolean | undefined;
 }): string | null {
   return d20TestRolledDieRollReplacementIssue({
     ...input,
@@ -481,7 +466,6 @@ function d20TestNaturalOneRerollReplacementRollIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRollReplacement;
   readonly requiredRollMode?: AttackRollMode | undefined;
-  readonly otherD20RerollPresent?: boolean | undefined;
 }): string | null {
   return d20TestRollReplacementRollIssue({
     ...input,

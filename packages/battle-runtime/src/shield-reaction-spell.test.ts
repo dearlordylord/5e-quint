@@ -306,14 +306,16 @@ describe("Shield Reaction spell", () => {
           ...originalRoll,
           value: {
             ...originalRoll.value,
-            heroicInspirationReroll: {
-              kind: "reroll",
-              effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-              replacement: {
-                total: 14,
-                d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: {
+                  total: 14,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+                },
               },
-            },
+            ],
           },
         },
       ],

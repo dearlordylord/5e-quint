@@ -59,6 +59,15 @@ module unitFeatureD20TestNaturalOneRerollCore {
   pure def legalD20TestRoll(roll: D20TestRoll): bool =
     legalD20(roll.naturalD20)
 
+  // A reroll replaces only the d20: the replacement total keeps everything
+  // the original total added to its die.
+  pure def rerollKeepsModifiers(
+    original: D20TestRoll,
+    replacement: D20TestRoll,
+  ): bool =
+    replacement.total - replacement.naturalD20 ==
+      original.total - original.naturalD20
+
   pure def rolledD20Face(
     rolledDice: D20TestRolledDice,
     die: D20TestRolledDie,
@@ -135,6 +144,7 @@ module unitFeatureD20TestNaturalOneRerollCore {
         facts.hasFeature,
         legalD20TestRoll(facts.original),
         legalD20TestRoll(choice.replacement),
+        rerollKeepsModifiers(facts.original, choice.replacement),
         facts.original.naturalD20 == 1,
       }
     }
@@ -148,6 +158,7 @@ module unitFeatureD20TestNaturalOneRerollCore {
         facts.hasFeature,
         legalD20TestRoll(facts.original),
         legalD20TestRoll(choice.replacement),
+        rerollKeepsModifiers(facts.original, choice.replacement),
         facts.original.naturalD20 == 1,
       })
     }

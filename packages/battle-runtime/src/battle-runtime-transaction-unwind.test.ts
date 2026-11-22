@@ -1666,19 +1666,21 @@ describe("battle runtime transaction completion unwind", () => {
           fills: [
             targetFill(target, goblinId),
             attackRollFill(attackRoll, {
-              total: 3,
+              total: 7,
               naturalD20: 2,
-              heroicInspirationReroll: {
-                kind: "reroll",
-                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-                replacement: {
-                  total: 15,
-                  d20TestRoll: {
-                    tag: "single",
-                    naturalD20: DieRollResult(10),
+              d20TestRerolls: [
+                {
+                  kind: "reroll",
+                  effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                  replacement: {
+                    total: 15,
+                    d20TestRoll: {
+                      tag: "single",
+                      naturalD20: DieRollResult(10),
+                    },
                   },
                 },
-              },
+              ],
             }),
           ],
         },

@@ -126,7 +126,6 @@ import {
   attackRollAfterD20TestRerolls,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  attackRollD20TestRerollTaken,
   battleStateAfterHeroicInspirationReroll,
   type AttackRollHeroicInspirationUse,
 } from "./attack-roll-d20-test-rerolls.ts";
@@ -1660,7 +1659,6 @@ function spellAttackNeedsSeekingRerollDecision(input: {
     input.invocation.procedure === "spellAttackDamage" &&
     !input.originalHit &&
     input.attackRoll.spellAttackReroll === undefined &&
-    !attackRollD20TestRerollTaken(input.attackRoll) &&
     seekingApplication !== null &&
     seekingSpellCombinedUseIssue({
       actor: input.actor,

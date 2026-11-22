@@ -771,10 +771,10 @@ export function attackRollFill(
     readonly naturalD20?: number;
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
     readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
-    readonly d20TestNaturalOneReroll?: Extract<
+    readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
-    >["value"]["d20TestNaturalOneReroll"];
+    >["value"]["d20TestRerolls"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   return {
@@ -793,9 +793,9 @@ export function attackRollFill(
             missToHitReplacementProcedureRef:
               value.missToHitReplacementProcedureRef,
           }),
-      ...(value.d20TestNaturalOneReroll === undefined
+      ...(value.d20TestRerolls === undefined
         ? {}
-        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: value.d20TestRerolls }),
     },
   };
 }

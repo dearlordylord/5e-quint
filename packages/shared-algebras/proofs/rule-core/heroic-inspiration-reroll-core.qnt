@@ -9,7 +9,8 @@ module heroicInspirationRerollCore {
   // - playing-the-game.md: Interactions with Rerolls. With Advantage or
   //   Disadvantage, a reroll replaces only one of the two d20s, chosen by
   //   the roller.
-  // - ASSUMPTIONS.md: one reroll per D20 Test roll, whatever its sources.
+  // - ASSUMPTIONS.md A55: a different source may reroll a rerolled die, so
+  //   `original` is the roll as it stands, after any other source's reroll.
   import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
 
   type HeroicInspiration = HeroicInspirationAvailable | NoHeroicInspiration
@@ -31,9 +32,6 @@ module heroicInspirationRerollCore {
     original: D20TestRoll,
     rolledD20s: D20TestRolledD20s,
     decision: HeroicInspirationRerollDecision,
-    // Another source (the natural-1 reroll, a Spell Attack reroll) takes the
-    // reroll of this same roll.
-    otherRerollTaken: bool,
   }
 
   type HeroicInspirationRerollResult = {
@@ -62,13 +60,13 @@ module heroicInspirationRerollCore {
   ): bool =
     all {
       heroicInspirationRerollAvailable(facts),
-      not(facts.otherRerollTaken),
       legalD20TestRoll(facts.original),
       match facts.decision {
         | HeroicInspirationRerollDeclined => false
         | HeroicInspirationRerollSelected(choice) => all {
           facts.rolledD20s == OneD20,
           legalD20TestRoll(choice.replacement),
+          rerollKeepsModifiers(facts.original, choice.replacement),
         }
         | HeroicInspirationRolledDieRerollSelected(choice) =>
             match facts.rolledD20s {

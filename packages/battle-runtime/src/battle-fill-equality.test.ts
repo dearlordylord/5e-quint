@@ -20,6 +20,7 @@ import {
   type BattleD20TestNaturalOneRerollOutcomeDecision,
   type BattleSpellAttackRerollDecision,
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+  HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleFill,
 } from "./battle-state-execution.ts";
 
@@ -343,9 +344,8 @@ describe("battle fill equality", () => {
 
   test("distinguishes reroll decision variants and their replacements", () => {
     const attackRoll = (
-      input: Pick<
-        BattleAttackRollResult,
-        "spellAttackReroll" | "d20TestNaturalOneReroll"
+      input: Partial<
+        Pick<BattleAttackRollResult, "spellAttackReroll" | "d20TestRerolls">
       >,
     ): AttackRollFill => ({
       kind: "attackRoll",
@@ -356,9 +356,9 @@ describe("battle fill equality", () => {
         ...(input.spellAttackReroll === undefined
           ? {}
           : { spellAttackReroll: input.spellAttackReroll }),
-        ...(input.d20TestNaturalOneReroll === undefined
+        ...(input.d20TestRerolls === undefined
           ? {}
-          : { d20TestNaturalOneReroll: input.d20TestNaturalOneReroll }),
+          : { d20TestRerolls: input.d20TestRerolls }),
       },
     });
     const spellDecline = {
@@ -405,20 +405,42 @@ describe("battle fill equality", () => {
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        attackRoll({ d20TestNaturalOneReroll: naturalDecline }),
-        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
+        attackRoll({ d20TestRerolls: [naturalDecline] }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
       ),
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
-        attackRoll({ d20TestNaturalOneReroll: naturalRolledDie }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
+        attackRoll({ d20TestRerolls: [naturalRolledDie] }),
       ),
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        attackRoll({ d20TestNaturalOneReroll: naturalRolledDie }),
-        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
+        attackRoll({ d20TestRerolls: [naturalRolledDie] }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
+      ),
+    ).toBe(false);
+    const inspirationDecline = {
+      kind: "decline",
+      effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+    } as const;
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+      ),
+    ).toBe(true);
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+        attackRoll({ d20TestRerolls: [inspirationDecline, naturalReroll] }),
+      ),
+    ).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
       ),
     ).toBe(false);
 

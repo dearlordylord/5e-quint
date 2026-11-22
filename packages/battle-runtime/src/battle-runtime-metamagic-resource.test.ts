@@ -2871,7 +2871,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
   });
 
-  test("Seeking Spell is not asked after Heroic Inspiration rerolled the spell attack", () => {
+  test("Seeking Spell is still asked after Heroic Inspiration rerolled a miss (A55)", () => {
     const session = saveMetamagicBattle({
       knownOptions: [seekingMetamagicOption()],
       heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
@@ -2899,12 +2899,39 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         attackRollFill(attack, {
           total: 5,
           naturalD20: 2,
-          heroicInspirationReroll,
+          d20TestRerolls: [heroicInspirationReroll],
         }),
       ],
     });
+    expect(rerolledMiss).toMatchObject({
+      tag: "needsHoles",
+      frontier: {
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            spellAttackRerolls: [expect.anything()],
+          }),
+        ],
+      },
+    });
 
-    const resolved = requireResolved(rerolledMiss).state;
+    const seekingDeclined = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        attackRollFill(attack, {
+          total: 5,
+          naturalD20: 2,
+          d20TestRerolls: [heroicInspirationReroll],
+          spellAttackReroll: {
+            kind: "decline",
+            effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+          },
+        }),
+      ],
+    });
+    const resolved = requireResolved(seekingDeclined).state;
     expect(heroicInspirationOf(resolved)).toEqual(NO_HEROIC_INSPIRATION);
     expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(4));
   });
@@ -2931,14 +2958,16 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           attackRollFill(attack, {
             total: 5,
             naturalD20: 2,
-            heroicInspirationReroll: {
-              kind: "reroll",
-              effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-              replacement: {
-                total: 6,
-                d20TestRoll: { tag: "single", naturalD20: DieRollResult(3) },
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: {
+                  total: 6,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(3) },
+                },
               },
-            },
+            ],
             spellAttackReroll: {
               kind: "decline",
               effectKind: SEEKING_METAMAGIC_EFFECT_KIND,

@@ -296,16 +296,18 @@ describe("battle runtime complexity extraction route boundaries", () => {
       subject: opportunity.subject,
       fills: [
         attackRollFill(rerollHole, {
-          total: 20,
+          total: 3,
           naturalD20: 1,
-          d20TestNaturalOneReroll: {
-            kind: "reroll",
-            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            replacement: {
-              total: 20,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
+          d20TestRerolls: [
+            {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                total: 20,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
+              },
             },
-          },
+          ],
         }),
       ],
     });

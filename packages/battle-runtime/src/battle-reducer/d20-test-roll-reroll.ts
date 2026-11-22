@@ -17,10 +17,10 @@ import type {
 export type D20TestRollRerollMessages = {
   readonly replacement: string;
   readonly mode: string;
-  readonly stacking: string;
   readonly dieSelectionRequired: string;
   readonly dieSelection: string;
   readonly projection: string;
+  readonly modifier: string;
 };
 
 export type D20TestRollFacts = {
@@ -31,26 +31,25 @@ export type D20TestRollFacts = {
 /** Whether a source may replace a rolled d20 showing `face`. */
 export type D20TestRerollableFace = (face: number) => boolean;
 
-/* v8 ignore start -- @preserve -- Malformed single-roll reroll protocol: the admitted roll cannot change its die shape, stack with another reroll, or violate replacement/mode validation. */
+/* v8 ignore start -- @preserve -- Malformed single-roll reroll protocol: the admitted roll cannot change its die shape, or violate replacement/mode validation. */
 export function d20TestRollReplacementRollIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRollReplacement;
   readonly requiredRollMode?: AttackRollMode | undefined;
-  readonly otherD20RerollPresent?: boolean | undefined;
   readonly messages: D20TestRollRerollMessages;
 }): string | null {
   if (input.facts.d20TestRoll?.tag === "multiple") {
     return input.messages.dieSelectionRequired;
   }
-  if (input.otherD20RerollPresent === true) {
-    return input.messages.stacking;
-  }
   if (!d20TestRollReplacementIsValid(input.replacement)) {
     return input.messages.replacement;
   }
-  return d20TestRollModeMatches(input.replacement, input.requiredRollMode)
+  if (!d20TestRollModeMatches(input.replacement, input.requiredRollMode)) {
+    return input.messages.mode;
+  }
+  return d20TestRollReplacementKeepsModifier(input.facts, input.replacement)
     ? null
-    : input.messages.mode;
+    : input.messages.modifier;
 }
 /* v8 ignore stop -- @preserve */
 
@@ -59,13 +58,9 @@ export function d20TestRolledDieRollReplacementIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRolledDieRollReplacement;
   readonly requiredRollMode?: AttackRollMode | undefined;
-  readonly otherD20RerollPresent?: boolean | undefined;
   readonly messages: D20TestRollRerollMessages;
   readonly rerollableFace: D20TestRerollableFace;
 }): string | null {
-  if (input.otherD20RerollPresent === true) {
-    return input.messages.stacking;
-  }
   if (!d20TestRollReplacementIsValid(input.replacement.result)) {
     return input.messages.replacement;
   }
@@ -187,6 +182,25 @@ export function d20TestRollAfterRolledDieReplacement(
         selectedD20TestNaturalD20(replacementRoll),
       )
     : replacementRoll;
+}
+
+/**
+ * A reroll replaces only the die: the replacement total keeps everything the
+ * original total added to its d20. Without a known original total there is
+ * nothing to compare.
+ */
+function d20TestRollReplacementKeepsModifier(
+  facts: D20TestRollFacts,
+  replacement: BattleD20TestRollReplacement,
+): boolean {
+  if (facts.total === undefined || facts.d20TestRoll === undefined) {
+    return true;
+  }
+  return (
+    replacement.total -
+      Number(selectedD20TestNaturalD20(replacement.d20TestRoll)) ===
+    facts.total - Number(selectedD20TestNaturalD20(facts.d20TestRoll))
+  );
 }
 
 function d20TestRollReplacementIsValid(

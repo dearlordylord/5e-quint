@@ -11,7 +11,6 @@ import {
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleAttackRollHole,
   type BattleSpellAttackRollHole,
-  type BattleAttackRollResult,
   type BattleCreatureState,
   type BattleD20TestRoll,
   type BattleD20TestRollRerollDecision,
@@ -20,7 +19,6 @@ import {
   type BattleSpellAttackRerollDecision,
 } from "../battle-state-execution.ts";
 import {
-  attackRollAfterD20TestRollReroll,
   d20TestRolledDieRollReplacementIssue,
   d20TestRollReplacementRollIssue,
   type D20TestRollRerollMessages,
@@ -30,19 +28,18 @@ export const HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE =
   "Heroic Inspiration reroll needs a player character who has Heroic Inspiration.";
 export const HEROIC_INSPIRATION_REROLL_DECISION_REQUIRED_MESSAGE =
   "Heroic Inspiration reroll requires an explicit reroll or decline decision.";
-export const HEROIC_INSPIRATION_REROLL_STACKING_MESSAGE =
-  "Heroic Inspiration reroll cannot be combined with another d20 reroll on the same roll.";
 
 const HEROIC_INSPIRATION_REROLL_MESSAGES = {
   replacement:
     "Heroic Inspiration replacement roll is outside the d20 protocol.",
   mode: "Heroic Inspiration replacement roll mode does not match the current D20 Test rule.",
-  stacking: HEROIC_INSPIRATION_REROLL_STACKING_MESSAGE,
   dieSelectionRequired:
     "Heroic Inspiration reroll under Advantage or Disadvantage must name the rolled die it replaces.",
   dieSelection: "Heroic Inspiration reroll must name a rolled die.",
   projection:
     "Heroic Inspiration rolled-die replacement does not match the projected D20 Test result.",
+  modifier:
+    "Heroic Inspiration replacement roll must keep the original roll's modifiers; only the d20 changes.",
 } as const satisfies D20TestRollRerollMessages;
 
 const HEROIC_INSPIRATION_REROLL_OPTION = {
@@ -50,14 +47,24 @@ const HEROIC_INSPIRATION_REROLL_OPTION = {
   label: "Heroic Inspiration reroll",
 } as const satisfies BattleHeroicInspirationRerollOption;
 
+/**
+ * Where the roller's Heroic Inspiration stands for one roll:
+ * - "available": it has Heroic Inspiration, or this roll spent it before a replay;
+ * - "spentOnAnotherRoll": another roll of the same subject spent it, so a
+ *   decline made before that spend still stands;
+ * - "unavailable": it has no Heroic Inspiration to decide about.
+ */
+export type HeroicInspirationRerollAvailability =
+  | "available"
+  | "spentOnAnotherRoll"
+  | "unavailable";
+
 type HeroicInspirationRollFacts = {
-  /** The roller may take the reroll: they have Heroic Inspiration, or spent it on this roll before a replay. */
-  readonly rerollAvailable: boolean;
+  readonly availability: HeroicInspirationRerollAvailability;
   readonly total: number;
+  /** The roll as it stands: the original roll, or another source's reroll of it. */
   readonly originalD20TestRoll: BattleD20TestRoll;
   readonly decision: BattleHeroicInspirationRerollDecision | undefined;
-  /** Another source rerolls this roll: only one reroll per roll. */
-  readonly otherD20RerollPresent: boolean;
 };
 
 /** Whether the creature is a player character who has Heroic Inspiration. */
@@ -87,11 +94,28 @@ export function heroicInspirationRerollRollIssue(
   },
 ): string | null {
   const decision = input.decision;
-  if (!input.rerollAvailable) {
-    return decision === undefined
-      ? null
-      : HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE;
-  }
+  return Match.value(input.availability).pipe(
+    Match.when("unavailable", () =>
+      decision === undefined
+        ? null
+        : HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+    ),
+    Match.when("spentOnAnotherRoll", () =>
+      decision === undefined || decision.kind === "decline"
+        ? null
+        : HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+    ),
+    Match.when("available", () => availableHeroicInspirationRerollIssue(input)),
+    Match.exhaustive,
+  );
+}
+
+function availableHeroicInspirationRerollIssue(
+  input: HeroicInspirationRollFacts & {
+    readonly requiredRollMode?: AttackRollMode | undefined;
+  },
+): string | null {
+  const decision = input.decision;
   /* v8 ignore next -- @preserve -- attack-roll-d20-test-rerolls asks the roll again before it checks a missing decision. */
   if (decision === undefined) {
     return HEROIC_INSPIRATION_REROLL_DECISION_REQUIRED_MESSAGE;
@@ -108,7 +132,6 @@ export function heroicInspirationRerollRollIssue(
           facts,
           replacement,
           requiredRollMode: input.requiredRollMode,
-          otherD20RerollPresent: input.otherD20RerollPresent,
           messages: HEROIC_INSPIRATION_REROLL_MESSAGES,
         }),
       rerollRolledDie: ({ replacement }) =>
@@ -116,7 +139,6 @@ export function heroicInspirationRerollRollIssue(
           facts,
           replacement,
           requiredRollMode: input.requiredRollMode,
-          otherD20RerollPresent: input.otherD20RerollPresent,
           messages: HEROIC_INSPIRATION_REROLL_MESSAGES,
           rerollableFace: anyD20Face,
         }),
@@ -138,16 +160,6 @@ export function attackRollHoleWithHeroicInspirationRerollOption<
     ...hole,
     heroicInspirationRerolls: [HEROIC_INSPIRATION_REROLL_OPTION],
   };
-}
-
-/** The attack roll after its Heroic Inspiration reroll decision. */
-export function effectiveHeroicInspirationRerollAttackRoll(
-  attackRoll: BattleAttackRollResult,
-): BattleAttackRollResult {
-  return attackRollAfterD20TestRollReroll(
-    attackRoll,
-    attackRoll.heroicInspirationReroll,
-  );
 }
 
 function anyD20Face(): boolean {
