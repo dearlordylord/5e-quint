@@ -1016,6 +1016,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.dropProne": account(
+      "operation",
+      "runtimeCommand.dropProne",
+      at(
+        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts",
+        "resolveMovementProcedure",
+      ),
+      REASONS.admittedSubject,
+    ),
     spawnedCompanionSharedSenses: account(
       "operation",
       "spawnedCompanionSharedSenses",

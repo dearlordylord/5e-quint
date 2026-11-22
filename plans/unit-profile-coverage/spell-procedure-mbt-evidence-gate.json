@@ -2090,6 +2090,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-forced-reaction-movement",
@@ -2642,6 +2650,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-expeditious-retreat-dash",
@@ -3170,6 +3186,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-grease-ground-hazard",
@@ -4764,6 +4788,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-jump-movement-replacement",
@@ -11457,6 +11489,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-forced-reaction-movement",
@@ -12009,6 +12049,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-expeditious-retreat-dash",
@@ -12537,6 +12585,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-grease-ground-hazard",
@@ -14131,6 +14187,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-condition-speed.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
             }
           ],
           "profileId": "spell.invocation-jump-movement-replacement",

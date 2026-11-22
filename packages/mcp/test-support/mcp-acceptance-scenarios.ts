@@ -814,6 +814,7 @@ export async function verifyBaselineVertical(
     "Adrenaline Rush: Dash",
     "Second Wind",
     "Move",
+    "Drop Prone",
     "Ready",
     "End Turn",
   ]);
@@ -865,6 +866,7 @@ export async function verifyBaselineVertical(
     "Unarmed Strike (Shove)",
     "Nimble Escape",
     "Move",
+    "Drop Prone",
     "Ready",
     "End Turn",
   ]);
@@ -1277,6 +1279,7 @@ export async function verifyWidthVertical(client: Client) {
     "Second Wind",
     "Action Surge",
     "Move",
+    "Drop Prone",
     "Ready",
     "End Turn",
   ]);

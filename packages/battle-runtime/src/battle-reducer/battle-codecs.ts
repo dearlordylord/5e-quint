@@ -8848,6 +8848,7 @@ function serializedRuntimeCommandReferencePolicy(
       }),
       persistentAreaSaveCompositeSave: actorOwned,
       standFromProne: actorOwned,
+      dropProne: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
       endPersistentAreaSaveConditionEscapeForDeparture: actorOwned,

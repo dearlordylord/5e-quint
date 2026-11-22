@@ -8267,6 +8267,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -15250,6 +15255,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -21374,6 +21384,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:character",
                     "command": "move"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:character",
+                    "command": "dropProne"
                   },
                   {
                     "tag": "action",
@@ -33458,6 +33473,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -39643,6 +39663,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:stat-block-a",
                     "command": "move"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
                   },
                   {
                     "tag": "action",
@@ -45834,6 +45859,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -45964,6 +45994,11 @@
                           "tag": "runtimeCommand",
                           "actorId": "corpus:stat-block-a",
                           "command": "move"
+                        },
+                        {
+                          "tag": "runtimeCommand",
+                          "actorId": "corpus:stat-block-a",
+                          "command": "dropProne"
                         },
                         {
                           "tag": "action",
@@ -52085,6 +52120,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -52292,6 +52332,11 @@
                                 "tag": "runtimeCommand",
                                 "actorId": "corpus:stat-block-a",
                                 "command": "move"
+                              },
+                              {
+                                "tag": "runtimeCommand",
+                                "actorId": "corpus:stat-block-a",
+                                "command": "dropProne"
                               },
                               {
                                 "tag": "action",

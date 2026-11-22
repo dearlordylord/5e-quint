@@ -658,7 +658,7 @@ function battleSubjectObligationAdmissionResult(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
+      "Pending Stat Block Multiattack dispatches must be resolved, Movement or Drop Prone may be taken between attacks, or the turn must end before other battle subjects.",
     );
   }
   if (

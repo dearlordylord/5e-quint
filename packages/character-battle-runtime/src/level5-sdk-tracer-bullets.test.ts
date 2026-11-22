@@ -17,6 +17,7 @@ import {
   combatantId,
   characterProcedureBinding,
   discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -578,7 +579,7 @@ describe("level 5 SDK tracer bullets", () => {
     });
   });
 
-  test("Stunning Strike projects Monk Focus, spends one Focus Point, and applies the failed-save Stunned result", () => {
+  test("Stunning Strike projects Monk Focus and Stunned without reducing Speed or preventing movement", () => {
     const session = battleSessionFromSheets({
       battleIdText: "battle:l5-tracer-stunning-strike",
       characters: [
@@ -696,6 +697,35 @@ describe("level 5 SDK tracer bullets", () => {
     expect(stunningStrikeProcedureRef).toBeDefined();
 
     expect(hasCondition(targetAfterStrike.conditions, "stunned")).toBe(true);
+    const targetTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: monkId }),
+    ).state;
+    expect(snapshotBattle(targetTurn).combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: monsterId,
+          movement: expect.objectContaining({ speedFeet: 30 }),
+        }),
+      ]),
+    );
+    expect(discoverBattleActCandidates(targetTurn)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: {
+            tag: "runtimeCommand",
+            actorId: monsterId,
+            command: "dropProne",
+          },
+        }),
+        expect.objectContaining({
+          subject: {
+            tag: "runtimeCommand",
+            actorId: monsterId,
+            command: "move",
+          },
+        }),
+      ]),
+    );
     expect(targetAfterStrike.activeEffects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

@@ -154,6 +154,7 @@ describe("BattleSubject identity", () => {
       },
       move: {},
       standFromProne: {},
+      dropProne: {},
       releaseReadiedSpell: {
         readiedSpellCasterId: targetId,
         procedureRef: targetProcedureRef,

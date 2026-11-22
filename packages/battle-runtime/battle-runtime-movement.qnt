@@ -34,6 +34,7 @@ module battleRuntimeMovement {
       state.goblin.hp > 0
         and not(state.goblin.unconscious)
         and not(state.goblin.incapacitated),
+    actionResourcesUsable: not(state.goblin.incapacitated),
     actionAvailable: true,
     bonusActionAvailable: true,
     reactionAvailable: state.goblin.reactionAvailable,
@@ -263,6 +264,7 @@ module battleRuntimeMovement {
   pure def movementRemaining(combatant: Combatant): int =
     battleRuntimeMovementRemaining({
       currentActorOwnsTurn: true,
+      actionResourcesUsable: not(combatant.incapacitated),
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,
