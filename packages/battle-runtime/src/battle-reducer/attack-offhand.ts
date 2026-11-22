@@ -1,4 +1,4 @@
-import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
+import { qualifiedAttackRollMode } from "./attack-roll.ts";
 // Light-property off-hand attack resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
@@ -35,7 +35,6 @@ import {
   attackRollOngoingFeatureActivations,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
-  requiredAttackRollMode,
 } from "./attack-roll.ts";
 
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
@@ -260,7 +259,6 @@ function resolveBonusActionAttack(
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target == null ||
-    target.combatantId === input.subject.actorId ||
     !attackTargetIsLegal(
       input.state,
       input.subject.actorId,
@@ -276,21 +274,12 @@ function resolveBonusActionAttack(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const enemyProximity = qualifyAttackEnemyProximity(
-    input.state,
-    input.subject.actorId,
-    attack,
-    fillSet.targetSpatialFacts,
-  );
-  if (enemyProximity?.tag === "invalid")
-    return invalidResult(input.state, "invalidFill", enemyProximity.message);
-  const initialRequiredRollMode = requiredAttackRollMode(
+  const initialRequiredRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,
     target,
     attack,
     fillSet.targetSpatialFacts,
-    enemyProximity,
   );
   if (typeof initialRequiredRollMode === "object")
     return invalidResult(

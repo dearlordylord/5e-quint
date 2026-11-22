@@ -1,3 +1,5 @@
+import { qualifiedAttackRollMode } from "./attack-roll.ts";
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import * as Result from "effect/Result";
 // Main Attack action resolution extracted from attack-resolution.ts.
 
@@ -1795,7 +1797,7 @@ export function resolveSelectedAttackProcedure<
     attack,
     fillSet.targetSpatialFacts,
   );
-  if (targetEnemyProximity?.tag === "invalid") {
+  if (isSpatialQualificationIssue(targetEnemyProximity)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -2061,6 +2063,10 @@ export function resolveSelectedAttackProcedure<
       "invalidFill",
       initialRequiredRollMode.message,
     );
+  const baselineRollMode = attackRollModeAfterBrutalStrike(
+    initialRequiredRollMode,
+    brutalStrikeSelected,
+  );
   if (fillSet.attackRoll == null) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -2080,7 +2086,7 @@ export function resolveSelectedAttackProcedure<
       attackRollHole(
         input.state.combatants.get(attackerId),
         attack,
-        !brutalStrikeSelected ? initialRequiredRollMode : undefined,
+        baselineRollMode,
         attackRollOngoingFeatureActivations(input.state, attackerId, attack),
       ),
     ]);
@@ -2134,9 +2140,10 @@ export function resolveSelectedAttackProcedure<
   );
 
   const baselineRequiredRollMode = initialRequiredRollMode;
-  const resolvedRequiredRollMode = brutalStrikeSelected
-    ? undefined
-    : requiredRollMode;
+  const resolvedRequiredRollMode = attackRollModeAfterBrutalStrike(
+    requiredRollMode,
+    brutalStrikeSelected,
+  );
   const attackRollModeWasEstablishedBeforeReplay =
     input.replayingInterruptedProcedure === true ||
     replayingChosenBrutalStrikeRoll;
@@ -4940,28 +4947,12 @@ function prepareWeaponMasteryCleaveAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const cleaveProximity = qualifyAttackEnemyProximity(
-    input.state,
-    input.subject.actorId,
-    cleaveAttack,
-    cleaveTargetFacts,
-  );
-  if (cleaveProximity?.tag === "invalid")
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        cleaveProximity.message,
-      ),
-    };
-  const cleaveRollMode = requiredAttackRollMode(
+  const cleaveRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,
     secondTarget,
     cleaveAttack,
     cleaveTargetFacts,
-    cleaveProximity,
   );
   if (typeof cleaveRollMode === "object")
     return {
@@ -5627,28 +5618,12 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const hordeBreakerProximity = qualifyAttackEnemyProximity(
-    input.state,
-    input.subject.actorId,
-    hordeBreakerAttack,
-    targetFacts,
-  );
-  if (hordeBreakerProximity?.tag === "invalid")
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        hordeBreakerProximity.message,
-      ),
-    };
-  const hordeBreakerRollMode = requiredAttackRollMode(
+  const hordeBreakerRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,
     secondTarget,
     hordeBreakerAttack,
     targetFacts,
-    hordeBreakerProximity,
   );
   if (typeof hordeBreakerRollMode === "object")
     return {
@@ -5727,4 +5702,13 @@ function hordeBreakerFillIsAbsent(
   return additionalWeaponAttackFillsAreAbsent(
     huntersPreyHordeBreakerAdditionalWeaponAttackFills(fillSet),
   );
+}
+
+function attackRollModeAfterBrutalStrike(
+  mode:
+    | import("@dnd/shared-algebras/runtime-hole-algebra").AttackRollMode
+    | undefined,
+  selected: boolean,
+): typeof mode {
+  return selected ? undefined : mode;
 }

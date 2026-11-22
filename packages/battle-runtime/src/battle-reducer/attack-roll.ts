@@ -1,3 +1,5 @@
+import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
 import {
   attackRollDefenseGrantsDisadvantage,
@@ -388,10 +390,12 @@ function attackRollSourceFlags(
     attackerId,
     targetId,
   );
-  const attackerCanSeeTarget =
-    attacker !== undefined &&
-    !sightDisadvantage &&
-    combatantCanSee(state, attacker.combatantId, target.combatantId);
+  const attackerCanSeeTarget = attackTargetVisibleToAttacker(
+    state,
+    attacker,
+    target,
+    sightDisadvantage,
+  );
   const grapplerAttackAdvantage =
     combatantHasGrapplerSupportProfile(attacker) &&
     state.grapples.some(
@@ -2268,5 +2272,42 @@ export function attackRollModeMatches(
       mechanicalD20TestRollModeSources(requiredMode),
       tableSource,
     )
+  );
+}
+
+export function qualifiedAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  target: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
+): ReturnType<typeof requiredAttackRollMode> {
+  const evidence = qualifyAttackEnemyProximity(
+    state,
+    attackerId,
+    attack,
+    facts,
+  );
+  if (isSpatialQualificationIssue(evidence)) return evidence;
+  return requiredAttackRollMode(
+    state,
+    attackerId,
+    target,
+    attack,
+    facts,
+    evidence,
+  );
+}
+
+function attackTargetVisibleToAttacker(
+  state: BattleState,
+  attacker: BattleCreatureState | undefined,
+  target: BattleCreatureState,
+  sightDisadvantage: boolean,
+): boolean {
+  return (
+    attacker !== undefined &&
+    !sightDisadvantage &&
+    combatantCanSee(state, attacker.combatantId, target.combatantId)
   );
 }

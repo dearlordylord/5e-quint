@@ -1,3 +1,5 @@
+import { prepareAttackRollInput } from "./battle-reducer/attack-roll-admission.ts";
+import { requiredSpellAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
@@ -13,6 +15,7 @@ import {
   battleId,
   cantripSpellInvocationRef,
   characterSeed,
+  characterSpellInvocationForProcedureRefForTest,
   endTurn,
   goblinId,
   movementFeet,
@@ -46,6 +49,11 @@ function spellAttack(readied: boolean) {
     wizardId,
     cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
   );
+  const invocation = characterSpellInvocationForProcedureRefForTest(
+    session,
+    wizardId,
+    procedureRef,
+  );
   const cast: BattleSubject = {
     tag: "actionSpell",
     actorId: wizardId,
@@ -55,6 +63,7 @@ function spellAttack(readied: boolean) {
   if (!readied)
     return {
       state: session.state,
+      invocation,
       subject: cast,
       scope: { attackerId: wizardId, procedureRef },
     };
@@ -77,7 +86,12 @@ function spellAttack(readied: boolean) {
     readiedSpellCasterId: wizardId,
     procedureRef: held.procedureRef,
   };
-  return { state, subject, scope: { attackerId: wizardId, procedureRef } };
+  return {
+    state,
+    subject,
+    invocation,
+    scope: { attackerId: wizardId, procedureRef },
+  };
 }
 
 for (const readied of [false, true]) {
@@ -256,3 +270,139 @@ test("admitted proximity uses live enemy conditions and rejects a vanished enemy
     ),
   ).toMatchObject({ tag: "invalid" });
 });
+
+test.each([true, false])(
+  "ranged spell same-pair sight claims with enemyCanSeeAttacker %s remain consistent",
+  (enemyCanSeeAttacker) => {
+    const { state, subject, scope } = spellAttack(false);
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const fill = targetFill(hole, goblinId);
+    const facts: readonly BattleTargetSpatialFact[] = [
+      ...(fill.spatialFacts ?? []).map((fact) =>
+        fact.kind === "rangedAttackEnemyProximity"
+          ? {
+              ...fact,
+              enemies: [
+                {
+                  enemyId: goblinId,
+                  distanceFeet: movementFeet(30),
+                  enemyCanSeeAttacker,
+                },
+              ],
+            }
+          : fact,
+      ),
+      {
+        kind: "attackTargetCannotSeeAttacker",
+        attackerId: scope.attackerId,
+        targetId: goblinId,
+      },
+    ];
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [{ ...fill, spatialFacts: facts }],
+    });
+    if (enemyCanSeeAttacker)
+      expect(result).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message: expect.stringContaining("sight facts contradict"),
+      });
+    else expect(requireHole(result, "attackRoll").rollMode).toBe("advantage");
+  },
+);
+
+test.each([5, 30])(
+  "a ranged target's independent exact distance claims must agree (%s)",
+  (otherDistance) => {
+    const { state, scope } = spellAttack(false);
+    const facts: readonly BattleTargetSpatialFact[] = [
+      {
+        kind: "spellTarget",
+        casterId: scope.attackerId,
+        sourceProcedureRef: scope.procedureRef,
+        targetId: goblinId,
+        distanceFeet: movementFeet(30),
+      },
+      {
+        kind: "spellTarget",
+        casterId: scope.attackerId,
+        sourceProcedureRef: scope.procedureRef,
+        targetId: goblinId,
+        distanceFeet: movementFeet(otherDistance),
+      },
+      { kind: "rangedAttackEnemyProximity", ...scope, enemies: [] },
+    ];
+    const result = qualifyRangedAttackEnemyProximity({ state, scope, facts });
+    if (otherDistance === 30) expect(result.tag).toBe("qualified");
+    else
+      expect(result).toMatchObject({
+        tag: "invalid",
+        message: expect.stringContaining("contradictory distances"),
+      });
+  },
+);
+
+test.each(["missing", "vanished"] as const)(
+  "failed %s spatial evidence refuses a roll request",
+  (scenario) => {
+    const { state, scope, invocation } = spellAttack(false);
+    const target = state.combatants.get(goblinId);
+    if (target === undefined) throw new Error("Expected the admitted target.");
+    const evidence = qualifyRangedAttackEnemyProximity({
+      state,
+      scope,
+      facts: [
+        {
+          kind: "rangedAttackEnemyProximity",
+          ...scope,
+          enemies: [
+            {
+              enemyId: goblinId,
+              distanceFeet: movementFeet(30),
+              enemyCanSeeAttacker: true,
+            },
+          ],
+        },
+      ],
+    });
+    if (evidence.tag === "invalid") throw new Error(evidence.message);
+    const combatants = new Map(state.combatants);
+    combatants.delete(goblinId);
+    const currentState =
+      scenario === "vanished" ? { ...state, combatants } : state;
+    const requiredRollMode = requiredSpellAttackRollMode(
+      currentState,
+      wizardId,
+      target,
+      invocation,
+      [],
+      scenario === "missing" ? null : evidence,
+    );
+    const result = prepareAttackRollInput({
+      errorState: currentState,
+      requiredRollMode,
+      attackRoll: undefined,
+      requestRoll: () => {
+        throw new Error(
+          "A refused spatial calculation must not ask for a roll.",
+        );
+      },
+    });
+    expect(result).toMatchObject({
+      tag: "result",
+      result: {
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          scenario === "missing"
+            ? "Ranged spell attack requires admitted enemy proximity evidence."
+            : "Admitted ranged attack enemy is no longer in the battle.",
+      },
+    });
+  },
+);
