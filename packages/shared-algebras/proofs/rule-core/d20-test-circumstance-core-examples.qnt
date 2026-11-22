@@ -114,6 +114,75 @@ module d20TestCircumstanceCoreExamples {
     ) == AttackRollModeInvalidDistance),
   }
 
+  run d20TestCircumstanceConditionSources = {
+    val noAttacker = noAttackerAttackRollConditions
+    val noTarget = noTargetAttackRollConditions
+    val restrainedAttacker = { ...noAttacker, restrained: true }
+    val poisonedAttacker = { ...noAttacker, poisoned: true }
+    val restrainedTarget = { ...noTarget, restrained: true }
+    val paralyzedTarget = { ...noTarget, paralyzed: true }
+    val petrifiedTarget = { ...noTarget, petrified: true }
+    val stunnedTarget = { ...noTarget, stunned: true }
+    val proneTarget = { ...noTarget, prone: true }
+    all {
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, restrainedAttacker, noTarget, 5),
+        DisadvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, poisonedAttacker, noTarget, 5),
+        DisadvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, restrainedTarget, 5),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, paralyzedTarget, 30),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, petrifiedTarget, 30),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, stunnedTarget, 30),
+        AdvantageD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, restrainedAttacker, restrainedTarget, 5),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(mechanicalDisadvantage, noAttacker, stunnedTarget, 5),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, noTarget, 5),
+        NormalD20TestRoll,
+      )),
+      // A Prone target's distance source applies only when the target is Prone.
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, restrainedAttacker, proneTarget, 5),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, { ...paralyzedTarget, prone: true }, 6),
+        NormalD20TestRoll,
+      )),
+      assert(attackRollModeMatches(
+        d20TestRollModeWithConditions(noMechanicalSources, noAttacker, paralyzedTarget, 6),
+        AdvantageD20TestRoll,
+      )),
+      assert(d20TestRollModeWithConditions(
+        noMechanicalSources,
+        noAttacker,
+        noTarget,
+        -1,
+      ) == AttackRollModeInvalidDistance),
+    }
+  }
+
   run d20TestCircumstanceExactRequestBinding = {
     val abilityCheckRequest: D20TestRequestRef = {
       lineage: 7,

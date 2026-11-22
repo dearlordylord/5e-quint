@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -64,7 +65,7 @@ function fighterAttackRollMode(state: BattleState, distanceFeet: number) {
   return requiredAttackRollMode(
     state,
     fighterId,
-    goblinId,
+    requireCombatant(state, goblinId),
     fighter.origin.attack,
     [
       attackTargetDistanceSpatialFact(
