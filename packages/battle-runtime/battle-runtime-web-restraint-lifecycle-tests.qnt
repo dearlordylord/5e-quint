@@ -30,8 +30,20 @@ module battleRuntimeWebRestraintLifecycleTests {
     val resolved = resolveWeb(initialState, webAreaId, 2)
     val removedArea = removeWebArea(resolved, webAreaId)
     all {
-      assert(webDifficultTerrainMovementCost(resolved, webAreaId, 10, 5) == 15),
-      assert(webDifficultTerrainMovementCost(removedArea, webAreaId, 10, 5) == 0),
+      assert(webDifficultTerrainMovementCost(resolved, Fighter, webAreaId, 10, 5) == 15),
+      assert(webDifficultTerrainMovementCost(removedArea, Fighter, webAreaId, 10, 5) == 0),
+    }
+  }
+
+  run test_web_crawling_cost_follows_the_mover_instead_of_the_caster = {
+    val cast = resolveWeb(initialState, webAreaId, 2)
+    val proneTarget = { ...cast, goblin: { ...cast.goblin, prone: true } }
+    val proneCaster = { ...cast, fighter: { ...cast.fighter, prone: true } }
+    all {
+      assert(webDifficultTerrainMovementCost(proneTarget, Goblin, webAreaId, 10, 5) == 25),
+      assert(webDifficultTerrainMovementCost(proneTarget, Fighter, webAreaId, 10, 5) == 15),
+      assert(webDifficultTerrainMovementCost(proneCaster, Goblin, webAreaId, 10, 5) == 15),
+      assert(webDifficultTerrainMovementCost(proneCaster, Fighter, webAreaId, 10, 5) == 25),
     }
   }
 

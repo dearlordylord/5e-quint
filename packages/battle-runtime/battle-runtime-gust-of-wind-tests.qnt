@@ -23,10 +23,13 @@ module battleRuntimeGustOfWindTests {
       assert(not(cast.battle.actionAvailable)),
       assert(cast.battle.fighter.concentrating),
       assert(battleActorHasCommittedSpellSlotUse(cast.battle, Fighter)),
-      assert(gustOfWindLineMovementFactValid(sameTurnChange.effect, Fighter, 1, 10, 5, 5, 10)),
+      assert(gustOfWindLineMovementFactValid(sameTurnChange.effect, Fighter, 1, 10, false, 5, 5, 10)),
       assert(sameTurnChange.battle.bonusActionAvailable),
-      assert(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, 5, 5, 10)),
-      assert(not(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, 5, 5, 5))),
+      assert(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, false, 5, 5, 10)),
+      assert(not(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, false, 5, 5, 5))),
+      // A Prone mover crawls: 5 feet against the wind cost 5 + 5 + 5 crawling.
+      assert(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, true, 5, 5, 15)),
+      assert(not(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, true, 5, 5, 10))),
       assert(gustOfWindLineSaveFactsValid(changed.effect, Fighter, 1, 20, true, false, 0, false)),
       assert(gustOfWindLineSaveFactsValid(changed.effect, Fighter, 1, 20, true, true, 15, false)),
       assert(not(gustOfWindLineSaveFactsValid(changed.effect, Fighter, 1, 20, true, true, 15, true))),
@@ -51,7 +54,7 @@ module battleRuntimeGustOfWindTests {
       assert(not(gustOfWindLineHeightenedDisadvantageApplies(cast.effect, Fighter))),
       assert(gustOfWindLineHeightenedDisadvantageApplies(changed.effect, Goblin)),
       assert(gustOfWindLineSaveFactsValid(changed.effect, Fighter, 1, 20, true, true, 15, false)),
-      assert(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, 5, 5, 10)),
+      assert(gustOfWindLineMovementFactValid(changed.effect, Fighter, 1, 20, false, 5, 5, 10)),
     }
   }
 }
