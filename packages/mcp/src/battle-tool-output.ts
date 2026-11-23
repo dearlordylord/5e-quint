@@ -1,3 +1,4 @@
+import { JsonSerializableObjectSchema as JsonObjectSchema } from "./tool-content.ts";
 import {
   BattleInitiativePositionSchema,
   BattleObjectDamageOutcomeSchema,
@@ -26,8 +27,6 @@ export const BattleActionCancelledOutputSchema = Schema.Struct({
   cancelledSelectionId: BattleActionSelectionIdSchema,
   next: Schema.Struct({ tool: Schema.Literal("read_battle_state") }),
 });
-
-const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 const BattleResolutionResolvedResultSchema = Schema.Struct({
   tag: Schema.Literal("resolved"),

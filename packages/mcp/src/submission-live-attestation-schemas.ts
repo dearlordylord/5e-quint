@@ -1,8 +1,9 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { Schema } from "effect";
 
-const Sha256Schema = Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u));
+const Sha256Schema = Schema.String.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u));
 const GitReleaseSchema = Schema.String.check(
-  Schema.isPattern(/^[0-9a-f]{40}$/u),
+  jsonSchemaPattern(/^[0-9a-f]{40}$/u),
 );
 const IsoTimestampSchema = Schema.String.check(
   Schema.makeFilter((value) => !Number.isNaN(Date.parse(value))),

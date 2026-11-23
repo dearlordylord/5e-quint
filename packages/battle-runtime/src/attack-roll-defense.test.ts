@@ -1,3 +1,5 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.ATTACK_ROLL_DEFENSE
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-defense
 import type { AttackRollDefenseSelection } from "@dnd/shared/game-facts";
@@ -5,10 +7,7 @@ import type { AttackRollDefenseSelection } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import { battleUnitRefWithSupportProfiles } from "./unit-feature-support.ts";
-import {
-  requiredAttackRollMode,
-  recordAttackRollOngoingFeatures,
-} from "./battle-reducer/attack-roll.ts";
+import { recordAttackRollOngoingFeatures } from "./battle-reducer/attack-roll.ts";
 import { resetBattleTurnResources } from "./battle-reducer/turn-resource-reset.ts";
 import {
   startBattleSessionRight,
@@ -152,19 +151,19 @@ describe("selected attack-roll defenses", () => {
   test("Opportunity Attack disadvantage excludes ordinary and retaliation attacks", () => {
     const state = battle("opportunityAttackDisadvantage");
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         state,
         goblinId,
-        fighterId,
+        requireCombatant(state, fighterId),
         testLongswordAttack(),
         [],
       ),
     ).toBeUndefined();
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         state,
         goblinId,
-        fighterId,
+        requireCombatant(state, fighterId),
         testLongswordAttack(),
         [],
         true,
@@ -185,10 +184,10 @@ describe("selected attack-roll defenses", () => {
   test("a hit marks only its attacker and defender for this turn, including a reaction attacker", () => {
     const state = battle("repeatAttackerAfterHitDisadvantage");
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         state,
         goblinId,
-        fighterId,
+        requireCombatant(state, fighterId),
         testLongswordAttack(),
         [],
         true,
@@ -214,19 +213,19 @@ describe("selected attack-roll defenses", () => {
       true,
     );
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         hit,
         goblinId,
-        fighterId,
+        requireCombatant(hit, fighterId),
         testLongswordAttack(),
         [],
       ),
     ).toBe("disadvantage");
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         hit,
         fighterId,
-        goblinId,
+        requireCombatant(hit, goblinId),
         testLongswordAttack(),
         [],
       ),
@@ -240,10 +239,10 @@ describe("selected attack-roll defenses", () => {
       currentTurnResources: resetBattleTurnResources(hit.currentTurnResources),
     };
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         ended,
         goblinId,
-        fighterId,
+        requireCombatant(ended, fighterId),
         testLongswordAttack(),
         [],
       ),

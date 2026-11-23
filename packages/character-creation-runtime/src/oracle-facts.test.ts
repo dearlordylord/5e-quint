@@ -1,8 +1,12 @@
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  characterClassLevel,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import { Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  DieRollResult,
   NonNegativeInteger,
   PositiveInteger,
   abilityScore,
@@ -286,6 +290,7 @@ describe("Character Creation owner facts", () => {
           {
             classUnitId: classUnitId(authoredUnitId("class_synthetic")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 0,
           },
         ],
       },
@@ -560,6 +565,39 @@ describe("Character Creation owner facts", () => {
     const fact = characterBuildFact(syntheticBuild());
 
     expect(fact.spellcasting).toBeUndefined();
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
+  });
+
+  test("projects fixed and rolled Hit Point rules for levels after 1", () => {
+    const startingClass = classUnitId(authoredUnitId("class_synthetic"));
+    const fact = characterBuildFact({
+      ...syntheticBuild(),
+      progression: {
+        startingClass,
+        advancements: [
+          {
+            classUnitId: startingClass,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 0,
+          },
+          {
+            classUnitId: startingClass,
+            hitPointRule: {
+              tag: "rolledHigherLevelGain",
+              hitDieResult: DieRollResult(5),
+            },
+            constitutionModifierAtGain: 0,
+          },
+        ],
+      },
+    });
+
+    expect(
+      fact.progression.advancements.map((entry) => entry.hitPointRule),
+    ).toEqual([
+      { tag: "fixedHigherLevelGain" },
+      { tag: "rolledHigherLevelGain", hitDieResult: 5 },
+    ]);
     expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
   });
 
@@ -1293,6 +1331,25 @@ describe("Character Creation owner facts", () => {
         {
           tag: "unsupportedHitPointMaximumGrant",
           sourceUnitId: syntheticFeatureUnitId,
+        },
+        {
+          tag: "rolledHitDieResultAboveHitDie",
+          classUnitId: syntheticUnitId,
+          hitDieResult: DieRollResult(11),
+          hitDieSize: 10,
+        },
+        {
+          tag: "constitutionModifierAtGainAboveCurrent",
+          characterLevel: characterClassLevel(2),
+          constitutionModifierAtGain: 2,
+          constitutionModifier: 0,
+        },
+        {
+          tag: "constitutionModifierAtGainBelowEarlier",
+          characterLevel: characterClassLevel(3),
+          constitutionModifierAtGain: 1,
+          earlierCharacterLevel: characterClassLevel(2),
+          earlierConstitutionModifierAtGain: 2,
         },
         {
           tag: "unsupportedClassFeatureLanguage",

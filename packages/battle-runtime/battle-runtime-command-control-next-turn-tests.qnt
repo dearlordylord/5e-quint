@@ -8,6 +8,9 @@ module battleRuntimeCommandControlNextTurnTests {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeCommandNextTurn.* from "./battle-runtime-command-next-turn"
   import battleRuntimeCommandControlNextTurn.* from "./battle-runtime-command-control-next-turn"
+  import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
 
   run test_command_grovel_records_next_turn_pending_effect_on_failed_save = {
     val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
@@ -55,12 +58,56 @@ module battleRuntimeCommandControlNextTurnTests {
       assert(not(halted.actionAvailable)),
       assert(not(halted.bonusActionAvailable)),
       assert(halted.goblin.movementSpent == halted.goblin.speed),
+      assert(dropCurrentActorProne(halted, false) == halted),
       assert(not(ended.goblin.activeEffects.contains(CommandPending({
         source: Fighter,
         option: CommandHaltOption,
         expiresAtActor: Goblin,
         expiresAtRound: 1,
       })))),
+    }
+  }
+
+  run test_drop_prone_requires_neither_action_nor_remaining_movement = {
+    val spent = {
+      ...initialState,
+      actionAvailable: false,
+      fighter: { ...initialState.fighter, incapacitated: true, movementSpent: initialState.fighter.speed },
+    }
+    val dropped = dropCurrentActorProne(spent, false)
+    all {
+      assert(dropped.fighter.prone),
+      assert(dropped.fighter.movementSpent == spent.fighter.movementSpent),
+      assert(not(dropped.actionAvailable)),
+      assert(dropped.bonusActionAvailable == spent.bonusActionAvailable),
+      assert(dropCurrentActorProne(spent, true) == spent),
+    }
+  }
+
+  run test_incapacitated_can_move_but_cannot_spend_action_resources = {
+    val incapacitated = { ...initialState, fighter: { ...initialState.fighter, incapacitated: true } }
+    val projection = movementProjectionForFighter(incapacitated, WalkSpeedKind)
+    val moved = moveFighter(incapacitated, 5, movementDoesNotProvokeOpportunityAttack)
+    val refusedDash = dashFighter(moved)
+    val recovered = { ...refusedDash, fighter: { ...refusedDash.fighter, incapacitated: false } }
+    val recoveredProjection = movementProjectionForFighter(recovered, WalkSpeedKind)
+    all {
+      assert(battleRuntimeCanSpendMovement(projection, 5)),
+      assert(moved.fighter.movementSpent == 5),
+      assert(moved.actionAvailable == incapacitated.actionAvailable),
+      assert(moved.bonusActionAvailable == incapacitated.bonusActionAvailable),
+      assert(moved.fighter.reactionAvailable == incapacitated.fighter.reactionAvailable),
+      assert(not(battleRuntimeSpendAttackAction(projection).admitted)),
+      assert(not(battleRuntimeSpendBonusAction(projection).admitted)),
+      assert(not(reactorCanReact(incapacitated, Fighter))),
+      assert(battleRuntimeDash(projection, 30).dashMovementBonus == 0),
+      assert(battleRuntimeBonusActionDash(projection, 30).dashMovementBonus == 0),
+      assert(refusedDash.actionAvailable == moved.actionAvailable),
+      assert(refusedDash.bonusActionAvailable == moved.bonusActionAvailable),
+      assert(refusedDash.fighter.reactionAvailable == moved.fighter.reactionAvailable),
+      assert(battleRuntimeSpendAttackAction(recoveredProjection).admitted),
+      assert(battleRuntimeSpendBonusAction(recoveredProjection).admitted),
+      assert(reactorCanReact(recovered, Fighter)),
     }
   }
 

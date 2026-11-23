@@ -16,6 +16,7 @@ import { opportunityAttackThreatEqual } from "./opportunity-attack-equality.ts";
 
 export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
   "targetChoice",
+  "targetSpatialFacts",
   "attackRoll",
   "rolledDice",
   "attackDamageDisposition",
@@ -56,6 +57,16 @@ export function battleContinuationFillEquals(
         b.kind === "targetChoice" &&
         left.holeId === b.holeId &&
         left.value === b.value,
+      targetSpatialFacts: (left) =>
+        b.kind === "targetSpatialFacts" &&
+        left.holeId === b.holeId &&
+        sameMultisetBy(
+          left.spatialFacts,
+          b.spatialFacts,
+          (leftFact, rightFact) =>
+            canonicalStructuralKey(leftFact) ===
+            canonicalStructuralKey(rightFact),
+        ),
       attackRoll: (left) =>
         b.kind === "attackRoll" &&
         left.holeId === b.holeId &&

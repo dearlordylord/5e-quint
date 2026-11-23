@@ -228,7 +228,7 @@ describe("Chromatic Orb chained spell attack", () => {
           {
             ...qualifiedTarget,
             spatialFacts: (qualifiedTarget.spatialFacts ?? []).filter(
-              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+              (fact) => fact.kind !== "rangedAttackEnemyProximity",
             ),
           },
         ],
@@ -569,7 +569,7 @@ describe("Chromatic Orb chained spell attack", () => {
           {
             ...leapTargetFill,
             spatialFacts: (leapTargetFill.spatialFacts ?? []).filter(
-              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+              (fact) => fact.kind !== "rangedAttackEnemyProximity",
             ),
           },
         ],
@@ -1880,10 +1880,9 @@ function spellTargetFill(
         distanceFeet: movementFeet(30),
       },
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: spellCasterId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        kind: "rangedAttackEnemyProximity",
+        attackerId: spellCasterId,
+        procedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
         enemies: [],
       },
     ],
@@ -1911,10 +1910,9 @@ function spellLeapTargetFill(
             distanceFeet: movementFeet(30),
           },
           {
-            kind: "rangedSpellAttackEnemyProximity",
-            casterId: spellCasterId,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForSpellHoleForTest(hole),
+            kind: "rangedAttackEnemyProximity",
+            attackerId: spellCasterId,
+            procedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
             enemies: [],
           },
           {

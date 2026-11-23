@@ -5,6 +5,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleExecutableSpellInvocation,
+  BattleAttackTargetRequest,
   BattleAttackRollRelationshipFact,
   BattleCreatureState,
   BattleFill,
@@ -119,6 +120,7 @@ type NonAttackTargetingSaveInterdictionCheck =
     };
 
 type TargetingSaveInterdictionInput = {
+  readonly attack?: BattleAttackTargetRequest;
   readonly state: BattleState;
   readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
@@ -171,6 +173,7 @@ export function targetingSaveInterdictionCheck(
             input.spellLeapTargetSpatialFactRequest,
         }),
     replacementTargetKind: input.replacementTargetKind,
+    ...(input.attack === undefined ? {} : { attack: input.attack }),
     effect,
   });
   const matchingFills = input.fills.filter(
@@ -299,6 +302,7 @@ function attackRollTargetingSaveInterdictionOutcomeCheck(
 }
 
 type TargetingSaveInterdictionOutcomeHoleInput = {
+  readonly attack?: BattleAttackTargetRequest;
   readonly state: BattleState;
   readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
@@ -366,6 +370,7 @@ function targetingSaveInterdictionOutcomeHole(
     ? {
         ...base,
         replacementTargetKind: "attackRoll",
+        ...(input.attack === undefined ? {} : { attack: input.attack }),
         ...(input.spellTargetSpatialFactRequest === undefined
           ? {}
           : {

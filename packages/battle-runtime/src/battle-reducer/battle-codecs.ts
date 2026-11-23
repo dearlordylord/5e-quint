@@ -59,6 +59,7 @@ import {
   CreatureId,
   DeathSavingThrowCount,
   D20Roll,
+  DieRollResultSchema,
   ResourceCount,
   SIZES,
 } from "@dnd/shared/types";
@@ -902,14 +903,14 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     distanceFeet: Schema.optionalKey(MovementFeet),
   }),
   Schema.Struct({
-    kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-    casterId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
+    kind: Schema.Literal("rangedAttackEnemyProximity"),
+    attackerId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
     enemies: Schema.Array(
       Schema.Struct({
         enemyId: CombatantId,
         distanceFeet: MovementFeet,
-        enemyCanSeeCaster: Schema.Boolean,
+        enemyCanSeeAttacker: Schema.Boolean,
       }),
     ),
   }),
@@ -1434,7 +1435,7 @@ const BattleSavingThrowFlatBonusProjectionSchema = Schema.Struct({
   targetId: CombatantId,
   sourceCombatantId: CombatantId,
   sourceProcedureRef: BattleProcedureExecutionRef,
-  bonus: Schema.Number,
+  bonus: Schema.Finite,
 });
 
 const BattleDamageOccurrenceSourceSchema = Schema.Union([
@@ -1587,9 +1588,7 @@ function pairedBattleHoleNestedMember<
 >(fields: Fields) {
   return {
     labeled: Schema.Struct({ ...fields, label: Schema.String }),
-    mechanical: Schema.Struct(fields).annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
+    mechanical: Schema.Struct(fields),
   };
 }
 
@@ -1599,9 +1598,7 @@ function pairedBattleHoleNestedMemberVariants<
 >(labeledFields: LabeledFields, mechanicalFields: MechanicalFields) {
   return {
     labeled: Schema.Struct(labeledFields),
-    mechanical: Schema.Struct(mechanicalFields).annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
+    mechanical: Schema.Struct(mechanicalFields),
   };
 }
 
@@ -1651,9 +1648,7 @@ function pairedUnqualifiedBattleHoleMember<
   const pair = pairedBattleHoleMember(fields);
   return {
     ...pair,
-    labeled: pair.labeled.annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
+    labeled: pair.labeled,
   };
 }
 
@@ -1663,9 +1658,7 @@ function pairedBattleHoleMemberVariants<
 >(labeledFields: LabeledFields, mechanicalFields: MechanicalFields) {
   return {
     labeled: Schema.Struct({ ...labeledFields, label: Schema.String }),
-    mechanical: Schema.Struct(mechanicalFields).annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
+    mechanical: Schema.Struct(mechanicalFields),
   };
 }
 
@@ -1686,7 +1679,7 @@ function pairedBattleHoleMemberWithFields<
     ),
     mechanical: Schema.Struct(fields).pipe(
       Schema.fieldsAssign(pairedFields.mechanical),
-      Schema.annotate({ parseOptions: { onExcessProperty: "error" } }),
+      Schema.annotate({}),
     ),
   };
 }
@@ -1706,9 +1699,7 @@ function mechanicalBattleHoleSchemaFromLabeled<
     readonly label: Schema.Top;
   },
 >(schema: Schema.Struct<Fields>) {
-  return Schema.Struct(withoutBattleHoleLabel(schema.fields)).annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  return Schema.Struct(withoutBattleHoleLabel(schema.fields));
 }
 
 const BattleHoleBaseFieldsSchema = withoutBattleHoleLabel(BattleHoleBaseSchema);
@@ -1827,7 +1818,7 @@ const AttackDamageDispositionChoiceFields = (() => {
   const mechanical = Schema.Struct({
     kind: Schema.Literal("zeroHitPointReplacement"),
     procedureRef: BattleProcedureExecutionRef,
-  }).annotate({ parseOptions: { onExcessProperty: "error" } });
+  });
   return {
     labeled: {
       choices: Schema.Array(
@@ -2110,10 +2101,10 @@ const GenericSavingThrowHolePayloadMembers = [
       ...BattleProcedureSourceSchema,
       condition: Schema.Literals(ALL_CONDITIONS),
       save: SpellConditionRepeatSaveSchema,
-      successes: Schema.Number,
-      failures: Schema.Number,
-      successThreshold: Schema.Number,
-      failureThreshold: Schema.Number,
+      successes: Schema.Finite,
+      failures: Schema.Finite,
+      successThreshold: Schema.Finite,
+      failureThreshold: Schema.Finite,
     }),
     ability: AbilitySchema,
     dc: DcSourceSchema,
@@ -2267,7 +2258,7 @@ const AdditionalStructuralMechanicalHolePayloadMembers = [
       ]),
       [BattleMechanicalStartTurnOccurrenceOptionSchema],
     ),
-  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+  }),
   mechanicalBattleHoleSchemaFromLabeled(
     AdditionalStructuralHolePayloadMembers[1],
   ),
@@ -2290,6 +2281,22 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ),
 } as const;
 
+const BattleAttackTargetRequestFields = {
+  actorId: CombatantId,
+  selection: BattleAttackExecutionSelectionSchema,
+  targetConstraint: Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("meleeReach"),
+      reachFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rangedRange"),
+      normalFeet: MovementFeet,
+      longFeet: MovementFeet,
+    }),
+  ]),
+} as const;
+
 const BattleHolePayloadMembers = [
   BattleInterruptDecisionHolePayloadMember,
   pairedBattleHoleMember({
@@ -2310,6 +2317,13 @@ const BattleHolePayloadMembers = [
     helperId: CombatantId,
     allyId: CombatantId,
     choices: Schema.Array(CombatantId),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("helpAbilityCheckDecision"),
+    helperId: CombatantId,
+    allyChoices: Schema.NonEmptyArray(CombatantId),
+    skillChoices: Schema.NonEmptyArray(Schema.Literals(BATTLE_SURFACE_SKILLS)),
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -2351,19 +2365,7 @@ const BattleHolePayloadMembers = [
     ),
     attack: Schema.optionalKey(
       Schema.Struct({
-        actorId: CombatantId,
-        selection: BattleAttackExecutionSelectionSchema,
-        targetConstraint: Schema.Union([
-          Schema.Struct({
-            kind: Schema.Literal("meleeReach"),
-            reachFeet: MovementFeet,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("rangedRange"),
-            normalFeet: MovementFeet,
-            longFeet: MovementFeet,
-          }),
-        ]),
+        ...BattleAttackTargetRequestFields,
         acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
@@ -2392,7 +2394,7 @@ const BattleHolePayloadMembers = [
     spellBeingCast: Schema.Struct({
       casterId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
-      castLevel: Schema.Number,
+      castLevel: Schema.Finite,
       components: Schema.Array(Schema.Literals(["V", "S", "M"])),
     }),
     requiresTableSpatialFact: Schema.Literal(true),
@@ -2552,7 +2554,7 @@ const BattleHolePayloadMembers = [
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("spellTargetAllocation"),
     sourceProcedureRef: BattleProcedureExecutionRef,
-    allocationCount: Schema.Number,
+    allocationCount: Schema.Finite,
     choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
     spellTargetSpatialFactRequest: Schema.Struct({
@@ -2572,7 +2574,7 @@ const BattleHolePayloadMembers = [
     sourceProcedureRef: BattleProcedureExecutionRef,
     procedure: Schema.optionalKey(Schema.Never),
     minTargets: Schema.Literal(1),
-    maxTargets: Schema.Number,
+    maxTargets: Schema.Finite,
     spatialTargeting: Schema.Union([
       Schema.Struct({ kind: Schema.Literal("individualTargets") }),
       Schema.Struct({
@@ -2674,8 +2676,8 @@ const BattleHolePayloadMembers = [
             procedureRef: BattleProcedureExecutionRef,
             optional: Schema.Boolean,
             damage: Schema.Struct({
-              dice: Schema.Number,
-              dieSize: Schema.Number,
+              dice: Schema.Finite,
+              dieSize: Schema.Finite,
               damageType: DamageTypeSchema,
             }),
           }),
@@ -3086,10 +3088,10 @@ const BattleHolePayloadMembers = [
       ...BattleProcedureSourceSchema,
       condition: Schema.Literals(ALL_CONDITIONS),
       save: SpellConditionRepeatSaveSchema,
-      successes: Schema.Number,
-      failures: Schema.Number,
-      successThreshold: Schema.Number,
-      failureThreshold: Schema.Number,
+      successes: Schema.Finite,
+      failures: Schema.Finite,
+      successThreshold: Schema.Finite,
+      failureThreshold: Schema.Finite,
     }),
     ability: AbilitySchema,
     dc: DcSourceSchema,
@@ -3508,6 +3510,7 @@ const BattleHolePayloadMembers = [
     dc: DcSourceSchema,
     choices: Schema.Array(CombatantId),
     replacementTargetKind: Schema.Literal("attackRoll"),
+    attack: Schema.optionalKey(Schema.Struct(BattleAttackTargetRequestFields)),
     relationshipFactRequest: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("attackRollTargetIsEnemy"),
@@ -3642,12 +3645,7 @@ export const BattleMechanicalHoleSchema: BattleMechanicalHoleCodec =
     BattleMechanicalOrdinaryHoleSchema,
   ]).annotate({ identifier: "BattleMechanicalHole" });
 
-const BattleDieRollResultSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isGreaterThan(0)),
-  Schema.brand("PositiveInteger"),
-  Schema.brand("DieRollResult"),
-);
+const BattleDieRollResultSchema = DieRollResultSchema;
 
 const BattleD6RollResultSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 6 })),
@@ -3661,14 +3659,14 @@ const BattleD20DieRollResultSchema = D20Roll;
 const BattleD20TestSingleRollSchema = Schema.Struct({
   tag: Schema.Literal("single"),
   naturalD20: BattleD20DieRollResultSchema,
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 
 const BattleD20TestMultipleRollSchema = Schema.Struct({
   tag: Schema.Literal("multiple"),
   first: BattleD20DieRollResultSchema,
   second: BattleD20DieRollResultSchema,
   rollMode: Schema.Literals(D20_TEST_MULTIPLE_ROLL_MODES),
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 
 const BattleD20TestRollSchema = Schema.Union([
   BattleD20TestSingleRollSchema,
@@ -3678,12 +3676,12 @@ const BattleD20TestRollSchema = Schema.Union([
 const BattleD20TestRollReplacementSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.check(Schema.isInt())),
   d20TestRoll: BattleD20TestRollSchema,
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 
 const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
   result: BattleD20TestRollReplacementSchema,
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 
 function battleD20TestRollRerollDecisionSchema<const EffectKind extends string>(
   effectKind: EffectKind,
@@ -3727,8 +3725,8 @@ const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
   result: Schema.Struct({
     succeeded: Schema.Boolean,
     d20TestRoll: BattleD20TestRollSchema,
-  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+  }),
+});
 
 const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union([
   Schema.Struct({
@@ -3741,7 +3739,7 @@ const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union([
     replacement: Schema.Struct({
       succeeded: Schema.Boolean,
       d20TestRoll: BattleD20TestRollSchema,
-    }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+    }),
   }),
   Schema.Struct({
     kind: Schema.Literal("rerollRolledDie"),
@@ -3778,10 +3776,10 @@ const BattleD20TestWithoutRollOutcomeFields = {
 } as const;
 const BattleD20TestRolledOutcomeSchema = Schema.Struct(
   BattleD20TestRolledOutcomeFields,
-).annotate({ parseOptions: { onExcessProperty: "error" } });
+);
 const BattleD20TestWithoutRollOutcomeSchema = Schema.Struct(
   BattleD20TestWithoutRollOutcomeFields,
-).annotate({ parseOptions: { onExcessProperty: "error" } });
+);
 const BattleConcentrationSavingThrowValueSchema = Schema.Union([
   BattleD20TestRolledOutcomeSchema,
   BattleD20TestWithoutRollOutcomeSchema,
@@ -3790,11 +3788,11 @@ const BattleSavingThrowOutcomeSchema = Schema.Union([
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestRolledOutcomeFields,
-  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+  }),
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestWithoutRollOutcomeFields,
-  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+  }),
 ]);
 
 const BattleAttackRollResultSchema = Schema.Struct({
@@ -3817,7 +3815,7 @@ const BattleAttackRollResultSchema = Schema.Struct({
       ]),
     ),
   ),
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 
 const BattleRolledDiceGroupSchema = Schema.Struct({
   results: Schema.Array(BattleDieRollResultSchema),
@@ -3996,6 +3994,13 @@ type BattleFillEncoded =
       readonly targetWithinFiveFeetOfHelper: boolean;
     }
   | {
+      readonly kind: "helpAbilityCheckDecision";
+      readonly holeId: string;
+      readonly allyId: string;
+      readonly skill: Skill;
+      readonly allyCanBeAssisted: boolean;
+    }
+  | {
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
@@ -4070,13 +4075,13 @@ type BattleFillEncoded =
             readonly attackerCanSeeObject: boolean;
           }
         | {
-            readonly kind: "rangedSpellAttackEnemyProximity";
-            readonly casterId: string;
-            readonly sourceProcedureRef: string;
+            readonly kind: "rangedAttackEnemyProximity";
+            readonly attackerId: string;
+            readonly procedureRef: string;
             readonly enemies: readonly {
               readonly enemyId: string;
               readonly distanceFeet: number;
-              readonly enemyCanSeeCaster: boolean;
+              readonly enemyCanSeeAttacker: boolean;
             }[];
           }
         | {
@@ -5192,7 +5197,6 @@ export function battleInterruptDecisionFillSchema() {
     ]),
   }).annotate({
     identifier: "BattleInterruptDecisionFill",
-    parseOptions: { onExcessProperty: "error" },
   });
 }
 
@@ -5224,6 +5228,13 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       targetEnemyId: CombatantId,
       targetWithinFiveFeetOfHelper: Schema.Boolean,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("helpAbilityCheckDecision"),
+      holeId: BattleHoleIdSchema,
+      allyId: CombatantId,
+      skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+      allyCanBeAssisted: Schema.Boolean,
     }),
     Schema.Struct({
       kind: Schema.Literal("targetChoice"),
@@ -5301,14 +5312,14 @@ export const BattleFillSchema: Schema.Codec<
             attackerCanSeeObject: Schema.Boolean,
           }),
           Schema.Struct({
-            kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-            casterId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
+            kind: Schema.Literal("rangedAttackEnemyProximity"),
+            attackerId: CombatantId,
+            procedureRef: BattleProcedureExecutionRef,
             enemies: Schema.Array(
               Schema.Struct({
                 enemyId: CombatantId,
                 distanceFeet: MovementFeet,
-                enemyCanSeeCaster: Schema.Boolean,
+                enemyCanSeeAttacker: Schema.Boolean,
               }),
             ),
           }),
@@ -5952,7 +5963,7 @@ export const BattleFillSchema: Schema.Codec<
         d20TestNaturalOneReroll: Schema.optionalKey(
           BattleD20TestNaturalOneRerollDecisionSchema,
         ),
-      }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+      }),
       spatialFacts: Schema.optionalKey(
         Schema.Array(
           Schema.Struct({
@@ -6278,13 +6289,13 @@ const BattleCharacterResourceSnapshotSchema = Schema.Union([
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     usage: Schema.Literal("limited"),
-    usesRemaining: Schema.Number,
+    usesRemaining: Schema.Finite,
     usedThisTurn: Schema.Boolean,
   }),
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     usage: Schema.Literal("pointPool"),
-    pointsRemaining: Schema.Number,
+    pointsRemaining: Schema.Finite,
   }),
 ]);
 
@@ -7500,6 +7511,12 @@ const BattleHelpAttackSnapshotSchema = Schema.Struct({
   expiresAt: OngoingFeatureExpirationSchema,
 });
 
+const BattleHelpAbilityCheckSnapshotSchema = Schema.Struct({
+  helperId: CombatantId,
+  allyId: CombatantId,
+  skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+});
+
 const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literals([
@@ -7511,7 +7528,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
     reduction: Schema.Struct({
       kind: Schema.Literal("rolled"),
       dice: Schema.Literal(1),
-      flatModifier: Schema.Number,
+      flatModifier: Schema.Finite,
       dieSize: Schema.Literals([6, 8, 10, 12]),
       spends: Schema.Struct({
         resourcePoolRef: BattleResourcePoolExecutionRef,
@@ -7528,7 +7545,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
       }),
       Schema.Struct({
         kind: Schema.Literal("rolled"),
-        flatModifier: Schema.Number,
+        flatModifier: Schema.Finite,
         dieSize: Schema.Literal(10),
       }),
     ]),
@@ -7635,22 +7652,14 @@ const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema: BattleMechanical
     BattleInterruptProcedureModifierChoiceMember.mechanical,
   ]);
 export const BattleInterruptProcedureChoiceSchema: typeof BattleInterruptProcedureChoiceUnfilteredSchema =
-  BattleInterruptProcedureChoiceUnfilteredSchema.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleInterruptProcedureChoiceUnfilteredSchema;
 export const BattleMechanicalInterruptProcedureChoiceSchema: typeof BattleMechanicalInterruptProcedureChoiceUnfilteredSchema =
-  BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleMechanicalInterruptProcedureChoiceUnfilteredSchema;
 
 export const BattleInterruptProcedureChoiceWithSubjectSchema: typeof FirstBattleInterruptProcedureChoiceMember.labeled =
-  FirstBattleInterruptProcedureChoiceMember.labeled.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  FirstBattleInterruptProcedureChoiceMember.labeled;
 export const BattleInterruptProcedureModifierChoiceSchema: typeof BattleInterruptProcedureModifierChoiceMember.labeled =
-  BattleInterruptProcedureModifierChoiceMember.labeled.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleInterruptProcedureModifierChoiceMember.labeled;
 
 const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   kind: Schema.Literal("endOfTurn"),
@@ -8448,6 +8457,7 @@ function serializedBattleHoleExecutionReferences(
         ),
       helpAttackAllyDecision: noSerializedExecutionReferences,
       helpAttackEnemyDecision: noSerializedExecutionReferences,
+      helpAbilityCheckDecision: noSerializedExecutionReferences,
       areaWindStrength: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
         value.questions.flatMap((question) =>
@@ -8872,6 +8882,7 @@ function serializedRuntimeCommandReferencePolicy(
       }),
       persistentAreaSaveCompositeSave: actorOwned,
       standFromProne: actorOwned,
+      dropProne: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
       endPersistentAreaSaveConditionEscapeForDeparture: actorOwned,
@@ -10074,6 +10085,7 @@ const BattleSnapshotCommonFields = {
     actionsOrMovements: Schema.Array(BattleReadiedResponseSnapshotSchema),
   }),
   helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
+  helpAbilityCheckMarkers: Schema.Array(BattleHelpAbilityCheckSnapshotSchema),
 };
 
 const BattleSnapshotExcludedFields = {

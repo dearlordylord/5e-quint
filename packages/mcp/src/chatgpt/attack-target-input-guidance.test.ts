@@ -7,6 +7,7 @@ import { expect, test } from "vitest";
 import {
   attackTargetFill,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
   fighterAttackSubject,
   fighterId,
@@ -115,9 +116,24 @@ for (const actor of ["character", "statBlock"] as const) {
       const fact = fill.spatialFacts?.[0];
       if (fact?.kind !== "attackTargetDistance")
         throw new Error("Expected canonical distance witness");
+      const proximity = (fill.spatialFacts ?? []).filter(
+        (f) => f.kind === "rangedAttackEnemyProximity",
+      );
+      expect(proximity).toHaveLength(range === "ranged" ? 1 : 0);
       expect(Array.isArray(input.fillSchema.oneOf)).toBe(true);
       expect(input.fillSchema.oneOf).toHaveLength(hole.choices.length);
-      expect(JSON.stringify(input.fillSchema)).not.toContain('"contains"');
+      if (range === "melee") {
+        expect(JSON.stringify(input.fillSchema)).not.toContain('"contains"');
+      } else {
+        expect(JSON.stringify(input.fillSchema)).toContain('"maxContains":1');
+        expect(validate({ ...fill, spatialFacts: [fact] }).valid).toBe(false);
+        expect(
+          validate({
+            ...fill,
+            spatialFacts: [fact, ...proximity, ...proximity],
+          }).valid,
+        ).toBe(false);
+      }
       expect(validate(fill).valid).toBe(true);
       const empty = battleInputGuidance({ ...hole, choices: [] })[0];
       if (empty === undefined)
@@ -127,12 +143,50 @@ for (const actor of ["character", "statBlock"] as const) {
           requireJsonSchema(empty.fillSchema, "no offered targets"),
         )(fill).valid,
       ).toBe(false);
-      expect(validate({ ...fill, spatialFacts: [fact] }).valid).toBe(true);
       expect(
-        validate({ ...fill, spatialFacts: [{ ...fact, distanceFeet: 0 }] })
-          .valid,
+        validate({ ...fill, spatialFacts: [fact, ...proximity] }).valid,
+      ).toBe(true);
+      expect(
+        validate({
+          ...fill,
+          spatialFacts: [{ ...fact, distanceFeet: 0 }, ...proximity],
+        }).valid,
       ).toBe(true);
       const before = root.sessionStore.snapshot();
+      for (const qualification of proximity) {
+        for (const change of [
+          { attackerId: targetId },
+          {
+            procedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-foreign-attack",
+            ),
+          },
+        ]) {
+          const invalidFill = {
+            ...fill,
+            spatialFacts: [
+              fact,
+              qualification,
+              { ...qualification, ...change },
+            ],
+          };
+          expect(validate(invalidFill).valid).toBe(false);
+          const rejected = Schema.decodeUnknownSync(
+            BattleResolutionOutputSchema,
+          )(
+            jsonContentPayload(
+              CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
+                fill: invalidFill,
+              }),
+            ),
+          );
+          expect(rejected.result).toMatchObject({
+            tag: "invalid",
+            reason: "invalidFill",
+          });
+          expect(root.sessionStore.snapshot()).toEqual(before);
+        }
+      }
       const selectionChange =
         "statBlockDamageSelection" in fact
           ? { statBlockDamageSelection: [] }
@@ -146,7 +200,10 @@ for (const actor of ["character", "statBlock"] as const) {
         { distanceFeet: -1 },
         selectionChange,
       ]) {
-        const invalidFill = { ...fill, spatialFacts: [{ ...fact, ...change }] };
+        const invalidFill = {
+          ...fill,
+          spatialFacts: [{ ...fact, ...change }, ...proximity],
+        };
         expect(validate(invalidFill).valid).toBe(false);
         const rejected = CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(
           root,
@@ -164,9 +221,9 @@ for (const actor of ["character", "statBlock"] as const) {
       expect(validate({ ...fill, value: "synthetic-unoffered" }).valid).toBe(
         false,
       );
-      expect(validate({ ...fill, spatialFacts: [fact, fact] }).valid).toBe(
-        false,
-      );
+      expect(
+        validate({ ...fill, spatialFacts: [fact, fact, ...proximity] }).valid,
+      ).toBe(false);
       const completed = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
         jsonContentPayload(
           CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, { fill }),

@@ -18,6 +18,7 @@ import {
   selectedPreparedSpellAccess,
 } from "./chosen-prepared-spell-access.ts";
 import {
+  abilityModifier,
   characterBuildFeatureUnitIds,
   characterBuildProficiencies,
   finalizedClassChoiceFeaturesForSupportedChoices,
@@ -76,7 +77,10 @@ import {
   characterProgressionWithClassLevelGain,
   type CharacterProgressionLevelIssue,
   type ClassUnitId,
-  type FixedHigherLevelClassHitPointRule,
+  type HigherLevelClassHitPointRule,
+  rolledHitDieResultAboveHitDie,
+  rolledHitDieResultAboveHitDieMessage,
+  type RolledHitDieResultAboveHitDie,
 } from "./character-progression-types.ts";
 import {
   creationChoiceOptionId,
@@ -164,13 +168,13 @@ const WeaponMasteryWeaponUnitId = Brand.nominal<WeaponMasteryWeaponUnitId>();
 export type CharacterBuildPlainClassLevelGain = {
   readonly tag: "classLevelGain";
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
 };
 
 export type CharacterBuildFighterFightingStyleReplacementLevelGain = {
   readonly tag: "fighterLevelGainWithFightingStyleReplacement";
   readonly classUnitId: FighterClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly replacement: {
     readonly selectedFeatUnitId: FightingStyleFeatUnitId;
   };
@@ -179,7 +183,7 @@ export type CharacterBuildFighterFightingStyleReplacementLevelGain = {
 export type CharacterBuildFightingStyleCantripReplacementLevelGain = {
   readonly tag: "classLevelGainWithFightingStyleCantripReplacement";
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly replacement: {
     readonly replaceCantripId: FightingStyleCantripUnitId;
     readonly selectedCantripId: FightingStyleCantripUnitId;
@@ -190,7 +194,7 @@ export type CharacterBuildFightingStyleCantripReplacementLevelGain = {
 export type CharacterBuildListPreparedSpellcastingOnlyLevelGain = {
   readonly tag: "classLevelGainWithListPreparedSpellcasting";
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
 };
 
@@ -205,7 +209,7 @@ export type CharacterBuildListPreparedSpellcastingLevelGain = {
 export type CharacterBuildWeaponMasteryOnlyLevelGain = {
   readonly tag: "classLevelGainWithWeaponMasterySelection";
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly weaponMastery: {
     readonly featureUnitId: WeaponMasteryFeatureUnitId;
     readonly selectedWeaponUnitIds: readonly WeaponMasteryWeaponUnitId[];
@@ -216,7 +220,7 @@ export type CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGa
   {
     readonly tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement";
     readonly classUnitId: FighterClassUnitId;
-    readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+    readonly hitPointRule: HigherLevelClassHitPointRule;
     readonly weaponMastery: {
       readonly featureUnitId: WeaponMasteryFeatureUnitId;
       readonly selectedWeaponUnitIds: readonly WeaponMasteryWeaponUnitId[];
@@ -246,7 +250,7 @@ export type CharacterBuildWarlockPactMagicLevelGain = {
 export type CharacterBuildSorcererMetamagicLevelGain = {
   readonly tag: "sorcererLevelGain";
   readonly classUnitId: SorcererClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly metamagic: {
     readonly gainedOptions: readonly SorcererMetamagicOptionId[];
     readonly replacement?: {
@@ -259,7 +263,7 @@ export type CharacterBuildSorcererMetamagicLevelGain = {
 export type CharacterBuildWarlockLevelGain = {
   readonly tag: "warlockLevelGain";
   readonly classUnitId: WarlockClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
   readonly eldritchInvocations: {
     readonly gainedInvocations: readonly EldritchInvocationSelection[];
@@ -338,6 +342,10 @@ void (true satisfies [MissingClassLevelGainTags] extends [never]
 
 export type CharacterBuildAdvancementIssue =
   | { readonly code: "invalidFeatChoiceGains"; readonly message: string }
+  | ({
+      readonly code: "rolledHitDieResultAboveHitDie";
+      readonly message: string;
+    } & RolledHitDieResultAboveHitDie)
   | {
       readonly code: "invalidWizardSpellcastingGains";
       readonly message: string;
@@ -1000,7 +1008,7 @@ export function weaponMasteryWeaponUnitId(input: {
 export function weaponMasteryLevelGain(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly featureUnitId: UnitRecord["id"];
   readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
   readonly fightingStyleReplacement?: {
@@ -1069,7 +1077,7 @@ export function weaponMasteryLevelGain(input: {
 export function fighterLevelGainWithFightingStyleReplacement(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly selectedFeatUnitId: UnitRecord["id"];
 }): Result.Result<
   CharacterBuildFighterFightingStyleReplacementLevelGain,
@@ -1099,7 +1107,7 @@ export function fighterLevelGainWithFightingStyleReplacement(input: {
 export function classLevelGainWithFightingStyleCantripReplacement(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly replaceCantripId: UnitRecord["id"];
   readonly selectedCantripId: UnitRecord["id"];
   readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
@@ -1147,7 +1155,7 @@ export function classLevelGainWithFightingStyleCantripReplacement(input: {
 export function warlockLevelGain(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly pactMagic?: CharacterBuildWarlockPactMagicLevelGain;
   readonly gainedInvocations: readonly CharacterBuildWarlockEldritchInvocationSelectionInput[];
   readonly replacement?: {
@@ -1199,7 +1207,7 @@ export function warlockLevelGain(input: {
 export function sorcererLevelGain(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
   readonly gainedOptions: readonly (string | SorcererMetamagicOptionId)[];
   readonly replacement?: {
     readonly replaceOptionId: string | SorcererMetamagicOptionId;
@@ -1251,6 +1259,18 @@ export function advanceCharacterBuildClassLevel(input: {
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
+  const rolledAboveHitDie = rolledHitDieResultAboveHitDie({
+    classUnitId: input.levelGain.classUnitId,
+    hitPointRule: input.levelGain.hitPointRule,
+    hitPointDie: classUnit.success.hitPointDie,
+  });
+  if (Option.isSome(rolledAboveHitDie)) {
+    return Result.fail({
+      code: "rolledHitDieResultAboveHitDie",
+      ...rolledAboveHitDie.value,
+      message: rolledHitDieResultAboveHitDieMessage(rolledAboveHitDie.value),
+    });
+  }
 
   const spellcasting = updateSpellcastingForClassLevelGain(input);
   if (Result.isFailure(spellcasting)) return Result.fail(spellcasting.failure);
@@ -1342,6 +1362,9 @@ export function advanceCharacterBuildClassLevel(input: {
     progression: input.build.progression,
     classUnitId: input.levelGain.classUnitId,
     hitPointRule: input.levelGain.hitPointRule,
+    // RAW: character-creation.md Level Advancement steps 2 and 5: the level's
+    // Hit Points use the modifier before its own feats raise Constitution.
+    constitutionModifierAtGain: abilityModifier(input.build.abilityScores.con),
   });
   /* v8 ignore start -- @preserve -- A parsed level gain cannot make its already-valid progression nonconsecutive; this reports malformed direct inputs. */
   if (Result.isFailure(progression)) {

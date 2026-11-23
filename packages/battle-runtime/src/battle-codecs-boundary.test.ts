@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
@@ -1738,7 +1739,10 @@ describe("battle shake-awake physical reachability codec", () => {
 
 describe("battle codec execution-reference boundaries", () => {
   test("parses a D20 Test roll as one coherent single or multiple-die value", () => {
-    const valid = Schema.decodeUnknownResult(BattleFillSchema)({
+    const valid = Schema.decodeUnknownResult(
+      BattleFillSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       kind: "attackRoll",
       holeId: holeId("d20-valid"),
       value: {
@@ -1753,7 +1757,10 @@ describe("battle codec execution-reference boundaries", () => {
     });
     expect(Result.isSuccess(valid)).toBe(true);
 
-    const removedSelectionField = Schema.decodeUnknownResult(BattleFillSchema)({
+    const removedSelectionField = Schema.decodeUnknownResult(
+      BattleFillSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       kind: "attackRoll",
       holeId: holeId("d20-removed-selection-field"),
       value: {
@@ -1769,17 +1776,19 @@ describe("battle codec execution-reference boundaries", () => {
     });
     expect(Result.isFailure(removedSelectionField)).toBe(true);
 
-    const legacyIndependentFacts = Schema.decodeUnknownResult(BattleFillSchema)(
-      {
-        kind: "attackRoll",
-        holeId: holeId("d20-legacy-independent-facts"),
-        value: { total: 10, naturalD20: 10, rollMode: "normal" },
-      },
-    );
+    const legacyIndependentFacts = Schema.decodeUnknownResult(
+      BattleFillSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
+      kind: "attackRoll",
+      holeId: holeId("d20-legacy-independent-facts"),
+      value: { total: 10, naturalD20: 10, rollMode: "normal" },
+    });
     expect(Result.isFailure(legacyIndependentFacts)).toBe(true);
 
     const missingRolledOutcomeFact = Schema.decodeUnknownResult(
       BattleFillSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )({
       kind: "concentrationSavingThrow",
       holeId: holeId("d20-missing-rolled-outcome-fact"),
@@ -1789,6 +1798,7 @@ describe("battle codec execution-reference boundaries", () => {
 
     const explicitWithoutRollOutcome = Schema.decodeUnknownResult(
       BattleFillSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )({
       kind: "concentrationSavingThrow",
       holeId: holeId("d20-explicit-without-roll-outcome"),
@@ -2818,6 +2828,11 @@ describe("battle codec act ownership boundaries", () => {
           procedureRef: subject.procedureRef,
           statBlockDamageSelection: subject.statBlockDamageSelection,
         },
+        {
+          kind: "rangedAttackEnemyProximity",
+          procedureRef: subject.procedureRef,
+          enemies: [],
+        },
       ],
     });
     expect(
@@ -3321,6 +3336,12 @@ describe("battle codec act ownership boundaries", () => {
           attackResponse.selection,
           movementFeet(5),
         ),
+        {
+          kind: "rangedAttackEnemyProximity" as const,
+          attackerId: goblinId,
+          procedureRef: attackResponse.selection.procedureRef,
+          enemies: [],
+        },
       ],
     };
     const decoded = Schema.decodeUnknownSync(BattleFillSchema)(
@@ -3334,6 +3355,7 @@ describe("battle codec act ownership boundaries", () => {
           statBlockDamageSelection:
             attackResponse.selection.statBlockDamageSelection,
         },
+        { kind: "rangedAttackEnemyProximity", enemies: [] },
       ],
     });
     expect(

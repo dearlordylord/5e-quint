@@ -133,6 +133,7 @@ import {
 import { d20TestRollReplacementKeepsModifier } from "./d20-test-roll-reroll.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import {
@@ -415,7 +416,10 @@ type InitialSpellAttackRollResolution =
       readonly effectiveAttackRoll: BattleAttackRollResult;
       readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
       readonly missedSpellAttackRerollTaken: boolean;
-      readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+      readonly requiredRollMode: Exclude<
+        ReturnType<typeof requiredSpellAttackRollMode>,
+        { readonly tag: "invalid" }
+      >;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
 
@@ -424,7 +428,7 @@ function resolveInitialSpellAttackRoll(input: {
   readonly errorState: BattleState;
   readonly subject: SpellActInternalInput["subject"];
   readonly actorId: CombatantId;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly invocation: Parameters<typeof spellAttackRollHole>[2];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   /** What Seeking Spell needs to decide on this roll, when it applies. */
@@ -433,17 +437,19 @@ function resolveInitialSpellAttackRoll(input: {
     readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
   };
 }): InitialSpellAttackRollResolution {
-  const requiredRollMode = requiredSpellAttackRollMode(
-    input.castingState,
-    input.actorId,
-    input.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  );
-  if (input.fillSet.attackRoll == null) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.castingState, input.subject, [
+  const rollInput = prepareAttackRollInput({
+    errorState: input.errorState,
+    requiredRollMode: requiredSpellAttackRollMode(
+      input.castingState,
+      input.actorId,
+      input.target,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+      input.fillSet.targetEnemyProximity,
+    ),
+    attackRoll: input.fillSet.attackRoll,
+    requestRoll: (requiredRollMode) =>
+      needsHolesResult(input.castingState, input.subject, [
         spellAttackRollHole(
           input.castingState,
           input.actorId,
@@ -451,10 +457,11 @@ function resolveInitialSpellAttackRoll(input: {
           requiredRollMode,
         ),
       ]),
-    };
-  }
+  });
+  if (rollInput.tag === "result") return rollInput;
+  const { requiredRollMode, attackRoll } = rollInput;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(input.fillSet.attackRoll)) {
+  if (!attackRollResultIsValid(attackRoll)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
@@ -465,7 +472,7 @@ function resolveInitialSpellAttackRoll(input: {
       ),
     };
   }
-  if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
+  if (!attackRollModeMatches(attackRoll, requiredRollMode)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
@@ -491,7 +498,7 @@ function resolveInitialSpellAttackRoll(input: {
     state: input.castingState,
     attackerId: input.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
-    attackRoll: input.fillSet.attackRoll,
+    attackRoll: attackRoll,
     requiredRollMode,
     ...optionalProperty("missedSpellAttackReroll", missedSpellAttackReroll),
   });
@@ -534,7 +541,7 @@ function resolveInitialSpellAttackRoll(input: {
   return {
     tag: "admitted",
     actor,
-    attackRoll: input.fillSet.attackRoll,
+    attackRoll: attackRoll,
     effectiveAttackRoll: d20TestRerolls.effectiveAttackRoll,
     heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
     missedSpellAttackRerollTaken: d20TestRerolls.missedSpellAttackRerollTaken,
@@ -1626,7 +1633,10 @@ export const SEEKING_SPELL_REPLACEMENT_MODIFIER_MESSAGE =
 function missedSpellAttackRerollSource(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
   readonly targetArmorClass: number;
   readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
 }): MissedSpellAttackRerollSource {
@@ -1653,7 +1663,10 @@ function spellAttackRerollDecisionIssue(input: {
   readonly roll: BattleAttackRollResult;
   readonly decision: BattleSpellAttackRerollDecision;
   readonly hit: boolean;
-  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
   readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
 }): string | null {
   if (input.invocation.procedure !== "spellAttackDamage") {
@@ -1734,7 +1747,10 @@ function spellAttackRollHoleWithSeekingOption(
         | "spellAttackDamage";
     }
   >,
-  rollMode: ReturnType<typeof requiredSpellAttackRollMode>,
+  rollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >,
 ): ReturnType<typeof spellAttackRollHole> {
   const actor = state.combatants.get(attackerId);
   const seeking = seekingSpellAttackRerollOption({ actor });
@@ -2256,7 +2272,7 @@ function resolveSpellActInternal(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const target = input.state.combatants.get(fillSet.targetId);
+  const target = castingState.combatants.get(fillSet.targetId);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target == null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -2426,6 +2442,12 @@ function resolveSpellActInternal(
         );
       }
       /* v8 ignore stop -- @preserve */
+      const replacementTargetFill =
+        targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+          fill: originalTargetFill,
+          replacement: interdictionCheck,
+        });
+
       return resolveSpellActInternal(
         {
           ...input,
@@ -2435,14 +2457,7 @@ function resolveSpellActInternal(
                 (fill) => fill.kind !== "targetingSaveInterdictionOutcome",
               )
               .map((fill) =>
-                fill === originalTargetFill
-                  ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                      {
-                        fill,
-                        replacement: interdictionCheck,
-                      },
-                    )
-                  : fill,
+                fill === originalTargetFill ? replacementTargetFill : fill,
               ),
           ],
         },
@@ -2497,7 +2512,7 @@ function resolveSpellActInternal(
       errorState: input.state,
       subject: input.subject,
       actorId: subject.actorId,
-      targetId: target.combatantId,
+      target,
       invocation: invocationForResolution,
       fillSet,
       seekingSpell: {

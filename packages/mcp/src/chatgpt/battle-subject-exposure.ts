@@ -13,6 +13,7 @@ export const BATTLE_SUBJECT_EXPOSURE = {
   "action.escapeGrapple": tool("escape_grapple"),
   "action.escapeSpellRestraint": tool("escape_spell_restraint"),
   "action.grapple": tool("grapple"),
+  "action.helpAbilityCheck": tool("help_ability_check"),
   "action.helpAttack": tool("help_attack"),
   "action.hide": tool("hide"),
   "action.multiattack": tool("multiattack"),
@@ -57,6 +58,7 @@ export const BATTLE_SUBJECT_EXPOSURE = {
     "adjust_spell_altitude",
   ),
   "runtimeCommand.creatureFalls": tool("report_creature_fall"),
+  "runtimeCommand.dropProne": tool("drop_prone"),
   "runtimeCommand.creatureTypeProtectionConditionAttempt": tool(
     "report_condition_attempt",
   ),

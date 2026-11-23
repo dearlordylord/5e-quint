@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 import { Result, Schema } from "effect";
@@ -36,20 +37,20 @@ export const DEFAULT_PLAY_SESSION_REQUESTS_PER_MINUTE = 120;
 export const PLAY_SESSION_RATE_LIMIT_WINDOW_MS = 60_000;
 
 export const GuestAccessGrantSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^guest-access:[0-9a-f]{64}$/u)),
+  Schema.check(jsonSchemaPattern(/^guest-access:[0-9a-f]{64}$/u)),
   Schema.brand("GuestAccessGrant"),
 );
 export type GuestAccessGrant = typeof GuestAccessGrantSchema.Type;
 export type GuestAccessGrantFactory = () => GuestAccessGrant;
 
 export const GuestAccessGrantDigestSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
   Schema.brand("GuestAccessGrantDigest"),
 );
 export type GuestAccessGrantDigest = typeof GuestAccessGrantDigestSchema.Type;
 
 const PlaySessionRateLimitKeyDigestSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
   Schema.brand("PlaySessionRateLimitKeyDigest"),
 );
 export type PlaySessionRateLimitKeyDigest =

@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { randomUUID } from "node:crypto";
 import {
   constants,
@@ -130,7 +131,7 @@ function benchmarkReviewSchemaVersion(profile: FixedBenchmarkProfile): 2 | 3 {
 const FIXED_BENCHMARK_ROOT = "scripts/raw-swarm/out/fixed-scenario-benchmark";
 export const FIXED_BENCHMARK_CONTEXT_ROLES = BENCHMARK_CONTEXT_ROLES;
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 type ScenarioCharacterEvaluation = Awaited<
   ReturnType<typeof evaluateScenarioCharacters>

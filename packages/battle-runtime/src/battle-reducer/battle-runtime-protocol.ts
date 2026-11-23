@@ -117,6 +117,12 @@ export const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
 export const HELP_ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
   "battle:help-attack:target",
 );
+export const HELP_ABILITY_CHECK_HOLE_ID = holeId(
+  "battle:help-ability-check:decision",
+);
+export const HELP_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
+  "battle:help-ability-check:decision",
+);
 export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
   "battle:hit-point-budget-condition-shake-awake:target",
 );
@@ -334,6 +340,12 @@ export type AttackFillSet =
         | undefined;
       readonly grapplerPunchAndGrabOutcome:
         | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
+        | undefined;
+      readonly weaponMasteryGrazeDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly huntersPreyHordeBreakerGrazeDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };

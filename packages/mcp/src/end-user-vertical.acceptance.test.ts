@@ -12,8 +12,7 @@ import {
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
 } from "../test-support/battle-act-labels.ts";
 import {
   loadoutHoleId,
@@ -199,10 +198,13 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -254,10 +256,12 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -581,11 +585,14 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Action Surge",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -642,10 +649,13 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(surged)).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -703,21 +713,25 @@ describe("end-user MCP vertical", () => {
         value: "skeleton-b",
         spatialFacts: [
           {
-            kind: "rangedSpellAttackEnemyProximity",
-            casterId: "wizard",
-            sourceProcedureRef: rayOfFrostAct.subject.procedureRef,
+            kind: "rangedAttackEnemyProximity",
+            attackerId: "wizard",
+            procedureRef: rayOfFrostAct.subject.procedureRef,
             enemies: [
               {
                 enemyId: "skeleton-a",
                 distanceFeet: 30,
-                enemyCanSeeCaster: true,
+                enemyCanSeeAttacker: true,
               },
               {
                 enemyId: "skeleton-b",
                 distanceFeet: 30,
-                enemyCanSeeCaster: true,
+                enemyCanSeeAttacker: true,
               },
-              { enemyId: "goblin", distanceFeet: 30, enemyCanSeeCaster: true },
+              {
+                enemyId: "goblin",
+                distanceFeet: 30,
+                enemyCanSeeAttacker: true,
+              },
             ],
           },
           {
@@ -1125,10 +1139,10 @@ describe("end-user MCP vertical", () => {
       naturalD20: 11,
       damageResults: [4],
       enemies: [
-        { enemyId: "goblin-a", distanceFeet: 5, enemyCanSeeCaster: true },
-        { enemyId: "goblin-b", distanceFeet: 30, enemyCanSeeCaster: true },
-        { enemyId: "skeleton-a", distanceFeet: 30, enemyCanSeeCaster: true },
-        { enemyId: "skeleton-b", distanceFeet: 30, enemyCanSeeCaster: true },
+        { enemyId: "goblin-a", distanceFeet: 5, enemyCanSeeAttacker: true },
+        { enemyId: "goblin-b", distanceFeet: 30, enemyCanSeeAttacker: true },
+        { enemyId: "skeleton-a", distanceFeet: 30, enemyCanSeeAttacker: true },
+        { enemyId: "skeleton-b", distanceFeet: 30, enemyCanSeeAttacker: true },
       ],
     });
     expect(combatant(root, "goblin-b")).toMatchObject({ hp: 6 });
@@ -1181,10 +1195,10 @@ describe("end-user MCP vertical", () => {
       naturalD20: 11,
       damageResults: [4],
       enemies: [
-        { enemyId: "goblin-a", distanceFeet: 5, enemyCanSeeCaster: true },
-        { enemyId: "goblin-b", distanceFeet: 30, enemyCanSeeCaster: true },
-        { enemyId: "skeleton-a", distanceFeet: 30, enemyCanSeeCaster: true },
-        { enemyId: "skeleton-b", distanceFeet: 30, enemyCanSeeCaster: true },
+        { enemyId: "goblin-a", distanceFeet: 5, enemyCanSeeAttacker: true },
+        { enemyId: "goblin-b", distanceFeet: 30, enemyCanSeeAttacker: true },
+        { enemyId: "skeleton-a", distanceFeet: 30, enemyCanSeeAttacker: true },
+        { enemyId: "skeleton-b", distanceFeet: 30, enemyCanSeeAttacker: true },
       ],
     });
     expect(combatant(root, "goblin-b")).toMatchObject({ hp: 2 });
@@ -2495,7 +2509,7 @@ function resolveSpellAttack(
     readonly enemies: readonly {
       readonly enemyId: string;
       readonly distanceFeet: number;
-      readonly enemyCanSeeCaster: boolean;
+      readonly enemyCanSeeAttacker: boolean;
     }[];
   },
 ) {
@@ -2506,9 +2520,9 @@ function resolveSpellAttack(
     value: input.targetId,
     spatialFacts: [
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: input.actorId,
-        sourceProcedureRef: act.subject.procedureRef,
+        kind: "rangedAttackEnemyProximity",
+        attackerId: input.actorId,
+        procedureRef: act.subject.procedureRef,
         enemies: input.enemies,
       },
       {

@@ -52152,6 +52152,14 @@
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELLCASTING-LONG-CASTING-TIME-001"
       ]
+    },
+    {
+      "evidenceId": "SB-MULTIATTACK-PRONE-RUNTIME-TEST",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/battle-runtime-multiattack-drop-prone.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-MULTIATTACK-001"
+      ]
     }
   ],
   "trackerClaims": [
@@ -81323,7 +81331,8 @@
       "evidenceClaims": [
         "SB-MULTIATTACK-INDUCTIVE",
         "SB-ACTIONS-RUNTIME-TEST",
-        "SB-MULTIATTACK-MBT"
+        "SB-MULTIATTACK-MBT",
+        "SB-MULTIATTACK-PRONE-RUNTIME-TEST"
       ],
       "trackerClaims": []
     },

@@ -1,4 +1,12 @@
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  interruptDecisionFill,
+  movementFill,
+  opportunityAttackProcedureSelectionForTest,
+  requireResolved,
+  resolveBattleInterrupt,
+  battleResolutionHolesForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
@@ -959,25 +967,69 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
 
   test("Opportunity Attack damage requests the linked caster Concentration save", () => {
     const session = linkedDefenseResistanceDamageShareClubBattle();
-    const state = withCasterConcentration(
+    const readyState = withCasterConcentration(
       advanceRound(castWardingBond(session), [spellCasterId, spellTargetId]),
     );
     const clubAttack = weaponAttackSubject(
-      battleRuntimeSessionForTest({ ...session, state }),
+      battleRuntimeSessionForTest({ ...session, state: readyState }),
       "Club",
     );
-    const subject: Extract<
-      BattleSubject,
-      { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
-    > = {
+    const selection = attackExecutionSelectionForSubjectForTest(clubAttack);
+    const moverState = requireResolved(
+      endTurn({ state: readyState, actorId: spellCasterId }),
+    ).state;
+    const moveSubject = {
       tag: "runtimeCommand",
-      actorId: spellCasterId,
-      command: "opportunityAttack",
-      reactorId: spellCasterId,
-      targetId: spellTargetId,
-      distanceFeet: movementFeet(5),
-      ...attackExecutionSelectionForSubjectForTest(clubAttack),
-    };
+      actorId: spellTargetId,
+      command: "move",
+    } as const;
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: moverState,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const awaiting = resolveBattleSubject({
+      state: moverState,
+      subject: moveSubject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: spellCasterId,
+              distanceFeet: movementFeet(5),
+              ...selection,
+            },
+          ],
+        }),
+      ],
+    });
+    if (awaiting.tag !== "needsHoles")
+      throw new Error("Expected movement to offer an Opportunity Attack.");
+    const pending = battleFrontierInterruptDecisionForState(awaiting.state);
+    const choice = pending?.choices.find(
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "opportunityAttack" &&
+        candidate.subject.reactorId === spellCasterId,
+    );
+    if (pending == null || choice?.kind !== "nestedProcedure")
+      throw new Error("Expected the caster's Opportunity Attack choice.");
+    const started = resolveBattleInterrupt({
+      state: awaiting.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "resolve",
+        responderId: spellCasterId,
+        choice: opportunityAttackProcedureSelectionForTest(choice),
+      }),
+    });
+    if (started.tag !== "needsHoles")
+      throw new Error("Expected the Opportunity Attack roll checkpoint.");
+    const state = started.state;
+    const subject = choice.subject;
     const attackRoll = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "attackRoll",

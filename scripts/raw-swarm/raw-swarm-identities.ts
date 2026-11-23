@@ -1,9 +1,10 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { basename, resolve } from "node:path";
 
 const SemanticIdentitySchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[a-z0-9][a-z0-9-]*$/)),
+  Schema.check(jsonSchemaPattern(/^[a-z0-9][a-z0-9-]*$/)),
 );
 
 const HISTORICAL_GENERATED_BATTLE_PREFIX = "generated-battle";

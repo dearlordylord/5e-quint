@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -27,7 +28,6 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
@@ -510,10 +510,10 @@ function rayOfEnfeeblementProjection(
       requireCombatant(state.battle.state, spellCasterId).concentration !==
       null,
     strAttackRollDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         state.battle.state,
         spellTargetId,
-        spellCasterId,
+        requireCombatant(state.battle.state, spellCasterId),
         zeroAbilityWeaponAttack("weapon_longsword"),
         [],
       ) === "disadvantage",

@@ -1,3 +1,4 @@
+import { JsonSerializableObjectSchema as JsonObjectSchema } from "./tool-content.ts";
 import { Schema } from "effect";
 
 import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
@@ -104,8 +105,6 @@ export const AdminMirrorBattleHpChangeSchema = Schema.Struct({
 });
 export type AdminMirrorBattleHpChange =
   typeof AdminMirrorBattleHpChangeSchema.Type;
-
-const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 export const AdminMirrorEventDebugSchema = Schema.Struct({
   derivedInput: JsonObjectSchema,

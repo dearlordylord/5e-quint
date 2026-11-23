@@ -52,6 +52,7 @@ function classifyWeaponAttackOverrideFill(
       readyDeclaration: ordinaryFillIsInvalid,
       helpAttackAllyDecision: ordinaryFillIsInvalid,
       helpAttackEnemyDecision: ordinaryFillIsInvalid,
+      helpAbilityCheckDecision: ordinaryFillIsInvalid,
       areaWindStrength: ordinaryFillIsInvalid,
       attackRoll: ordinaryFillIsInvalid,
       rolledDice: ordinaryFillIsInvalid,

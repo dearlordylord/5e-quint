@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "rules": [".hapsland/rules/custom/preserve-failure-meaning.jsonc"],
+  "sessionInspection": true,
+}

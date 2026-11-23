@@ -1,3 +1,4 @@
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources.ts";
 import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
@@ -1156,7 +1157,10 @@ function targetedSpellAttackRollIssue(input: {
   readonly attackRoll: NonNullable<
     Extract<SpellFillSet, { readonly tag: "ok" }>["attackRoll"]
   >;
-  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): string | null {
   if (!attackRollResultIsValid(input.attackRoll)) {
     return "Spell attack roll result is outside the d20 attack-roll protocol.";
@@ -1173,18 +1177,20 @@ function targetedSpellAttackRollIssue(input: {
 function prepareTargetedSpellAttackRoll(
   input: TargetedSpellReleaseAfterTargetInput,
 ): TargetedSpellAttackRollPreparation {
-  const requiredRollMode = requiredSpellAttackRollMode(
+  const calculatedRollMode = requiredSpellAttackRollMode(
     input.input.state,
     input.input.subject.actorId,
-    input.target.combatantId,
+    input.target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
+    input.fillSet.targetEnemyProximity,
   );
-  const attackRoll = input.fillSet.attackRoll;
-  if (attackRoll === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.input.state, input.input.subject, [
+  const rollInput = prepareAttackRollInput({
+    errorState: input.input.state,
+    requiredRollMode: calculatedRollMode,
+    attackRoll: input.fillSet.attackRoll,
+    requestRoll: (requiredRollMode) =>
+      needsHolesResult(input.input.state, input.input.subject, [
         spellAttackRollHole(
           input.input.state,
           input.input.subject.actorId,
@@ -1192,8 +1198,9 @@ function prepareTargetedSpellAttackRoll(
           requiredRollMode,
         ),
       ]),
-    };
-  }
+  });
+  if (rollInput.tag === "result") return rollInput;
+  const { requiredRollMode, attackRoll } = rollInput;
   const attackRollError = targetedSpellAttackRollIssue({
     attackRoll,
     requiredRollMode,

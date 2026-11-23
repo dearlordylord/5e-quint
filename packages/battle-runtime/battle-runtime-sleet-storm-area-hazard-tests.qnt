@@ -33,10 +33,24 @@ module battleRuntimeSleetStormAreaHazardTests {
     val resolved = resolveSleetStorm(initialState, sleetStormAreaId, 3)
     val removedArea = removeSleetStormArea(resolved, sleetStormAreaId)
     all {
-      assert(sleetStormDifficultTerrainMovementCost(resolved, sleetStormAreaId, 10, 5) == 15),
-      assert(sleetStormDifficultTerrainMovementCost(removedArea, sleetStormAreaId, 10, 5) == 0),
+      assert(sleetStormDifficultTerrainMovementCost(resolved, Fighter, sleetStormAreaId, 10, 5) == 15),
+      assert(sleetStormDifficultTerrainMovementCost(removedArea, Fighter, sleetStormAreaId, 10, 5) == 0),
       assert(sleetStormAreaHazardSightObscurement(resolved, sleetStormAreaId) == HeavilyObscuredSight),
       assert(sleetStormAreaHazardSightObscurement(removedArea, sleetStormAreaId) == UnobscuredSight),
+    }
+  }
+
+  run test_sleet_storm_crawling_cost_follows_the_moving_target = {
+    val cast = resolveSleetStorm(initialState, sleetStormAreaId, 3)
+    val trigger = SleetStormFirstEntryOnTurn({ areaId: sleetStormAreaId })
+    val failed = resolveSleetStormAreaHazardSave(cast, Goblin, trigger, false)
+    val saved = resolveSleetStormAreaHazardSave(cast, Goblin, trigger, true)
+    all {
+      assert(failed.goblin.prone),
+      assert(not(failed.fighter.prone)),
+      assert(sleetStormDifficultTerrainMovementCost(failed, Goblin, sleetStormAreaId, 10, 5) == 25),
+      assert(sleetStormDifficultTerrainMovementCost(failed, Fighter, sleetStormAreaId, 10, 5) == 15),
+      assert(sleetStormDifficultTerrainMovementCost(saved, Goblin, sleetStormAreaId, 10, 5) == 15),
     }
   }
 

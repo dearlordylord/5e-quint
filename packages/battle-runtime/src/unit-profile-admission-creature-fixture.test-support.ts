@@ -1,4 +1,7 @@
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleResolutionHolesForTest,
+  rangedAttackEnemyProximityFactsForTest,
+} from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   abilityModifier,
@@ -758,6 +761,7 @@ export function attackTargetFill(
         ...hole.attack.selection,
         distanceFeet: movementFeet(5),
       },
+      ...rangedAttackEnemyProximityFactsForTest(hole, extraSpatialFacts),
       ...extraSpatialFacts,
     ],
   };

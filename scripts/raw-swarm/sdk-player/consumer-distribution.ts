@@ -1,6 +1,9 @@
+import reviewedPublicDeclarationManifest from "./public-declaration-manifest.json" with { type: "json" };
 import {
   declarationCompilerEnvironment,
   emitCachedDeclarations,
+  type DeclarationCacheResult,
+  type DeclarationCacheInput,
 } from "./declaration-cache.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -24,7 +27,7 @@ import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
 import ts from "typescript";
 
 import {
-  validatedPackageEffectCompilerSupportDirectories,
+  validatedPackageEffectCompilerSupportDirectory,
   validatedPackageEffectRuntimeEntries,
 } from "#dnd-package-effect-runtime";
 import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
@@ -100,23 +103,11 @@ function contextText(delivery: ContextDelivery): string {
 }
 
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
-export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
-  comparisonBaseline: {
-    commit: "993cb0b11152316f8bd7e16693366267bf2ee16d",
-    files: 530,
-    bytes: 4_667_450,
-    pathLedgerSha256:
-      "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
-  },
-  measure: {
-    files: 386,
-    bytes: 9_603_419,
-  },
-  pathLedgerSha256:
-    "9bc8b7ca5413bf466395028ce1f0347d1193e38cd092a8553473fd526274ad1e",
-  contentLedgerSha256:
-    "426ad76365a06d50ebed38d8aee028c960c16c5e497e71103ecff6b207b65ce4",
-} as const;
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST: PublicDeclarationBundleManifest & {
+  readonly comparisonBaseline: Readonly<
+    typeof reviewedPublicDeclarationManifest.comparisonBaseline
+  >;
+} = reviewedPublicDeclarationManifest;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
 /** Coarse safety ceiling, independent of the exact reviewed manifest. */
@@ -153,17 +144,14 @@ const PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS = [
 
 export const EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST = {
   versions: {
-    effect: "4.0.0-rc.112",
-    "fast-check": "4.9.0",
-    msgpackr: "2.1.0",
-    "pure-rand": "8.4.2",
+    effect: "4.1.4",
   },
-  files: 498,
-  bytes: 10_598_459,
+  files: 597,
+  bytes: 11_784_469,
   pathLedgerSha256:
-    "01e202db91ee798780a0dd9af282f2281895d34f70c87f203b189c44cf7db6ef",
+    "5709909ecf7a627ea87eaccdccc02030c261c057d0d148ccc733157eef8ccba5",
   contentLedgerSha256:
-    "b1df9fbfcd1513fcb19cbcd37c100a008a906f97ea622c9941c60eabe94b4560",
+    "dfd230f4cc44ed0faf46a0f2e7699617b52b3c41d2a9486472d13e04752637b0",
 } as const;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
@@ -205,7 +193,7 @@ function declarationFiles(directory: string): readonly string[] {
       }
       return [path];
     });
-  return visit(directory);
+  return visit(root);
 }
 
 function declarationPathLedgerSha256(
@@ -373,6 +361,7 @@ function compilerSupportFiles(directory: string): readonly string[] {
         ) ||
         (packageRelativePath !== "LICENSE" &&
           packageRelativePath !== "package.json" &&
+          packageRelativePath !== "THIRD_PARTY_NOTICES.md" &&
           !packageRelativePath.endsWith(".d.ts") &&
           !packageRelativePath.endsWith(".d.cts"))
       ) {
@@ -382,7 +371,7 @@ function compilerSupportFiles(directory: string): readonly string[] {
       }
       return [path];
     });
-  return visit(directory);
+  return visit(root);
 }
 
 export function assertEffectDeclarationCompilerSupport(
@@ -429,7 +418,7 @@ export function assertEffectDeclarationCompilerSupport(
 export function copyEffectDeclarationCompilerSupport(
   destination: string,
 ): void {
-  const sources = validatedPackageEffectCompilerSupportDirectories(
+  const source = validatedPackageEffectCompilerSupportDirectory(
     CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS,
   );
   const cohortTarget = resolve(destination, "node_modules");
@@ -460,32 +449,22 @@ export function copyEffectDeclarationCompilerSupport(
       }
     }
   };
-  for (const packageName of [
-    "effect",
-    "fast-check",
-    "msgpackr",
-    "pure-rand",
+  const target = resolve(cohortTarget, "effect");
+  mkdirSync(target, { recursive: true });
+  for (const fileName of [
+    "LICENSE",
+    "package.json",
+    "THIRD_PARTY_NOTICES.md",
   ] as const) {
-    const source = sources[packageName];
-    const target = resolve(cohortTarget, packageName);
-    mkdirSync(target, { recursive: true });
-    for (const fileName of ["LICENSE", "package.json"] as const) {
-      copyFileSync(resolve(source, fileName), resolve(target, fileName));
-    }
-    copyDeclarations(source, source, target);
+    copyFileSync(resolve(source, fileName), resolve(target, fileName));
   }
+  copyDeclarations(source, source, target);
   assertEffectDeclarationCompilerSupport(cohortTarget);
 }
 
-/**
- * Enforce the separate declaration accessibility/size boundary. The model
- * context budget does not constrain files that are reachable by the compiler;
- * this gate does, and rejects any non-declaration or escaped file outright.
- */
-export function assertPublicDeclarationBundle(
-  directory: string,
+function declarationMeasure(
+  files: readonly string[],
 ): PublicDeclarationBundleMeasure {
-  const files = declarationFiles(directory);
   const bytes = files.reduce((total, path) => total + lstatSync(path).size, 0);
   if (files.length > PUBLIC_DECLARATION_BUNDLE_MAX_FILES) {
     throw new Error(
@@ -500,26 +479,44 @@ export function assertPublicDeclarationBundle(
   return { files: files.length, bytes };
 }
 
-function assertReviewedPublicDeclarationBundle(
+/**
+ * Enforce the separate declaration accessibility/size boundary. The model
+ * context budget does not constrain files that are reachable by the compiler;
+ * this gate does, and rejects any non-declaration or escaped file outright.
+ */
+export function assertPublicDeclarationBundle(
   directory: string,
 ): PublicDeclarationBundleMeasure {
-  const measure = assertPublicDeclarationBundle(directory);
+  return declarationMeasure(declarationFiles(directory));
+}
+
+export type PublicDeclarationBundleManifest = {
+  readonly measure: PublicDeclarationBundleMeasure;
+  readonly pathLedgerSha256: string;
+  readonly contentLedgerSha256: string;
+};
+
+export function publicDeclarationBundleManifest(
+  directory: string,
+): PublicDeclarationBundleManifest {
   const files = declarationFiles(directory);
-  const pathLedgerSha256 = declarationPathLedgerSha256(directory, files);
-  const contentLedgerSha256 = declarationContentLedgerSha256(directory, files);
-  if (
-    measure.files !== PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files ||
-    measure.bytes !== PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes ||
-    pathLedgerSha256 !==
-      PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256 ||
-    contentLedgerSha256 !==
-      PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256
-  ) {
-    throw new Error(
-      `Public declaration bundle differs from the reviewed manifest: expected ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files)} files, ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes)} bytes, path ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256}, and content ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256}; received ${String(measure.files)} files, ${String(measure.bytes)} bytes, path ledger ${pathLedgerSha256}, and content ledger ${contentLedgerSha256}.`,
-    );
-  }
-  return measure;
+  return {
+    measure: declarationMeasure(files),
+    pathLedgerSha256: declarationPathLedgerSha256(directory, files),
+    contentLedgerSha256: declarationContentLedgerSha256(directory, files),
+  };
+}
+
+export function publicDeclarationReviewMatches(
+  actual: PublicDeclarationBundleManifest,
+  reviewed: PublicDeclarationBundleManifest,
+): boolean {
+  return (
+    actual.measure.files === reviewed.measure.files &&
+    actual.measure.bytes === reviewed.measure.bytes &&
+    actual.pathLedgerSha256 === reviewed.pathLedgerSha256 &&
+    actual.contentLedgerSha256 === reviewed.contentLedgerSha256
+  );
 }
 
 const declarationImplementationPaths = [
@@ -612,12 +609,33 @@ function finalizePublicDeclarations(
       );
     }
   }
-  return assertReviewedPublicDeclarationBundle(declarationsDirectory);
+  return assertPublicDeclarationBundle(declarationsDirectory);
 }
 
-export function emitPublicDeclarations(
+export function prepareDeclarationBundle(
+  input: DeclarationCacheInput,
+  reviewed: PublicDeclarationBundleManifest,
+): {
+  readonly actual: PublicDeclarationBundleManifest;
+  readonly cache: Extract<
+    DeclarationCacheResult,
+    { readonly kind: "ok" }
+  >["cache"];
+  readonly matchesReview: boolean;
+} {
+  const result = emitCachedDeclarations(input);
+  if (result.kind === "failure") throw new Error(result.message);
+  const actual = publicDeclarationBundleManifest(input.destination);
+  return {
+    actual,
+    cache: result.cache,
+    matchesReview: publicDeclarationReviewMatches(actual, reviewed),
+  };
+}
+
+export function preparePublicDeclarations(
   destination: string,
-): PublicDeclarationBundleMeasure {
+): ReturnType<typeof prepareDeclarationBundle> {
   const nativePackage = createRequire(import.meta.url).resolve(
     "@typescript/native/package.json",
   );
@@ -627,27 +645,41 @@ export function emitPublicDeclarations(
     "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
   );
   const declarationsDirectory = resolve(destination, "declarations");
-  const result = emitCachedDeclarations({
-    repoRoot,
-    compiler,
-    config,
-    destination: declarationsDirectory,
-    ownerPaths: declarationPolicyPaths,
-    loadedOwners: loadedDeclarationPolicy,
-    copiedPaths: [
-      resolve(repoRoot, "packages/shared/src/non-empty-array.d.ts"),
-    ],
-    compile(directory) {
-      strictDeclarationEmission(compiler, config, directory);
-      return { kind: "ok" };
+  return prepareDeclarationBundle(
+    {
+      repoRoot,
+      compiler,
+      config,
+      destination: declarationsDirectory,
+      ownerPaths: declarationPolicyPaths,
+      loadedOwners: loadedDeclarationPolicy,
+      copiedPaths: [
+        resolve(repoRoot, "packages/shared/src/non-empty-array.d.ts"),
+      ],
+      compile(directory) {
+        strictDeclarationEmission(compiler, config, directory);
+        return { kind: "ok" };
+      },
+      admit(directory) {
+        finalizePublicDeclarations(directory);
+        return { kind: "ok" };
+      },
     },
-    admit(directory) {
-      finalizePublicDeclarations(directory);
-      return { kind: "ok" };
-    },
-  });
-  if (result.kind === "failure") throw new Error(result.message);
-  return assertReviewedPublicDeclarationBundle(declarationsDirectory);
+    PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST,
+  );
+}
+
+export function emitPublicDeclarations(
+  destination: string,
+): PublicDeclarationBundleMeasure {
+  const prepared = preparePublicDeclarations(destination);
+  if (!prepared.matchesReview) {
+    const { measure, pathLedgerSha256, contentLedgerSha256 } = prepared.actual;
+    throw new Error(
+      `Public declaration bundle differs from the reviewed manifest: expected ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files)} files, ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes)} bytes, path ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256}, and content ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256}; received ${String(measure.files)} files, ${String(measure.bytes)} bytes, path ledger ${pathLedgerSha256}, and content ledger ${contentLedgerSha256}. Retained declarations: ${resolve(destination, "declarations")}. Inspect with pnpm declarations:diagnose --inspect <declarations-directory>.`,
+    );
+  }
+  return prepared.actual.measure;
 }
 
 const DECLARATION_PACKAGE_PATH_ROOTS = [

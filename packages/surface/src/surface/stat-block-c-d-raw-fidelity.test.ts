@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -23,6 +24,7 @@ const {
 const recordByName = new Map(RECORDS.map((record) => [record.name, record]));
 const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
   SrdStatBlockRecordSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 const rawProjectionFor = (name: (typeof FIDELITY_FACT_NAMES)[number]) =>

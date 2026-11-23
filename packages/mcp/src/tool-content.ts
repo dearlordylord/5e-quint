@@ -1,3 +1,9 @@
+import { Schema } from "effect";
+
+export const JsonSerializableObjectSchema = Schema.fromJsonString(
+  Schema.Record(Schema.String, Schema.Unknown),
+).pipe(Schema.encodeTo(Schema.flip(Schema.fromJsonString(Schema.JsonObject))));
+
 export function jsonContent(payload: unknown) {
   const serializablePayload = jsonSerializablePayload(payload);
   return {

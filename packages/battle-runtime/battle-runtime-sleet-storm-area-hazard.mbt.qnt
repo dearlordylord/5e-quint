@@ -254,7 +254,6 @@ module battleRuntimeSleetStormAreaHazardMbt {
   action doMoveWithDifficultTerrain = all {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
-    not(qTargetProne),
     qMovementSpentFeet == 0,
     openHoles == noHoles,
     recordSleetStormState(
@@ -264,9 +263,9 @@ module battleRuntimeSleetStormAreaHazardMbt {
       true,
       true,
       qTargetConcentrating,
-      false,
+      qTargetProne,
       qSavedThisTurn,
-      sleetStormMovementSpentFeet,
+      if (qTargetProne) 25 else sleetStormMovementSpentFeet,
       true,
       noHoles,
       Moved,

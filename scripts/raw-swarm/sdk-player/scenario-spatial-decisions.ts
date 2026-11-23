@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../../packages/shared/src/json-schema.ts";
 import { createHash } from "node:crypto";
 import type {
   BattleCreatureSpaceTraversalMovementFact,
@@ -45,7 +46,7 @@ const ScenarioSpatialDecisionId = Schema.Trimmed.check(
 export type ScenarioSpatialDecisionId = typeof ScenarioSpatialDecisionId.Type;
 
 const ScenarioTableSpatialFingerprint = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^sha256:[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^sha256:[0-9a-f]{64}$/)),
   Schema.brand("ScenarioTableSpatialFingerprint"),
 );
 export type ScenarioTableSpatialFingerprint =

@@ -1,3 +1,4 @@
+import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
@@ -9,7 +10,6 @@ import { longCastingCompletionResource } from "./long-casting-readiness.ts";
 import * as Result from "effect/Result";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { type BattleSubject } from "../battle-subjects.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
@@ -195,7 +195,7 @@ type AfterDamageSequenceContinuation =
       readonly kind: "primaryAttackFollowUp";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
       readonly attackResolvers: BattleAttackResolvers;
     };
@@ -236,7 +236,7 @@ export function openPrimaryAttackAfterDamageSequenceInterruptWindow(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly events: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];

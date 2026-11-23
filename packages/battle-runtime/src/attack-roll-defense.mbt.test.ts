@@ -1,3 +1,5 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // UNIT-IDENTITY-REPLAY: FEATURE-585 ranger_defensive_tactics doResolveDefense
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay FEATURE-585 ranger_defensive_tactics
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.ATTACK_ROLL_DEFENSE
@@ -8,10 +10,7 @@ import { Result } from "effect";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-feature-support.ts";
-import {
-  requiredAttackRollMode,
-  recordAttackRollOngoingFeatures,
-} from "./battle-reducer/attack-roll.ts";
+import { recordAttackRollOngoingFeatures } from "./battle-reducer/attack-roll.ts";
 import { resetBattleTurnResources } from "./battle-reducer/turn-resource-reset.ts";
 import {
   startBattleSessionRight,
@@ -69,26 +68,46 @@ function defenseProjection() {
   const attack = testLongswordAttack();
   return {
     opportunityDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         opportunity,
         goblinId,
-        fighterId,
+        requireCombatant(opportunity, fighterId),
         attack,
         [],
         true,
       ) === "disadvantage",
     ordinaryDisadvantage:
-      requiredAttackRollMode(opportunity, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      attackRollModeForTest(
+        opportunity,
+        goblinId,
+        requireCombatant(opportunity, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
     repeatDisadvantage:
-      requiredAttackRollMode(hit, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      attackRollModeForTest(
+        hit,
+        goblinId,
+        requireCombatant(hit, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
     missDisadvantage:
-      requiredAttackRollMode(miss, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      attackRollModeForTest(
+        miss,
+        goblinId,
+        requireCombatant(miss, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
     nextTurnDisadvantage:
-      requiredAttackRollMode(nextTurn, goblinId, fighterId, attack, []) ===
-      "disadvantage",
+      attackRollModeForTest(
+        nextTurn,
+        goblinId,
+        requireCombatant(nextTurn, fighterId),
+        attack,
+        [],
+      ) === "disadvantage",
   };
 }
 

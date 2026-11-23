@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "4.0.0-rc.112"
+    "effect": "4.1.4"
   },
   "devDependencies": {
     "@types/node": "22.19.15",

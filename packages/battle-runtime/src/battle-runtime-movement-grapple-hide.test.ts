@@ -1781,6 +1781,77 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(effect).not.toHaveProperty("shape");
   });
 
+  test("a Prone creature crawling through Grease spends 1 extra foot for every foot of the move", () => {
+    const areaId = battleAreaId("test-crawling-grease-area");
+    const greased = castGroundHazardForMovementTest(areaId);
+    const wizard = greased.combatants.get(wizardId);
+    const greaseEffect = wizard?.activeEffects.find(
+      (effect) => effect.kind === "persistentAreaSaveCondition",
+    );
+    if (
+      wizard === undefined ||
+      greaseEffect === undefined ||
+      greaseEffect.areaId !== areaId
+    ) {
+      throw new Error("Expected the admitted Grease ground hazard.");
+    }
+    const prone: BattleState = {
+      ...greased,
+      combatants: new Map(greased.combatants).set(
+        wizardId,
+        testBattleCreatureStateWithConditions(
+          wizard,
+          applyCondition(wizard.conditions, "prone"),
+        ),
+      ),
+    };
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: wizardId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: prone, subject, fills: [] }),
+      "movement",
+    );
+    // SRD 5.2.1 "Crawling": 5 feet in the open cost 10, and 5 feet of
+    // Difficult Terrain cost 15, so the 10-foot crawl costs 25.
+    const crawl = (movementCostFeet: number) =>
+      resolveBattleSubject({
+        state: prone,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet,
+            provokedOpportunityAttacks: [],
+            areaDifficultTerrain: {
+              kind: "areaDifficultTerrain",
+              sources: [
+                {
+                  kind: "persistentAreaSaveCondition",
+                  effectRef: greaseEffect.effectRef,
+                  sourceCombatantId: wizardId,
+                  sourceProcedureRef: greaseEffect.sourceProcedureRef,
+                  areaId,
+                },
+              ],
+              totalDistanceFeet: movementFeet(10),
+              difficultTerrainDistanceFeet: movementFeet(5),
+            },
+          }),
+        ],
+      });
+
+    expect(crawl(15)).toMatchObject({
+      tag: "invalid",
+      message:
+        "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain. A Prone mover is crawling and also spends 1 extra foot for every foot moved.",
+    });
+    expect(
+      requireResolved(crawl(25)).state.combatants.get(wizardId),
+    ).toMatchObject({ movementSpentFeet: movementFeet(25) });
+  });
+
   test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
     const areaId = battleAreaId("test-expiring-grease-area");
     const greased = castGroundHazardForMovementTest(areaId);
@@ -2675,6 +2746,94 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           tag: "runtimeCommand",
           actorId: goblinId,
           command: "standFromProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("Drop Prone applies Prone without spending an action or Movement", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-drop-prone"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const state = session.state;
+    const dropAct = findAct(
+      battleRuntimeSessionForTest({ state, context: session.context }),
+      { tag: "runtimeCommand", actorId: fighterId, command: "dropProne" },
+    );
+    const dropped = requireResolved(
+      resolveBattleSubject({ state, subject: dropAct.subject, fills: [] }),
+    );
+
+    expect(dropped.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        conditions: expect.arrayContaining(["prone"]),
+        movement: expect.objectContaining({
+          spentFeet: movementFeet(0),
+          remainingFeet: movementFeet(30),
+        }),
+      }),
+    );
+    expect(dropped.state.currentTurnResources).toEqual(
+      state.currentTurnResources,
+    );
+  });
+
+  test("Drop Prone is unavailable while already Prone or at Speed 0", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId)!;
+    const prone: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "prone"),
+        ),
+      ),
+    };
+    expect(
+      discoverBattleActCandidates(prone).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "dropProne",
+    });
+    expect(
+      resolveBattleSubject({
+        state: prone,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "dropProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    expect(
+      discoverBattleActCandidates(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "dropProne",
+    });
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "dropProne",
         },
         fills: [],
       }),
@@ -3594,6 +3753,57 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       reason: "staleSubject",
       message: "No Grapple is available to escape.",
     });
+  });
+
+  test("a Prone grappler dragging its target also spends the crawling cost", () => {
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+    const fighter = grappled.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const prone: BattleState = {
+      ...grappled,
+      combatants: new Map(grappled.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "prone"),
+        ),
+      ),
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: prone, subject, fills: [] }),
+      "movement",
+    );
+    // SRD 5.2.1 "Crawling" and "Grappled": 10 feet + 10 crawling + 10 drag.
+    const drag = (movementCostFeet: number) =>
+      resolveBattleSubject({
+        state: prone,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet,
+            provokedOpportunityAttacks: [],
+            grappleDrag: {
+              kind: "grappleDrag",
+              totalDistanceFeet: movementFeet(10),
+              targets: [{ targetId: goblinId, distanceFeet: movementFeet(10) }],
+            },
+          }),
+        ],
+      });
+
+    expect(drag(20)).toMatchObject({
+      tag: "invalid",
+      message:
+        "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged. A Prone mover is crawling and also spends 1 extra foot for every foot moved.",
+    });
+    expect(
+      requireResolved(drag(30)).state.combatants.get(fighterId),
+    ).toMatchObject({ movementSpentFeet: movementFeet(30) });
   });
 
   test("grapple drag movement enforces extra cost unless Fast Wrestler exempts the target", () => {

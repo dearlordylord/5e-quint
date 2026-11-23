@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 import { Match, Option, Result, Schema } from "effect";
@@ -490,7 +491,14 @@ function validateRetainedLiveScopes(
   retained: BattleRuntimeSessionContinuation,
 ): Result.Result<void, string> {
   const snapshot = snapshotBattle(retained.state);
-  if (!Schema.is(BattleSnapshotSchema)(snapshot))
+  if (
+    Result.isFailure(
+      Schema.decodeUnknownResult(
+        Schema.toType(BattleSnapshotSchema),
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(snapshot),
+    )
+  )
     return Result.fail("Saved Battle execution ownership is invalid.");
   for (const combatant of snapshot.combatants) {
     const allocation = retained.state.executionScopeCursors.get(
@@ -731,9 +739,17 @@ export function restoreBattleRuntimeContinuation(
     function validateLayerInputs(
       retained: RetainedTransactionLayer,
     ): Result.Result<void, string> {
+      const decodeSubject = Schema.decodeUnknownResult(
+        Schema.toType(BattleSubjectSchema),
+        STRICT_OBJECT_PARSE_OPTIONS,
+      );
+      const decodeFill = Schema.decodeUnknownResult(
+        Schema.toType(BattleFillSchema),
+        STRICT_OBJECT_PARSE_OPTIONS,
+      );
       if (
-        !Schema.is(BattleSubjectSchema)(retained.subject) ||
-        !retained.fills.every(Schema.is(BattleFillSchema))
+        Result.isFailure(decodeSubject(retained.subject)) ||
+        !retained.fills.every((fill) => Result.isSuccess(decodeFill(fill)))
       )
         return Result.fail(
           "Saved transaction inputs no longer match the executable contract.",

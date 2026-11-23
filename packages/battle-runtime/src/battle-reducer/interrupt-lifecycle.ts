@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 import { optionalProperty } from "../optional-property.ts";
-import { Equal, Match } from "effect";
+import { Match } from "effect";
 import { sameBattleSubject } from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
@@ -53,6 +53,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { releasePendingSpellSlotUseThisTurn } from "./spell-turn-resources.ts";
 import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
 import { handledInterruptRouteProjection } from "./replay-continuation.ts";
+import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 
 const admittedActiveInterruptProcedure = Symbol(
   "AdmittedActiveInterruptProcedure",
@@ -432,11 +433,11 @@ export function resolveActiveInterruptProcedure(input: {
   // interrupt selection. Preserve that support fact for each continuation;
   // replaying every selection fill would also replay unrelated choices that
   // the continuation may have already consumed.
-  const continuationDistanceFills = activeInterrupt.fills.filter(
-    (fill) =>
-      fill.kind === "targetSpatialFacts" &&
+  const continuationDistanceFills = activeInterrupt.fills
+    .filter((fill) => fill.kind === "targetSpatialFacts")
+    .filter((fill) =>
       fill.spatialFacts.some((fact) => fact.kind === "attackTargetDistance"),
-  );
+    );
   const continuationResolution = {
     ...input.resolution,
     // The transaction owner may already carry the initial spatial fill in its
@@ -445,8 +446,10 @@ export function resolveActiveInterruptProcedure(input: {
     fills: [
       ...continuationDistanceFills.filter(
         (retained) =>
-          !input.resolution.fills.some((submitted) =>
-            Equal.equals(retained, submitted),
+          !input.resolution.fills.some(
+            (submitted) =>
+              submitted.kind === "targetSpatialFacts" &&
+              battleContinuationFillEquals(retained, submitted),
           ),
       ),
       ...input.resolution.fills,

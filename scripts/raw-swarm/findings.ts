@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -117,7 +118,7 @@ export const FINDING_KINDS = [
 export type FindingKind = (typeof FINDING_KINDS)[number];
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),

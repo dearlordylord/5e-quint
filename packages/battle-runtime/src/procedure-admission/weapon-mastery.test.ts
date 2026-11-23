@@ -11,17 +11,14 @@ import { admitWeaponMasteryProcedure } from "./weapon-mastery.ts";
 
 const canonicalMasteries = [
   ["mastery_cleave", "weaponMasteryCleave"],
+  ["mastery_graze", "weaponMasteryGraze"],
   ["mastery_push", "weaponMasteryPush"],
   ["mastery_sap", "weaponMasterySap"],
   ["mastery_slow", "weaponMasterySlow"],
   ["mastery_topple", "weaponMasteryTopple"],
 ] as const;
 
-const canonicalUnsupportedMasteries = [
-  "mastery_graze",
-  "mastery_nick",
-  "mastery_vex",
-] as const;
+const canonicalUnsupportedMasteries = ["mastery_nick", "mastery_vex"] as const;
 
 describe("atomic Weapon Mastery procedure admission", () => {
   test.each(canonicalMasteries)(

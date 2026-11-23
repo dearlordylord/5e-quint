@@ -135,8 +135,8 @@ from that history and class names from the catalog.
 Use `@dnd/shared-algebras/multiclass-prerequisite-algebra` for multiclass checks.
 Establish the non-empty existing class set and proposed class before calling it;
 do not reauthor prerequisite tables in support profiles. Post-start gains carry
-explicit HP rule evidence. The current profile uses fixed HP gains; rolled HP
-requires an explicit creation choice before it can be finalized.
+explicit HP rule evidence. Prepared drafts and class-level gains accept fixed or caller-supplied rolled HP.
+Guided initial progression choices currently offer only fixed HP gains.
 
 Each spellcasting source retains its Unit, ability, cantrip/spellbook/prepared
 Spell Access, and focus permissions. Keep ordinary `spellcasting` and

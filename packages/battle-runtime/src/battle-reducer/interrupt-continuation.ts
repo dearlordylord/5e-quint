@@ -689,7 +689,7 @@ function attackDamageDeathFailuresAtZeroHp(
   >,
 ): 1 | 2 {
   return Match.value(continuation.criticalConsequence.kind).pipe(
-    Match.when("ordinaryHit", (): 1 => 1),
+    Match.when("nonCritical", (): 1 => 1),
     Match.when("criticalHit", (): 2 => 2),
     Match.exhaustive,
   );

@@ -460,6 +460,7 @@ function wizardAdvancement(): CharacterBuild["progression"]["advancements"][numb
   return {
     classUnitId: classUnitId(authoredUnitId("class_wizard")),
     hitPointRule: { tag: "fixedHigherLevelGain" },
+    constitutionModifierAtGain: 1,
   };
 }
 
