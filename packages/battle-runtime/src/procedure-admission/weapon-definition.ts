@@ -15,7 +15,10 @@ import {
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 
-import type { WeaponExecutionFactsWithMasteryProperty } from "../character-weapon-execution-schema.ts";
+import type {
+  WeaponExecutionFactsWithMasteryProperty,
+  WeaponExecutionFactsWithoutMasteryProperty,
+} from "../character-weapon-execution-schema.ts";
 import { weaponMasteryExecutionPropertyForSupportProfile } from "../unit-feature-execution-constants.ts";
 import {
   admitWeaponMasteryProcedure,
@@ -30,14 +33,35 @@ const WEAPON_MASTERY_REFERENCE_PATH = unitMechanicsPath([
 type WeaponDefinitionAdmissionIssue =
   UnitMechanicsAdmissionIssueDraft<UnitMechanicsPath>;
 
-export type AdmittedWeaponDefinition = {
-  readonly tag: "admitted";
-  readonly facts: WeaponExecutionFactsWithMasteryProperty;
-  readonly resolvedMastery: {
-    readonly unit: Extract<UnitRecord, { readonly kind: "mastery" }>;
-    readonly procedureFacts: BattleWeaponMasteryProcedureFacts;
-  };
-};
+type WeaponMasteryUnit = Extract<UnitRecord, { readonly kind: "mastery" }>;
+
+/**
+ * Battle admits a weapon for ordinary use whatever its mastery. Its mastery
+ * either has a Battle procedure, whose property the execution facts carry, or
+ * it doesn't, and then only a selection of that mastery is refused.
+ */
+export type AdmittedWeaponDefinition =
+  | {
+      readonly tag: "admitted";
+      readonly masterySupport: "supported";
+      readonly facts: WeaponExecutionFactsWithMasteryProperty;
+      readonly resolvedMastery: {
+        readonly unit: WeaponMasteryUnit;
+        readonly procedureFacts: BattleWeaponMasteryProcedureFacts;
+      };
+    }
+  | {
+      readonly tag: "admitted";
+      readonly masterySupport: "unsupported";
+      readonly facts: WeaponExecutionFactsWithoutMasteryProperty;
+      readonly resolvedMastery: {
+        readonly unit: WeaponMasteryUnit;
+        readonly issues: readonly [
+          WeaponDefinitionAdmissionIssue,
+          ...WeaponDefinitionAdmissionIssue[],
+        ];
+      };
+    };
 
 /**
  * A weapon admission is structurally compatible with the Surface Unit
@@ -65,44 +89,64 @@ export function admitWeaponDefinition(input: {
     return rejectedReference(resolution.failure);
   }
 
-  const masteryAdmission = admitWeaponMasteryProcedure(
-    resolution.success.mastery,
-  );
-  return Match.value(masteryAdmission).pipe(
-    Match.when({ tag: "rejected" }, ({ issues }) =>
-      rejected([
-        {
-          reason: "unsupported_mechanics" as const,
-          mechanicsPath: WEAPON_MASTERY_REFERENCE_PATH,
-          message: `The referenced Weapon Mastery procedure is unsupported by Battle: ${issues[0].message}`,
+  const mastery = resolution.success.mastery;
+  const facts = weaponExecutionFactsWithoutMasteryProperty(input.weapon);
+  return Match.value(admitWeaponMasteryProcedure(mastery)).pipe(
+    Match.when(
+      { tag: "rejected" },
+      ({ issues }): AdmittedWeaponDefinition => ({
+        tag: "admitted",
+        masterySupport: "unsupported",
+        facts,
+        resolvedMastery: {
+          unit: mastery,
+          issues: [
+            {
+              reason: "unsupported_mechanics",
+              mechanicsPath: WEAPON_MASTERY_REFERENCE_PATH,
+              message: `The referenced Weapon Mastery procedure is unsupported by Battle: ${issues[0].message}`,
+            },
+          ],
         },
-      ]),
+      }),
     ),
-    Match.when({ tag: "admitted" }, ({ procedure }) => ({
-      tag: "admitted" as const,
-      resolvedMastery: {
-        unit: resolution.success.mastery,
-        procedureFacts: procedure.facts,
-      },
-      facts: {
-        ...(input.weapon.attachedWeaponAttackOverrideEligibility === undefined
-          ? {}
-          : {
-              attachedWeaponAttackOverrideEligibility:
-                input.weapon.attachedWeaponAttackOverrideEligibility,
-            }),
-        category: input.weapon.category,
-        usage: input.weapon.usage,
-        damage: input.weapon.damage,
-        properties: input.weapon.properties ?? [],
-        costGp: input.weapon.costGp,
-        masteryProperty: weaponMasteryExecutionPropertyForSupportProfile(
-          procedure.facts,
-        ),
-      },
-    })),
+    Match.when(
+      { tag: "admitted" },
+      ({ procedure }): AdmittedWeaponDefinition => ({
+        tag: "admitted",
+        facts: {
+          ...facts,
+          masteryProperty: weaponMasteryExecutionPropertyForSupportProfile(
+            procedure.facts,
+          ),
+        },
+        masterySupport: "supported",
+        resolvedMastery: {
+          unit: mastery,
+          procedureFacts: procedure.facts,
+        },
+      }),
+    ),
     Match.exhaustive,
   );
+}
+
+function weaponExecutionFactsWithoutMasteryProperty(
+  weapon: WeaponRecord,
+): WeaponExecutionFactsWithoutMasteryProperty {
+  return {
+    ...(weapon.attachedWeaponAttackOverrideEligibility === undefined
+      ? {}
+      : {
+          attachedWeaponAttackOverrideEligibility:
+            weapon.attachedWeaponAttackOverrideEligibility,
+        }),
+    category: weapon.category,
+    usage: weapon.usage,
+    damage: weapon.damage,
+    properties: weapon.properties ?? [],
+    costGp: weapon.costGp,
+  };
 }
 
 function rejectedReference(
