@@ -40,15 +40,17 @@ module ammunitionLifecycle {
     legalAmmunitionStock(stock) and
     ammunitionRemaining(stock, ammunitionKind) > 0
 
-  // Loading takes a hand that holds nothing and grapples no one: the other
-  // hand of a one-handed weapon, or the second hand of a Two-Handed weapon,
-  // which needs both hands to attack.
+  // Drawing the ammunition is part of the attack, and loading a one-handed
+  // weapon needs a free hand: one that holds nothing and grapples no one.
+  // A stat block never states what each hand holds (ASSUMPTIONS.md A64), so
+  // its loading hand is not stated and does not refuse the attack.
   type LoadingHand =
     | LoadingHandFree
     | LoadingHandOccupied
+    | LoadingHandNotStated
 
   pure def ammunitionCanBeDrawn(loadingHand: LoadingHand): bool =
-    loadingHand == LoadingHandFree
+    loadingHand != LoadingHandOccupied
 
   pure def ammunitionAttackReady(
     stock: AmmunitionStock,

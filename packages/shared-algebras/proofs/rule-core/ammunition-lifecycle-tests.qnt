@@ -45,6 +45,7 @@ module ammunitionLifecycleTests {
   run ammunitionAttackNeedsAFreeHandToLoad = all {
     assert(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition, LoadingHandFree)),
     assert(not(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition, LoadingHandOccupied))),
+    assert(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition, LoadingHandNotStated)),
     assert(
       not(ammunitionAttackReady(
         { ammunitionKind: SlingBulletAmmunition, remaining: 0 },

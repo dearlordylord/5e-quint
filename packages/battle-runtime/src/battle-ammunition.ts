@@ -62,30 +62,29 @@ export function ammunitionForAttackIsReady(
   const ammunition = ammunitionRequirementForAttack(attack);
   return (
     ammunition === null ||
-    (ammunitionStockIsAvailable(combatant, ammunition) &&
+    (combatant !== undefined &&
+      ammunitionStockIsAvailable(combatant, ammunition) &&
       ammunitionCanBeDrawn(state, combatant, attack))
   );
 }
 
 /**
- * Loading takes a hand that holds nothing and grapples no one. For a
- * one-handed weapon that is the other hand. A Two-Handed grip leaves its
- * second hand free of anything else, and a grapple or held object that takes
- * it leaves the weapon in one hand, so the same check refuses that attack too.
- * Stat block attacks have no weapon grip, so only character weapons are
- * checked (ASSUMPTIONS.md A64).
+ * Loading takes a hand that holds nothing and grapples no one: for a
+ * one-handed weapon, the other hand (SRD "Ammunition"). A Two-Handed weapon
+ * "requires two hands when you attack with it" (SRD "Two-Handed"), so a
+ * grapple or held object in its second hand refuses the attack through the
+ * same check. A stat block never states what each hand holds, so its loading
+ * hand is not checked (ASSUMPTIONS.md A64).
  */
 function ammunitionCanBeDrawn(
   state: BattleState,
-  combatant: BattleCreatureState | undefined,
+  combatant: BattleCreatureState,
   attack: SupportedAttackActionOption,
 ): boolean {
   return Match.value(attack.kind).pipe(
     Match.when(
       "weapon",
-      () =>
-        combatant === undefined ||
-        firstFreeHand(state, combatant, state.grapples) !== undefined,
+      () => firstFreeHand(state, combatant, state.grapples) !== undefined,
     ),
     Match.whenOr("unarmedStrike", "statBlockAttack", () => true),
     Match.exhaustive,
