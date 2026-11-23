@@ -1212,6 +1212,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
             (candidate.subject.tag === "runtimeCommand" &&
               (candidate.subject.command === "move" ||
                 candidate.subject.command === "standFromProne" ||
+                candidate.subject.command === "dropProne" ||
                 candidate.subject.command === "fixedCostMovementReplacement"))),
       ),
     ).toBe(false);
@@ -1268,6 +1269,17 @@ describe("QMBT14 deterministic Command control option admission", () => {
       reason: "staleSubject",
     });
     expect(suppressedMove).not.toHaveProperty("routeEvents");
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "dropProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     const staleCommandGrovel = resolveBattleSubject({
       state: targetTurn.state,
       subject: {

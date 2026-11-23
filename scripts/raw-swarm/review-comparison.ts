@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -18,7 +19,7 @@ const ReviewComparisonSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
   transcriptSha256: Schema.String.pipe(
-    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+    Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   ),
   mappings: Schema.Array(
     Schema.Struct({

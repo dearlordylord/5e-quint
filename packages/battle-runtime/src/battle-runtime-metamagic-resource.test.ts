@@ -1066,12 +1066,12 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       {
         enemyId: skeletonId,
         distanceFeet: movementFeet(30),
-        enemyCanSeeCaster: true,
+        enemyCanSeeAttacker: true,
       },
       {
         enemyId: fighterId,
         distanceFeet: movementFeet(30),
-        enemyCanSeeCaster: true,
+        enemyCanSeeAttacker: true,
       },
     ]);
     const awaitingAttackRoll = resolveBattleSubject({
@@ -1162,12 +1162,12 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       {
         enemyId: skeletonId,
         distanceFeet: movementFeet(30),
-        enemyCanSeeCaster: true,
+        enemyCanSeeAttacker: true,
       },
       {
         enemyId: fighterId,
         distanceFeet: movementFeet(30),
-        enemyCanSeeCaster: true,
+        enemyCanSeeAttacker: true,
       },
     ]);
     const fills: BattleFill[] = [
@@ -5105,7 +5105,7 @@ function sanctuaryRetargetFill(
   targetId: ReturnType<typeof combatantId>,
   enemies: Extract<
     BattleTargetSpatialFact,
-    { readonly kind: "rangedSpellAttackEnemyProximity" }
+    { readonly kind: "rangedAttackEnemyProximity" }
   >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
   if (hole.kind !== "targetingSaveInterdictionOutcome") {
@@ -5121,9 +5121,9 @@ function sanctuaryRetargetFill(
         targetId,
         spatialFacts: [
           {
-            kind: "rangedSpellAttackEnemyProximity",
-            casterId: wizardId,
-            sourceProcedureRef: hole.triggeringProcedureRef,
+            kind: "rangedAttackEnemyProximity",
+            attackerId: wizardId,
+            procedureRef: hole.triggeringProcedureRef,
             enemies,
           },
           {

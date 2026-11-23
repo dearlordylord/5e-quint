@@ -1,9 +1,10 @@
+import { jsonSchemaPattern } from "../../../packages/shared/src/json-schema.ts";
 import { Schema } from "effect";
 
 import { ScenarioIdSchema } from "../transcript.ts";
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),

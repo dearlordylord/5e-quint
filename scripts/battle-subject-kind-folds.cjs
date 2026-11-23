@@ -61,6 +61,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTurnBoundary";
     case "move":
     case "standFromProne":
+    case "dropProne":
     case "fixedCostMovementReplacement":
     case "creatureFalls":
       return "runtimeMovement";
@@ -137,6 +138,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         case "dodge":
           return "actionAvoidance";
         case "helpAttack":
+        case "helpAbilityCheck":
           return "actionSupport";
         case "hide":
         case "search":

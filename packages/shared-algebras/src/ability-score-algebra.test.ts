@@ -7,6 +7,7 @@ import {
   abilityScoreValues,
   isPointBuyAssignment,
   isStandardArrayAssignment,
+  isRandomGenerationAssignment,
   isValidAbilityScoreAssignment,
   pointBuyCost,
   totalPointBuyCost,
@@ -96,5 +97,18 @@ describe("ability score assignment algebra", () => {
     expect(isStandardArrayAssignment(invalid)).toBe(false);
     expect(isPointBuyAssignment(invalid)).toBe(false);
     expect(Option.isNone(totalPointBuyCost(invalid))).toBe(true);
+  });
+
+  test("admits Random Generation scores from 3 to 18 in any combination", () => {
+    const rolled = { str: 18, dex: 3, con: 16, int: 9, wis: 12, cha: 12 };
+    expect(isRandomGenerationAssignment(rolled)).toBe(true);
+    expect(isValidAbilityScoreAssignment("randomGeneration", rolled)).toBe(
+      true,
+    );
+    expect(isValidAbilityScoreAssignment("standardArray", rolled)).toBe(false);
+    expect(isValidAbilityScoreAssignment("pointBuy", rolled)).toBe(false);
+    expect(isRandomGenerationAssignment({ ...rolled, dex: 2 })).toBe(false);
+    expect(isRandomGenerationAssignment({ ...rolled, str: 19 })).toBe(false);
+    expect(isRandomGenerationAssignment({ ...rolled, wis: 12.5 })).toBe(false);
   });
 });

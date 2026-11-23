@@ -17,6 +17,7 @@ import {
   unitChoiceSourceUnitId,
   type AbilityScoreAssignment,
   type CharacterDraft,
+  type CharacterBuild,
   type CharacterDraftPath,
   type CharacterProgression,
   type CreationChoiceOptionId,
@@ -162,6 +163,52 @@ export function testProgression(
   }
 
   return result.success;
+}
+
+/** The build with its progression replaced by {@link testBuildProgression}. */
+export function withTestBuildProgression<Build extends CharacterBuild>(input: {
+  readonly build: Build;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: UnitRecord["id"];
+  readonly classLevel: number;
+}): Build {
+  return {
+    ...input.build,
+    progression: testBuildProgression({
+      unitLibrary: input.unitLibrary,
+      classUnitId: input.classUnitId,
+      classLevel: input.classLevel,
+      constitutionModifierAtGain: constitutionModifierOf(input.build),
+    }),
+  };
+}
+
+/** The build's current Constitution modifier. */
+export function constitutionModifierOf(
+  build: Pick<CharacterBuild, "abilityScores">,
+): number {
+  return Math.floor((build.abilityScores.con - 10) / 2);
+}
+
+/** A built character's single-class progression, every level fixed. */
+export function testBuildProgression(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: UnitRecord["id"];
+  readonly classLevel: number;
+  readonly constitutionModifierAtGain: number;
+}): CharacterBuild["progression"] {
+  const progression = testProgression(
+    input.unitLibrary,
+    input.classUnitId,
+    input.classLevel,
+  );
+  return {
+    ...progression,
+    advancements: progression.advancements.map((advancement) => ({
+      ...advancement,
+      constitutionModifierAtGain: input.constitutionModifierAtGain,
+    })),
+  };
 }
 
 export function choiceFill(

@@ -85,6 +85,8 @@ import {
   type BattleState,
 } from "./unit-profile-admission.test-support.ts";
 import { battleFrontierInterruptDecisionForState } from "./index.ts";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { testBattleCreatureStateWithConditions } from "./battle-runtime.test-support.ts";
 import {
   greaseAreaId,
   greaseUnitId,
@@ -1102,6 +1104,65 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       message:
         "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.",
     });
+  });
+
+  test("a Prone mover crawling closer through the Line also spends the crawling cost", () => {
+    const cast = castGustOfWind([]);
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const lineEffect = directionalPersistentAreaEffect(targetTurn.state);
+    const moverSubject = moveAct(targetTurn.state).subject;
+    if (moverSubject.tag !== "runtimeCommand") {
+      throw new Error("Expected the Movement command.");
+    }
+    const mover = targetTurn.state.combatants.get(moverSubject.actorId);
+    if (mover === undefined) throw new Error("Expected the mover.");
+    const prone: BattleState = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(
+        mover.combatantId,
+        testBattleCreatureStateWithConditions(
+          mover,
+          applyCondition(mover.conditions, "prone"),
+        ),
+      ),
+    };
+    const act = moveAct(prone);
+    const movement = requireHole(act.initialHoles, "movement");
+    // SRD 5.2.1 "Crawling": 5 feet + 5 against the Line + 5 crawling.
+    const crawl = (movementCostFeet: number) =>
+      resolveBattleSubject({
+        state: prone,
+        subject: act.subject,
+        fills: [
+          movementFill(movement, {
+            movementCostFeet,
+            provokedOpportunityAttacks: [],
+            directionalPersistentAreaMovement: {
+              kind: "directionalPersistentAreaMovement",
+              effectRef: lineEffect.effectRef,
+              sourceCombatantId: spellCasterId,
+              sourceProcedureRef: lineEffect.sourceProcedureRef,
+              areaId: gustOfWindAreaId,
+              directionId: gustOfWindNorthDirectionId,
+              totalDistanceFeet: movementFeet(5),
+              closerDistanceFeet: movementFeet(5),
+            },
+          }),
+        ],
+      });
+
+    expect(crawl(10)).toMatchObject({
+      tag: "invalid",
+      message:
+        "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line. A Prone mover is crawling and also spends 1 extra foot for every foot moved.",
+    });
+    expect(crawl(15)).toMatchObject({ tag: "resolved" });
   });
 
   test("movement cost composes Grease and Gust of Wind Line facts", () => {

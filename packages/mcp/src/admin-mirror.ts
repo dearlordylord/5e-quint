@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Effect, Result, Schema } from "effect";
 
 import {
@@ -59,7 +60,10 @@ export function createHttpAdminMirrorPublisher(input: {
     try {
       await fetch(publishUrl, {
         body: JSON.stringify(
-          Schema.encodeSync(AdminMirrorProjectionEnvelopeSchema)(envelope),
+          Schema.encodeSync(
+            AdminMirrorProjectionEnvelopeSchema,
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )(envelope),
         ),
         headers: { "content-type": "application/json" },
         method: "POST",

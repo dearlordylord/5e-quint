@@ -366,6 +366,7 @@ function actionSubjectEligibilityFacts(
     Match.when("disengage", () => standard("disengage")),
     Match.when("dodge", () => standard("dodge")),
     Match.when("helpAttack", () => standard("help")),
+    Match.when("helpAbilityCheck", () => standard("help")),
     Match.when("hide", () => standard("hide")),
     Match.when(
       "multiattack",

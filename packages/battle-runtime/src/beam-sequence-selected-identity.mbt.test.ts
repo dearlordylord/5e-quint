@@ -519,9 +519,9 @@ function spellTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: casterId,
-              sourceProcedureRef:
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: casterId,
+              procedureRef:
                 hole.spellTargetSpatialFactRequest?.sourceProcedureRef ??
                 battleProcedureExecutionRefForTest(String(eldritchBlastUnitId)),
               enemies: [],
@@ -554,9 +554,9 @@ function spellObjectTargetFill(
         },
       } satisfies SpellObjectTargetFact,
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId,
-        sourceProcedureRef: hole.sourceProcedureRef,
+        kind: "rangedAttackEnemyProximity",
+        attackerId: casterId,
+        procedureRef: hole.sourceProcedureRef,
         enemies: [],
       },
     ],

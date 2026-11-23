@@ -1199,6 +1199,7 @@ export function armorClassBuild(input: {
       advancements: (input.advancements ?? []).map((classId) => ({
         classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
+        constitutionModifierAtGain: 1,
       })),
     },
     background: authoredUnitId("background_soldier"),

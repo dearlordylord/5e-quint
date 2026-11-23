@@ -115,6 +115,17 @@ collection: independent checks continue, and coverage requires a successful
 build. Any failed or blocked check still fails the command. Both modes stop
 after SIGKILL or exit 137 and retain existing descendant cleanup.
 
+CI splits the milestone across parallel jobs without dropping a gate. The
+Quality workflow runs `pnpm quality:milestone --defer coverage,typecheck`. A
+typecheck job runs `pnpm build` and then `pnpm typecheck`, and one job per
+coverage shard runs `pnpm build` and then `pnpm coverage --shard <shard>`. Each
+production package names its shard in the harness's package policies, and
+`node scripts/workspace-quality-harness.mjs coverage:shards` lists them. The
+workflow's `Workspace quality gate` job passes only when the milestone, the
+typecheck and every shard pass. `--defer` refuses unknown ids and any check that a retained check
+depends on, and the receipt records what was deferred. Locally, run the whole
+milestone; `pnpm coverage` without `--shard` still covers every package.
+
 Use `pnpm quality:repair --checks <comma-separated milestone ids>` for a scoped
 rerun with prerequisite closure. Coverage repair still uses `coverage:diagnose`.
 Milestone and repair runs print a receipt path under `.scratch/verification/`.

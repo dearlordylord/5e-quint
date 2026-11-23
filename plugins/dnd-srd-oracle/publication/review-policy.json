@@ -527,7 +527,7 @@
       "implementationEvidence": {
         "tag": "scopedHumanReview",
         "scope": "Play Session rate-limit repository, SQLite actions, and window policy",
-        "sourceDigest": "3953a7813b7d6f890a76e09748d140da719b1480b16d7f83aa63ffc3ffa946e5"
+        "sourceDigest": "9784c79bf55b9b37bc418045daa00099b1a9bc236f4e9964e2ceaa7ae28e78db"
       },
       "privacyAnchor": "rate-limit-capacity",
       "privacyEvidence": {
@@ -559,7 +559,7 @@
       "implementationEvidence": {
         "tag": "scopedHumanReview",
         "scope": "packages/mcp/src/public-service-operations.ts",
-        "sourceDigest": "29bee30e3ab923d66a6f5f7b58e27ce78bb5dbdb74be73feb59ce1a92e844d5f"
+        "sourceDigest": "94aa4ed09bf6ca89a31d56703f29eabbb2e4af01e5a5120cd18937017459d30e"
       },
       "privacyAnchor": "request-observations",
       "privacyEvidence": {

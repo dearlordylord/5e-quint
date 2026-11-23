@@ -343,9 +343,17 @@ test("earlier ASI qualifies a later Grappler choice, whose own increase cannot s
       choices,
     },
   };
+  // Constitution 15 rises to 17 at level 6, after that level's Hit Points.
   expect(finalizeCharacterDraft({ draft: legal, unitLibrary })).toMatchObject({
     tag: "ready",
-    build: { abilityScores: { str: 14 } },
+    build: {
+      abilityScores: { str: 14, con: 17 },
+      progression: {
+        advancements: [2, 2, 2, 2, 2, 3, 3].map((modifier) => ({
+          constitutionModifierAtGain: modifier,
+        })),
+      },
+    },
   });
   const ownIncreaseOnly = {
     ...legal,

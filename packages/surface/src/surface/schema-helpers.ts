@@ -5,15 +5,6 @@ import { Schema } from "effect";
 export const exactOptional = <S extends Schema.Constraint>(schema: S) =>
   Schema.optionalKey(schema);
 
-export const strictStruct = <Fields extends Schema.Struct.Fields>(
-  fields: Fields,
-) =>
-  Schema.Struct(fields).pipe(
-    Schema.annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
-  );
-
 export const ForbiddenValueSchema = Schema.Never.pipe(
   Schema.annotate({
     identifier: "ForbiddenValue",

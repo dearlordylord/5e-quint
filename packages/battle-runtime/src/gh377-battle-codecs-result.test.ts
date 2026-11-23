@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -46,8 +47,10 @@ const grantedAreaSaveDamageHole = (dieSize: number) => ({
 
 describe("GH-377 battle protocol codecs", () => {
   test("round-trips the smallest target-choice hole/fill pair with ordering and identity", () => {
-    const decodedHole =
-      Schema.decodeUnknownResult(BattleHoleSchema)(foundationHole);
+    const decodedHole = Schema.decodeUnknownResult(
+      BattleHoleSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(foundationHole);
     const decodedFill =
       Schema.decodeUnknownResult(BattleFillSchema)(foundationFill);
 
@@ -67,7 +70,10 @@ describe("GH-377 battle protocol codecs", () => {
   });
 
   test("rejects malformed holes and mismatched fill shapes", () => {
-    const malformedHole = Schema.decodeUnknownResult(BattleHoleSchema)({
+    const malformedHole = Schema.decodeUnknownResult(
+      BattleHoleSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       ...foundationHole,
       choices: ["combatant:source", 42],
     });
@@ -90,9 +96,10 @@ describe("GH-377 battle protocol codecs", () => {
   ] as const)(
     "granted-area damage result accepts only the fixed d6 die size (%i)",
     (dieSize, expectedSuccess) => {
-      const decoded = Schema.decodeUnknownResult(BattleHoleSchema)(
-        grantedAreaSaveDamageHole(dieSize),
-      );
+      const decoded = Schema.decodeUnknownResult(
+        BattleHoleSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(grantedAreaSaveDamageHole(dieSize));
       expect(Result.isSuccess(decoded)).toBe(expectedSuccess);
     },
   );

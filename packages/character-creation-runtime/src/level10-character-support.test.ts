@@ -202,6 +202,7 @@ function bardLevelNineBuild(): CharacterBuild {
       advancements: Array.from({ length: 8 }, () => ({
         classUnitId: classUnitId(authoredUnitId("class_bard")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 1,
       })),
     },
     background: authoredUnitId("background_soldier"),

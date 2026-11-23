@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
@@ -64,9 +65,9 @@ const LocalSkillEvaluationSchema = Schema.Struct({
   kind: Schema.Literal("independentStaticForwardTest"),
   installedChatGptEvidence: Schema.Literal(false),
   status: Schema.Literal("passed"),
-  skillSourceDigest: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+  skillSourceDigest: Schema.String.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
   skillActivationInventoryDigest: Schema.String.check(
-    Schema.isPattern(/^[0-9a-f]{64}$/u),
+    jsonSchemaPattern(/^[0-9a-f]{64}$/u),
   ),
   cases: Schema.Array(
     Schema.Struct({

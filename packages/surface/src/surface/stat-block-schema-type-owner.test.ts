@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -60,9 +61,13 @@ test("round-trips positive authored Stat Block values and Life Bond ranges", () 
       > = { kind: "literal", value };
       const decodedLiteral = Schema.decodeUnknownSync(
         StandaloneStatBlockValueSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
       )(encodedLiteral);
       expect(
-        Schema.encodeSync(StandaloneStatBlockValueSchema)(decodedLiteral),
+        Schema.encodeSync(
+          StandaloneStatBlockValueSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(decodedLiteral),
       ).toEqual(encodedLiteral);
 
       const encodedTrait: Schema.Codec.Encoded<
@@ -71,11 +76,15 @@ test("round-trips positive authored Stat Block values and Life Bond ranges", () 
         kind: "caster_heal_link",
         rangeFeet: value,
       };
-      const decodedTrait = Schema.decodeUnknownSync(CreatureTraitEffectSchema)(
-        encodedTrait,
-      );
+      const decodedTrait = Schema.decodeUnknownSync(
+        CreatureTraitEffectSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(encodedTrait);
       expect(
-        Schema.encodeSync(CreatureTraitEffectSchema)(decodedTrait),
+        Schema.encodeSync(
+          CreatureTraitEffectSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(decodedTrait),
       ).toEqual(encodedTrait);
     }),
   );
@@ -85,13 +94,19 @@ test.each([0, -1, 1.5])(
   "rejects invalid authored Stat Block numeric value %s",
   (value) => {
     expect(
-      Schema.decodeUnknownResult(StandaloneStatBlockValueSchema)({
+      Schema.decodeUnknownResult(
+        StandaloneStatBlockValueSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         kind: "literal",
         value,
       })._tag,
     ).toBe("Failure");
     expect(
-      Schema.decodeUnknownResult(CreatureTraitEffectSchema)({
+      Schema.decodeUnknownResult(
+        CreatureTraitEffectSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         kind: "caster_heal_link",
         rangeFeet: value,
       })._tag,
@@ -167,19 +182,28 @@ const invalidSaveOutcomeReactionTrigger: AuthoredStatBlockReactionTriggerEncoded
 describe("canonical Stat Block type owner", () => {
   test("rejects non-positive authored procedure quantities", () => {
     expect(() =>
-      Schema.decodeUnknownSync(StatBlockProcedureResourceLimitSchema)({
+      Schema.decodeUnknownSync(
+        StatBlockProcedureResourceLimitSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         kind: "daily",
         uses: 0,
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(StatBlockProcedureDcSourceSchema)({
+      Schema.decodeUnknownSync(
+        StatBlockProcedureDcSourceSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         kind: "fixed",
         dc: -1,
       }),
     ).toThrow();
     expect(
-      Schema.decodeUnknownSync(StatBlockProcedureDcSourceSchema)({
+      Schema.decodeUnknownSync(
+        StatBlockProcedureDcSourceSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         kind: "fixed",
         dc: 15,
       }),
@@ -187,14 +211,20 @@ describe("canonical Stat Block type owner", () => {
   });
 
   test("enforces GM Speed choice cardinality independently at type and runtime boundaries", () => {
-    const decoded = Schema.decodeUnknownSync(StatBlockGmSpeedChoiceSchema)({
+    const decoded = Schema.decodeUnknownSync(
+      StatBlockGmSpeedChoiceSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )({
       kind: "gm_choice",
       alternatives: validGmSpeedChoiceAlternatives,
     });
 
     expect(decoded.alternatives).toHaveLength(2);
     expect(() =>
-      Schema.decodeUnknownSync(StatBlockGmSpeedChoiceSchema)({
+      Schema.decodeUnknownSync(
+        StatBlockGmSpeedChoiceSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         kind: "gm_choice",
         alternatives: invalidGmSpeedChoiceAlternatives,
       }),
@@ -209,23 +239,29 @@ describe("canonical Stat Block type owner", () => {
     for (const trigger of Object.values(encodedReactionTriggers)) {
       const decoded = Schema.decodeUnknownSync(
         AuthoredStatBlockReactionTriggerSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
       )(trigger);
       expect(
-        Schema.encodeSync(AuthoredStatBlockReactionTriggerSchema)(decoded),
+        Schema.encodeSync(
+          AuthoredStatBlockReactionTriggerSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(decoded),
       ).toEqual(trigger);
     }
   });
 
   test("rejects malformed recursive reaction triggers", () => {
     expect(() =>
-      Schema.decodeUnknownSync(AuthoredStatBlockReactionTriggerSchema)(
-        invalidNestedReactionTrigger,
-      ),
+      Schema.decodeUnknownSync(
+        AuthoredStatBlockReactionTriggerSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(invalidNestedReactionTrigger),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(AuthoredStatBlockReactionTriggerSchema)(
-        invalidSaveOutcomeReactionTrigger,
-      ),
+      Schema.decodeUnknownSync(
+        AuthoredStatBlockReactionTriggerSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(invalidSaveOutcomeReactionTrigger),
     ).toThrow();
   });
 
@@ -239,16 +275,19 @@ describe("canonical Stat Block type owner", () => {
     } as const;
     const decoded = Schema.decodeUnknownSync(
       AuthoredStatBlockReactionTriggerNonRecursiveSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(encoded);
 
     expect(
-      Schema.encodeSync(AuthoredStatBlockReactionTriggerNonRecursiveSchema)(
-        decoded,
-      ),
+      Schema.encodeSync(
+        AuthoredStatBlockReactionTriggerNonRecursiveSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(decoded),
     ).toEqual(encoded);
     expect(() =>
       Schema.decodeUnknownSync(
         AuthoredStatBlockReactionTriggerNonRecursiveSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
       )({
         ...encoded,
         weaponFilter: { ...encoded.weaponFilter, itemId: " " },
@@ -259,10 +298,18 @@ describe("canonical Stat Block type owner", () => {
   test("builds Challenge Rating decoding from the canonical values", () => {
     for (const challengeRating of SRD_CHALLENGE_RATINGS) {
       expect(
-        Schema.decodeUnknownSync(ChallengeRatingSchema)(challengeRating),
+        Schema.decodeUnknownSync(
+          ChallengeRatingSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(challengeRating),
       ).toBe(challengeRating);
     }
-    expect(() => Schema.decodeUnknownSync(ChallengeRatingSchema)(31)).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(
+        ChallengeRatingSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(31),
+    ).toThrow();
   });
 
   test("parses the canonical record and its published SRD specialization", () => {
@@ -273,12 +320,16 @@ describe("canonical Stat Block type owner", () => {
     };
     const published = Schema.decodeUnknownSync(
       PublishedSrdStatBlockRecordSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(publicationInput);
 
     expect(record.id).toBe("stat_block_skeleton");
     expect(published).toMatchObject(record);
     expect(
-      Schema.encodeSync(PublishedSrdStatBlockRecordSchema)(published),
+      Schema.encodeSync(
+        PublishedSrdStatBlockRecordSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(published),
     ).toEqual(publicationInput);
   });
 });

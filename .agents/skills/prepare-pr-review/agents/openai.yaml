@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare PR review"
+  short_description: "Turn PR findings into a clear, evidence-backed review"
+  default_prompt: "Use $prepare-pr-review to review this PR or update its existing review report."

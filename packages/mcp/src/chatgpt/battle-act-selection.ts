@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { createHash } from "node:crypto";
 import { Schema } from "effect";
 import type { BattleSubject } from "@dnd/battle-runtime";
@@ -6,7 +7,7 @@ import type { PlaySessionId } from "../play-session.ts";
 import { battleMechanicsEnvelopeForSession } from "../battle-tool-payloads.ts";
 
 export const BattleActKeySchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^act:[0-9a-f]{32}$/u)),
+  Schema.check(jsonSchemaPattern(/^act:[0-9a-f]{32}$/u)),
   Schema.brand("BattleActKey"),
 ).annotate({
   description:

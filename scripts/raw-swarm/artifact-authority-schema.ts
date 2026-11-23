@@ -1,7 +1,8 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { Schema } from "effect";
 
 export const ArtifactSha256Schema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   Schema.brand("ArtifactSha256"),
 );
 export type ArtifactSha256 = Schema.Schema.Type<typeof ArtifactSha256Schema>;

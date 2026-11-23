@@ -138,6 +138,28 @@ function expectInvalidDraft(value: unknown, path: string): void {
 }
 
 describe("stored CharacterDraft parser", () => {
+  test("parses a rolled Hit Die for a level after 1", () => {
+    const rolledDraft = storedDraftWith(
+      ["selections", "progression", "advancements", 0, "hitPointRule"],
+      { tag: "rolledHigherLevelGain", hitDieResult: 7 },
+    );
+    expect(parseCharacterDraft(rolledDraft)).toMatchObject({
+      _tag: "Success",
+      success: {
+        selections: {
+          progression: {
+            advancements: [
+              {
+                classUnitId: "synthetic_class",
+                hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 7 },
+              },
+            ],
+          },
+        },
+      },
+    });
+  });
+
   test("parses every durable selection variant in one maximal stored draft", () => {
     const result = parseCharacterDraft(maximalStoredDraft());
 
@@ -375,6 +397,18 @@ describe("stored CharacterDraft parser", () => {
       "advancement Hit Point rule tag",
       ["selections", "progression", "advancements", 0, "hitPointRule", "tag"],
       "syntheticUnsupported",
+      "$.selections.progression.advancements[0].hitPointRule",
+    ],
+    [
+      "rolled Hit Die result",
+      ["selections", "progression", "advancements", 0, "hitPointRule"],
+      { tag: "rolledHigherLevelGain", hitDieResult: 0 },
+      "$.selections.progression.advancements[0].hitPointRule",
+    ],
+    [
+      "missing rolled Hit Die result",
+      ["selections", "progression", "advancements", 0, "hitPointRule"],
+      { tag: "rolledHigherLevelGain" },
       "$.selections.progression.advancements[0].hitPointRule",
     ],
     ["background", ["selections", "background"], 1, "$.selections.background"],

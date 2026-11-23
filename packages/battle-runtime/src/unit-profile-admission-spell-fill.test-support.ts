@@ -540,9 +540,9 @@ export function spellTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: casterId,
-              sourceProcedureRef: sourceProcedureRef,
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: casterId,
+              procedureRef: sourceProcedureRef,
               enemies: [],
             },
           ]
@@ -725,7 +725,7 @@ export function spellObjectTargetFill(input: {
   readonly spellId: string;
   readonly enemies: Extract<
     BattleTargetSpatialFact,
-    { readonly kind: "rangedSpellAttackEnemyProximity" }
+    { readonly kind: "rangedAttackEnemyProximity" }
   >["enemies"];
   readonly casterId: CombatantId;
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
@@ -745,9 +745,9 @@ export function spellObjectTargetFill(input: {
     value: objectId,
     spatialFacts: [
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: input.casterId,
-        sourceProcedureRef,
+        kind: "rangedAttackEnemyProximity",
+        attackerId: input.casterId,
+        procedureRef: sourceProcedureRef,
         enemies: input.enemies,
       },
       {

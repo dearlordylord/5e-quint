@@ -16,6 +16,7 @@ import {
 import { Match, Result, Schema } from "effect";
 
 import {
+  McpEmptyArgumentsSchema,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
   type ToolError,
@@ -32,7 +33,6 @@ import {
 
 import { CancelBattleActionArgsSchema } from "./battle-action-selection-id.ts";
 
-const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.annotate({
     description:
@@ -73,15 +73,18 @@ const EndTurnArgsSchema = Schema.Struct({
 export const selectStatBlockInputSchema = mcpObjectJsonSchema(
   SelectStatBlockArgsSchema,
 );
-export const readBattleStateInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
-export const discoverBattleActsInputSchema =
-  mcpObjectJsonSchema(EmptyArgsSchema);
+export const readBattleStateInputSchema = mcpObjectJsonSchema(
+  McpEmptyArgumentsSchema,
+);
+export const discoverBattleActsInputSchema = mcpObjectJsonSchema(
+  McpEmptyArgumentsSchema,
+);
 export const fillBattleHoleInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   FillBattleHoleArgsSchema,
   {
     subject:
       "Copy the exact subject object returned by discover_battle_acts or the preceding needsHoles result.",
-    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. For an attack targetChoice, use the branch identified by hole.attack.selection: Character attacks require attackAbility and attackDamageType and omit statBlockDamageSelection; Stat Block attacks require the complete statBlockDamageSelection and omit attackAbility and attackDamageType. Copy actorId from hole.attack.actorId and the branch fields from hole.attack.selection. For a ranged spell target hole whose spellTargetSpatialFactRequest.requiresExactDistance is true, include one spellTarget fact with distanceFeet set to the exact caster-to-target distance. A chained Spell Attack leap hole also requires the spellLeapTargetWithinRange fact named by spellLeapTargetSpatialFactRequest. When requiresEnemyProximityQualification is true, include one rangedSpellAttackEnemyProximity fact scoped by casterId and sourceProcedureRef with enemies entries {enemyId, distanceFeet, enemyCanSeeCaster}. Check contextual enemies independently of the target, including object targets and sequence parts. Supply enemies: [] only after checking none qualify; omission is rejected. The engine checks Incapacitated. The server validates the complete fill against the canonical battle contract.",
+    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. For an attack targetChoice, use the branch identified by hole.attack.selection: Character attacks require attackAbility and attackDamageType and omit statBlockDamageSelection; Stat Block attacks require the complete statBlockDamageSelection and omit attackAbility and attackDamageType. Copy actorId from hole.attack.actorId and the branch fields from hole.attack.selection. For a ranged spell target hole whose spellTargetSpatialFactRequest.requiresExactDistance is true, include one spellTarget fact with distanceFeet set to the exact caster-to-target distance. A chained Spell Attack leap hole also requires the spellLeapTargetWithinRange fact named by spellLeapTargetSpatialFactRequest. When requiresEnemyProximityQualification is true, or an attack targetChoice's hole.attack.targetConstraint.kind is rangedRange, include one rangedAttackEnemyProximity fact scoped by attackerId (casterId or hole.attack.actorId) and procedureRef (sourceProcedureRef or hole.attack.selection.procedureRef) with enemies entries {enemyId, distanceFeet, enemyCanSeeAttacker}. Check contextual enemies independently of the target, including object targets and sequence parts. Supply enemies: [] only after checking none qualify; omission is rejected. The engine checks Incapacitated. The server validates the complete fill against the canonical battle contract.",
   },
 );
 export const resolveBattleActInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
@@ -95,7 +98,9 @@ export const endTurnInputSchema = mcpObjectJsonSchema(EndTurnArgsSchema);
 export const cancelBattleActionInputSchema = mcpObjectJsonSchema(
   CancelBattleActionArgsSchema,
 );
-export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+export const endBattleInputSchema = mcpObjectJsonSchema(
+  McpEmptyArgumentsSchema,
+);
 
 export const battleToolNames = {
   selectStatBlock: "select_stat_block",
@@ -389,7 +394,7 @@ function decodeEmptyArgs(
   args: unknown,
   toolName: EmptyBattleToolName,
 ): Result.Result<EmptyToolInput, ToolError> {
-  const decoded = decodeBattleToolArgs(EmptyArgsSchema, args, toolName);
+  const decoded = decodeBattleToolArgs(McpEmptyArgumentsSchema, args, toolName);
   return Result.map(decoded, () => ({}));
 }
 

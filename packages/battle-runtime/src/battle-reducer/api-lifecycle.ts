@@ -1096,6 +1096,7 @@ function initialBattleState(
     readiedSpells: new Map(),
     readiedResponses: new Map(),
     helpAttacks: [],
+    helpAbilityChecks: [],
     grapples: [],
     interruptStack: [],
     legendaryActionWindow: null,
