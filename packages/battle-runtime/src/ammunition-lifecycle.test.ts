@@ -1,5 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
-import { movementFeet, resourceCount } from "@dnd/shared/types";
+import { unitId as parseUnitId } from "@dnd/shared/game-facts";
+import {
+  difficultyClass,
+  movementFeet,
+  resourceCount,
+} from "@dnd/shared/types";
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { Result } from "effect";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -25,15 +31,20 @@ import {
   attackTargetFill,
   characterSeed,
   damageRollFill,
+  fighterId,
+  goblinId,
   readyTriggerDescriptionForTest,
   requireHole,
   skeletonId,
   skeletonCreatureInit,
   startBattleSessionRight,
   statBlockCreatureInit,
+  testSlingAttack,
+  testSlingUnitRef,
   wizardId,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
+import { battleObjectId } from "./identity.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   battleId,
@@ -511,5 +522,77 @@ describe("ammunition lifecycle", () => {
     expect(
       resolved.state.combatants.get(skeletonId)?.ammunitionStocks[0]?.remaining,
     ).toBe(resourceCount(19));
+  });
+
+  describe("loading a one-handed Ammunition weapon", () => {
+    // SRD "Ammunition": "Drawing the ammunition is part of the attack (you
+    // need a free hand to load a one-handed weapon)."
+    const sling = {
+      itemId: battleObjectId("main:weapon_sling"),
+      unitId: parseUnitId("weapon_sling"),
+      grip: "one_handed" as const,
+    };
+    const slingWielder = (withShield: boolean) =>
+      startBattleSessionRight({
+        battleId: battleId("battle-ammunition-free-hand"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: [testSlingUnitRef()],
+            attack: testSlingAttack(),
+            ammunitionStocks: [battleAmmunitionStock("sling_bullet", 20)],
+            selectedLoadout: withShield
+              ? {
+                  weapon: sling,
+                  shield: {
+                    itemId: battleObjectId("shield:equipment_shield"),
+                    unitId: parseUnitId("equipment_shield"),
+                  },
+                }
+              : { weapon: sling },
+            armorClass: {
+              ...defaultArmorClassState(),
+              leftHandUse: withShield ? "shield" : "free",
+              rightHandUse: "mainWeapon",
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }).state;
+    const weaponNames = (state: ReturnType<typeof slingWielder>) =>
+      attackActionOptionsForActor(state, fighterId).flatMap((attack) =>
+        attack.kind === "weapon" ? [attack.weapon.weaponUnitId] : [],
+      );
+
+    it("offers the attack while the other hand is free", () => {
+      expect(weaponNames(slingWielder(false))).toEqual(["weapon_sling"]);
+    });
+
+    it("withholds the attack while the other hand holds a shield", () => {
+      const state = slingWielder(true);
+      expect(weaponNames(state)).toEqual([]);
+      expect(
+        attackActionOptionsForActor(state, fighterId).map(
+          (attack) => attack.kind,
+        ),
+      ).toEqual(["unarmedStrike"]);
+    });
+
+    it("withholds the attack while the other hand grapples", () => {
+      const free = slingWielder(false);
+      const grappling = {
+        ...free,
+        grapples: [
+          {
+            grapplerId: fighterId,
+            targetId: goblinId,
+            escapeDc: difficultyClass(13),
+            reachFeet: movementFeet(5),
+            hand: "left" as const,
+          },
+        ],
+      };
+      expect(weaponNames(grappling)).toEqual([]);
+    });
   });
 });

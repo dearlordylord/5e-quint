@@ -31,7 +31,7 @@ import { findPresentFamiliarById } from "./spawned-companion-state.ts";
 import type { CombatantId } from "./identity.ts";
 import { combatantHasPactOfTheChainSpawnedCompanion } from "./companion-reaction-feature-facts.ts";
 import {
-  ammunitionForAttackIsAvailable,
+  ammunitionForAttackIsReady,
   spendAmmunitionForAcceptedAttack,
 } from "./battle-ammunition.ts";
 export { combatantHasPactOfTheChainSpawnedCompanion } from "./companion-reaction-feature-facts.ts";
@@ -116,7 +116,7 @@ function pactFamiliarAttackActionOptionForInput(
   return (
     statBlockAttackActionOptions(actor.origin.execution).find(
       (attack): attack is StatBlockAttackActionOption =>
-        ammunitionForAttackIsAvailable(actor, attack) &&
+        ammunitionForAttackIsReady(input.state, actor, attack) &&
         statBlockAttackProcedureSection(
           input.state,
           input.subject.familiarId,

@@ -7,6 +7,7 @@ import {
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
+import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -47,14 +48,40 @@ export function ammunitionStockIsAvailable(
   );
 }
 
-export function ammunitionForAttackIsAvailable(
+/**
+ * Whether the attacker can fire the attack's ammunition: it carries matching
+ * stock, and it can draw a piece. Drawing is part of the attack, and a
+ * one-handed weapon needs a free hand to load (SRD "Ammunition").
+ */
+export function ammunitionForAttackIsReady(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
 ): boolean {
   const ammunition = ammunitionRequirementForAttack(attack);
   return (
-    ammunition === null || ammunitionStockIsAvailable(combatant, ammunition)
+    ammunition === null ||
+    (ammunitionStockIsAvailable(combatant, ammunition) &&
+      ammunitionCanBeDrawn(state, combatant, attack))
   );
+}
+
+/**
+ * A Two-Handed weapon is loaded by the hands that hold it. A one-handed
+ * weapon needs another hand that holds nothing and grapples no one. Stat block
+ * attacks have no weapon grip, so only character weapons are checked.
+ */
+function ammunitionCanBeDrawn(
+  state: BattleState,
+  combatant: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): boolean {
+  if (attack.kind !== "weapon" || combatant === undefined) return true;
+  if (attack.weapon.properties.some(({ kind }) => kind === "two_handed")) {
+    return true;
+  }
+  const hands = combatantHandUses(state, combatant, state.grapples);
+  return hands.left === "free" || hands.right === "free";
 }
 
 export function ammunitionStockIssues(

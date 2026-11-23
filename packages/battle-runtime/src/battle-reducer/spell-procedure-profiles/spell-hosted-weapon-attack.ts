@@ -4,7 +4,7 @@ import { spellAdmissionActionCost } from "./profile.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import {
-  ammunitionForAttackIsAvailable,
+  ammunitionForAttackIsReady,
   spendAmmunitionForAcceptedAttack,
 } from "../../battle-ammunition.ts";
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
@@ -919,7 +919,8 @@ function discoverSpellHostedWeaponAttackCastAct(
     return [];
   }
   if (
-    !ammunitionForAttackIsAvailable(
+    !ammunitionForAttackIsReady(
+      state,
       state.combatants.get(actorId),
       componentWeapon.attack,
     )
@@ -958,7 +959,8 @@ function resolveSpellHostedWeaponAttack(
     );
   }
   if (
-    !ammunitionForAttackIsAvailable(
+    !ammunitionForAttackIsReady(
+      input.input.state,
       input.input.state.combatants.get(input.actorId),
       componentWeapon.attack,
     )

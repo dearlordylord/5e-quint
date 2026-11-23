@@ -40,4 +40,18 @@ module ammunitionLifecycleTests {
     assert(ammunitionAfterAcceptedAttack({ ammunitionKind: NeedleAmmunition, remaining: 1 }, NeedleAmmunition).remaining == 0),
     assert(ammunitionAfterAcceptedAttack({ ammunitionKind: SlingBulletAmmunition, remaining: 1 }, SlingBulletAmmunition).remaining == 0),
   }
+
+  run oneHandedAmmunitionWeaponNeedsAFreeHandToLoad = all {
+    assert(ammunitionAttackReady(arrowStock, ArrowAmmunition, OneHandedAmmunitionWeapon, 1)),
+    assert(not(ammunitionAttackReady(arrowStock, ArrowAmmunition, OneHandedAmmunitionWeapon, 0))),
+    assert(ammunitionAttackReady(arrowStock, ArrowAmmunition, TwoHandedAmmunitionWeapon, 0)),
+    assert(
+      not(ammunitionAttackReady(
+        { ammunitionKind: ArrowAmmunition, remaining: 0 },
+        ArrowAmmunition,
+        OneHandedAmmunitionWeapon,
+        1,
+      ))
+    ),
+  }
 }
