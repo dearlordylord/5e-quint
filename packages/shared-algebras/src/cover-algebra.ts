@@ -4,7 +4,7 @@
 // degree of cover between an attacker and a target, and supplies it only when it
 // rules some; this algebra owns what that degree does to an attack roll or to
 // direct targeting.
-import type { CoverType } from "@dnd/shared/types";
+import type { CoverType, RuledCoverType } from "@dnd/shared/types";
 import { Match } from "effect";
 
 /** A degree of cover that still lets an attack or a spell target directly. */
@@ -64,4 +64,20 @@ export function armorClassBehindCover(
   cover: DirectTargetCover,
 ): number {
   return armorClass + coverArmorClassBonus(cover);
+}
+
+/**
+ * A target fact's cover field for a measured degree: the degree when there is
+ * some cover, and no field when there is none.
+ */
+export function ruledCoverField(cover: CoverType): {
+  readonly cover?: RuledCoverType;
+} {
+  return Match.value(cover).pipe(
+    Match.when("none", () => ({})),
+    Match.whenOr("half", "threeQuarters", "total", (degree) => ({
+      cover: degree,
+    })),
+    Match.exhaustive,
+  );
 }

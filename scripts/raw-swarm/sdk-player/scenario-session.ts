@@ -60,6 +60,7 @@ import {
 } from "@dnd/battle-runtime/consumer-protocol";
 import { statBlockAttackDamageComponentRefKey } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { ruledCoverField } from "../../../packages/shared-algebras/src/cover-algebra.ts";
 import { isIncapacitated } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
 import {
   movementFeet,
@@ -2398,7 +2399,7 @@ export function scenarioCreatureSpellTargetFills(input: {
       }
       canonicalFacts.push({
         kind: "spellTarget" as const,
-        cover: relation.relation.cover,
+        ...ruledCoverField(relation.relation.cover),
         casterId: request.casterId,
         targetId,
         sourceProcedureRef: request.sourceProcedureRef,
@@ -2981,7 +2982,7 @@ export function scenarioAttackTargetFills(input: {
       targetId: fill.value,
       ...attack.selection,
       distanceFeet: movementFeet(Number(relation.distanceFeet)),
-      cover: relation.cover,
+      ...ruledCoverField(relation.cover),
     };
     const canonicalSightFact = relation.attackerCanSeeTarget
       ? undefined
@@ -3099,7 +3100,7 @@ export function scenarioObjectAttackFills(input: {
           Match.exhaustive,
         ),
         attackerCanSeeObject: relation.relation.attackerCanSeeTarget,
-        cover: relation.relation.cover,
+        ...ruledCoverField(relation.relation.cover),
         armorClass: object.armorClass,
         damageDisposition: object.damageDisposition,
       },

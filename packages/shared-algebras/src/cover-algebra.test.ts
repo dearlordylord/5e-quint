@@ -5,6 +5,7 @@ import {
   coverArmorClassBonus,
   coverTargeting,
   directTargetCover,
+  ruledCoverField,
 } from "./cover-algebra.ts";
 
 describe("cover algebra", () => {
@@ -43,5 +44,14 @@ describe("cover algebra", () => {
     expect(armorClassBehindCover(15, "none")).toBe(15);
     expect(armorClassBehindCover(15, "half")).toBe(17);
     expect(armorClassBehindCover(15, "threeQuarters")).toBe(20);
+  });
+
+  test("a measured degree becomes a fact's cover field, and no cover no field", () => {
+    expect(ruledCoverField("none")).toEqual({});
+    expect(ruledCoverField("half")).toEqual({ cover: "half" });
+    expect(ruledCoverField("threeQuarters")).toEqual({
+      cover: "threeQuarters",
+    });
+    expect(ruledCoverField("total")).toEqual({ cover: "total" });
   });
 });
