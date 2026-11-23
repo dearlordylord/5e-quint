@@ -616,7 +616,7 @@ export function parseBattleMovement(
   /* v8 ignore stop -- @preserve */
   const movementCostFactValidation = validateMovementCostFacts(
     state,
-    moverId,
+    mover,
     fill.value,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1836,7 +1836,7 @@ function creatureSpaceMovementPermissionProfileForCombatant(
 
 function validateMovementCostFacts(
   state: BattleState,
-  moverId: CombatantId,
+  mover: BattleCreatureState,
   value: BattleMovementFillValue,
 ): string | null {
   const difficultTerrain = validateAreaDifficultTerrainMovementFact(
@@ -1859,7 +1859,7 @@ function validateMovementCostFacts(
   /* v8 ignore stop -- @preserve */
   const grappleDrag = validateGrappleDragMovementFact(
     state,
-    moverId,
+    mover.combatantId,
     value.grappleDrag,
   );
   /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the Grapple table adapter constructs the typed drag fact, so this only propagates a caller-mutated contradiction. */
@@ -1936,8 +1936,7 @@ function validateMovementCostFacts(
     return null;
   }
   const crawlingExtraCostFeet = crawlingMovementExtraCostFeet(
-    state,
-    moverId,
+    mover.conditions,
     firstCost.totalDistanceFeet,
   );
   const expectedCostFeet = movementFeet(
@@ -1968,12 +1967,10 @@ const PRONE_CRAWLING_MOVEMENT_COST_MESSAGE =
  * foot, and each foot of Difficult Terrain adds its own extra foot on top.
  */
 function crawlingMovementExtraCostFeet(
-  state: BattleState,
-  moverId: CombatantId,
+  conditions: BattleCreatureState["conditions"],
   totalDistanceFeet: MovementFeet,
 ): MovementFeet {
-  const mover = state.combatants.get(moverId);
-  if (mover === undefined || !hasCondition(mover.conditions, "prone")) {
+  if (!hasCondition(conditions, "prone")) {
     return movementFeet(0);
   }
   const crawl = activityMovementCost({
