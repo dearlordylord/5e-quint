@@ -107,7 +107,6 @@
       "module/binding:applyBattleMovement": 11
     },
     "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts": {
-      "module/binding:applyBattleHeldWeaponPickup": 11,
       "module/binding:characterEffectiveLoadoutFromOrigin": 13
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
@@ -166,7 +165,7 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 69
+      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 68
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,

@@ -1016,6 +1016,24 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.interactWithObject": account(
+      "operation",
+      "runtimeCommand.interactWithObject",
+      at(
+        "packages/battle-runtime/src/battle-reducer/object-interaction.ts",
+        "resolveObjectInteraction",
+      ),
+      REASONS.admittedSubject,
+    ),
+    "runtimeCommand.pickUpHeldWeapon": account(
+      "operation",
+      "runtimeCommand.pickUpHeldWeapon",
+      at(
+        "packages/battle-runtime/src/battle-reducer/object-interaction.ts",
+        "resolveObjectInteraction",
+      ),
+      REASONS.admittedSubject,
+    ),
     "runtimeCommand.dropProne": account(
       "operation",
       "runtimeCommand.dropProne",
@@ -1567,6 +1585,15 @@ export const OPERATION_ACCOUNTING = {
     objectDropResolution: account(
       "continuation",
       "objectDropResolution",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
+    objectInteractionRuling: account(
+      "continuation",
+      "objectInteractionRuling",
       at(
         "packages/battle-runtime/src/battle-runtime-transaction.ts",
         "settleBattleRuntimeTransaction",

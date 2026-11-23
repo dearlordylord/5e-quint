@@ -1097,6 +1097,7 @@ describe("battle runtime: death saves and turns", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
@@ -1341,6 +1342,7 @@ describe("battle runtime: death saves and turns", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
@@ -1364,7 +1366,7 @@ describe("battle runtime: death saves and turns", () => {
 
     expect(
       discoverBattleActCandidates(state).map((act) => subjectName(act.subject)),
-    ).toEqual(["move", "dropProne", "endTurn"]);
+    ).toEqual(["move", "dropProne", "interactWithObject", "endTurn"]);
   });
 
   test("endTurn advances to the next Initiative actor and refreshes turn resources", () => {
@@ -1382,6 +1384,7 @@ describe("battle runtime: death saves and turns", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],

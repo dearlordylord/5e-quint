@@ -155,6 +155,8 @@ describe("BattleSubject identity", () => {
       move: {},
       standFromProne: {},
       dropProne: {},
+      interactWithObject: {},
+      pickUpHeldWeapon: { objectId: battleObjectId("subject-pickup-weapon") },
       releaseReadiedSpell: {
         readiedSpellCasterId: targetId,
         procedureRef: targetProcedureRef,

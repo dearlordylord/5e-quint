@@ -44,6 +44,7 @@ module battleRuntimeSubjectKinds {
     | RuntimeEffectCleanupSubjectKind
     | RuntimeEffectControlSubjectKind
     | RuntimeHeldObjectReleaseSubjectKind
+    | RuntimeObjectInteractionSubjectKind
     | RuntimeProtectionSaveSubjectKind
     | RuntimeProtectionPreventionSubjectKind
     | RuntimeTransformationModeSubjectKind

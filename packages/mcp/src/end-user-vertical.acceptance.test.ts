@@ -205,6 +205,7 @@ describe("end-user MCP vertical", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -262,6 +263,7 @@ describe("end-user MCP vertical", () => {
       "Nimble Escape",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -593,6 +595,7 @@ describe("end-user MCP vertical", () => {
       "Action Surge",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -656,6 +659,7 @@ describe("end-user MCP vertical", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);

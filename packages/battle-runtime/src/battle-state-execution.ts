@@ -140,6 +140,8 @@ export type {
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 import type {
   ActionEconomyState,
+  ObjectInteractionRuling,
+  ObjectInteractionState,
   RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
@@ -5168,6 +5170,19 @@ export type BattleHeldObjectFactsHole = {
   readonly label: string;
   readonly actorId: CombatantId;
 };
+/**
+ * Asks the table to rule on one object interaction: whether the object needs
+ * an action for its use. Battle then charges the free object interaction or
+ * the Utilize action.
+ */
+export type BattleObjectInteractionRulingHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "objectInteractionRuling";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly objectInteraction: ObjectInteractionState;
+};
 export type BattleToolPossessionFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6914,6 +6929,7 @@ export type BattleHole =
   | BattleTeleportDestinationHole
   | BattleSpatialMeleeSpellAttackProxyPositionHole
   | BattleHeldObjectFactsHole
+  | BattleObjectInteractionRulingHole
   | BattleToolPossessionFactsHole
   | BattleCunningStrikeEndTurnCoverFactsHole
   | BattleSpawnedCompanionConnectionHole
@@ -7251,6 +7267,11 @@ export type BattleFill =
       readonly value: {
         readonly objectIds: readonly BattleObjectId[];
       };
+    }
+  | {
+      readonly kind: "objectInteractionRuling";
+      readonly holeId: BattleHoleId;
+      readonly value: ObjectInteractionRuling;
     }
   | {
       readonly kind: "toolPossessionFacts";
@@ -8127,6 +8148,8 @@ export type BattleTurnSnapshot = {
   readonly actionTakenThisTurn: boolean;
   /** The current turn's unspent Bonus Action quota, not discovered action availability. */
   readonly bonusActionQuotaAvailable: boolean;
+  /** The current turn's free object interaction. */
+  readonly objectInteraction: ObjectInteractionState;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];

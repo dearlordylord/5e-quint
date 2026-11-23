@@ -23,6 +23,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "objectContactTargets",
   "objectDropResolution",
   "heldObjectFacts",
+  "objectInteractionRuling",
   "spawnedCompanionConnection",
   "companionReappearancePlacement",
   "companionReappearanceInitiative",

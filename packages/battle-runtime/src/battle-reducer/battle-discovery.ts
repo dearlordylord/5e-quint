@@ -150,6 +150,10 @@ import {
   type CompelledNextTurnBehaviorEffect,
 } from "./compelled-behavior-discovery.ts";
 import { dropProneAvailable } from "./drop-prone-policy.ts";
+import {
+  OBJECT_INTERACTION_COMMANDS,
+  objectInteractionActs,
+} from "./object-interaction.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
@@ -466,6 +470,7 @@ function discoverBattleActsWithoutRouteEvents(
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));
     acts.push(...proneTransitionActs(state, actor));
+    acts.push(...objectInteractionActs(state, actor));
     acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
     acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
     acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -692,6 +697,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...movablePersistentAreaExitActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   acts.push(...proneTransitionActs(state, actor));
+  acts.push(...objectInteractionActs(state, actor));
   acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
   acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
   acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -2153,6 +2159,7 @@ const STAT_BLOCK_MULTIATTACK_CONTINUATION_COMMANDS = [
   "move",
   "standFromProne",
   "dropProne",
+  ...OBJECT_INTERACTION_COMMANDS,
 ] as const satisfies readonly BattleRuntimeCommand[];
 
 export function subjectAllowedDuringStatBlockMultiattackDispatch(

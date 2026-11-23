@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 177,
-    "covered": 166,
+    "total": 178,
+    "covered": 167,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 137,
+      "battle": 138,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 166,
+      "covered": 167,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 197,
+    "total": 200,
     "bySubject": {
-      "battle-hole-family": 99,
-      "battle-fill-kind": 58,
-      "battle-subject-kind": 40
+      "battle-hole-family": 100,
+      "battle-fill-kind": 59,
+      "battle-subject-kind": 41
     },
     "byClassification": {
-      "semantic-frontier": 151,
+      "semantic-frontier": 152,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 46,
+      "table-owned-fact": 48,
       "unsupported-dead-branch": 0
     }
   },
@@ -6462,6 +6462,35 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage"
       ],
       "title": "Help's Assist an Ability Check option: the helper's skill proficiency and a table-decided ally give Advantage on that ally's next check with the skill, used by that check or expired at the start of the helper's next turn"
+    },
+    {
+      "id": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/object-interaction-cost.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-object-interaction.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt"
+      ],
+      "reason": "The QNT owner models one free object interaction per own turn, the Utilize action for a second object or for an object the table rules needs an action, no interaction off-turn or while unable to act, and the free interaction's return at the start of the next turn. Battle charges every object interaction through one cost operation: a table-described interaction and the held-weapon pickup transition both spend the turn's free interaction or the Utilize action.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/object-interaction.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Your Turn",
+        ".references/srd-5.2.1/rules-glossary.md#Utilize [Action]"
+      ],
+      "title": "Object interaction: the first object a creature interacts with on its turn is free unless the table rules it needs an action, and any other costs the Utilize action"
     }
   ],
   "battleHoleFrontier": [
@@ -8587,6 +8616,39 @@
       "id": "damageRelationshipDecisions",
       "reason": "Damage relationship decision fills answer every question from one emitted damage-event hole exactly once and are carried only through that event's damage application.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.OBJECT_INTERACTION_COST"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "objectInteractionRuling",
+      "id": "BattleObjectInteractionRulingHole",
+      "reason": "Whether an object needs an action for its use is the table's ruling on that object. The reducer requests and consumes the ruling and owns the charge: the turn's free object interaction or the Utilize action.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.OBJECT_INTERACTION_COST"
+      ],
+      "fillKind": "objectInteractionRuling",
+      "followUpTaskIds": [],
+      "id": "objectInteractionRuling",
+      "reason": "Object interaction ruling fills carry the table's ruling on whether the object needs an action; what happens to the world beyond a held-weapon pickup stays with the table.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
+      "followUpTaskIds": [],
+      "id": "runtimeObjectInteraction",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeObjectInteraction"
     }
   ],
   "profileObligations": [
@@ -13325,6 +13387,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns what an object interaction costs on a creature's turn: the free interaction, then the Utilize action, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.ACTION.OBJECT_INTERACTION_COST"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover a free first object and a Utilize second object, an object that needs an action, no interaction off-turn or while unable to act, and the free interaction's return on the next turn.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -14877,6 +14951,16 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -20696,6 +20780,26 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "bool",
+        "boolean-connective",
+        "set",
+        "if-expression",
+        "variant"
+      ],
+      "obligationId": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

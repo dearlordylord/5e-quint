@@ -26,6 +26,8 @@ import {
   canSpendBonusAction,
   canSpendMovement,
   canSpendUnarmedStrikeActionResource,
+  canChargeObjectInteraction,
+  chargeObjectInteraction,
   disableActionOrBonusActionExclusion,
   enableActionOrBonusActionExclusion,
   enableMovementActionBonusActionExclusion,
@@ -220,6 +222,59 @@ describe("action-economy-algebra", () => {
         mechanics: { castingTime: { kind: "reaction" } },
       }),
     ).toEqual(Result.fail("unsupported unit casting time"));
+  });
+
+  it("charges the free object interaction first, then the Utilize action", () => {
+    const turn = resetTurnActionEconomy(emptyActionEconomyState());
+    expect(turn.objectInteraction).toBe("available");
+
+    const first = chargeObjectInteraction(turn, { requiresUtilize: false });
+    if (Result.isFailure(first)) throw new Error(first.failure);
+    expect(first.success.charge).toBe("freeObjectInteraction");
+    expect(first.success.resources.objectInteraction).toBe("spent");
+    expect(first.success.resources.actionResources).toEqual(
+      turn.actionResources,
+    );
+
+    const second = chargeObjectInteraction(first.success.resources, {
+      requiresUtilize: false,
+    });
+    if (Result.isFailure(second)) throw new Error(second.failure);
+    expect(second.success.charge).toBe("utilizeAction");
+    expect(second.success.resources.actionResources).toEqual([]);
+    expect(second.success.resources.actionTakenThisTurn).toBe(true);
+
+    expect(
+      chargeObjectInteraction(second.success.resources, {
+        requiresUtilize: false,
+      }),
+    ).toEqual(Result.fail("no action resource available"));
+    expect(
+      canChargeObjectInteraction(second.success.resources, {
+        requiresUtilize: false,
+      }),
+    ).toBe(false);
+    expect(
+      resetTurnActionEconomy(second.success.resources).objectInteraction,
+    ).toBe("available");
+  });
+
+  it("charges the Utilize action when the object needs an action", () => {
+    const turn = resetTurnActionEconomy(emptyActionEconomyState());
+    const charged = chargeObjectInteraction(turn, { requiresUtilize: true });
+    if (Result.isFailure(charged)) throw new Error(charged.failure);
+    expect(charged.success.charge).toBe("utilizeAction");
+    expect(charged.success.resources.objectInteraction).toBe("available");
+    expect(
+      canChargeObjectInteraction(charged.success.resources, {
+        requiresUtilize: true,
+      }),
+    ).toBe(false);
+    expect(
+      canChargeObjectInteraction(charged.success.resources, {
+        requiresUtilize: false,
+      }),
+    ).toBe(true);
   });
 
   it("resets turn action and bonus-action resources", () => {
@@ -1003,6 +1058,7 @@ function emptyActionEconomyState(): ActionEconomyState {
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
+    objectInteraction: "available",
   };
 }
 

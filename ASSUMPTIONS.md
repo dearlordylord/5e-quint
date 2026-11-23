@@ -280,3 +280,25 @@ sequence rather than imposing a shared one-reroll limit across sources.
 `.references/srd-5.2.1/playing-the-game.md`, "Interactions with Rerolls,"
 still limits each reroll with Advantage or Disadvantage to one chosen die,
 not both.
+
+## A60: Object interactions belong to the creature's own turn
+
+**Assumption:** Battle offers an object interaction only on the creature's own
+turn, while it can act (it isn't Incapacitated), and not while Command's Halt
+applies. The first one each turn is free unless the table rules that the object
+needs an action; any other costs the Utilize action. The free interaction isn't
+tied to a moment of the move or the action: the table says when it happens.
+Battle doesn't offer an object interaction off-turn, such as in a readied
+response. Whether a readied response can include one is the table's ruling.
+
+**Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Your
+Turn," lets a creature "interact with one object or feature of the environment
+for free, during either your move or action," and requires the Utilize action
+for a second object. `.references/srd-5.2.1/rules-glossary.md`,
+"Incapacitated," says "You can't take any action, Bonus Action, or Reaction,"
+and
+`.references/srd-5.2.1/spells.md`, "Command," says that under Halt the target
+"doesn't move and takes no action." The SRD doesn't say whether a creature
+that can't act may still interact during its move, or whether a free
+interaction is available during a Reaction. The model ties the interaction to
+a turn the creature can act on, and leaves Reactions to the table.

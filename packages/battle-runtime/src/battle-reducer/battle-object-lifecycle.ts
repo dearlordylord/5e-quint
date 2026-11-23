@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import type {
   BattleDroppedObjectSource,
@@ -18,18 +19,10 @@ export type BattleGroundObjectPlacement = BattleGroundObjectState & {
   readonly objectId: BattleObjectId;
 };
 
+/** A selected-loadout weapon on the ground that its owner can pick up. */
 export type BattleHeldWeaponPickup = {
-  readonly interaction: ResolvedBattleObjectInteraction;
-  readonly loadoutSlot: "mainWeapon" | "offHandWeapon";
-};
-
-export type ResolvedBattleObjectInteraction = {
   readonly actorId: CombatantId;
   readonly objectId: BattleObjectId;
-  readonly actorSpace: {
-    readonly kind: "actorSpace";
-    readonly positionId: BattleTablePositionId;
-  };
 };
 
 export type BattleGroundObjectPlacementResult =
@@ -50,8 +43,7 @@ export type BattleHeldWeaponPickupResult =
         | "actorNotCharacter"
         | "activeFormPickupUnsupported"
         | "objectNotOnGround"
-        | "positionMismatch"
-        | "selectedLoadoutMismatch";
+        | "notSelectedLoadoutWeapon";
       readonly message: string;
     };
 
@@ -128,12 +120,16 @@ export function battleObjectIsOnGround(
   return state.groundObjects.get(actorId)?.has(objectId) === true;
 }
 
-export function applyBattleHeldWeaponPickup(
+/**
+ * Puts a fallen selected-loadout weapon back in its owner's hand. The
+ * caller charges the object interaction; the table decides whether the
+ * creature can reach the object.
+ */
+export function heldWeaponPickupTransition(
   state: BattleState,
   pickup: BattleHeldWeaponPickup,
 ): BattleHeldWeaponPickupResult {
-  const interaction = pickup.interaction;
-  const actor = state.combatants.get(interaction.actorId);
+  const actor = state.combatants.get(pickup.actorId);
   if (actor === undefined) {
     return {
       tag: "invalid",
@@ -158,43 +154,31 @@ export function applyBattleHeldWeaponPickup(
         "This narrow held-weapon restoration operation does not support pickup while Wild Shape is active.",
     };
   }
-  const actorGroundObjects = state.groundObjects.get(interaction.actorId);
-  const groundObject = actorGroundObjects?.get(interaction.objectId);
-  if (groundObject === undefined) {
+  const actorGroundObjects = state.groundObjects.get(pickup.actorId);
+  if (actorGroundObjects?.has(pickup.objectId) !== true) {
     return {
       tag: "invalid",
       reason: "objectNotOnGround",
       message: "Battle object pickup requires an object on the ground.",
     };
   }
-  if (groundObject.positionId !== interaction.actorSpace.positionId) {
+  if (!selectedLoadoutWeaponIds(actor).includes(pickup.objectId)) {
     return {
       tag: "invalid",
-      reason: "positionMismatch",
-      message: "Battle object pickup must use the object's ground position.",
-    };
-  }
-  const loadoutObject =
-    pickup.loadoutSlot === "mainWeapon"
-      ? actor.origin.selectedLoadout.weapon
-      : actor.origin.selectedLoadout.offHandWeapon;
-  if (loadoutObject?.itemId !== interaction.objectId) {
-    return {
-      tag: "invalid",
-      reason: "selectedLoadoutMismatch",
+      reason: "notSelectedLoadoutWeapon",
       message:
-        "Held-weapon pickup must restore the matching selected weapon loadout slot.",
+        "Held-weapon pickup restores only a weapon of the selected loadout.",
     };
   }
   const groundObjects = new Map(state.groundObjects);
   const remainingActorGroundObjects = new Map(actorGroundObjects);
-  remainingActorGroundObjects.delete(interaction.objectId);
+  remainingActorGroundObjects.delete(pickup.objectId);
   const [firstRemaining, ...otherRemaining] = remainingActorGroundObjects;
   if (firstRemaining === undefined) {
-    groundObjects.delete(interaction.actorId);
+    groundObjects.delete(pickup.actorId);
   } else {
     groundObjects.set(
-      interaction.actorId,
+      pickup.actorId,
       battleActorGroundObjectsFromEntries([firstRemaining, ...otherRemaining]),
     );
   }
@@ -202,6 +186,28 @@ export function applyBattleHeldWeaponPickup(
     tag: "applied",
     state: { ...state, groundObjects },
   };
+}
+
+/** The selected-loadout weapons of an actor that lie on the ground. */
+export function groundedHeldWeaponPickups(
+  state: BattleState,
+  actor: BattleCreatureState,
+): readonly BattleHeldWeaponPickup[] {
+  if (!battleObjectLifecycleActorIsCharacter(actor)) return [];
+  const groundObjects = state.groundObjects.get(actor.combatantId);
+  if (groundObjects === undefined) return [];
+  return selectedLoadoutWeaponIds(actor)
+    .filter((objectId) => groundObjects.has(objectId))
+    .map((objectId) => ({ actorId: actor.combatantId, objectId }));
+}
+
+function selectedLoadoutWeaponIds(
+  actor: CharacterBattleCreatureState,
+): readonly BattleObjectId[] {
+  const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
+  return [weapon?.itemId, offHandWeapon?.itemId].filter(
+    (itemId): itemId is BattleObjectId => itemId !== undefined,
+  );
 }
 
 function battleActorGroundObjectsFromEntries(

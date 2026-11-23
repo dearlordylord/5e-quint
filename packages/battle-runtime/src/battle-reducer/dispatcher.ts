@@ -189,6 +189,10 @@ import {
   isMovementProcedureSubject,
   resolveMovementProcedure,
 } from "./movement-procedures.ts";
+import {
+  isObjectInteractionSubject,
+  resolveObjectInteraction,
+} from "./object-interaction.ts";
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
@@ -984,23 +988,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...handledInterruptRouteOption,
       });
     }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "replaceSelfTransformationMode"
-    ) {
-      return resolveReplaceSelfTransformationModeCommand({
-        ...input,
-        subject,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "controlledVerticalSuspensionAltitudeControl"
-    ) {
-      return resolveControlledVerticalSuspensionAltitudeControlCommand({
-        ...input,
-        subject,
-      });
+    if (isObjectInteractionSubject(subject)) {
+      return resolveObjectInteraction({ ...input, subject });
     }
     if (isPersistentSpatialSpellProcedureSubject(subject)) {
       return resolvePersistentSpatialSpellProcedureCommand({
@@ -1010,6 +999,18 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       });
     }
     if (subject.tag === "runtimeCommand") {
+      if (subject.command === "replaceSelfTransformationMode") {
+        return resolveReplaceSelfTransformationModeCommand({
+          ...input,
+          subject,
+        });
+      }
+      if (subject.command === "controlledVerticalSuspensionAltitudeControl") {
+        return resolveControlledVerticalSuspensionAltitudeControlCommand({
+          ...input,
+          subject,
+        });
+      }
       if (subject.command === "protectionRelevantEffectSave") {
         return resolveProtectionRelevantEffectSaveCommand({
           ...input,

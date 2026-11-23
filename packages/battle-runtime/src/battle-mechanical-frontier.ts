@@ -215,6 +215,8 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
+      objectInteractionRuling: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       helpAttackAllyDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
       helpAttackEnemyDecision: (value) =>
