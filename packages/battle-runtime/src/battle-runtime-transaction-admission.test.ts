@@ -119,7 +119,7 @@ function pendingInterruptMove(): {
         subject: ordinary.subject,
         fills: [
           movementFill(movementHole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
@@ -388,7 +388,7 @@ describe("battle runtime transaction operation admission", () => {
   test("returns the reducer's invalid fill through the transaction boundary", () => {
     const ordinary = pendingOrdinaryMove();
     const movement = movementFill(requireHole(ordinary.result, "movement"), {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [],
     });
     const invalid = settleBattleRuntimeTransaction({

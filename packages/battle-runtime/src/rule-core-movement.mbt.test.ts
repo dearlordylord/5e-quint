@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
@@ -191,7 +192,7 @@ function createRuleCoreMovementDriver() {
           subject: { tag: "runtimeCommand", actorId, command: "move" },
           fills: [
             movementFill(hole, {
-              movementCostFeet: input.costFeet,
+              distanceFeet: input.costFeet,
               provokedOpportunityAttacks: input.provokesOpportunityAttack
                 ? [
                     {
@@ -501,7 +502,7 @@ function projectRuleCoreMovementState(input: {
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -513,7 +514,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };

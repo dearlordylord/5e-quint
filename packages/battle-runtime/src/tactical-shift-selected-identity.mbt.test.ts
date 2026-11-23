@@ -34,6 +34,7 @@ import {
   resolveBattleSubject,
   unitFeatureDecisionFill,
   movementFill,
+  testMovementPath,
   requireResolved,
   fighterId,
   endTurn,
@@ -146,7 +147,10 @@ function resolveTacticalShiftThroughHazard(
     throw new Error("Expected movement-damage hazard.");
   }
   const movement = movementFill(movementHole, {
-    movementCostFeet: 15,
+    path: testMovementPath(
+      { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+      { distanceFeet: 5 },
+    ),
     provokedOpportunityAttacks: [],
     areaDifficultTerrain: {
       kind: "areaDifficultTerrain",
@@ -160,8 +164,6 @@ function resolveTacticalShiftThroughHazard(
           damageDistanceFeet: movementFeet(5),
         },
       ],
-      totalDistanceFeet: movementFeet(10),
-      difficultTerrainDistanceFeet: movementFeet(5),
     },
   });
   const fills = [healingRoll, use, order, movement];
@@ -187,10 +189,7 @@ function resolveTacticalShiftThroughHazard(
   return {
     hp: Number(resolved.state.combatants.get(spellTargetId)?.hp),
     riderMovementCostFeet: Number(resolvedMovement.movementCostFeet),
-    riderTravelDistanceFeet: Number(
-      resolvedMovement.areaDifficultTerrain?.totalDistanceFeet ??
-        resolvedMovement.movementCostFeet,
-    ),
+    riderTravelDistanceFeet: movementPathDistanceFeet(movement),
     movementBudgetFeet: Number(movementHole.movementBudgetFeet),
     movementSpentFeet: Number(
       resolved.state.combatants.get(spellTargetId)?.movementSpentFeet,
@@ -295,7 +294,7 @@ defineSelectedIdentityReplayAndQntReplay({
               "movement",
             );
             const requestedMovement = movementFill(movement, {
-              movementCostFeet: 10,
+              distanceFeet: 10,
               provokedOpportunityAttacks: [],
             });
             const resolved = requireResolved(
@@ -312,10 +311,8 @@ defineSelectedIdentityReplayAndQntReplay({
             return {
               hp: Number(resolved.state.combatants.get(fighterId)?.hp),
               riderMovementCostFeet: Number(resolvedMovement.movementCostFeet),
-              riderTravelDistanceFeet: Number(
-                resolvedMovement.areaDifficultTerrain?.totalDistanceFeet ??
-                  resolvedMovement.movementCostFeet,
-              ),
+              riderTravelDistanceFeet:
+                movementPathDistanceFeet(requestedMovement),
               movementBudgetFeet: Number(movement.movementBudgetFeet),
               movementSpentFeet: Number(
                 resolved.state.combatants.get(fighterId)?.movementSpentFeet,
@@ -345,3 +342,12 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+function movementPathDistanceFeet(
+  movement: ReturnType<typeof movementFill>,
+): number {
+  return movement.value.path.reduce(
+    (total, segment) => total + Number(segment.distanceFeet),
+    0,
+  );
+}

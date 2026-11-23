@@ -1645,7 +1645,7 @@ describe("battle runtime: Stat Block actions", () => {
         subject: moveSubject,
         fills: [
           movementFill(moveHole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [],
           }),
         ],

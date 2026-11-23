@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm doReplaySleetStormAreaHazard
@@ -363,8 +364,6 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
           areaId: sleetStormAreaId,
         },
       ],
-      totalDistanceFeet: movementFeet(10),
-      difficultTerrainDistanceFeet: movementFeet(5),
     };
 
     expect(
@@ -373,7 +372,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
         subject: moveSubject,
         fills: [
           movementFill(moveHole, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
             areaDifficultTerrain: sleetStormDifficultTerrain,
           }),
@@ -382,7 +381,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain.",
+        "Area Difficult Terrain movement fact requires a movement path segment in that area's Difficult Terrain.",
     });
 
     const moved = resolveBattleSubject({
@@ -390,7 +389,10 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: sleetStormDifficultTerrain,
         }),

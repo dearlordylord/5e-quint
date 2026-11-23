@@ -248,11 +248,13 @@ function moveHole(state: BattleState, actorId: CombatantId): BattleHole {
 
 function simpleMovementFill(
   hole: BattleHole,
-  overrides: Partial<Parameters<typeof movementFill>[1]> = {},
+  overrides: Partial<
+    Omit<Parameters<typeof movementFill>[1], "distanceFeet" | "path">
+  > & { readonly distanceFeet?: number } = {},
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
     ...overrides,
-    movementCostFeet: overrides.movementCostFeet ?? 5,
+    distanceFeet: overrides.distanceFeet ?? 5,
     provokedOpportunityAttacks: overrides.provokedOpportunityAttacks ?? [],
   });
 }
@@ -1219,11 +1221,11 @@ describe("battle boundary admission owners", () => {
       parseBattleMovement(
         state,
         fighterId,
-        simpleMovementFill(hole, { movementCostFeet: movementFeet(0) }),
+        simpleMovementFill(hole, { distanceFeet: 0 }),
       ),
     ).toMatchObject({
       tag: "invalid",
-      message: "Movement cost must be a positive integer.",
+      message: "Movement path segment distance must be a positive integer.",
     });
     expect(
       parseBattleMovement(

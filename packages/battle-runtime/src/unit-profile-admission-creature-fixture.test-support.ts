@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import {
   battleResolutionHolesForTest,
   rangedAttackEnemyProximityFactsForTest,
@@ -806,12 +807,20 @@ export function attackRollFill(
 
 export function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  value: {
+  value: (
+    | { readonly distanceFeet: number; readonly path?: never }
+    | {
+        readonly path: Extract<
+          BattleFill,
+          { readonly kind: "movement" }
+        >["value"]["path"];
+        readonly distanceFeet?: never;
+      }
+  ) & {
     readonly speedKind?: Extract<
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["speedKind"];
-    readonly movementCostFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -843,7 +852,8 @@ export function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path:
+        value.path ?? ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       ...(value.fixedCostMovementReplacement === undefined
         ? {}

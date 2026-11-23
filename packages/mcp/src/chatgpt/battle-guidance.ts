@@ -89,13 +89,21 @@ export function battleMovementInputGuidance(
         holeId: hole.holeId,
         value: {
           speedKind: "walk",
-          movementCostFeet: 5,
+          path: [
+            {
+              distanceFeet: 5,
+              activity: "ordinary",
+              difficultTerrain: "none",
+              movesCloserThroughDirectionalArea: false,
+              draggedGrappledTargetIds: [],
+            },
+          ],
           provokedOpportunityAttacks: [],
         },
       },
       instructions: [
-        "Submit example as fill to provide_battle_input for a 5-foot walk only when the table confirms its movement cost is 5 feet and no opportunity attacks are provoked.",
-        "Report the table's provoked opportunity attacks; use [] only when the table confirms none are provoked. Adjust speedKind and movementCostFeet for the actual movement, including terrain.",
+        "Submit example as fill to provide_battle_input for a 5-foot walk only when the table confirms the mover walks 5 feet outside Difficult Terrain and no opportunity attacks are provoked.",
+        "Report the table's provoked opportunity attacks; use [] only when the table confirms none are provoked. Adjust speedKind and the path segments for the actual movement: each segment's distance, activity, Difficult Terrain and dragged Grappled creatures. The battle derives the movement cost from the path.",
       ],
     },
   ] as const;

@@ -43,7 +43,7 @@ function discoveredOpportunityAttack() {
     subject: movementSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           { reactorId: fighterId, distanceFeet: movementFeet(5), ...selection },
         ],

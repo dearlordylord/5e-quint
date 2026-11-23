@@ -122,7 +122,7 @@ function encodedFills() {
     "movement",
   );
   const movement = movementFill(movementHole, {
-    movementCostFeet: 5,
+    distanceFeet: 5,
     provokedOpportunityAttacks: [],
   });
   return [target, attackRoll, movement].map((fill) =>

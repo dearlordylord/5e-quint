@@ -255,7 +255,7 @@ function projectRemarkableAthleteCriticalMovement(
       criticalAttackFill,
       unitFeatureDecisionFill(decision, "use"),
       movementFill(movement, {
-        movementCostFeet: 10,
+        distanceFeet: 10,
         provokedOpportunityAttacks: [],
       }),
     ],

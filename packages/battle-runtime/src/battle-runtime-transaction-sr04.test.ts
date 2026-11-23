@@ -286,7 +286,7 @@ describe("battle runtime transaction SR-04 invariants", () => {
     const pending = pendingMove();
     const movementHole = requireHole(pending.result, "movement");
     const movement = movementFill(movementHole, {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [],
     });
     const invalidMovement = {

@@ -228,7 +228,9 @@ function positionChanged(call) {
     return false;
   const fill = call.arguments?.fill;
   if (
-    (fill?.kind === "movement" && fill.value?.movementCostFeet > 0) ||
+    (fill?.kind === "movement" &&
+      Array.isArray(fill.value?.path) &&
+      fill.value.path.length > 0) ||
     fill?.kind === "teleportDestination"
   )
     return true;

@@ -2038,7 +2038,7 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
     subject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           {
             reactorId: goblinId,

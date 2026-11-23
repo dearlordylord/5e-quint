@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -562,7 +563,7 @@ function rejectTargetMovementWithoutWitness(
     subject: moveActInState(state.battle.state).subject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -586,7 +587,9 @@ function moveTargetWithWitnessUp5Feet(
       subject: moveActInState(state.battle.state).subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 10,
+          // SRD 5.2.1 Levitate: the target moves as if climbing, so rising 5
+          // feet costs 10.
+          path: testMovementPath({ distanceFeet: 5, activity: "climbing" }),
           provokedOpportunityAttacks: [],
           controlledVerticalSuspensionMovement: {
             kind: "controlledVerticalSuspensionMovement",

@@ -23,6 +23,7 @@ import type {
   BattleStatBlockProcedureExecutionRef,
   BattleSubject,
   BattleTargetSpatialFact,
+  BattleMovementPath,
   BattleTablePositionId,
   CombatantId,
   StatBlockAttackDamageSelection,
@@ -1953,7 +1954,7 @@ export function planScenarioMovement(input: {
         holeId: movementHole.holeId,
         value: Object.freeze({
           speedKind: input.speedKind,
-          movementCostFeet: answer.movementCostFeet,
+          path: answer.path,
           provokedOpportunityAttacks: Object.freeze(
             answer.provokedOpportunityAttacks.map((threat) =>
               Object.freeze({ ...threat }),
@@ -2007,7 +2008,6 @@ export function planScenarioMovement(input: {
 
   let routeState = restoredSpatialState;
   const originFingerprint = geometry.space.fingerprint;
-  let movementCost = 0;
   const objectByToken = new Map(
     input.session.battlefield.objects.map((object) => [
       String(object.objectId),
@@ -2142,7 +2142,6 @@ export function planScenarioMovement(input: {
           `Scenario route step is invalid: ${preview.error.tag}.`,
       });
     }
-    movementCost += Number(preview.value.step.weight);
     const routePosition = scenarioPositionId(preview.value.step.to);
     routeSteps.push({
       positionId: routePosition,
@@ -2240,11 +2239,32 @@ export function planScenarioMovement(input: {
       message: routeFacts.message,
     });
   }
-  movementCost += routeFacts.difficultTerrainSteps
-    .filter(
-      ({ positionId }) => !tacticalDifficultTerrainPositions.has(positionId),
-    )
-    .reduce((total, { distanceFeet }) => total + Number(distanceFeet), 0);
+  // SRD 5.2.1 "Difficult Terrain" is not cumulative: a step is Difficult
+  // Terrain when the tactical space marks it or a creature's space makes it so.
+  const creatureSpaceDifficultTerrainPositions = new Set(
+    routeFacts.difficultTerrainSteps.map(({ positionId }) => positionId),
+  );
+  const [firstStep, ...laterSteps] = routeSteps.map((step) =>
+    Object.freeze({
+      distanceFeet: step.distanceFeet,
+      activity: "ordinary" as const,
+      difficultTerrain:
+        tacticalDifficultTerrainPositions.has(step.positionId) ||
+        creatureSpaceDifficultTerrainPositions.has(step.positionId)
+          ? ("tableTerrain" as const)
+          : ("none" as const),
+      movesCloserThroughDirectionalArea: false,
+      draggedGrappledTargetIds: Object.freeze([]),
+    }),
+  );
+  if (firstStep === undefined) {
+    return Result.fail({
+      tag: "scenario-movement-rejected",
+      message: "Scenario movement requires a nonempty route.",
+    });
+  }
+  const path: BattleMovementPath = [firstStep, ...laterSteps];
+  Object.freeze(path);
   const creatureSpaceTraversal = routeFacts.creatureSpaceTraversal;
   const fill: Extract<BattleFill, { readonly kind: "movement" }> =
     Object.freeze({
@@ -2252,7 +2272,7 @@ export function planScenarioMovement(input: {
       holeId: movementHole.holeId,
       value: Object.freeze({
         speedKind: input.speedKind,
-        movementCostFeet: movementFeet(movementCost),
+        path,
         provokedOpportunityAttacks: Object.freeze(
           provokedOpportunityAttacks.map((threat) =>
             Object.freeze({ ...threat }),
@@ -3414,7 +3434,6 @@ function sameScenarioMovement(
   return (
     movement.moverId === pending.subject.actorId &&
     movement.speedKind === value.speedKind &&
-    movement.movementCostFeet === value.movementCostFeet &&
     sameOpportunityAttackThreats(
       movement.provokedOpportunityAttacks,
       value.provokedOpportunityAttacks,
@@ -3422,7 +3441,6 @@ function sameScenarioMovement(
     movement.spendsTurnMovement === true &&
     movement.acrobaticMovement === undefined &&
     movement.areaDifficultTerrain === undefined &&
-    movement.grappleDrag === undefined &&
     sameCreatureSpaceTraversal(
       movement.creatureSpaceTraversal,
       value.creatureSpaceTraversal,

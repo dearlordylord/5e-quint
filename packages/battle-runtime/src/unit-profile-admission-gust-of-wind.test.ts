@@ -1,3 +1,5 @@
+import { PRONE_MOVEMENT_PATH_MESSAGE } from "./battle-reducer/movement-path.ts";
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
@@ -963,7 +965,10 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       subject: act.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 10,
+          path: testMovementPath({
+            distanceFeet: 5,
+            movesCloserThroughDirectionalArea: true,
+          }),
           provokedOpportunityAttacks: [],
           directionalPersistentAreaMovement: {
             kind: "directionalPersistentAreaMovement",
@@ -972,8 +977,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             sourceProcedureRef: lineEffect.sourceProcedureRef,
             areaId: gustOfWindAreaId,
             directionId: gustOfWindNorthDirectionId,
-            totalDistanceFeet: movementFeet(5),
-            closerDistanceFeet: movementFeet(5),
           },
         }),
       ],
@@ -1031,7 +1034,10 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const movement = requireHole(act.initialHoles, "movement");
     const lineMovement = (effectRef: typeof staleEffect.effectRef) =>
       movementFill(movement, {
-        movementCostFeet: 10,
+        path: testMovementPath({
+          distanceFeet: 5,
+          movesCloserThroughDirectionalArea: true,
+        }),
         provokedOpportunityAttacks: [],
         directionalPersistentAreaMovement: {
           kind: "directionalPersistentAreaMovement",
@@ -1040,8 +1046,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           sourceProcedureRef: freshEffect.sourceProcedureRef,
           areaId: gustOfWindAreaId,
           directionId: gustOfWindNorthDirectionId,
-          totalDistanceFeet: movementFeet(5),
-          closerDistanceFeet: movementFeet(5),
         },
       });
 
@@ -1065,7 +1069,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     ).toMatchObject({ tag: "resolved" });
   });
 
-  test("movement closer to the caster rejects mismatched Line movement cost", () => {
+  test("Line movement facts and path segments moving closer through the Line must agree", () => {
     const cast = castGustOfWind([]);
     const targetTurn = endTurn({
       state: cast.state,
@@ -1084,7 +1088,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         subject: act.subject,
         fills: [
           movementFill(movement, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [],
             directionalPersistentAreaMovement: {
               kind: "directionalPersistentAreaMovement",
@@ -1093,8 +1097,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
               sourceProcedureRef: lineEffect.sourceProcedureRef,
               areaId: gustOfWindAreaId,
               directionId: gustOfWindNorthDirectionId,
-              totalDistanceFeet: movementFeet(5),
-              closerDistanceFeet: movementFeet(5),
             },
           }),
         ],
@@ -1102,7 +1104,26 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.",
+        "directional persistent area Line movement fact requires a movement path segment moving closer through that Line.",
+    });
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: act.subject,
+        fills: [
+          movementFill(movement, {
+            path: testMovementPath({
+              distanceFeet: 5,
+              movesCloserThroughDirectionalArea: true,
+            }),
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "A movement path segment moving closer through a directional persistent area requires the directionalPersistentAreaMovement fact naming that area.",
     });
   });
 
@@ -1135,13 +1156,17 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const act = moveAct(prone);
     const movement = requireHole(act.initialHoles, "movement");
     // SRD 5.2.1 "Crawling": 5 feet + 5 against the Line + 5 crawling.
-    const crawl = (movementCostFeet: number) =>
+    const crawl = (activity: "ordinary" | "crawling") =>
       resolveBattleSubject({
         state: prone,
         subject: act.subject,
         fills: [
           movementFill(movement, {
-            movementCostFeet,
+            path: testMovementPath({
+              distanceFeet: 5,
+              activity,
+              movesCloserThroughDirectionalArea: true,
+            }),
             provokedOpportunityAttacks: [],
             directionalPersistentAreaMovement: {
               kind: "directionalPersistentAreaMovement",
@@ -1150,19 +1175,26 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
               sourceProcedureRef: lineEffect.sourceProcedureRef,
               areaId: gustOfWindAreaId,
               directionId: gustOfWindNorthDirectionId,
-              totalDistanceFeet: movementFeet(5),
-              closerDistanceFeet: movementFeet(5),
             },
           }),
         ],
       });
 
-    expect(crawl(10)).toMatchObject({
+    expect(crawl("ordinary")).toMatchObject({
       tag: "invalid",
-      message:
-        "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line. A Prone mover is crawling and also spends 1 extra foot for every foot moved.",
+      message: PRONE_MOVEMENT_PATH_MESSAGE,
     });
-    expect(crawl(15)).toMatchObject({ tag: "resolved" });
+    expect(crawl("crawling")).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: mover.combatantId,
+            movement: expect.objectContaining({ spentFeet: 15 }),
+          }),
+        ]),
+      },
+    });
   });
 
   test("movement cost composes Grease and Gust of Wind Line facts", () => {
@@ -1187,7 +1219,13 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       subject: act.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 15,
+          // SRD 5.2.1 "Difficult Terrain" and Gust of Wind: 5 feet + 5 for
+          // the Grease + 5 for moving closer through the Line.
+          path: testMovementPath({
+            distanceFeet: 5,
+            difficultTerrain: "areaDifficultTerrain",
+            movesCloserThroughDirectionalArea: true,
+          }),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -1200,8 +1238,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
                 areaId: greaseAreaId,
               },
             ],
-            totalDistanceFeet: movementFeet(5),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
           directionalPersistentAreaMovement: {
             kind: "directionalPersistentAreaMovement",
@@ -1210,8 +1246,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             sourceProcedureRef: lineEffect.sourceProcedureRef,
             areaId: gustOfWindAreaId,
             directionId: gustOfWindNorthDirectionId,
-            totalDistanceFeet: movementFeet(5),
-            closerDistanceFeet: movementFeet(5),
           },
         }),
       ],
@@ -1275,7 +1309,10 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       effectRef: typeof staleEffect.effectRef,
     ) =>
       movementFill(movement, {
-        movementCostFeet: 10,
+        path: testMovementPath({
+          distanceFeet: 5,
+          difficultTerrain: "areaDifficultTerrain",
+        }),
         provokedOpportunityAttacks: [],
         areaDifficultTerrain: {
           kind: "areaDifficultTerrain",
@@ -1288,8 +1325,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
               areaId: greaseAreaId,
             },
           ],
-          totalDistanceFeet: movementFeet(5),
-          difficultTerrainDistanceFeet: movementFeet(5),
         },
       });
 

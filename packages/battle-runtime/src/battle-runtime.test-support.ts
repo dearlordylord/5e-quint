@@ -321,6 +321,7 @@ import {
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+  ordinaryMovementPath,
   type ActiveOngoingFeatureOccurrence,
   type BattleAreaId,
   type BattleAttackExecutionSelection,
@@ -3468,34 +3469,25 @@ export function interruptDecisionFill(
   };
 }
 
+type MovementFillTestValue = Extract<
+  BattleFill,
+  { readonly kind: "movement" }
+>["value"];
+
 export function movementFill(
   hole: BattleHole,
-  value: {
-    readonly speedKind?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["speedKind"];
-    readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["provokedOpportunityAttacks"];
-    readonly areaDifficultTerrain?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["areaDifficultTerrain"];
-    readonly acrobaticMovement?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["acrobaticMovement"];
-    readonly grappleDrag?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["grappleDrag"];
-    readonly creatureSpaceTraversal?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["creatureSpaceTraversal"];
+  value: (
+    | { readonly distanceFeet: number; readonly path?: never }
+    | {
+        readonly path: MovementFillTestValue["path"];
+        readonly distanceFeet?: never;
+      }
+  ) & {
+    readonly speedKind?: MovementFillTestValue["speedKind"];
+    readonly provokedOpportunityAttacks: MovementFillTestValue["provokedOpportunityAttacks"];
+    readonly areaDifficultTerrain?: MovementFillTestValue["areaDifficultTerrain"];
+    readonly acrobaticMovement?: MovementFillTestValue["acrobaticMovement"];
+    readonly creatureSpaceTraversal?: MovementFillTestValue["creatureSpaceTraversal"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -3506,7 +3498,8 @@ export function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path:
+        value.path ?? ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       ...(value.areaDifficultTerrain === undefined
         ? {}
@@ -3514,13 +3507,45 @@ export function movementFill(
       ...(value.acrobaticMovement === undefined
         ? {}
         : { acrobaticMovement: value.acrobaticMovement }),
-      ...(value.grappleDrag === undefined
-        ? {}
-        : { grappleDrag: value.grappleDrag }),
       ...(value.creatureSpaceTraversal === undefined
         ? {}
         : { creatureSpaceTraversal: value.creatureSpaceTraversal }),
     },
+  };
+}
+
+/**
+ * A test path of `segments`, each ordinary, outside Difficult Terrain and
+ * dragging nothing unless the segment says otherwise.
+ */
+export function testMovementPath(
+  ...segments: readonly [TestMovementPathSegment, ...TestMovementPathSegment[]]
+): MovementFillTestValue["path"] {
+  const [first, ...rest] = segments.map(testMovementPathSegment);
+  if (first === undefined) {
+    throw new Error("Expected a movement path segment.");
+  }
+  return [first, ...rest];
+}
+
+type TestMovementPathSegment = {
+  readonly distanceFeet: number;
+  readonly activity?: MovementFillTestValue["path"][number]["activity"];
+  readonly difficultTerrain?: MovementFillTestValue["path"][number]["difficultTerrain"];
+  readonly movesCloserThroughDirectionalArea?: boolean;
+  readonly draggedGrappledTargetIds?: readonly CombatantId[];
+};
+
+function testMovementPathSegment(
+  segment: TestMovementPathSegment,
+): MovementFillTestValue["path"][number] {
+  return {
+    distanceFeet: movementFeet(segment.distanceFeet),
+    activity: segment.activity ?? "ordinary",
+    difficultTerrain: segment.difficultTerrain ?? "none",
+    movesCloserThroughDirectionalArea:
+      segment.movesCloserThroughDirectionalArea ?? false,
+    draggedGrappledTargetIds: segment.draggedGrappledTargetIds ?? [],
   };
 }
 

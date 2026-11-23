@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME levitate
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-levitated-creature
@@ -679,19 +680,19 @@ describe("L12G deterministic Levitate creature admission", () => {
       subject: moveAct.subject,
       fills: [
         movementFill(movementHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [],
         }),
       ],
     });
     expect(missingWitness).toMatchObject({ tag: "invalid" });
 
-    const underpaidClimbingCost = resolveBattleSubject({
+    const ordinaryWalkWhileLevitated = resolveBattleSubject({
       state: targetTurn.state,
       subject: moveAct.subject,
       fills: [
         movementFill(movementHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [],
           controlledVerticalSuspensionMovement: {
             kind: "controlledVerticalSuspensionMovement",
@@ -708,10 +709,10 @@ describe("L12G deterministic Levitate creature admission", () => {
         }),
       ],
     });
-    expect(underpaidClimbingCost).toMatchObject({
+    expect(ordinaryWalkWhileLevitated).toMatchObject({
       tag: "invalid",
       message:
-        "ControlledVerticalSuspension movement must spend the altitude-change distance as climbing, plus any area movement costs.",
+        "ControlledVerticalSuspension movement must climb along every segment of its path.",
     });
 
     const moved = resolveBattleSubject({
@@ -719,7 +720,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       subject: moveAct.subject,
       fills: [
         movementFill(movementHole, {
-          movementCostFeet: 10,
+          path: testMovementPath({ distanceFeet: 5, activity: "climbing" }),
           provokedOpportunityAttacks: [],
           controlledVerticalSuspensionMovement: {
             kind: "controlledVerticalSuspensionMovement",
@@ -994,7 +995,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       subject: moveAct.subject,
       fills: [
         movementFill(movementHole, {
-          movementCostFeet: 10,
+          path: testMovementPath({ distanceFeet: 5, activity: "climbing" }),
           provokedOpportunityAttacks: [],
           controlledVerticalSuspensionMovement: {
             kind: "controlledVerticalSuspensionMovement",

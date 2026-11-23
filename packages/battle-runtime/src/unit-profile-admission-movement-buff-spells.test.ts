@@ -461,11 +461,10 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       subject: selectedAct.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
           fixedCostMovementReplacement: {
             kind: "fixedCostMovementReplacement",
-            distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
               difficultTerrainAcrobatics: "notRequired",
@@ -631,7 +630,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       subject: jumpAct.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [
             {
               reactorId: spellTargetId,
@@ -647,7 +646,6 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
           ],
           fixedCostMovementReplacement: {
             kind: "fixedCostMovementReplacement",
-            distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
               difficultTerrainAcrobatics: "notRequired",
@@ -674,11 +672,10 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       subject: jumpAct.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
           fixedCostMovementReplacement: {
             kind: "fixedCostMovementReplacement",
-            distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
               difficultTerrainAcrobatics: "notRequired",
@@ -772,7 +769,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
         subject: jumpAct.subject,
         fills: [
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -784,31 +781,10 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
         subject: jumpAct.subject,
         fills: [
           movementFill(movement, {
-            movementCostFeet: 5,
+            distanceFeet: 35,
             provokedOpportunityAttacks: [],
             fixedCostMovementReplacement: {
               kind: "fixedCostMovementReplacement",
-              distanceFeet: movementFeet(30),
-              landing: {
-                kind: "legalLanding",
-                difficultTerrainAcrobatics: "passed",
-              },
-            },
-          }),
-        ],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-    expect(
-      resolveBattleSubject({
-        state: cast.state,
-        subject: jumpAct.subject,
-        fills: [
-          movementFill(movement, {
-            movementCostFeet: 10,
-            provokedOpportunityAttacks: [],
-            fixedCostMovementReplacement: {
-              kind: "fixedCostMovementReplacement",
-              distanceFeet: movementFeet(35),
               landing: {
                 kind: "legalLanding",
                 difficultTerrainAcrobatics: "passed",
@@ -824,11 +800,10 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       subject: jumpAct.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
           fixedCostMovementReplacement: {
             kind: "fixedCostMovementReplacement",
-            distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
               difficultTerrainAcrobatics: "failed",

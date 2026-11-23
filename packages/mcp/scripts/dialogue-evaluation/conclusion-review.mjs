@@ -52,6 +52,8 @@ const successful = (c) => {
 };
 const envelope = (s) => s?.operation?.result?.battleEnvelope;
 const activeState = (observation, sid) => envelope(observation?.states?.[sid]);
+const movementFillHasPath = (fill) =>
+  Array.isArray(fill.value?.path) && fill.value.path.length > 0;
 export function conclusionEvidence(directory) {
   const calls = rows(directory, "calls.jsonl"),
     observations = rows(directory, "observations.jsonl"),
@@ -381,7 +383,7 @@ export function validateConclusion(directory, envelopeValue, expectedManifest) {
       !successful(call) ||
       call.arguments.playSessionId !== response.playSessionId ||
       call.arguments.fill?.kind !== "movement" ||
-      !(call.arguments.fill.value.movementCostFeet > 0) ||
+      !movementFillHasPath(call.arguments.fill) ||
       beforeBattle?.checkpoint.battleId !== response.battleId ||
       beforeBattle.checkpoint.currentActorId !== retreat.combatantId ||
       afterBattle?.checkpoint.battleId !== response.battleId ||
@@ -403,7 +405,7 @@ export function validateConclusion(directory, envelopeValue, expectedManifest) {
       movingSubject.actorId !== retreat.combatantId ||
       !Number.isFinite(spentBefore) ||
       !Number.isFinite(spentAfter) ||
-      spentAfter - spentBefore !== call.arguments.fill.value.movementCostFeet
+      !(spentAfter > spentBefore)
     )
       return unresolved(
         "The cited ordinary movement is not owned and spent by the retreating participant.",

@@ -18,13 +18,14 @@ import type {
   BattleVerticalSuspensionAltitudeDirection,
   BattleControlledVerticalSuspensionInitialRiseHole,
   BattleControlledVerticalSuspensionMovementFact,
-  BattleMovementFillValue,
+  BattleMovementFillValueCommon,
   BattleState,
   BattleTargetSpatialFact,
   ControlledVerticalSuspensionActiveEffect,
 } from "../battle-state-execution.ts";
 import { Match } from "effect";
 import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
+import { battleMovementPathIsClimbing } from "./movement-path.ts";
 
 const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID = holeId(
   "battle:controlled-vertical-suspension:altitude-change",
@@ -183,9 +184,7 @@ export function validateControlledVerticalSuspensionMovementFact(input: {
   readonly state: BattleState;
   readonly combatant: BattleCreatureState;
   readonly fact: BattleControlledVerticalSuspensionMovementFact | undefined;
-  readonly speedKind: BattleMovementFillValue["speedKind"];
-  readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
-  readonly areaExtraCostFeet: MovementFeet;
+  readonly path: BattleMovementFillValueCommon;
 }): string | null {
   return Match.value(
     controlledVerticalSuspensionMovementEffectAdmission(
@@ -278,11 +277,16 @@ function controlledVerticalSuspensionMovementEffectMismatchMessage(
     : "ControlledVerticalSuspension movement witness does not match the active ControlledVerticalSuspension effect.";
 }
 
+/**
+ * SRD 5.2.1 Levitate: the target "can move only by pushing or pulling against
+ * a fixed object or surface within reach ..., which allows it to move as if it
+ * were climbing", and its altitude can change by up to the spell's limit. So
+ * every segment of its path is climbing, and the altitude change is part of
+ * that path.
+ */
 function validateMatchedControlledVerticalSuspensionMovementFact(
   input: {
-    readonly speedKind: BattleMovementFillValue["speedKind"];
-    readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
-    readonly areaExtraCostFeet: MovementFeet;
+    readonly path: BattleMovementFillValueCommon;
   },
   effect: ControlledVerticalSuspensionActiveEffect & {
     readonly maxAltitudeChangeFeet: MovementFeet;
@@ -294,27 +298,25 @@ function validateMatchedControlledVerticalSuspensionMovementFact(
     return "ControlledVerticalSuspension movement requires a fixed object or surface within reach.";
   }
   /* v8 ignore stop -- @preserve */
+  if (!battleMovementPathIsClimbing(input.path)) {
+    return "ControlledVerticalSuspension movement must climb along every segment of its path.";
+  }
   const altitudeChange = fact.altitudeChange;
   if (altitudeChange === undefined) {
     return null;
   }
-  /* v8 ignore start -- @preserve -- Malformed raw altitude change: the ControlledVerticalSuspension movement choice offers positive whole feet no greater than the active spell limit. */
+  const pathDistanceFeet = input.path.path.reduce(
+    (total, segment) => total + Number(segment.distanceFeet),
+    0,
+  );
+  /* v8 ignore start -- @preserve -- Malformed raw altitude change: the ControlledVerticalSuspension movement choice offers positive whole feet no greater than the active spell limit or the path climbed. */
   if (
     altitudeChange.distanceFeet <= 0 ||
     altitudeChange.distanceFeet > effect.maxAltitudeChangeFeet ||
-    !Number.isInteger(altitudeChange.distanceFeet)
+    !Number.isInteger(altitudeChange.distanceFeet) ||
+    Number(altitudeChange.distanceFeet) > pathDistanceFeet
   ) {
-    return "ControlledVerticalSuspension movement altitude change must be a positive whole number no greater than the spell limit.";
-  }
-  /* v8 ignore stop -- @preserve */
-  const expectedMovementCostFeet = movementFeet(
-    Number(altitudeChange.distanceFeet) *
-      (input.speedKind === "climb" ? 1 : 2) +
-      Number(input.areaExtraCostFeet),
-  );
-  /* v8 ignore start -- @preserve -- Malformed ControlledVerticalSuspension movement cost: discovery derives the exact climb-or-other altitude cost plus area surcharge from the submitted change. */
-  if (input.movementCostFeet !== expectedMovementCostFeet) {
-    return "ControlledVerticalSuspension movement must spend the altitude-change distance as climbing, plus any area movement costs.";
+    return "ControlledVerticalSuspension movement altitude change must be a positive whole number no greater than the spell limit or the distance climbed.";
   }
   /* v8 ignore stop -- @preserve */
   return null;

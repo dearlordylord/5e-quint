@@ -5,6 +5,7 @@ import {
   endBattleRuntimeTurn,
   interruptChoiceResponderId,
   initiativeScore,
+  ordinaryMovementPath,
   settleBattleRuntimeTransaction,
   startBattle,
   type BattleFill,
@@ -593,7 +594,7 @@ function prepareBattleMovementFacts(
     holeId: started.success.movementHole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(10),
+      path: ordinaryMovementPath(movementFeet(10)),
       provokedOpportunityAttacks: [],
     },
   };
@@ -602,7 +603,7 @@ function prepareBattleMovementFacts(
     holeId: started.success.movementHole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(10),
+      path: ordinaryMovementPath(movementFeet(10)),
       provokedOpportunityAttacks: [
         {
           reactorId: secondId,

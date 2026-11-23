@@ -562,7 +562,7 @@ describe("battle runtime: Cunning Strike", () => {
           ...window.damageAppliedFills,
           concentrationSavingThrowFill(concentration, true),
           movementFill(movement, {
-            movementCostFeet: 15,
+            distanceFeet: 15,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -867,7 +867,7 @@ describe("battle runtime: Cunning Strike", () => {
         fills: [
           ...window.damageAppliedFills,
           movementFill(move, {
-            movementCostFeet: 15,
+            distanceFeet: 15,
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
@@ -892,7 +892,7 @@ describe("battle runtime: Cunning Strike", () => {
         fills: [
           ...window.damageAppliedFills,
           movementFill(move, {
-            movementCostFeet: 15,
+            distanceFeet: 15,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -1133,7 +1133,7 @@ function cunningStrikeOpportunityAttackDamageWindow(
     subject: moveSubject,
     fills: [
       movementFill(move, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           {
             reactorId: fighterId,

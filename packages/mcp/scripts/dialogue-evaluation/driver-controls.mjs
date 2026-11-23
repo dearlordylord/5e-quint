@@ -232,7 +232,7 @@ try {
     {
       name: "provide_battle_input",
       arguments: {
-        fill: { kind: "movement", value: { movementCostFeet: 10 } },
+        fill: { kind: "movement", value: { path: [{ distanceFeet: 10 }] } },
       },
       result: { structuredContent: { result: { tag: "resolved" } } },
     },
@@ -529,7 +529,15 @@ if (process.platform === "darwin") {
           holeId: "battle:movement",
           value: {
             speedKind: "walk",
-            movementCostFeet: 5,
+            path: [
+              {
+                distanceFeet: 5,
+                activity: "ordinary",
+                difficultTerrain: "none",
+                movesCloserThroughDirectionalArea: false,
+                draggedGrappledTargetIds: [],
+              },
+            ],
             provokedOpportunityAttacks: [],
           },
         },

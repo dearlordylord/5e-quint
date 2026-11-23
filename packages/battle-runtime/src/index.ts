@@ -507,6 +507,12 @@ export {
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
+  type BattleMovementPath,
+  type BattleMovementPathActivity,
+  type BattleMovementPathDifficultTerrain,
+  type BattleMovementPathSegment,
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
   type BattleObjectDamageComponent,
   type BattleObjectIgnitionDisposition,
   type BattleObjectIgnitionOutcome,
@@ -795,6 +801,7 @@ export {
 } from "./battle-reducer/creature-space-table-route.ts";
 
 export { type BattleOpportunityAttackExecutionCandidate } from "./battle-reducer/movement-speed.ts";
+export { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,

@@ -108,7 +108,7 @@ describe("ongoing feature activation movement commands", () => {
         fills: [
           fixture.decision,
           movementFill(fixture.movement, {
-            movementCostFeet: 20,
+            distanceFeet: 20,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -155,7 +155,7 @@ describe("ongoing feature activation movement commands", () => {
   test("choice and movement protocol failures preserve the pre-activation state", () => {
     const fixture = movementFixture();
     const move = movementFill(fixture.movement, {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [],
     });
     const effect = { ...fixture.decision, holeId: holeId("unexpected-effect") };
@@ -174,7 +174,7 @@ describe("ongoing feature activation movement commands", () => {
       [
         fixture.decision,
         movementFill(fixture.movement, {
-          movementCostFeet: 21,
+          distanceFeet: 21,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -216,7 +216,7 @@ describe("ongoing feature activation movement commands", () => {
     )[0];
     if (attack === undefined) throw Error("Expected melee reaction");
     const move = movementFill(fixture.movement, {
-      movementCostFeet: 10,
+      distanceFeet: 10,
       provokedOpportunityAttacks: [
         {
           reactorId: skeletonId,

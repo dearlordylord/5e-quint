@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MISTY-STEP misty_step
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-teleport
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
@@ -216,7 +217,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
         holeId: destinationHole.holeId,
         value: {
           speedKind: "walk",
-          movementCostFeet: movementFeet(30),
+          path: ordinaryMovementPath(movementFeet(30)),
           provokedOpportunityAttacks: [
             {
               reactorId: spellTargetId,

@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-MULTIATTACK-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
@@ -228,7 +229,7 @@ function createRuleCoreStatBlockMultiattackDriver() {
             subject,
             fills: [
               movementFill(movement, {
-                movementCostFeet: 5,
+                distanceFeet: 5,
                 provokedOpportunityAttacks: [],
               }),
             ],
@@ -521,7 +522,7 @@ function unknownSyntheticProcedureRef(procedureRef: unknown): never {
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -533,7 +534,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };

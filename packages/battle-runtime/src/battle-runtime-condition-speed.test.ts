@@ -91,7 +91,7 @@ describe("condition Speed projection", () => {
           subject,
           fills: [
             movementFill(hole, {
-              movementCostFeet: 1,
+              distanceFeet: 1,
               provokedOpportunityAttacks: [],
             }),
           ],
@@ -129,7 +129,7 @@ describe("condition Speed projection", () => {
           subject,
           fills: [
             movementFill(hole, {
-              movementCostFeet: 30,
+              distanceFeet: 30,
               provokedOpportunityAttacks: [],
             }),
           ],

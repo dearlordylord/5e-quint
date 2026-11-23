@@ -333,12 +333,36 @@ function movementFillValuesEqual(
 ): boolean {
   return (
     a.speedKind === b.speedKind &&
-    a.movementCostFeet === b.movementCostFeet &&
+    movementPathsEqual(a.path, b.path) &&
     acrobaticMovementFactsEqual(a.acrobaticMovement, b.acrobaticMovement) &&
     opportunityAttackThreatListsEqual(
       a.provokedOpportunityAttacks,
       b.provokedOpportunityAttacks,
     )
+  );
+}
+
+function movementPathsEqual(
+  a: Extract<BattleFill, { readonly kind: "movement" }>["value"]["path"],
+  b: Extract<BattleFill, { readonly kind: "movement" }>["value"]["path"],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every((segment, index) => {
+      const other = b[index];
+      return (
+        other !== undefined &&
+        segment.distanceFeet === other.distanceFeet &&
+        segment.activity === other.activity &&
+        segment.difficultTerrain === other.difficultTerrain &&
+        segment.movesCloserThroughDirectionalArea ===
+          other.movesCloserThroughDirectionalArea &&
+        arrayValuesEqual(
+          segment.draggedGrappledTargetIds,
+          other.draggedGrappledTargetIds,
+        )
+      );
+    })
   );
 }
 

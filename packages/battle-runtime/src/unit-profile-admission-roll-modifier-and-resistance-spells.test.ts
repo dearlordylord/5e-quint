@@ -1973,7 +1973,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: spellCasterId,

@@ -595,7 +595,7 @@ function executeCompelledApproachContinuesScenario(): Projection {
       subject: command.subject,
       fills: [
         executeCompelledApproachMovementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 10,
           movedWithinFiveFeetOfCaster: false,
           provokedOpportunityAttacks: [],
         }),
@@ -620,7 +620,7 @@ function executeCompelledApproachWithinFiveScenario(): Projection {
       subject: command.subject,
       fills: [
         executeCompelledApproachMovementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 10,
           movedWithinFiveFeetOfCaster: true,
           provokedOpportunityAttacks: [],
         }),
@@ -663,7 +663,7 @@ function executeCompelledFleeScenario(): Projection {
       subject: command.subject,
       fills: [
         executeCompelledFleeMovementFill(movement, {
-          movementCostFeet: 30,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -686,7 +686,7 @@ function executeCompelledFleePartialRejectedScenario(): Projection {
     subject: command.subject,
     fills: [
       executeCompelledFleeMovementFill(movement, {
-        movementCostFeet: 10,
+        distanceFeet: 10,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -729,7 +729,7 @@ function executeCompelledFleeOpportunityAttackScenario(): Projection {
     subject: command.subject,
     fills: [
       executeCompelledFleeMovementFill(movement, {
-        movementCostFeet: 30,
+        distanceFeet: 30,
         provokedOpportunityAttacks: [
           {
             reactorId: spellCasterId,
