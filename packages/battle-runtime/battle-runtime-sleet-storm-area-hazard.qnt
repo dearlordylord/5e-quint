@@ -7,6 +7,7 @@ module battleRuntimeSleetStormAreaHazard {
   import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
@@ -23,8 +24,8 @@ module battleRuntimeSleetStormAreaHazard {
   pure def sleetStormAreaHazardActiveForTerrain(state: BattleState, areaId: int): bool =
     state.fighter.activeEffects.exists(effect => match effect { | SleetStormAreaHazard(data) => data.areaId == areaId | _ => false })
 
-  pure def sleetStormDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
-    battleRuntimeDifficultTerrainMovementCost(sleetStormAreaHazardActiveForTerrain(state, areaId), state.fighter.prone, totalDistanceFeet, difficultTerrainDistanceFeet)
+  pure def sleetStormDifficultTerrainMovementCost(state: BattleState, mover: Actor, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
+    battleRuntimeDifficultTerrainMovementCost(sleetStormAreaHazardActiveForTerrain(state, areaId), combatantForActor(state, mover).prone, totalDistanceFeet, difficultTerrainDistanceFeet)
   pure def activeEffectsWithoutSleetStormAreaHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | SleetStormAreaHazard(data) => data.areaId != areaId
