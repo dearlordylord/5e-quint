@@ -3,6 +3,7 @@ import * as fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import {
+  isOracleBatchResponse,
   decodeOracleBindPort,
   decodeOracleListeningPort,
   decodeDistributionId,
@@ -53,6 +54,23 @@ describe("Opaque Oracle process contract", () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  test("rejects unknown response members at both transport levels", () => {
+    const response = oracleDecodeRejectedResponse({
+      distributionId,
+      issues: [{ path: "", code: "invalidJson" }],
+    });
+    expect(isOracleBatchResponse(response)).toBe(true);
+    expect(isOracleBatchResponse({ ...response, unexpected: true })).toBe(
+      false,
+    );
+    expect(
+      isOracleBatchResponse({
+        ...response,
+        issues: [{ path: "", code: "invalidJson", unexpected: true }],
+      }),
+    ).toBe(false);
   });
 
   test("encodes a response compactly through its schema", () => {

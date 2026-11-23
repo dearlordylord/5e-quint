@@ -1,7 +1,8 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { Schema } from "effect";
 
 const OperationResultInputPathSchema = Schema.String.check(
-  Schema.isPattern(/^\$\./u),
+  jsonSchemaPattern(/^\$\./u),
 ).pipe(Schema.brand("OperationResultInputPath"));
 
 export const UnresolvedInputSourceSchema = Schema.Union([

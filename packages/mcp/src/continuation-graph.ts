@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { createHash } from "node:crypto";
 import { Match, Option, Result, Schema } from "effect";
 import type { McpApplicationServices } from "./composition-root.ts";
@@ -19,7 +20,7 @@ const Node = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("undefined") }),
   Schema.Struct({
     kind: Schema.Literal("bigint"),
-    value: Schema.String.check(Schema.isPattern(/^-?\d+$/u)),
+    value: Schema.String.check(jsonSchemaPattern(/^-?\d+$/u)),
   }),
   Schema.Struct({
     kind: Schema.Literal("object"),

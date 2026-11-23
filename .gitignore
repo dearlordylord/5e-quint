@@ -54,3 +54,5 @@ fat-traces/
 .scratch/
 
 scripts/raw-swarm/out/
+
+.hapsland.jsonc.rules-lock/

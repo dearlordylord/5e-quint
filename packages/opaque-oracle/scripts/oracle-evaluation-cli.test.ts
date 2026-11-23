@@ -5,6 +5,7 @@ import {
   Layer,
   Option,
   Path,
+  Queue,
   Terminal,
 } from "effect";
 import { systemError } from "effect/PlatformError";
@@ -674,9 +675,16 @@ function recordingFileSystem(
 }
 
 function recordingTerminal(output: string[]): Terminal.Terminal {
+  const size: Terminal.Size = { columns: 80, rows: 24 };
   return Terminal.make({
-    columns: Effect.succeed(80),
-    rows: Effect.succeed(24),
+    columns: Effect.succeed(size.columns),
+    rows: Effect.succeed(size.rows),
+    size: Effect.acquireRelease(
+      Queue.sliding<Terminal.Size>(1).pipe(
+        Effect.tap((queue) => Queue.offer(queue, size)),
+      ),
+      Queue.shutdown,
+    ),
     readInput: Effect.never,
     readLine: Effect.never,
     display: (text: string) => {

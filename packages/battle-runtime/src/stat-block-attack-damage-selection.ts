@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import type { PositiveInteger, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Brand, Match, Schema } from "effect";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 
 export const STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS = [
   "rolled",
@@ -64,18 +65,21 @@ export type StatBlockAttackDamageComponentSelection =
 
 export const StatBlockAttackDamageSelection = Schema.NonEmptyArray(
   StatBlockAttackDamageComponentSelection,
-).pipe(
-  Schema.check(
-    Schema.makeFilter(
-      statBlockAttackDamageSelectionHasCanonicalComponentRoles,
-      {
-        message:
-          "Stat Block Attack damage selection must list base component refs 1 through N in order, followed only by the optional Advantage bonus component ref.",
-      },
+)
+  .pipe(
+    Schema.check(
+      Schema.makeFilter(
+        statBlockAttackDamageSelectionHasCanonicalComponentRoles,
+        {
+          ...semanticRefinement("statBlockDamageComponentRoleCorrelation"),
+          message:
+            "Stat Block Attack damage selection must list base component refs 1 through N in order, followed only by the optional Advantage bonus component ref.",
+        },
+      ),
     ),
-  ),
-  Schema.brand("StatBlockAttackDamageSelection"),
-);
+    Schema.brand("StatBlockAttackDamageSelection"),
+  )
+  .annotate({ identifier: "StatBlockAttackDamageSelection" });
 export type StatBlockAttackDamageSelection =
   typeof StatBlockAttackDamageSelection.Type;
 

@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
@@ -58,7 +59,7 @@ export function currentGitRevision(
 }
 
 export const GitShaSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)),
+  Schema.check(jsonSchemaPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)),
   Schema.brand("RawSwarmGitSha"),
 );
 export type GitSha = Schema.Schema.Type<typeof GitShaSchema>;

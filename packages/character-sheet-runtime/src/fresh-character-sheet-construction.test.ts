@@ -1,5 +1,6 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
+import { jsonSchemaDocument } from "@dnd/shared/json-schema";
 import Ajv2020 from "ajv/dist/2020.js";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -105,9 +106,9 @@ describe("fresh Character Sheet construction", () => {
         })({ ...projection, displayName: "presentation must stay outside" }),
       ),
     ).toBe(true);
-    const projectionSchema = Schema.toStandardJSONSchemaV1(
+    const projectionSchema = jsonSchemaDocument(
       FreshCharacterSheetProjectionSchema,
-    )["~standard"].jsonSchema.output({ target: "draft-2020-12" });
+    ).schema;
     expect(JSON.stringify(projectionSchema)).toContain('"minItems":1');
   });
 
@@ -300,9 +301,8 @@ describe("fresh Character Sheet construction", () => {
     const serialized: unknown = JSON.parse(JSON.stringify(projection));
     expect(serialized).not.toHaveProperty("bookOfShadowsPresence");
     expect(serialized).not.toHaveProperty("pactSlotExpenditure");
-    const schema = Schema.toStandardJSONSchemaV1(
-      FreshCharacterSheetProjectionSchema,
-    )["~standard"].jsonSchema.output({ target: "draft-2020-12" });
+    const document = jsonSchemaDocument(FreshCharacterSheetProjectionSchema);
+    const schema = { ...document.schema, $defs: document.definitions };
     const validate = new Ajv2020({ strict: false }).compile(schema);
     expect(validate(serialized)).toBe(true);
     expect(

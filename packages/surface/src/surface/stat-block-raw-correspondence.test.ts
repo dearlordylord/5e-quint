@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -95,7 +96,8 @@ type EncodedTextOnlyReason = Schema.Codec.Encoded<
 const decode = <S extends Schema.Codec<unknown, unknown, never, never>>(
   schema: S,
   input: Schema.Codec.Encoded<S>,
-): S["Type"] => Schema.decodeUnknownSync(schema)(input);
+): S["Type"] =>
+  Schema.decodeUnknownSync(schema, STRICT_OBJECT_PARSE_OPTIONS)(input);
 
 const noResourceRefs: Extract<EncodedResourceRefs, { readonly kind: "none" }> =
   { kind: "none" };

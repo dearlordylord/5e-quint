@@ -48,6 +48,7 @@ test("projects only authentic declaration compiler support", () => {
           path.endsWith(".d.ts") ||
           path.endsWith(".d.cts") ||
           path.endsWith("/LICENSE") ||
+          path.endsWith("/THIRD_PARTY_NOTICES.md") ||
           path.endsWith("/package.json"),
       ),
     ).toBe(true);

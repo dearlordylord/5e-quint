@@ -157,11 +157,11 @@ const D20RollModifierEffectSchema = Schema.Struct({
   delta: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("fixedNumber"),
-      amount: Schema.Number,
+      amount: Schema.Finite,
       sign: Schema.Literals(["+", "-"]),
     }),
     Schema.Struct({
-      dice: Schema.Number,
+      dice: Schema.Finite,
       dieSize: Schema.Literals(BATTLE_D20_ROLL_MODIFIER_DIE_SIZES),
       sign: Schema.Literals(["+", "-"]),
     }),

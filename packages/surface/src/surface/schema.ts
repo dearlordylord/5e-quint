@@ -1,3 +1,4 @@
+import { jsonSchemaDocument } from "@dnd/shared/json-schema";
 import { JsonSchema, Result, Schema, SchemaIssue, Struct, Tuple } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
 import * as SchemaAST from "effect/SchemaAST";
@@ -716,7 +717,7 @@ const factorEncodedPublicationAst = (
         factoredMember = factor(member);
         return suspended;
       }),
-      ast.mode,
+      ast.options,
       ast.annotations,
       ast.checks,
       undefined,
@@ -907,7 +908,7 @@ const factoredEncodedPublicationAst = factorEncodedPublicationAst(
     suspends: new WeakMap(),
   },
 );
-const encodedPublicationDocument = Schema.toJsonSchemaDocument(
+const encodedPublicationDocument = jsonSchemaDocument(
   Schema.make<typeof encodedPublication>(factoredEncodedPublicationAst),
 );
 

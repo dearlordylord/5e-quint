@@ -1047,12 +1047,12 @@ const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
       Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
+        maxTargets: Schema.Finite,
       }),
       Schema.Struct({
         kind: Schema.Literal("pointOriginSphereTargetList"),
         minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
+        maxTargets: Schema.Finite,
         area: Schema.Struct({
           kind: Schema.Literal("pointOriginSphere"),
           radiusFeet: MovementFeetSchema,

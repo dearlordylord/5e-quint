@@ -4818,6 +4818,19 @@ describe("MCP server route", () => {
         initiative: 14,
       },
     ]);
+    const session = root.sessionStore.battleSession;
+    if (session === null) throw new Error("Expected the retained Battle.");
+    const [present] = session.state.companions.values();
+    expect(present).toBeDefined();
+    for (const field of [
+      "reappearanceCombatantId",
+      "resolvedStatBlockId",
+      "hitPoints",
+      "ammunitionStocks",
+      "reactionAvailable",
+    ]) {
+      expect(present).not.toHaveProperty(field);
+    }
   });
 
   test("end_battle preserves the active battle when character handoff ownership is invalid", () => {

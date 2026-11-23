@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { describe, expect, expectTypeOf, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
 import {
@@ -7,7 +8,7 @@ import {
   type Integer,
   type MovementFeet,
 } from "@dnd/shared/types";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import {
   spellActivationAttachmentPath,
@@ -479,7 +480,13 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         expr: { dice: 3, dieSize: 6 },
       },
     } as const;
-    const isBattleHole = Schema.is(BattleHoleSchema);
+    const isBattleHole = (value: unknown) =>
+      Result.isSuccess(
+        Schema.decodeUnknownResult(
+          BattleHoleSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(value),
+      );
 
     expect(isBattleHole(slowHole)).toBe(true);
     expect(isBattleHole({ ...slowHole, failurePercent: 50 })).toBe(false);

@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { existsSync, readFileSync } from "node:fs";
 
 import { Result, Option, Schema } from "effect";
@@ -59,6 +60,7 @@ import type { StartingEquipmentItemRef, WeaponRecord } from "./types.ts";
 
 const publication = Schema.decodeUnknownSync(
   Schema.toType(PublishedSrdSurfaceSchema),
+  STRICT_OBJECT_PARSE_OPTIONS,
 )(
   JSON.parse(
     readFileSync(
@@ -1384,7 +1386,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects lossy Alter Self Natural Weapons placeholders", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
     const completeNaturalWeapons = {
       kind: "natural_weapons",
       damageType: alterSelfNaturalWeaponGrowthDamageType,
@@ -1707,7 +1712,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("keeps combined, bright-only, and dim-only illumination states distinct", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
 
     expect(
       Result.isSuccess(
@@ -2236,6 +2244,7 @@ describe("SRD Unit catalog boundary", () => {
 
     const decode = Schema.decodeUnknownResult(
       Schema.toType(MagicCircleWardMechanicsSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
     const mechanics = magicCircle.mechanics;
 
@@ -2453,6 +2462,7 @@ describe("SRD Unit catalog boundary", () => {
 
     const decode = Schema.decodeUnknownResult(
       Schema.toType(StoneMergeMechanicsSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
     const mechanics = meldIntoStone.mechanics;
 
@@ -2563,6 +2573,7 @@ describe("SRD Unit catalog boundary", () => {
 
     const decode = Schema.decodeUnknownResult(
       Schema.toType(GlyphWardingMechanicsSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
     const mechanics = glyph.mechanics;
 
@@ -2997,7 +3008,10 @@ describe("SRD Unit catalog boundary", () => {
       });
       expect(
         Result.isFailure(
-          Schema.decodeUnknownResult(Schema.toType(TargetSelectionSchema))({
+          Schema.decodeUnknownResult(
+            Schema.toType(TargetSelectionSchema),
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )({
             ...phase.attachment.value.selection,
             visibility: "target_can_see",
           }),
@@ -3456,7 +3470,10 @@ describe("SRD Unit catalog boundary", () => {
       ]);
       expect(
         Result.isFailure(
-          Schema.decodeUnknownResult(Schema.toType(OngoingTriggerSchema))({
+          Schema.decodeUnknownResult(
+            Schema.toType(OngoingTriggerSchema),
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )({
             kind: "on_caster_spends_action",
             cost: { kind: "bonus_action" },
             laterTurnsOnly: false,
@@ -4575,7 +4592,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Magic Weapon enhancement bonuses outside the SRD slot tiers", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
     const invalidBonuses = [
       { kind: "fixed_number", amount: 1, sign: "+" },
       { kind: "fixed_dice", dice: 1, dieSize: 4, sign: "+" },
@@ -4624,7 +4644,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects paired worn material components with duplicated generic material-cost metadata", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(ComponentsSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(ComponentsSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
     const pairedWornRings = {
       kind: "paired_worn_items",
       itemKind: "ring",
@@ -5513,7 +5536,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Sending mental message block durations other than 8 hours", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
     const sendingMentalMessageEffect = {
       kind: "deliver_mental_message",
       recipient: "met_by_caster_or_described_by_someone_who_met_it",
@@ -5821,7 +5847,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Water Walk traversal facts with non-RAW surface example sequences", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
     const baseEffect = {
       kind: "grant_liquid_surface_traversal",
       surfaceScope: {
@@ -6026,6 +6055,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects contradictory Revivify death target-state filters", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(TargetSelectionSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -6311,7 +6341,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-RAW Locate Object subject variants", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
 
     expect(
       Result.isFailure(
@@ -6372,9 +6405,13 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-RAW Animal Messenger courier task variants", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
     const decodePhase = Schema.decodeUnknownResult(
       Schema.toType(ActivationPhaseSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
     const courierTask = {
       kind: "assign_courier_task",
@@ -6593,7 +6630,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-RAW Knock Arcane Lock suppression variants", () => {
-    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    );
 
     expect(
       Result.isFailure(
@@ -6997,6 +7037,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects Thunderwave area-only push facts outside area attachments", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(ActivationPhaseSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7040,9 +7081,11 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects non-positive or fractional Thunderwave feet facts", () => {
     const decodeAudible = Schema.decodeUnknownResult(
       Schema.toType(AudibleEffectSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
     const decodeEffectAtom = Schema.decodeUnknownResult(
       Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7131,6 +7174,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects malformed Expeditious Retreat action economy facts", () => {
     const decodeEffectAtom = Schema.decodeUnknownResult(
       Schema.toType(EffectAtomSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7244,9 +7288,10 @@ describe("SRD Unit catalog boundary", () => {
       if (phase.attachment.value.kind !== "target") return;
       expect(
         Result.isSuccess(
-          Schema.decodeUnknownResult(Schema.toType(TargetSelectionSchema))(
-            phase.attachment.value.selection,
-          ),
+          Schema.decodeUnknownResult(
+            Schema.toType(TargetSelectionSchema),
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )(phase.attachment.value.selection),
         ),
       ).toBe(true);
       expect(phase.attachment).toEqual({
@@ -7332,6 +7377,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects malformed Feather Fall mitigation facts", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(FeatherFallMitigationSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7357,6 +7403,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects falling target state without creature targets", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(TargetSelectionSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7383,6 +7430,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects creature size filters without creature target selections", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(TargetSelectionSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7426,6 +7474,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects malformed Jump movement replacement facts", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(JumpMovementReplacementSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -7473,6 +7522,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects willing target disposition for non-creature target selections", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(TargetSelectionSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
 
     expect(
@@ -8022,16 +8072,18 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))(
-          malformedMetamagic,
-        ),
+        Schema.decodeUnknownResult(
+          Schema.toType(ClassFeatureRecordSchema),
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(malformedMetamagic),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))(
-          duplicatedMetamagic,
-        ),
+        Schema.decodeUnknownResult(
+          Schema.toType(ClassFeatureRecordSchema),
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(duplicatedMetamagic),
       ),
     ).toBe(true);
   });
@@ -8069,9 +8121,10 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))(
-          malformedFontOfMagic,
-        ),
+        Schema.decodeUnknownResult(
+          Schema.toType(ClassFeatureRecordSchema),
+          STRICT_OBJECT_PARSE_OPTIONS,
+        )(malformedFontOfMagic),
       ),
     ).toBe(true);
   });
@@ -8919,7 +8972,10 @@ describe("SRD Unit catalog boundary", () => {
 
       expect(
         Result.isFailure(
-          Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))({
+          Schema.decodeUnknownResult(
+            Schema.toType(ClassFeatureRecordSchema),
+            STRICT_OBJECT_PARSE_OPTIONS,
+          )({
             ...unit,
             className: wrongClassName,
           }),
@@ -9329,6 +9385,7 @@ describe("SRD Unit catalog boundary", () => {
   test("rejects mismatched on-hit trigger and effect families", () => {
     const decode = Schema.decodeUnknownResult(
       Schema.toType(OnHitTriggerMechanicsSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     );
     const addSneakAttackDice = {
       kind: "add_attack_damage_dice",

@@ -44,10 +44,10 @@
     "@dnd/surface": "workspace:*",
     "@drdice/dice": "0.4.0",
     "@drdice/prng": "0.4.0",
-    "@effect/platform-node": "4.0.0-rc.112",
+    "@effect/platform-node": "4.1.4",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-auth": "1.7.2",
-    "effect": "4.0.0-rc.112",
+    "effect": "4.1.4",
     "jose": "^6.2.10",
     "redis": "6.2.1",
     "tsx": "^4.19.2"

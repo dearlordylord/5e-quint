@@ -502,8 +502,8 @@ export const DruidWildShapeKnownFormProcedureExecutionSchema = Schema.Struct({
   classLevel: ClassLevel,
   knownFormRoster: Schema.Struct({
     creatureType: Schema.Literals(CREATURE_TYPES),
-    count: Schema.Number,
-    maxChallengeRating: Schema.Number,
+    count: Schema.Finite,
+    maxChallengeRating: Schema.Finite,
     flySpeed: Schema.Literals(["allowed", "forbidden"]),
   }),
 });
@@ -651,11 +651,11 @@ export const ExtraActionGrantProcedureExecutionSchema = Schema.Struct({
 
 export const SelfBonusActionHealingProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("selfBonusActionHealing"),
-  dice: Schema.Number,
-  dieSize: Schema.Number,
-  flatBase: Schema.Number,
-  flatPerLevel: Schema.Number,
-  startingAtLevel: Schema.Number,
+  dice: Schema.Finite,
+  dieSize: Schema.Finite,
+  flatBase: Schema.Finite,
+  flatPerLevel: Schema.Finite,
+  startingAtLevel: Schema.Finite,
   className: Schema.Literals(CLASS_NAMES),
   classLevel: ClassLevel,
 });
@@ -687,7 +687,7 @@ const OngoingFeatureLifecycleProcedureExecutionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("roundExtended"),
     initialExpiration: Schema.Literal("endOfNextTurn"),
-    maximumDurationRounds: Schema.Number,
+    maximumDurationRounds: Schema.Finite,
     earlyEndConditions: Schema.Array(Schema.Literals(CONDITIONS)),
     earlyEndArmorCategories: Schema.Union([
       Schema.Tuple([]),
@@ -703,7 +703,7 @@ const OngoingFeatureLifecycleProcedureExecutionSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("fixedDuration"),
-    maximumDurationRounds: Schema.Number,
+    maximumDurationRounds: Schema.Finite,
     earlyEndConditions: Schema.Array(Schema.Literals(CONDITIONS)),
     earlyEndArmorCategories: Schema.Union([
       Schema.Tuple([]),
@@ -722,12 +722,12 @@ const OngoingFeatureRollModifierProcedureExecutionSchema = Schema.Struct({
 
 const OngoingFeatureSpellModifierProcedureExecutionSchema = Schema.Struct({
   sourceClassName: Schema.Literals(CLASS_NAMES),
-  saveDcBonus: Schema.Number,
+  saveDcBonus: Schema.Finite,
   attackRollMode: Schema.Literals(ATTACK_ROLL_MODES),
 });
 
 const OngoingFeatureDamageModifierProcedureExecutionSchema = Schema.Struct({
-  amount: Schema.Number,
+  amount: Schema.Finite,
   abilityFilter: Schema.optionalKey(Schema.Array(AbilitySchema)),
   weaponUsageFilter: Schema.optionalKey(WeaponUsageSchema),
 });
@@ -763,9 +763,9 @@ export const AttackDamageRiderProcedureExecutionSchema = Schema.Union([
     classLevel: ClassLevel,
     dice: Schema.Struct({
       kind: Schema.Literal("classLevelTable"),
-      dieSize: Schema.Number,
+      dieSize: Schema.Finite,
       diceByLevel: Schema.Array(
-        Schema.Struct({ atLevel: Schema.Number, count: Schema.Number }),
+        Schema.Struct({ atLevel: Schema.Finite, count: Schema.Finite }),
       ),
     }),
   }),

@@ -215,14 +215,16 @@ export const CHARACTER_CLASS_LEVELS = [
 
 export type CharacterClassLevel = number & Brand.Brand<"CharacterClassLevel">;
 
-export const CharacterClassLevelSchema = Schema.Number.pipe(
+export const CharacterClassLevelSchema = Schema.Finite.pipe(
   Schema.check(
-    Schema.makeFilter((value: number) =>
-      CHARACTER_CLASS_LEVELS.some((level) => level === value),
+    Schema.makeFilter(
+      (value: number) =>
+        CHARACTER_CLASS_LEVELS.some((level) => level === value),
+      { toJsonSchema: () => ({ enum: CHARACTER_CLASS_LEVELS }) },
     ),
   ),
   Schema.brand("CharacterClassLevel"),
-);
+).annotate({ identifier: "CharacterClassLevel" });
 
 export const CharacterClassLevel = Brand.all(
   Brand.make<CharacterClassLevel>(

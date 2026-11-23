@@ -2,6 +2,7 @@ import {
   StatBlockLeveledSpellAccessSchema,
   StatBlockLeveledSpellInvocationResourceSchema,
 } from "../procedure-execution/spell-invocation-codecs.ts";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
@@ -249,7 +250,7 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   attackDamageAbilityModifierChoice: Schema.optionalKey(
     AttackDamageAbilityModifierChoiceSchema,
   ),
-  damageBonus: Schema.optionalKey(Schema.Number),
+  damageBonus: Schema.optionalKey(Schema.Finite),
   damageTypeChoices: Schema.optionalKey(
     Schema.TupleWithRest(Schema.Tuple([DamageTypeSchema, DamageTypeSchema]), [
       DamageTypeSchema,
@@ -279,7 +280,7 @@ const SelectedStatBlockAttackDamageComponentSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     componentRef: StatBlockAttackDamageComponentRef,
-    amount: Schema.Number,
+    amount: Schema.Finite,
     damageType: DamageTypeSchema,
   }),
   Schema.Struct({
@@ -297,15 +298,21 @@ const SelectedStatBlockAttackDamageSchema = Schema.Struct({
   advantageBonus: Schema.optionalKey(
     SelectedStatBlockAttackDamageComponentSchema,
   ),
-}).pipe(
-  Schema.check(
-    Schema.makeFilter(selectedStatBlockAttackDamageHasCanonicalComponentRefs, {
-      message:
-        "Selected Stat Block damage component refs must form the canonical role bijection.",
-    }),
-  ),
-  Schema.brand("SelectedStatBlockAttackDamage"),
-);
+})
+  .pipe(
+    Schema.check(
+      Schema.makeFilter(
+        selectedStatBlockAttackDamageHasCanonicalComponentRefs,
+        {
+          ...semanticRefinement("statBlockDamageComponentRoleCorrelation"),
+          message:
+            "Selected Stat Block damage component refs must form the canonical role bijection.",
+        },
+      ),
+    ),
+    Schema.brand("SelectedStatBlockAttackDamage"),
+  )
+  .annotate({ identifier: "SelectedStatBlockAttackDamage" });
 
 const StatBlockAttackHitTargetSizeConditionRiderSchema = Schema.Struct({
   condition: Schema.Literal("prone"),
@@ -326,7 +333,7 @@ const SelectedStatBlockAttackRollCommonFields = {
   attackAbility: Schema.Union([AbilitySchema, Schema.Literal("spellcasting")]),
   attackBonus: Schema.Struct({
     kind: Schema.Literal("literal"),
-    value: Schema.Number,
+    value: Schema.Finite,
   }),
   multiattackCount: Schema.optionalKey(Schema.Never),
   onHit: SelectedStatBlockAttackHitEffectsSchema,
@@ -336,7 +343,7 @@ const SelectedStatBlockAttackRollMechanicsSchema = Schema.Union([
   Schema.Struct({
     ...SelectedStatBlockAttackRollCommonFields,
     attackType: Schema.Literal("melee"),
-    reachFeet: Schema.Number,
+    reachFeet: Schema.Finite,
     rangeFeet: Schema.optionalKey(Schema.Never),
     ammunition: Schema.optionalKey(Schema.Never),
   }),
@@ -345,8 +352,8 @@ const SelectedStatBlockAttackRollMechanicsSchema = Schema.Union([
     attackType: Schema.Literal("ranged"),
     reachFeet: Schema.optionalKey(Schema.Never),
     rangeFeet: Schema.Struct({
-      normal: Schema.Number,
-      long: Schema.Number,
+      normal: Schema.Finite,
+      long: Schema.Finite,
     }),
     ammunition: Schema.optionalKey(AmmunitionKindSchema),
   }),
@@ -400,7 +407,7 @@ export const SupportedAttackActionOptionSchema = Schema.Union([
     attackAbilityModifier: AbilityModifier,
     attackBonus: AttackBonus,
     damageAbilityModifier: AbilityModifier,
-    damageBonus: Schema.optionalKey(Schema.Number),
+    damageBonus: Schema.optionalKey(Schema.Finite),
   }),
   StatBlockAttackActionOptionSchema,
 ]) satisfies Schema.Codec<SupportedAttackActionOption, unknown>;
@@ -425,7 +432,7 @@ const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({
   attackDamageAbilityModifierChoice: Schema.optionalKey(
     MechanicalAttackDamageAbilityModifierChoiceSchema,
   ),
-  damageBonus: Schema.optionalKey(Schema.Number),
+  damageBonus: Schema.optionalKey(Schema.Finite),
   damageTypeChoices: Schema.optionalKey(
     Schema.TupleWithRest(Schema.Tuple([DamageTypeSchema, DamageTypeSchema]), [
       DamageTypeSchema,
@@ -480,12 +487,11 @@ export const MechanicalSupportedAttackActionOptionSchema = Schema.Union([
     attackAbilityModifier: AbilityModifier,
     attackBonus: AttackBonus,
     damageAbilityModifier: AbilityModifier,
-    damageBonus: Schema.optionalKey(Schema.Number),
+    damageBonus: Schema.optionalKey(Schema.Finite),
   }),
   MechanicalStatBlockAttackActionOptionSchema,
 ]).annotate({
   identifier: "MechanicalSupportedAttackActionOption",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export type MechanicalSupportedAttackActionOption =
@@ -558,7 +564,7 @@ const SingleCombatantSpellTargetingSchema = Schema.Struct({
 const TargetListSpellTargetingSchema = Schema.Struct({
   kind: Schema.Literal("targetList"),
   minTargets: Schema.Literal(1),
-  maxTargets: Schema.Number,
+  maxTargets: Schema.Finite,
 });
 const PointOriginSphereSpellTargetingSchema = Schema.Struct({
   kind: Schema.Literal("pointOriginSphere"),
@@ -664,11 +670,11 @@ export const SpellFailedSaveConditionExpirationSchema = Schema.Union([
   Schema.Literals(["endOfCasterNextTurn", "concentration"]),
   Schema.Struct({
     kind: Schema.Literal("concentration"),
-    durationTicks: Schema.Number,
+    durationTicks: Schema.Finite,
   }),
   Schema.Struct({
     kind: Schema.Literal("duration"),
-    durationTicks: Schema.Number,
+    durationTicks: Schema.Finite,
   }),
 ]);
 
@@ -693,8 +699,8 @@ export const SpellConditionRepeatSaveSchema = Schema.Struct({
 export const SpellConditionCountedRepeatSaveSchema = Schema.Struct({
   kind: Schema.Literal("counted"),
   save: SpellConditionRepeatSaveSchema,
-  successThreshold: Schema.Number,
-  failureThreshold: Schema.Number,
+  successThreshold: Schema.Finite,
+  failureThreshold: Schema.Finite,
   savingThrowDisadvantageAbilities: Schema.NonEmptyArray(AbilitySchema),
 });
 
@@ -751,7 +757,7 @@ export const RollModifierSpellTargetingSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("targetList"),
     minTargets: Schema.Literal(1),
-    maxTargets: Schema.Number,
+    maxTargets: Schema.Finite,
     requiredTargetDisposition: Schema.Literals(["unrestricted", "willing"]),
   }),
   Schema.Struct({
