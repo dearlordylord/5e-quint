@@ -3,6 +3,7 @@ import {
   d20Roll,
   DieRollResult,
   movementFeet,
+  NonNegativeInteger,
   type D20Roll,
 } from "@dnd/shared/types";
 import fc from "fast-check";
@@ -14,6 +15,12 @@ import {
   type BattleContinuationComparableFill,
 } from "./battle-reducer/battle-fill-equality.ts";
 import { combatantId } from "./battle-runtime.test-support.ts";
+import {
+  battleCharacterExecutionScopeRef,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleProcedureExecutionRef,
+} from "./identity.ts";
 import {
   type BattleAttackRollResult,
   type BattleD20TestRoll,
@@ -757,6 +764,35 @@ describe("resubmitted fill continuity", () => {
       battleResubmittedFillKeepsAcceptedFill(
         deathSavingThrow(1),
         deathSavingThrow(2, reroll),
+      ),
+    ).toBe(false);
+  });
+
+  test("a damage roll may not change a choice the accepted fill made", () => {
+    const procedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("continuity-battle"),
+        combatantId("combatant:continuity:0"),
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const damageRoll = (selection: "apply" | "decline"): RolledDiceFill => ({
+      kind: "rolledDice",
+      holeId: holeId("continuity-hole:damage"),
+      value: [{ results: [DieRollResult(4)] }],
+      attackDamageAbilityModifierChoice: { procedureRef, selection },
+    });
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        damageRoll("apply"),
+        damageRoll("apply"),
+      ),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        damageRoll("apply"),
+        damageRoll("decline"),
       ),
     ).toBe(false);
   });

@@ -194,12 +194,11 @@ export function battleResubmittedFillKeepsAcceptedFill(
   const atAcceptedDecisions = isBattleRerollDecisionFill(resubmitted)
     ? resubmittedFillAtAcceptedDecisions(accepted, resubmitted)
     : resubmitted;
-  if (atAcceptedDecisions === null) return false;
-  return isBattleContinuationComparableFill(accepted) &&
-    isBattleContinuationComparableFill(atAcceptedDecisions)
-    ? battleContinuationFillEquals(accepted, atAcceptedDecisions)
-    : canonicalStructuralKey(accepted) ===
-        canonicalStructuralKey(atAcceptedDecisions);
+  return (
+    atAcceptedDecisions !== null &&
+    canonicalStructuralKey(accepted) ===
+      canonicalStructuralKey(atAcceptedDecisions)
+  );
 }
 
 /**
