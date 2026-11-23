@@ -772,6 +772,7 @@ const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   dropProne: "Drop Prone",
   interactWithObject: "Interact with an Object",
   pickUpHeldWeapon: "Pick Up Weapon",
+  changeWeaponAfterAttack: "Equip or Unequip Weapon",
   releaseReadiedSpell: "Release Readied Spell",
   releaseReadiedMovement: "Release Readied Movement",
   reportReadyTrigger: "Report Ready Trigger",

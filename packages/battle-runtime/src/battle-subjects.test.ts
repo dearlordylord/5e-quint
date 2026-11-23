@@ -157,6 +157,12 @@ describe("BattleSubject identity", () => {
       dropProne: {},
       interactWithObject: {},
       pickUpHeldWeapon: { objectId: battleObjectId("subject-pickup-weapon") },
+      changeWeaponAfterAttack: {
+        weaponChange: {
+          kind: "stow",
+          objectId: battleObjectId("subject-pickup-weapon"),
+        },
+      },
       releaseReadiedSpell: {
         readiedSpellCasterId: targetId,
         procedureRef: targetProcedureRef,

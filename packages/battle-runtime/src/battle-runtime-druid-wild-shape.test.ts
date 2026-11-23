@@ -4150,14 +4150,21 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
   });
 
   expect(hasSpell(revertedSession, "shillelagh")).toBe(false);
-  expect(
-    discoverBattleActCandidates(revertedSession.state).some((act) =>
-      isAttackActForProcedure(
-        act,
-        trueFormMainAttackProcedureRef(revertedSession.state),
-      ),
+  const revertedMainAttacks = discoverBattleActCandidates(
+    revertedSession.state,
+  ).filter((act) =>
+    isAttackActForProcedure(
+      act,
+      trueFormMainAttackProcedureRef(revertedSession.state),
     ),
-  ).toBe(false);
+  );
+  // The fallen Quarterstaff can be picked up only as part of an attack with
+  // it (Rules Glossary, "Attack [Action]", Equipping and Unequipping Weapons).
+  expect(
+    revertedMainAttacks.map((act) =>
+      "weaponChange" in act.subject ? act.subject.weaponChange : undefined,
+    ),
+  ).toEqual([{ kind: "equip", objectId: quarterstaff.objectId }]);
   expect(
     resolveBattleSubject({
       state: revertedSession.state,

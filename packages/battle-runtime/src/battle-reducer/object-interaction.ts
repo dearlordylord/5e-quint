@@ -33,9 +33,9 @@ import type {
 } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  groundedHeldWeaponPickups,
-  heldWeaponPickupTransition,
-} from "./battle-object-lifecycle.ts";
+  groundedLoadoutWeaponPickups,
+  stateWithLoadoutWeaponChange,
+} from "./loadout-weapon-custody.ts";
 import {
   combatantCanTakeActions,
   currentActorId,
@@ -114,7 +114,7 @@ export function objectInteractionActs(
       },
       initialHoles: [objectInteractionRulingHole(state, actorId)],
     },
-    ...groundedHeldWeaponPickups(state, actor).map(
+    ...groundedLoadoutWeaponPickups(state, actor).map(
       (pickup): BattleActDiscoveryCandidate => ({
         subject: {
           tag: "runtimeCommand",
@@ -186,10 +186,17 @@ export function resolveObjectInteraction(
       resolvedResult(chargedState),
     ),
     Match.when({ command: "pickUpHeldWeapon" }, (subject) => {
-      const pickedUp = heldWeaponPickupTransition(chargedState, {
-        actorId: subject.actorId,
-        objectId: subject.objectId,
-      });
+      const pickedUp = groundedLoadoutWeaponPickups(input.state, actor).some(
+        (pickup) => pickup.objectId === subject.objectId,
+      )
+        ? stateWithLoadoutWeaponChange(chargedState, subject.actorId, {
+            kind: "equip",
+            objectId: subject.objectId,
+          })
+        : {
+            tag: "invalid" as const,
+            message: "That weapon is not on the ground for this creature to pick up.",
+          };
       return pickedUp.tag === "applied"
         ? resolvedResult(pickedUp.state)
         : invalidResult(input.state, "staleSubject", pickedUp.message);

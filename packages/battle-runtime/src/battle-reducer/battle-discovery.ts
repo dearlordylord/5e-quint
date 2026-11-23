@@ -22,6 +22,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
+import { changeWeaponAfterAttackActs } from "./attack-weapon-change.ts";
+import {
+  loadoutWeaponChanges,
+  stateWithLoadoutWeaponChange,
+} from "./loadout-weapon-custody.ts";
+import type { AttackWeaponChange } from "../battle-subjects.ts";
 import { optionalProperty } from "../optional-property.ts";
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -401,25 +407,80 @@ function appendOrdinaryAttackActs(
     )
   ) {
     acts.push(
-      ...attackActionOptions.flatMap((attack) => {
-        const targetHole = ordinaryAttackTargetHole(state, actorId, attack);
-        return targetHole.choices.length === 0 &&
-          targetHole.attack?.acceptsObjectTarget !== true
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "action" as const,
-                  actorId,
-                  action: "attack" as const,
-                  ...attackSubjectPart(attack),
-                },
-                initialHoles: [targetHole],
-              },
-            ];
-      }),
+      ...attackActionOptions.flatMap((attack) =>
+        ordinaryAttackActs(state, actorId, attack, undefined),
+      ),
+      ...drawnWeaponAttackActs(state, actorId),
     );
   }
+}
+
+function ordinaryAttackActs(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: ReturnType<typeof attackActionOptionsForActor>[number],
+  weaponChange: AttackWeaponChange | undefined,
+): BattleActDiscoveryCandidate[] {
+  const targetHole = ordinaryAttackTargetHole(state, actorId, attack);
+  if (
+    targetHole.choices.length === 0 &&
+    targetHole.attack?.acceptsObjectTarget !== true
+  ) {
+    return [];
+  }
+  const subject = {
+    tag: "action" as const,
+    actorId,
+    action: "attack" as const,
+    ...attackSubjectPart(attack),
+  };
+  return [
+    {
+      subject:
+        weaponChange === undefined || subject.attackAbility === undefined
+          ? subject
+          : { ...subject, weaponChange },
+      initialHoles: [targetHole],
+    },
+  ];
+}
+
+/**
+ * The attacks with a loadout weapon the creature draws or picks up as part
+ * of the attack (SRD 5.2.1 Rules Glossary, "Attack [Action]", Equipping and
+ * Unequipping Weapons). Other changes before an attack ride on any attack
+ * subject as its `weaponChange`.
+ */
+function drawnWeaponAttackActs(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleActDiscoveryCandidate[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) return [];
+  return loadoutWeaponChanges(state, actor)
+    .filter((change) => change.kind === "equip")
+    .flatMap((change) => {
+      const equipped = stateWithLoadoutWeaponChange(state, actorId, {
+        kind: "equip",
+        objectId: change.objectId,
+      });
+      /* v8 ignore next -- @preserve -- loadoutWeaponChanges admits only changes that apply. */
+      if (equipped.tag === "invalid") return [];
+      return attackActionOptionsForActor(equipped.state, actorId)
+        .filter(
+          (attack) =>
+            attack.kind === "weapon" &&
+            attack.weaponObjectId === change.objectId &&
+            attackActionOptionIsOrdinaryAttackAction(
+              equipped.state,
+              actorId,
+              attack,
+            ),
+        )
+        .flatMap((attack) =>
+          ordinaryAttackActs(equipped.state, actorId, attack, change),
+        );
+    });
 }
 
 function discoverBattleActsWithoutRouteEvents(
@@ -471,6 +532,7 @@ function discoverBattleActsWithoutRouteEvents(
     acts.push(...movementActs(state, actorId));
     acts.push(...proneTransitionActs(state, actor));
     acts.push(...objectInteractionActs(state, actor));
+    acts.push(...changeWeaponAfterAttackActs(state, actor));
     acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
     acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
     acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -698,6 +760,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   acts.push(...proneTransitionActs(state, actor));
   acts.push(...objectInteractionActs(state, actor));
+  acts.push(...changeWeaponAfterAttackActs(state, actor));
   acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
   acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
   acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));

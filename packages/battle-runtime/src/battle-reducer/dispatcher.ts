@@ -189,6 +189,7 @@ import {
   isMovementProcedureSubject,
   resolveMovementProcedure,
 } from "./movement-procedures.ts";
+import { resolveChangeWeaponAfterAttack } from "./attack-weapon-change.ts";
 import {
   isObjectInteractionSubject,
   resolveObjectInteraction,
@@ -987,6 +988,12 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         subject,
         ...handledInterruptRouteOption,
       });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "changeWeaponAfterAttack"
+    ) {
+      return resolveChangeWeaponAfterAttack({ ...input, subject });
     }
     if (isObjectInteractionSubject(subject)) {
       return resolveObjectInteraction({ ...input, subject });

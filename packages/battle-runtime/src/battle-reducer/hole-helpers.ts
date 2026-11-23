@@ -329,6 +329,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "objectInteractionRuling" as const,
       ),
       byBattleHoleKind(
+        "weaponDropPosition",
+        () => "weaponDropPosition" as const,
+      ),
+      byBattleHoleKind(
         "temporaryHitPointChoice",
         () => "temporaryHitPointChoice" as const,
       ),

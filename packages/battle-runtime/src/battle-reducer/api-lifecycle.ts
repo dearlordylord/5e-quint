@@ -1088,6 +1088,7 @@ function initialBattleState(
     executionScopeCursors: accumulator.executionScopeCursors,
     companions: new Map(),
     groundObjects: new Map(),
+    stowedLoadoutWeapons: new Map(),
     objectOutlines: [],
     lightEmitters: [],
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),

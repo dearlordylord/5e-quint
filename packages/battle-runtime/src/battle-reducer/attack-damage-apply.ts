@@ -104,7 +104,7 @@ import {
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import {
-  battleObjectIsOnGround,
+  loadoutWeaponIsHeld,
   characterEffectiveLoadoutFromOrigin,
 } from "./battle-object-lifecycle.ts";
 
@@ -442,7 +442,7 @@ export function attackActionOptionsForActor(
     const options =
       actor.origin.attack == null ||
       (actor.origin.attack.kind === "weapon" &&
-        battleObjectIsOnGround(
+        !loadoutWeaponIsHeld(
           state,
           actor.combatantId,
           actor.origin.attack.weaponObjectId,
@@ -528,8 +528,8 @@ export function offHandAttackActionOptionsForActor(
   if (main === null || offHand === undefined) return [];
   if (
     (main.kind === "weapon" &&
-      battleObjectIsOnGround(state, actorId, main.weaponObjectId)) ||
-    battleObjectIsOnGround(state, actorId, offHand.weaponObjectId)
+      !loadoutWeaponIsHeld(state, actorId, main.weaponObjectId)) ||
+    !loadoutWeaponIsHeld(state, actorId, offHand.weaponObjectId)
   ) {
     return [];
   }

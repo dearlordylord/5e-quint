@@ -96,6 +96,20 @@ export const BATTLE_SUBJECT_BONUS_ACTIONS = [
 export type BattleSubjectBonusAction =
   (typeof BATTLE_SUBJECT_BONUS_ACTIONS)[number];
 
+/**
+ * The one weapon an Attack action attack equips or unequips: equip draws a
+ * stowed loadout weapon or picks a fallen one up, stow sheathes or stows a
+ * held one, and drop lets a held one fall.
+ */
+export const ATTACK_WEAPON_CHANGE_KINDS = ["equip", "stow", "drop"] as const;
+export type AttackWeaponChangeKind =
+  (typeof ATTACK_WEAPON_CHANGE_KINDS)[number];
+export const AttackWeaponChangeSchema = Schema.Struct({
+  kind: Schema.Literals(ATTACK_WEAPON_CHANGE_KINDS),
+  objectId: BattleObjectId,
+});
+export type AttackWeaponChange = typeof AttackWeaponChangeSchema.Type;
+
 export const BATTLE_RUNTIME_COMMANDS = [
   "endTurn",
   "endConcentration",
@@ -106,6 +120,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "dropProne",
   "interactWithObject",
   "pickUpHeldWeapon",
+  "changeWeaponAfterAttack",
   "releaseReadiedSpell",
   "releaseReadiedMovement",
   "reportReadyTrigger",
@@ -719,6 +734,13 @@ const BattlePickUpHeldWeaponSubjectSchema = Schema.Struct({
   objectId: BattleObjectId,
 });
 
+const BattleChangeWeaponAfterAttackSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("changeWeaponAfterAttack"),
+  weaponChange: AttackWeaponChangeSchema,
+});
+
 export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -809,6 +831,7 @@ export const BattleSubjectSchema = Schema.Union([
     attackName: Schema.optionalKey(Schema.Never),
     statBlockSection: Schema.optionalKey(Schema.Never),
     statBlockDamageSelection: Schema.optionalKey(Schema.Never),
+    weaponChange: Schema.optionalKey(AttackWeaponChangeSchema),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -1047,6 +1070,7 @@ export const BattleSubjectSchema = Schema.Union([
   }),
   BattleInteractWithObjectSubjectSchema,
   BattlePickUpHeldWeaponSubjectSchema,
+  BattleChangeWeaponAfterAttackSubjectSchema,
   BattleInterruptReleaseReadiedSpellSubjectSchema,
   BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
@@ -1400,6 +1424,7 @@ function battleRuntimeCommandProcedureRefs(
       dropProne: noProcedureExecutionReferences,
       interactWithObject: noProcedureExecutionReferences,
       pickUpHeldWeapon: noProcedureExecutionReferences,
+      changeWeaponAfterAttack: noProcedureExecutionReferences,
       releaseReadiedSpell: (value) => [value.procedureRef],
       releaseReadiedMovement: noProcedureExecutionReferences,
       reportReadyTrigger: noProcedureExecutionReferences,
@@ -1491,6 +1516,7 @@ export function battleSubjectProcedureRefsBelongToOwners(
         dropProne: (v) => v.actorId,
         interactWithObject: (v) => v.actorId,
         pickUpHeldWeapon: (v) => v.actorId,
+        changeWeaponAfterAttack: (v) => v.actorId,
         releaseReadiedSpell: (v) => v.readiedSpellCasterId,
         releaseReadiedMovement: (v) => v.actorId,
         reportReadyTrigger: (v) => v.actorId,
@@ -1689,6 +1715,7 @@ function battleRuntimeCommandBoundExecutionReferences(
       dropProne: noBoundExecutionReferences,
       interactWithObject: noBoundExecutionReferences,
       pickUpHeldWeapon: noBoundExecutionReferences,
+      changeWeaponAfterAttack: noBoundExecutionReferences,
       releaseReadiedSpell: noBoundExecutionReferences,
       releaseReadiedMovement: noBoundExecutionReferences,
       reportReadyTrigger: noBoundExecutionReferences,
@@ -1991,6 +2018,7 @@ function battleSubjectKey(subject: BattleSubject): string {
             attack.actorId,
             attack.action,
             attackExecutionSelectionKey(attack),
+            "weaponChange" in attack ? (attack.weaponChange ?? null) : null,
           ]),
         ),
         Match.when({ tag: "action", action: "dash" }, (action) =>
@@ -2118,6 +2146,8 @@ function battleSubjectKey(subject: BattleSubject): string {
             "trigger" in command ? command.trigger : null,
             runtimeCommandAreaMembershipTrigger(command),
             "relevantEffect" in command ? command.relevantEffect : null,
+            "objectId" in command ? command.objectId : null,
+            "weaponChange" in command ? command.weaponChange : null,
           ]),
         ),
         Match.exhaustive,

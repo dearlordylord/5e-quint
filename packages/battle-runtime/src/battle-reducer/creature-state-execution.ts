@@ -63,7 +63,7 @@ import {
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
 import {
-  battleObjectIsOnGround,
+  loadoutWeaponIsHeld,
   characterEffectiveLoadoutFromOrigin,
 } from "./battle-object-lifecycle.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
@@ -143,7 +143,7 @@ function combatantCanStillHoldBoundWeaponItem(
   combatant: CharacterBattleCreatureState,
   itemId: BattleObjectId,
 ): boolean {
-  if (battleObjectIsOnGround(state, combatant.combatantId, itemId)) {
+  if (!loadoutWeaponIsHeld(state, combatant.combatantId, itemId)) {
     return false;
   }
   const activeWildShape = activeDruidWildShapeEffect(combatant);

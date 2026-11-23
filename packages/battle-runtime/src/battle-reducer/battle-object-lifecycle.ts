@@ -19,7 +19,7 @@ export type BattleGroundObjectPlacement = BattleGroundObjectState & {
   readonly objectId: BattleObjectId;
 };
 
-/** A selected-loadout weapon on the ground that its owner can pick up. */
+/** A selected-loadout weapon on the ground that its owner picks up. */
 export type BattleHeldWeaponPickup = {
   readonly actorId: CombatantId;
   readonly objectId: BattleObjectId;
@@ -102,14 +102,38 @@ export function characterEffectiveLoadoutFromOrigin(
       ? {}
       : { shield: selected.shield }),
     ...(selected.weapon === undefined ||
-    groundObjects?.has(selected.weapon.itemId) === true
+    !loadoutWeaponIsHeld(state, actorId, selected.weapon.itemId)
       ? {}
       : { weapon: selected.weapon }),
     ...(selected.offHandWeapon === undefined ||
-    groundObjects?.has(selected.offHandWeapon.itemId) === true
+    !loadoutWeaponIsHeld(state, actorId, selected.offHandWeapon.itemId)
       ? {}
       : { offHandWeapon: selected.offHandWeapon }),
   };
+}
+
+/** Whether the character has sheathed or stowed this loadout weapon. */
+export function loadoutWeaponIsStowed(
+  state: BattleState,
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+): boolean {
+  return state.stowedLoadoutWeapons.get(actorId)?.has(objectId) === true;
+}
+
+/**
+ * Whether a loadout weapon is still in its owner's hand: neither stowed nor
+ * on the ground.
+ */
+export function loadoutWeaponIsHeld(
+  state: BattleState,
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+): boolean {
+  return (
+    !battleObjectIsOnGround(state, actorId, objectId) &&
+    !loadoutWeaponIsStowed(state, actorId, objectId)
+  );
 }
 
 export function battleObjectIsOnGround(
@@ -171,10 +195,9 @@ const OBJECT_NOT_ON_GROUND = {
 } as const satisfies BattleHeldWeaponPickupResult;
 
 /**
- * Why this actor can't pick this weapon back up, or null when it can. One
- * admission for discovery and the transition, so Battle never offers a pickup
- * that it then refuses. Whether the creature can reach the object is the
- * table's ruling (ASSUMPTIONS.md A60).
+ * Why this actor can't pick this weapon back up, or null when it can. Whether
+ * the creature can reach the object is the table's ruling (ASSUMPTIONS.md
+ * A60); whether its hands are free is `loadoutWeaponChangeIssue`'s.
  */
 function heldWeaponPickupIssue(
   state: BattleState,
@@ -210,19 +233,6 @@ function heldWeaponPickupIssue(
     };
   }
   return null;
-}
-
-/** The fallen selected-loadout weapons the actor can pick back up. */
-export function groundedHeldWeaponPickups(
-  state: BattleState,
-  actor: BattleCreatureState,
-): readonly BattleHeldWeaponPickup[] {
-  if (!battleObjectLifecycleActorIsCharacter(actor)) return [];
-  return selectedLoadoutWeaponIds(actor)
-    .filter(
-      (objectId) => heldWeaponPickupIssue(state, actor, objectId) === null,
-    )
-    .map((objectId) => ({ actorId: actor.combatantId, objectId }));
 }
 
 function selectedLoadoutWeaponIds(

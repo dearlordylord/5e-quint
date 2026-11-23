@@ -17,6 +17,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+import { stateWithWeaponChangeAfterAttackAllowance } from "./attack-weapon-change.ts";
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import type {
   ActionEconomyState,
@@ -139,7 +140,7 @@ import {
   shoveForTarget,
 } from "./movement-speed.ts";
 
-import { invalidResult } from "./result-helpers.ts";
+import { invalidResult, resolvedResult } from "./result-helpers.ts";
 import {
   readyDeclarationHole,
   readyDeclarationFill,
@@ -333,9 +334,9 @@ export function needsAttackDamageConcentrationResult(input: {
       ),
     ],
   };
-  const spent = spendAttackAction(
+  const spent = spendAttackActionForSubject(
     pendingState,
-    input.subject.actorId,
+    input.subject,
     input.attack,
     { kind: "acceptedAttack" },
   );
@@ -2536,6 +2537,24 @@ export function openClassFeatureExtraAttackResource(input: {
       })),
     ],
   };
+}
+
+/**
+ * Spends the attack for its subject and leaves the weapon change an Attack
+ * action attack allows after it.
+ */
+export function spendAttackActionForSubject(
+  state: BattleState,
+  subject: BattleAttackHostSubject,
+  attack: BoundSupportedAttackActionOption,
+  timing: { readonly kind: "acceptedAttack" | "attackPreventedBeforeRoll" },
+): BattleTerminalResolutionResult {
+  const spent = spendAttackAction(state, subject.actorId, attack, timing);
+  return spent.tag === "resolved"
+    ? resolvedResult(
+        stateWithWeaponChangeAfterAttackAllowance(spent.state, subject),
+      )
+    : spent;
 }
 
 export function spendAttackAction(
