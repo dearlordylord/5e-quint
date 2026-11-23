@@ -1464,8 +1464,11 @@ function battleWithHellishRebukeTarget(): BattleRuntimeSession {
 const dartId = battleObjectId("main:weapon_dart");
 
 /** A Wizard holding a Dart, who knows True Strike. */
-function dartBattle() {
+function dartBattle(
+  target: Pick<Parameters<typeof spellBattle>[0], "targetSpellcasting"> = {},
+) {
   return spellBattle({
+    ...target,
     cantrips: [spellRecord(trueStrikeUnitId)],
     spellSlots: [],
     attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dart"),
@@ -1598,6 +1601,100 @@ describe("battle runtime: a thrown Dart", () => {
         state,
         subject: act.subject,
         fills: [damageType, target, roll, damage],
+      }),
+    );
+  });
+
+  test("a True Strike Dart whose damage opens an after-damage Reaction window is reported once, when the window closes", () => {
+    const session = dartBattle({
+      targetSpellcasting: wizardSpellcasting({
+        cantrips: [],
+        preparedSpells: [spellRecord("hellish_rebuke")],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+    });
+    const rebuke = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellTargetId,
+      spellSlotInvocationRef("hellish_rebuke", 2, "saveGatedDamage"),
+    );
+    const act = spellAct({ session, spellId: trueStrikeUnitId });
+    const damageType: BattleFill = {
+      kind: "damageTypeChoice",
+      holeId: requireFixtureHole(act.initialHoles, "damageTypeChoice").holeId,
+      value: "radiant",
+    };
+    const state = session.state;
+    const landingTarget = dartTargetFill(
+      dartHoles(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [damageType],
+        }),
+      ),
+    );
+    const target: BattleFill = {
+      ...landingTarget,
+      spatialFacts: [
+        ...(landingTarget.spatialFacts ?? []),
+        {
+          kind: "reactionSpellDamagerVisibleWithinRange",
+          reactorId: spellTargetId,
+          damageSourceId: spellCasterId,
+          sourceProcedureRef: rebuke,
+          rangeFeet: movementFeet(60),
+        },
+      ],
+    };
+    const roll = attackRollFill(
+      requireFixtureHole(
+        dartHoles(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [damageType, target],
+          }),
+        ),
+        "attackRoll",
+      ),
+      { total: 20, naturalD20: 12 },
+    );
+    const damage = damageRollFillWithGroups(
+      requireFixtureHole(
+        dartHoles(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [damageType, target, roll],
+          }),
+        ),
+        "rolledDice",
+      ),
+      [[2], [3]],
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageType, target, roll, damage],
+    });
+    expect(
+      requireFixtureHole(dartHoles(awaitingReaction), "interruptDecision"),
+    ).toBeDefined();
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the Hellish Rebuke after-damage window.");
+    }
+
+    expectDartLandedAndReported(
+      resolveBattleInterrupt({
+        state: awaitingReaction.state,
+        fill: interruptDecisionFill(
+          findHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
+          { kind: "decline", responderId: spellTargetId },
+        ),
       }),
     );
   });

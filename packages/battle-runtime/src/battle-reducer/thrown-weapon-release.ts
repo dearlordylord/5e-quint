@@ -19,6 +19,7 @@ import type { BattleObjectId, CombatantId } from "../identity.ts";
 import { battleStateWithGroundObjects } from "./battle-object-lifecycle.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { interruptedProcedureSubject } from "./interrupt-execution.ts";
+import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
 import {
   isThrownWeaponAttack,
   thrownWeaponLanding,
@@ -147,35 +148,54 @@ function thrownWeaponAttackFinished(input: {
     true;
   return (
     (landedNow ||
-      thrownWeaponAttackIsInFlight(
-        input.stateBefore,
-        input.actorId,
-        input.source,
-      )) &&
-    !thrownWeaponAttackIsInFlight(input.state, input.actorId, input.source)
+      thrownWeaponAttackIsInFlight({ ...input, state: input.stateBefore })) &&
+    !thrownWeaponAttackIsInFlight(input)
   );
 }
 
 /**
  * Whether the attack that threw a weapon is still in flight: a frame on the
- * interrupt stack resumes a subject by the thrower naming that attack.
+ * interrupt stack resumes a subject by the thrower that made that attack.
  */
-function thrownWeaponAttackIsInFlight(
-  state: BattleState,
-  attackerId: CombatantId,
-  source: ThrownWeaponDropSource,
-): boolean {
-  return state.interruptStack.some((frame) => {
+function thrownWeaponAttackIsInFlight(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
+  readonly source: ThrownWeaponDropSource;
+}): boolean {
+  return input.state.interruptStack.some((frame) => {
     const procedure = interruptFrameProcedure(frame);
+    if (procedure === undefined) return false;
+    const subject = interruptedProcedureSubject(procedure);
     return (
-      procedure !== undefined &&
-      subjectNamesAttack(
-        interruptedProcedureSubject(procedure),
-        attackerId,
-        source.procedureRef,
+      subjectNamesAttack(subject, input.actorId, input.source.procedureRef) ||
+      subjectHostsWeaponAttack(
+        input.state,
+        subject,
+        input.actorId,
+        input.objectId,
       )
     );
   });
+}
+
+/**
+ * A spell subject hosts a weapon attack when its caster is the thrower and
+ * the spell makes its attack with that weapon, as a spell-hosted weapon
+ * attack does with its component weapon.
+ */
+function subjectHostsWeaponAttack(
+  state: BattleState,
+  subject: BattleSubject,
+  attackerId: CombatantId,
+  objectId: BattleObjectId,
+): boolean {
+  if (!("actorId" in subject) || subject.actorId !== attackerId) return false;
+  const invocation = spellInvocationForRouteSubject(state, subject);
+  return (
+    invocation?.procedure === "spellHostedWeaponAttack" &&
+    invocation.componentWeaponObjectId === objectId
+  );
 }
 
 /** The procedure an interrupt frame resumes, if it resumes one. */
