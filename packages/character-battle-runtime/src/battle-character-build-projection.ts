@@ -1075,19 +1075,27 @@ function characterWeaponBattleUse(input: {
 export function characterBuildEquippedWeaponBattleBlockers(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): readonly CharacterEquippedWeaponBattleBlocker[] {
-  // A mastery selection the catalog can't resolve is reported by Battle
-  // support; here it selects nothing.
-  const weaponMasteries = Result.getOrElse(
-    characterBattleWeaponMasterySelections(input.build, input.unitLibrary),
-    () => [],
+}): Result.Result<
+  readonly CharacterEquippedWeaponBattleBlocker[],
+  BattleCreatureInitIssue
+> {
+  const weaponMasteries = characterBattleWeaponMasterySelections(
+    input.build,
+    input.unitLibrary,
   );
-  return characterWeaponLoadoutRequests(input.build).flatMap((request) => {
+  if (Result.isFailure(weaponMasteries)) {
+    return battleSupportProfileIssuesToBattleCreatureInitIssue(
+      weaponMasteries.failure,
+    );
+  }
+  const blockers = characterWeaponLoadoutRequests(
+    input.build,
+  ).flatMap<CharacterEquippedWeaponBattleBlocker>((request) => {
     const source = characterEquipmentItemSourceFromId(request.itemId);
     const admission = characterWeaponBattleUse({
       request,
       unitLibrary: input.unitLibrary,
-      weaponMasteries,
+      weaponMasteries: weaponMasteries.success,
     });
     if (Result.isSuccess(admission)) return [];
     return [
@@ -1108,7 +1116,7 @@ export function characterBuildEquippedWeaponBattleBlockers(input: {
             const alternative = characterWeaponBattleUse({
               request: { ...request, itemId: item.itemId },
               unitLibrary: input.unitLibrary,
-              weaponMasteries,
+              weaponMasteries: weaponMasteries.success,
             });
             return Result.isSuccess(alternative) &&
               alternative.success.definition !== null
@@ -1118,6 +1126,7 @@ export function characterBuildEquippedWeaponBattleBlockers(input: {
       },
     ];
   });
+  return Result.succeed(blockers);
 }
 
 function characterMartialArtsWeaponAttack(
