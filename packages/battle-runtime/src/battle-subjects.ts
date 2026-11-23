@@ -2138,8 +2138,6 @@ function battleSubjectKey(subject: BattleSubject): string {
             "trigger" in command ? command.trigger : null,
             runtimeCommandAreaMembershipTrigger(command),
             "relevantEffect" in command ? command.relevantEffect : null,
-            "objectId" in command ? command.objectId : null,
-            "weaponChange" in command ? command.weaponChange : null,
           ]),
         ),
         Match.exhaustive,
@@ -2148,7 +2146,7 @@ function battleSubjectKey(subject: BattleSubject): string {
   );
 }
 
-/** The creatures and the object a runtime command refers to. */
+/** The creatures and the objects a runtime command refers to. */
 function runtimeCommandReferenceKey(
   command: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
 ): readonly (string | null)[] {
@@ -2159,6 +2157,7 @@ function runtimeCommandReferenceKey(
     "targetId" in command ? command.targetId : null,
     "reactorId" in command ? command.reactorId : null,
     "objectId" in command ? command.objectId : null,
+    "weaponChange" in command ? JSON.stringify(command.weaponChange) : null,
   ];
 }
 

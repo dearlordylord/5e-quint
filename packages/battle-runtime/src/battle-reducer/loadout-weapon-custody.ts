@@ -284,7 +284,9 @@ function withStowedWeapons(
     // Brands are erased at runtime; the length check proves this Set cannot
     // encode the redundant actor-with-no-stowed-weapons state.
     // eslint-disable-next-line no-restricted-syntax -- the length check is the runtime proof required by this erased non-empty-set brand
-    const actorStowed = new Set(stowed) as unknown as BattleActorStowedLoadoutWeapons;
+    const actorStowed = new Set(
+      stowed,
+    ) as unknown as BattleActorStowedLoadoutWeapons;
     stowedLoadoutWeapons.set(actorId, actorStowed);
   }
   return { ...state, stowedLoadoutWeapons };

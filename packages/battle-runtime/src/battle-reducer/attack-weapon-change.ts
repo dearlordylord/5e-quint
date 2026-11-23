@@ -41,8 +41,21 @@ import { invalidResult, resolvedResult } from "./result-helpers.ts";
 
 export type ChangeWeaponAfterAttackSubject = Extract<
   BattleSubject,
-  { readonly tag: "runtimeCommand"; readonly command: "changeWeaponAfterAttack" }
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "changeWeaponAfterAttack";
+  }
 >;
+
+/** Whether a subject spends the weapon change an attack left after it. */
+export function isChangeWeaponAfterAttackSubject(
+  subject: BattleSubject,
+): subject is ChangeWeaponAfterAttackSubject {
+  return (
+    subject.tag === "runtimeCommand" &&
+    subject.command === "changeWeaponAfterAttack"
+  );
+}
 
 type AttackActionSubject = Extract<
   BattleSubject,
@@ -259,9 +272,15 @@ function appliedWeaponChangeFacts(
   fills: readonly BattleFill[],
 ):
   | { readonly tag: "applied"; readonly change: AppliedAttackWeaponChange }
-  | { readonly tag: "needsHoles"; readonly hole: BattleWeaponDropPositionHole } {
+  | {
+      readonly tag: "needsHoles";
+      readonly hole: BattleWeaponDropPositionHole;
+    } {
   if (change.kind !== "drop") {
-    return { tag: "applied", change: { kind: change.kind, objectId: change.objectId } };
+    return {
+      tag: "applied",
+      change: { kind: change.kind, objectId: change.objectId },
+    };
   }
   const hole = weaponDropPositionHole(actorId, change.objectId);
   const fill = fills.find(

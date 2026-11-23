@@ -315,8 +315,11 @@ function resolveAttackAfterWeaponChange(
       "Attack resolution requires a supported Attack action option.",
     );
   }
-  return resolveSelectedAttackProcedure(input, attack, (state, _actorId, selected, timing) =>
-    spendAttackActionForSubject(state, input.subject, selected, timing),
+  return resolveSelectedAttackProcedure(
+    input,
+    attack,
+    (state, _actorId, selected, timing) =>
+      spendAttackActionForSubject(state, input.subject, selected, timing),
   );
 }
 

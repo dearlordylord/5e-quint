@@ -3752,6 +3752,9 @@ describe("MCP server route", () => {
       "Move",
       "Drop Prone",
       "Interact with an Object",
+      // The attack leaves a stow or a drop of the Longsword after it.
+      "Equip or Unequip Weapon",
+      "Equip or Unequip Weapon",
       "End Turn",
     ]);
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();

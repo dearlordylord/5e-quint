@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  attackInitialTargetHole,
   attackRollFill,
-  attackRollHoleAfterTarget,
   attackTargetFill,
   battleObjectId,
   battleTablePositionId,
@@ -46,7 +44,10 @@ function withChange(
 /** Resolves the Fighter's attack on the Goblin to a miss. */
 function missedAttack(
   state: BattleState,
-  subject: BattleSubject & { readonly tag: "action"; readonly action: "attack" },
+  subject: BattleSubject & {
+    readonly tag: "action";
+    readonly action: "attack";
+  },
   changeFills: readonly BattleFill[] = [],
 ): BattleState {
   const targetHole = requireHole(
@@ -319,7 +320,11 @@ describe("weapon change after an attack", () => {
     const ended = requireResolved(
       resolveBattleSubject({
         state: attacked,
-        subject: { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "endTurn",
+        },
         fills: [],
       }),
     ).state;

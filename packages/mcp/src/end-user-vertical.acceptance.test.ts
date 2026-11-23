@@ -660,6 +660,9 @@ describe("end-user MCP vertical", () => {
       "Move",
       "Drop Prone",
       "Interact with an Object",
+      // The attack before Action Surge left a stow or drop of the weapon.
+      "Equip or Unequip Weapon",
+      "Equip or Unequip Weapon",
       "Ready",
       "End Turn",
     ]);

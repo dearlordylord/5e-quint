@@ -195,7 +195,8 @@ export function resolveObjectInteraction(
           })
         : {
             tag: "invalid" as const,
-            message: "That weapon is not on the ground for this creature to pick up.",
+            message:
+              "That weapon is not on the ground for this creature to pick up.",
           };
       return pickedUp.tag === "applied"
         ? resolvedResult(pickedUp.state)

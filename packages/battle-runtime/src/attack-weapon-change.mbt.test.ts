@@ -39,7 +39,11 @@ import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import type { CombatantId } from "./identity.ts";
 import { resolveBattleSubject } from "./index.ts";
 
-const WEAPON_CUSTODIES = ["HeldWeapon", "StowedWeapon", "WeaponOnGround"] as const;
+const WEAPON_CUSTODIES = [
+  "HeldWeapon",
+  "StowedWeapon",
+  "WeaponOnGround",
+] as const;
 type WeaponCustody = (typeof WEAPON_CUSTODIES)[number];
 
 type AttackWeaponChangeProjection = {

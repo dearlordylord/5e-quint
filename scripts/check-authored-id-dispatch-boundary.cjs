@@ -1144,7 +1144,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "characterBattleLoadoutShieldOffhandIssues",
     "shield",
     "shieldAvailable",
-    "shieldGrounded",
+    "holdsShield",
     "shieldWorn",
     "usesShield",
     "wieldingShield",
@@ -2827,9 +2827,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "82ee45ea86e06d75ca8261c416acb9af54f23c800586e80277a840fc8f59b01a",
-  siteCount: 1724,
-  violationCount: 1844,
+  sha256: "38b0ad952033fbfd4598ae5757d4a70ebb2961eacc4912b0769f9ab26f216cc8",
+  siteCount: 1729,
+  violationCount: 1849,
 };
 
 function escapeForRegExp(text) {
