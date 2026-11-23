@@ -1699,7 +1699,10 @@ function spellAttackRerollDecisionIssue(input: {
 function spellAttackRerollReplacementIssue(
   roll: BattleAttackRollResult,
   replacement: BattleSpellAttackRerollReplacement,
-  requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>,
+  requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Seeking Spell replacement: the parsed replacement is a d20 attack roll of the current mode. */
   if (!attackRollResultIsValid(replacement)) {
