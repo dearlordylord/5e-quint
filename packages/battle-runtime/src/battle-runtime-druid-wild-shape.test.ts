@@ -4129,6 +4129,14 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     tag: "invalid",
     reason: "activeFormPickupUnsupported",
   });
+  // Discovery uses the same admission, so it doesn't offer the pickup.
+  expect(
+    discoverBattleActCandidates(fallen.state).some(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "pickUpHeldWeapon",
+    ),
+  ).toBe(false);
   const dismissTurn = restoreBonusAction(fallen.state);
   const dismissed = requireResolved(
     resolveDruidWildShape(

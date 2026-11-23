@@ -669,14 +669,6 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
   };
 }
 
-/** What an object interaction cost: the turn's free one or a Utilize action. */
-export const OBJECT_INTERACTION_CHARGES = [
-  "freeObjectInteraction",
-  "utilizeAction",
-] as const;
-export type ObjectInteractionCharge =
-  (typeof OBJECT_INTERACTION_CHARGES)[number];
-
 /**
  * The table's ruling on one object interaction. `requiresUtilize` is true when
  * the object needs an action for its use: SRD 5.2.1 "Your Turn" says some
@@ -685,11 +677,6 @@ export type ObjectInteractionCharge =
  */
 export type ObjectInteractionRuling = {
   readonly requiresUtilize: boolean;
-};
-
-export type ObjectInteractionChargeResult<T extends ActionEconomyState> = {
-  readonly resources: T;
-  readonly charge: ObjectInteractionCharge;
 };
 
 /**
@@ -701,17 +688,11 @@ export type ObjectInteractionChargeResult<T extends ActionEconomyState> = {
 export function chargeObjectInteraction<T extends ActionEconomyState>(
   state: T,
   ruling: ObjectInteractionRuling,
-): Result.Result<ObjectInteractionChargeResult<T>, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   if (!ruling.requiresUtilize && state.objectInteraction === "available") {
-    return Result.succeed({
-      resources: { ...state, objectInteraction: "spent" },
-      charge: "freeObjectInteraction",
-    });
+    return Result.succeed({ ...state, objectInteraction: "spent" });
   }
-  return Result.map(spendAction(state, "utilize"), (resources) => ({
-    resources,
-    charge: "utilizeAction" as const,
-  }));
+  return spendAction(state, "utilize");
 }
 
 /** Whether an object interaction under this ruling could be charged now. */

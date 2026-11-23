@@ -155,6 +155,7 @@ const PLAYER_HOLE_ADMISSION = {
   objectContactTargets: true,
   savingThrowOutcome: true,
   objectDropResolution: true,
+  objectInteractionRuling: true,
   spellAreaChoice: true,
   teleportDestination: true,
   spatialMeleeSpellAttackProxyPosition: true,

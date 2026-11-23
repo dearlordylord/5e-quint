@@ -179,7 +179,7 @@ export function resolveObjectInteraction(
   }
   const chargedState: BattleState = {
     ...input.state,
-    currentTurnResources: charged.success.resources,
+    currentTurnResources: charged.success,
   };
   return Match.value(input.subject).pipe(
     Match.when({ command: "interactWithObject" }, () =>

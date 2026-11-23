@@ -292,7 +292,10 @@ the table says when it happens. Off its turn a creature has no free
 interaction, not even during readied movement, but Ready can hold an object
 interaction as its readied action. Releasing it takes that readied Utilize
 action, whatever the table rules about the object. Any other off-turn
-interaction is the table's ruling, outside Battle's costs.
+interaction is the table's ruling, outside Battle's costs. Battle also leaves
+reach to the table: it offers the pickup of a fallen weapon wherever the weapon
+lies, and the caller takes it only when the table rules the creature can reach
+it.
 
 **Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Your
 Turn," lets a creature "interact with one object or feature of the environment

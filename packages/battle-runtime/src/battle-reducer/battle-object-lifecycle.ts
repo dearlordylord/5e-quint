@@ -123,7 +123,8 @@ export function battleObjectIsOnGround(
 /**
  * Puts a fallen selected-loadout weapon back in its owner's hand. The
  * caller charges the object interaction; the table decides whether the
- * creature can reach the object.
+ * creature can reach the object, by taking the pickup only when it can
+ * (ASSUMPTIONS.md A60).
  */
 export function heldWeaponPickupTransition(
   state: BattleState,
@@ -137,39 +138,14 @@ export function heldWeaponPickupTransition(
       message: "Battle object pickup requires an actor in this battle.",
     };
   }
-  if (!battleObjectLifecycleActorIsCharacter(actor)) {
-    return {
-      tag: "invalid",
-      reason: "actorNotCharacter",
-      message: "Battle loadout object pickup requires a character actor.",
-    };
-  }
-  if (
-    actor.activeEffects.some((effect) => effect.kind === "druidWildShapeForm")
-  ) {
-    return {
-      tag: "invalid",
-      reason: "activeFormPickupUnsupported",
-      message:
-        "This narrow held-weapon restoration operation does not support pickup while Wild Shape is active.",
-    };
-  }
+  const issue = heldWeaponPickupIssue(state, actor, pickup.objectId);
+  if (issue !== null) return issue;
   const actorGroundObjects = state.groundObjects.get(pickup.actorId);
-  if (actorGroundObjects?.has(pickup.objectId) !== true) {
-    return {
-      tag: "invalid",
-      reason: "objectNotOnGround",
-      message: "Battle object pickup requires an object on the ground.",
-    };
+  /* v8 ignore start -- @preserve -- heldWeaponPickupIssue has just proved the object is on this actor's ground. */
+  if (actorGroundObjects === undefined) {
+    return OBJECT_NOT_ON_GROUND;
   }
-  if (!selectedLoadoutWeaponIds(actor).includes(pickup.objectId)) {
-    return {
-      tag: "invalid",
-      reason: "notSelectedLoadoutWeapon",
-      message:
-        "Held-weapon pickup restores only a weapon of the selected loadout.",
-    };
-  }
+  /* v8 ignore stop -- @preserve */
   const groundObjects = new Map(state.groundObjects);
   const remainingActorGroundObjects = new Map(actorGroundObjects);
   remainingActorGroundObjects.delete(pickup.objectId);
@@ -188,16 +164,64 @@ export function heldWeaponPickupTransition(
   };
 }
 
-/** The selected-loadout weapons of an actor that lie on the ground. */
+const OBJECT_NOT_ON_GROUND = {
+  tag: "invalid",
+  reason: "objectNotOnGround",
+  message: "Battle object pickup requires an object on the ground.",
+} as const satisfies BattleHeldWeaponPickupResult;
+
+/**
+ * Why this actor can't pick this weapon back up, or null when it can. One
+ * admission for discovery and the transition, so Battle never offers a pickup
+ * that it then refuses. Whether the creature can reach the object is the
+ * table's ruling (ASSUMPTIONS.md A60).
+ */
+function heldWeaponPickupIssue(
+  state: BattleState,
+  actor: BattleCreatureState,
+  objectId: BattleObjectId,
+): Extract<BattleHeldWeaponPickupResult, { readonly tag: "invalid" }> | null {
+  if (!battleObjectLifecycleActorIsCharacter(actor)) {
+    return {
+      tag: "invalid",
+      reason: "actorNotCharacter",
+      message: "Battle loadout object pickup requires a character actor.",
+    };
+  }
+  if (
+    actor.activeEffects.some((effect) => effect.kind === "druidWildShapeForm")
+  ) {
+    return {
+      tag: "invalid",
+      reason: "activeFormPickupUnsupported",
+      message:
+        "This narrow held-weapon restoration operation does not support pickup while Wild Shape is active.",
+    };
+  }
+  if (!battleObjectIsOnGround(state, actor.combatantId, objectId)) {
+    return OBJECT_NOT_ON_GROUND;
+  }
+  if (!selectedLoadoutWeaponIds(actor).includes(objectId)) {
+    return {
+      tag: "invalid",
+      reason: "notSelectedLoadoutWeapon",
+      message:
+        "Held-weapon pickup restores only a weapon of the selected loadout.",
+    };
+  }
+  return null;
+}
+
+/** The fallen selected-loadout weapons the actor can pick back up. */
 export function groundedHeldWeaponPickups(
   state: BattleState,
   actor: BattleCreatureState,
 ): readonly BattleHeldWeaponPickup[] {
   if (!battleObjectLifecycleActorIsCharacter(actor)) return [];
-  const groundObjects = state.groundObjects.get(actor.combatantId);
-  if (groundObjects === undefined) return [];
   return selectedLoadoutWeaponIds(actor)
-    .filter((objectId) => groundObjects.has(objectId))
+    .filter(
+      (objectId) => heldWeaponPickupIssue(state, actor, objectId) === null,
+    )
     .map((objectId) => ({ actorId: actor.combatantId, objectId }));
 }
 

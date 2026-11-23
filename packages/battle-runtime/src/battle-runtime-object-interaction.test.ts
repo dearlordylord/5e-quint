@@ -1,6 +1,7 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, it } from "vitest";
 import {
+  applyCondition,
   battleObjectId,
   battleProcedureExecutionRefForTest,
   battleTablePositionId,
@@ -14,6 +15,7 @@ import {
   requireHole,
   requireResolved,
   resolveBattleInterrupt,
+  testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
 import type { BattleFill, BattleState } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -301,6 +303,50 @@ describe("object interaction", () => {
     expect(released.state.currentTurnResources).toEqual(
       goblinTurn.currentTurnResources,
     );
+  });
+
+  it("neither offers nor resolves an interaction under Command's Halt", () => {
+    const start = fighterVsGoblinBattle();
+    const halted: BattleState = {
+      ...start,
+      currentTurnResources: {
+        ...start.currentTurnResources,
+        compelledHalt: { kind: "compelledHalt" },
+      },
+    };
+    expect(halted.currentTurnResources.objectInteraction).toBe("available");
+    expect(objectInteractionActs(halted)).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state: halted,
+        subject: interactSubject(fighterId),
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
+  it("neither offers nor resolves an interaction while the creature can't act", () => {
+    const start = fighterVsGoblinBattle();
+    const fighter = start.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected Fighter.");
+    const incapacitated: BattleState = {
+      ...start,
+      combatants: new Map(start.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "incapacitated"),
+        ),
+      ),
+    };
+    expect(objectInteractionActs(incapacitated)).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state: incapacitated,
+        subject: interactSubject(fighterId),
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid" });
   });
 
   it("refuses a fill for another hole", () => {

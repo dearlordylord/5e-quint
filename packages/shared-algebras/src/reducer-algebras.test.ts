@@ -230,48 +230,43 @@ describe("action-economy-algebra", () => {
 
     const first = chargeObjectInteraction(turn, { requiresUtilize: false });
     if (Result.isFailure(first)) throw new Error(first.failure);
-    expect(first.success.charge).toBe("freeObjectInteraction");
-    expect(first.success.resources.objectInteraction).toBe("spent");
-    expect(first.success.resources.actionResources).toEqual(
-      turn.actionResources,
-    );
+    expect(first.success.objectInteraction).toBe("spent");
+    expect(first.success.actionResources).toEqual(turn.actionResources);
 
-    const second = chargeObjectInteraction(first.success.resources, {
+    const second = chargeObjectInteraction(first.success, {
       requiresUtilize: false,
     });
     if (Result.isFailure(second)) throw new Error(second.failure);
-    expect(second.success.charge).toBe("utilizeAction");
-    expect(second.success.resources.actionResources).toEqual([]);
-    expect(second.success.resources.actionTakenThisTurn).toBe(true);
+    expect(second.success.actionResources).toEqual([]);
+    expect(second.success.actionTakenThisTurn).toBe(true);
 
     expect(
-      chargeObjectInteraction(second.success.resources, {
+      chargeObjectInteraction(second.success, {
         requiresUtilize: false,
       }),
     ).toEqual(Result.fail("no action resource available"));
     expect(
-      canChargeObjectInteraction(second.success.resources, {
+      canChargeObjectInteraction(second.success, {
         requiresUtilize: false,
       }),
     ).toBe(false);
-    expect(
-      resetTurnActionEconomy(second.success.resources).objectInteraction,
-    ).toBe("available");
+    expect(resetTurnActionEconomy(second.success).objectInteraction).toBe(
+      "available",
+    );
   });
 
   it("charges the Utilize action when the object needs an action", () => {
     const turn = resetTurnActionEconomy(emptyActionEconomyState());
     const charged = chargeObjectInteraction(turn, { requiresUtilize: true });
     if (Result.isFailure(charged)) throw new Error(charged.failure);
-    expect(charged.success.charge).toBe("utilizeAction");
-    expect(charged.success.resources.objectInteraction).toBe("available");
+    expect(charged.success.objectInteraction).toBe("available");
     expect(
-      canChargeObjectInteraction(charged.success.resources, {
+      canChargeObjectInteraction(charged.success, {
         requiresUtilize: true,
       }),
     ).toBe(false);
     expect(
-      canChargeObjectInteraction(charged.success.resources, {
+      canChargeObjectInteraction(charged.success, {
         requiresUtilize: false,
       }),
     ).toBe(true);
