@@ -12,6 +12,7 @@ import {
 import type { McpOutputSchema } from "../schema-codec.ts";
 import {
   enemyProximityConstraint,
+  NO_THROWN_WEAPON_LANDING,
   pinFact,
   targetFactMembers,
   thrownWeaponLandingConstraint,
@@ -110,7 +111,12 @@ function attackTargetSchemas(
             minItems: 1 + supplemental.length,
             prefixItems: [witness],
             items: { $ref: `#/$defs/${ATTACK_SUPPLEMENTAL_FACT_DEFINITION}` },
-            ...(supplemental.length === 0 ? {} : { allOf: supplemental }),
+            allOf: [
+              ...supplemental,
+              ...(attack.requiresThrownWeaponLanding === true
+                ? []
+                : [NO_THROWN_WEAPON_LANDING]),
+            ],
           },
         },
       }),

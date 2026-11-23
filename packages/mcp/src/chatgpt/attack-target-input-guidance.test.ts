@@ -125,7 +125,9 @@ for (const actor of ["character", "statBlock"] as const) {
       expect(Array.isArray(input.fillSchema.oneOf)).toBe(true);
       expect(input.fillSchema.oneOf).toHaveLength(hole.choices.length);
       if (range === "melee") {
-        expect(JSON.stringify(input.fillSchema)).not.toContain('"contains"');
+        // A melee target counts no supplemental fact: it needs no proximity
+        // fact and refuses any thrown weapon landing.
+        expect(JSON.stringify(input.fillSchema)).not.toContain('"maxContains"');
       } else {
         expect(JSON.stringify(input.fillSchema)).toContain('"maxContains":1');
         expect(validate({ ...fill, spatialFacts: [fact] }).valid).toBe(false);
@@ -207,11 +209,12 @@ for (const actor of ["character", "statBlock"] as const) {
   }
 }
 
-test("a thrown weapon target requires one landing fact scoped to its attack", () => {
+/** A fighter's Dagger target fill and its advertised fill schema validator. */
+function daggerTargetContract(delivery: "thrown" | "melee") {
   const root = createMcpPlaySessionRoot();
   const dagger = testDaggerAttack();
   const session = startBattleSessionRight({
-    battleId: battleId("synthetic-thrown-target-contract"),
+    battleId: battleId(`synthetic-${delivery}-target-contract`),
     combatants: [
       characterSeed({
         initiative: 20,
@@ -230,18 +233,22 @@ test("a thrown weapon target requires one landing fact scoped to its attack", ()
   expect(Result.isSuccess(root.sessionStore.storeActiveBattle(session))).toBe(
     true,
   );
-  const thrown = attackActionOptionsForActor(session.state, fighterId).find(
-    (attack) => attack.kind === "weapon" && attack.weaponDelivery === "thrown",
+  const option = attackActionOptionsForActor(session.state, fighterId).find(
+    (attack) =>
+      attack.kind === "weapon" &&
+      (attack.weaponDelivery ?? "melee") === delivery,
   );
-  if (thrown?.kind !== "weapon") throw new Error("Expected thrown Dagger");
+  if (option?.kind !== "weapon") throw new Error(`Expected ${delivery} Dagger`);
   const subject = {
     tag: "action" as const,
     actorId: fighterId,
     action: "attack" as const,
-    procedureRef: thrown.procedureRef,
-    attackAbility: thrown.ability,
-    attackDamageType: thrown.weapon.damage.damageType,
-    weaponDelivery: "thrown" as const,
+    procedureRef: option.procedureRef,
+    attackAbility: option.ability,
+    attackDamageType: option.weapon.damage.damageType,
+    ...(option.weaponDelivery === undefined
+      ? {}
+      : { weaponDelivery: option.weaponDelivery }),
   };
   const selected = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
     jsonContentPayload(
@@ -255,14 +262,13 @@ test("a thrown weapon target requires one landing fact scoped to its attack", ()
   );
   if (hole?.kind !== "targetChoice" || hole.attack === undefined)
     throw new Error("Expected canonical attack target");
-  expect(hole.attack.requiresThrownWeaponLanding).toBe(true);
   const guidance = chatGptBattleGuidance(root);
   if (guidance.kind !== "ordinaryContinuation")
     throw new Error("Expected current continuation");
   const input = guidance.inputs.find((i) => i.holeId === hole.holeId);
   if (input === undefined) throw new Error("Expected target fill contract");
   const validate = createDraft2020JsonSchemaValidator().getValidator(
-    requireJsonSchema(input.fillSchema, "thrown attack target"),
+    requireJsonSchema(input.fillSchema, `${delivery} attack target`),
   );
   const fill = attackTargetFill(
     hole,
@@ -270,8 +276,14 @@ test("a thrown weapon target requires one landing fact scoped to its attack", ()
     goblinId,
     hole.attack.selection,
     [],
-    movementFeet(20),
+    movementFeet(delivery === "thrown" ? 20 : 5),
   );
+  return { hole, attack: hole.attack, fill, validate };
+}
+
+test("a thrown weapon target requires one landing fact scoped to its attack", () => {
+  const { attack, fill, validate } = daggerTargetContract("thrown");
+  expect(attack.requiresThrownWeaponLanding).toBe(true);
   const facts = fill.spatialFacts ?? [];
   const landing = facts.filter((f) => f.kind === "thrownWeaponLanding");
   const others = facts.filter((f) => f.kind !== "thrownWeaponLanding");
@@ -303,5 +315,34 @@ test("a thrown weapon target requires one landing fact scoped to its attack", ()
         ...landing.map((f) => ({ ...f, attackerId: goblinId })),
       ],
     }).valid,
+  ).toBe(false);
+  // The runtime takes exactly one landing fact in all, so a second one for
+  // another attacker is refused beside the scoped one.
+  expect(
+    validate({
+      ...fill,
+      spatialFacts: [
+        ...others,
+        ...landing,
+        ...landing.map((f) => ({ ...f, attackerId: goblinId })),
+      ],
+    }).valid,
+  ).toBe(false);
+});
+
+test("a melee weapon target refuses a thrown weapon landing fact", () => {
+  const { attack, fill, validate } = daggerTargetContract("melee");
+  expect(attack.requiresThrownWeaponLanding).toBeUndefined();
+  const facts = fill.spatialFacts ?? [];
+  expect(facts.some((f) => f.kind === "thrownWeaponLanding")).toBe(false);
+  const thrown = daggerTargetContract("thrown").fill.spatialFacts ?? [];
+  const landing = thrown
+    .filter((f) => f.kind === "thrownWeaponLanding")
+    .map((f) => ({ ...f, procedureRef: attack.selection.procedureRef }));
+  expect(landing).toHaveLength(1);
+
+  expect(validate(fill).valid).toBe(true);
+  expect(
+    validate({ ...fill, spatialFacts: [...facts, ...landing] }).valid,
   ).toBe(false);
 });

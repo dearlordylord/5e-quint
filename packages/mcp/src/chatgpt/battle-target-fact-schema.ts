@@ -51,6 +51,11 @@ export function enemyProximityConstraint(
   );
 }
 
+/** Any other attack takes no thrown weapon landing fact. */
+export const NO_THROWN_WEAPON_LANDING: McpOutputSchema = {
+  not: { contains: factOfKind("thrownWeaponLanding") },
+};
+
 /** A thrown weapon attack needs exactly one landing fact scoped to it. */
 export function thrownWeaponLandingConstraint(
   facts: readonly McpOutputSchema[],
@@ -69,10 +74,25 @@ function exactlyOneScopedFact(
   const scoped = facts.filter((fact) => hasKind(fact, kind, definitions));
   if (scoped.length === 0)
     throw new Error(`The canonical target fill must contain the ${kind} fact.`);
+  // The runtime takes exactly one fact of the kind in all, so the scoped fact
+  // must be there and no other fact of the kind may sit beside it.
   return {
-    contains: {
-      anyOf: scoped.map((fact) => pinFact(fact, { kind, ...scope })),
-    },
-    maxContains: 1,
+    allOf: [
+      {
+        contains: {
+          anyOf: scoped.map((fact) => pinFact(fact, { kind, ...scope })),
+        },
+      },
+      { contains: factOfKind(kind), maxContains: 1 },
+    ],
+  };
+}
+
+/** Any fact of one kind, whatever else it states. */
+function factOfKind(kind: string): McpOutputSchema {
+  return {
+    type: "object",
+    required: ["kind"],
+    properties: { kind: { const: kind } },
   };
 }
