@@ -119,6 +119,7 @@ const driverSchema = {
   doDisengage: {},
   doRejectDashAfterActionSpent: {},
   doStandFromProne: {},
+  doDropProne: {},
   doDiscoverGrapple: {},
   doSelectGrappleTarget: {},
   doResolveGrappleSuccess: {},
@@ -278,6 +279,12 @@ function createRuleCoreMovementDriver() {
           tag: "runtimeCommand",
           actorId,
           command: "standFromProne",
+        }),
+      doDropProne: () =>
+        resolveSubject({
+          tag: "runtimeCommand",
+          actorId,
+          command: "dropProne",
         }),
       doDiscoverGrapple: () =>
         resolveSubject({ tag: "action", actorId, action: "grapple" }),

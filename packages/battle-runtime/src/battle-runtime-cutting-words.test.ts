@@ -272,7 +272,7 @@ describe("battle runtime: Cutting Words", () => {
         d20TestRoll: { tag: "single", naturalD20: 15 },
       },
       damageInput: { kind: "rolledDamage" },
-      criticalConsequence: { kind: "ordinaryHit" },
+      criticalConsequence: { kind: "nonCritical" },
       phase: "attackDamage",
       continuation: { damageDisposition: { kind: "ordinaryDamage" } },
     });

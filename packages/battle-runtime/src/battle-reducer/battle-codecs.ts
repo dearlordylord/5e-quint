@@ -57,6 +57,7 @@ import {
   CreatureId,
   DeathSavingThrowCount,
   D20Roll,
+  DieRollResultSchema,
   ResourceCount,
   SIZES,
 } from "@dnd/shared/types";
@@ -897,14 +898,14 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     distanceFeet: Schema.optionalKey(MovementFeet),
   }),
   Schema.Struct({
-    kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-    casterId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
+    kind: Schema.Literal("rangedAttackEnemyProximity"),
+    attackerId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
     enemies: Schema.Array(
       Schema.Struct({
         enemyId: CombatantId,
         distanceFeet: MovementFeet,
-        enemyCanSeeCaster: Schema.Boolean,
+        enemyCanSeeAttacker: Schema.Boolean,
       }),
     ),
   }),
@@ -2257,6 +2258,22 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ),
 } as const;
 
+const BattleAttackTargetRequestFields = {
+  actorId: CombatantId,
+  selection: BattleAttackExecutionSelectionSchema,
+  targetConstraint: Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("meleeReach"),
+      reachFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rangedRange"),
+      normalFeet: MovementFeet,
+      longFeet: MovementFeet,
+    }),
+  ]),
+} as const;
+
 const BattleHolePayloadMembers = [
   BattleInterruptDecisionHolePayloadMember,
   pairedBattleHoleMember({
@@ -2277,6 +2294,13 @@ const BattleHolePayloadMembers = [
     helperId: CombatantId,
     allyId: CombatantId,
     choices: Schema.Array(CombatantId),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("helpAbilityCheckDecision"),
+    helperId: CombatantId,
+    allyChoices: Schema.NonEmptyArray(CombatantId),
+    skillChoices: Schema.NonEmptyArray(Schema.Literals(BATTLE_SURFACE_SKILLS)),
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -2318,19 +2342,7 @@ const BattleHolePayloadMembers = [
     ),
     attack: Schema.optionalKey(
       Schema.Struct({
-        actorId: CombatantId,
-        selection: BattleAttackExecutionSelectionSchema,
-        targetConstraint: Schema.Union([
-          Schema.Struct({
-            kind: Schema.Literal("meleeReach"),
-            reachFeet: MovementFeet,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("rangedRange"),
-            normalFeet: MovementFeet,
-            longFeet: MovementFeet,
-          }),
-        ]),
+        ...BattleAttackTargetRequestFields,
         acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
@@ -3469,6 +3481,7 @@ const BattleHolePayloadMembers = [
     dc: DcSourceSchema,
     choices: Schema.Array(CombatantId),
     replacementTargetKind: Schema.Literal("attackRoll"),
+    attack: Schema.optionalKey(Schema.Struct(BattleAttackTargetRequestFields)),
     relationshipFactRequest: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("attackRollTargetIsEnemy"),
@@ -3603,12 +3616,7 @@ export const BattleMechanicalHoleSchema: BattleMechanicalHoleCodec =
     BattleMechanicalOrdinaryHoleSchema,
   ]).annotate({ identifier: "BattleMechanicalHole" });
 
-const BattleDieRollResultSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isGreaterThan(0)),
-  Schema.brand("PositiveInteger"),
-  Schema.brand("DieRollResult"),
-);
+const BattleDieRollResultSchema = DieRollResultSchema;
 
 const BattleD6RollResultSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 6 })),
@@ -3943,6 +3951,13 @@ type BattleFillEncoded =
       readonly targetWithinFiveFeetOfHelper: boolean;
     }
   | {
+      readonly kind: "helpAbilityCheckDecision";
+      readonly holeId: string;
+      readonly allyId: string;
+      readonly skill: Skill;
+      readonly allyCanBeAssisted: boolean;
+    }
+  | {
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
@@ -4017,13 +4032,13 @@ type BattleFillEncoded =
             readonly attackerCanSeeObject: boolean;
           }
         | {
-            readonly kind: "rangedSpellAttackEnemyProximity";
-            readonly casterId: string;
-            readonly sourceProcedureRef: string;
+            readonly kind: "rangedAttackEnemyProximity";
+            readonly attackerId: string;
+            readonly procedureRef: string;
             readonly enemies: readonly {
               readonly enemyId: string;
               readonly distanceFeet: number;
-              readonly enemyCanSeeCaster: boolean;
+              readonly enemyCanSeeAttacker: boolean;
             }[];
           }
         | {
@@ -5169,6 +5184,13 @@ export const BattleFillSchema: Schema.Codec<
       targetWithinFiveFeetOfHelper: Schema.Boolean,
     }),
     Schema.Struct({
+      kind: Schema.Literal("helpAbilityCheckDecision"),
+      holeId: BattleHoleIdSchema,
+      allyId: CombatantId,
+      skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+      allyCanBeAssisted: Schema.Boolean,
+    }),
+    Schema.Struct({
       kind: Schema.Literal("targetChoice"),
       holeId: BattleHoleIdSchema,
       value: CombatantId,
@@ -5244,14 +5266,14 @@ export const BattleFillSchema: Schema.Codec<
             attackerCanSeeObject: Schema.Boolean,
           }),
           Schema.Struct({
-            kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
-            casterId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
+            kind: Schema.Literal("rangedAttackEnemyProximity"),
+            attackerId: CombatantId,
+            procedureRef: BattleProcedureExecutionRef,
             enemies: Schema.Array(
               Schema.Struct({
                 enemyId: CombatantId,
                 distanceFeet: MovementFeet,
-                enemyCanSeeCaster: Schema.Boolean,
+                enemyCanSeeAttacker: Schema.Boolean,
               }),
             ),
           }),
@@ -7437,6 +7459,12 @@ const BattleHelpAttackSnapshotSchema = Schema.Struct({
   expiresAt: OngoingFeatureExpirationSchema,
 });
 
+const BattleHelpAbilityCheckSnapshotSchema = Schema.Struct({
+  helperId: CombatantId,
+  allyId: CombatantId,
+  skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
+
 const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literals([
@@ -8377,6 +8405,7 @@ function serializedBattleHoleExecutionReferences(
         ),
       helpAttackAllyDecision: noSerializedExecutionReferences,
       helpAttackEnemyDecision: noSerializedExecutionReferences,
+      helpAbilityCheckDecision: noSerializedExecutionReferences,
       areaWindStrength: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
         value.questions.flatMap((question) =>
@@ -8801,6 +8830,7 @@ function serializedRuntimeCommandReferencePolicy(
       }),
       persistentAreaSaveCompositeSave: actorOwned,
       standFromProne: actorOwned,
+      dropProne: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
       endPersistentAreaSaveConditionEscapeForDeparture: actorOwned,
@@ -10003,6 +10033,7 @@ const BattleSnapshotCommonFields = {
     actionsOrMovements: Schema.Array(BattleReadiedResponseSnapshotSchema),
   }),
   helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
+  helpAbilityCheckMarkers: Schema.Array(BattleHelpAbilityCheckSnapshotSchema),
 };
 
 const BattleSnapshotExcludedFields = {

@@ -59,13 +59,13 @@
       "module/binding:resolveCastAttackHitBonusActionSpellCommand": 33
     },
     "packages/battle-runtime/src/battle-reducer/attack-main.ts": {
-      "module/binding:attackPostDuplicateHitInterceptionFillsArePresent": 33,
+      "module/binding:attackPostDuplicateHitInterceptionFillsArePresent": 22,
       "module/binding:brutalStrikeSelection": 10,
       "module/binding:resolveAdditionalWeaponAttackDamage": 9,
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,
       "module/binding:resolveGrapplerPunchAndGrabAfterHit": 12,
       "module/binding:resolveHuntersPreyHordeBreakerAfterPrimaryDamage": 21,
-      "module/binding:resolveSelectedAttackProcedure": 215,
+      "module/binding:resolveSelectedAttackProcedure": 213,
       "module/binding:resolveWeaponMasteryCleaveAfterPrimaryDamage": 20
     },
     "packages/battle-runtime/src/battle-reducer/attack-offhand.ts": {
@@ -91,7 +91,7 @@
       "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17,
       "module/binding:applyWeaponMasteryToppleSavingThrow": 9,
       "module/binding:attackRollOngoingFeatureActivationProfile": 13,
-      "module/binding:attackRollSourceFlags": 25,
+      "module/binding:attackRollSourceFlags": 22,
       "module/binding:tacticalMasterReplacementSelection": 9
     },
     "packages/battle-runtime/src/battle-reducer/attack-routes.ts": {
@@ -101,8 +101,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
-      "module/binding:discoverBattleActsWithoutRouteEvents": 69,
-      "module/binding:subjectAllowedDuringStatBlockMultiattackDispatch": 11
+      "module/binding:discoverBattleActsWithoutRouteEvents": 68
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -194,9 +193,6 @@
       "module/binding:glyphWardingSpellGlyphSupported": 18,
       "module/binding:glyphWardingTriggerSupported": 12,
       "module/binding:releaseGlyphExplosiveRune": 10
-    },
-    "packages/battle-runtime/src/battle-reducer/hole-helpers.ts": {
-      "module/binding:requiredAbilityCheckRollMode": 12
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-continuation.ts": {
       "module/binding:attackDamageContinuationCunningStrikeFillSet": 9,
@@ -701,7 +697,6 @@
       "module/binding:applyDraftFill": 9
     },
     "packages/character-creation-runtime/src/finalization.ts": {
-      "module/binding:applyClassFeatureAbilityScoreIncreases": 10,
       "module/binding:classFeatureAcquisitionAbilityCheckBonusFeature": 11,
       "module/binding:decodedUnitProficiencySubjects": 16,
       "module/binding:executableSupportIssues": 12,
@@ -839,7 +834,6 @@
       "module/binding:parseStoredLoadout": 9,
       "module/binding:parseStoredPactSlots": 10,
       "module/binding:parseStoredProficiencyChoices": 16,
-      "module/binding:parseStoredProgression": 10,
       "module/binding:parseStoredSpellcastingSource": 12,
       "module/binding:parseStoredSpellSlotPools": 10,
       "module/binding:parseStoredSpellSlots": 17,

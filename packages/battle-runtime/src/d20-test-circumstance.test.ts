@@ -1,3 +1,4 @@
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
@@ -83,6 +84,8 @@ import {
   battleD20TestCircumstanceRequests,
   battleHolesWithTableD20TestCircumstances,
   combineD20TestRollMode,
+  D20TestRollModeSourcesMonoid,
+  mechanicalD20TestRollMode,
   proneAttackRollModeSources,
   ATTACKER_DISADVANTAGE_CONDITIONS,
   TARGET_ADVANTAGE_CONDITIONS,
@@ -95,6 +98,28 @@ import {
   type TableD20TestCircumstanceDecision,
   type TableD20TestCircumstanceSource,
 } from "./d20-test-circumstance.ts";
+
+test("opposing sources cancel without losing either source when another benefit applies", () => {
+  const sources = D20TestRollModeSourcesMonoid.combineAll([
+    { advantage: true, disadvantage: false },
+    { advantage: false, disadvantage: true },
+  ]);
+  expect(mechanicalD20TestRollMode(sources)).toBe("normal");
+  expect(
+    mechanicalD20TestRollMode(
+      D20TestRollModeSourcesMonoid.combineAll([
+        sources,
+        {
+          advantage: true,
+          disadvantage: false,
+        },
+      ]),
+    ),
+  ).toBe("normal");
+  expect(
+    mechanicalD20TestRollMode(D20TestRollModeSourcesMonoid.combineAll([])),
+  ).toBeUndefined();
+});
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x279 } as const;
 const resolutionId = d20TestResolutionId("synthetic-resolution");
@@ -213,7 +238,6 @@ describe("Table-authored per-test D20 circumstances", () => {
     for (const sources of [
       attackerConditionAttackRollModeSources(undefined),
       attackerConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
-      targetConditionAttackRollModeSources(undefined),
       targetConditionAttackRollModeSources(EMPTY_CONDITION_STATE),
     ]) {
       expect(sources).toEqual({ advantage: false, disadvantage: false });
@@ -805,9 +829,10 @@ describe("Table-authored per-test D20 circumstances", () => {
       attackRollHasAdvantageSource(
         session.state,
         fighterId,
-        goblinId,
+        requireCombatant(session.state, goblinId),
         undefined,
         [],
+        null,
       ),
     ).toBe(false);
 

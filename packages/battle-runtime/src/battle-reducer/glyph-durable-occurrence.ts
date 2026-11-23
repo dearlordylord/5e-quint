@@ -1924,7 +1924,7 @@ function resolveStoredSpellGlyphRelease(input: {
     spellAttackRequiresExactDistance(input.effect.release.storedProcedure) &&
     input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature" &&
     !input.witness.targeting.targetSpatialFacts.some(
-      (fact) => fact.kind === "rangedSpellAttackEnemyProximity",
+      (fact) => fact.kind === "rangedAttackEnemyProximity",
     )
   ) {
     return {

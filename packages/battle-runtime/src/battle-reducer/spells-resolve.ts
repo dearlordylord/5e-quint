@@ -408,7 +408,10 @@ type InitialSpellAttackRollResolution =
       readonly tag: "admitted";
       readonly actor: BattleCreatureState | undefined;
       readonly attackRoll: BattleAttackRollResult;
-      readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+      readonly requiredRollMode: Exclude<
+        ReturnType<typeof requiredSpellAttackRollMode>,
+        { readonly tag: "invalid" }
+      >;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
 
@@ -417,17 +420,27 @@ function resolveInitialSpellAttackRoll(input: {
   readonly errorState: BattleState;
   readonly subject: SpellActInternalInput["subject"];
   readonly actorId: CombatantId;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly invocation: Parameters<typeof spellAttackRollHole>[2];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): InitialSpellAttackRollResolution {
   const requiredRollMode = requiredSpellAttackRollMode(
     input.castingState,
     input.actorId,
-    input.targetId,
+    input.target,
     input.invocation,
     input.fillSet.targetSpatialFacts,
+    input.fillSet.targetEnemyProximity,
   );
+  if (typeof requiredRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.errorState,
+        "invalidFill",
+        requiredRollMode.message,
+      ),
+    };
   if (input.fillSet.attackRoll == null) {
     return {
       tag: "result",
@@ -1617,7 +1630,10 @@ function spellAttackRerollValidationIssue(input: {
   readonly invocation: BattleExecutableSpellInvocation;
   readonly originalAttackRoll: BattleAttackRollResult;
   readonly originalHit: boolean;
-  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
   readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
 }): string | null {
   const decision = input.originalAttackRoll.spellAttackReroll;
@@ -1688,7 +1704,10 @@ function spellAttackRollHoleWithSeekingOption(
         | "spellAttackDamage";
     }
   >,
-  rollMode: ReturnType<typeof requiredSpellAttackRollMode>,
+  rollMode: Exclude<
+    ReturnType<typeof requiredSpellAttackRollMode>,
+    { readonly tag: "invalid" }
+  >,
 ): ReturnType<typeof spellAttackRollHole> {
   const actor = state.combatants.get(attackerId);
   const seeking = seekingSpellAttackRerollOption({ actor });
@@ -2210,7 +2229,7 @@ function resolveSpellActInternal(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const target = input.state.combatants.get(fillSet.targetId);
+  const target = castingState.combatants.get(fillSet.targetId);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target == null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -2380,6 +2399,12 @@ function resolveSpellActInternal(
         );
       }
       /* v8 ignore stop -- @preserve */
+      const replacementTargetFill =
+        targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+          fill: originalTargetFill,
+          replacement: interdictionCheck,
+        });
+
       return resolveSpellActInternal(
         {
           ...input,
@@ -2389,14 +2414,7 @@ function resolveSpellActInternal(
                 (fill) => fill.kind !== "targetingSaveInterdictionOutcome",
               )
               .map((fill) =>
-                fill === originalTargetFill
-                  ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                      {
-                        fill,
-                        replacement: interdictionCheck,
-                      },
-                    )
-                  : fill,
+                fill === originalTargetFill ? replacementTargetFill : fill,
               ),
           ],
         },
@@ -2451,7 +2469,7 @@ function resolveSpellActInternal(
       errorState: input.state,
       subject: input.subject,
       actorId: subject.actorId,
-      targetId: target.combatantId,
+      target,
       invocation: invocationForResolution,
       fillSet,
     });

@@ -400,6 +400,7 @@ describe("Character Sheet battle handoff", () => {
             advancements: Array.from({ length: 2 }, () => ({
               classUnitId: classUnitId(authoredUnitId("class_fighter")),
               hitPointRule: { tag: "fixedHigherLevelGain" as const },
+              constitutionModifierAtGain: 1,
             })),
           },
         },
@@ -546,6 +547,7 @@ describe("Character Sheet battle handoff", () => {
               advancements: Array.from({ length: 9 }, () => ({
                 classUnitId: classUnitId(authoredUnitId("class_warlock")),
                 hitPointRule: { tag: "fixedHigherLevelGain" as const },
+                constitutionModifierAtGain: 1,
               })),
             },
             features: [
@@ -4801,6 +4803,63 @@ describe("Character Sheet battle handoff", () => {
     if (init.creatureInit.kind !== "character") return;
     expect(init.creatureInit.maxHp).toBe(sheetMaximumHp(sheet.success));
     expect(init.creatureInit.currentHp).toBe(7);
+  });
+
+  test("admits a rolled Hit Die above the fixed value into battle initialization", () => {
+    const fighterUnitId = classUnitId(authoredUnitId("class_fighter"));
+    const rolledBuild = {
+      ...build,
+      progression: {
+        startingClass: fighterUnitId,
+        advancements: [
+          {
+            classUnitId: fighterUnitId,
+            hitPointRule: {
+              tag: "rolledHigherLevelGain" as const,
+              hitDieResult: DieRollResult(10),
+            },
+            constitutionModifierAtGain: 1,
+          },
+        ],
+      },
+    };
+    const fixedBuild = {
+      ...rolledBuild,
+      progression: {
+        ...rolledBuild.progression,
+        advancements: [
+          {
+            classUnitId: fighterUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            constitutionModifierAtGain: 1,
+          },
+        ],
+      },
+    };
+    const initWith = (
+      characterBuild: typeof rolledBuild | typeof fixedBuild,
+      hitPointMaximum?: number,
+    ) =>
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("rolled-maximum-init"),
+        characterId: characterId("character:rolled-maximum-init"),
+        displayName: "Fighter",
+        build: characterBuild,
+        initiative: initiativeScore(20),
+        ammunitionStocks: [],
+        unitLibrary,
+        ...(hitPointMaximum === undefined
+          ? {}
+          : { hitPointMaximum: Hp(hitPointMaximum) }),
+      });
+
+    const fixed = expectSuccess(initWith(fixedBuild)).creatureInit;
+    const rolled = expectSuccess(initWith(rolledBuild)).creatureInit;
+    expect(rolled.maxHp - fixed.maxHp).toBe(10 - 6);
+    expect(
+      expectSuccess(initWith(rolledBuild, rolled.maxHp)).creatureInit.maxHp,
+    ).toBe(rolled.maxHp);
+    expect(Result.isFailure(initWith(fixedBuild, rolled.maxHp))).toBe(true);
   });
 
   test("rejects CharacterBuild battle initialization max HP above the build-derived maximum", () => {
@@ -9544,6 +9603,7 @@ describe("Character Build battle projection", () => {
           {
             classUnitId: duplicateClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            constitutionModifierAtGain: 1,
           },
         ],
       },
@@ -9782,14 +9842,17 @@ describe("Character Build battle projection", () => {
           {
             classUnitId: classUnitId(authoredUnitId("class_druid")),
             hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            constitutionModifierAtGain: 1,
           },
           {
             classUnitId: classUnitId(authoredUnitId("class_monk")),
             hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            constitutionModifierAtGain: 1,
           },
           {
             classUnitId: classUnitId(authoredUnitId("class_monk")),
             hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            constitutionModifierAtGain: 1,
           },
         ],
       },
@@ -9827,6 +9890,7 @@ describe("Character Build battle projection", () => {
         advancements: Array.from({ length: 9 }, () => ({
           classUnitId: classUnitId(authoredUnitId("class_barbarian")),
           hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          constitutionModifierAtGain: 1,
         })),
       },
       features: [
@@ -12814,6 +12878,7 @@ function monkBuild(input: {
         () => ({
           classUnitId: classUnitId(authoredUnitId("class_monk")),
           hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          constitutionModifierAtGain: 1,
         }),
       ),
     },
@@ -13238,6 +13303,7 @@ function multiclassUnarmoredDefenseBuild(): CharacterBuild {
         {
           classUnitId: classUnitId(authoredUnitId("class_monk")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },
@@ -13446,6 +13512,7 @@ function weaponMasteryLongswordLevel9FighterBuild(): CharacterBuild {
       advancements: Array.from({ length: 8 }, () => ({
         classUnitId: classUnitId(authoredUnitId("class_fighter")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 1,
       })),
     },
   };
@@ -13634,10 +13701,12 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
         {
           classUnitId: classUnitId(authoredUnitId("class_ranger")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
         {
           classUnitId: classUnitId(authoredUnitId("class_ranger")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },
@@ -13700,6 +13769,7 @@ function paladinsSmitePaladinBuild(): CharacterBuild {
         {
           classUnitId: classUnitId(authoredUnitId("class_paladin")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },
@@ -14086,6 +14156,7 @@ function druidWildShapeBuildAtLevel(level: number): CharacterBuild {
       advancements: Array.from({ length: level - 1 }, () => ({
         classUnitId: classUnitId(authoredUnitId("class_druid")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
+        constitutionModifierAtGain: 1,
       })),
     },
     spellcasting: {
@@ -14242,18 +14313,22 @@ function sorcererFontOfMagicBuild(): CharacterBuild {
         {
           classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
         {
           classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
         {
           classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
         {
           classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },

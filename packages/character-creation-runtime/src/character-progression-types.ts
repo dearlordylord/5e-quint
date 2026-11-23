@@ -1,11 +1,16 @@
-import { Brand, Result, Match } from "effect";
+import { Brand, Match, Option, Result, Schema } from "effect";
 import {
   CHARACTER_CLASS_LEVELS,
   characterClassLevel,
   type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  DieRollResultSchema,
+  type DieRollResult,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { LOWEST_ABILITY_MODIFIER } from "@dnd/shared-algebras/ability-score-algebra";
 
 export type ClassUnitId = UnitRecord["id"] & Brand.Brand<"ClassUnitId">;
 const ClassUnitId = Brand.nominal<ClassUnitId>();
@@ -27,13 +32,33 @@ export type LevelOneClassHitPointRule = {
   readonly tag: "levelOneMaximumHitDie";
 };
 
-export type FixedHigherLevelClassHitPointRule = {
-  readonly tag: "fixedHigherLevelGain";
-};
+export const FixedHigherLevelClassHitPointRuleSchema = Schema.Struct({
+  tag: Schema.Literal("fixedHigherLevelGain"),
+});
+
+export const RolledHigherLevelClassHitPointRuleSchema = Schema.Struct({
+  tag: Schema.Literal("rolledHigherLevelGain"),
+  hitDieResult: DieRollResultSchema,
+});
+
+export const HigherLevelClassHitPointRuleSchema = Schema.Union([
+  FixedHigherLevelClassHitPointRuleSchema,
+  RolledHigherLevelClassHitPointRuleSchema,
+]);
+
+export type FixedHigherLevelClassHitPointRule =
+  typeof FixedHigherLevelClassHitPointRuleSchema.Type;
+
+/** The class's Hit Die as the player rolled it for a level after 1. */
+export type RolledHigherLevelClassHitPointRule =
+  typeof RolledHigherLevelClassHitPointRuleSchema.Type;
+
+export type HigherLevelClassHitPointRule =
+  typeof HigherLevelClassHitPointRuleSchema.Type;
 
 export type ClassHitPointRule =
   | LevelOneClassHitPointRule
-  | FixedHigherLevelClassHitPointRule;
+  | HigherLevelClassHitPointRule;
 
 export type CharacterTotalLevelHitPointRule =
   | {
@@ -42,17 +67,43 @@ export type CharacterTotalLevelHitPointRule =
     }
   | {
       readonly totalLevel: PostLevelOneCharacterClassLevel;
-      readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+      readonly hitPointRule: HigherLevelClassHitPointRule;
     };
 
 export type CharacterProgressionEntry = {
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
 };
 
 export type CharacterProgression = {
   readonly startingClass: ClassUnitId;
   readonly advancements: readonly CharacterProgressionEntry[];
+};
+
+/**
+ * Decodes the Constitution modifier a level records: a whole number no lower
+ * than the lowest ability score's modifier.
+ */
+export const ConstitutionModifierAtGainSchema = Schema.Number.pipe(
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(LOWEST_ABILITY_MODIFIER),
+  ),
+);
+
+/**
+ * A level after 1 as a built character records it: its Hit Point rule and the
+ * Constitution modifier the character had when gaining it, before that level's
+ * own score increases. A later increase adds 1 per level from that modifier.
+ */
+export type CharacterBuildProgressionEntry = CharacterProgressionEntry & {
+  readonly constitutionModifierAtGain: number;
+};
+
+/** A built character's class levels, each recording its gain's Constitution modifier. */
+export type CharacterBuildProgression = {
+  readonly startingClass: ClassUnitId;
+  readonly advancements: readonly CharacterBuildProgressionEntry[];
 };
 
 export type CharacterProgressionClassLevel = {
@@ -91,17 +142,20 @@ export function characterTotalLevelHitPointRule(input: {
             hitPointRule,
           }),
     ),
-    Match.when({ tag: "fixedHigherLevelGain" }, (hitPointRule) =>
-      input.totalLevel > 1
-        ? Result.succeed({
-            totalLevel: PostLevelOneCharacterClassLevel(input.totalLevel),
-            hitPointRule,
-          })
-        : Result.fail({
-            code: "invalidHitPointRuleForLevel" as const,
-            totalLevel: input.totalLevel,
-            hitPointRule,
-          }),
+    Match.whenOr(
+      { tag: "fixedHigherLevelGain" },
+      { tag: "rolledHigherLevelGain" },
+      (hitPointRule) =>
+        input.totalLevel > 1
+          ? Result.succeed({
+              totalLevel: PostLevelOneCharacterClassLevel(input.totalLevel),
+              hitPointRule,
+            })
+          : Result.fail({
+              code: "invalidHitPointRuleForLevel" as const,
+              totalLevel: input.totalLevel,
+              hitPointRule,
+            }),
     ),
     Match.exhaustive,
   );
@@ -110,7 +164,7 @@ export function characterTotalLevelHitPointRule(input: {
 export function characterProgressionEntry(input: {
   readonly classUnitId: ClassUnitId;
   readonly characterLevel: CharacterClassLevel;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly hitPointRule: HigherLevelClassHitPointRule;
 }): Result.Result<CharacterProgressionEntry, CharacterProgressionLevelIssue> {
   const levelRule = characterTotalLevelHitPointRule({
     totalLevel: input.characterLevel,
@@ -126,10 +180,11 @@ export function characterProgressionEntry(input: {
 }
 
 export function characterProgressionWithClassLevelGain(input: {
-  readonly progression: CharacterProgression;
+  readonly progression: CharacterBuildProgression;
   readonly classUnitId: ClassUnitId;
-  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
-}): Result.Result<CharacterProgression, CharacterProgressionLevelIssue> {
+  readonly hitPointRule: HigherLevelClassHitPointRule;
+  readonly constitutionModifierAtGain: number;
+}): Result.Result<CharacterBuildProgression, CharacterProgressionLevelIssue> {
   const nextCharacterLevel = 2 + input.progression.advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)) {
     return Result.fail({
@@ -143,32 +198,45 @@ export function characterProgressionWithClassLevelGain(input: {
     characterLevel: characterClassLevel(nextCharacterLevel),
     hitPointRule: input.hitPointRule,
   });
-  /* v8 ignore start -- @preserve -- The consecutive level and fixed higher-level Hit Point rule satisfy this narrowed constructor. */
+  /* v8 ignore start -- @preserve -- The consecutive level and higher-level Hit Point rule satisfy this narrowed constructor. */
   if (Result.isFailure(entry)) return Result.fail(entry.failure);
   /* v8 ignore stop -- @preserve */
 
   return Result.succeed({
     startingClass: input.progression.startingClass,
-    advancements: [...input.progression.advancements, entry.success],
+    advancements: [
+      ...input.progression.advancements,
+      {
+        ...entry.success,
+        constitutionModifierAtGain: input.constitutionModifierAtGain,
+      },
+    ],
   });
 }
 
 export function hitPointRuleOptionSuffix(
   rule: ClassHitPointRule,
-): "maximum_hit_die" | "fixed_hp_gain" {
+): "maximum_hit_die" | "fixed_hp_gain" | "rolled_hp_gain" {
   return Match.value(rule).pipe(
     Match.when(
       { tag: "levelOneMaximumHitDie" },
       () => "maximum_hit_die" as const,
     ),
     Match.when({ tag: "fixedHigherLevelGain" }, () => "fixed_hp_gain" as const),
+    Match.when(
+      { tag: "rolledHigherLevelGain" },
+      () => "rolled_hp_gain" as const,
+    ),
     Match.exhaustive,
   );
 }
 
 export function hitPointRuleLabel(
   rule: ClassHitPointRule,
-): "Level 1 Hit Point maximum" | "Fixed higher-level HP gain" {
+):
+  | "Level 1 Hit Point maximum"
+  | "Fixed higher-level HP gain"
+  | "Rolled higher-level HP gain" {
   return Match.value(rule).pipe(
     Match.when(
       { tag: "levelOneMaximumHitDie" },
@@ -178,16 +246,139 @@ export function hitPointRuleLabel(
       { tag: "fixedHigherLevelGain" },
       () => "Fixed higher-level HP gain" as const,
     ),
+    Match.when(
+      { tag: "rolledHigherLevelGain" },
+      () => "Rolled higher-level HP gain" as const,
+    ),
     Match.exhaustive,
   );
 }
 
-export function hitPointsAfterLevelOneMultiplier(
-  progression: CharacterProgression,
-): number {
-  return progression.advancements.filter(
-    (entry) => entry.hitPointRule.tag === "fixedHigherLevelGain",
-  ).length;
+/** A level's rolled Hit Die result that is above the class's Hit Die. */
+export type RolledHitDieResultAboveHitDie = {
+  readonly classUnitId: UnitRecord["id"];
+  readonly hitDieResult: DieRollResult;
+  readonly hitDieSize: number;
+};
+
+/**
+ * The roll a level's Hit Point rule records, when it is above the class's Hit
+ * Die. A fixed gain records no roll.
+ */
+export function rolledHitDieResultAboveHitDie(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly hitPointRule: HigherLevelClassHitPointRule;
+  readonly hitPointDie: number;
+}): Option.Option<RolledHitDieResultAboveHitDie> {
+  return Match.value(input.hitPointRule).pipe(
+    Match.when({ tag: "fixedHigherLevelGain" }, () => Option.none()),
+    Match.when({ tag: "rolledHigherLevelGain" }, ({ hitDieResult }) =>
+      hitDieResult > input.hitPointDie
+        ? Option.some({
+            classUnitId: input.classUnitId,
+            hitDieResult,
+            hitDieSize: input.hitPointDie,
+          })
+        : Option.none(),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function rolledHitDieResultAboveHitDieMessage(
+  issue: RolledHitDieResultAboveHitDie,
+): string {
+  return `Rolled Hit Die result ${issue.hitDieResult} exceeds the d${issue.hitDieSize} Hit Die of class ${issue.classUnitId}.`;
+}
+
+/**
+ * A level that records a higher Constitution modifier than the character has
+ * now. A built character's scores only rise, so a stored sheet or direct input
+ * that lowers Constitution afterwards has no Level Advancement reading.
+ */
+export type ConstitutionModifierAtGainAboveCurrent = {
+  readonly characterLevel: CharacterClassLevel;
+  readonly constitutionModifierAtGain: number;
+  readonly constitutionModifier: number;
+};
+
+/** The levels that record a higher Constitution modifier than the current one. */
+export function constitutionModifiersAtGainAboveCurrent(
+  progression: CharacterBuildProgression,
+  constitutionModifier: number,
+): readonly ConstitutionModifierAtGainAboveCurrent[] {
+  return progression.advancements.flatMap(
+    ({ constitutionModifierAtGain }, index) =>
+      constitutionModifierAtGain > constitutionModifier
+        ? [
+            {
+              characterLevel: advancementCharacterLevel(progression, index),
+              constitutionModifierAtGain,
+              constitutionModifier,
+            },
+          ]
+        : [],
+  );
+}
+
+/**
+ * A level that records a lower Constitution modifier than an earlier level. A
+ * built character's scores only rise, so a later level can't have gained with
+ * a lower modifier.
+ */
+export type ConstitutionModifierAtGainBelowEarlier = {
+  readonly characterLevel: CharacterClassLevel;
+  readonly constitutionModifierAtGain: number;
+  readonly earlierCharacterLevel: CharacterClassLevel;
+  readonly earlierConstitutionModifierAtGain: number;
+};
+
+/** The levels that record a lower Constitution modifier than the level before. */
+export function constitutionModifiersAtGainBelowEarlier(
+  progression: CharacterBuildProgression,
+): readonly ConstitutionModifierAtGainBelowEarlier[] {
+  return progression.advancements.flatMap((advancement, index) => {
+    const earlier = progression.advancements[index - 1];
+    return earlier !== undefined &&
+      advancement.constitutionModifierAtGain <
+        earlier.constitutionModifierAtGain
+      ? [
+          {
+            characterLevel: advancementCharacterLevel(progression, index),
+            constitutionModifierAtGain: advancement.constitutionModifierAtGain,
+            earlierCharacterLevel: advancementCharacterLevel(
+              progression,
+              index - 1,
+            ),
+            earlierConstitutionModifierAtGain:
+              earlier.constitutionModifierAtGain,
+          },
+        ]
+      : [];
+  });
+}
+
+export function constitutionModifierAtGainBelowEarlierMessage(
+  issue: ConstitutionModifierAtGainBelowEarlier,
+): string {
+  return `Character level ${issue.characterLevel} records Constitution modifier ${issue.constitutionModifierAtGain}, below the ${issue.earlierConstitutionModifierAtGain} that character level ${issue.earlierCharacterLevel} records.`;
+}
+
+/** The character level an advancement reaches: level 1 plus the advancements up to it. */
+function advancementCharacterLevel(
+  progression: CharacterBuildProgression,
+  index: number,
+): CharacterClassLevel {
+  return computeTotalLevel({
+    ...progression,
+    advancements: progression.advancements.slice(0, index + 1),
+  });
+}
+
+export function constitutionModifierAtGainAboveCurrentMessage(
+  issue: ConstitutionModifierAtGainAboveCurrent,
+): string {
+  return `Character level ${issue.characterLevel} records Constitution modifier ${issue.constitutionModifierAtGain}, above the current ${issue.constitutionModifier}.`;
 }
 
 export function computeTotalLevel(

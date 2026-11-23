@@ -9,6 +9,7 @@ module battleRuntimeMovementBridgeExamples {
   run test_start_turn_resets_runtime_turn_resources = {
     val started = battleRuntimeStartTurn({
       currentActorOwnsTurn: true,
+      actionResourcesUsable: true,
       actionAvailable: false,
       bonusActionAvailable: false,
       reactionAvailable: false,
@@ -40,6 +41,7 @@ module battleRuntimeMovementBridgeExamples {
   run test_battle_runtime_bonus_action_dash_spends_bonus_action_not_action = {
     val dashed = battleRuntimeBonusActionDash({
       currentActorOwnsTurn: true,
+      actionResourcesUsable: true,
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,
@@ -64,6 +66,7 @@ module battleRuntimeMovementBridgeExamples {
   run test_battle_runtime_attack_and_magic_actions_spend_action = {
     val projection = {
       currentActorOwnsTurn: true,
+      actionResourcesUsable: true,
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,
@@ -89,6 +92,7 @@ module battleRuntimeMovementBridgeExamples {
   run test_battle_runtime_bonus_action_spends_bonus_action_only = {
     val spent = battleRuntimeSpendBonusAction({
       currentActorOwnsTurn: true,
+      actionResourcesUsable: true,
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,

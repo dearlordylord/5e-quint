@@ -2681,6 +2681,94 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
+  test("Drop Prone applies Prone without spending an action or Movement", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-drop-prone"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const state = session.state;
+    const dropAct = findAct(
+      battleRuntimeSessionForTest({ state, context: session.context }),
+      { tag: "runtimeCommand", actorId: fighterId, command: "dropProne" },
+    );
+    const dropped = requireResolved(
+      resolveBattleSubject({ state, subject: dropAct.subject, fills: [] }),
+    );
+
+    expect(dropped.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        conditions: expect.arrayContaining(["prone"]),
+        movement: expect.objectContaining({
+          spentFeet: movementFeet(0),
+          remainingFeet: movementFeet(30),
+        }),
+      }),
+    );
+    expect(dropped.state.currentTurnResources).toEqual(
+      state.currentTurnResources,
+    );
+  });
+
+  test("Drop Prone is unavailable while already Prone or at Speed 0", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId)!;
+    const prone: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "prone"),
+        ),
+      ),
+    };
+    expect(
+      discoverBattleActCandidates(prone).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "dropProne",
+    });
+    expect(
+      resolveBattleSubject({
+        state: prone,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "dropProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    expect(
+      discoverBattleActCandidates(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "dropProne",
+    });
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "dropProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
     const acts = discoverBattleActCandidates(
       startBattleRight({

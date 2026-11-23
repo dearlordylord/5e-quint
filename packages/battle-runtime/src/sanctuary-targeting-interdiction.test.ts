@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -55,6 +56,7 @@ import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   skeletonCreatureInit,
+  rangedAttackEnemyProximityFactsForTest,
 } from "./battle-runtime.test-support.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 
@@ -85,16 +87,16 @@ const spellAttackTableEnemies = [
   {
     enemyId: wardedId,
     distanceFeet: movementFeet(30),
-    enemyCanSeeCaster: true,
+    enemyCanSeeAttacker: true,
   },
   {
     enemyId: replacementId,
     distanceFeet: movementFeet(30),
-    enemyCanSeeCaster: true,
+    enemyCanSeeAttacker: true,
   },
 ] satisfies Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "rangedSpellAttackEnemyProximity" }
+  { readonly kind: "rangedAttackEnemyProximity" }
 >["enemies"];
 
 type NeedsHolesResult = Extract<
@@ -331,49 +333,7 @@ describe("Sanctuary targeting interdiction", () => {
   });
 
   test("an attack prevented by Sanctuary before its roll does not expend ammunition", () => {
-    const warded = advanceToAttacker(
-      castSanctuary(
-        battleWithSanctuary({ ammunitionAttacker: true }),
-        wardedId,
-      ),
-    );
-    const shortbow = attackActionOptionsForActor(warded.state, attackerId).find(
-      (option) =>
-        option.kind === "statBlockAttack" &&
-        option.attack.ammunition === "arrow",
-    );
-    if (shortbow === undefined) {
-      throw new Error("Expected the ammunition attacker Shortbow option.");
-    }
-    const attack = discoverBattleActCandidates(warded.state).find(
-      (candidate) =>
-        candidate.subject.tag === "action" &&
-        candidate.subject.action === "attack" &&
-        candidate.subject.procedureRef === shortbow.procedureRef,
-    );
-    if (
-      attack === undefined ||
-      attack.subject.tag !== "action" ||
-      attack.subject.action !== "attack"
-    ) {
-      throw new Error("Expected the ammunition attacker Shortbow act.");
-    }
-    const targetFill = {
-      ...attackTargetFill(
-        requireHole(attack.initialHoles, "targetChoice"),
-        wardedId,
-        attack.subject,
-      ),
-      spatialFacts: [
-        {
-          kind: "attackTargetDistance" as const,
-          actorId: attackerId,
-          targetId: wardedId,
-          ...attackExecutionSelectionForSubjectForTest(attack.subject),
-          distanceFeet: movementFeet(5),
-        },
-      ],
-    };
+    const { warded, attack, targetFill } = wardedShortbowAttack();
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
       subject: attack.subject,
@@ -402,6 +362,113 @@ describe("Sanctuary targeting interdiction", () => {
       { ammunition: "arrow", remaining: resourceCount(20) },
     ]);
   });
+
+  test.each([
+    "coherent",
+    "contradictory",
+    "refreshed",
+    "checkedEmpty",
+    "missing",
+  ] as const)(
+    "Sanctuary ranged replacement independently qualifies proximity: %s",
+    (scenario) => {
+      const { warded, attack, targetFill } = wardedShortbowAttack([
+        {
+          enemyId: scenario === "refreshed" ? replacementId : wardedId,
+          distanceFeet: movementFeet(5),
+          enemyCanSeeAttacker: true,
+        },
+      ]);
+      const needsSanctuary = resolveBattleSubject({
+        state: warded.state,
+        subject: attack.subject,
+        fills: [targetFill],
+      });
+      if (needsSanctuary.tag !== "needsHoles") {
+        throw new Error("Expected Sanctuary interdiction hole.");
+      }
+      const request = requireHole(
+        battleResolutionHolesForTest(needsSanctuary),
+        "targetingSaveInterdictionOutcome",
+      );
+      if (request.replacementTargetKind !== "attackRoll")
+        throw new Error("Expected attack replacement.");
+      expect(request.attack?.targetConstraint.kind).toBe("rangedRange");
+      const retargeted = resolveBattleSubject({
+        state: warded.state,
+        subject: attack.subject,
+        fills: [
+          targetFill,
+          sanctuaryOutcomeFill(
+            requireHole(
+              battleResolutionHolesForTest(needsSanctuary),
+              "targetingSaveInterdictionOutcome",
+            ),
+            {
+              saveSucceeded: false,
+              outcome: {
+                kind: "newTarget",
+                targetId: replacementId,
+                spatialFacts: [
+                  {
+                    ...attackTargetFact(replacementId, attack.subject),
+                    distanceFeet: movementFeet(30),
+                  },
+                  ...(scenario === "missing"
+                    ? []
+                    : rangedAttackEnemyProximityFactsForTest(
+                        requireHole(attack.initialHoles, "targetChoice"),
+                        [],
+                        scenario === "checkedEmpty"
+                          ? []
+                          : [
+                              {
+                                enemyId:
+                                  scenario === "coherent"
+                                    ? wardedId
+                                    : replacementId,
+                                distanceFeet: movementFeet(
+                                  scenario === "refreshed" ? 30 : 5,
+                                ),
+                                enemyCanSeeAttacker: true,
+                              },
+                            ],
+                      )),
+                ],
+                replacementTargetKind: "attackRoll",
+              },
+            },
+          ),
+        ],
+      });
+      if (scenario === "coherent") {
+        if (retargeted.tag !== "needsHoles")
+          throw new Error("Expected the retargeted attack's roll hole.");
+        expect(
+          requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+            .rollMode,
+        ).toBe("disadvantage");
+      } else if (scenario === "refreshed" || scenario === "checkedEmpty") {
+        if (retargeted.tag !== "needsHoles")
+          throw new Error("Expected replacement attack roll.");
+        expect(
+          requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+            .rollMode,
+        ).toBeUndefined();
+      } else {
+        expect(retargeted).toMatchObject({
+          tag: "invalid",
+          reason: "invalidFill",
+          message: expect.stringMatching(
+            scenario === "missing" ? /qualification/i : /distance/i,
+          ),
+        });
+        expect(combatant(warded.state, attackerId).ammunitionStocks).toEqual([
+          { ammunition: "arrow", remaining: resourceCount(20) },
+        ]);
+      }
+    },
+  );
 
   test("successful save proceeds to the attack roll", () => {
     const warded = advanceToAttacker(
@@ -2071,7 +2138,7 @@ function spellTargetFill(
   targetId: CombatantId,
   enemies: Extract<
     BattleTargetSpatialFact,
-    { readonly kind: "rangedSpellAttackEnemyProximity" }
+    { readonly kind: "rangedAttackEnemyProximity" }
   >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const distanceFeet =
@@ -2096,10 +2163,9 @@ function spellTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: casterIdValue,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        kind: "rangedAttackEnemyProximity",
+        attackerId: casterIdValue,
+        procedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
         enemies,
       },
       {
@@ -2120,7 +2186,7 @@ function spellLeapTargetFill(
   targetId: CombatantId,
   enemies: Extract<
     BattleTargetSpatialFact,
-    { readonly kind: "rangedSpellAttackEnemyProximity" }
+    { readonly kind: "rangedAttackEnemyProximity" }
   >["enemies"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const casterId = hole.spellTargetSpatialFactRequest?.casterId;
@@ -2145,10 +2211,9 @@ function spellLeapTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: casterId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        kind: "rangedAttackEnemyProximity",
+        attackerId: casterId,
+        procedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
         enemies,
       },
       {
@@ -2220,6 +2285,43 @@ function spellDamageTypeChoiceFill(
   value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
 ): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
+function wardedShortbowAttack(
+  enemies: Parameters<typeof rangedAttackEnemyProximityFactsForTest>[2] = [],
+) {
+  const warded = advanceToAttacker(
+    castSanctuary(battleWithSanctuary({ ammunitionAttacker: true }), wardedId),
+  );
+  const shortbow = attackActionOptionsForActor(warded.state, attackerId).find(
+    (option) =>
+      option.kind === "statBlockAttack" && option.attack.ammunition === "arrow",
+  );
+  if (shortbow === undefined) {
+    throw new Error("Expected the ammunition attacker Shortbow option.");
+  }
+  const attack = discoverBattleActCandidates(warded.state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef === shortbow.procedureRef,
+  );
+  if (
+    attack === undefined ||
+    attack.subject.tag !== "action" ||
+    attack.subject.action !== "attack"
+  ) {
+    throw new Error("Expected the ammunition attacker Shortbow act.");
+  }
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = {
+    ...attackTargetFill(targetHole, wardedId, attack.subject),
+    spatialFacts: [
+      attackTargetFact(wardedId, attack.subject),
+      ...rangedAttackEnemyProximityFactsForTest(targetHole, [], enemies),
+    ],
+  };
+  return { warded, attack: { ...attack, subject: attack.subject }, targetFill };
 }
 
 function attackTargetFact(

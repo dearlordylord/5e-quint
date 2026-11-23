@@ -1,3 +1,4 @@
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import * as Result from "effect/Result";
 import { Match } from "effect";
 import {
@@ -7,6 +8,8 @@ import {
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
@@ -98,7 +101,10 @@ import {
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
-import { attackTargetIsLegal } from "./attack-spatial.ts";
+import {
+  qualifyAttackEnemyProximity,
+  attackTargetIsLegal,
+} from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -130,6 +136,11 @@ import {
 } from "./battle-runtime-protocol.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { readiedAttackOption } from "./ready.ts";
+import { resolveWeaponMasteryGraze } from "./weapon-mastery-graze.ts";
+import {
+  WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
+  WEAPON_MASTERY_GRAZE_DECISION_HOLE_INSTANCE,
+} from "./domain-constants.ts";
 
 const byReactionAttackDamagePathKind = Match.discriminator("kind");
 
@@ -174,9 +185,13 @@ type ReactionAttackDamagePath =
 type ReactionAttackCommandContext = {
   readonly input: OpportunityAttackResolutionInput;
   readonly commandLabel: string;
+  readonly reactor: BattleCreatureState;
   readonly target: BattleCreatureState;
   readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: ResolvedAttackFillSet;
+  readonly enemyProximity:
+    | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
+    | null;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 };
 
@@ -217,7 +232,10 @@ function reactionAttackRollHoleWithRelationshipFacts(input: {
   readonly targetId: BattleCreatureState["combatantId"];
   readonly attack: BoundSupportedAttackActionOption;
   readonly reactor: BattleCreatureState | undefined;
-  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): ReturnType<typeof attackRollHole> {
   return {
     ...attackRollHole(input.reactor, input.attack, input.requiredRollMode),
@@ -239,11 +257,15 @@ function reactionAttackRollHoleWithRelationshipFacts(input: {
 
 function reactionAttackMissingRollResult(
   input: ReactionAttackCommandContext,
-  requiredRollMode: ReturnType<typeof requiredAttackRollMode>,
+  requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >,
 ): BattleResolutionResult {
   if (
     input.fillSet.damageRoll != null ||
-    input.fillSet.damageDispositionFilled
+    input.fillSet.damageDispositionFilled ||
+    input.fillSet.weaponMasteryGrazeDecision !== undefined
   ) {
     return invalidResult(
       input.input.state,
@@ -266,7 +288,10 @@ function reactionAttackMissingRollResult(
 function reactionAttackRollIssue(input: {
   readonly context: ReactionAttackCommandContext;
   readonly attackRoll: BattleAttackRollResult;
-  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): string | null {
   if (!attackRollResultIsValid(input.attackRoll)) {
     return `${input.context.commandLabel} attack roll result is outside the d20 attack-roll protocol.`;
@@ -285,7 +310,10 @@ function reactionAttackRerollResult(input: {
   readonly context: ReactionAttackCommandContext;
   readonly attackRoll: BattleAttackRollResult;
   readonly reactor: BattleCreatureState | undefined;
-  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+  readonly requiredRollMode: Exclude<
+    ReturnType<typeof requiredAttackRollMode>,
+    { readonly tag: "invalid" }
+  >;
 }): BattleResolutionResult | null {
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -329,11 +357,21 @@ function prepareReactionAttackRoll(
   const requiredRollMode = requiredAttackRollMode(
     input.input.state,
     input.input.subject.reactorId,
-    input.input.subject.targetId,
+    input.target,
     input.attack,
     input.targetSpatialFacts,
+    input.enemyProximity,
     input.input.subject.command === "opportunityAttack",
   );
+  if (typeof requiredRollMode === "object")
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        requiredRollMode.message,
+      ),
+    };
   const attackRoll = input.fillSet.attackRoll;
   if (attackRoll == null) {
     return {
@@ -406,7 +444,90 @@ function resolveReactionAttackCommand(
     Match.when("releaseReadiedAttack", () => "Readied" as const),
     Match.exhaustive,
   );
+  const binding = reactionAttackBinding(input, commandLabel);
+  if (binding.tag === "result") return binding.result;
+  const { reactor, target, attack } = binding;
+  const fillSet = attackFillSet(
+    input.fills,
+    subject.reactorId,
+    input.state,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      subject.reactorId,
+      "attackRollAgainstEnemy",
+    ),
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (fillSet.tag === "invalid") {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  /* v8 ignore stop -- @preserve */
+  const reactionFillIssue = reactionAttackFillIssue(fillSet, commandLabel);
+  if (reactionFillIssue !== null) {
+    return invalidResult(input.state, "invalidFill", reactionFillIssue);
+  }
+  const targetSpatialFacts = reactionAttackTargetSpatialFacts({
+    state: input.state,
+    commandLabel,
+    subject,
+    attack,
+    fillSet,
+  });
+  if (targetSpatialFacts.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      targetSpatialFacts.message,
+    );
+  }
+  const context: ReactionAttackCommandContext = {
+    input,
+    commandLabel,
+    reactor,
+    target,
+    attack,
+    fillSet,
+    targetSpatialFacts: targetSpatialFacts.facts,
+    enemyProximity: targetSpatialFacts.enemyProximity,
+  };
+  const rollPreparation = prepareReactionAttackRoll(context);
+  if (rollPreparation.tag === "result") return rollPreparation.result;
+  return resolveReactionAttackAfterRoll({
+    context,
+    pendingAttackDamageReductions,
+    rollPreparation,
+  });
+}
+
+function reactionAttackBinding(
+  input: OpportunityAttackResolutionInput,
+  commandLabel: ReactionAttackCommandContext["commandLabel"],
+):
+  | ({ readonly tag: "ready" } & Pick<
+      ReactionAttackCommandContext,
+      "reactor" | "target" | "attack"
+    >)
+  | {
+      readonly tag: "result";
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    } {
+  const subject = input.subject;
   const target = input.state.combatants.get(subject.targetId);
+  const reactor = input.state.combatants.get(subject.reactorId);
+  if (reactor === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        `${commandLabel} reactor is no longer in the battle.`,
+      ),
+    };
+  }
   const attack = Match.value(subject).pipe(
     Match.when({ command: "retaliationAttack" }, (reaction) =>
       meleeWeaponOrUnarmedStrikeOptionForReactor(
@@ -435,67 +556,16 @@ function resolveReactionAttackCommand(
     Match.exhaustive,
   );
   if (target === undefined || attack === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      `${commandLabel} attack is no longer available.`,
-    );
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        `${commandLabel} attack is no longer available.`,
+      ),
+    };
   }
-  const fillSet = attackFillSet(
-    input.fills,
-    subject.reactorId,
-    input.state,
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      subject.reactorId,
-      "attackRollAgainstEnemy",
-    ),
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", fillSet.message);
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.targetId !== undefined) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} target is fixed by the reaction trigger.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const targetSpatialFacts = reactionAttackTargetSpatialFacts({
-    state: input.state,
-    commandLabel,
-    subject,
-    attack,
-    fillSet,
-  });
-  if (targetSpatialFacts.tag === "invalid") {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      targetSpatialFacts.message,
-    );
-  }
-  const context: ReactionAttackCommandContext = {
-    input,
-    commandLabel,
-    target,
-    attack,
-    fillSet,
-    targetSpatialFacts: targetSpatialFacts.facts,
-  };
-  const rollPreparation = prepareReactionAttackRoll(context);
-  if (rollPreparation.tag === "result") return rollPreparation.result;
-  return resolveReactionAttackAfterRoll({
-    context,
-    pendingAttackDamageReductions,
-    rollPreparation,
-  });
+  return { tag: "ready", reactor, target, attack };
 }
 
 function reactionAttackTargetSpatialFacts(input: {
@@ -505,7 +575,13 @@ function reactionAttackTargetSpatialFacts(input: {
   readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: ResolvedAttackFillSet;
 }):
-  | { readonly tag: "ok"; readonly facts: readonly BattleTargetSpatialFact[] }
+  | {
+      readonly tag: "ok";
+      readonly facts: readonly BattleTargetSpatialFact[];
+      readonly enemyProximity:
+        | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
+        | null;
+    }
   | { readonly tag: "invalid"; readonly message: string } {
   const suppliedDistanceFeet = attackTargetDistanceFeet(
     input.fillSet.targetSpatialFacts,
@@ -524,16 +600,7 @@ function reactionAttackTargetSpatialFacts(input: {
         "Opportunity Attack target distance must match the reach-leaving trigger distance.",
     };
   }
-  const distanceFact = reactionAttackDistanceFact({
-    subject: input.subject,
-    attack: input.attack,
-  });
-  const facts =
-    suppliedDistanceFeet !== null
-      ? input.fillSet.targetSpatialFacts
-      : distanceFact === undefined
-        ? undefined
-        : [...input.fillSet.targetSpatialFacts, distanceFact];
+  const facts = reactionAttackDistanceFacts(input, suppliedDistanceFeet);
   if (facts === undefined) {
     return {
       tag: "invalid",
@@ -541,24 +608,34 @@ function reactionAttackTargetSpatialFacts(input: {
         "Fixed-target reaction attacks require an exact attack target distance fact.",
     };
   }
-  if (
-    !attackTargetIsLegal(
-      input.state,
-      input.subject.reactorId,
-      input.subject.targetId,
-      input.attack,
-      facts,
-    )
-  ) {
-    return {
-      tag: "invalid",
-      message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
-    };
-  }
-  return {
-    tag: "ok",
+  const targetIssue = reactionAttackTargetIssue(input, facts);
+  if (targetIssue !== null) return targetIssue;
+  const enemyProximity = qualifyAttackEnemyProximity(
+    input.state,
+    input.subject.reactorId,
+    input.attack,
     facts,
-  };
+  );
+  if (isSpatialQualificationIssue(enemyProximity)) return enemyProximity;
+  return { tag: "ok", facts, enemyProximity };
+}
+
+function reactionAttackTargetIssue(
+  input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
+  facts: readonly BattleTargetSpatialFact[],
+): { readonly tag: "invalid"; readonly message: string } | null {
+  return attackTargetIsLegal(
+    input.state,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+    facts,
+  )
+    ? null
+    : {
+        tag: "invalid",
+        message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
+      };
 }
 
 function reactionAttackDistanceFact(input: {
@@ -881,7 +958,74 @@ type ReactionAttackDamagePathInput = {
 function resolveReactionAttackDamagePath(
   input: ReactionAttackDamagePathInput,
 ): BattleResolutionResult {
-  if (!input.hit) return resolveReactionAttackMiss(input);
+  if (
+    !input.hit &&
+    (input.fillSet.damageRoll !== undefined ||
+      input.fillSet.sourceDamageRollPenaltyRolls.length > 0)
+  ) {
+    return invalidResult(
+      input.context.input.state,
+      "invalidFill",
+      `${input.context.commandLabel} damage can only be filled after a hit.`,
+    );
+  }
+  return Match.value(
+    resolveWeaponMasteryGraze({
+      attacker: input.context.reactor,
+      attack: input.attack,
+      hit: input.hit,
+      decision: input.fillSet.weaponMasteryGrazeDecision,
+      decisionHole: {
+        holeId: WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
+        holeInstanceKey: WEAPON_MASTERY_GRAZE_DECISION_HOLE_INSTANCE,
+      },
+    }),
+  ).pipe(
+    Match.when({ tag: "needsDecision" }, ({ hole }) =>
+      needsHolesResult(input.attackRolledState, input.context.input.subject, [
+        hole,
+      ]),
+    ),
+    Match.when({ tag: "invalid" }, ({ message }) =>
+      invalidResult(input.context.input.state, "invalidFill", message),
+    ),
+    Match.when({ tag: "damage" }, ({ damageByType }) =>
+      resolveReactionAttackGrazeDamage(input, damageByType),
+    ),
+    Match.when({ tag: "declined" }, () => resolveReactionAttackMiss(input)),
+    Match.when({ tag: "notApplicable" }, () =>
+      input.hit
+        ? resolveReactionAttackHitDamagePath(input)
+        : resolveReactionAttackMiss(input),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveReactionAttackGrazeDamage(
+  input: ReactionAttackDamagePathInput,
+  damageByTypeBeforeTargetAdjustments: Extract<
+    BattleAttackDamageEvent,
+    { readonly kind: "aggregateDamage" }
+  >["damageByTypeBeforeTargetAdjustments"],
+): BattleResolutionResult {
+  return resolveReactionAttackDamageTransaction({
+    resolutionInput: input.context.input,
+    fillSet: input.fillSet,
+    targetSpatialFacts: input.context.targetSpatialFacts,
+    preConsumptionState: input.attackRolledState,
+    target: input.target,
+    attack: input.attack,
+    effectiveAttackRoll: input.effectiveAttackRoll,
+    critical: false,
+    pendingAttackDamageReductions: input.pendingAttackDamageReductions,
+    path: { kind: "fixed", damageByTypeBeforeTargetAdjustments },
+  });
+}
+
+function resolveReactionAttackHitDamagePath(
+  input: ReactionAttackDamagePathInput,
+): BattleResolutionResult {
   const fixedDamageAmount =
     input.spellMarkedDamageRiders.length > 0 ||
     input.spellWeaponDamageRiders.length > 0
@@ -909,11 +1053,7 @@ function resolveReactionAttackMiss(
 ): BattleResolutionResult {
   const { context, attackRolledState } = input;
   const { input: resolutionInput, fillSet } = context;
-  if (
-    fillSet.damageRoll != null ||
-    fillSet.damageDispositionFilled ||
-    fillSet.sourceDamageRollPenaltyRolls.length > 0
-  ) {
+  if (fillSet.damageDispositionFilled) {
     return invalidResult(
       resolutionInput.state,
       "invalidFill",
@@ -1502,4 +1642,37 @@ function resolveReactionAttackDamageTransaction(input: {
     state: afterDamagePath.state,
     snapshot: snapshotBattle(afterDamagePath.state),
   };
+}
+
+function reactionAttackDistanceFacts(
+  input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
+  suppliedDistanceFeet: ReturnType<typeof attackTargetDistanceFeet>,
+): readonly BattleTargetSpatialFact[] | undefined {
+  if (suppliedDistanceFeet !== null) return input.fillSet.targetSpatialFacts;
+  const distanceFact = reactionAttackDistanceFact({
+    subject: input.subject,
+    attack: input.attack,
+  });
+  return distanceFact === undefined
+    ? undefined
+    : [...input.fillSet.targetSpatialFacts, distanceFact];
+}
+
+/**
+ * A reaction attack's target is fixed by its trigger.
+ */
+function reactionAttackFillIssue(
+  fillSet: ResolvedAttackFillSet,
+  attackLabel: string,
+): string | null {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (fillSet.targetId !== undefined) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return `${attackLabel} target is fixed by the reaction trigger.`;
+  }
+  /* v8 ignore stop -- @preserve */
+  if (fillSet.huntersPreyHordeBreakerGrazeDecision !== undefined) {
+    return `${attackLabel} does not include a Horde Breaker attack.`;
+  }
+  return null;
 }

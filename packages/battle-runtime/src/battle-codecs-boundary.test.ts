@@ -2828,6 +2828,11 @@ describe("battle codec act ownership boundaries", () => {
           procedureRef: subject.procedureRef,
           statBlockDamageSelection: subject.statBlockDamageSelection,
         },
+        {
+          kind: "rangedAttackEnemyProximity",
+          procedureRef: subject.procedureRef,
+          enemies: [],
+        },
       ],
     });
     expect(
@@ -3331,6 +3336,12 @@ describe("battle codec act ownership boundaries", () => {
           attackResponse.selection,
           movementFeet(5),
         ),
+        {
+          kind: "rangedAttackEnemyProximity" as const,
+          attackerId: goblinId,
+          procedureRef: attackResponse.selection.procedureRef,
+          enemies: [],
+        },
       ],
     };
     const decoded = Schema.decodeUnknownSync(BattleFillSchema)(
@@ -3344,6 +3355,7 @@ describe("battle codec act ownership boundaries", () => {
           statBlockDamageSelection:
             attackResponse.selection.statBlockDamageSelection,
         },
+        { kind: "rangedAttackEnemyProximity", enemies: [] },
       ],
     });
     expect(

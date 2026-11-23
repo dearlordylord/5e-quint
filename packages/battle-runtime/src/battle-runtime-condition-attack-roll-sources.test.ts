@@ -1,3 +1,5 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.CONDITION_ROLL_MODE
 import {
   applyCondition,
@@ -34,7 +36,6 @@ import {
   wizardSpellcasting,
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { TARGET_ADVANTAGE_CONDITIONS } from "./d20-test-circumstance.ts";
 import { battleObjectId, type CombatantId } from "./identity.ts";
 import type { BattleFill, BattleState } from "./battle-state-execution.ts";
@@ -291,9 +292,9 @@ describe("battle runtime: condition attack-roll sources", () => {
         distanceFeet: movementFeet(30),
       },
       {
-        kind: "rangedSpellAttackEnemyProximity",
-        casterId: wizardId,
-        sourceProcedureRef,
+        kind: "rangedAttackEnemyProximity",
+        attackerId: wizardId,
+        procedureRef: sourceProcedureRef,
         enemies: [],
       },
     ]);
@@ -334,10 +335,10 @@ describe("battle runtime: condition attack-roll sources", () => {
       if (targetHole.attack === undefined) {
         throw new Error("Expected the attack target selection.");
       }
-      return requiredAttackRollMode(
+      return attackRollModeForTest(
         state,
         fighterId,
-        goblinId,
+        requireCombatant(state, goblinId),
         fighter.origin.attack,
         [
           attackTargetDistanceSpatialFact(

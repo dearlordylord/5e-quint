@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
 import {
   unitMechanicsPath,
   type UnitMechanicsPath,
@@ -7,6 +8,7 @@ import { Match } from "effect";
 
 import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
@@ -39,7 +41,8 @@ export type BattleWeaponMasteryProcedureFacts = Exclude<
   | BattleWeaponMasteryToppleSupport
   | BattleWeaponMasteryCleaveSupport
   | BattleWeaponMasteryPushSupport
-  | BattleWeaponMasterySlowSupport,
+  | BattleWeaponMasterySlowSupport
+  | typeof WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   "unsupported" | null
 >;
 
@@ -47,11 +50,21 @@ const WEAPON_MASTERY_ROOT_MECHANICS_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
 ]);
 
+/**
+ * The Weapon Mastery procedures whose authored shape Battle can reject. Graze's
+ * Surface schema admits only the one shape Battle executes, so it is never
+ * rejected.
+ */
+export type RejectableWeaponMasteryProcedure =
+  | Exclude<
+      BattleWeaponMasteryProcedureFacts,
+      typeof WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE
+    >
+  | "unrecognizedWeaponMastery";
+
 export type WeaponMasteryProcedureAdmissionIssue = {
   readonly tag: "weaponMasteryProcedureAdmissionIssue";
-  readonly procedure:
-    | BattleWeaponMasteryProcedureFacts
-    | "unrecognizedWeaponMastery";
+  readonly procedure: RejectableWeaponMasteryProcedure;
   readonly mechanicsPath: UnitMechanicsPath;
   readonly message: string;
 };
@@ -118,15 +131,18 @@ export function admitWeaponMasteryProcedure(
   };
 }
 
-type WeaponMasterySupportInspection = {
-  readonly procedure:
-    | BattleWeaponMasteryProcedureFacts
-    | "unrecognizedWeaponMastery";
-  readonly support: BattleWeaponMasteryProcedureFacts | "unsupported";
-};
+type WeaponMasterySupportInspection =
+  | {
+      readonly procedure: RejectableWeaponMasteryProcedure;
+      readonly support: BattleWeaponMasteryProcedureFacts | "unsupported";
+    }
+  | {
+      readonly procedure: typeof WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE;
+      readonly support: typeof WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE;
+    };
 
 function inspectedMasterySupport(
-  procedure: BattleWeaponMasteryProcedureFacts,
+  procedure: RejectableWeaponMasteryProcedure,
   support: BattleWeaponMasteryProcedureFacts | "unsupported" | null,
 ): WeaponMasterySupportInspection {
   return { procedure, support: support ?? "unsupported" };
@@ -144,6 +160,12 @@ function weaponMasterySupportForUnit(
 ): WeaponMasterySupportInspection | null {
   if (unit.kind !== "mastery") {
     return null;
+  }
+  if (unit.mechanics.family === "weapon_attack_miss_damage") {
+    return {
+      procedure: WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
+      support: WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
+    };
   }
   if (unit.mechanics.family !== "on_hit_trigger") {
     return unrecognizedMasterySupport();

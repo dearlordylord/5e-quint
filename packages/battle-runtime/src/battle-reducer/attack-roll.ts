@@ -1,3 +1,5 @@
+import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
 import {
   attackRollDefenseGrantsDisadvantage,
@@ -9,7 +11,8 @@ import {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
-// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.CONDITION_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -23,7 +26,6 @@ import {
 import {
   applyCondition,
   hasCondition,
-  isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
   d20TestRollMode,
@@ -50,8 +52,10 @@ import {
 } from "../character-execution-queries.ts";
 import {
   unboundAttackActionOption,
+  attackExecutionSelectionForOption,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
+  type BoundCharacterWeaponAttackActionOption,
   type CharacterWeaponAttackAbilityChoice,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
@@ -65,7 +69,6 @@ import {
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
-  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
@@ -154,15 +157,19 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
-  RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
 } from "./domain-constants.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
-  attackTargetIsLegal,
+  creatureAttackTargetIsLegal,
   attackTargetDistanceFeet,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
+import {
+  rangedAttackCloseCombatDisadvantage,
+  type SpatialQualificationIssue,
+  type RangedAttackEnemyProximityEvidence,
+} from "./ranged-attack-close-combat.ts";
 import { hasDodgeBenefit } from "./dodge-benefit.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 export { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
@@ -172,6 +179,7 @@ import {
   savingThrowTargetsEnemy,
 } from "./roll-trigger-relationship-facts.ts";
 import {
+  D20TestRollModeSourcesMonoid,
   admittedAttackRollTableSource,
   attackerConditionAttackRollModeSources,
   combineD20TestRollMode,
@@ -223,19 +231,23 @@ export function attackRollHole(
 export function requiredAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
   opportunityAttack = false,
-): AttackRollMode | undefined {
+): AttackRollMode | undefined | SpatialQualificationIssue {
+  const targetId = target.combatantId;
   const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
+    enemyProximity,
     null,
   );
+  if ("tag" in sources) return sources;
   return attackRollModeFromSources(
     sources.hasAdvantage,
     sources.hasDisadvantage ||
@@ -253,66 +265,39 @@ type AttackRollSourceFlags = {
   readonly hasDisadvantage: boolean;
 };
 
-function proneTargetAttackRollModeSources(
-  state: BattleState,
+function targetCreatureConditionAttackRollModeSources(
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   spellTargetDistanceFeet: MovementFeet | null,
-) {
-  const target = state.combatants.get(targetId);
-  if (target === undefined || !hasCondition(target.conditions, "prone")) {
-    return { advantage: false, disadvantage: false };
-  }
+): D20TestRollModeSources {
+  const conditionSources = targetConditionAttackRollModeSources(
+    target.conditions,
+  );
+  if (!hasCondition(target.conditions, "prone")) return conditionSources;
+
   const distanceFeet =
     attack === undefined
       ? spellTargetDistanceFeet
       : attackTargetDistanceFeet(
           targetSpatialFacts,
           attackerId,
-          targetId,
+          target.combatantId,
           attack,
         );
-  if (distanceFeet === null) {
-    return {
+  return D20TestRollModeSourcesMonoid.combineAll([
+    conditionSources,
+    distanceFeet === null
+      ? D20TestRollModeSourcesMonoid.initialValue
+      : proneAttackRollModeSources(distanceFeet),
+    {
       advantage:
-        attack === undefined && hasCondition(target.conditions, "unconscious"),
+        hasCondition(target.conditions, "unconscious") &&
+        (distanceFeet !== null || attack === undefined),
       disadvantage: false,
-    };
-  }
-  const proneSources = proneAttackRollModeSources(distanceFeet);
-  return {
-    advantage:
-      proneSources.advantage || hasCondition(target.conditions, "unconscious"),
-    disadvantage: proneSources.disadvantage,
-  };
-}
-
-function targetCreatureConditionAttackRollModeSources(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption | undefined,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  spellTargetDistanceFeet: MovementFeet | null,
-): D20TestRollModeSources {
-  const proneSources = proneTargetAttackRollModeSources(
-    state,
-    attackerId,
-    targetId,
-    attack,
-    targetSpatialFacts,
-    spellTargetDistanceFeet,
-  );
-  return {
-    advantage:
-      proneSources.advantage ||
-      targetConditionAttackRollModeSources(
-        state.combatants.get(targetId)?.conditions,
-      ).advantage,
-    disadvantage: proneSources.disadvantage,
-  };
+    },
+  ]);
 }
 
 function combatantHasHiddenAttackRollBenefit(
@@ -325,48 +310,70 @@ function combatantHasHiddenAttackRollBenefit(
   );
 }
 
-function attackTargetIsLongRange(
+// SRD "Ranged Attacks": long range and close combat each impose Disadvantage.
+function rangedAttackDisadvantage(
+  state: BattleState,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
   attackerId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption | undefined,
-): boolean {
+): boolean | SpatialQualificationIssue {
+  if (
+    attack === undefined ||
+    attackTargetConstraint(attack).kind !== "rangedRange"
+  )
+    return false;
+  if (enemyProximity === null)
+    return {
+      tag: "invalid",
+      message: "Ranged attack requires admitted enemy proximity evidence.",
+    };
+  const proximity = rangedAttackCloseCombatDisadvantage(state, enemyProximity);
+  if (typeof proximity !== "boolean") return proximity;
   return (
-    attack !== undefined &&
-    attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
-      "long"
+    (attack !== undefined &&
+      attackTargetRangeBand(
+        targetSpatialFacts,
+        attackerId,
+        targetId,
+        attack,
+      ) === "long") ||
+    proximity
   );
 }
 
 function attackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
   spellTargetDistanceFeet: MovementFeet | null,
-): AttackRollSourceFlags {
+): AttackRollSourceFlags | SpatialQualificationIssue {
+  const targetId = target.combatantId;
   const attacker = state.combatants.get(attackerId);
-  const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
   const hiddenTargetDisadvantage = combatantHasHiddenAttackRollBenefit(target);
   const dodgeDisadvantage =
     attacker !== undefined &&
-    target !== undefined &&
     hasDodgeAttackRollBenefit(state, target, attacker);
   const grappleDisadvantage =
     grapple !== undefined && grapple.grapplerId !== targetId;
-  const longRangeDisadvantage = attackTargetIsLongRange(
+  const rangedDisadvantage = rangedAttackDisadvantage(
+    state,
     targetSpatialFacts,
+    enemyProximity,
     attackerId,
     targetId,
     attack,
   );
+  if (typeof rangedDisadvantage !== "boolean") return rangedDisadvantage;
   const targetConditionRollModeSources =
     targetCreatureConditionAttackRollModeSources(
-      state,
       attackerId,
-      targetId,
+      target,
       attack,
       targetSpatialFacts,
       spellTargetDistanceFeet,
@@ -383,11 +390,12 @@ function attackRollSourceFlags(
     attackerId,
     targetId,
   );
-  const attackerCanSeeTarget =
-    attacker !== undefined &&
-    target !== undefined &&
-    !sightDisadvantage &&
-    combatantCanSee(state, attacker.combatantId, target.combatantId);
+  const attackerCanSeeTarget = attackTargetVisibleToAttacker(
+    state,
+    attacker,
+    target,
+    sightDisadvantage,
+  );
   const grapplerAttackAdvantage =
     combatantHasGrapplerSupportProfile(attacker) &&
     state.grapples.some(
@@ -431,7 +439,7 @@ function attackRollSourceFlags(
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
-    longRangeDisadvantage ||
+    rangedDisadvantage ||
     attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
       attackerCanSeeTarget,
@@ -528,8 +536,8 @@ export function requiredSpellObjectTargetAttackRollMode(
   invocation: RuntimeSpellProcedure,
   targetObjectId: BattleObjectId,
   attackerCanSeeObject: boolean | undefined,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): AttackRollMode | undefined {
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
+): AttackRollMode | undefined | SpatialQualificationIssue {
   const attacker = state.combatants.get(attackerId);
   const sources = objectTargetAttackRollSourceFlags(
     state,
@@ -546,14 +554,15 @@ export function requiredSpellObjectTargetAttackRollMode(
       invocation,
       "advantage",
     );
+  const proximity = rangedSpellAttackCloseCombatDisadvantage(
+    state,
+    invocation,
+    enemyProximity,
+  );
+  if (typeof proximity !== "boolean") return proximity;
   const hasDisadvantage =
     sources.hasDisadvantage ||
-    rangedSpellAttackCloseCombatDisadvantage(
-      state,
-      attackerId,
-      invocation,
-      targetSpatialFacts,
-    ) ||
+    proximity ||
     ongoingFeatureGrantsSpellAttackRollMode(
       state,
       attacker,
@@ -565,10 +574,9 @@ export function requiredSpellObjectTargetAttackRollMode(
 
 function rangedSpellAttackCloseCombatDisadvantage(
   state: BattleState,
-  attackerId: CombatantId,
   invocation: RuntimeSpellProcedure,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): boolean {
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
+): boolean | SpatialQualificationIssue {
   if (
     !(
       "attackKind" in invocation &&
@@ -579,25 +587,13 @@ function rangedSpellAttackCloseCombatDisadvantage(
   ) {
     return false;
   }
-  return targetSpatialFacts.some((fact) => {
-    if (
-      fact.kind !== "rangedSpellAttackEnemyProximity" ||
-      fact.casterId !== attackerId ||
-      fact.sourceProcedureRef !== invocation.sourceProcedureRef
-    ) {
-      return false;
-    }
-    return fact.enemies.some((entry) => {
-      const enemy = state.combatants.get(entry.enemyId);
-      return (
-        entry.enemyId !== attackerId &&
-        entry.distanceFeet <= RANGED_ATTACK_ENEMY_PROXIMITY_FEET &&
-        entry.enemyCanSeeCaster &&
-        enemy !== undefined &&
-        !isIncapacitated(enemy.conditions)
-      );
-    });
-  });
+  if (enemyProximity === null)
+    return {
+      tag: "invalid",
+      message:
+        "Ranged spell attack requires admitted enemy proximity evidence.",
+    };
+  return rangedAttackCloseCombatDisadvantage(state, enemyProximity);
 }
 
 export function requiredOrdinaryObjectAttackRollMode(
@@ -690,17 +686,20 @@ function objectOutlineGrantsAttackRollAdvantage(
 export function requiredSpellAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   invocation: RuntimeSpellProcedure,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): AttackRollMode | undefined {
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
+): AttackRollMode | undefined | SpatialQualificationIssue {
+  const targetId = target.combatantId;
   const attacker = state.combatants.get(attackerId);
   const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     undefined,
     targetSpatialFacts,
+    enemyProximity,
     spellAttackTargetDistanceFeet(
       targetSpatialFacts,
       attackerId,
@@ -708,6 +707,7 @@ export function requiredSpellAttackRollMode(
       invocation,
     ),
   );
+  if ("tag" in sources) return sources;
   const hasAdvantage =
     sources.hasAdvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(
@@ -716,14 +716,15 @@ export function requiredSpellAttackRollMode(
       invocation,
       "advantage",
     );
+  const proximity = rangedSpellAttackCloseCombatDisadvantage(
+    state,
+    invocation,
+    enemyProximity,
+  );
+  if (typeof proximity !== "boolean") return proximity;
   const hasDisadvantage =
     sources.hasDisadvantage ||
-    rangedSpellAttackCloseCombatDisadvantage(
-      state,
-      attackerId,
-      invocation,
-      targetSpatialFacts,
-    ) ||
+    proximity ||
     ongoingFeatureGrantsSpellAttackRollMode(
       state,
       attacker,
@@ -768,38 +769,28 @@ function attackRollModeFromSources(
 export function attackRollHasAdvantageSource(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): boolean {
-  return attackRollSourceFlags(
+  enemyProximity: RangedAttackEnemyProximityEvidence | null,
+): boolean | SpatialQualificationIssue {
+  const sources = attackRollSourceFlags(
     state,
     attackerId,
-    targetId,
+    target,
     attack,
     targetSpatialFacts,
+    enemyProximity,
     null,
-  ).hasAdvantage;
+  );
+  return "tag" in sources ? sources : sources.hasAdvantage;
 }
 
 export function attackRollModeWithOptionalOngoingFeature(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  baseline: AttackRollMode | undefined,
   activatedOngoingFeatureProcedureRef: BattleProcedureExecutionRef | undefined,
 ): AttackRollMode | undefined {
-  const baseline = requiredAttackRollMode(
-    state,
-    attackerId,
-    targetId,
-    attack,
-    targetSpatialFacts,
-  );
-  if (activatedOngoingFeatureProcedureRef === undefined) {
-    return baseline;
-  }
+  if (activatedOngoingFeatureProcedureRef === undefined) return baseline;
   if (baseline === "normal" || baseline === "disadvantage") return "normal";
   return "advantage";
 }
@@ -1137,9 +1128,10 @@ export function applyWeaponMasterySapOnHit(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleState {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) return state;
   const selection = selectedWeaponMasteryProperty({
-    state,
-    attackerId,
+    attacker,
     attack,
     supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   });
@@ -1270,9 +1262,11 @@ export function applyWeaponMasteryPushOnHit(input: {
       readonly shovePushes: readonly BattleShovePushOutcome[];
     }
   | { readonly tag: "invalid"; readonly message: string } {
+  const attacker = input.state.combatants.get(input.attackerId);
+  if (attacker === undefined)
+    return { tag: "ok", state: input.state, shovePushes: [] };
   const selection = selectedWeaponMasteryProperty({
-    state: input.state,
-    attackerId: input.attackerId,
+    attacker,
     attack: input.attack,
     supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   });
@@ -1291,18 +1285,7 @@ export function applyWeaponMasteryPushOnHit(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const pushDisposition = input.targetSpatialFacts.find(
-    (
-      fact,
-    ): fact is Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "weaponMasteryPushDisposition" }
-    > =>
-      fact.kind === "weaponMasteryPushDisposition" &&
-      fact.attackerId === input.attackerId &&
-      fact.targetId === input.targetId &&
-      attackExecutionSelectionMatchesOption(fact, input.attack),
-  )?.disposition;
+  const pushDisposition = weaponMasteryPushDispositionForAttack(input);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (pushDisposition === undefined) {
     return {
@@ -1335,6 +1318,31 @@ export function applyWeaponMasteryPushOnHit(input: {
   };
 }
 
+function weaponMasteryPushDispositionForAttack(
+  input: Pick<
+    Parameters<typeof applyWeaponMasteryPushOnHit>[0],
+    "attackerId" | "targetId" | "attack" | "targetSpatialFacts"
+  >,
+):
+  | Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    >["disposition"]
+  | undefined {
+  return input.targetSpatialFacts.find(
+    (
+      fact,
+    ): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    > =>
+      fact.kind === "weaponMasteryPushDisposition" &&
+      fact.attackerId === input.attackerId &&
+      fact.targetId === input.targetId &&
+      attackExecutionSelectionMatchesOption(fact, input.attack),
+  )?.disposition;
+}
+
 export function applyWeaponMasterySlowAfterDamage(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
@@ -1345,9 +1353,10 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   if (input.damageAmount <= 0) {
     return input.state;
   }
+  const attacker = input.state.combatants.get(input.attackerId);
+  if (attacker === undefined) return input.state;
   const selection = selectedWeaponMasteryProperty({
-    state: input.state,
-    attackerId: input.attackerId,
+    attacker,
     attack: input.attack,
     supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   });
@@ -1456,22 +1465,6 @@ export function applyWeaponMasteryToppleSavingThrow(
   };
 }
 
-export function weaponMasteryToppleSelection(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): SelectedWeaponMasteryProperty | null {
-  return state.combatants.has(targetId)
-    ? selectedWeaponMasteryProperty({
-        state,
-        attackerId,
-        attack,
-        supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-      })
-    : null;
-}
-
 export function weaponMasteryCleaveDecisionHole(
   state: BattleState,
   attackerId: CombatantId,
@@ -1528,21 +1521,14 @@ export function weaponMasteryCleaveTargetHole(
 export function weaponMasteryCleaveAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  requiredRollMode: AttackRollMode | undefined,
 ): BattleAttackRollHole {
   return {
     ...attackRollHole(
       state.combatants.get(attackerId),
       attack,
-      requiredAttackRollMode(
-        state,
-        attackerId,
-        targetId,
-        attack,
-        targetSpatialFacts,
-      ),
+      requiredRollMode,
     ),
     holeId: WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
     holeInstanceKey: WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_INSTANCE,
@@ -1576,6 +1562,12 @@ export function weaponMasteryCleaveDamageHole(
   };
 }
 
+export function weaponMasteryCleaveExtraAttack(
+  attack: BoundCharacterWeaponAttackActionOption,
+): BoundCharacterWeaponAttackActionOption;
+export function weaponMasteryCleaveExtraAttack(
+  attack: CharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption;
 export function weaponMasteryCleaveExtraAttack(
   attack: CharacterWeaponAttackActionOption,
 ): CharacterWeaponAttackActionOption {
@@ -1625,6 +1617,7 @@ export function huntersPreyHordeBreakerTargetHole(
   attackerId: CombatantId,
   firstTargetId: CombatantId,
   sourceProcedureRef: BattleProcedureExecutionRef,
+  attack: BoundCharacterWeaponAttackActionOption,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
@@ -1632,6 +1625,11 @@ export function huntersPreyHordeBreakerTargetHole(
     holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
     label: "Horde Breaker second target",
     requiresTableSpatialFact: true,
+    attack: {
+      actorId: attackerId,
+      selection: attackExecutionSelectionForOption(attack),
+      targetConstraint: attackTargetConstraint(attack),
+    },
     procedureRef: sourceProcedureRef,
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -1655,21 +1653,14 @@ export function huntersPreyHordeBreakerTargetHole(
 export function huntersPreyHordeBreakerAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  requiredRollMode: AttackRollMode | undefined,
 ): BattleAttackRollHole {
   return {
     ...attackRollHole(
       state.combatants.get(attackerId),
       attack,
-      requiredAttackRollMode(
-        state,
-        attackerId,
-        targetId,
-        attack,
-        targetSpatialFacts,
-      ),
+      requiredRollMode,
     ),
     holeId: HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID,
     holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_INSTANCE,
@@ -1736,16 +1727,15 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
   readonly attackerId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly firstTargetId: CombatantId;
-  readonly secondTargetId: CombatantId;
+  readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
-    input.secondTargetId !== input.firstTargetId &&
-    attackTargetIsLegal(
-      input.state,
+    input.secondTarget.combatantId !== input.firstTargetId &&
+    creatureAttackTargetIsLegal(
       input.attackerId,
-      input.secondTargetId,
+      input.secondTarget,
       input.attack,
       input.targetSpatialFacts,
     ) &&
@@ -1755,7 +1745,7 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
         fact.attackerId === input.attackerId &&
         fact.sourceProcedureRef === input.sourceProcedureRef &&
         fact.originalTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTargetId,
+        fact.secondTargetId === input.secondTarget.combatantId,
     )
   );
 }
@@ -1840,19 +1830,17 @@ function cleaveAbilityChoice(
 }
 
 export function weaponMasteryCleaveTargetIsLegal(input: {
-  readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly firstTargetId: CombatantId;
-  readonly secondTargetId: CombatantId;
+  readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
-    input.secondTargetId !== input.firstTargetId &&
-    attackTargetIsLegal(
-      input.state,
+    input.secondTarget.combatantId !== input.firstTargetId &&
+    creatureAttackTargetIsLegal(
       input.attackerId,
-      input.secondTargetId,
+      input.secondTarget,
       input.attack,
       input.targetSpatialFacts,
     ) &&
@@ -1861,7 +1849,7 @@ export function weaponMasteryCleaveTargetIsLegal(input: {
         fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
         fact.attackerId === input.attackerId &&
         fact.firstTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTargetId,
+        fact.secondTargetId === input.secondTarget.combatantId,
     )
   );
 }
@@ -1907,9 +1895,10 @@ function weaponMasteryCleaveSelection(
   ) {
     return null;
   }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) return null;
   return selectedWeaponMasteryProperty({
-    state,
-    attackerId,
+    attacker,
     attack,
     supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   });
@@ -1980,9 +1969,8 @@ function creatureSizeIsAtMost(
   return SIZES.indexOf(actual) <= SIZES.indexOf(maximum);
 }
 
-function selectedWeaponMasteryProperty(input: {
-  readonly state: BattleState;
-  readonly attackerId: CombatantId;
+export function selectedWeaponMasteryProperty(input: {
+  readonly attacker: BattleCreatureState;
   readonly attack: SupportedAttackActionOption;
   readonly supportProfile: WeaponMasteryPropertySupportProfile;
 }): SelectedWeaponMasteryProperty | null {
@@ -1998,7 +1986,7 @@ function selectedWeaponMasteryProperty(input: {
   ) {
     return null;
   }
-  const attacker = input.state.combatants.get(input.attackerId);
+  const attacker = input.attacker;
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }
@@ -2286,5 +2274,42 @@ export function attackRollModeMatches(
       mechanicalD20TestRollModeSources(requiredMode),
       tableSource,
     )
+  );
+}
+
+export function qualifiedAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  target: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
+): ReturnType<typeof requiredAttackRollMode> {
+  const evidence = qualifyAttackEnemyProximity(
+    state,
+    attackerId,
+    attack,
+    facts,
+  );
+  if (isSpatialQualificationIssue(evidence)) return evidence;
+  return requiredAttackRollMode(
+    state,
+    attackerId,
+    target,
+    attack,
+    facts,
+    evidence,
+  );
+}
+
+function attackTargetVisibleToAttacker(
+  state: BattleState,
+  attacker: BattleCreatureState | undefined,
+  target: BattleCreatureState,
+  sightDisadvantage: boolean,
+): boolean {
+  return (
+    attacker !== undefined &&
+    !sightDisadvantage &&
+    combatantCanSee(state, attacker.combatantId, target.combatantId)
   );
 }

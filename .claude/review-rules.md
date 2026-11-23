@@ -130,6 +130,11 @@ return its narrowed evidence, or genuinely handle the entire wider type.
 
 ## Fixes, Tests, And Hygiene
 
+- For documentation changes, check fact ownership against
+  [CONTEXT-MAP.md](../CONTEXT-MAP.md). Reject runtime support inventories,
+  deferred-work notes, migration history, and implementation mappings in domain
+  definitions. Keep architecture and package contracts at their named owners.
+
 - Review a fix against the original domain invariant, including lifecycle,
   timing, provenance, and support. New state or continuation paths must compose
   with adjacent procedures, nested reactions, replay/resume, and widening.

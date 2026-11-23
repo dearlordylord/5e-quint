@@ -128,7 +128,7 @@ module movementSpatialGrappleInductive {
   }
 
   action doDropProne = all {
-    recordMovementGrappleState(dropProne(qMovementGrappleState)),
+    recordMovementGrappleState(dropProne(qMovementGrappleState, { alive: true, proneImmune: false, commandHalt: false })),
   }
 
   action doDash = {

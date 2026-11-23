@@ -14,6 +14,9 @@ module characterSheetHitPointMaximumMbt {
     | CharacterSheetHitPointMaximumDwarfWizardLevelFour
     | CharacterSheetHitPointMaximumSorcererDraconicResilience
     | CharacterSheetHitPointMaximumReducedEffectiveMaximum
+    | CharacterSheetHitPointMaximumRolledMinimumHigherLevelGain
+    | CharacterSheetHitPointMaximumRolledMulticlass
+    | CharacterSheetHitPointMaximumRolledMinimumGainAfterConstitutionIncrease
 
   type CharacterSheetHitPointMaximumState = {
     outcome: CharacterSheetHitPointMaximumOutcome,
@@ -49,7 +52,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 0,
-      fixedHigherLevelHitPointDice: [],
+      higherLevelHitPointGains: [],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -64,7 +67,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [],
+      higherLevelHitPointGains: [],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -80,7 +83,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [10],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(10, 1)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -96,7 +99,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [10],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(10, 1)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -112,7 +115,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: -4,
-      fixedHigherLevelHitPointDice: [6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6, -4)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -128,7 +131,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [6, 6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6, 1), fixedHigherLevelHitPointGainFor(6, 1)],
       hitPointMaximumBonus: 3,
       hitPointMaximumReduction: 0,
     },
@@ -144,7 +147,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 10,
       constitutionModifier: 1,
-      fixedHigherLevelHitPointDice: [10],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(10, 1)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 3,
     },
@@ -160,7 +163,7 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 2,
-      fixedHigherLevelHitPointDice: [6, 6, 6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6, 2), fixedHigherLevelHitPointGainFor(6, 2), fixedHigherLevelHitPointGainFor(6, 2)],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
     },
@@ -176,12 +179,61 @@ module characterSheetHitPointMaximumMbt {
       {
       startingHitPointDie: 6,
       constitutionModifier: 2,
-      fixedHigherLevelHitPointDice: [6, 6, 6],
+      higherLevelHitPointGains: [fixedHigherLevelHitPointGainFor(6, 2), fixedHigherLevelHitPointGainFor(6, 2), fixedHigherLevelHitPointGainFor(6, 2)],
       hitPointMaximumBonus: 4,
       hitPointMaximumReduction: 0,
     },
       4,
       6,
+    ),
+  }
+
+  action doProjectRolledMinimumHigherLevelGain = all {
+    qState.replayIndex == 8,
+    recordProjection(
+      CharacterSheetHitPointMaximumRolledMinimumHigherLevelGain,
+      {
+      startingHitPointDie: 6,
+      constitutionModifier: -1,
+      higherLevelHitPointGains: [rolledHigherLevelHitPointGainFor(6, 1, -1)],
+      hitPointMaximumBonus: 0,
+      hitPointMaximumReduction: 0,
+    },
+      2,
+      9,
+    ),
+  }
+
+  action doProjectRolledMulticlass = all {
+    qState.replayIndex == 9,
+    recordProjection(
+      CharacterSheetHitPointMaximumRolledMulticlass,
+      {
+      startingHitPointDie: 10,
+      constitutionModifier: 1,
+      higherLevelHitPointGains: [rolledHigherLevelHitPointGainFor(6, 5, 1), rolledHigherLevelHitPointGainFor(10, 8, 1)],
+      hitPointMaximumBonus: 0,
+      hitPointMaximumReduction: 0,
+    },
+      3,
+      10,
+    ),
+  }
+
+  // Level 2 rolled 1 at Constitution 8; Constitution is now 10.
+  action doProjectRolledMinimumGainAfterConstitutionIncrease = all {
+    qState.replayIndex == 10,
+    recordProjection(
+      CharacterSheetHitPointMaximumRolledMinimumGainAfterConstitutionIncrease,
+      {
+      startingHitPointDie: 6,
+      constitutionModifier: 0,
+      higherLevelHitPointGains: [rolledHigherLevelHitPointGainFor(6, 1, -1)],
+      hitPointMaximumBonus: 0,
+      hitPointMaximumReduction: 0,
+    },
+      2,
+      11,
     ),
   }
 
@@ -194,5 +246,8 @@ module characterSheetHitPointMaximumMbt {
     doProjectDwarfWizardLevelFour,
     doProjectSorcererDraconicResilience,
     doProjectReducedEffectiveMaximum,
+    doProjectRolledMinimumHigherLevelGain,
+    doProjectRolledMulticlass,
+    doProjectRolledMinimumGainAfterConstitutionIncrease,
   }
 }

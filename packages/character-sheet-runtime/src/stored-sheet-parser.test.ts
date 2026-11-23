@@ -616,6 +616,31 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test("round-trips fixed and rolled Hit Point rules for levels after 1", () => {
+    const build = {
+      ...fighterBuild,
+      progression: {
+        ...fighterBuild.progression,
+        advancements: [
+          {
+            classUnitId: "class_fighter",
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 0,
+          },
+          {
+            classUnitId: "class_fighter",
+            hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 8 },
+            constitutionModifierAtGain: 1,
+          },
+        ],
+      },
+    };
+    expect(parseCharacterBuild(build, unitLibrary)).toMatchObject({
+      _tag: "Success",
+      success: { progression: build.progression },
+    });
+  });
+
   test("round-trips every supported proficiency-choice shape", () => {
     const choice = fc.constantFrom(
       { kind: "skill" as const, skill: "athletics" as const },
@@ -1032,6 +1057,73 @@ describe("stored Character Build parser", () => {
       expected: "Character Build progression advancement is invalid.",
     },
     {
+      name: "a rolled Hit Point rule without a positive integer result",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 0 },
+              constitutionModifierAtGain: 1,
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
+      name: "a level without the Constitution modifier it was gained with",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
+      name: "a fractional Constitution modifier at a level's gain",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+              constitutionModifierAtGain: 0.5,
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
+      name: "a Constitution modifier at a level's gain below any score's",
+      value: {
+        ...fighterBuild,
+        progression: {
+          startingClass: "class_fighter",
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+              constitutionModifierAtGain: -6,
+            },
+          ],
+        },
+      },
+      expected: "Character Build progression advancement is invalid.",
+    },
+    {
       name: "a progression above level 20",
       value: {
         ...fighterBuild,
@@ -1040,6 +1132,7 @@ describe("stored Character Build parser", () => {
           advancements: Array.from({ length: 20 }, () => ({
             classUnitId: "class_fighter",
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: 1,
           })),
         },
       },

@@ -55,11 +55,6 @@ type KnownAdmissionFailure = AdmissionFailure & {
 
 const KNOWN_ADMISSION_FAILURES = [
   {
-    unitId: unitId("mastery_graze"),
-    claimTag: "unsupported-profile",
-    message: "Unsupported battle Weapon Mastery Unit hook: mastery_graze.",
-  },
-  {
     unitId: unitId("mastery_nick"),
     claimTag: "unsupported-profile",
     message: "Unsupported battle Weapon Mastery Unit hook: mastery_nick.",

@@ -8,7 +8,9 @@ module statBlockMultiattack {
 
   type StatBlockDispatchSubject =
     | StatBlockDispatchProcedure({ procedureRef: StatBlockProcedureRef })
+    // Includes spending movement to right yourself under Prone.
     | StatBlockMovementSubject
+    | StatBlockDropProneSubject
     | StatBlockEndTurnSubject
     | StatBlockBonusActionSubject
     | StatBlockOrdinaryActionSubject
@@ -112,6 +114,7 @@ module statBlockMultiattack {
     if (not(statBlockMultiattackContinuationOpen(state))) true
     else match subject {
       | StatBlockMovementSubject => true
+      | StatBlockDropProneSubject => true
       | StatBlockEndTurnSubject => true
       | StatBlockDispatchProcedure(v) =>
         statBlockProcedureRefsContain(

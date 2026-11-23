@@ -146,6 +146,7 @@ const PLAYER_HOLE_ADMISSION = {
   readyDeclaration: true,
   helpAttackAllyDecision: true,
   helpAttackEnemyDecision: true,
+  helpAbilityCheckDecision: true,
   damageRelationshipDecisions: true,
   targetSpatialFacts: true,
   turnConstraintSomaticSpellFailureOutcome: true,
