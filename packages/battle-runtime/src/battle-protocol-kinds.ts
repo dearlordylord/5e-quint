@@ -140,6 +140,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
     )
     .pipe(
+      byBattleFillKind(
+        "helpAbilityCheckDecision",
+        () => "helpAbilityCheckDecision" as const,
+      ),
       byBattleFillKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleFillKind("skillChoice", () => "skillChoice" as const),
       byBattleFillKind("spellAreaChoice", () => "spellAreaChoice" as const),
@@ -180,6 +184,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       byBattleFillKind(
         "toolPossessionFacts",
         () => "toolPossessionFacts" as const,
+      ),
+      byBattleFillKind(
+        "objectInteractionRuling",
+        () => "objectInteractionRuling" as const,
       ),
       byBattleFillKind(
         "temporaryHitPointChoice",
@@ -250,6 +258,7 @@ function actionSubjectKind(
     byAction("disengage", () => "actionAvoidance" as const),
     byAction("dodge", () => "actionAvoidance" as const),
     byAction("helpAttack", () => "actionSupport" as const),
+    byAction("helpAbilityCheck", () => "actionSupport" as const),
     byAction("hide", () => "actionExploration" as const),
     byAction("multiattack", () => "actionAttack" as const),
     byAction("search", () => "actionExploration" as const),
@@ -480,6 +489,12 @@ function runtimeCommandSubjectKind(
         () => "runtimeAltitudeControl" as const,
       ),
       byCommand("creatureFalls", () => "runtimeMovement" as const),
+      byCommand("dropProne", () => "runtimeMovement" as const),
+      byCommand(
+        "interactWithObject",
+        () => "runtimeObjectInteraction" as const,
+      ),
+      byCommand("pickUpHeldWeapon", () => "runtimeObjectInteraction" as const),
       Match.exhaustive,
     );
 }

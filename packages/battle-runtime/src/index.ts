@@ -214,7 +214,8 @@ export {
 export {
   battleHoleAcceptsFill,
   battleHoleFamilyKind,
-  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceSkillCheck,
+  type BattleSkillCheck,
   type BattleHoleFamilyKind,
 } from "./battle-reducer/hole-helpers.ts";
 
@@ -709,16 +710,12 @@ export {
   type WildShapeLoadoutObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
-  applyBattleHeldWeaponPickup,
   battleObjectIsOnGround,
   battleStateWithGroundObjects,
   characterEffectiveLoadout,
   characterEffectiveLoadoutFromOrigin,
   type BattleGroundObjectPlacement,
   type BattleGroundObjectPlacementResult,
-  type BattleHeldWeaponPickup,
-  type BattleHeldWeaponPickupResult,
-  type ResolvedBattleObjectInteraction,
 } from "./battle-reducer/battle-object-lifecycle.ts";
 export {
   type AttackDamageAbilityModifierChoice,
@@ -869,6 +866,7 @@ export {
   TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   initiativeProficiencyAndSwapProfileForUnit,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   passiveAbilityCheckRollModeProfileForUnit,

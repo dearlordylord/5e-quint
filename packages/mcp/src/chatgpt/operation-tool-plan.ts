@@ -91,6 +91,8 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     "action.escapeSpellRestraint":
       BATTLE_SUBJECT_EXPOSURE["action.escapeSpellRestraint"],
     "action.grapple": BATTLE_SUBJECT_EXPOSURE["action.grapple"],
+    "action.helpAbilityCheck":
+      BATTLE_SUBJECT_EXPOSURE["action.helpAbilityCheck"],
     "action.helpAttack": BATTLE_SUBJECT_EXPOSURE["action.helpAttack"],
     "action.hide": BATTLE_SUBJECT_EXPOSURE["action.hide"],
     "action.search": BATTLE_SUBJECT_EXPOSURE["action.search"],
@@ -99,6 +101,10 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     "action.shakeAwakeFromStagedCondition":
       BATTLE_SUBJECT_EXPOSURE["action.shakeAwakeFromStagedCondition"],
     "action.shove": BATTLE_SUBJECT_EXPOSURE["action.shove"],
+    "runtimeCommand.interactWithObject":
+      BATTLE_SUBJECT_EXPOSURE["runtimeCommand.interactWithObject"],
+    "runtimeCommand.pickUpHeldWeapon":
+      BATTLE_SUBJECT_EXPOSURE["runtimeCommand.pickUpHeldWeapon"],
   },
   battleAdmissions: {
     bonusActionStandardAction: refine("battleSubjects"),
@@ -130,6 +136,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
       CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     grappleOutcome: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     heldObjectFacts: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
+    helpAbilityCheckDecision: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     helpAttackAllyDecision: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     helpAttackEnemyDecision: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     hitPointHealingDistribution: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
@@ -140,6 +147,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     movement: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     objectContactTargets: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     objectDropResolution: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
+    objectInteractionRuling: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     objectTargetChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     ongoingSpellTargetChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     persistentAreaSourceTurnTranslation: CHATGPT_ORDINARY_BATTLE_CONTINUATION,

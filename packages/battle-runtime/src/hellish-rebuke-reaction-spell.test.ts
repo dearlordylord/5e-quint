@@ -43,6 +43,7 @@ import {
   concentrationSavingThrowFill,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
+  snapshotBattle,
 } from "./battle-runtime.test-support.ts";
 import type { BattleInterruptSubject } from "./battle-subjects.ts";
 import { saveGatedConditionWithRepeatDurationTicks } from "./unit-profile-admission-catalog.test-support.ts";
@@ -673,6 +674,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       state,
     );
 
+    const snapshotBefore = snapshotBattle(state.state);
     const stale = resolveBattleSubject({
       state: state.state,
       subject: choice.subject,
@@ -682,8 +684,10 @@ describe("Hellish Rebuke Reaction spell", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Triggered Reaction spell casting requires an active matching interrupt checkpoint.",
+        "A pending interrupt checkpoint must be resolved before the interrupted procedure can continue.",
     });
+    expect(stale.snapshot).toEqual(snapshotBefore);
+    expect(snapshotBattle(state.state)).toEqual(snapshotBefore);
   });
 
   test("rejects an ineligible responder for a pending Hellish Rebuke", () => {

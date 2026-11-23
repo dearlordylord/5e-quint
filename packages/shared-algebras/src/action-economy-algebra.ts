@@ -1,6 +1,6 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.ACTION.OBJECT_INTERACTION_COST
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import { Match, Result, Schema } from "effect";
@@ -153,12 +153,21 @@ export type MovementActionBonusActionExclusion =
       readonly choice: MovementActionBonusActionExclusionChoice;
     };
 
+/**
+ * The turn's one free object interaction. SRD 5.2.1 "Your Turn",
+ * Interacting with Things: "You can interact with one object or feature of
+ * the environment for free, during either your move or action."
+ */
+export const OBJECT_INTERACTION_STATES = ["available", "spent"] as const;
+export type ObjectInteractionState = (typeof OBJECT_INTERACTION_STATES)[number];
+
 export type ActionEconomyState = {
   readonly actionResources: ReadonlyArray<RuntimeActionResource>;
   readonly actionTakenThisTurn: boolean;
   readonly currentHasBonusAction: boolean;
   readonly actionOrBonusActionExclusion: ActionOrBonusActionExclusion;
   readonly movementActionBonusActionExclusion: MovementActionBonusActionExclusion;
+  readonly objectInteraction: ObjectInteractionState;
 };
 
 export type ActivationResourceCost =
@@ -656,7 +665,42 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
     currentHasBonusAction: true,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
+    objectInteraction: "available",
   };
+}
+
+/**
+ * The table's ruling on one object interaction. `requiresUtilize` is true when
+ * the object needs an action for its use: SRD 5.2.1 "Your Turn" says some
+ * objects "always require an action to use", and "the GM might require you to
+ * use an action" for one that needs special care.
+ */
+export type ObjectInteractionRuling = {
+  readonly requiresUtilize: boolean;
+};
+
+/**
+ * Charges one object interaction. It spends the turn's free interaction while
+ * it is unspent and the table doesn't require an action, and otherwise the
+ * Utilize action: "If you want to interact with a second object, you need to
+ * take the Utilize action" (SRD 5.2.1 "Your Turn").
+ */
+export function chargeObjectInteraction<T extends ActionEconomyState>(
+  state: T,
+  ruling: ObjectInteractionRuling,
+): Result.Result<T, ActionEconomySpendError> {
+  if (!ruling.requiresUtilize && state.objectInteraction === "available") {
+    return Result.succeed({ ...state, objectInteraction: "spent" });
+  }
+  return spendAction(state, "utilize");
+}
+
+/** Whether an object interaction under this ruling could be charged now. */
+export function canChargeObjectInteraction(
+  state: ActionEconomyState,
+  ruling: ObjectInteractionRuling,
+): boolean {
+  return Result.isSuccess(chargeObjectInteraction(state, ruling));
 }
 
 export function spendAction<T extends ActionEconomyState>(

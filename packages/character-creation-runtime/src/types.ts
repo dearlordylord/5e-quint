@@ -61,7 +61,13 @@ import type {
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-import type { CharacterProgression } from "./character-progression-types.ts";
+import type {
+  CharacterBuildProgression,
+  CharacterProgression,
+  ConstitutionModifierAtGainAboveCurrent,
+  ConstitutionModifierAtGainBelowEarlier,
+  RolledHitDieResultAboveHitDie,
+} from "./character-progression-types.ts";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS, abilityScoreAssignment };
 export type { SupportedAbilityScoreMethod };
@@ -1123,6 +1129,15 @@ export type CharacterBuildProjectionCause =
       readonly tag: "missingHitPointMaximumGrantSourceUnit";
       readonly sourceUnitId: UnitRecord["id"];
     }
+  | ({
+      readonly tag: "rolledHitDieResultAboveHitDie";
+    } & RolledHitDieResultAboveHitDie)
+  | ({
+      readonly tag: "constitutionModifierAtGainAboveCurrent";
+    } & ConstitutionModifierAtGainAboveCurrent)
+  | ({
+      readonly tag: "constitutionModifierAtGainBelowEarlier";
+    } & ConstitutionModifierAtGainBelowEarlier)
   | {
       readonly tag: "unsupportedHitPointMaximumGrant";
       readonly sourceUnitId: UnitRecord["id"];
@@ -1615,7 +1630,7 @@ export type CharacterBuildClassFeatureLanguage =
 // In-play CharacterSheet state such as current HP, Temporary Hit Points, and
 // Hit Dice remaining belongs to the adventuring/rest boundary, not this package.
 export type CharacterBuild = {
-  readonly progression: CharacterProgression;
+  readonly progression: CharacterBuildProgression;
   readonly background: UnitRecord["id"];
   readonly species: UnitRecord["id"];
   // Present only when the selected species has a size choice in Surface.

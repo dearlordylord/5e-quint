@@ -1,4 +1,7 @@
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleResolutionHolesForTest,
+  rangedAttackEnemyProximityFactsForTest,
+} from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as parseSharedStatBlockId,
@@ -16321,9 +16324,9 @@ function independentSpellAttackSequenceTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: spellCasterId,
-              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: spellCasterId,
+              procedureRef: spellTargetProcedureRefForMbtHole(hole),
               enemies: [],
             },
           ]
@@ -18062,6 +18065,7 @@ function targetFill(
     value: targetId,
     spatialFacts: [
       ...attackSpatialFacts,
+      ...rangedAttackEnemyProximityFactsForTest(hole),
       {
         kind: "attackerAllyWithin5FeetOfTarget",
         attackerId: fighterId,
@@ -18098,9 +18102,9 @@ function spellTargetChoiceFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: subject.actorId,
-              sourceProcedureRef: subject.procedureRef,
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: subject.actorId,
+              procedureRef: subject.procedureRef,
               enemies: [],
             },
           ]
@@ -18144,9 +18148,9 @@ function chainedAttackProcedureTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: spellCasterId,
-              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: spellCasterId,
+              procedureRef: spellTargetProcedureRefForMbtHole(hole),
               enemies: [],
             },
           ]
@@ -18174,9 +18178,9 @@ function chainedAttackProcedureLeapTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: spellCasterId,
-              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: spellCasterId,
+              procedureRef: spellTargetProcedureRefForMbtHole(hole),
               enemies: [],
             },
           ]
@@ -18831,6 +18835,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Battle runtime MBT does not model held-object fact holes.",
           );
         }),
+        Match.when({ kind: "objectInteractionRuling" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model object interaction ruling holes.",
+          );
+        }),
         Match.when({ kind: "concentrationSavingThrow" }, () => {
           throw new Error(
             "Battle runtime MBT does not model concentration saving throw holes.",
@@ -18900,6 +18909,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "helpAttackEnemyDecision" }, () => {
           throw new Error(
             "Generic battle runtime MBT leaves Help enemy decisions to the focused Help witness.",
+          );
+        }),
+        Match.when({ kind: "helpAbilityCheckDecision" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Help ability check decisions to the focused Help witness.",
           );
         }),
         Match.when({ kind: "cunningStrikeEndTurnCoverFacts" }, () => {

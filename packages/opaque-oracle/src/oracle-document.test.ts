@@ -2,6 +2,11 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { Record as EffectRecord, Result, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import { describe, expect, it } from "vitest";
+import { StatBlockAttackDamageSelection } from "@dnd/battle-runtime";
+import {
+  CHARACTER_CLASS_LEVELS,
+  CharacterClassLevelSchema,
+} from "@dnd/shared/game-facts";
 
 import {
   admitOracleCaseDocument,
@@ -1529,6 +1534,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       creationFrontierCorrelation: 0,
       checkpointFrontierCorrelation: 4,
       corpusBatchTraceLengthCorrelation: 0,
+      statBlockDamageComponentRoleCorrelation: 2,
       constraintFreeBrand: 0,
     });
 
@@ -1538,14 +1544,14 @@ describe("Opaque Oracle document JSON Schemas", () => {
       OracleEvaluationBatchDocumentJsonSchema,
     });
     for (const field of ["session", "frame", "globalRole", "presentation"]) {
-      expect(schemaText).not.toContain(`\"${field}\"`);
+      expect(schemaText.includes(`\"${field}\"`), field).toBe(false);
     }
-    expect(schemaText).toContain('"maxItems":3');
-    expect(schemaText).toContain('"maximum":9007199254740991');
+    expect(schemaText.includes('"maxItems":3')).toBe(true);
+    expect(schemaText.includes('"maximum":9007199254740991')).toBe(true);
     for (const slot of ["armor", "shield", "main", "off"]) {
-      expect(schemaText).toContain(`^${slot}:(?=\\\\S)`);
+      expect(schemaText.includes(`^${slot}:(?=\\\\S)`), slot).toBe(true);
     }
-    expect(schemaText).not.toContain('"steps"');
+    expect(schemaText.includes('"steps"')).toBe(false);
   });
 
   it("returns a typed issue for an unmarked semantic refinement", () => {
@@ -1582,27 +1588,72 @@ describe("Opaque Oracle document JSON Schemas", () => {
     );
   });
 
-  it("uses an Effect brand as the identifier for its structural Document projection", () => {
+  it("rejects an unmarked runtime check even when its schema has a nominal brand", () => {
     const branded = Schema.String.pipe(
       Schema.check(Schema.makeFilter((value) => value.length > 0)),
       Schema.brand("SyntheticNonEmptyText"),
     );
-    const document = documentSchema(branded);
-    expect(Result.isSuccess(document)).toBe(true);
-    if (Result.isFailure(document)) return;
-
-    expect(Result.isFailure(Schema.decodeUnknownResult(branded)(""))).toBe(
-      true,
+    expect(documentSchema(branded)).toEqual(
+      Result.fail([
+        {
+          tag: "unannotatedRefinement",
+          path: "$<check:0>",
+          annotationKeys: [],
+        },
+      ]),
     );
+  });
+
+  it("keeps damage component role validation separate from its named structural Document projection", () => {
+    const document = documentSchema(StatBlockAttackDamageSelection);
+    expect(Result.isSuccess(document)).toBe(true);
+    if (Result.isFailure(document))
+      throw new Error("Expected the marked damage projection.");
+    // Deliberately invalid: a selection cannot begin with the second base component.
+    const missingFirstComponent = [
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 2 },
+        notation: "static",
+      },
+    ];
     expect(
-      Result.isSuccess(Schema.decodeUnknownResult(document.success)("")),
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockAttackDamageSelection)(
+          missingFirstComponent,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(document.success)(missingFirstComponent),
+      ),
     ).toBe(true);
     expect(documentJsonSchema(document.success)).toMatchObject({
-      $ref: "#/$defs/SyntheticNonEmptyText",
-      $defs: {
-        SyntheticNonEmptyText: { type: "string" },
-      },
+      $ref: "#/$defs/StatBlockAttackDamageSelection",
+      $defs: { StatBlockAttackDamageSelection: { type: "array" } },
     });
+  });
+
+  it("publishes class-level membership from the canonical allowed values", () => {
+    const document = documentSchema(CharacterClassLevelSchema);
+    expect(Result.isSuccess(document)).toBe(true);
+    if (Result.isFailure(document))
+      throw new Error("Expected the class-level projection.");
+    const validate = ajv.compile(documentJsonSchema(document.success));
+    for (const level of CHARACTER_CLASS_LEVELS) {
+      expect(validate(level)).toBe(true);
+      expect(
+        Result.isSuccess(Schema.decodeUnknownResult(document.success)(level)),
+      ).toBe(true);
+    }
+    for (const invalidLevel of [0, 1.5, 21, "Infinity", null]) {
+      expect(validate(invalidLevel)).toBe(false);
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(document.success)(invalidLevel),
+        ),
+      ).toBe(true);
+    }
   });
 
   it("keeps canonical equality type-aware, order-aware, and set sorting non-deduplicating", () => {

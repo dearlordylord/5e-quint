@@ -1607,8 +1607,14 @@ describe("battle runtime: Stat Block actions", () => {
       ["static", "rolled"],
       ["static", "static"],
     ]);
-    expect(continuationSubjects.slice(-2)).toEqual([
+    expect(continuationSubjects.slice(-4)).toEqual([
       { tag: "runtimeCommand", actorId: goblinId, command: "move" },
+      { tag: "runtimeCommand", actorId: goblinId, command: "dropProne" },
+      {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "interactWithObject",
+      },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
     expect(continuationSubjects).not.toContainEqual(subject);
@@ -1622,6 +1628,8 @@ describe("battle runtime: Stat Block actions", () => {
       "Attack",
       "Attack",
       "Move",
+      "Drop Prone",
+      "Interact with an Object",
       "End Turn",
     ]);
     const moveSubject: BattleSubject = {
@@ -2687,7 +2695,7 @@ describe("battle runtime: Stat Block actions", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
+        "Pending Stat Block Multiattack dispatches must be resolved, Movement or Drop Prone may be taken between attacks, or the turn must end before other battle subjects.",
     });
   });
 

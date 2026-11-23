@@ -61,6 +61,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTurnBoundary";
     case "move":
     case "standFromProne":
+    case "dropProne":
     case "fixedCostMovementReplacement":
     case "creatureFalls":
       return "runtimeMovement";
@@ -103,6 +104,9 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeEffectControl";
     case "releaseSpellCreatedHeldObject":
       return "runtimeHeldObjectRelease";
+    case "interactWithObject":
+    case "pickUpHeldWeapon":
+      return "runtimeObjectInteraction";
     case "protectionRelevantEffectSave":
       return "runtimeProtectionSave";
     case "creatureTypeProtectionConditionAttempt":
@@ -137,6 +141,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         case "dodge":
           return "actionAvoidance";
         case "helpAttack":
+        case "helpAbilityCheck":
           return "actionSupport";
         case "hide":
         case "search":

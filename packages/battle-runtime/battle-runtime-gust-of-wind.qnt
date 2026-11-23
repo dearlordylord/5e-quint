@@ -11,6 +11,7 @@ module battleRuntimeGustOfWind {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
+  import movementSpatialGrapple as MovementRule from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
 
   type GustOfWindLineEffect =
     | NoGustOfWindLine
@@ -40,14 +41,16 @@ module battleRuntimeGustOfWind {
   pure val gustOfWindLifecycle: PersistentAreaLifecycle =
     CasterBonusActionDirectionReplacementPersistentArea
 
-  pure def gustOfWindLineMovementCost(totalDistanceFeet: int, closerDistanceFeet: int): int =
-    directionalPersistentAreaMovementCost(totalDistanceFeet, closerDistanceFeet)
+  pure def gustOfWindLineMovementCost(moverProne: bool, totalDistanceFeet: int, closerDistanceFeet: int): int =
+    directionalPersistentAreaMovementCost(totalDistanceFeet, closerDistanceFeet) +
+      MovementRule::crawlingExtraCostFeet(moverProne, totalDistanceFeet)
 
   pure def gustOfWindLineMovementFactValid(
     effect: GustOfWindLineEffect,
     source: Actor,
     areaId: int,
     directionId: int,
+    moverProne: bool,
     totalDistanceFeet: int,
     closerDistanceFeet: int,
     spentFeet: int,
@@ -60,7 +63,7 @@ module battleRuntimeGustOfWind {
             totalDistanceFeet > 0 and
             closerDistanceFeet > 0 and
             closerDistanceFeet <= totalDistanceFeet and
-            spentFeet == gustOfWindLineMovementCost(totalDistanceFeet, closerDistanceFeet)
+            spentFeet == gustOfWindLineMovementCost(moverProne, totalDistanceFeet, closerDistanceFeet)
       | NoGustOfWindLine => false
     }
 

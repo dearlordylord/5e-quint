@@ -8,6 +8,26 @@ module battleRuntimeCommandControlNextTurn {
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeCommandNextTurn.* from "./battle-runtime-command-next-turn"
+  import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import movementSpatialGrapple as MovementRule from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
+
+  pure def commandHaltApplies(state: BattleState): bool =
+    commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0
+
+  pure def dropCurrentActorProne(state: BattleState, proneImmune: bool): BattleState = {
+    val actor = currentActor(state)
+    val combatant = combatantForActor(state, actor)
+    val projection =
+      if (actor == Goblin) movementProjectionForGrappledGoblin(state)
+      else movementProjectionForActor(state, actor, WalkSpeedKind)
+    val dropped = MovementRule::dropProne(battleRuntimeMovementProjection(projection), {
+      alive: not(combatantIsDead(combatant)),
+      proneImmune: proneImmune,
+      commandHalt: commandHaltApplies(state),
+    })
+    stateWithActorCombatant(state, actor, { ...combatant, prone: dropped.prone })
+  }
 
   pure def followCommandGrovel(state: BattleState): BattleState =
     match commandGrovelFollowOutcome(commandPendingEffectsForActor(state, currentActor(state), CommandGrovelOption).size() > 0) {
@@ -35,7 +55,7 @@ module battleRuntimeCommandControlNextTurn {
     }
 
   pure def followCommandHalt(state: BattleState): BattleState =
-    match commandHaltFollowOutcome(commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0) {
+    match commandHaltFollowOutcome(commandHaltApplies(state)) {
       | CommandHaltSuppressesActionBonusAndMovement =>
           {
             val actor = currentActor(state)

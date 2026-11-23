@@ -39,10 +39,11 @@ import {
   classUnitId,
   type CharacterProgression,
   type CharacterProgressionEntry,
-  type FixedHigherLevelClassHitPointRule,
+  HigherLevelClassHitPointRuleSchema,
+  type HigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
 import { SURFACE_ABILITIES, type Ability } from "@dnd/shared/game-facts";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 
 export type CharacterDraftParseIssue = {
   readonly tag: "invalidCharacterDraft";
@@ -292,7 +293,7 @@ function parseCharacterProgressionEntry(
   const classId = stringAt(entry.success, "classUnitId", `${path}.classUnitId`);
   if (Result.isFailure(classId)) return failIssue(classId.failure);
 
-  const hitPointRule = parseFixedHigherLevelHitPointRule(
+  const hitPointRule = parseHigherLevelHitPointRule(
     entry.success.hitPointRule,
     `${path}.hitPointRule`,
   );
@@ -304,15 +305,21 @@ function parseCharacterProgressionEntry(
   });
 }
 
-function parseFixedHigherLevelHitPointRule(
+const decodeHigherLevelHitPointRule = Schema.decodeUnknownResult(
+  HigherLevelClassHitPointRuleSchema,
+);
+
+function parseHigherLevelHitPointRule(
   value: unknown,
   path: string,
-): ParseResult<FixedHigherLevelClassHitPointRule> {
-  const rule = record(value, path);
-  if (Result.isFailure(rule)) return failIssue(rule.failure);
-  return rule.success.tag === "fixedHigherLevelGain"
-    ? Result.succeed({ tag: "fixedHigherLevelGain" })
-    : invalid(path, "Expected fixedHigherLevelGain hit point rule.");
+): ParseResult<HigherLevelClassHitPointRule> {
+  const rule = decodeHigherLevelHitPointRule(value);
+  return Result.isSuccess(rule)
+    ? Result.succeed(rule.success)
+    : invalid(
+        path,
+        "Expected fixedHigherLevelGain, or rolledHigherLevelGain with a positive integer hitDieResult.",
+      );
 }
 
 function parseAbilityScoreGeneration(

@@ -306,6 +306,15 @@ module ruleCoreMovementMbt {
     recordFighterMovementState(standFromProne(qFighterMovementState)),
   }
 
+  action doDropProne = all {
+    qCurrentActor == fighterActor,
+    openHoles == Set(),
+    not(qProne),
+    qFighterMovementState.turn.currentActorOwnsTurn,
+    effectiveSpeedFeet(qFighterMovementState) > 0,
+    recordFighterMovementState(dropProne(qFighterMovementState, { alive: true, proneImmune: false, commandHalt: false })),
+  }
+
   action doDiscoverGrapple = all {
     qCurrentActor == fighterActor,
     openHoles == Set(),
@@ -434,6 +443,7 @@ module ruleCoreMovementMbt {
     doDisengage,
     doRejectDashAfterActionSpent,
     doStandFromProne,
+    doDropProne,
     doDiscoverGrapple,
     doSelectGrappleTarget,
     doRejectGrappleWithoutFreeHand,

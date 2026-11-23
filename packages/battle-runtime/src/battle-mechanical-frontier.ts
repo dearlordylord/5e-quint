@@ -22,17 +22,11 @@ import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 export const BattleMechanicalHoleSchema: typeof BattleMechanicalHoleCodecSchema =
-  BattleMechanicalHoleCodecSchema.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleMechanicalHoleCodecSchema;
 export const BattleMechanicalOrdinaryHoleSchema: typeof BattleMechanicalOrdinaryHoleCodecSchema =
-  BattleMechanicalOrdinaryHoleCodecSchema.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleMechanicalOrdinaryHoleCodecSchema;
 export const BattleMechanicalInterruptDecisionHoleSchema: typeof BattleMechanicalInterruptDecisionHoleCodecSchema =
-  BattleMechanicalInterruptDecisionHoleCodecSchema.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleMechanicalInterruptDecisionHoleCodecSchema;
 
 export type BattleMechanicalHole = typeof BattleMechanicalHoleSchema.Type;
 export type BattleMechanicalOrdinaryHole =
@@ -73,9 +67,7 @@ export type BattleMechanicalFrontierIssue = {
 };
 
 export const BattleMechanicalInterruptChoiceSchema: typeof BattleMechanicalInterruptProcedureChoiceSchema =
-  BattleMechanicalInterruptProcedureChoiceSchema.annotate({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  BattleMechanicalInterruptProcedureChoiceSchema;
 
 type BattleMechanicalOrdinaryFrontierCodec = Schema.Struct<{
   readonly kind: Schema.Literal<"ordinaryHoles">;
@@ -126,7 +118,6 @@ export const BattleMechanicalFrontierSchema: Schema.Codec<
     }),
   ]).annotate({
     identifier: "BattleMechanicalFrontier",
-    parseOptions: { onExcessProperty: "error" },
   }),
 );
 
@@ -224,9 +215,13 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
+      objectInteractionRuling: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       helpAttackAllyDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
       helpAttackEnemyDecision: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      helpAbilityCheckDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
       hitPointHealingDistribution: (value) =>
         projectHoleWithoutPresentationLabel(value),

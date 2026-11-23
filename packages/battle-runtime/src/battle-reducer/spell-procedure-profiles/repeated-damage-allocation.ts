@@ -828,7 +828,7 @@ const RepeatedDamageAllocationInvocationSchema = spellProcedureExecutionSchema(
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("repeatedEffectTargetAllocation"),
-      repeatedEffectCount: Schema.Number,
+      repeatedEffectCount: Schema.Finite,
     }),
     damage: Schema.Struct({
       expr: DiceExprSchema,

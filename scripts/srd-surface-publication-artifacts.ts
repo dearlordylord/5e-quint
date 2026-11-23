@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "../packages/shared/src/json-schema.ts";
 import { createRequire } from "node:module";
 
 import type { Schema as SchemaTypes } from "effect";
@@ -273,7 +274,10 @@ export function buildSrdSurfacePublication(options: {
     statBlocks,
   };
 
-  const aggregate = Schema.encodeSync(PublishedSrdSurfaceSchema)(published);
+  const aggregate = Schema.encodeSync(
+    PublishedSrdSurfaceSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(published);
   const artifacts = {
     aggregate,
     schema: SRD_SURFACE_PUBLICATION_SCHEMA_ARTIFACT,

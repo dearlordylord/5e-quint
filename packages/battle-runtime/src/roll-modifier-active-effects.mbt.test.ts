@@ -65,7 +65,7 @@ import {
   breakBattleConcentration,
   combatantId,
   discoverBattleActs,
-  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceSkillCheck,
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleFill,
@@ -1516,11 +1516,11 @@ function abilityCheckModeFor(
 
 function thaumaturgyIntimidationMode(state: BattleState): RollMode {
   return (
-    temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
+    temporaryAbilityCheckRollModeInfluenceSkillCheck(
       state,
       spellCasterId,
       difficultyClass(13),
-    ).rollMode ?? "normal"
+    ).hole.rollMode ?? "normal"
   );
 }
 

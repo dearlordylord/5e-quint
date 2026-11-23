@@ -2997,7 +2997,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -3202,7 +3203,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -3485,7 +3487,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -3952,7 +3955,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -8267,6 +8271,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -9088,7 +9097,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -9980,7 +9990,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -10185,7 +10196,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -10468,7 +10480,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -10935,7 +10948,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -15250,6 +15264,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -16071,7 +16090,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -16276,7 +16296,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -16559,7 +16580,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -17026,7 +17048,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -21324,6 +21347,11 @@
                   {
                     "tag": "action",
                     "actorId": "corpus:character",
+                    "action": "helpAbilityCheck"
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
                     "action": "grapple"
                   },
                   {
@@ -21369,6 +21397,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:character",
                     "command": "move"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:character",
+                    "command": "dropProne"
                   },
                   {
                     "tag": "action",
@@ -22192,7 +22225,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -22397,7 +22431,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -22680,7 +22715,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -23147,7 +23183,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -28158,7 +28195,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -28363,7 +28401,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -28646,7 +28685,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -29113,7 +29153,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -33451,6 +33492,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:stat-block-a",
                     "command": "move"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
                   },
                   {
                     "tag": "action",
@@ -34345,7 +34391,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -34550,7 +34597,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -34833,7 +34881,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -35300,7 +35349,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -39638,6 +39688,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:stat-block-a",
                     "command": "move"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
                   },
                   {
                     "tag": "action",
@@ -40534,7 +40589,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -40739,7 +40795,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -41022,7 +41079,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -41489,7 +41547,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -45829,6 +45888,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -45959,6 +46023,11 @@
                           "tag": "runtimeCommand",
                           "actorId": "corpus:stat-block-a",
                           "command": "move"
+                        },
+                        {
+                          "tag": "runtimeCommand",
+                          "actorId": "corpus:stat-block-a",
+                          "command": "dropProne"
                         },
                         {
                           "tag": "action",
@@ -46785,7 +46854,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -46990,7 +47060,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -47273,7 +47344,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -47740,7 +47812,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -52080,6 +52153,11 @@
                     "command": "move"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "dropProne"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -52287,6 +52365,11 @@
                                 "tag": "runtimeCommand",
                                 "actorId": "corpus:stat-block-a",
                                 "command": "move"
+                              },
+                              {
+                                "tag": "runtimeCommand",
+                                "actorId": "corpus:stat-block-a",
+                                "command": "dropProne"
                               },
                               {
                                 "tag": "action",
@@ -53116,7 +53199,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -53321,7 +53405,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -53604,7 +53689,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -54071,7 +54157,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -59075,7 +59162,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -59975,7 +60063,8 @@
               },
               "methods": [
                 "standardArray",
-                "pointBuy"
+                "pointBuy",
+                "randomGeneration"
               ]
             },
             {
@@ -60180,7 +60269,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -60463,7 +60553,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {
@@ -60930,7 +61021,8 @@
                 },
                 "methods": [
                   "standardArray",
-                  "pointBuy"
+                  "pointBuy",
+                  "randomGeneration"
                 ]
               },
               {

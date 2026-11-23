@@ -154,6 +154,9 @@ describe("BattleSubject identity", () => {
       },
       move: {},
       standFromProne: {},
+      dropProne: {},
+      interactWithObject: {},
+      pickUpHeldWeapon: { objectId: battleObjectId("subject-pickup-weapon") },
       releaseReadiedSpell: {
         readiedSpellCasterId: targetId,
         procedureRef: targetProcedureRef,
@@ -325,6 +328,7 @@ describe("BattleSubject identity", () => {
       disengage: {},
       dodge: {},
       helpAttack: {},
+      helpAbilityCheck: {},
       hide: {},
       multiattack: { procedureRef: statBlockProcedureRef },
       ready: {},

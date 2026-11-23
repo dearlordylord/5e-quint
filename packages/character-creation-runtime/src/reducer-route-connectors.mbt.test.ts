@@ -1630,6 +1630,7 @@ function classFeatureProjectionBuild(input: {
       advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
         classUnitId: classUnitId(authoredUnitId(input.startingClass)),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 1,
       })),
     },
     background: authoredUnitId("background_soldier"),
@@ -2187,6 +2188,7 @@ function warlockBuild(input: {
       advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
         classUnitId: classUnitId(authoredUnitId(WARLOCK_CLASS_UNIT_ID)),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 1,
       })),
     },
     spellcasting: {

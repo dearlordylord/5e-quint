@@ -23,7 +23,7 @@ module battleRuntimeSpikeGrowthMovementHazard {
     state.fighter.activeEffects.exists(effect => match effect { | SpikeGrowthMovementHazard(data) => data.areaId == areaId | _ => false })
 
   pure def spikeGrowthDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
-    battleRuntimeDifficultTerrainMovementCost(spikeGrowthMovementHazardActive(state, areaId), totalDistanceFeet, difficultTerrainDistanceFeet)
+    battleRuntimeDifficultTerrainMovementCost(spikeGrowthMovementHazardActive(state, areaId), state.fighter.prone, totalDistanceFeet, difficultTerrainDistanceFeet)
   pure def activeEffectsWithoutSpikeGrowthMovementHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | SpikeGrowthMovementHazard(data) => data.areaId != areaId

@@ -74,6 +74,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "disengage",
   "dodge",
   "helpAttack",
+  "helpAbilityCheck",
   "hide",
   "multiattack",
   "ready",
@@ -102,6 +103,9 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "continueSpellCasting",
   "move",
   "standFromProne",
+  "dropProne",
+  "interactWithObject",
+  "pickUpHeldWeapon",
   "releaseReadiedSpell",
   "releaseReadiedMovement",
   "reportReadyTrigger",
@@ -700,6 +704,21 @@ export const BattleInterruptSubjectSchema = Schema.Union([
 ]);
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
 
+// SRD 5.2.1 "Your Turn", Interacting with Things, and "Utilize [Action]": an
+// object interaction, charged as the turn's free interaction or the Utilize
+// action. Ready can hold one as its readied Utilize action (ASSUMPTIONS.md A60).
+const BattleInteractWithObjectSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("interactWithObject"),
+});
+const BattlePickUpHeldWeaponSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("pickUpHeldWeapon"),
+  objectId: BattleObjectId,
+});
+
 export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -721,6 +740,11 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("helpAttack"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("helpAbilityCheck"),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -765,6 +789,8 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     actorId: CombatantId,
     action: Schema.Literal("shakeAwakeFromAreaControl"),
   }),
+  BattleInteractWithObjectSubjectSchema,
+  BattlePickUpHeldWeaponSubjectSchema,
 ]);
 export type BattleReadyActionSubject =
   typeof BattleReadyActionSubjectSchema.Type;
@@ -1014,6 +1040,13 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("standFromProne"),
   }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("dropProne"),
+  }),
+  BattleInteractWithObjectSubjectSchema,
+  BattlePickUpHeldWeaponSubjectSchema,
   BattleInterruptReleaseReadiedSpellSubjectSchema,
   BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
@@ -1335,6 +1368,7 @@ function battleActionSubjectProcedureRefs(
       disengage: noProcedureExecutionReferences,
       dodge: noProcedureExecutionReferences,
       helpAttack: noProcedureExecutionReferences,
+      helpAbilityCheck: noProcedureExecutionReferences,
       hide: noProcedureExecutionReferences,
       multiattack: (value) => [value.procedureRef],
       ready: noProcedureExecutionReferences,
@@ -1363,6 +1397,9 @@ function battleRuntimeCommandProcedureRefs(
       ],
       move: noProcedureExecutionReferences,
       standFromProne: noProcedureExecutionReferences,
+      dropProne: noProcedureExecutionReferences,
+      interactWithObject: noProcedureExecutionReferences,
+      pickUpHeldWeapon: noProcedureExecutionReferences,
       releaseReadiedSpell: (value) => [value.procedureRef],
       releaseReadiedMovement: noProcedureExecutionReferences,
       reportReadyTrigger: noProcedureExecutionReferences,
@@ -1451,6 +1488,9 @@ export function battleSubjectProcedureRefsBelongToOwners(
         continueSpellCasting: (v) => v.actorId,
         move: (v) => v.actorId,
         standFromProne: (v) => v.actorId,
+        dropProne: (v) => v.actorId,
+        interactWithObject: (v) => v.actorId,
+        pickUpHeldWeapon: (v) => v.actorId,
         releaseReadiedSpell: (v) => v.readiedSpellCasterId,
         releaseReadiedMovement: (v) => v.actorId,
         reportReadyTrigger: (v) => v.actorId,
@@ -1545,6 +1585,7 @@ function battleActionSubjectBoundExecutionReferences(
       disengage: noBoundExecutionReferences,
       dodge: noBoundExecutionReferences,
       helpAttack: noBoundExecutionReferences,
+      helpAbilityCheck: noBoundExecutionReferences,
       hide: noBoundExecutionReferences,
       multiattack: noBoundExecutionReferences,
       ready: noBoundExecutionReferences,
@@ -1645,6 +1686,9 @@ function battleRuntimeCommandBoundExecutionReferences(
       continueSpellCasting: noBoundExecutionReferences,
       move: noBoundExecutionReferences,
       standFromProne: noBoundExecutionReferences,
+      dropProne: noBoundExecutionReferences,
+      interactWithObject: noBoundExecutionReferences,
+      pickUpHeldWeapon: noBoundExecutionReferences,
       releaseReadiedSpell: noBoundExecutionReferences,
       releaseReadiedMovement: noBoundExecutionReferences,
       reportReadyTrigger: noBoundExecutionReferences,
@@ -1964,6 +2008,9 @@ function battleSubjectKey(subject: BattleSubject): string {
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "helpAttack" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "helpAbilityCheck" }, (action) =>
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "hide" }, (action) =>

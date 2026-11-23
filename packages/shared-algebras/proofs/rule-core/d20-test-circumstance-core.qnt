@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE BATTLE.ATTACK.CONDITION_ROLL_MODE
+// KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE BATTLE.ATTACK.CONDITION_ROLL_MODE
 
 // RAW trace:
 // - .references/srd-5.2.1/playing-the-game.md#D20 Tests defines Ability
@@ -14,6 +14,13 @@
 // - The same Prone entry says a Prone creature has Disadvantage on attack
 //   rolls, at any distance, so a Prone attacker supplies a Disadvantage source
 //   that combines with the target's sources before cancellation.
+// - .references/srd-5.2.1/playing-the-game.md#Ranged Attacks in Close Combat
+//   says a ranged attack roll, with a weapon, a spell, or some other means,
+//   has Disadvantage if the attacker is within 5 feet of an enemy who can see
+//   it and doesn't have the Incapacitated condition. Any one such enemy is a
+//   Disadvantage source that combines with the other sources, including a
+//   Prone target's, before cancellation.
+
 // - .references/srd-5.2.1/rules-glossary.md#Restrained says "Attack rolls
 //   against you have Advantage, and your attack rolls have Disadvantage."
 // - .references/srd-5.2.1/rules-glossary.md#Paralyzed, #Petrified and
@@ -156,6 +163,53 @@ module d20TestCircumstanceCore {
     distance: AttackRollTargetDistance,
   ): AttackRollModeResult =
     d20TestRollModeWithProneTarget(withProneAttacker(mechanicalSources), distance)
+
+  pure val rangedAttackEnemyProximityFeet: AttackRollTargetDistance = 5
+
+  // An enemy the table lists for a ranged attack: its distance from the
+  // attacker, whether it can see the attacker, and whether it's Incapacitated.
+  type RangedAttackProximityEnemy = {
+    distanceFeet: AttackRollTargetDistance,
+    canSeeAttacker: bool,
+    incapacitated: bool,
+  }
+
+  pure def rangedAttackEnemyImposesDisadvantage(
+    enemy: RangedAttackProximityEnemy,
+  ): bool = all {
+    enemy.distanceFeet <= rangedAttackEnemyProximityFeet,
+    enemy.canSeeAttacker,
+    not(enemy.incapacitated),
+  }
+
+  pure def withRangedAttackCloseCombat(
+    mechanicalSources: D20TestRollModeSources,
+    enemies: List[RangedAttackProximityEnemy],
+  ): D20TestRollModeSources = {
+    advantage: mechanicalSources.advantage,
+    disadvantage: mechanicalSources.disadvantage
+      or enemies.foldl(false, (found, enemy) =>
+        found or rangedAttackEnemyImposesDisadvantage(enemy)
+      ),
+  }
+
+  pure def d20TestRollModeWithRangedAttackCloseCombat(
+    mechanicalSources: D20TestRollModeSources,
+    enemies: List[RangedAttackProximityEnemy],
+  ): D20TestRollMode =
+    d20TestRollModeFromSources(
+      withRangedAttackCloseCombat(mechanicalSources, enemies)
+    )
+
+  pure def d20TestRollModeWithRangedAttackCloseCombatAndProneTarget(
+    mechanicalSources: D20TestRollModeSources,
+    enemies: List[RangedAttackProximityEnemy],
+    distance: AttackRollTargetDistance,
+  ): AttackRollModeResult =
+    d20TestRollModeWithProneTarget(
+      withRangedAttackCloseCombat(mechanicalSources, enemies),
+      distance,
+    )
 
   // The attacker's conditions that give its own attack rolls Disadvantage.
   type AttackerAttackRollConditions = {

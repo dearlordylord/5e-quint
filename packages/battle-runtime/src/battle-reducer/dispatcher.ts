@@ -69,6 +69,8 @@ export {
 } from "./battle-snapshot.ts";
 import {
   type BattleSubject,
+  type BattleSubjectAction,
+  type BattleInterruptSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
 } from "../battle-subjects.ts";
@@ -161,6 +163,7 @@ import {
   resolveShove,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
+import { resolveHelpAbilityCheck } from "./help-ability-check.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
@@ -186,6 +189,10 @@ import {
   isMovementProcedureSubject,
   resolveMovementProcedure,
 } from "./movement-procedures.ts";
+import {
+  isObjectInteractionSubject,
+  resolveObjectInteraction,
+} from "./object-interaction.ts";
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
@@ -224,6 +231,44 @@ function isEndConcentrationSubject(
 ): subject is Parameters<typeof resolveEndConcentrationCommand>[0]["subject"] {
   return (
     subject.tag === "runtimeCommand" && subject.command === "endConcentration"
+  );
+}
+
+/** Help's two options, Assist an Attack Roll and Assist an Ability Check. */
+const HELP_ACTIONS = [
+  "helpAttack",
+  "helpAbilityCheck",
+] as const satisfies readonly BattleSubjectAction[];
+
+type HelpActionSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "action";
+    readonly action: (typeof HELP_ACTIONS)[number];
+  }
+>;
+
+function isHelpActionSubject(
+  subject: BattleSubject,
+): subject is HelpActionSubject {
+  return (
+    subject.tag === "action" &&
+    HELP_ACTIONS.some((action) => action === subject.action)
+  );
+}
+
+function resolveHelpAction(
+  input: AdmittedBattleResolutionInput,
+  subject: HelpActionSubject,
+): BattleResolutionResult {
+  return Match.value(subject).pipe(
+    Match.when({ action: "helpAttack" }, (helpAttack) =>
+      resolveHelpAttack({ ...input, subject: helpAttack }),
+    ),
+    Match.when({ action: "helpAbilityCheck" }, (helpAbilityCheck) =>
+      resolveHelpAbilityCheck({ ...input, subject: helpAbilityCheck }),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -355,17 +400,35 @@ function resolveBattleSubjectInternal(
   return resolveBattleSubjectAfterD20TestNaturalOneReroll(input, options);
 }
 
+const INTERRUPT_COMMAND_REQUIRES_CHECKPOINT = {
+  // Discovery also exposes direct release; its owner validates and consumes the held spell.
+  releaseReadiedSpell: false,
+  releaseReadiedMovement: true,
+  releaseReadiedAction: true,
+  releaseReadiedAttack: true,
+  castTriggeredReactionSpell: true,
+  castAttackHitBonusActionSpell: true,
+  opportunityAttack: true,
+  retaliationAttack: true,
+} as const satisfies Record<BattleInterruptSubject["command"], boolean>;
+
 function interruptSubjectRequiresCheckpoint(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): boolean {
+  const subject = input.subject;
+  const commandRequiresCheckpoint =
+    subject.tag === "runtimeCommand" &&
+    Object.entries(INTERRUPT_COMMAND_REQUIRES_CHECKPOINT).some(
+      ([command, required]) => required && command === subject.command,
+    );
   return (
-    input.state.interruptStack.length > 0 &&
+    (input.state.interruptStack.length > 0 || commandRequiresCheckpoint) &&
     options.interruptRouteOptions.replayingInterruptedProcedure !== true &&
     options.readiedActionActorId === undefined &&
     !(
-      input.subject.tag === "runtimeCommand" &&
-      input.subject.command === "reportReadyTrigger"
+      subject.tag === "runtimeCommand" &&
+      subject.command === "reportReadyTrigger"
     )
   );
 }
@@ -618,7 +681,7 @@ function battleSubjectObligationAdmissionResult(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
+      "Pending Stat Block Multiattack dispatches must be resolved, Movement or Drop Prone may be taken between attacks, or the turn must end before other battle subjects.",
     );
   }
   if (
@@ -759,8 +822,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       if (subject.action === "dodge") {
         return resolveDodge(input);
       }
-      if (subject.action === "helpAttack") {
-        return resolveHelpAttack({ ...input, subject });
+      if (isHelpActionSubject(subject)) {
+        return resolveHelpAction(input, subject);
       }
       if (subject.action === "hide") {
         return resolveHide({ ...input, subject: actionHideSubject(subject) });
@@ -925,23 +988,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...handledInterruptRouteOption,
       });
     }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "replaceSelfTransformationMode"
-    ) {
-      return resolveReplaceSelfTransformationModeCommand({
-        ...input,
-        subject,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "controlledVerticalSuspensionAltitudeControl"
-    ) {
-      return resolveControlledVerticalSuspensionAltitudeControlCommand({
-        ...input,
-        subject,
-      });
+    if (isObjectInteractionSubject(subject)) {
+      return resolveObjectInteraction({ ...input, subject });
     }
     if (isPersistentSpatialSpellProcedureSubject(subject)) {
       return resolvePersistentSpatialSpellProcedureCommand({
@@ -951,6 +999,18 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       });
     }
     if (subject.tag === "runtimeCommand") {
+      if (subject.command === "replaceSelfTransformationMode") {
+        return resolveReplaceSelfTransformationModeCommand({
+          ...input,
+          subject,
+        });
+      }
+      if (subject.command === "controlledVerticalSuspensionAltitudeControl") {
+        return resolveControlledVerticalSuspensionAltitudeControlCommand({
+          ...input,
+          subject,
+        });
+      }
       if (subject.command === "protectionRelevantEffectSave") {
         return resolveProtectionRelevantEffectSaveCommand({
           ...input,

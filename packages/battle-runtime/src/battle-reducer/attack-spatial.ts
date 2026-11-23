@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleAttackExecutionSelection,
@@ -12,6 +12,12 @@ import {
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
+import {
+  qualifyRangedAttackEnemyProximity,
+  type RangedAttackEnemyProximityScope,
+  type SpatialQualificationIssue,
+  type RangedAttackEnemyProximityEvidence,
+} from "./ranged-attack-close-combat.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 
 export function attackExecutionSelectionMatchesOption(
@@ -57,6 +63,29 @@ export function creatureAttackTargetIsLegal(
       ? Number(distanceFeet) <= Number(constraint.reachFeet)
       : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
   );
+}
+
+/** A ranged attack's proximity scope; a melee or unbound attack has none. */
+function rangedAttackProximityScope(
+  actorId: CombatantId,
+  attack: SupportedAttackActionOption,
+): RangedAttackEnemyProximityScope | null {
+  return attackTargetConstraint(attack).kind === "rangedRange" &&
+    "procedureRef" in attack
+    ? { attackerId: actorId, procedureRef: attack.procedureRef }
+    : null;
+}
+
+/** Admit proximity evidence for a ranged attack; melee attacks need none. */
+export function qualifyAttackEnemyProximity(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
+): RangedAttackEnemyProximityEvidence | SpatialQualificationIssue | null {
+  const scope = rangedAttackProximityScope(actorId, attack);
+  if (scope === null) return null;
+  return qualifyRangedAttackEnemyProximity({ state, scope, facts });
 }
 
 export function attackTargetRangeBand(

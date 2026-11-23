@@ -159,91 +159,22 @@ export function validatedPackageEffectRuntimeEntries(
 export function validatedPackageEffectCompilerSupportDirectory(
   packageOwners: readonly [PackageEffectOwner, ...PackageEffectOwner[]],
 ): string {
-  return validatedPackageEffectRuntimePaths(packageOwners).effectDirectory;
-}
-
-export function validatedPackageEffectCompilerSupportDirectories(
-  packageOwners: readonly [PackageEffectOwner, ...PackageEffectOwner[]],
-): Readonly<
-  Record<"effect" | "fast-check" | "msgpackr" | "pure-rand", string>
-> {
-  const effectDirectory =
-    validatedPackageEffectCompilerSupportDirectory(packageOwners);
-  const effectRequire = createRequire(join(effectDirectory, "package.json"));
-  const fastCheckDirectory = dirname(
-    realpathSync(effectRequire.resolve("fast-check/package.json")),
+  const { effectDirectory } = validatedPackageEffectRuntimePaths(packageOwners);
+  const manifest: unknown = JSON.parse(
+    readFileSync(join(effectDirectory, "package.json"), "utf8"),
   );
-  const msgpackrDirectory = resolve(
-    dirname(realpathSync(effectRequire.resolve("msgpackr"))),
-    "..",
-  );
-  const fastCheckRequire = createRequire(
-    join(fastCheckDirectory, "package.json"),
-  );
-  const pureRandDirectory = dirname(
-    realpathSync(fastCheckRequire.resolve("pure-rand/package.json")),
-  );
-  const directories = {
-    effect: effectDirectory,
-    "fast-check": fastCheckDirectory,
-    msgpackr: msgpackrDirectory,
-    "pure-rand": pureRandDirectory,
-  } as const;
-  const expectedVersions = {
-    effect: "4.0.0-rc.112",
-    "fast-check": "4.9.0",
-    msgpackr: "2.1.0",
-    "pure-rand": "8.4.2",
-  } as const;
-  const packageManifest = (directory: string): unknown =>
-    JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
-  const dependencyVersion = (
-    manifest: unknown,
-    dependency: string,
-  ): string | undefined => {
-    if (
-      typeof manifest !== "object" ||
-      manifest === null ||
-      !("dependencies" in manifest) ||
-      typeof manifest.dependencies !== "object" ||
-      manifest.dependencies === null ||
-      !(dependency in manifest.dependencies)
-    ) {
-      return undefined;
-    }
-    const value = Reflect.get(manifest.dependencies, dependency);
-    return typeof value === "string" ? value : undefined;
-  };
-  const effectManifest = packageManifest(effectDirectory);
-  const fastCheckManifest = packageManifest(fastCheckDirectory);
   if (
-    dependencyVersion(effectManifest, "fast-check") !== "^4.9.0" ||
-    dependencyVersion(effectManifest, "msgpackr") !== "^2.0.5" ||
-    dependencyVersion(fastCheckManifest, "pure-rand") !== "^8.0.0"
+    typeof manifest !== "object" ||
+    manifest === null ||
+    !("version" in manifest) ||
+    manifest.version !== "4.1.4" ||
+    "dependencies" in manifest
   ) {
     throw new Error(
-      "Effect declaration compiler-support dependency relationships changed.",
+      "Effect compiler support requires the reviewed dependency-free 4.1.4 package.",
     );
   }
-  for (const packageName of [
-    "effect",
-    "fast-check",
-    "msgpackr",
-    "pure-rand",
-  ] as const) {
-    const manifest = packageManifest(directories[packageName]);
-    if (
-      typeof manifest !== "object" ||
-      manifest === null ||
-      !("version" in manifest) ||
-      manifest.version !== expectedVersions[packageName]
-    ) {
-      throw new Error(
-        `${packageName} compiler-support version does not match ${expectedVersions[packageName]}.`,
-      );
-    }
-  }
-  return directories;
+  return effectDirectory;
 }
 
 export function effectRuntimeForPackageOwners(

@@ -173,6 +173,47 @@ platforms or toolchains. A process started outside the helper is not covered;
 ordinary deterministic evidence must therefore use the public command, which
 owns compilation and boundary installation before any verification phase.
 
+## Declaration diagnostics
+
+Declaration compiler subprocesses default to a 6 GiB Go runtime memory target
+within the verification runner's 8 GiB container cap. An explicit `GOMEMLIMIT`
+overrides that target.
+
+Prepare the public declaration graph and compare it with the
+[reviewed manifest](sdk-player/public-declaration-manifest.json):
+
+```sh
+pnpm declarations:diagnose --out .audit/declarations/run-1
+```
+
+Use a fresh output directory beneath `.audit/`. The command acquires the shared broad lock.
+On macOS it uses the Linux verification runner; artifacts are exported beneath
+that runner's printed evidence directory, at `outputs/.audit/declarations/run-1/`.
+The output contains `declarations/` and `declaration-review.json`, with the actual
+and reviewed measures, path/content ledgers, cache hit/miss, and core execution time.
+The launcher prints total wall time to stderr, including lock admission and
+environment startup.
+A review mismatch exits with status 1 and retains the declarations and report.
+Structural admission failures still reject the artifact.
+
+Inspect retained declarations without invoking the compiler or acquiring the
+broad lock:
+
+```sh
+pnpm declarations:diagnose --inspect <retained-declarations-directory>
+```
+
+This mode measures the saved tree and compares it with the reviewed manifest;
+it does not qualify source freshness. It writes its report to stdout and
+returns status 1 for a mismatch. Invalid arguments return status 64.
+
+Review changes to the emitted API before editing the manifest. Reviewed values
+are separate from compiler policy, so changing those values alone does not
+invalidate a compiled artifact in the same cache. Source, toolchain, and
+structural-admission changes still invalidate it. Linux verification jobs keep
+private temporary caches; use the inspection mode for exported artifacts
+between jobs.
+
 ## Vocabulary
 
 These terms have one package-wide meaning:

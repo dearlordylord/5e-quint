@@ -1135,20 +1135,20 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(unqualifiedReplay.snapshot).toEqual(beforeReplay);
     const proximity = {
-      kind: "rangedSpellAttackEnemyProximity",
-      casterId: needsContext.request.casterId,
-      sourceProcedureRef: needsContext.request.sourceProcedureRef,
+      kind: "rangedAttackEnemyProximity",
+      attackerId: needsContext.request.casterId,
+      procedureRef: needsContext.request.sourceProcedureRef,
       enemies: [
         {
           enemyId: thunderwaveSecondTargetId,
           distanceFeet: movementFeet(5),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         },
       ],
     } as const satisfies BattleTargetSpatialFact;
     for (const staleProximity of [
-      { ...proximity, casterId: spellTargetId },
-      { ...proximity, sourceProcedureRef: glyphProcedureRef },
+      { ...proximity, attackerId: spellTargetId },
+      { ...proximity, procedureRef: glyphProcedureRef },
       {
         ...proximity,
         enemies: [
@@ -1295,14 +1295,14 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       spellTargetId,
       [
         {
-          kind: "rangedSpellAttackEnemyProximity",
-          casterId: needsContext.request.casterId,
-          sourceProcedureRef: needsContext.request.sourceProcedureRef,
+          kind: "rangedAttackEnemyProximity",
+          attackerId: needsContext.request.casterId,
+          procedureRef: needsContext.request.sourceProcedureRef,
           enemies: [
             {
               enemyId: spellTargetId,
               distanceFeet: movementFeet(10),
-              enemyCanSeeCaster: true,
+              enemyCanSeeAttacker: true,
             },
           ],
         },
@@ -1455,14 +1455,14 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         spellTargetId,
         [
           {
-            kind: "rangedSpellAttackEnemyProximity",
-            casterId: needsContext.request.casterId,
-            sourceProcedureRef: needsContext.request.sourceProcedureRef,
+            kind: "rangedAttackEnemyProximity",
+            attackerId: needsContext.request.casterId,
+            procedureRef: needsContext.request.sourceProcedureRef,
             enemies: [
               {
                 enemyId: spellTargetId,
                 distanceFeet: movementFeet(10),
-                enemyCanSeeCaster: true,
+                enemyCanSeeAttacker: true,
               },
             ],
           },

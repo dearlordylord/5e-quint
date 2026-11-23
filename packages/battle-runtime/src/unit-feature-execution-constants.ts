@@ -121,12 +121,14 @@ export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 export const WEAPON_MASTERY_PUSH_SUPPORT_PROFILE = "weaponMasteryPush";
 export const WEAPON_MASTERY_SLOW_SUPPORT_PROFILE = "weaponMasterySlow";
+export const WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE = "weaponMasteryGraze";
 export const WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE = {
   [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE]: "push",
   [WEAPON_MASTERY_SAP_SUPPORT_PROFILE]: "sap",
   [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE]: "slow",
   [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE]: "topple",
   [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE]: "cleave",
+  [WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE]: "graze",
 } as const satisfies Readonly<Record<string, WeaponMasteryName>>;
 export type WeaponMasteryPropertySupportProfile =
   keyof typeof WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE;

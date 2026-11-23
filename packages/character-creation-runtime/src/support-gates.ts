@@ -747,7 +747,7 @@ export function isSupportedProgression(
   supportProfile: CharacterCreationSupportProfile,
 ): boolean {
   return supportedCharacterProgressions(supportProfile).some((supported) =>
-    sameProgression(supported, progression),
+    sameClassPath(supported, progression),
   );
 }
 
@@ -782,21 +782,21 @@ function uniqueValues<T>(values: readonly T[]): readonly T[] {
   return [...new Set(values)];
 }
 
-function sameProgression(
+/**
+ * Support covers the class path only: each level after 1 may take the fixed
+ * Hit Point value or a rolled Hit Die, whatever the supported progression.
+ */
+function sameClassPath(
   left: CharacterProgression,
   right: CharacterProgression,
 ): boolean {
   return (
     startingClassUnitId(left) === startingClassUnitId(right) &&
     left.advancements.length === right.advancements.length &&
-    left.advancements.every((leftEntry, index) => {
-      const rightEntry = right.advancements[index];
-      return (
-        rightEntry != null &&
-        leftEntry.classUnitId === rightEntry.classUnitId &&
-        leftEntry.hitPointRule.tag === rightEntry.hitPointRule.tag
-      );
-    })
+    left.advancements.every(
+      (leftEntry, index) =>
+        leftEntry.classUnitId === right.advancements[index]?.classUnitId,
+    )
   );
 }
 
