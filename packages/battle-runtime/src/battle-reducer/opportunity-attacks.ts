@@ -97,7 +97,10 @@ import {
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
-import { attackTargetIsLegal } from "./attack-spatial.ts";
+import {
+  attackTargetIsLegal,
+  attackTargetStatedCover,
+} from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -497,6 +500,34 @@ function resolveReactionAttackCommand(
   });
 }
 
+/**
+ * Why a reactor's own attack target fact for an Opportunity Attack can't be
+ * used: its distance and cover must be the ones ruled on the threat.
+ */
+function suppliedOpportunityAttackTargetFactIssue(
+  input: {
+    readonly subject: OpportunityAttackResolutionInput["subject"];
+    readonly attack: BoundSupportedAttackActionOption;
+    readonly fillSet: ResolvedAttackFillSet;
+  },
+  suppliedDistanceFeet: NonNullable<
+    ReturnType<typeof attackTargetDistanceFeet>
+  >,
+): string | null {
+  if (input.subject.command !== "opportunityAttack") return null;
+  if (Number(suppliedDistanceFeet) !== Number(input.subject.distanceFeet)) {
+    return "Opportunity Attack target distance must match the reach-leaving trigger distance.";
+  }
+  return attackTargetStatedCover(
+    input.fillSet.targetSpatialFacts,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+  ) === input.subject.cover
+    ? null
+    : "Opportunity Attack target cover must match the cover the table ruled on its threat.";
+}
+
 function reactionAttackTargetSpatialFacts(input: {
   readonly state: BattleState;
   readonly commandLabel: string;
@@ -512,16 +543,12 @@ function reactionAttackTargetSpatialFacts(input: {
     input.subject.targetId,
     input.attack,
   );
-  if (
-    input.subject.command === "opportunityAttack" &&
-    suppliedDistanceFeet !== null &&
-    Number(suppliedDistanceFeet) !== Number(input.subject.distanceFeet)
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "Opportunity Attack target distance must match the reach-leaving trigger distance.",
-    };
+  const suppliedFactIssue =
+    suppliedDistanceFeet === null
+      ? null
+      : suppliedOpportunityAttackTargetFactIssue(input, suppliedDistanceFeet);
+  if (suppliedFactIssue !== null) {
+    return { tag: "invalid", message: suppliedFactIssue };
   }
   const distanceFact = reactionAttackDistanceFact({
     subject: input.subject,

@@ -54,6 +54,7 @@ import {
 import {
   CONDITIONS as ALL_CONDITIONS,
   COVER_TYPES,
+  RULED_COVER_TYPES,
   CreatureId,
   DeathSavingThrowCount,
   D20Roll,
@@ -852,7 +853,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackName: Schema.optionalKey(Schema.Never),
       statBlockDamageSelection: Schema.optionalKey(Schema.Never),
       distanceFeet: MovementFeet,
-      cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+      cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     }),
     Schema.Struct({
       kind: Schema.Literal("attackTargetDistance"),
@@ -864,7 +865,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackName: Schema.optionalKey(Schema.Never),
       statBlockDamageSelection: StatBlockAttackDamageSelection,
       distanceFeet: MovementFeet,
-      cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+      cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     }),
   ]),
   Schema.Struct({
@@ -897,7 +898,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     distanceFeet: Schema.optionalKey(MovementFeet),
-    cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
@@ -921,7 +922,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     familiarId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTargetKnownWilling"),
@@ -941,7 +942,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     forcePositionId: BattleTablePositionId,
     reachFeet: MovementFeet,
-    cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("linkedEffectPairedWornComponents"),
@@ -963,7 +964,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
     distanceFeet: MovementFeet,
-    cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     armorClass: BattleArmorClassSchema,
     damageDisposition: BattleObjectDamageDispositionSchema,
   }),
@@ -1075,7 +1076,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
-    cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTargetsInPointOriginSphere"),
@@ -4020,7 +4021,7 @@ type BattleFillEncoded =
             readonly sourceProcedureRef: string;
             readonly rangeFeet: number;
             readonly distanceFeet: number;
-            readonly cover?: (typeof COVER_TYPES)[number];
+            readonly cover?: (typeof RULED_COVER_TYPES)[number];
             readonly armorClass: number;
             readonly damageDisposition:
               | { readonly kind: "hitPoints"; readonly hitPoints: number }
@@ -4448,7 +4449,7 @@ type BattleFillEncoded =
             readonly targetId: string;
             readonly sourceProcedureRef: string;
             readonly distanceFeet?: number;
-            readonly cover?: (typeof COVER_TYPES)[number];
+            readonly cover?: (typeof RULED_COVER_TYPES)[number];
           }
         | {
             readonly kind: "reactionSpellDamagerVisibleWithinRange";
@@ -4472,7 +4473,7 @@ type BattleFillEncoded =
             readonly targetId: string;
             readonly sourceProcedureRef: string;
             readonly distanceFeet?: number;
-            readonly cover?: (typeof COVER_TYPES)[number];
+            readonly cover?: (typeof RULED_COVER_TYPES)[number];
           }
         | {
             readonly kind: "spellTargetKnownWilling";
@@ -4922,7 +4923,7 @@ const BattleMovementFillValueCommonSchemaFields = {
     battleInterruptAttackExecutionSelectionWithFields({
       reactorId: CombatantId,
       distanceFeet: MovementFeet,
-      cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+      cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     }),
   ),
   acrobaticMovement: Schema.optionalKey(
@@ -5269,7 +5270,7 @@ export const BattleFillSchema: Schema.Codec<
             sourceProcedureRef: BattleProcedureExecutionRef,
             rangeFeet: MovementFeet,
             distanceFeet: MovementFeet,
-            cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+            cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
             armorClass: BattleArmorClassSchema,
             damageDisposition: BattleObjectDamageDispositionSchema,
           }),
@@ -5474,7 +5475,7 @@ export const BattleFillSchema: Schema.Codec<
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             distanceFeet: Schema.optionalKey(MovementFeet),
-            cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+            cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
           }),
           Schema.Struct({
             kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
@@ -5500,7 +5501,7 @@ export const BattleFillSchema: Schema.Codec<
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             distanceFeet: Schema.optionalKey(MovementFeet),
-            cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+            cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
           }),
           Schema.Struct({
             kind: Schema.Literal("spellTargetKnownWilling"),

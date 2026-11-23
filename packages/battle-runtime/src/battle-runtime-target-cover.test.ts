@@ -7,7 +7,8 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { armorClassDelta } from "@dnd/shared-algebras/armor-class-values";
-import type { CoverType } from "@dnd/shared/types";
+import type { RuledCoverType } from "@dnd/shared/types";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { describe, expect, test } from "vitest";
 import { activeEffectArmorClass } from "./battle-reducer/creature-state-execution.ts";
 import { battleObjectId } from "./identity.ts";
@@ -16,6 +17,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   attackTargetDistanceSpatialFact,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterSeed,
   fighterAttackSubject,
@@ -25,10 +27,14 @@ import {
   goblinAttackSubject,
   goblinId,
   heavyArmorClassState,
+  interruptDecisionFill,
   magicSubject,
   movementFeet,
   movementFill,
+  opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
   requireHole,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
@@ -49,14 +55,14 @@ function armorClassOf(state: BattleState, combatantId: typeof goblinId) {
 
 function withCover<Fact extends object>(
   fact: Fact,
-  cover: CoverType | undefined,
-): Fact & { readonly cover?: CoverType } {
+  cover: RuledCoverType | undefined,
+): Fact & { readonly cover?: RuledCoverType } {
   return cover === undefined ? fact : { ...fact, cover };
 }
 
 function longswordAttack(
   state: BattleState,
-  cover: CoverType | undefined,
+  cover: RuledCoverType | undefined,
   total?: number,
 ) {
   const subject = fighterAttackSubject(state, "Longsword");
@@ -95,8 +101,8 @@ describe("battle runtime: Cover on creature targets", () => {
   test("a weapon attack meets the target's AC with no cover", () => {
     const state = fighterVsGoblinBattle();
     const ac = armorClassOf(state, goblinId);
-    expect(hits(longswordAttack(state, "none", ac))).toBe(true);
-    expect(hits(longswordAttack(state, "none", ac - 1))).toBe(false);
+    expect(hits(longswordAttack(state, undefined, ac))).toBe(true);
+    expect(hits(longswordAttack(state, undefined, ac - 1))).toBe(false);
   });
 
   test("a target fact without a degree of cover gets no cover", () => {
@@ -137,7 +143,7 @@ describe("battle runtime: Cover on creature targets", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
       "movement",
     );
-    const move = (cover: CoverType | undefined) =>
+    const move = (cover: RuledCoverType | undefined) =>
       resolveBattleSubject({
         state,
         subject,
@@ -171,6 +177,80 @@ describe("battle runtime: Cover on creature targets", () => {
     });
   });
 
+  test("an Opportunity Attack's supplied target fact keeps the cover ruled on its threat", () => {
+    const state = fighterVsGoblinBattle();
+    const scimitar = attackExecutionSelectionForSubjectForTest(
+      goblinAttackSubject(state, "Scimitar"),
+    );
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const awaiting = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: goblinId,
+              distanceFeet: movementFeet(5),
+              cover: "half",
+              ...scimitar,
+            },
+          ],
+        }),
+      ],
+    });
+    if (awaiting.tag !== "needsHoles") {
+      throw new Error("Expected the Opportunity Attack window.");
+    }
+    const pending = battleFrontierInterruptDecisionForState(awaiting.state);
+    if (pending === null) throw new Error("Expected a pending Reaction.");
+    const choice = reactionChoiceWithSubject(pending.choices);
+    const react = (cover: RuledCoverType | undefined) =>
+      resolveBattleInterrupt({
+        state: awaiting.state,
+        fill: interruptDecisionFill(pending.decisionHole, {
+          kind: "resolve",
+          responderId: goblinId,
+          choice: opportunityAttackProcedureSelectionForTest(choice, [
+            {
+              kind: "targetSpatialFacts",
+              holeId: ATTACK_TARGET_HOLE_ID,
+              spatialFacts: [
+                withCover(
+                  attackTargetDistanceSpatialFact(
+                    goblinId,
+                    fighterId,
+                    scimitar,
+                    movementFeet(5),
+                  ),
+                  cover,
+                ),
+              ],
+            },
+          ]),
+        }),
+      });
+    expect(react(undefined)).toMatchObject({
+      tag: "invalid",
+      message:
+        "Opportunity Attack target cover must match the cover the table ruled on its threat.",
+    });
+    expect(react("total")).toMatchObject({ tag: "invalid" });
+    expect(react("half")).toMatchObject({
+      tag: "needsHoles",
+      frontier: { kind: "holes", holes: [{ kind: "attackRoll" }] },
+    });
+  });
+
   test("a Spell Attack meets the target's AC plus its cover", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-chill-touch-cover"),
@@ -196,7 +276,7 @@ describe("battle runtime: Cover on creature targets", () => {
       "targetChoice",
     );
     const ac = armorClassOf(state, skeletonId);
-    const spellTarget = (cover: CoverType | undefined) => {
+    const spellTarget = (cover: RuledCoverType | undefined) => {
       const fill = targetFill(targetHole, skeletonId);
       return {
         ...fill,
@@ -205,7 +285,7 @@ describe("battle runtime: Cover on creature targets", () => {
         ),
       };
     };
-    const rollWith = (cover: CoverType | undefined, total: number) => {
+    const rollWith = (cover: RuledCoverType | undefined, total: number) => {
       const rollHole = requireHole(
         resolveBattleSubject({ state, subject, fills: [spellTarget(cover)] }),
         "attackRoll",
@@ -220,7 +300,6 @@ describe("battle runtime: Cover on creature targets", () => {
       });
     };
     expect(hits(rollWith(undefined, ac))).toBe(true);
-    expect(hits(rollWith("none", ac))).toBe(true);
     expect(hits(rollWith("half", ac + 1))).toBe(false);
     expect(hits(rollWith("threeQuarters", ac + 5))).toBe(true);
     expect(
@@ -278,7 +357,7 @@ describe("battle runtime: Cover on creature targets", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
     );
-    const target = (cover: CoverType | undefined) =>
+    const target = (cover: RuledCoverType | undefined) =>
       targetFill(targetHole, fighterId, [
         withCover(
           attackTargetDistanceSpatialFact(
@@ -290,7 +369,7 @@ describe("battle runtime: Cover on creature targets", () => {
           cover,
         ),
       ]);
-    const strike = (cover: CoverType | undefined, total: number) => {
+    const strike = (cover: RuledCoverType | undefined, total: number) => {
       const rollHole = requireHole(
         resolveBattleSubject({ state, subject, fills: [target(cover)] }),
         "attackRoll",

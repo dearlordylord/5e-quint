@@ -731,4 +731,83 @@ describe("battle runtime: Fire Bolt object targets", () => {
     });
     expect("objectIgnitions" in requireResolved(hit)).toBe(false);
   });
+  test("a spell object target's cover adds to the object's AC, and Total Cover refuses it", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("battle-fire-bolt-object-cover"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const objectId = battleObjectId("covered-object");
+    const targetWithCover = (cover: "half" | "total") =>
+      objectTargetFill({
+        hole: objectTarget,
+        objectId,
+        rangeFeet: movementFeet(120),
+        distanceFeet: movementFeet(30),
+        damageDisposition: { kind: "tableResolved" },
+        spatialFacts: [
+          {
+            kind: "spellObjectTarget",
+            casterId: wizardId,
+            objectId,
+            sourceProcedureRef:
+              battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
+            rangeFeet: movementFeet(120),
+            distanceFeet: movementFeet(30),
+            cover,
+            armorClass: armorClass(13),
+            damageDisposition: { kind: "tableResolved" },
+          },
+          {
+            kind: "spellObjectIgnition",
+            casterId: wizardId,
+            objectId,
+            sourceProcedureRef:
+              battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
+            disposition: { kind: "wornOrCarried" },
+          },
+        ],
+      });
+    const halfCover = targetWithCover("half");
+    const attackRoll = requireHole(
+      resolveBattleSubject({ state: state.state, subject, fills: [halfCover] }),
+      "attackRoll",
+    );
+    const strike = (total: number) =>
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [
+          halfCover,
+          attackRollFill(attackRoll, { total, naturalD20: 10 }),
+        ],
+      });
+
+    // Half Cover raises the object's AC of 13 to 15.
+    expect(strike(14)).toMatchObject({ tag: "resolved" });
+    expect(requireHole(strike(15), "rolledDice").kind).toBe("rolledDice");
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [targetWithCover("total")],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
 });

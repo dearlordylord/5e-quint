@@ -218,6 +218,7 @@ function chainedSpellStepTargetIsLegal(input: {
       input.targetId,
       input.invocation,
       input.spatialFacts,
+      { coverOrigin: input.stepIndex === 0 ? "caster" : "previousTarget" },
     ) &&
     (input.stepIndex === 0 ||
       chainedSpellLeapTargetIsLegal(

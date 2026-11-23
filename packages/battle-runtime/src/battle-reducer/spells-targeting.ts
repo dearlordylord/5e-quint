@@ -118,6 +118,12 @@ type WeaponAttackDamageEnhancementSpellExecution = Extract<
 
 export type SpellTargetLegalityOptions = {
   readonly spatialMeleeSpellAttackProxyPositionId?: BattleTablePositionId;
+  /**
+   * Where the spell's attack originates for cover. A chained leap originates
+   * at the previous target (A59), so the caster's `spellTarget` cover doesn't
+   * refuse it; the leap fact's own cover does.
+   */
+  readonly coverOrigin?: "caster" | "previousTarget";
 };
 export type ObjectLightTargetFact = Extract<
   BattleTargetSpatialFact,
@@ -978,12 +984,13 @@ function spellTargetFactAdmitsTarget(
   actorId: CombatantId,
   targetId: CombatantId,
   sourceProcedureRef: BattleExecutableSpellInvocation["sourceProcedureRef"],
+  coverOrigin: SpellTargetLegalityOptions["coverOrigin"],
 ): boolean {
   return (
     fact.casterId === actorId &&
     fact.targetId === targetId &&
     fact.sourceProcedureRef === sourceProcedureRef &&
-    directTargetCover(fact.cover) !== null
+    (coverOrigin === "previousTarget" || directTargetCover(fact.cover) !== null)
   );
 }
 
@@ -1018,7 +1025,13 @@ export function spellTargetSpatialFactMatches(
     return false;
   }
   if (
-    !spellTargetFactAdmitsTarget(fact, actorId, targetId, sourceProcedureRef)
+    !spellTargetFactAdmitsTarget(
+      fact,
+      actorId,
+      targetId,
+      sourceProcedureRef,
+      options.coverOrigin,
+    )
   ) {
     return false;
   }

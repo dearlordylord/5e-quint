@@ -23,7 +23,7 @@
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
-  COVER_TYPES,
+  RULED_COVER_TYPES,
   MovementFeet,
   SpellSlotLevel,
   spellSlotLevel,
@@ -680,7 +680,7 @@ const BattleInterruptOpportunityAttackSubjectSchema =
     reactorId: CombatantId,
     targetId: CombatantId,
     distanceFeet: MovementFeet,
-    cover: Schema.optionalKey(Schema.Literals(COVER_TYPES)),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   });
 
 const BattleInterruptRetaliationAttackSubjectSchema =

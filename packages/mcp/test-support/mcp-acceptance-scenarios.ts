@@ -1445,7 +1445,6 @@ export async function verifyWidthVertical(client: Client) {
       spatialFacts: [
         {
           kind: "spellTarget",
-          cover: "none",
           casterId: "wizard",
           targetId: "skeleton-b",
           sourceProcedureRef:
@@ -4237,7 +4236,6 @@ export function attackTargetFill(subject: JsonObject, value: string) {
     spatialFacts: [
       {
         kind: "attackTargetDistance",
-        cover: "none",
         actorId: subject.actorId,
         targetId: value,
         distanceFeet: movementFeet(5),
@@ -4300,7 +4298,6 @@ function targetFill(hole: JsonObject, value: string, distanceFeet?: number) {
         : []),
       {
         kind: "spellTarget",
-        cover: "none",
         casterId: "wizard",
         targetId: value,
         sourceProcedureRef: sourceProcedureRefFromHole(hole),
@@ -4336,7 +4333,6 @@ function spellTargetFill(
           ]),
       {
         kind: "spellTarget",
-        cover: "none",
         casterId,
         targetId,
         sourceProcedureRef,

@@ -596,6 +596,88 @@ describe("Chromatic Orb chained spell attack", () => {
     ).toBe(true);
   });
 
+  test("measures a leap's cover from the creature it leaps from (A59)", () => {
+    const state = chromaticOrbBattle({ spellLevel: 1 });
+    const first = chromaticOrbDamageFills(state, {
+      damageType: "fire",
+      targetId: firstTargetId,
+      attackTotal: 18,
+      naturalD20: 12,
+      damageFaces: [2, 2, 5],
+    });
+    const leapTargetHole = requireHole(
+      battleResolutionHolesForTest(
+        resolveNeedsHoles(state, first.subject, first.fills),
+      ),
+      "targetChoice",
+    );
+    const leapFill = (input: {
+      readonly casterCover?: "total";
+      readonly leapCover?: "half" | "total";
+    }) => {
+      const fill = spellLeapTargetFill(
+        leapTargetHole,
+        firstTargetId,
+        secondTargetId,
+        true,
+      );
+      return {
+        ...fill,
+        spatialFacts: (fill.spatialFacts ?? []).map((fact) =>
+          fact.kind === "spellTarget" && input.casterCover !== undefined
+            ? { ...fact, cover: input.casterCover }
+            : fact.kind === "spellLeapTargetWithinRange" &&
+                input.leapCover !== undefined
+              ? { ...fact, cover: input.leapCover }
+              : fact,
+        ),
+      };
+    };
+    const secondTargetHpAfterLeap = (
+      fill: Extract<BattleFill, { readonly kind: "targetChoice" }>,
+      attackTotal: number,
+    ) => {
+      const awaitingAttack = resolveNeedsHoles(state, first.subject, [
+        ...first.fills,
+        fill,
+      ]);
+      const attack = attackRollFill(
+        requireHole(battleResolutionHolesForTest(awaitingAttack), "attackRoll"),
+        attackTotal,
+        2,
+      );
+      const result = resolveBattleSubject({
+        state,
+        subject: first.subject,
+        fills: [...first.fills, fill, attack],
+      });
+      return result.tag === "resolved"
+        ? result.state.combatants.get(secondTargetId)?.hp
+        : "needsDamage";
+    };
+    const secondTargetHp = state.combatants.get(secondTargetId)?.hp;
+
+    // Half Cover from the first target adds 2 to the second target's AC of 10.
+    expect(secondTargetHpAfterLeap(leapFill({}), 10)).toBe("needsDamage");
+    expect(secondTargetHpAfterLeap(leapFill({ leapCover: "half" }), 11)).toBe(
+      secondTargetHp,
+    );
+    expect(secondTargetHpAfterLeap(leapFill({ leapCover: "half" }), 12)).toBe(
+      "needsDamage",
+    );
+    // Total Cover from the first target refuses the leap.
+    expect(
+      resolveInvalid(state, first.subject, [
+        ...first.fills,
+        leapFill({ leapCover: "total" }),
+      ]).reason,
+    ).toBe("invalidFill");
+    // Total Cover from the caster doesn't, since the leap starts elsewhere.
+    expect(
+      secondTargetHpAfterLeap(leapFill({ casterCover: "total" }), 10),
+    ).toBe("needsDamage");
+  });
+
   test("duplicate d8 faces open a leap target hole until the slot leap budget is exhausted", () => {
     const state = chromaticOrbBattle({ spellLevel: 2 });
     const { subject, fills } = chromaticOrbDamageFills(state, {
