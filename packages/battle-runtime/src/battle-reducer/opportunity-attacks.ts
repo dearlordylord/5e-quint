@@ -5,7 +5,7 @@ import {
   type BoundSupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
-import { stateWithThrownWeaponReleased } from "./thrown-weapon-release.ts";
+import { stateWithThrownWeaponReleasedPendingContinuation } from "./thrown-weapon-release.ts";
 import { thrownWeaponLandingIssue } from "./thrown-weapon-attack.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
@@ -671,10 +671,16 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     subject.reactorId,
     subject.targetId,
   );
-  attackRolledState = spendAmmunitionForAcceptedAttackPendingContinuation({
-    state: attackRolledState,
-    actorId: subject.reactorId,
+  attackRolledState = stateWithThrownWeaponReleasedPendingContinuation({
+    state: spendAmmunitionForAcceptedAttackPendingContinuation({
+      state: attackRolledState,
+      actorId: subject.reactorId,
+      attack,
+      subject: input.subject,
+    }),
+    attackerId: subject.reactorId,
     attack,
+    facts: afterRollInput.context.targetSpatialFacts,
     subject: input.subject,
   });
   const critical = attackRollHitIsCritical({
@@ -978,16 +984,11 @@ function resolveReactionAttackMiss(
       relationshipIssue,
     );
   }
-  const resolvedState = stateWithThrownWeaponReleased({
-    state: attackRolledState,
-    attackerId: resolutionInput.subject.reactorId,
-    attack: input.attack,
-    facts: context.targetSpatialFacts,
-  });
+  // The accepted roll already threw a thrown weapon, hit or miss.
   return {
     tag: "resolved",
-    state: resolvedState,
-    snapshot: snapshotBattle(resolvedState),
+    state: attackRolledState,
+    snapshot: snapshotBattle(attackRolledState),
   };
 }
 
@@ -1370,16 +1371,11 @@ function resolveReactionAttackDamageTransaction(input: {
     Match.exhaustive,
   );
 
-  // The attack-damage window resumes from its own frame and finishes the attack
-  // there, never returning here, so a thrown weapon leaves the hand as the
-  // window opens. The public result reports it once the attack is over.
+  // The attack-damage window resumes from its own frame and finishes the
+  // attack there, never returning here. The accepted roll already threw a
+  // thrown weapon; the public result reports it once the attack is over.
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
-    stateWithThrownWeaponReleased({
-      state: spellReducedState,
-      attackerId: subject.reactorId,
-      attack,
-      facts: targetSpatialFacts,
-    }),
+    spellReducedState,
     {
       trigger: "attackDamage",
       continuation: attackDamageInterruptionFrame({
@@ -1535,15 +1531,9 @@ function resolveReactionAttackDamageTransaction(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  // Without an attack-damage window the subject ends here, so a thrown weapon
-  // leaves the hand now: a needsHoles state above is resumed, and the resumed
-  // attack still needs its weapon.
-  const resolvedState = stateWithThrownWeaponReleased({
-    state: afterDamagePath.state,
-    attackerId: subject.reactorId,
-    attack,
-    facts: targetSpatialFacts,
-  });
+  // Without an attack-damage window the subject ends here, with any thrown
+  // weapon already where the accepted roll threw it.
+  const resolvedState = afterDamagePath.state;
   const afterDamageReactionWindow = maybeOpenInterruptWindow(
     resolvedState,
     {

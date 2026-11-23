@@ -10,6 +10,7 @@ import type {
   BattleSnapshot,
   BattleState,
   BattleAcceptedAttackAmmunitionSpend,
+  BattleAcceptedThrownWeaponRelease,
   BattleInterruptRouteOptions,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -361,6 +362,10 @@ function battleResolutionWithExecutionSnapshot(
                         "acceptedAttackAmmunitionSpend",
                         continuation.acceptedAttackAmmunitionSpend,
                       ),
+                      ...optionalProperty(
+                        "acceptedThrownWeaponRelease",
+                        continuation.acceptedThrownWeaponRelease,
+                      ),
                       ...(continuation.handledInterruptTrigger !== undefined
                         ? {
                             handledInterruptTrigger:
@@ -403,6 +408,9 @@ function continuationMetadata(
   readonly acceptedAttackAmmunitionSpend:
     | BattleAcceptedAttackAmmunitionSpend
     | undefined;
+  readonly acceptedThrownWeaponRelease:
+    | BattleAcceptedThrownWeaponRelease
+    | undefined;
   readonly admittedMovement: Extract<
     BattleState["subjectResolutionPhase"],
     { readonly kind: "subjectContinuation" }
@@ -415,6 +423,7 @@ function continuationMetadata(
     return {
       handledInterruptTrigger,
       acceptedAttackAmmunitionSpend: undefined,
+      acceptedThrownWeaponRelease: undefined,
       admittedMovement: undefined,
     };
   }
@@ -424,6 +433,8 @@ function continuationMetadata(
       handledInterruptTrigger,
     acceptedAttackAmmunitionSpend:
       result.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend,
+    acceptedThrownWeaponRelease:
+      result.state.subjectResolutionPhase.acceptedThrownWeaponRelease,
     admittedMovement: result.state.subjectResolutionPhase.admittedMovement,
   };
 }

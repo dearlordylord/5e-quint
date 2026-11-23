@@ -133,7 +133,10 @@ import {
 } from "./attack-resolvers.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { withThrownWeaponReleased } from "./thrown-weapon-release.ts";
+import {
+  stateWithThrownWeaponReleasedPendingContinuation,
+  withThrownWeaponReleased,
+} from "./thrown-weapon-release.ts";
 import { attackTargetFactsIssue } from "./attack-spatial.ts";
 
 import {
@@ -2489,7 +2492,13 @@ export function resolveSelectedAttackProcedure<
         );
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
-      attackRolledState,
+      stateWithThrownWeaponReleasedPendingContinuation({
+        state: attackRolledState,
+        attackerId,
+        attack,
+        facts: fillSet.targetSpatialFacts,
+        subject: input.subject,
+      }),
       {
         trigger: "attackHit",
         attackerId: attackerId,
@@ -3082,10 +3091,16 @@ export function resolveSelectedAttackProcedure<
     }
     /* v8 ignore stop -- @preserve */
     return needsHolesResult(
-      spendAmmunitionForAcceptedAttackPendingContinuation({
-        state: hitAppliedState,
-        actorId: attackerId,
+      stateWithThrownWeaponReleasedPendingContinuation({
+        state: spendAmmunitionForAcceptedAttackPendingContinuation({
+          state: hitAppliedState,
+          actorId: attackerId,
+          attack,
+          subject: input.subject,
+        }),
+        attackerId,
         attack,
+        facts: fillSet.targetSpatialFacts,
         subject: input.subject,
       }),
       input.subject,

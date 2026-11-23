@@ -4456,6 +4456,7 @@ export type BattleSubjectResolutionPhase =
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
       readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
+      readonly acceptedThrownWeaponRelease?: BattleAcceptedThrownWeaponRelease;
       readonly admittedMovement?: Extract<
         BattleInterruptedProcedure,
         { readonly kind: "movement" }
@@ -4465,6 +4466,16 @@ export type BattleSubjectResolutionPhase =
 export type BattleAcceptedAttackAmmunitionSpend = {
   readonly actorId: CombatantId;
   readonly attackSelection: BoundAttackExecutionSelection;
+};
+
+/**
+ * The thrown weapon that the pending subject's accepted attack roll put on the
+ * ground. Resuming the subject replays that roll, so the replay starts with the
+ * weapon back in its thrower's hand and the accepted roll throws it again.
+ */
+export type BattleAcceptedThrownWeaponRelease = {
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
 };
 
 export type BattleState = {

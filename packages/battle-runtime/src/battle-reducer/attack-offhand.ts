@@ -84,7 +84,7 @@ import {
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { attackTargetFactsIssue } from "./attack-spatial.ts";
-import { withThrownWeaponReleased } from "./thrown-weapon-release.ts";
+import { stateWithThrownWeaponReleasedPendingContinuation } from "./thrown-weapon-release.ts";
 
 import { attackTargetHole, revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -256,13 +256,6 @@ function resolveBonusActionAttack(
   if (targetFactsIssue !== null) {
     return invalidResult(input.state, "invalidFill", targetFactsIssue);
   }
-  const spendBonusActionAttack = (state: BattleState) =>
-    withThrownWeaponReleased({
-      result: spendOffHandBonusAction(state),
-      attackerId: input.subject.actorId,
-      attack,
-      facts: fillSet.targetSpatialFacts,
-    });
   if (fillSet.attackRoll == null) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
@@ -423,10 +416,16 @@ function resolveBonusActionAttack(
     input.subject.actorId,
     target.combatantId,
   );
-  attackRolledState = spendAmmunitionForAcceptedAttackPendingContinuation({
-    state: attackRolledState,
-    actorId: input.subject.actorId,
+  attackRolledState = stateWithThrownWeaponReleasedPendingContinuation({
+    state: spendAmmunitionForAcceptedAttackPendingContinuation({
+      state: attackRolledState,
+      actorId: input.subject.actorId,
+      attack,
+      subject: input.subject,
+    }),
+    attackerId: input.subject.actorId,
     attack,
+    facts: fillSet.targetSpatialFacts,
     subject: input.subject,
   });
   const critical = attackRollHitIsCritical({
@@ -604,7 +603,7 @@ function resolveBonusActionAttack(
       return invalidResult(input.state, "invalidFill", relationshipIssue);
     }
     /* v8 ignore stop -- @preserve */
-    return spendBonusActionAttack(attackRolledState);
+    return spendOffHandBonusAction(attackRolledState);
   }
   if (hit && fillSet.damageRoll != null) {
     const damageValidation = validateAttackDamageFill(
@@ -845,7 +844,7 @@ function resolveBonusActionAttack(
       input.handledInterruptTrigger,
     );
     if (attackDamageReactionWindow !== null) {
-      const spent = spendBonusActionAttack(attackDamageReactionWindow.state);
+      const spent = spendOffHandBonusAction(attackDamageReactionWindow.state);
       return spent.tag === "invalid"
         ? spent
         : {
@@ -950,7 +949,7 @@ function resolveBonusActionAttack(
       return invalidResult(input.state, "invalidFill", cunningStrike.message);
     }
     /* v8 ignore stop -- @preserve */
-    const spent = spendBonusActionAttack(cunningStrike.state);
+    const spent = spendOffHandBonusAction(cunningStrike.state);
     if (spent.tag === "invalid") {
       return spent;
     }
@@ -979,7 +978,7 @@ function resolveBonusActionAttack(
     return spent;
   }
 
-  return spendBonusActionAttack(attackRolledState);
+  return spendOffHandBonusAction(attackRolledState);
 }
 
 export function spendOffHandBonusAction(

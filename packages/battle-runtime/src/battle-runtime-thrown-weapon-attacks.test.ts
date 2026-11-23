@@ -549,6 +549,51 @@ describe("battle runtime: thrown weapon attacks", () => {
     ).toBe(true);
   });
 
+  test("a thrown Dagger leaves the hand once its hit is accepted, before its damage", () => {
+    const state = battleWithDaggers({ mainHand: "dagger" });
+    const subject = attackSubjectFor(state, "thrown");
+    const target = thrownTargetFill(state, subject, [
+      noEnemyNear(subject),
+      landingFact(subject),
+    ]);
+    const roll = attackRollFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [target] }),
+        "attackRoll",
+      ),
+      { total: 20, naturalD20: 10 },
+    );
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject,
+      fills: [target, roll],
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected the thrown Dagger's damage hole.");
+    }
+    expect(
+      awaitingDamage.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+        ?.positionId,
+    ).toBe(landingFact(subject).positionId);
+
+    const completed = requireResolved(
+      resolveBattleSubject({
+        state: awaitingDamage.state,
+        subject,
+        fills: [
+          target,
+          roll,
+          damageRollFill(requireHole(awaitingDamage, "rolledDice"), 3),
+        ],
+      }),
+    );
+    expect(completed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
+    expect(
+      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+        ?.positionId,
+    ).toBe(landingFact(subject).positionId);
+  });
+
   test("a melee Dagger attack keeps the Dagger in hand", () => {
     const state = battleWithDaggers({ mainHand: "dagger" });
     const subject = attackSubjectFor(state, undefined);
@@ -898,7 +943,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     ]);
   });
 
-  test("a readied thrown Dagger needs a landing fact, stays in hand until its damage, then lands", () => {
+  test("a readied thrown Dagger needs a landing fact, leaves the hand once its hit is accepted, and is reported when its damage ends the attack", () => {
     const { state, attack, release } = withReadiedThrownDagger(
       battleWithDaggers({ mainHand: "dagger", goblinActsFirst: true }),
     );
@@ -940,7 +985,15 @@ describe("battle runtime: thrown weapon attacks", () => {
     if (awaitingDamage.tag !== "needsHoles") {
       throw new Error("Expected the readied attack's damage hole.");
     }
-    expect(awaitingDamage.state.groundObjects.has(fighterId)).toBe(false);
+    expect(
+      awaitingDamage.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+        ?.positionId,
+    ).toBe(landingFact(attack).positionId);
+    expect(
+      attackActionOptionsForActor(awaitingDamage.state, fighterId).map(
+        (option) => option.kind,
+      ),
+    ).toEqual(["unarmedStrike"]);
 
     const resolved = requireResolved(
       resolveBattleSubject({
@@ -1068,6 +1121,11 @@ describe("battle runtime: thrown weapon attacks", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected the thrown Dagger hit's Reaction window.");
     }
+    // The hit is accepted, so the Dagger has left the hand while the window
+    // is open; the result that ends the attack reports it.
+    expect(
+      awaitingReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+    ).toBe(true);
     const pending = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
     );
@@ -1101,6 +1159,9 @@ describe("battle runtime: thrown weapon attacks", () => {
     if (afterReaction.tag !== "needsHoles") {
       throw new Error("Expected the damage roll after Uncanny Dodge.");
     }
+    expect(
+      afterReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+    ).toBe(true);
     const completed = requireResolved(
       resolveBattleSubject({
         state: afterReaction.state,
