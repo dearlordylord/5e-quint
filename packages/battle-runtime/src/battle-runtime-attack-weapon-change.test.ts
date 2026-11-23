@@ -1,4 +1,3 @@
-// KERNEL-COVERAGE: runtime-test BATTLE.ACTION.ATTACK_WEAPON_CHANGE
 import { describe, expect, it } from "vitest";
 import {
   attackInitialTargetHole,

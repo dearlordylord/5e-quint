@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 178,
-    "covered": 167,
+    "total": 179,
+    "covered": 168,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 138,
+      "battle": 139,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 167,
+      "covered": 168,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 200,
+    "total": 202,
     "bySubject": {
-      "battle-hole-family": 100,
-      "battle-fill-kind": 59,
+      "battle-hole-family": 101,
+      "battle-fill-kind": 60,
       "battle-subject-kind": 41
     },
     "byClassification": {
       "semantic-frontier": 152,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 48,
+      "table-owned-fact": 50,
       "unsupported-dead-branch": 0
     }
   },
@@ -6468,6 +6468,33 @@
       "title": "Help's Assist an Ability Check option: the helper's skill proficiency and a table-decided ally give Advantage on that ally's next check with the skill, used by that check or expired at the start of the helper's next turn"
     },
     {
+      "id": "BATTLE.ACTION.ATTACK_WEAPON_CHANGE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/attack-weapon-change.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-attack-weapon-change.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
+      ],
+      "reason": "The QNT owner models a loadout weapon held, stowed or on the ground; equipping a weapon that is not in hand into empty hands, and stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle applies a change carried on the attack before it looks up the attack, offers the change after it as its own command, and asks the table where a dropped weapon lands.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
+        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Attack [Action]"
+      ],
+      "title": "Attack weapon change: each Attack action attack can equip or unequip one loadout weapon, before or after the attack"
+    },
+    {
       "id": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -8643,6 +8670,30 @@
       "followUpTaskIds": [],
       "id": "objectInteractionRuling",
       "reason": "Object interaction ruling fills carry the table's ruling on whether the object needs an action; what happens to the world beyond a held-weapon pickup stays with the table.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.ATTACK_WEAPON_CHANGE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "weaponDropPosition",
+      "id": "BattleWeaponDropPositionHole",
+      "reason": "Where a weapon dropped with an attack lands is the table's placement. The reducer requests the position and keeps the weapon on the ground there for its owner to pick up.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.ATTACK_WEAPON_CHANGE"
+      ],
+      "fillKind": "weaponDropPosition",
+      "followUpTaskIds": [],
+      "id": "weaponDropPosition",
+      "reason": "Weapon drop position fills carry the table's placement of a dropped weapon; Battle owns the weapon's custody once it lands.",
       "subject": "battle-fill-kind"
     },
     {
@@ -13393,6 +13444,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns which weapon change an Attack action attack allows: equipping, stowing or dropping one loadout weapon, and the change left after an attack, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.ACTION.ATTACK_WEAPON_CHANGE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover sheathing, dropping, drawing and picking up a weapon, no change that does nothing or needs an occupied hand, the change left after an attack without one, and its end with the turn.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Owns what an object interaction costs on a creature's turn: the free interaction, then the Utilize action, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.ACTION.OBJECT_INTERACTION_COST"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt",
@@ -14808,6 +14871,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -20784,6 +20857,29 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "record-update",
+        "pure-def",
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "set",
+        "if-expression",
+        "variant",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.ACTION.ATTACK_WEAPON_CHANGE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
