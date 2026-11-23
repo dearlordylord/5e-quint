@@ -133,6 +133,15 @@ module battleRuntimeMovementTests {
     }
   }
 
+  run test_grapple_needs_a_hand_not_holding_a_two_handed_weapon = {
+    val twoHanded = { ...initialState, fighter: { ...initialState.fighter, leftHandUse: HMainWeapon } }
+    all {
+      assert(fighterCanGrappleGoblin(initialState)),
+      assert(not(fighterCanGrappleGoblin(twoHanded))),
+      assert(grappleFighterGoblin(twoHanded, 12) == twoHanded),
+    }
+  }
+
   run test_grappled_attack_disadvantage_excludes_the_grappler = {
     val grappled = endTurn(grappleFighterGoblin(initialState, 12))
     all {

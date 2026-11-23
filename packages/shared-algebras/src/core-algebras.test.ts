@@ -9,6 +9,7 @@ import {
   currentArmorClass,
   currentCreatureArmorClass,
   defaultArmorClassState,
+  loadoutHandUses,
   statBlockArmorClassState,
   type ArmorClassState,
 } from "./armor-class-algebra.ts";
@@ -43,6 +44,51 @@ function armorState(input: Partial<ArmorClassState> = {}): ArmorClassState {
 }
 
 describe("armor class algebra", () => {
+  test.each([
+    {
+      loadout: "nothing",
+      holdsShield: false,
+      holdsOffHandWeapon: false,
+      mainWeaponGrip: undefined,
+      hands: { leftHandUse: "free", rightHandUse: "free" },
+    },
+    {
+      loadout: "a one-handed main weapon",
+      holdsShield: false,
+      holdsOffHandWeapon: false,
+      mainWeaponGrip: "one_handed",
+      hands: { leftHandUse: "free", rightHandUse: "mainWeapon" },
+    },
+    {
+      loadout: "a two-handed main weapon",
+      holdsShield: false,
+      holdsOffHandWeapon: false,
+      mainWeaponGrip: "two_handed",
+      hands: { leftHandUse: "mainWeapon", rightHandUse: "mainWeapon" },
+    },
+    {
+      loadout: "a main weapon and a shield",
+      holdsShield: true,
+      holdsOffHandWeapon: false,
+      mainWeaponGrip: "one_handed",
+      hands: { leftHandUse: "shield", rightHandUse: "mainWeapon" },
+    },
+    {
+      loadout: "a main and an off-hand weapon",
+      holdsShield: false,
+      holdsOffHandWeapon: true,
+      mainWeaponGrip: "one_handed",
+      hands: { leftHandUse: "offWeapon", rightHandUse: "mainWeapon" },
+    },
+  ] as const)(
+    "a loadout of $loadout holds the hands it uses",
+    ({ holdsShield, holdsOffHandWeapon, mainWeaponGrip, hands }) => {
+      expect(
+        loadoutHandUses({ holdsShield, holdsOffHandWeapon, mainWeaponGrip }),
+      ).toEqual(hands);
+    },
+  );
+
   test("computes stat-block, ability, and armor formula bases", () => {
     expect(currentArmorClass(defaultArmorClassState())).toBe(10);
     expect(currentArmorClass(statBlockArmorClassState(14))).toBe(14);

@@ -10903,6 +10903,38 @@ describe("Character Build battle projection", () => {
   );
 
   test.each([
+    { grip: "one_handed", leftHandUse: "free" },
+    { grip: "two_handed", leftHandUse: "mainWeapon" },
+  ] as const)(
+    "initializes a $grip Longsword in the hands its grip uses",
+    ({ grip, leftHandUse }) => {
+      const init = expectSuccess(
+        battleCreatureInitFromCharacterBuild({
+          combatantId: combatantId(`longsword-${grip}`),
+          characterId: characterId(`character:longsword-${grip}`),
+          displayName: "Longsword Fighter",
+          build: equippedFighterBuild({
+            weaponUnitId: authoredUnitId("weapon_longsword"),
+            str: 16,
+            dex: 10,
+            grip,
+          }),
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          unitLibrary,
+        }),
+      );
+
+      expect(init.creatureInit.kind).toBe("character");
+      if (init.creatureInit.kind !== "character") return;
+      expect(init.creatureInit.armorClass).toMatchObject({
+        leftHandUse,
+        rightHandUse: "mainWeapon",
+      });
+    },
+  );
+
+  test.each([
     { grip: "one_handed", dieSize: 10 },
     { grip: "two_handed", dieSize: 10 },
   ] as const)(

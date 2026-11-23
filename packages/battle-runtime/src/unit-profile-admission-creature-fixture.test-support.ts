@@ -3,6 +3,7 @@ import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.
 import {
   abilityModifier,
   defaultArmorClassState,
+  loadoutHandUses,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { Result } from "effect";
 import {
@@ -212,14 +213,11 @@ export function characterCreature(input: {
           ? input.armorClass
           : {
               ...defaultArmorClassState(),
-              leftHandUse:
-                selectedLoadout.shield !== undefined
-                  ? "shield"
-                  : selectedLoadout.offHandWeapon !== undefined
-                    ? "offWeapon"
-                    : "free",
-              rightHandUse:
-                selectedLoadout.weapon === undefined ? "free" : "mainWeapon",
+              ...loadoutHandUses({
+                holdsShield: selectedLoadout.shield !== undefined,
+                holdsOffHandWeapon: selectedLoadout.offHandWeapon !== undefined,
+                mainWeaponGrip: selectedLoadout.weapon?.grip,
+              }),
             },
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

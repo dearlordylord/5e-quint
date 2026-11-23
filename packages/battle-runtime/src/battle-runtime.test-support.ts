@@ -53,6 +53,7 @@ import {
   armorClass,
   defaultArmorClassState,
   defaultUnarmoredArmorClassBase,
+  loadoutHandUses,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -4200,13 +4201,11 @@ function armorClassStateForLoadout(
 ): ReturnType<typeof defaultArmorClassState> {
   return {
     ...defaultArmorClassState(),
-    leftHandUse:
-      loadout.shield === undefined
-        ? loadout.offHandWeapon === undefined
-          ? "free"
-          : "offWeapon"
-        : "shield",
-    rightHandUse: loadout.weapon === undefined ? "free" : "mainWeapon",
+    ...loadoutHandUses({
+      holdsShield: loadout.shield !== undefined,
+      holdsOffHandWeapon: loadout.offHandWeapon !== undefined,
+      mainWeaponGrip: loadout.weapon?.grip,
+    }),
   };
 }
 

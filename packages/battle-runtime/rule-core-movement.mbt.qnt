@@ -15,6 +15,7 @@ module ruleCoreMovementMbt {
   var qActionAvailable: bool
   var qGrappleActive: bool
   var qGrappleEscapeDc: int
+  var qMainWeaponGrip: str
   var qProtocol: WitnessProtocol[str]
   var qPendingOpportunityAttack: bool
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
@@ -32,6 +33,19 @@ module ruleCoreMovementMbt {
   pure def movementFullCostFeet: int = 30
   pure def movementOverspendCostFeet: int = 35
   pure def runtimeGrappleEscapeDc: int = 10
+
+  // The Fighter holds a Versatile main weapon with either grip. A two-handed
+  // grip holds both hands; a one-handed grip leaves one, which a Grapple then
+  // holds. A Grapple needs a free hand.
+  pure val mainWeaponGrips: Set[str] = Set("one_handed", "two_handed")
+
+  pure def mainWeaponHandsHeld(grip: str): int =
+    if (grip == "two_handed") 2 else 1
+
+  pure def qFighterFreeHands: int =
+    2 - mainWeaponHandsHeld(qMainWeaponGrip) - (if (qGrappleActive) 1 else 0)
+
+  pure def qFighterHasFreeHand: bool = qFighterFreeHands > 0
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
@@ -82,6 +96,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     clearSuccessfulHoles(WResolved),
   }
 
@@ -94,6 +109,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     clearSuccessfulHoles(WResolved),
   }
 
@@ -106,6 +122,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = active,
     qGrappleEscapeDc' = escapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     clearSuccessfulHoles(WResolved),
   }
 
@@ -118,23 +135,28 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(openHoles, WInvalid(reason)),
     qPendingOpportunityAttack' = qPendingOpportunityAttack,
     qComponentRoute' = componentRouteEvidence,
   }
 
-  action init = all {
-    qCurrentActor' = fighterActor,
-    qMovementSpentFeet' = 0,
-    qDashBonusFeet' = 0,
-    qProne' = true,
-    qDisengaged' = false,
-    qActionAvailable' = true,
-    qGrappleActive' = false,
-    qGrappleEscapeDc' = 0,
-    qProtocol' = witnessProtocolForProjection(Set(), WInit),
-    qPendingOpportunityAttack' = false,
-    qComponentRoute' = componentRouteEvidence,
+  action init = {
+    nondet mainWeaponGrip = mainWeaponGrips.oneOf()
+    all {
+      qCurrentActor' = fighterActor,
+      qMovementSpentFeet' = 0,
+      qDashBonusFeet' = 0,
+      qProne' = true,
+      qDisengaged' = false,
+      qActionAvailable' = true,
+      qGrappleActive' = false,
+      qGrappleEscapeDc' = 0,
+      qMainWeaponGrip' = mainWeaponGrip,
+      qProtocol' = witnessProtocolForProjection(Set(), WInit),
+      qPendingOpportunityAttack' = false,
+      qComponentRoute' = componentRouteEvidence,
+    }
   }
 
   action doDiscoverMovement = all {
@@ -149,6 +171,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(Set("Movement"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -210,6 +233,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(Set("ReactionDecision"), WNeedsHoles),
     qPendingOpportunityAttack' = true,
     qComponentRoute' = componentRouteEvidence,
@@ -291,6 +315,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(Set("TargetChoice"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -298,6 +323,7 @@ module ruleCoreMovementMbt {
 
   action doSelectGrappleTarget = all {
     openHoles == Set("TargetChoice"),
+    qFighterHasFreeHand,
     qMovementSpentFeet' = qMovementSpentFeet,
     qDashBonusFeet' = qDashBonusFeet,
     qProne' = qProne,
@@ -306,9 +332,16 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(Set("GrappleOutcome"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
+  }
+
+  action doRejectGrappleWithoutFreeHand = all {
+    openHoles == Set("TargetChoice"),
+    not(qFighterHasFreeHand),
+    recordInvalid(WInvalidFill),
   }
 
   action doResolveGrappleSuccess = all {
@@ -335,6 +368,7 @@ module ruleCoreMovementMbt {
     qActionAvailable' = true,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(Set(), WResolved),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -353,6 +387,7 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = qMainWeaponGrip,
     qProtocol' = witnessProtocolForProjection(Set("GrappleOutcome"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -397,6 +432,7 @@ module ruleCoreMovementMbt {
     doStandFromProne,
     doDiscoverGrapple,
     doSelectGrappleTarget,
+    doRejectGrappleWithoutFreeHand,
     doResolveGrappleSuccess,
     doResolveGrappleFailure,
     doStartGrappledTargetTurn,

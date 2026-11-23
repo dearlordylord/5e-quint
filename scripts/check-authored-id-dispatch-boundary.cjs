@@ -1140,9 +1140,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...[
     "WildShapeShieldLoadoutObjectRefSchema",
     "characterBattleLoadoutShieldOffhandIssues",
+    "holdsShield",
     "shield",
     "shieldAvailable",
-    "shieldGrounded",
     "shieldWorn",
     "usesShield",
     "wieldingShield",
@@ -2807,9 +2807,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "67218610784cbdc64defbfb3a3afba86033787b6eaab438642491585607d30e7",
-  siteCount: 1703,
-  violationCount: 1819,
+  sha256: "bad072770cc63250ec4fdc5e9edb69ff190e4653cfdc64115ba12d7094a91a59",
+  siteCount: 1704,
+  violationCount: 1820,
 };
 
 function escapeForRegExp(text) {
