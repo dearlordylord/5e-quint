@@ -22,6 +22,7 @@ import {
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
   type BattleGrappleLink,
+  type BattleHand,
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
@@ -237,6 +238,18 @@ export function combatantHandUses(
       ),
     ),
   };
+}
+
+/** The first hand, left before right, that holds nothing and grapples nothing. */
+export function firstFreeHand(
+  state: BattleState,
+  combatant: BattleCreatureState,
+  grapples: readonly BattleGrappleLink[],
+): BattleHand | undefined {
+  const hands = combatantHandUses(state, combatant, grapples);
+  if (hands.left === "free") return "left";
+  if (hands.right === "free") return "right";
+  return undefined;
 }
 
 function combatantWildShapeEffectiveHandUse(

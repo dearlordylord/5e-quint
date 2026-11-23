@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
 import { resourceCount } from "@dnd/shared/types";
+import { Match } from "effect";
 
 import {
   attackExecutionSelectionForOption,
@@ -7,7 +8,7 @@ import {
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
-import { firstFreeHand } from "./battle-reducer/movement-speed.ts";
+import { firstFreeHand } from "./battle-reducer/creature-state-leaves.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -79,8 +80,16 @@ function ammunitionCanBeDrawn(
   combatant: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
 ): boolean {
-  if (attack.kind !== "weapon" || combatant === undefined) return true;
-  return firstFreeHand(state, combatant, state.grapples) !== undefined;
+  return Match.value(attack.kind).pipe(
+    Match.when(
+      "weapon",
+      () =>
+        combatant === undefined ||
+        firstFreeHand(state, combatant, state.grapples) !== undefined,
+    ),
+    Match.whenOr("unarmedStrike", "statBlockAttack", () => true),
+    Match.exhaustive,
+  );
 }
 
 export function ammunitionStockIssues(
