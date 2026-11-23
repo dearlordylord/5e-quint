@@ -1,5 +1,6 @@
 import type {
   BattleAttackRollResult,
+  BattleD20TestOutcome,
   BattleD20TestRollRerollDecision,
   BattleFill,
   BattleOpportunityAttackThreat,
@@ -7,6 +8,7 @@ import type {
   BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
+import { canonicalStructuralKey } from "@dnd/shared/structural-value";
 import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
 import { d20TestRollsEqual } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -154,6 +156,159 @@ export function battleFillPrefixAccumulated(
       battleContinuationFillEquals(fill, fills[index]!),
     )
   );
+}
+
+/**
+ * Fill kinds whose holes the pending frontier asks again for a reroll
+ * decision: an attack roll's ordered reroll decisions, and a D20 Test's
+ * natural-1 reroll decision.
+ */
+const BATTLE_REROLL_DECISION_FILL_KINDS = [
+  "attackRoll",
+  "abilityCheck",
+  "concentrationSavingThrow",
+  "savingThrowOutcome",
+  "deathSavingThrow",
+] as const satisfies ReadonlyArray<BattleFill["kind"]>;
+
+type BattleRerollDecisionFill = Extract<
+  BattleFill,
+  { readonly kind: (typeof BATTLE_REROLL_DECISION_FILL_KINDS)[number] }
+>;
+
+function isBattleRerollDecisionFill(
+  fill: BattleFill,
+): fill is BattleRerollDecisionFill {
+  return BATTLE_REROLL_DECISION_FILL_KINDS.some((kind) => kind === fill.kind);
+}
+
+/**
+ * Whether a fill submitted again for a hole the pending frontier asks again
+ * keeps the accepted fill: it is the same fill, except that it may add reroll
+ * decisions after the accepted ones.
+ */
+export function battleResubmittedFillKeepsAcceptedFill(
+  accepted: BattleFill,
+  resubmitted: BattleFill,
+): boolean {
+  const atAcceptedDecisions = isBattleRerollDecisionFill(resubmitted)
+    ? resubmittedFillAtAcceptedDecisions(accepted, resubmitted)
+    : resubmitted;
+  if (atAcceptedDecisions === null) return false;
+  return isBattleContinuationComparableFill(accepted) &&
+    isBattleContinuationComparableFill(atAcceptedDecisions)
+    ? battleContinuationFillEquals(accepted, atAcceptedDecisions)
+    : canonicalStructuralKey(accepted) ===
+        canonicalStructuralKey(atAcceptedDecisions);
+}
+
+/**
+ * The resubmitted fill with only the reroll decisions the accepted fill made,
+ * or null when its decisions don't extend the accepted ones.
+ */
+function resubmittedFillAtAcceptedDecisions(
+  accepted: BattleFill,
+  resubmitted: BattleRerollDecisionFill,
+): BattleFill | null {
+  return Match.value(resubmitted).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      attackRoll: (fill) => {
+        const acceptedRerolls =
+          accepted.kind === "attackRoll"
+            ? accepted.value.d20TestRerolls
+            : undefined;
+        if (
+          !attackRollD20TestRerollDecisionsExtend(
+            acceptedRerolls,
+            fill.value.d20TestRerolls,
+          )
+        ) {
+          return null;
+        }
+        const { d20TestRerolls: _resubmittedRerolls, ...value } = fill.value;
+        return {
+          ...fill,
+          value:
+            acceptedRerolls === undefined
+              ? value
+              : { ...value, d20TestRerolls: acceptedRerolls },
+        };
+      },
+      abilityCheck: (fill) => {
+        if (
+          accepted.kind !== "abilityCheck" ||
+          accepted.value.d20TestNaturalOneReroll !== undefined
+        ) {
+          return fill;
+        }
+        const { d20TestNaturalOneReroll: _added, ...value } = fill.value;
+        return { ...fill, value };
+      },
+      concentrationSavingThrow: (fill) =>
+        accepted.kind === "concentrationSavingThrow" &&
+        accepted.value.d20TestNaturalOneReroll === undefined
+          ? {
+              ...fill,
+              value: d20TestOutcomeWithoutNaturalOneDecision(fill.value),
+            }
+          : fill,
+      savingThrowOutcome: (fill) =>
+        accepted.kind === "savingThrowOutcome"
+          ? {
+              ...fill,
+              value: {
+                ...fill.value,
+                outcomes: fill.value.outcomes.map((outcome, index) =>
+                  accepted.value.outcomes[index]?.d20TestNaturalOneReroll ===
+                  undefined
+                    ? savingThrowOutcomeWithoutNaturalOneDecision(outcome)
+                    : outcome,
+                ),
+              },
+            }
+          : fill,
+      deathSavingThrow: (fill) => {
+        if (
+          accepted.kind !== "deathSavingThrow" ||
+          accepted.d20TestNaturalOneReroll !== undefined
+        ) {
+          return fill;
+        }
+        const { d20TestNaturalOneReroll: _added, ...withoutDecision } = fill;
+        return withoutDecision;
+      },
+    }),
+  );
+}
+
+function attackRollD20TestRerollDecisionsExtend(
+  accepted: BattleAttackRollResult["d20TestRerolls"],
+  resubmitted: BattleAttackRollResult["d20TestRerolls"],
+): boolean {
+  if (accepted === undefined) return true;
+  return (
+    resubmitted !== undefined &&
+    accepted.length <= resubmitted.length &&
+    accepted.every((decision, index) =>
+      d20TestRollRerollDecisionsEqual(decision, resubmitted[index]),
+    )
+  );
+}
+
+function d20TestOutcomeWithoutNaturalOneDecision(
+  outcome: BattleD20TestOutcome,
+): BattleD20TestOutcome {
+  if (outcome.withoutRoll === true) return outcome;
+  const { d20TestNaturalOneReroll: _added, ...rolled } = outcome;
+  return rolled;
+}
+
+function savingThrowOutcomeWithoutNaturalOneDecision(
+  outcome: BattleSavingThrowOutcome,
+): BattleSavingThrowOutcome {
+  if (outcome.withoutRoll === true) return outcome;
+  const { d20TestNaturalOneReroll: _added, ...rolled } = outcome;
+  return rolled;
 }
 
 type ComparableAttackRollResult = Pick<
