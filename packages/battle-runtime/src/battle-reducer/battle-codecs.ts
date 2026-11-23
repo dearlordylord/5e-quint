@@ -7463,7 +7463,7 @@ const BattleHelpAbilityCheckSnapshotSchema = Schema.Struct({
   helperId: CombatantId,
   allyId: CombatantId,
   skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 
 const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({
