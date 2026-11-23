@@ -740,6 +740,21 @@ describe("BattleSubject identity", () => {
     expect(sameBattleSubject(charmedAttempt, frightenedAttempt)).toBe(false);
   });
 
+  test("weapon pickups include the weapon in subject identity", () => {
+    const mainWeaponPickup = {
+      tag: "runtimeCommand",
+      actorId: combatantId("dual-wielder"),
+      command: "pickUpHeldWeapon",
+      objectId: battleObjectId("main-weapon"),
+    } satisfies BattleSubject;
+    const offHandPickup = {
+      ...mainWeaponPickup,
+      objectId: battleObjectId("off-hand-weapon"),
+    } satisfies BattleSubject;
+
+    expect(sameBattleSubject(mainWeaponPickup, offHandPickup)).toBe(false);
+  });
+
   test("admitted character procedures include their execution ref in subject identity", () => {
     const actorId = combatantId("procedure-subject-owner");
     const scopeRef = battleCharacterExecutionScopeRef(
