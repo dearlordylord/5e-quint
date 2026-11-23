@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // Attack replay fill parser extracted from attack-resolution.ts.
 // Owns classification of attack fills and the uniqueness invariant for attack target distance facts.
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
@@ -47,6 +49,8 @@ import {
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+  WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
@@ -147,6 +151,8 @@ export function selectedAttackFillSet(
     huntersPreyHordeBreakerDamageRoll,
     grapplerPunchAndGrabDecision,
     grapplerPunchAndGrabOutcome,
+    weaponMasteryGrazeDecision,
+    huntersPreyHordeBreakerGrazeDecision,
   } = context;
 
   if (objectTarget !== undefined) {
@@ -253,6 +259,8 @@ export function selectedAttackFillSet(
     huntersPreyHordeBreakerDamageDispositionFilled,
     grapplerPunchAndGrabDecision,
     grapplerPunchAndGrabOutcome,
+    weaponMasteryGrazeDecision,
+    huntersPreyHordeBreakerGrazeDecision,
   };
 }
 
@@ -361,6 +369,8 @@ function createSelectedAttackFillContext(): SelectedAttackFillContext {
     huntersPreyHordeBreakerAttackRoll: undefined,
     huntersPreyHordeBreakerDamageRoll: undefined,
     grapplerPunchAndGrabDecision: undefined,
+    weaponMasteryGrazeDecision: undefined,
+    huntersPreyHordeBreakerGrazeDecision: undefined,
     grapplerPunchAndGrabOutcome: undefined,
   };
 }
@@ -559,6 +569,26 @@ function processUnitFeatureDecisionFill(
   fill: Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>,
   context: SelectedAttackFillContext,
 ): SelectedAttackFillProcessingResult {
+  if (fill.holeId === HUNTERS_PREY_HORDE_BREAKER_GRAZE_DECISION_HOLE_ID) {
+    return rememberSelectedAttackFill(
+      context.huntersPreyHordeBreakerGrazeDecision,
+      fill,
+      "Horde Breaker Graze decision was filled twice.",
+      (value) => {
+        context.huntersPreyHordeBreakerGrazeDecision = value;
+      },
+    );
+  }
+  if (fill.holeId === WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID) {
+    return rememberSelectedAttackFill(
+      context.weaponMasteryGrazeDecision,
+      fill,
+      "Weapon Mastery Graze decision was filled twice.",
+      (value) => {
+        context.weaponMasteryGrazeDecision = value;
+      },
+    );
+  }
   const first = processUnitFeatureDecisionGroupA(fill, context);
   return first === undefined
     ? processUnitFeatureDecisionGroupB(fill, context)

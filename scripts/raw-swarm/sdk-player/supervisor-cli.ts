@@ -1,3 +1,7 @@
+import {
+  STRICT_OBJECT_PARSE_OPTIONS,
+  jsonSchemaPattern,
+} from "../../../packages/shared/src/json-schema.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { spawnSync } from "node:child_process";
 import { constants } from "node:fs";
@@ -138,7 +142,7 @@ const charactersPath = resolve("evidence/characters.ts");
 const setupPath = resolve("evidence/setup.ts");
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
@@ -401,9 +405,10 @@ function resolutionProjection(
   const { envelope, ...outcome } = result;
   return jsonValue({
     ...outcome,
-    envelope: Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
-      envelope,
-    ),
+    envelope: Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(envelope),
   });
 }
 

@@ -17,7 +17,7 @@ const SupportIssueSchema = Schema.Struct({
         Schema.Struct({
           kind: Schema.Literal("occurrence"),
           role: Schema.Literals(MECHANICS_GRAPH_NODE_ROLES),
-          ordinal: Schema.Number,
+          ordinal: Schema.Finite,
         }),
       ]),
     ),

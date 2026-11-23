@@ -176,7 +176,12 @@ function ancestors(path: string): string[] {
   }
 }
 export function declarationCompilerEnvironment(): NodeJS.ProcessEnv {
-  return { ...process.env, NODE_OPTIONS: "", NODE_PATH: "" };
+  return {
+    ...process.env,
+    NODE_OPTIONS: "",
+    NODE_PATH: "",
+    GOMEMLIMIT: process.env.GOMEMLIMIT ?? "6GiB",
+  };
 }
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -712,6 +717,9 @@ export function emitCachedDeclarations(
   input: DeclarationCacheInput,
 ): DeclarationCacheResult {
   try {
+    if (existsSync(input.destination))
+      return failure("Declaration destination already exists");
+    mkdirSync(dirname(input.destination), { recursive: true });
     const cacheRoot =
       input.cacheRoot ??
       join(

@@ -1238,8 +1238,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       "movement",
     );
     const hazard = requireSpikeGrowthHazard(movementTurn.state);
+    // The condition leaves the target Prone, so it crawls: 10 feet, 5 of them
+    // in Difficult Terrain, cost 10 + 10 crawling + 5 Difficult Terrain.
+    expect(
+      requireCombatant(movementTurn.state, spellTargetId).conditions.prone,
+    ).toBe(true);
     const movementThroughHazard = movementFill(movement, {
-      movementCostFeet: 15,
+      movementCostFeet: 25,
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
@@ -1311,7 +1316,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
             hp: Hp(18),
             conditions: expect.not.arrayContaining(["prone", "incapacitated"]),
             movement: expect.objectContaining({
-              spentFeet: movementFeet(15),
+              spentFeet: movementFeet(25),
             }),
           }),
         ]),

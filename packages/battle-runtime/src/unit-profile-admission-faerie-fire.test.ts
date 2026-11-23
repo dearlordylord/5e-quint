@@ -982,7 +982,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         {
           enemyId: spellTargetId,
           distanceFeet: movementFeet(30),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         },
       ],
       attackerCanSeeObject: true,

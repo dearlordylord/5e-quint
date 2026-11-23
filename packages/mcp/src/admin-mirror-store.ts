@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Effect, Result, PubSub, Schema, Stream } from "effect";
 
 import {
@@ -200,6 +201,7 @@ export function decodeAdminMirrorProjectionEnvelope(
 ): Result.Result<AdminMirrorProjectionEnvelope, string> {
   const decoded = Schema.decodeUnknownResult(
     AdminMirrorProjectionEnvelopeSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
   )(value);
   return Result.mapError(decoded, (error) => error.message);
 }

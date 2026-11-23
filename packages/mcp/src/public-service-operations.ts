@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
 import { BATTLE_INVALID_REASON_CODES } from "@dnd/battle-runtime";
@@ -24,6 +25,7 @@ export const PublicMcpPublisherNameSchema = Schema.Trimmed.check(
 export type PublicMcpPublisherName = typeof PublicMcpPublisherNameSchema.Type;
 export const DEFAULT_PUBLIC_MCP_PUBLISHER_NAME = Schema.decodeUnknownSync(
   PublicMcpPublisherNameSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 )("5e Quint developers");
 
 export type PublicMcpServiceOperations = {
@@ -313,9 +315,10 @@ function battleRejectionDiagnostic(
     isObject(payload.result) &&
     payload.result.tag === "invalid"
   ) {
-    const battle = Schema.decodeUnknownResult(BattleResolutionOutputSchema)(
-      payload,
-    );
+    const battle = Schema.decodeUnknownResult(
+      BattleResolutionOutputSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(payload);
     if (Result.isSuccess(battle) && battle.success.result.tag === "invalid") {
       return { code: "TOOL_REJECTED", reason: battle.success.result.reason };
     }

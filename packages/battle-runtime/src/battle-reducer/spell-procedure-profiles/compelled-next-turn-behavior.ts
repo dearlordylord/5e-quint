@@ -1014,7 +1014,7 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
+      maxTargets: Schema.Finite,
     }),
     visibility: Schema.Literal("caster_can_see"),
   }),

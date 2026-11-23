@@ -30,7 +30,7 @@ const InitialBattleArgsSchema = Schema.Struct({
   reactionSpellTargetFacts: Schema.optionalKey(
     Schema.Array(BattleFallingCreatureMitigationTriggerFactSchema),
   ),
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 type CreatureFallSubject = Extract<
   typeof BattleSubjectSchema.Type,
   { readonly tag: "runtimeCommand"; readonly command: "creatureFalls" }
@@ -89,9 +89,7 @@ const InitialSelectionSchema = InitialBattleArgsSchema.pipe(
     },
   ),
 );
-const BattleFillArgsSchema = Schema.Struct({ fill: BattleFillSchema }).annotate(
-  { parseOptions: { onExcessProperty: "error" } },
-);
+const BattleFillArgsSchema = Schema.Struct({ fill: BattleFillSchema });
 const ReactionSelectionArgsSchema = BattleFillArgsSchema.pipe(
   Schema.refine(
     (args): args is { readonly fill: ReactionSelectionFill } =>
@@ -114,7 +112,7 @@ export const ChatGptBattlePublicInitialArgsSchema = Schema.Struct({
   reactionSpellTargetFacts: Schema.optionalKey(
     Schema.Array(BattleFallingCreatureMitigationTriggerFactSchema),
   ),
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 export const ChatGptBattlePublicArgsSchema = Schema.Union([
   ChatGptBattlePublicInitialArgsSchema,
   ReactionSelectionArgsSchema,

@@ -1526,6 +1526,9 @@ describe("MCP server route", () => {
           {
             classUnitId: wizardClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: Math.floor(
+              (build.abilityScores.con - 10) / 2,
+            ),
           },
         ],
       },
@@ -3093,6 +3096,22 @@ describe("MCP server route", () => {
                 distanceFeet: movementFeet(5),
                 ...battleAttackSelection(subject, attackName),
               },
+              ...(attackName === "Shortbow"
+                ? [
+                    {
+                      kind: "rangedAttackEnemyProximity",
+                      attackerId: "goblin",
+                      procedureRef: subject.procedureRef,
+                      enemies: [
+                        {
+                          enemyId: "fighter",
+                          distanceFeet: movementFeet(5),
+                          enemyCanSeeAttacker: true,
+                        },
+                      ],
+                    },
+                  ]
+                : []),
             ],
           },
         }),
@@ -3965,6 +3984,7 @@ describe("MCP server route", () => {
             ...shortbowSelection,
             distanceFeet: movementFeet(100),
           },
+          noRangedAttackEnemyProximity(shortbowSubject, "goblin"),
         ],
       },
       shortbowSubject,
@@ -3988,6 +4008,7 @@ describe("MCP server route", () => {
               kind: "attackTargetDistance",
               distanceFeet: movementFeet(100),
             },
+            { kind: "rangedAttackEnemyProximity", enemies: [] },
           ],
         },
       ],
@@ -4797,6 +4818,19 @@ describe("MCP server route", () => {
         initiative: 14,
       },
     ]);
+    const session = root.sessionStore.battleSession;
+    if (session === null) throw new Error("Expected the retained Battle.");
+    const [present] = session.state.companions.values();
+    expect(present).toBeDefined();
+    for (const field of [
+      "reappearanceCombatantId",
+      "resolvedStatBlockId",
+      "hitPoints",
+      "ammunitionStocks",
+      "reactionAvailable",
+    ]) {
+      expect(present).not.toHaveProperty(field);
+    }
   });
 
   test("end_battle preserves the active battle when character handoff ownership is invalid", () => {
@@ -10163,14 +10197,14 @@ describe("MCP server route", () => {
           value: "dry-training-dummy",
           spatialFacts: [
             {
-              kind: "rangedSpellAttackEnemyProximity",
-              casterId: "fighter",
-              sourceProcedureRef: act.subject.procedureRef,
+              kind: "rangedAttackEnemyProximity",
+              attackerId: "fighter",
+              procedureRef: act.subject.procedureRef,
               enemies: [
                 {
                   enemyId: "goblin",
                   distanceFeet: 30,
-                  enemyCanSeeCaster: true,
+                  enemyCanSeeAttacker: true,
                 },
               ],
             },
@@ -10409,14 +10443,14 @@ describe("MCP server route", () => {
           value: "goblin",
           spatialFacts: [
             {
-              kind: "rangedSpellAttackEnemyProximity",
-              casterId: "fighter",
-              sourceProcedureRef: act.subject.procedureRef,
+              kind: "rangedAttackEnemyProximity",
+              attackerId: "fighter",
+              procedureRef: act.subject.procedureRef,
               enemies: [
                 {
                   enemyId: "goblin",
                   distanceFeet: 30,
-                  enemyCanSeeCaster: true,
+                  enemyCanSeeAttacker: true,
                 },
               ],
             },
@@ -10737,14 +10771,14 @@ describe("MCP server route", () => {
           value: "training-crystal",
           spatialFacts: [
             {
-              kind: "rangedSpellAttackEnemyProximity",
-              casterId: "fighter",
-              sourceProcedureRef: act.subject.procedureRef,
+              kind: "rangedAttackEnemyProximity",
+              attackerId: "fighter",
+              procedureRef: act.subject.procedureRef,
               enemies: [
                 {
                   enemyId: "goblin",
                   distanceFeet: 30,
-                  enemyCanSeeCaster: true,
+                  enemyCanSeeAttacker: true,
                 },
               ],
             },
@@ -10913,8 +10947,9 @@ describe("MCP server route", () => {
               actorId: "goblin",
               targetId: "fighter",
               ...battleAttackSelection(goblinAttack, "Shortbow"),
-              distanceFeet: movementFeet(5),
+              distanceFeet: movementFeet(30),
             },
+            noRangedAttackEnemyProximity(goblinAttack, "goblin"),
           ],
         },
       }),
@@ -11037,14 +11072,14 @@ describe("MCP server route", () => {
           value: "goblin",
           spatialFacts: [
             {
-              kind: "rangedSpellAttackEnemyProximity",
-              casterId: "fighter",
-              sourceProcedureRef: releaseChoice.choice.subject.procedureRef,
+              kind: "rangedAttackEnemyProximity",
+              attackerId: "fighter",
+              procedureRef: releaseChoice.choice.subject.procedureRef,
               enemies: [
                 {
                   enemyId: "goblin",
                   distanceFeet: 5,
-                  enemyCanSeeCaster: true,
+                  enemyCanSeeAttacker: true,
                 },
               ],
             },
@@ -12001,6 +12036,22 @@ function battleAttackSubjectForName(
   return act.subject;
 }
 
+/** The table checked and found no enemy within 5 feet who can see the attacker. */
+function noRangedAttackEnemyProximity(
+  subject: BattleSubject,
+  attackerId: string,
+) {
+  if (subject.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected an Attack subject.");
+  }
+  return {
+    kind: "rangedAttackEnemyProximity",
+    attackerId,
+    procedureRef: subject.procedureRef,
+    enemies: [],
+  } as const;
+}
+
 function battleAttackSelection(subject: BattleSubject, attackName: string) {
   if (subject.tag !== "action" || subject.action !== "attack") {
     throw new Error(`Expected ${attackName} Attack subject.`);
@@ -12200,6 +12251,9 @@ function characterBuildForClassProgression(input: {
     advancements: Array.from({ length: classLevel - 1 }, () => ({
       classUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      constitutionModifierAtGain: Math.floor(
+        (input.base.abilityScores.con - 10) / 2,
+      ),
     })),
   };
   return {

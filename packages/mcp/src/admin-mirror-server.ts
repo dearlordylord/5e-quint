@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import {
   createServer,
   type IncomingMessage,
@@ -76,9 +77,10 @@ export function handleAdminMirrorRequest(
 
   const sessionMatch = /^\/admin-projections\/([^/]+)$/.exec(url.pathname);
   if (request.method === "GET" && sessionMatch?.[1] !== undefined) {
-    const sessionId = Schema.decodeUnknownResult(AdminMirrorSessionIdSchema)(
-      decodeURIComponent(sessionMatch[1]),
-    );
+    const sessionId = Schema.decodeUnknownResult(
+      AdminMirrorSessionIdSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(decodeURIComponent(sessionMatch[1]));
     if (sessionId._tag === "Failure") {
       writeJson(response, 400, { error: sessionId.failure.message });
       return;
@@ -96,9 +98,10 @@ export function handleAdminMirrorRequest(
     url.pathname,
   );
   if (request.method === "GET" && streamMatch?.[1] !== undefined) {
-    const sessionId = Schema.decodeUnknownResult(AdminMirrorSessionIdSchema)(
-      decodeURIComponent(streamMatch[1]),
-    );
+    const sessionId = Schema.decodeUnknownResult(
+      AdminMirrorSessionIdSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(decodeURIComponent(streamMatch[1]));
     if (sessionId._tag === "Failure") {
       writeJson(response, 400, { error: sessionId.failure.message });
       return;
@@ -185,12 +188,14 @@ function handleProjectionEvents(
 
 function sessionOutput(session: AdminMirrorSessionState) {
   return {
-    envelope: Schema.encodeSync(AdminMirrorProjectionEnvelopeSchema)(
-      session.envelope,
-    ),
+    envelope: Schema.encodeSync(
+      AdminMirrorProjectionEnvelopeSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(session.envelope),
     multiSource: session.multiSource,
     presentationTimeline: Schema.encodeSync(
       Schema.Array(AdminMirrorPresentationTimelineEntrySchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(session.presentationTimeline),
     receivedAtEpochMs: session.receivedAtEpochMs,
   };

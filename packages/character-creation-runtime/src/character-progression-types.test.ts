@@ -2,7 +2,8 @@ import {
   characterClassLevel,
   unitId as authoredUnitId,
 } from "@dnd/shared/game-facts";
-import { Result } from "effect";
+import { DieRollResult } from "@dnd/shared/types";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -15,10 +16,12 @@ import {
   finalAdvancementEntry,
   hitPointRuleLabel,
   hitPointRuleOptionSuffix,
-  hitPointsAfterLevelOneMultiplier,
   progressionClassLevels,
   progressionClassUnitIds,
+  rolledHitDieResultAboveHitDie,
+  rolledHitDieResultAboveHitDieMessage,
   startingClassUnitId,
+  type CharacterBuildProgression,
   type CharacterProgression,
 } from "./character-progression-types.ts";
 
@@ -26,6 +29,11 @@ const fighterUnitId = classUnitId(authoredUnitId("class_fighter"));
 const wizardUnitId = classUnitId(authoredUnitId("class_wizard"));
 const levelOneHitPoints = { tag: "levelOneMaximumHitDie" } as const;
 const fixedHitPoints = { tag: "fixedHigherLevelGain" } as const;
+const rolledHitPoints = (result: number) =>
+  ({
+    tag: "rolledHigherLevelGain",
+    hitDieResult: DieRollResult(result),
+  }) as const;
 
 describe("Character progression typed boundaries", () => {
   test("pairs each total-level domain with only its legal Hit Point rule", () => {
@@ -87,7 +95,7 @@ describe("Character progression typed boundaries", () => {
   });
 
   test("appends a class level and rejects progression beyond level 20", () => {
-    const progression: CharacterProgression = {
+    const progression: CharacterBuildProgression = {
       startingClass: fighterUnitId,
       advancements: [],
     };
@@ -96,21 +104,27 @@ describe("Character progression typed boundaries", () => {
         progression,
         classUnitId: wizardUnitId,
         hitPointRule: fixedHitPoints,
+        constitutionModifierAtGain: -1,
       }),
     ).toEqual(
       Result.succeed({
         startingClass: fighterUnitId,
         advancements: [
-          { classUnitId: wizardUnitId, hitPointRule: fixedHitPoints },
+          {
+            classUnitId: wizardUnitId,
+            hitPointRule: fixedHitPoints,
+            constitutionModifierAtGain: -1,
+          },
         ],
       }),
     );
 
-    const levelTwenty: CharacterProgression = {
+    const levelTwenty: CharacterBuildProgression = {
       startingClass: fighterUnitId,
       advancements: Array.from({ length: 19 }, () => ({
         classUnitId: fighterUnitId,
         hitPointRule: fixedHitPoints,
+        constitutionModifierAtGain: 0,
       })),
     };
     expect(
@@ -118,6 +132,7 @@ describe("Character progression typed boundaries", () => {
         progression: levelTwenty,
         classUnitId: fighterUnitId,
         hitPointRule: fixedHitPoints,
+        constitutionModifierAtGain: 0,
       }),
     ).toEqual(
       Result.fail({ code: "invalidCharacterClassLevel", classLevel: 21 }),
@@ -143,7 +158,10 @@ describe("Character progression typed boundaries", () => {
     expect(hitPointRuleLabel(fixedHitPoints)).toBe(
       "Fixed higher-level HP gain",
     );
-    expect(hitPointsAfterLevelOneMultiplier(progression)).toBe(4);
+    expect(hitPointRuleOptionSuffix(rolledHitPoints(7))).toBe("rolled_hp_gain");
+    expect(hitPointRuleLabel(rolledHitPoints(7))).toBe(
+      "Rolled higher-level HP gain",
+    );
     expect(computeTotalLevel(progression)).toBe(5);
     expect(startingClassUnitId(progression)).toBe(fighterUnitId);
     expect(finalAdvancementEntry(progression)).toEqual({
@@ -163,5 +181,36 @@ describe("Character progression typed boundaries", () => {
       { classUnitId: fighterUnitId, classLevel: 3 },
       { classUnitId: wizardUnitId, classLevel: 2 },
     ]);
+  });
+
+  test("finds a rolled Hit Die result above the class's Hit Die", () => {
+    const check = (
+      hitPointRule: Parameters<
+        typeof rolledHitDieResultAboveHitDie
+      >[0]["hitPointRule"],
+    ) =>
+      rolledHitDieResultAboveHitDie({
+        classUnitId: fighterUnitId,
+        hitPointRule,
+        hitPointDie: 10,
+      });
+
+    expect(check(fixedHitPoints)).toEqual(Option.none());
+    expect(check(rolledHitPoints(10))).toEqual(Option.none());
+    const aboveHitDie = check(rolledHitPoints(11));
+    expect(aboveHitDie).toEqual(
+      Option.some({
+        classUnitId: fighterUnitId,
+        hitDieResult: 11,
+        hitDieSize: 10,
+      }),
+    );
+    expect(
+      Option.map(aboveHitDie, rolledHitDieResultAboveHitDieMessage),
+    ).toEqual(
+      Option.some(
+        "Rolled Hit Die result 11 exceeds the d10 Hit Die of class class_fighter.",
+      ),
+    );
   });
 });

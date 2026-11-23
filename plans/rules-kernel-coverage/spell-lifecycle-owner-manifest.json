@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "3e59edfd7430c108ec690180de114f94ed4c920b",
+    "registryCommit": "961bf459028ce78e303a1fe9a11262021d5ff570",
     "generator": {
       "path": "scripts/spell-lifecycle-owner-manifest.cjs",
       "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "f26b89cf48059e0e988ba4ef984560d28349b10324f58413c8c054c645dc0d97"
+        "sha256": "d7531e49aa30005d54634a3b36e5a22d1d1ec19c148c6a89459067367126bc35"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "5bdc453578b87bad0dcddd043ccf1679360c012e743aa4496d22b39e045bc211"
+        "sha256": "2273170929bdce6d7b31f5f9a9d77a91732e49240440b0e1686f9dec74029459"
       }
     ]
   },
@@ -604,6 +604,7 @@
     "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts",
     "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts",
     "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts",
+    "packages/battle-runtime/src/battle-runtime-reaction-graze.test.ts",
     "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts",
     "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/cloudkill-area-hazard.mbt.test.ts",
@@ -950,7 +951,7 @@
   "pathCounts": {
     "obligationCount": 58,
     "sourceOrPure": 247,
-    "parityOrFixture": 101,
+    "parityOrFixture": 102,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },

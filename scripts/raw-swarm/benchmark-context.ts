@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import {
   BenchmarkContextProfileSchema,
   type BenchmarkContextProfile,
@@ -33,7 +34,7 @@ export const BenchmarkContextRoleSchema = Schema.Literals(
 );
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 
 /** The immutable bytes actually delivered to one benchmark model role. */

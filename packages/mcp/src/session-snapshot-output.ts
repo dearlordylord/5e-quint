@@ -5,7 +5,7 @@ import type { McpSessionSnapshot } from "./session-store.ts";
 
 const McpInitialInitiativeCombatantSnapshotSchema = Schema.Struct({
   combatantId: CombatantId,
-  initiative: Schema.Number,
+  initiative: Schema.Finite,
   rollMode: Schema.Literals(["normal", "advantage", "disadvantage"]),
 });
 

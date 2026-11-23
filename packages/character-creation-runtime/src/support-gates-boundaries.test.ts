@@ -1,7 +1,11 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
 import { describe, expect, test } from "vitest";
-import { computeTotalLevel } from "./character-progression-types.ts";
+import { DieRollResult } from "@dnd/shared/types";
+import {
+  classUnitId,
+  computeTotalLevel,
+} from "./character-progression-types.ts";
 
 import {
   choiceHole,
@@ -130,6 +134,42 @@ describe("character creation support-profile boundaries", () => {
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
     ).toEqual(fighterProgression);
+    const fighterLevelTwo = fighterProgressions.find(
+      (progression) => progression.advancements.length === 1,
+    );
+    if (fighterLevelTwo === undefined) {
+      throw new Error(
+        "The support profile must admit a Fighter 2 progression.",
+      );
+    }
+    const rolledLevelTwo = {
+      ...fighterLevelTwo,
+      advancements: fighterLevelTwo.advancements.map((advancement) => ({
+        ...advancement,
+        hitPointRule: {
+          tag: "rolledHigherLevelGain" as const,
+          hitDieResult: DieRollResult(3),
+        },
+      })),
+    };
+    expect(
+      isSupportedProgression(
+        rolledLevelTwo,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBe(true);
+    expect(
+      isSupportedProgression(
+        {
+          ...rolledLevelTwo,
+          advancements: rolledLevelTwo.advancements.map((advancement) => ({
+            ...advancement,
+            classUnitId: classUnitId(authoredUnitId("synthetic_class")),
+          })),
+        },
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBe(false);
     expect(
       supportedProgressionForOptionId(
         creationChoiceOptionId("synthetic:unsupported:progression"),

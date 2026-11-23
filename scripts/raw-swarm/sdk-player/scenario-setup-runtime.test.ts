@@ -3494,7 +3494,7 @@ describe("scenario setup public-SDK boundary", () => {
       _tag: "Failure",
       failure: {
         tag: "spell-target-projection",
-        message: expect.stringContaining("rangedSpellAttackEnemyProximity"),
+        message: expect.stringContaining("rangedAttackEnemyProximity"),
       },
     });
     if (Result.isFailure(unqualifiedSpellTarget)) {
@@ -3516,16 +3516,16 @@ describe("scenario setup public-SDK boundary", () => {
     expect(enemyRelation.tag).toBe("relation");
     if (enemyRelation.tag !== "relation") return;
     const qualification = {
-      kind: "rangedSpellAttackEnemyProximity" as const,
-      casterId: ordinaryRequest.casterId,
-      sourceProcedureRef: ordinaryRequest.sourceProcedureRef,
+      kind: "rangedAttackEnemyProximity" as const,
+      attackerId: ordinaryRequest.casterId,
+      procedureRef: ordinaryRequest.sourceProcedureRef,
       enemies: [
         {
           enemyId: combatantId("wolf-3b"),
           distanceFeet: movementFeet(
             Number(enemyRelation.relation.distanceFeet),
           ),
-          enemyCanSeeCaster: enemyRelation.relation.attackerCanSeeTarget,
+          enemyCanSeeAttacker: enemyRelation.relation.attackerCanSeeTarget,
         },
       ],
     };
@@ -3574,11 +3574,11 @@ describe("scenario setup public-SDK boundary", () => {
       ).toBe("needsHoles");
     }
     for (const spatialFacts of [
-      [{ ...qualification, casterId: combatantId("wolf-3b") }],
+      [{ ...qualification, attackerId: combatantId("wolf-3b") }],
       [
         {
           ...qualification,
-          sourceProcedureRef: battleProcedureExecutionRef(
+          procedureRef: battleProcedureExecutionRef(
             battleStatBlockExecutionScopeRef(
               battleId("stale-enemy-qualification"),
               ordinaryRequest.casterId,
@@ -4593,9 +4593,9 @@ describe("scenario setup public-SDK boundary", () => {
     ).toEqual(projectedAttack);
 
     const tableCheckedNoEnemies = {
-      kind: "rangedSpellAttackEnemyProximity" as const,
-      casterId: spellRequest.casterId,
-      sourceProcedureRef: spellRequest.sourceProcedureRef,
+      kind: "rangedAttackEnemyProximity" as const,
+      attackerId: spellRequest.casterId,
+      procedureRef: spellRequest.sourceProcedureRef,
       enemies: [],
     };
     const projectedSpell = scenarioCreatureSpellTargetFills({

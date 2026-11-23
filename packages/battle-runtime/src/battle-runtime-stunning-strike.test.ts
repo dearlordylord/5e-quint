@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
@@ -13,7 +14,6 @@ import type {
   BattleHole,
   BattleState,
 } from "./battle-state-execution.ts";
-import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import {
@@ -157,7 +157,7 @@ describe("battle runtime: Stunning Strike", () => {
     // RAW rules-glossary.md#Stunned: "Attack rolls against you have
     // Advantage." The Stunned condition supplies it however it was imposed.
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         resolved.state,
         fighterId,
         requireCombatant(resolved.state, goblinId),
@@ -174,7 +174,7 @@ describe("battle runtime: Stunning Strike", () => {
     }
     expect(hasCondition(monkTurnTarget.conditions, "stunned")).toBe(false);
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         monkTurn,
         fighterId,
         requireCombatant(monkTurn, goblinId),
@@ -228,7 +228,7 @@ describe("battle runtime: Stunning Strike", () => {
     expect(hasCondition(target.conditions, "stunned")).toBe(false);
     expect(effectiveWalkSpeed(resolved.state, target)).toBe(15);
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         resolved.state,
         fighterId,
         requireCombatant(resolved.state, goblinId),
@@ -251,7 +251,7 @@ describe("battle runtime: Stunning Strike", () => {
       30,
     );
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         nextMonkTurn.state,
         fighterId,
         requireCombatant(nextMonkTurn.state, goblinId),

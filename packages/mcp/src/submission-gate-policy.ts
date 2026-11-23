@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -47,7 +48,7 @@ const HighRiskSurfaceDecisionSchema = Schema.Struct({
   recipients: NonEmptyTextArraySchema,
   retentionOwner: NonEmptyTextSchema,
   privacyAnchor: NonEmptyTextSchema,
-  scopeDigest: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+  scopeDigest: Schema.String.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
 });
 
 const OpaqueNodeDecisionSchema = Schema.Struct({
@@ -60,18 +61,18 @@ const OpaqueNodeDecisionSchema = Schema.Struct({
     "representativeResult",
   ] as const),
   owner: NonEmptyTextSchema,
-  scopeDigest: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+  scopeDigest: Schema.String.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
 });
 
 const DisclosureImplementationEvidenceSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("canonicalInventory"),
-    digest: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+    digest: Schema.String.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
   }),
   Schema.Struct({
     tag: Schema.Literal("scopedHumanReview"),
     scope: NonEmptyTextSchema,
-    sourceDigest: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+    sourceDigest: Schema.String.check(jsonSchemaPattern(/^[0-9a-f]{64}$/u)),
   }),
 ]);
 

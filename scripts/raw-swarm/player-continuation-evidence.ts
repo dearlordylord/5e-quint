@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { Result, Schema } from "effect";
 
 export const PLAYER_CONTINUATION_LIMIT = 128;
@@ -27,7 +28,7 @@ export type PlayerExecutionState = Schema.Schema.Type<
 >;
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 
 const PlayerContinuationObservationSchema = Schema.Struct({

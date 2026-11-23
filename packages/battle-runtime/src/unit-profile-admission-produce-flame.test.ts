@@ -691,7 +691,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         {
           enemyId: spellTargetId,
           distanceFeet: movementFeet(30),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         },
       ],
     });
@@ -757,7 +757,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         {
           enemyId: spellTargetId,
           distanceFeet: movementFeet(30),
-          enemyCanSeeCaster: true,
+          enemyCanSeeAttacker: true,
         },
       ],
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },

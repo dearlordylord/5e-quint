@@ -93,7 +93,7 @@ const OracleAmmunitionStockFields = {
 
 export const OracleAmmunitionStocksSchema = Schema.Struct(
   OracleAmmunitionStockFields,
-).annotate({ parseOptions: { onExcessProperty: "error" } });
+);
 export type OracleAmmunitionStocks = Schema.Schema.Type<
   typeof OracleAmmunitionStocksSchema
 >;
@@ -143,7 +143,7 @@ export const OracleBattleRosterSchema = Schema.Union([
     characterSheet: OracleCharacterSheetRosterEntrySchema,
     followingStatBlocks: Schema.Array(OracleStatBlockRosterEntrySchema),
   }),
-]).annotate({ parseOptions: { onExcessProperty: "error" } });
+]);
 export type OracleBattleCharacterSheetRosterEntry = Schema.Schema.Type<
   typeof OracleCharacterSheetRosterEntrySchema
 >;
@@ -156,13 +156,11 @@ export type OracleBattleRoster = Schema.Schema.Type<
 
 const OracleBattleFillSchema = BattleFillSchema.annotate({
   identifier: "BattleFill",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleBattleInterruptDecisionFillSchema =
   BattleInterruptDecisionFillSchema.annotate({
     identifier: "BattleInterruptDecisionFill",
-    parseOptions: { onExcessProperty: "error" },
   });
 export type OracleBattleInterruptDecisionFill =
   typeof OracleBattleInterruptDecisionFillSchema.Type;
@@ -173,7 +171,6 @@ export const OracleBattleOrdinaryAttemptSchema = Schema.Struct({
   fills: Schema.Array(OracleBattleFillSchema),
 }).annotate({
   identifier: "OracleBattleOrdinaryAttempt",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleOrdinaryAttempt = Schema.Schema.Type<
   typeof OracleBattleOrdinaryAttemptSchema
@@ -184,7 +181,6 @@ export const OracleBattleInterruptAttemptSchema = Schema.Struct({
   fill: OracleBattleInterruptDecisionFillSchema,
 }).annotate({
   identifier: "OracleBattleInterruptAttempt",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleInterruptAttempt = Schema.Schema.Type<
   typeof OracleBattleInterruptAttemptSchema
@@ -195,7 +191,6 @@ export const OracleBattleAttemptSchema = Schema.Union([
   OracleBattleInterruptAttemptSchema,
 ]).annotate({
   identifier: "OracleBattleAttempt",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleAttempt = Schema.Schema.Type<
   typeof OracleBattleAttemptSchema
@@ -209,7 +204,6 @@ export const OracleBattleInputSchema = Schema.Struct({
   attempts: Schema.Array(OracleBattleAttemptSchema),
 }).annotate({
   identifier: "OracleBattleInput",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleInput = Schema.Schema.Type<
   typeof OracleBattleInputSchema
@@ -221,12 +215,11 @@ const OracleCaseShapeSchema = Schema.Struct({
   }),
   sheet: FreshSheetInputSchema,
   battle: OracleBattleInputSchema,
-}).annotate({ parseOptions: { onExcessProperty: "error" } });
+});
 export const OracleCaseSchema = OracleCaseShapeSchema.pipe(
   Schema.brand("OracleCase"),
 ).annotate({
   identifier: "OracleCase",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleCase = Schema.Schema.Type<typeof OracleCaseSchema>;
 
@@ -234,7 +227,6 @@ export const OracleEvaluationBatchSchema = Schema.Struct({
   cases: Schema.NonEmptyArray(OracleCaseSchema),
 }).annotate({
   identifier: "OracleEvaluationBatch",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleEvaluationBatch = Schema.Schema.Type<
   typeof OracleEvaluationBatchSchema
@@ -414,7 +406,7 @@ const OracleBattleCreatureSnapshotSchema = Schema.Struct({
   hp: NonNegativeIntegerSchema,
   maxHp: NonNegativeIntegerSchema,
   tempHp: NonNegativeIntegerSchema,
-  armorClass: Schema.Number,
+  armorClass: Schema.Finite,
   size: Schema.Literals(SIZES),
   conditions: Schema.Array(Schema.Literals(CONDITIONS)).pipe(
     Schema.check(
@@ -488,7 +480,6 @@ export const OracleBattleActsFrontierSchema = Schema.Struct({
   acts: Schema.NonEmptyArray(BattleSubjectSchema),
 }).annotate({
   identifier: "OracleBattleActsFrontier",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleActsFrontier = Schema.Schema.Type<
   typeof OracleBattleActsFrontierSchema
@@ -499,7 +490,6 @@ export const OracleBattleNonterminalFrontierSchema = Schema.Union([
   BattleMechanicalFrontierSchema,
 ]).annotate({
   identifier: "OracleBattleNonterminalFrontier",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleNonterminalFrontier =
   | OracleBattleActsFrontier
@@ -618,7 +608,6 @@ export const OracleBattleContinuationSchema: Schema.Codec<
   ),
 ).annotate({
   identifier: "OracleBattleContinuation",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleBattleAttemptSegmentSchema = Schema.Struct({
@@ -632,7 +621,6 @@ export const OracleBattleAttemptSegmentSchema = Schema.Struct({
   ]),
 }).annotate({
   identifier: "OracleBattleAttemptSegment",
-  parseOptions: { onExcessProperty: "error" },
 });
 const OracleBattleEnteredShapeSchema = Schema.Struct({
   tag: Schema.Literal("entered"),
@@ -641,7 +629,6 @@ const OracleBattleEnteredShapeSchema = Schema.Struct({
   segment: OracleBattleAttemptSegmentSchema,
 }).annotate({
   identifier: "OracleBattleEntered",
-  parseOptions: { onExcessProperty: "error" },
 });
 export const OracleBattleEnteredSchema = OracleBattleEnteredShapeSchema.pipe(
   Schema.check(
@@ -664,7 +651,6 @@ export const OracleSheetOutcomeSchema = Schema.Union([
   OracleSheetConstructionSuccessSchema,
 ]).annotate({
   identifier: "OracleSheetOutcome",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleCreationOutcomeSchema = Schema.Union([
@@ -683,7 +669,6 @@ export const OracleCreationOutcomeSchema = Schema.Union([
   }),
 ]).annotate({
   identifier: "OracleCreationOutcome",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleCreationTraceSchema = Schema.Struct({
@@ -692,7 +677,6 @@ export const OracleCreationTraceSchema = Schema.Struct({
   outcome: OracleCreationOutcomeSchema,
 }).annotate({
   identifier: "OracleCreationTrace",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleTraceSchema = Schema.Struct({
@@ -701,7 +685,6 @@ export const OracleTraceSchema = Schema.Struct({
   .pipe(Schema.brand("OracleTrace"))
   .annotate({
     identifier: "OracleTrace",
-    parseOptions: { onExcessProperty: "error" },
   });
 export type OracleTrace = Schema.Schema.Type<typeof OracleTraceSchema>;
 

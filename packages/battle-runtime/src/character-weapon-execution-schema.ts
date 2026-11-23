@@ -17,7 +17,7 @@ export const WeaponExecutionFactFields = {
   usage: WeaponUsageSchema,
   damage: WeaponDamageSchema,
   properties: Schema.Array(WeaponPropertyDetailSchema),
-  costGp: Schema.Number,
+  costGp: Schema.Finite,
 } as const;
 
 /**

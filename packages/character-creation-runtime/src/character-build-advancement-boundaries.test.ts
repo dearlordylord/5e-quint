@@ -2,7 +2,7 @@ import {
   characterClassLevel,
   unitId as authoredUnitId,
 } from "@dnd/shared/game-facts";
-import { abilityScore } from "@dnd/shared/types";
+import { abilityScore, DieRollResult } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -41,6 +41,7 @@ import {
   type UnitCatalog,
 } from "./index.ts";
 import { classSpellcastingCreationAtLevel } from "./class-spellcasting.ts";
+import { characterBuildHitPoints } from "./consumer-protocol.ts";
 
 const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
 if (catalogResult.tag !== "ok") {
@@ -145,8 +146,16 @@ function fighterLevelThreeBuild(
     progression: {
       ...build.progression,
       advancements: [
-        { classUnitId: fighterUnitId, hitPointRule: fixedHitPoints },
-        { classUnitId: fighterUnitId, hitPointRule: fixedHitPoints },
+        {
+          classUnitId: fighterUnitId,
+          hitPointRule: fixedHitPoints,
+          constitutionModifierAtGain: 2,
+        },
+        {
+          classUnitId: fighterUnitId,
+          hitPointRule: fixedHitPoints,
+          constitutionModifierAtGain: 2,
+        },
       ],
     },
   };
@@ -159,6 +168,7 @@ function classAdvancementEntries(
   return Array.from({ length: classLevel - 1 }, () => ({
     classUnitId,
     hitPointRule: fixedHitPoints,
+    constitutionModifierAtGain: 2,
   }));
 }
 
@@ -273,6 +283,63 @@ function fightingStyleReplacement(
 }
 
 describe("Character Build advancement typed boundaries", () => {
+  test("takes a rolled Hit Die for the level gained, up to the class's Hit Die", () => {
+    const rolled = (hitDieResult: number) => ({
+      tag: "rolledHigherLevelGain" as const,
+      hitDieResult: DieRollResult(hitDieResult),
+    });
+    const levelOne = fighterBuild(
+      fighterWeaponMasteryFeatures(
+        ["weapon_longsword", "weapon_dagger", "weapon_shortbow"].map((unitId) =>
+          authoredUnitId(unitId),
+        ),
+      ),
+    );
+    const levelTwo = advanceCharacterBuildClassLevel({
+      build: levelOne,
+      unitLibrary,
+      levelGain: {
+        tag: "classLevelGain",
+        classUnitId: fighterUnitId,
+        hitPointRule: rolled(9),
+      },
+    });
+    expect(levelTwo).toMatchObject({
+      _tag: "Success",
+      success: {
+        progression: {
+          advancements: [
+            { classUnitId: fighterUnitId, hitPointRule: rolled(9) },
+          ],
+        },
+      },
+    });
+    if (Result.isFailure(levelTwo)) return;
+    expect(
+      characterBuildHitPoints(levelTwo.success, unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 12 + 11 } });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: levelOne,
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: fighterUnitId,
+          hitPointRule: rolled(11),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        code: "rolledHitDieResultAboveHitDie",
+        classUnitId: fighterUnitId,
+        hitDieResult: 11,
+        hitDieSize: 10,
+      },
+    });
+  });
+
   test("narrows only the matching class identity", () => {
     expect(
       fighterClassUnitId({ unitLibrary, classUnitId: fighterUnitId }),
@@ -620,10 +687,12 @@ describe("Character Build advancement typed boundaries", () => {
             {
               classUnitId: fighterUnitId,
               hitPointRule: fixedHitPoints,
+              constitutionModifierAtGain: 2,
             },
             {
               classUnitId: fighterUnitId,
               hitPointRule: fixedHitPoints,
+              constitutionModifierAtGain: 2,
             },
           ],
         },
@@ -660,6 +729,13 @@ describe("Character Build advancement typed boundaries", () => {
       expect(fighterAdvancement.success.progression.advancements).toHaveLength(
         3,
       );
+      // Level 4 gains its Hit Points before its own feat raises Constitution.
+      expect(
+        fighterAdvancement.success.progression.advancements.map(
+          ({ constitutionModifierAtGain }) => constitutionModifierAtGain,
+        ),
+      ).toEqual([2, 2, 2]);
+      expect(fighterAdvancement.success.abilityScores.con).toBe(16);
     }
   });
 
@@ -807,10 +883,12 @@ describe("Character Build advancement typed boundaries", () => {
               {
                 classUnitId: barbarianUnitId,
                 hitPointRule: fixedHitPoints,
+                constitutionModifierAtGain: 2,
               },
               {
                 classUnitId: barbarianUnitId,
                 hitPointRule: fixedHitPoints,
+                constitutionModifierAtGain: 2,
               },
             ],
           },

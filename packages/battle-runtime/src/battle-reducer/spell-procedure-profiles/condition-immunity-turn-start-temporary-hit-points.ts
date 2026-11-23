@@ -1745,7 +1745,7 @@ export const TurnStartTemporaryHitPointsTemplateSchema = Schema.Struct({
   ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("turnStartTemporaryHitPoints"),
   sourceCombatantId: CombatantId,
-  amount: Schema.Number,
+  amount: Schema.Finite,
   expiresAt: BattleActiveEffectExpirationSchema,
 });
 
@@ -1762,7 +1762,7 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
+        maxTargets: Schema.Finite,
         requiredTargetDisposition: Schema.Literal("willing"),
       }),
       activeEffects: Schema.Tuple([

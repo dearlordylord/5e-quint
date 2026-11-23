@@ -1,4 +1,5 @@
 import {
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -517,6 +518,85 @@ describe(
           },
         ]);
         expect(readFileSync(portableCasesPath, "utf8")).toBe("committed\n");
+      } finally {
+        rmSync(contentDir, { force: true, recursive: true });
+      }
+    });
+
+    it("rejects a stale portable-case schema binding before compiling content", () => {
+      const contentDir = mkdtempSync(join(tmpdir(), "surface-preflight-test-"));
+      const portableCasesPath = join(contentDir, "cases.json");
+      const compiledSources: string[] = [];
+      const message =
+        "Independent expectations were authored for a different Surface schema";
+      try {
+        writeFileSync(join(contentDir, "record.dhall"), "synthetic source");
+        writeFileSync(portableCasesPath, "committed\n");
+        for (const relativePath of [
+          "packages/surface/publication/srd-surface.json",
+          "packages/surface/publication/srd-surface.schema.json",
+          "packages/surface/portable-cases/srd-surface-dependency-contract.json",
+          "packages/surface/portable-cases/srd-surface-independent-expectations.json",
+        ]) {
+          const destination = join(contentDir, relativePath);
+          mkdirSync(dirname(destination), { recursive: true });
+          copyFileSync(join(process.cwd(), relativePath), destination);
+        }
+        const schemaPath = join(
+          contentDir,
+          "packages/surface/publication/srd-surface.schema.json",
+        );
+        writeFileSync(schemaPath, "{}");
+        const result = runPublicationCheck({
+          repoRoot: contentDir,
+          contentDir,
+          portableCasesPath,
+          compile: (sourcePath) => {
+            compiledSources.push(sourcePath);
+            return "compilation must not start";
+          },
+        });
+        expect(result.issues).toEqual([
+          {
+            kind: "portable-case-generation-failed",
+            file: "cases.json",
+            message,
+          },
+        ]);
+        expect(compiledSources).toEqual([]);
+        expect(result.sourceCount).toBe(1);
+        expect(result.peerObservations).toEqual([]);
+        expect(readFileSync(portableCasesPath, "utf8")).toBe("committed\n");
+      } finally {
+        rmSync(contentDir, { force: true, recursive: true });
+      }
+    });
+
+    it("compiles content when portable-case evidence is current", () => {
+      const contentDir = mkdtempSync(
+        join(tmpdir(), "surface-preflight-valid-test-"),
+      );
+      const portableCasesDir = join(contentDir, "portable-cases");
+      const compiledSources: string[] = [];
+      try {
+        mkdirSync(portableCasesDir);
+        const portableCasesPath = join(portableCasesDir, "cases.json");
+        writeFileSync(portableCasesPath, "current\n");
+        writeFileSync(join(contentDir, "record.dhall"), "fixture");
+        writeFileSync(join(contentDir, "record.json"), validRecord);
+        const result = runPublicationCheck({
+          repoRoot: contentDir,
+          contentDir,
+          portableCasesPath,
+          portableCasesBuilder: () => Buffer.from("current\n"),
+          compile: (sourcePath, outputPath) => {
+            compiledSources.push(sourcePath);
+            writeFileSync(outputPath, validRecord);
+            return undefined;
+          },
+        });
+        expect(result.issues).toEqual([]);
+        expect(compiledSources).toEqual([join(contentDir, "record.dhall")]);
       } finally {
         rmSync(contentDir, { force: true, recursive: true });
       }

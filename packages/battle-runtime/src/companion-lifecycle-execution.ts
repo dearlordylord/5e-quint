@@ -88,7 +88,7 @@ export function spawnedCompanionPresentState(input: {
   readonly ownerId: CombatantId;
 }): BattleCompanionPresentState {
   return {
-    ...input.form,
+    formAccess: input.form.formAccess,
     status: "present",
     combatantId: input.combatantId,
     ownerId: input.ownerId,

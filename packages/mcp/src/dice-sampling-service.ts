@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import {
   DICE_GROUP_SEMANTIC_PROFILE,
   sampleDiceGroups,
@@ -21,7 +22,7 @@ export const DICE_RANDOM_SOURCE = {
   stateSchemaVersion: SCHEMA_VERSION,
 } as const;
 const DiceSeedWordSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{8}$/u)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{8}$/u)),
 );
 export const DiceSeedSchema = Schema.Tuple([
   DiceSeedWordSchema,

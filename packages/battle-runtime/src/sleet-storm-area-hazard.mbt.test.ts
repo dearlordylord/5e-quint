@@ -201,6 +201,25 @@ describe("Sleet Storm area hazard MBT parity", () => {
     });
   });
 
+  it.each([true, false])(
+    "charges the target's crawling cost after an entry save (success: %s)",
+    (succeeded) => {
+      const targetTurn = endCasterTurn(castSleetStorm(initialRuntimeState()));
+      const supplied = supplySleetStormTriggerFact(targetTurn, "entersArea");
+      const saved = fillSleetStormSave(supplied, "entersArea", succeeded);
+      const moved = moveWithDifficultTerrain(saved);
+
+      expect(
+        requireCombatant(moved.battle.state, spellCasterId).conditions.prone,
+      ).toBe(false);
+      expect(sleetStormProjection(moved)).toMatchObject({
+        targetProne: !succeeded,
+        movementSpentFeet: succeeded ? 15 : 25,
+        lastResult: "moved",
+      });
+    },
+  );
+
   it("rejects a start-turn save after an entry save consumed the shared turn limit", () => {
     const cast = castSleetStorm(initialRuntimeState());
     const targetTurn = endCasterTurn(cast);
@@ -487,7 +506,10 @@ function moveWithDifficultTerrain(
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: sleetStormMovementSpentFeet,
+          movementCostFeet: requireCombatant(state.battle.state, spellTargetId)
+            .conditions.prone
+            ? 25
+            : sleetStormMovementSpentFeet,
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",

@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.HELP.ABILITY_CHECK_ASSIST
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { classLevel } from "@dnd/shared/types";
 import type { Skill } from "@dnd/surface/surface/types";
 import { Result, Schema } from "effect";
@@ -285,16 +286,25 @@ describe("Help: Assist an Ability Check", () => {
       skill: "stealth",
     });
     const snapshot = snapshotBattle(helped);
-    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
-    expect(Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded)).toEqual(
-      snapshot,
-    );
+    const encoded = Schema.encodeSync(
+      BattleSnapshotSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(snapshot);
+    expect(
+      Schema.decodeUnknownSync(
+        BattleSnapshotSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )(encoded),
+    ).toEqual(snapshot);
     for (const expiresAt of [
       { kind: "startOfTurn", combatantId: rogueId },
       { kind: "endOfTurn", combatantId: rogueId },
       { kind: "startOfTurn", combatantId: fighterId },
     ]) {
-      const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)({
+      const decoded = Schema.decodeUnknownResult(
+        BattleSnapshotSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
+      )({
         ...encoded,
         helpAbilityCheckMarkers: encoded.helpAbilityCheckMarkers.map(
           (help) => ({ ...help, expiresAt }),

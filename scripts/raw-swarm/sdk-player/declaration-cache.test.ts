@@ -88,6 +88,51 @@ function fixture() {
   };
   return { root, source, input, compilations: () => compilations };
 }
+test("creates missing destination parents before exposing a cached declaration", () => {
+  const f = fixture();
+  const destination = join(f.root, "absent", "nested", "declarations");
+  expect(emitCachedDeclarations({ ...f.input, destination })).toEqual({
+    kind: "ok",
+    cache: "miss",
+  });
+  expect(readFileSync(join(destination, "value.d.ts"), "utf8")).toContain(
+    '"first"',
+  );
+  expect(emit(f, "another")).toEqual({ kind: "ok", cache: "hit" });
+  expect(f.compilations()).toBe(1);
+});
+
+test("review metadata changes do not discard a strictly admitted compilation", async () => {
+  const { prepareDeclarationBundle } =
+    await import("./consumer-distribution.ts");
+  const f = fixture();
+  const reviewPath = join(f.source, "review.json");
+  const review = {
+    measure: { files: 2, bytes: 64 },
+    pathLedgerSha256: createHash("sha256")
+      .update("previous declaration paths\n")
+      .digest("hex"),
+    contentLedgerSha256: createHash("sha256")
+      .update("previous declaration contents\n")
+      .digest("hex"),
+  };
+  writeFileSync(reviewPath, JSON.stringify(review));
+  const first = join(f.root, "destinations", "first");
+  const inspected = prepareDeclarationBundle(
+    { ...f.input, destination: first },
+    review,
+  );
+  expect(inspected).toMatchObject({ cache: "miss", matchesReview: false });
+  expect(existsSync(join(first, "value.d.ts"))).toBe(true);
+  writeFileSync(reviewPath, JSON.stringify(inspected.actual));
+  const reviewed = inspected.actual;
+  const second = join(f.root, "destinations", "second");
+  expect(
+    prepareDeclarationBundle({ ...f.input, destination: second }, reviewed),
+  ).toMatchObject({ cache: "hit", matchesReview: true });
+  expect(f.compilations()).toBe(1);
+});
+
 test("reuses a strictly emitted declaration in fresh independent destinations", () => {
   const f = fixture();
   expect(

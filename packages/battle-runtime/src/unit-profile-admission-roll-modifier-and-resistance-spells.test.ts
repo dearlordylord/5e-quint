@@ -1,4 +1,12 @@
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  interruptDecisionFill,
+  movementFill,
+  opportunityAttackProcedureSelectionForTest,
+  requireResolved,
+  resolveBattleInterrupt,
+  battleResolutionHolesForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
@@ -98,7 +106,6 @@ import type {
   BattleFill,
   BattleRuntimeSession,
   BattleState,
-  BattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
@@ -1930,7 +1937,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       false,
     );
     const target = requireCombatant(resistanceState, spellTargetId);
-    const state: BattleState = {
+    const readyState: BattleState = {
       ...resistanceState,
       combatants: new Map(resistanceState.combatants).set(spellTargetId, {
         ...target,
@@ -1942,20 +1949,64 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       }),
     };
-    const subject: Extract<
-      BattleSubject,
-      { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
-    > = {
+    const selection = attackExecutionSelectionForSubjectForTest(
+      characterAttackSubjectForTest(readyState, spellCasterId, "Longsword"),
+    );
+    const moverState = requireResolved(
+      endTurn({ state: readyState, actorId: spellCasterId }),
+    ).state;
+    const moveSubject = {
       tag: "runtimeCommand",
-      actorId: spellCasterId,
-      command: "opportunityAttack",
-      reactorId: spellCasterId,
-      targetId: spellTargetId,
-      distanceFeet: movementFeet(5),
-      ...attackExecutionSelectionForSubjectForTest(
-        characterAttackSubjectForTest(state, spellCasterId, "Longsword"),
-      ),
-    };
+      actorId: spellTargetId,
+      command: "move",
+    } as const;
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: moverState,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const awaiting = resolveBattleSubject({
+      state: moverState,
+      subject: moveSubject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: spellCasterId,
+              distanceFeet: movementFeet(5),
+              ...selection,
+            },
+          ],
+        }),
+      ],
+    });
+    if (awaiting.tag !== "needsHoles")
+      throw new Error("Expected movement to offer an Opportunity Attack.");
+    const pending = battleFrontierInterruptDecisionForState(awaiting.state);
+    const choice = pending?.choices.find(
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "opportunityAttack" &&
+        candidate.subject.reactorId === spellCasterId,
+    );
+    if (pending == null || choice?.kind !== "nestedProcedure")
+      throw new Error("Expected the caster's Opportunity Attack choice.");
+    const started = resolveBattleInterrupt({
+      state: awaiting.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "resolve",
+        responderId: spellCasterId,
+        choice: opportunityAttackProcedureSelectionForTest(choice),
+      }),
+    });
+    if (started.tag !== "needsHoles")
+      throw new Error("Expected the Opportunity Attack roll checkpoint.");
+    const state = started.state;
+    const subject = choice.subject;
     const attack = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "attackRoll",
