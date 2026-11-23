@@ -1,3 +1,4 @@
+import type { BoundSupportedAttackActionOption } from "./battle-action-options.ts";
 import type { AuthoredSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type { AttackPresentationJoinIssue } from "./attack-presentation-contract.ts";
@@ -794,7 +795,7 @@ export type GlyphStoredSpellReleaseReplayInput = {
 };
 export type BattleAttackDamageCriticalConsequence =
   | {
-      readonly kind: "ordinaryHit";
+      readonly kind: "nonCritical";
     }
   | {
       readonly kind: "criticalHit";
@@ -826,7 +827,7 @@ export type BattleAttackDamageInterruptionContinuation =
        * first target remain on the enclosing frame and are intentionally not
        * copied here.
        */
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
     });
 export type BattleAttackDamageInterruptionFrame = {
@@ -932,7 +933,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "afterDamageSequenceWithPrimaryAttackFollowUp";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
@@ -943,14 +944,14 @@ export type BattleInterruptedProcedure =
       readonly kind: "weaponMasteryCleave";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
     }
   | {
       readonly kind: "huntersPreyHordeBreaker";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
     }
   | {
@@ -1790,13 +1791,13 @@ export type BattleTargetSpatialFact =
        * An empty enemies array means checked-none; omission is unqualified.
        * Enemies are contextual and independent of the selected target.
        */
-      readonly kind: "rangedSpellAttackEnemyProximity";
-      readonly casterId: CombatantId;
-      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly kind: "rangedAttackEnemyProximity";
+      readonly attackerId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
       readonly enemies: readonly {
         readonly enemyId: CombatantId;
         readonly distanceFeet: MovementFeet;
-        readonly enemyCanSeeCaster: boolean;
+        readonly enemyCanSeeAttacker: boolean;
       }[];
     }
   | {
@@ -4931,7 +4932,7 @@ export const RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS = [
   "spellObjectTarget",
   "spellObjectTargetSight",
   "spellObjectIgnition",
-  "rangedSpellAttackEnemyProximity",
+  "rangedAttackEnemyProximity",
   "spellLeapTargetWithinRange",
   "spellTargetKnownWilling",
   "reactionSpellDamagerVisibleWithinRange",
@@ -4965,6 +4966,11 @@ export type BattleSpellObjectTargetSpatialFactRequest = {
   readonly requiresExactDistance: true;
   readonly requiresEnemyProximityQualification: true;
 };
+export type BattleAttackTargetRequest = {
+  readonly actorId: CombatantId;
+  readonly selection: BattleAttackExecutionSelection;
+  readonly targetConstraint: AttackTargetConstraint;
+};
 export type BattleTargetChoiceHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "targetChoice" }
@@ -4975,10 +4981,7 @@ export type BattleTargetChoiceHole = Extract<
   readonly relationshipFactRequest?: BattleTargetChoiceRelationshipFactRequest;
   readonly spellTargetSpatialFactRequest?: BattleSpellTargetSpatialFactRequest;
   readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
-  readonly attack?: {
-    readonly actorId: CombatantId;
-    readonly selection: BattleAttackExecutionSelection;
-    readonly targetConstraint: AttackTargetConstraint;
+  readonly attack?: BattleAttackTargetRequest & {
     readonly acceptsObjectTarget?: true;
   };
 };
@@ -6881,6 +6884,7 @@ export type BattleTargetingSaveInterdictionOutcomeHole =
     (
       | {
           readonly replacementTargetKind: "attackRoll";
+          readonly attack?: BattleAttackTargetRequest;
           readonly relationshipFactRequest?: Extract<
             BattleTargetChoiceRelationshipFactRequest,
             { readonly kind: "attackRollTargetIsEnemy" }
@@ -7361,7 +7365,7 @@ export type BattleFill =
             | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"
             | "spellObjectTargetSight"
-            | "rangedSpellAttackEnemyProximity"
+            | "rangedAttackEnemyProximity"
             | "attackObjectTarget";
         }
       >[];

@@ -341,6 +341,12 @@ export type AttackFillSet =
       readonly grapplerPunchAndGrabOutcome:
         | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
         | undefined;
+      readonly weaponMasteryGrazeDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly huntersPreyHordeBreakerGrazeDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
 export type SelectedAttackFillSet = AttackFillSet | OrdinaryObjectAttackFillSet;

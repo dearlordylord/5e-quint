@@ -1174,7 +1174,7 @@ export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
+      maxTargets: Schema.Finite,
       requiredTargetDisposition: Schema.Literal("willing"),
     }),
     damageTypeChoices: Schema.Array(DamageTypeSchema),

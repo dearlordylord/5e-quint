@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import {
   characterCreationBatchFact,
   characterBuildDisplayName,
@@ -956,11 +957,14 @@ function strippedBattleCheckpoint(
   if (firstStillToAct === undefined) {
     return defect("Battle snapshot still-to-act initiative stack was empty");
   }
-  return OracleBattleCheckpointSchema.make({
-    round: snapshot.round,
-    alreadyActed: orderedEntries.slice(0, currentActorIndex),
-    stillToAct: [firstStillToAct, ...remainingStillToAct],
-  });
+  return OracleBattleCheckpointSchema.make(
+    {
+      round: snapshot.round,
+      alreadyActed: orderedEntries.slice(0, currentActorIndex),
+      stillToAct: [firstStillToAct, ...remainingStillToAct],
+    },
+    { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+  );
 }
 
 function strippedBattleEnteredCheckpoint(
@@ -976,5 +980,8 @@ function strippedBattleEnteredCheckpoint(
 }
 
 function oracleTrace(creation: OracleTrace["creation"]): OracleTrace {
-  return OracleTraceSchema.make({ creation });
+  return OracleTraceSchema.make(
+    { creation },
+    { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+  );
 }

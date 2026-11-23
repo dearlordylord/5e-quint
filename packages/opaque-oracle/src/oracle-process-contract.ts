@@ -1,4 +1,8 @@
-import { Schema } from "effect";
+import {
+  STRICT_OBJECT_PARSE_OPTIONS,
+  jsonSchemaPattern,
+} from "@dnd/shared/json-schema";
+import { Result, Schema } from "effect";
 
 import { ORACLE_DECODE_ISSUE_CODES } from "./oracle-decode.ts";
 import { compareCodePoints } from "./oracle-canonical.ts";
@@ -28,8 +32,10 @@ export const OracleBindPortSchema = Schema.Number.pipe(
 
 export type OracleBindPort = typeof OracleBindPortSchema.Type;
 
-export const decodeOracleBindPort =
-  Schema.decodeUnknownResult(OracleBindPortSchema);
+export const decodeOracleBindPort = Schema.decodeUnknownResult(
+  OracleBindPortSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
+);
 
 /** A TCP port returned after the operating system has completed a bind. */
 export const OracleListeningPortSchema = Schema.Number.pipe(
@@ -45,6 +51,7 @@ export type OracleListeningPort = typeof OracleListeningPortSchema.Type;
 
 export const decodeOracleListeningPort = Schema.decodeUnknownResult(
   OracleListeningPortSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 /** The one compact value written after a serve command starts listening. */
@@ -53,29 +60,29 @@ export const OracleHttpReadinessSchema = Schema.Struct({
   port: OracleListeningPortSchema,
 }).annotate({
   identifier: "OracleHttpReadiness",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export type OracleHttpReadiness = typeof OracleHttpReadinessSchema.Type;
 
 /** The identity of the executable and immutable services used for evaluation. */
 export const DistributionIdSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^sha256:[0-9a-f]{64}$/u)),
+  Schema.check(jsonSchemaPattern(/^sha256:[0-9a-f]{64}$/u)),
 )
   .pipe(Schema.brand("DistributionId"))
   .annotate({ identifier: "DistributionId" });
 
 export type DistributionId = typeof DistributionIdSchema.Type;
 
-export const decodeDistributionId =
-  Schema.decodeUnknownResult(DistributionIdSchema);
+export const decodeDistributionId = Schema.decodeUnknownResult(
+  DistributionIdSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
+);
 
 export const OracleDecodeIssueSchema = Schema.Struct({
   path: Schema.String,
   code: Schema.Literals(ORACLE_DECODE_ISSUE_CODES),
 }).annotate({
   identifier: "OracleDecodeIssue",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 /** Canonical, non-empty issues returned by the shared batch decoder. */
@@ -91,7 +98,6 @@ export const OracleDecodeIssuesSchema = Schema.NonEmptyArray(
   )
   .annotate({
     identifier: "OracleDecodeIssues",
-    parseOptions: { onExcessProperty: "error" },
   });
 
 export type OracleDecodeIssue = Schema.Schema.Type<
@@ -107,7 +113,6 @@ const OracleEvaluatedResponseSchema = Schema.Struct({
   traces: Schema.NonEmptyArray(OracleTraceSchema),
 }).annotate({
   identifier: "OracleEvaluatedResponse",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 const OracleDecodeRejectedResponseSchema = Schema.Struct({
@@ -116,7 +121,6 @@ const OracleDecodeRejectedResponseSchema = Schema.Struct({
   issues: OracleDecodeIssuesSchema,
 }).annotate({
   identifier: "OracleDecodeRejectedResponse",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 /** The complete response algebra for one raw batch frame. */
@@ -125,7 +129,6 @@ export const OracleBatchResponseSchema = Schema.Union([
   OracleDecodeRejectedResponseSchema,
 ]).annotate({
   identifier: "OracleBatchResponse",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export type OracleEvaluatedResponse = Schema.Schema.Type<
@@ -142,7 +145,6 @@ export const OracleIdentityResponseSchema = Schema.Struct({
   distributionId: DistributionIdSchema,
 }).annotate({
   identifier: "OracleIdentityResponse",
-  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleIdentityResponse = Schema.Schema.Type<
   typeof OracleIdentityResponseSchema
@@ -154,7 +156,6 @@ export const OracleDefectResponseSchema = Schema.Struct({
   distributionId: DistributionIdSchema,
 }).annotate({
   identifier: "OracleDefectResponse",
-  parseOptions: { onExcessProperty: "error" },
 });
 
 export type OracleDefectResponse = typeof OracleDefectResponseSchema.Type;
@@ -175,49 +176,62 @@ const OracleDefectResponseJsonSchema = Schema.fromJsonString(
 /** Encode only after schema validation; JSON object member order is schema order. */
 export const encodeOracleBatchResponseJson = Schema.encodeSync(
   OracleBatchResponseJsonSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 export const encodeOracleIdentityResponseJson = Schema.encodeSync(
   OracleIdentityResponseJsonSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 export const encodeOracleHttpReadinessJson = Schema.encodeSync(
   OracleHttpReadinessJsonSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 export const encodeOracleDefectResponseJson = Schema.encodeSync(
   OracleDefectResponseJsonSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 export function oracleDefectResponse(input: {
   readonly distributionId: DistributionId;
 }): OracleDefectResponse {
-  return OracleDefectResponseSchema.make({
-    tag: "defect",
-    distributionId: input.distributionId,
-  });
+  return OracleDefectResponseSchema.make(
+    {
+      tag: "defect",
+      distributionId: input.distributionId,
+    },
+    { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+  );
 }
 
 export function oracleDecodeRejectedResponse(input: {
   readonly distributionId: DistributionId;
   readonly issues: OracleDecodeIssues;
 }): OracleDecodeRejectedResponse {
-  return OracleDecodeRejectedResponseSchema.make({
-    tag: "decodeRejected",
-    distributionId: input.distributionId,
-    issues: input.issues,
-  });
+  return OracleDecodeRejectedResponseSchema.make(
+    {
+      tag: "decodeRejected",
+      distributionId: input.distributionId,
+      issues: input.issues,
+    },
+    { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+  );
 }
 
 export function oracleEvaluatedResponse(input: {
   readonly distributionId: DistributionId;
   readonly traces: readonly [OracleTrace, ...OracleTrace[]];
 }): OracleEvaluatedResponse {
-  return OracleEvaluatedResponseSchema.make({
-    tag: "evaluated",
-    distributionId: input.distributionId,
-    traces: input.traces,
-  });
+  return OracleEvaluatedResponseSchema.make(
+    {
+      tag: "evaluated",
+      distributionId: input.distributionId,
+      traces: input.traces,
+    },
+    { parseOptions: STRICT_OBJECT_PARSE_OPTIONS },
+  );
 }
 
 export const ORACLE_INVALID_JSON_ISSUES = [
@@ -227,7 +241,12 @@ export const ORACLE_INVALID_JSON_ISSUES = [
 export function isOracleBatchResponse(
   input: unknown,
 ): input is OracleBatchResponse {
-  return Schema.is(OracleBatchResponseSchema)(input);
+  return Result.isSuccess(
+    Schema.decodeUnknownResult(
+      Schema.toType(OracleBatchResponseSchema),
+      STRICT_OBJECT_PARSE_OPTIONS,
+    )(input),
+  );
 }
 
 function isCanonicalOracleDecodeIssues(

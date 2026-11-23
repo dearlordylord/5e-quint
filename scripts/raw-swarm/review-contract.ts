@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { Schema } from "effect";
 
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
@@ -18,7 +19,7 @@ export const ReviewOutputSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
   transcriptSha256: Schema.String.pipe(
-    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+    Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   ),
   reviewer: Schema.Trimmed.check(Schema.isNonEmpty()),
   verdicts: Schema.Array(

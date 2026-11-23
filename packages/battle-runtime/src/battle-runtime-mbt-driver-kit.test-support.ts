@@ -1,4 +1,7 @@
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleResolutionHolesForTest,
+  rangedAttackEnemyProximityFactsForTest,
+} from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as parseSharedStatBlockId,
@@ -16321,9 +16324,9 @@ function independentSpellAttackSequenceTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: spellCasterId,
-              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: spellCasterId,
+              procedureRef: spellTargetProcedureRefForMbtHole(hole),
               enemies: [],
             },
           ]
@@ -18062,6 +18065,7 @@ function targetFill(
     value: targetId,
     spatialFacts: [
       ...attackSpatialFacts,
+      ...rangedAttackEnemyProximityFactsForTest(hole),
       {
         kind: "attackerAllyWithin5FeetOfTarget",
         attackerId: fighterId,
@@ -18098,9 +18102,9 @@ function spellTargetChoiceFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: subject.actorId,
-              sourceProcedureRef: subject.procedureRef,
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: subject.actorId,
+              procedureRef: subject.procedureRef,
               enemies: [],
             },
           ]
@@ -18144,9 +18148,9 @@ function chainedAttackProcedureTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: spellCasterId,
-              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: spellCasterId,
+              procedureRef: spellTargetProcedureRefForMbtHole(hole),
               enemies: [],
             },
           ]
@@ -18174,9 +18178,9 @@ function chainedAttackProcedureLeapTargetFill(
         ?.requiresEnemyProximityQualification === true
         ? [
             {
-              kind: "rangedSpellAttackEnemyProximity" as const,
-              casterId: spellCasterId,
-              sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+              kind: "rangedAttackEnemyProximity" as const,
+              attackerId: spellCasterId,
+              procedureRef: spellTargetProcedureRefForMbtHole(hole),
               enemies: [],
             },
           ]

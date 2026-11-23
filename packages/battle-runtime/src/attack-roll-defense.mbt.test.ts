@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // UNIT-IDENTITY-REPLAY: FEATURE-585 ranger_defensive_tactics doResolveDefense
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay FEATURE-585 ranger_defensive_tactics
@@ -9,10 +10,7 @@ import { Result } from "effect";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-feature-support.ts";
-import {
-  requiredAttackRollMode,
-  recordAttackRollOngoingFeatures,
-} from "./battle-reducer/attack-roll.ts";
+import { recordAttackRollOngoingFeatures } from "./battle-reducer/attack-roll.ts";
 import { resetBattleTurnResources } from "./battle-reducer/turn-resource-reset.ts";
 import {
   startBattleSessionRight,
@@ -70,7 +68,7 @@ function defenseProjection() {
   const attack = testLongswordAttack();
   return {
     opportunityDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         opportunity,
         goblinId,
         requireCombatant(opportunity, fighterId),
@@ -79,7 +77,7 @@ function defenseProjection() {
         true,
       ) === "disadvantage",
     ordinaryDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         opportunity,
         goblinId,
         requireCombatant(opportunity, fighterId),
@@ -87,7 +85,7 @@ function defenseProjection() {
         [],
       ) === "disadvantage",
     repeatDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         hit,
         goblinId,
         requireCombatant(hit, fighterId),
@@ -95,7 +93,7 @@ function defenseProjection() {
         [],
       ) === "disadvantage",
     missDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         miss,
         goblinId,
         requireCombatant(miss, fighterId),
@@ -103,7 +101,7 @@ function defenseProjection() {
         [],
       ) === "disadvantage",
     nextTurnDisadvantage:
-      requiredAttackRollMode(
+      attackRollModeForTest(
         nextTurn,
         goblinId,
         requireCombatant(nextTurn, fighterId),

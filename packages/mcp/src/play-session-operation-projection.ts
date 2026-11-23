@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import {
   operationResultInputSource,
   type UnresolvedInputSource,
@@ -81,6 +82,7 @@ export function unresolvedInputsFrom(
     Match.when(battleToolNames.cancelBattleAction, () => {
       const decoded = Schema.decodeUnknownResult(
         BattleActionCancelledOutputSchema,
+        STRICT_OBJECT_PARSE_OPTIONS,
       )(value);
       return Result.isFailure(decoded)
         ? operationProjectionIssue(decoded.failure)
@@ -113,9 +115,10 @@ export function unresolvedInputsFromBattleEnvelope(
   value: unknown,
   envelopePath: OperationResultPath = "$.envelope",
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(BattlePresentationEnvelopeSchema)(
-    value,
-  );
+  const decoded = Schema.decodeUnknownResult(
+    BattlePresentationEnvelopeSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed(
@@ -129,7 +132,10 @@ export function unresolvedInputsFromBattleEnvelope(
 function creationDraftUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(CreationDraftOutputSchema)(value);
+  const decoded = Schema.decodeUnknownResult(
+    CreationDraftOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed([
@@ -141,9 +147,10 @@ function creationDraftUnresolvedInputs(
 function creationFillUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(FillCreationHolesOutputSchema)(
-    value,
-  );
+  const decoded = Schema.decodeUnknownResult(
+    FillCreationHolesOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed([
@@ -158,9 +165,10 @@ function creationFillUnresolvedInputs(
 function finalizationUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(FinalizeCharacterOutputSchema)(
-    value,
-  );
+  const decoded = Schema.decodeUnknownResult(
+    FinalizeCharacterOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed(finalizationHoleGroup(decoded.success.finalization));
@@ -171,6 +179,7 @@ function characterSessionOperationUnresolvedInputs(
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const decoded = Schema.decodeUnknownResult(
     CharacterSessionOperationOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
   )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
@@ -187,7 +196,10 @@ function characterSessionOperationUnresolvedInputs(
 function startBattleUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(StartBattleOutputSchema)(value);
+  const decoded = Schema.decodeUnknownResult(
+    StartBattleOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed(
@@ -198,9 +210,10 @@ function startBattleUnresolvedInputs(
 function battleLifecycleUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(BattleLifecycleOutputSchema)(
-    value,
-  );
+  const decoded = Schema.decodeUnknownResult(
+    BattleLifecycleOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed(
@@ -211,7 +224,10 @@ function battleLifecycleUnresolvedInputs(
 function battleSessionUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(BattleSessionOutputSchema)(value);
+  const decoded = Schema.decodeUnknownResult(
+    BattleSessionOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed(
@@ -267,9 +283,10 @@ function battlePresentationUnresolvedInputsFrom(
 function battleResolutionUnresolvedInputs(
   value: unknown,
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownResult(BattleResolutionOutputSchema)(
-    value,
-  );
+  const decoded = Schema.decodeUnknownResult(
+    BattleResolutionOutputSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
+  )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);
   return Result.succeed(
@@ -282,6 +299,7 @@ function readPlaySessionUnresolvedInputs(
 ): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const decoded = Schema.decodeUnknownResult(
     PlaySessionReadOperationResultSchema,
+    STRICT_OBJECT_PARSE_OPTIONS,
   )(value);
   if (Result.isFailure(decoded))
     return operationProjectionIssue(decoded.failure);

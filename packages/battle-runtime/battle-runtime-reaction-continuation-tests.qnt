@@ -55,6 +55,8 @@ module battleRuntimeReactionContinuationTests {
       assert(resolved.goblin.reactionAvailable == false),
       assert(resolved.fighter.hp == 6),
       assert(resolved.fighter.movementSpent == 5),
+      assert(resolveTriggeredReactionOffer(resolved, Goblin) == resolved),
+      assert(resolveTriggeredReactionOffer(initialState, Goblin) == initialState),
     }
   }
 

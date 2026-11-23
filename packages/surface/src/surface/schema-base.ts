@@ -481,12 +481,12 @@ export const ExileDestinationSchema = Schema.Literals([
 ]);
 
 export const ContainerStorageProfileSchema = Schema.Struct({
-  maxWeightPounds: Schema.Number,
-  maxVolumeCubicFeet: Schema.Number,
-  weightOverridePounds: exactOptional(Schema.Number),
+  maxWeightPounds: Schema.Finite,
+  maxVolumeCubicFeet: Schema.Finite,
+  weightOverridePounds: exactOptional(Schema.Finite),
   airSupply: exactOptional(
     Schema.Struct({
-      sharedMinutes: Schema.Number,
+      sharedMinutes: Schema.Finite,
     }),
   ),
   extradimensional: exactOptional(Schema.Literal(true)),
@@ -598,13 +598,13 @@ export const LevelAxisSchema = Schema.Literals([
 export const DiceDeltaSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fixed_number"),
-    amount: Schema.Number,
+    amount: Schema.Finite,
     sign: Schema.Literals(["+", "-"]),
   }),
   Schema.Struct({
     kind: Schema.Literal("fixed_dice"),
-    dice: Schema.Number,
-    dieSize: Schema.Number,
+    dice: Schema.Finite,
+    dieSize: Schema.Finite,
     sign: Schema.Literals(["+", "-"]),
   }),
   Schema.Struct({
@@ -616,16 +616,16 @@ export const DiceDeltaSchema = Schema.Union([
     kind: Schema.Literal("ability_modifier"),
     ability: AbilitySchema,
     sign: Schema.Literals(["+", "-"]),
-    minimum: exactOptional(Schema.Number),
+    minimum: exactOptional(Schema.Finite),
   }),
   Schema.Struct({
     kind: Schema.Literal("threshold_tiers"),
     axis: LevelAxisSchema,
-    base: Schema.Number,
+    base: Schema.Finite,
     tiers: Schema.NonEmptyArray(
       Schema.Struct({
-        atLevel: Schema.Number,
-        value: Schema.Number,
+        atLevel: Schema.Finite,
+        value: Schema.Finite,
       }),
     ),
     sign: Schema.Literals(["+", "-"]),
@@ -634,12 +634,12 @@ export const DiceDeltaSchema = Schema.Union([
     kind: Schema.Literal("magic_item_rarity_bonus"),
     sign: Schema.Literals(["+", "-"]),
     byRarity: Schema.Struct({
-      common: Schema.Number,
-      uncommon: Schema.Number,
-      rare: Schema.Number,
-      very_rare: Schema.Number,
-      legendary: Schema.Number,
-      artifact: Schema.Number,
+      common: Schema.Finite,
+      uncommon: Schema.Finite,
+      rare: Schema.Finite,
+      very_rare: Schema.Finite,
+      legendary: Schema.Finite,
+      artifact: Schema.Finite,
     }),
   }),
 ]);
@@ -718,17 +718,17 @@ export const ArmorCategorySchema = Schema.Literals([
 
 export const LightArmorAcFormulaSchema = Schema.Struct({
   kind: Schema.Literal("light_dex"),
-  base: Schema.Number,
+  base: Schema.Finite,
 });
 
 export const MediumArmorAcFormulaSchema = Schema.Struct({
   kind: Schema.Literal("medium_dex_max_2"),
-  base: Schema.Number,
+  base: Schema.Finite,
 });
 
 export const HeavyArmorAcFormulaSchema = Schema.Struct({
   kind: Schema.Literal("heavy_fixed"),
-  ac: Schema.Number,
+  ac: Schema.Finite,
 });
 
 export const ArmorAcFormulaSchema = Schema.Union([
@@ -758,20 +758,20 @@ export const WeaponUsageSchema = Schema.Literals(
 export const WeaponDamageSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("dice"),
-    dice: Schema.Number,
-    dieSize: Schema.Number,
+    dice: Schema.Finite,
+    dieSize: Schema.Finite,
     damageType: DamageTypeSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("flat"),
-    amount: Schema.Number,
+    amount: Schema.Finite,
     damageType: DamageTypeSchema,
   }),
 ]);
 
 export const WeaponRangeSchema = Schema.Struct({
-  normal: Schema.Number,
-  long: Schema.Number,
+  normal: Schema.Finite,
+  long: Schema.Finite,
 });
 
 export { AmmunitionKindSchema };
@@ -968,21 +968,21 @@ export const ReadonlyNonEmptyArrayCreatureTypeSchema =
   Schema.NonEmptyArray(CreatureTypeSchema);
 
 export const DiceExprSchema = Schema.Struct({
-  dice: Schema.Number,
-  dieSize: Schema.Number,
-  flat: exactOptional(Schema.Number),
+  dice: Schema.Finite,
+  dieSize: Schema.Finite,
+  flat: exactOptional(Schema.Finite),
   spellcastingMod: exactOptional(Schema.Literal(true)),
   abilityModifier: exactOptional(AbilitySchema),
 });
 
 export const DiceExprDeltaSchema = Schema.Struct({
-  dice: exactOptional(Schema.Number),
-  dieSize: exactOptional(Schema.Number),
-  flat: exactOptional(Schema.Number),
+  dice: exactOptional(Schema.Finite),
+  dieSize: exactOptional(Schema.Finite),
+  flat: exactOptional(Schema.Finite),
 });
 
 const DiceAmountThresholdTierSchema = Schema.Struct({
-  atLevel: Schema.Number,
+  atLevel: Schema.Finite,
   override: DiceExprDeltaSchema,
 });
 
@@ -991,8 +991,8 @@ const ReadonlyNonEmptyArrayDiceAmountThresholdTierSchema = Schema.NonEmptyArray(
 );
 
 const ExplodingMaxDieThresholdTierSchema = Schema.Struct({
-  atLevel: Schema.Number,
-  dice: Schema.Number,
+  atLevel: Schema.Finite,
+  dice: Schema.Finite,
 });
 
 const ReadonlyNonEmptyArrayExplodingMaxDieThresholdTierSchema =
@@ -1024,13 +1024,13 @@ export const DiceAmountSchema = Schema.suspend(() =>
       axis: LevelAxisSchema,
       base: DiceExprSchema,
       perLevel: DiceExprDeltaSchema,
-      startingAtLevel: Schema.Number,
+      startingAtLevel: Schema.Finite,
     }),
     Schema.Struct({
       kind: Schema.Literal("threshold_tiers_exploding_max_die"),
       axis: LevelAxisSchema,
-      baseDice: Schema.Number,
-      dieSize: Schema.Number,
+      baseDice: Schema.Finite,
+      dieSize: Schema.Finite,
       tiers: ReadonlyNonEmptyArrayExplodingMaxDieThresholdTierSchema,
       maxAdditionalDice: Schema.Literal("spellcasting_ability_modifier"),
     }),
@@ -1064,10 +1064,10 @@ export const SpellAccessModeSchema = Schema.Union([
   ]),
   Schema.Struct({
     kind: Schema.Literal("charge_cast"),
-    baseCharges: Schema.Number,
-    perLevelCharges: Schema.Number,
-    minLevel: Schema.Number,
-    maxLevel: Schema.Number,
+    baseCharges: Schema.Finite,
+    perLevelCharges: Schema.Finite,
+    minLevel: Schema.Finite,
+    maxLevel: Schema.Finite,
   }),
 ]);
 
@@ -1077,7 +1077,7 @@ export const GrantedSpellTargetRestrictionSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("visible_target_within_feet"),
-    feet: Schema.Number,
+    feet: Schema.Finite,
     origin: Schema.Literals(["caster", "spell_sensor"]),
   }),
 ]);

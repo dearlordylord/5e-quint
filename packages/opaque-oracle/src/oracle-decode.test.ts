@@ -7,10 +7,10 @@ describe("decodeWithSchema", () => {
   it("maps a forbidden async transformation to a root wrongType issue", () => {
     const asyncText = Schema.String.pipe(
       Schema.decodeTo(Schema.String, {
-        decode: SchemaGetter.transformOrFail((value: string) =>
+        decode: SchemaGetter.transformEffect((value: string) =>
           Effect.promise(() => Promise.resolve(value)),
         ),
-        encode: SchemaGetter.transformOrFail((value: string) =>
+        encode: SchemaGetter.transformEffect((value: string) =>
           Effect.succeed(value),
         ),
       }),
@@ -25,10 +25,10 @@ describe("decodeWithSchema", () => {
   it("does not add the forbidden fallback when a sibling issue is present", () => {
     const asyncText = Schema.String.pipe(
       Schema.decodeTo(Schema.String, {
-        decode: SchemaGetter.transformOrFail((value: string) =>
+        decode: SchemaGetter.transformEffect((value: string) =>
           Effect.promise(() => Promise.resolve(value)),
         ),
-        encode: SchemaGetter.transformOrFail((value: string) =>
+        encode: SchemaGetter.transformEffect((value: string) =>
           Effect.succeed(value),
         ),
       }),

@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { NonNegativeInteger, PositiveInteger } from "@dnd/shared/types";
@@ -532,6 +533,7 @@ describe("mechanical attack option projection", () => {
         Result.isFailure(
           Schema.decodeUnknownResult(
             MechanicalSupportedAttackActionOptionSchema,
+            STRICT_OBJECT_PARSE_OPTIONS,
           )(invalidInput),
         ),
       ).toBe(true);

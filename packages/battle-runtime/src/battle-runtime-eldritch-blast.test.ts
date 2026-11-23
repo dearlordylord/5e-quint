@@ -130,7 +130,7 @@ describe("battle runtime: Eldritch Blast", () => {
           {
             ...beamOneTarget,
             spatialFacts: (beamOneTarget.spatialFacts ?? []).filter(
-              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+              (fact) => fact.kind !== "rangedAttackEnemyProximity",
             ),
           },
         ],
@@ -144,7 +144,7 @@ describe("battle runtime: Eldritch Blast", () => {
           {
             ...beamTwoTarget,
             spatialFacts: (beamTwoTarget.spatialFacts ?? []).filter(
-              (fact) => fact.kind !== "rangedSpellAttackEnemyProximity",
+              (fact) => fact.kind !== "rangedAttackEnemyProximity",
             ),
           },
         ],

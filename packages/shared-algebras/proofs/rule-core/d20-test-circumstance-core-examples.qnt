@@ -114,6 +114,47 @@ module d20TestCircumstanceCoreExamples {
     ) == AttackRollModeInvalidDistance),
   }
 
+  run d20TestCircumstanceRangedAttackCloseCombat = {
+    val qualifying: RangedAttackProximityEnemy = {
+      distanceFeet: 5,
+      canSeeAttacker: true,
+      incapacitated: false,
+    }
+    all {
+      assert(d20TestRollModeWithRangedAttackCloseCombat(noMechanicalSources, [])
+        == NormalD20TestRoll),
+      assert(d20TestRollModeWithRangedAttackCloseCombat(noMechanicalSources, [qualifying])
+        == DisadvantageD20TestRoll),
+      assert(d20TestRollModeWithRangedAttackCloseCombat(
+        noMechanicalSources,
+        [{ ...qualifying, distanceFeet: 6 }],
+      ) == NormalD20TestRoll),
+      assert(d20TestRollModeWithRangedAttackCloseCombat(
+        noMechanicalSources,
+        [{ ...qualifying, canSeeAttacker: false }],
+      ) == NormalD20TestRoll),
+      assert(d20TestRollModeWithRangedAttackCloseCombat(
+        noMechanicalSources,
+        [{ ...qualifying, incapacitated: true }],
+      ) == NormalD20TestRoll),
+      assert(d20TestRollModeWithRangedAttackCloseCombat(
+        noMechanicalSources,
+        [{ ...qualifying, incapacitated: true }, qualifying],
+      ) == DisadvantageD20TestRoll),
+      assert(d20TestRollModeWithRangedAttackCloseCombat(mechanicalAdvantage, [qualifying])
+        == NormalD20TestRoll),
+      // A Prone target 5 feet away gives Advantage, which cancels it.
+      assert(attackRollModeMatches(
+        d20TestRollModeWithRangedAttackCloseCombatAndProneTarget(
+          noMechanicalSources,
+          [qualifying],
+          5,
+        ),
+        NormalD20TestRoll,
+      )),
+    }
+  }
+
   run d20TestCircumstanceConditionSources = {
     val noAttacker = noAttackerAttackRollConditions
     val noTarget = noTargetAttackRollConditions

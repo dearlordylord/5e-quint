@@ -38,12 +38,8 @@ const SpellReferenceOccurrenceSchema = Schema.Struct({
         "legendaryActions",
       ]),
       procedureOrdinal: StatBlockProcedureOrdinalSchema,
-      groupOrdinal: Schema.Number.pipe(
-        Schema.fromBrand("PositiveInteger", PositiveInteger),
-      ),
-      spellOrdinal: Schema.Number.pipe(
-        Schema.fromBrand("PositiveInteger", PositiveInteger),
-      ),
+      groupOrdinal: Schema.Number.pipe(Schema.refine(PositiveInteger.is)),
+      spellOrdinal: Schema.Number.pipe(Schema.refine(PositiveInteger.is)),
     }),
   }),
 });

@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
+  McpEmptyArgumentsSchema,
   canonicalMcpOutputSchema,
   withCanonicalMcpOutputSchema,
   decodeToolArgs,
@@ -25,6 +26,43 @@ const schemaProperties = fc.uniqueArray(
 );
 
 describe("MCP output JSON Schema identity", () => {
+  test("omits optional named impossible fields while retaining required constraints", () => {
+    const forbidden = Schema.Never.annotate({
+      identifier: "ForbiddenTestValue",
+    });
+    const optional = mcpOutputJsonSchema(
+      Schema.Struct({ forbidden: Schema.optionalKey(forbidden) }),
+    );
+    expect(optional.properties).toEqual({});
+    expect(JSON.stringify(optional)).not.toContain('"not":{}');
+    expect(mcpOutputJsonSchema(Schema.Struct({ forbidden }))).toMatchObject({
+      required: ["forbidden"],
+      properties: { forbidden: { not: {} } },
+    });
+  });
+
+  test("advertises and decodes only an empty object for argument-free tools", () => {
+    expect(mcpObjectJsonSchema(McpEmptyArgumentsSchema)).toMatchObject({
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    });
+    for (const input of [{}, undefined]) {
+      expect(
+        Result.isSuccess(
+          decodeToolArgs(McpEmptyArgumentsSchema, input, "empty"),
+        ),
+      ).toBe(true);
+    }
+    for (const input of [null, [], "", 1, { extra: true }]) {
+      expect(
+        Result.isFailure(
+          decodeToolArgs(McpEmptyArgumentsSchema, input, "empty"),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("decodes the same encoded representation advertised for transformed inputs", () => {
     const codec = Schema.Struct({ count: Schema.NumberFromString });
 
@@ -380,9 +418,10 @@ describe("shared anonymous MCP codec graphs", () => {
     });
     const codec = Schema.Struct({ left: branch, right: branch, named });
     const advertised = mcpOutputJsonSchema(codec);
-    const baseline = Schema.toStandardJSONSchemaV1(codec)[
-      "~standard"
-    ].jsonSchema.input({ target: "draft-2020-12" });
+    const document = Schema.toJsonSchemaDocument(codec, {
+      onExcessProperty: "error",
+    });
+    const baseline = { ...document.schema, $defs: document.definitions };
     const ajv = createDraft2020JsonSchemaValidator();
     const validate = ajv.getValidator(
       requireJsonSchema(advertised, "shared codec"),

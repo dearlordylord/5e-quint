@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -18,7 +19,6 @@ import {
 import { battleObjectId, type CombatantId } from "./identity.ts";
 import type { BattleFill, BattleState } from "./battle-state-execution.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
-import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 
 // RAW: .references/srd-5.2.1/rules-glossary.md#Prone, "Attacks Affected.":
 // "You have Disadvantage on attack rolls. An attack roll against you has
@@ -62,7 +62,7 @@ function fighterAttackRollMode(state: BattleState, distanceFeet: number) {
   if (targetHole.attack === undefined) {
     throw new Error("Expected the attack target selection.");
   }
-  return requiredAttackRollMode(
+  return attackRollModeForTest(
     state,
     fighterId,
     requireCombatant(state, goblinId),

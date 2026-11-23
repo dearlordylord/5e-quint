@@ -362,10 +362,12 @@ function prayerOfHealingClericBuild(): CharacterBuild {
         {
           classUnitId: classUnitId(authoredUnitId("class_cleric")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
         {
           classUnitId: classUnitId(authoredUnitId("class_cleric")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 1,
         },
       ],
     },

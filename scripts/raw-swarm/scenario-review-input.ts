@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { Result, Match, Schema } from "effect";
 
 import { ScenarioCompositeReviewSchema } from "./scenario-campaign.ts";
@@ -58,7 +59,7 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union([
     evidenceSetId: EvidenceSetIdSchema,
     candidateId: ScenarioCandidateIdSchema,
     candidateScenarioSha256: Schema.String.pipe(
-      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+      Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
     ),
     plannedScenarioId: PlannedScenarioIdSchema,
   }),

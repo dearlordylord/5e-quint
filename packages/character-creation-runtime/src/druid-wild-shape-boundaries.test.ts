@@ -188,6 +188,7 @@ describe("Druid Wild Shape boundaries", () => {
               {
                 classUnitId: classUnitId(authoredUnitId("class_druid")),
                 hitPointRule: { tag: "fixedHigherLevelGain" },
+                constitutionModifierAtGain: 1,
               },
             ],
           },
@@ -216,6 +217,7 @@ describe("Druid Wild Shape boundaries", () => {
             advancements: Array.from({ length: 7 }, () => ({
               classUnitId: druidClassUnitId,
               hitPointRule: { tag: "fixedHigherLevelGain" as const },
+              constitutionModifierAtGain: 1,
             })),
           },
         },

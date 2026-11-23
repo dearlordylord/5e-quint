@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "preserve-failure-meaning",
+  "title": "Preserve failure meaning",
+  "question": "Does this function turn a missing required entity or an unsatisfied prerequisite into an ordinary successful result that conceals the failure?",
+  "criteria": {
+    "true": "A required lookup or prerequisite can fail, but the function returns the same ordinary value used for a valid negative, zero, empty, unchanged, or no-modifier result. Its contract loses the distinction between missing evidence and verified absence.",
+    "false": "The function accepts the resolved entity or validated prerequisite, propagates an explicit typed failure or absence, or implements a fallback whose domain meaning is established in the supplied code. An existing entity with no matching conditions and an intentionally optional configuration with a documented default are valid cases.",
+  },
+  "message": "Require the resolved entity or validated prerequisite as input, or preserve failure in a typed result. Use a normal fallback only when it has an explicit domain meaning.",
+  "inputs": [
+    {
+      "languages": ["typescript"],
+      "kind": "function",
+      "requires": ["signature", "body"],
+    },
+  ],
+}

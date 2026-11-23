@@ -199,76 +199,14 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
-The combined issue #516 and #519 candidate built from campaign base
-`954bc8a03` measures the Effect 4 public declaration graph at 283 declaration
-files and 8,120,860 bytes. The byte gate remains 10 MiB, leaving 2,364,900 bytes
-of explicit margin; the coarse file safety ceiling is 1,000. The emitter retains
-the complete compiler dependency closure from its explicit public and
-compiler-entry roots and removes other emitted implementation declarations.
-Deterministic verification asserts exact-manifest acceptance plus coarse-cap
-and cap-plus-one boundary tests; changing either bound, any admitted path, or
-any declaration content requires a new measured graph and review. The canonical
-manifest is owned beside the declaration emitter in
-`sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
-distribution test. The historical
-[declaration-bundle convergence record](../../docs/cleanroom/CONTEXT.md)
-records the repaired 23 additions and one removal from comparison commit
-`993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
-excluded by the lightweight mechanics-admission owner.
-
-The combined issue #511, #285, #525, #526, and #520 candidate based on
-`321644f4b` retains the same 283 declaration paths and path-ledger SHA-256. It
-measures 8,122,404 bytes, leaving 2,363,356 bytes below the unchanged 10 MiB
-cap, and its
-content-ledger SHA-256 is
-`ec2d7fd8fdfcb25f6834f85fb199f83f5c1b033d2cd799b1f2a34683e671efcb`.
-Relative to the #511 and #285 candidate, exactly four declarations change:
-`battle-state-execution.d.ts` grows by 23 bytes for the dead-at-admission
-requirement, `domain-constants.d.ts` grows by 119 bytes for the Unconscious
-adjacency distance, `character-creation-runtime/consumer-protocol.d.ts` shrinks
-by 34 bytes after returning proficiency type ownership to the canonical package
-index, and `battle-character-build-projection.d.ts` grows by 50 bytes to import
-that type from its owner. The #520 MCP diagnostic formatter is outside the SDK
-declaration graph. The shared weapon-proficiency algebra remains implementation
-support already consumed by the existing declarations and adds no declaration
-path. The file and byte caps, required roots, and forbidden paths remain
-unchanged.
-
-The declaration manifest was measured from integration commit
-`d3cd34fd3` through two separately reviewed legs. The pre-#534 drift from the
-recorded manifest commit `1af5fbffd` to review base `f7ad33901` measured 284
-files and 8,131,454 bytes: one added path, eleven changed declarations, and
-9,050 additional bytes. Its battle spatial/size, character-creation
-admission/loadout, and character-sheet loadout cohorts remain attributed to
-their earlier owning changes. The reviewed `f7ad33901` to `d3cd34fd3` protocol
-leg added one declaration and changed nineteen, adding 6,454 bytes. Its exact
-measure was 285 files and 8,137,908 bytes, with path ledger
-`9f5717f9301a785b2355e0bc263f770771c996a76482cac457f13e9e9f77447e` and
-content ledger
-`0f330965857f0b1b145bbe62b1b36437f00e818999a42e530164c97bbe11b57f`.
-Comparison baseline `993cb0b11` and all caps, required roots, and forbidden
-paths remained unchanged; the clean-consumer distribution test reproduced the
-four exact values.
-
-The follow-up index-export cleanup after `d3cd34fd3` retained all 285 paths and
-reduced the reviewed declaration bundle to 8,137,616 bytes. Its path ledger is
-unchanged at
-`9f5717f9301a785b2355e0bc263f770771c996a76482cac457f13e9e9f77447e`; its
-content ledger is
-`47e12f2cfbf394e949844cf4e1994b75e8259ee7b5d43783449469a3de262ae7`.
-Against the preceding 8,137,908-byte `d3cd34fd3` measure, the repeated
-comparison found no added or removed declarations and exactly two changed
-paths, both deliberate duplicate-export removals: the battle-runtime index
-and character-creation-runtime index declarations. The caps, required roots,
-forbidden paths, and comparison baseline remain unchanged.
-
-The owning [consumer distribution module](sdk-player/consumer-distribution.ts)
-records the reviewed declaration manifest, required roots, forbidden paths,
-and caps. The exact named creature-field schema interface preserves all
-canonical fields while avoiding repeated structural declarations. Final-source
-emission reproduced the declaration bytes qualified by an isolated strict
-consumer check of every retained declaration. The comparison baseline and
-acceptance gates remain unchanged.
+The [consumer distribution module](sdk-player/consumer-distribution.ts) owns
+its reviewed declaration manifest, required roots, forbidden paths, and caps.
+The emitter retains the complete compiler dependency closure from its explicit
+public and compiler-entry roots, removing other implementation declarations.
+Deterministic verification checks exact-manifest acceptance and cap boundaries.
+Changing a bound, admitted path, or declaration content requires a measured
+graph and review; reproduce the manifest with the clean-consumer distribution
+test.
 
 The [declaration cache](sdk-player/declaration-cache.ts) stores only successful
 strict emissions admitted by the owning consumer distribution module. Its
@@ -317,9 +255,9 @@ Generated consumer configurations are byte-identical after relocation, use
 `baseUrl: "."`, and contain only POSIX relative declaration paths.
 Compiler resolution is supplied separately from the certified D&D
 declaration graph by an authentic declaration-only cohort:
-Effect 4.0.0-rc.112, fast-check 4.9.0, msgpackr 2.1.0, and pure-rand 8.4.2.
-That cohort contains the packages' original manifests and licenses plus their
-complete required declaration files; exact version, dependency, path, content,
+Effect 4.1.4, whose published package has no external runtime dependencies.
+That cohort contains Effect's original manifest, license, third-party notices,
+and complete declaration files; exact version, dependency, path, content,
 file-count, and byte ledgers reject drift. It contains no JavaScript, maps, or
 source runtime and is not an authored SDK capability. The authored-source
 admission boundary permits the role's generated static type import from its

@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
@@ -77,7 +78,6 @@ import {
   attackRollOngoingFeatureActivationProfile,
   attackRollOngoingFeatureActivations,
   attackRollModeWithOptionalOngoingFeature,
-  requiredAttackRollMode,
 } from "./battle-reducer/attack-roll.ts";
 import {
   compatibleAttackActionResource,
@@ -595,7 +595,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       combatants: new Map(state.combatants).set(fighterId, poisonedFighter),
     };
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         poisonedState,
         fighterId,
         requireCombatant(poisonedState, goblinId),
@@ -604,14 +604,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ),
     ).toBe("disadvantage");
     expect(
-      attackRollModeWithOptionalOngoingFeature(
-        poisonedState,
-        fighterId,
-        requireCombatant(poisonedState, goblinId),
-        attack,
-        [],
-        activationRef,
-      ),
+      attackRollModeWithOptionalOngoingFeature("disadvantage", activationRef),
     ).toBe("normal");
 
     const helperId = combatantId("synthetic-helper");
@@ -652,7 +645,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ],
     };
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         helpedState,
         fighterId,
         requireCombatant(helpedState, goblinId),
@@ -661,24 +654,10 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ),
     ).toBe("normal");
     expect(
-      attackRollModeWithOptionalOngoingFeature(
-        helpedState,
-        fighterId,
-        requireCombatant(helpedState, goblinId),
-        helpedAttack,
-        [],
-        activationRef,
-      ),
+      attackRollModeWithOptionalOngoingFeature("normal", activationRef),
     ).toBe("normal");
     expect(
-      attackRollModeWithOptionalOngoingFeature(
-        state,
-        fighterId,
-        requireCombatant(state, goblinId),
-        attack,
-        [],
-        activationRef,
-      ),
+      attackRollModeWithOptionalOngoingFeature(undefined, activationRef),
     ).toBe("advantage");
     expect(attackRollHole(undefined, attack)).not.toHaveProperty(
       "missToHitReplacement",
@@ -718,7 +697,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
         combatants: new Map(state.combatants).set(goblinId, proneGoblin),
       };
       expect(
-        requiredAttackRollMode(
+        attackRollModeForTest(
           proneState,
           fighterId,
           requireCombatant(proneState, goblinId),
@@ -757,7 +736,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
     };
 
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         proneState,
         fighterId,
         requireCombatant(proneState, goblinId),
@@ -766,7 +745,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ),
     ).toBeUndefined();
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         proneState,
         fighterId,
         requireCombatant(proneState, goblinId),
@@ -971,7 +950,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
         .set(fighterId, poisonedFighter),
     };
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         composedState,
         fighterId,
         requireCombatant(composedState, goblinId),
@@ -998,7 +977,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ],
     };
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         helpedState,
         fighterId,
         requireCombatant(helpedState, goblinId),

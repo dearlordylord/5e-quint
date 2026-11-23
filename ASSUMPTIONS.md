@@ -245,6 +245,42 @@ model reads "doesn't move" as covering any voluntary change of the target's
 position, so Halt suppresses Drop Prone as it suppresses Movement and Stand from
 Prone.
 
+## A54: Graze fixes outgoing damage; Vulnerability doubles damage taken
+
+**Assumption:** Graze's restriction fixes the attacker's outgoing damage at the
+attack ability modifier, with a minimum of 0. The target then applies Immunity,
+Resistance, and Vulnerability normally. With a +3 attack ability modifier and
+Vulnerability to the weapon's damage type, the target takes 6 Graze damage.
+Damage bonuses, extra dice, and attack riders do not increase the outgoing
+Graze amount.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Graze," permits
+increasing its damage only by increasing the ability modifier.
+`.references/srd-5.2.1/playing-the-game.md`, "Order of Application," applies
+Vulnerability after other damage adjustments and Resistance. The SRD does not
+explicitly settle whether Graze's restriction also prevents that target-side
+adjustment. This model applies the restriction to outgoing damage and permits
+Vulnerability to double the damage taken by the target.
+
+## A55: Different reroll sources may apply sequentially to the same die
+
+**Assumption:** A die rerolled by one source may be rerolled again by a
+different source, provided each source's triggering conditions, timing,
+resource costs, and usage limits are satisfied. "Must use the new roll"
+prevents choosing the previous result; it does not prevent another eligible
+source from replacing the new result. This does not grant additional uses of
+the same source.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`,
+"Heroic Inspiration," permits rerolling any die immediately after rolling it
+and requires using the new roll. `.references/srd-5.2.1/character-origins.md`,
+"Halfling," uses the same requirement for Luck. Neither passage explicitly
+addresses a subsequent reroll by a different source. The model permits that
+sequence rather than imposing a shared one-reroll limit across sources.
+`.references/srd-5.2.1/playing-the-game.md`, "Interactions with Rerolls,"
+still limits each reroll with Advantage or Disadvantage to one chosen die,
+not both.
+
 ## A59: A Chromatic Orb leap measures cover from the previous target
 
 **Assumption:** When the orb leaps, the new target's cover against the new

@@ -56,7 +56,7 @@ export function attackDamageInterruptionFrame(input: {
     damageInput: input.damageInput,
     criticalConsequence: input.critical
       ? { kind: "criticalHit" }
-      : { kind: "ordinaryHit" },
+      : { kind: "nonCritical" },
     phase: "attackDamage",
     continuation: input.continuation,
   };
@@ -148,6 +148,7 @@ export function attackFillsForAttackHitReplay(
   return fills.filter(
     (fill) =>
       fill.kind === "targetChoice" ||
+      fill.kind === "targetSpatialFacts" ||
       fill.kind === "attackRoll" ||
       (fill.kind === "damageTypeChoice" &&
         fill.holeId === FRENZY_DAMAGE_TYPE_HOLE_ID),

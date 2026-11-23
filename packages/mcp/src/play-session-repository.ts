@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "@dnd/shared/json-schema";
 import { Result, Schema } from "effect";
 
 import { type PlaySessionCommand, type PlaySessionId } from "./play-session.ts";
@@ -21,7 +22,7 @@ import {
 
 export const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 5 as const;
 const StoredDiceSeedSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{32}$/u)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{32}$/u)),
 );
 const StoredPlaySessionRowSchema = Schema.Struct({
   format_version: Schema.Literal(RECOVERABLE_PLAY_SESSION_FORMAT_VERSION),

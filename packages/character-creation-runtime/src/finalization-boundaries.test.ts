@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { abilityScore } from "@dnd/shared/types";
+import { abilityScore, DieRollResult } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -84,6 +84,8 @@ function selectionsWithStartingClass(
   };
 }
 
+const dieRollResult = (value: number) => DieRollResult(value);
+
 function projectionBuild(
   startingClass: ReturnType<typeof classUnitId>,
 ): Pick<
@@ -124,6 +126,7 @@ function fighterSorcererMulticlassProjectionBuild(): ReturnType<
         {
           classUnitId: sorcererClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
+          constitutionModifierAtGain: 0,
         },
       ],
     },
@@ -856,6 +859,122 @@ describe("character finalization boundaries", () => {
     ).toMatchObject({
       _tag: "Success",
       success: { maximum: 15 },
+    });
+  });
+
+  test("adds a rolled Hit Die plus the Constitution modifier for a level after 1", () => {
+    const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
+    const startingBuild = projectionBuild(fighterClassUnitId);
+    const fighterLevelTwo = (
+      hitPointRule: CharacterBuild["progression"]["advancements"][number]["hitPointRule"],
+      con: number,
+      conAtGain: number = con,
+    ) => ({
+      ...startingBuild,
+      abilityScores: { ...startingBuild.abilityScores, con: abilityScore(con) },
+      progression: {
+        ...startingBuild.progression,
+        advancements: [
+          {
+            classUnitId: fighterClassUnitId,
+            hitPointRule,
+            constitutionModifierAtGain: Math.floor((conAtGain - 10) / 2),
+          },
+        ],
+      },
+    });
+    const rolled = (hitDieResult: number) => ({
+      tag: "rolledHigherLevelGain" as const,
+      hitDieResult: dieRollResult(hitDieResult),
+    });
+
+    expect(
+      characterBuildHitPoints(
+        fighterLevelTwo({ tag: "fixedHigherLevelGain" }, 14),
+        unitLibrary,
+      ),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 12 + 8 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(10), 14), unitLibrary),
+    ).toMatchObject({
+      _tag: "Success",
+      success: {
+        maximum: 12 + 12,
+        hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 2 }],
+      },
+    });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(2), 10), unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 10 + 2 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(1), 3), unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 6 + 1 } });
+    // Level 2 rolled 1 at Constitution 8 (gain 1); Constitution 10 adds 1.
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(1), 10, 8), unitLibrary),
+    ).toMatchObject({ _tag: "Success", success: { maximum: 10 + 2 } });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(5), 10, 14), unitLibrary),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          cause: {
+            tag: "constitutionModifierAtGainAboveCurrent",
+            characterLevel: 2,
+            constitutionModifierAtGain: 2,
+            constitutionModifier: 0,
+          },
+        },
+      ],
+    });
+    expect(
+      characterBuildHitPoints(fighterLevelTwo(rolled(11), 10), unitLibrary),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          cause: {
+            tag: "rolledHitDieResultAboveHitDie",
+            classUnitId: "class_fighter",
+            hitDieResult: 11,
+            hitDieSize: 10,
+          },
+        },
+      ],
+    });
+    const levelTwo = fighterLevelTwo(rolled(5), 14);
+    const [levelTwoGain] = levelTwo.progression.advancements;
+    expect(levelTwoGain).toBeDefined();
+    expect(
+      characterBuildHitPoints(
+        {
+          ...levelTwo,
+          progression: {
+            ...levelTwo.progression,
+            advancements: levelTwoGain
+              ? [
+                  levelTwoGain,
+                  { ...levelTwoGain, constitutionModifierAtGain: 1 },
+                ]
+              : [],
+          },
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          cause: {
+            tag: "constitutionModifierAtGainBelowEarlier",
+            characterLevel: 3,
+            constitutionModifierAtGain: 1,
+            earlierCharacterLevel: 2,
+            earlierConstitutionModifierAtGain: 2,
+          },
+        },
+      ],
     });
   });
 

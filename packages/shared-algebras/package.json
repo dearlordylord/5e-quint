@@ -49,7 +49,7 @@
   "dependencies": {
     "@dnd/shared": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "effect": "4.0.0-rc.112"
+    "effect": "4.1.4"
   },
   "devDependencies": {
     "@firfi/quint-connect": "catalog:",
