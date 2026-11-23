@@ -5129,7 +5129,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt"
       ],
-      "reason": "The QNT owner proves only the kind-indexed scalar rule: positive matching stock is available, an attack also needs a free hand to load the weapon, an accepted attack decrements exactly one, and unrelated kinds are preserved, with examples for all five surfaced kinds. The independent runtime contract covers explicit stock admission, zero-stock discovery suppression, a character's one-handed Ammunition weapon withheld while its other hand holds a shield or grapples, a Two-Handed one withheld while its second hand grapples, ordinary and readied hit/miss sequencing across damage continuation, per-combatant isolation, and snapshot/codec persistence; it does not claim model-based sequencing parity for every attack host.",
+      "reason": "The QNT owner covers positive matching stock, a genuine free loading hand for a one-handed weapon, and operating hands holding the same Two-Handed weapon without foreign occupancy, while retaining the A64 unstated Stat Block boundary. Accepted attacks decrement exactly one piece and preserve unrelated kinds. The runtime contract covers one- and two-handed discovery, a public two-handed bow miss and exact stock spend, shield/grapple/other-weapon/spell-created-object conflicts, custody of the same weapon, ordinary and readied hit/miss continuations, per-combatant isolation, and snapshot/codec persistence; it does not claim model-based sequencing parity for every attack host.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-ammunition.ts",
@@ -5142,11 +5142,12 @@
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/equipment.md#Ammunition",
+        ".references/srd-5.2.1/equipment.md#Two-Handed",
         ".references/srd-5.2.1/monsters.md#Ammunition and Ranged Attacks",
         "UBIQUITOUS_LANGUAGE.md#Equipment",
         "UBIQUITOUS_LANGUAGE.md#Resource"
       ],
-      "title": "Battle ammunition attacks require positive matching carried stock and a free hand to load the weapon, and expend one piece per accepted attack"
+      "title": "Battle ammunition attacks require positive matching stock and the hands needed to operate the attacking weapon, and expend one piece per accepted attack"
     },
     {
       "id": "CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION",
@@ -12709,13 +12710,13 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Owns matching-ammunition availability, the free hand that loads the weapon, nonnegative stock, exact one-piece accepted-attack expenditure, and per-kind stock independence.",
+      "evidence": "Owns matching-ammunition availability, free one-handed loading hands versus same-weapon two-handed operating hands and foreign occupancy, nonnegative stock, exact one-piece accepted-attack expenditure, and per-kind stock independence.",
       "obligationIds": ["BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "Focused run-block proof evidence for matching-stock availability, the free loading hand, exact decrement, empty-stock rejection, and unrelated-stock preservation.",
+      "evidence": "Focused run-block evidence for matching stock, free loading hand, same-weapon two-handed operation, foreign occupancy and unavailable grip rejection, exact decrement, and unrelated-stock preservation.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle-tests.qnt",
       "role": "proof-only"
@@ -19831,7 +19832,8 @@
         "boolean-connective",
         "all-block",
         "set",
-        "membership"
+        "membership",
+        "pattern-match"
       ],
       "obligationId": "BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE",
       "proofOnly": [

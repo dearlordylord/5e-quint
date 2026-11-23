@@ -968,7 +968,7 @@ function resolveSpellHostedWeaponAttack(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Spell-hosted weapon attack requires available matching ammunition and a free hand to load it.",
+      "Spell-hosted weapon attack requires matching ammunition and hands available to operate the weapon.",
     );
   }
   if (input.fillSet.damageTypeChoice === undefined) {

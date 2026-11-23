@@ -8,7 +8,8 @@ import {
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
-import { firstFreeHand } from "./battle-reducer/creature-state-leaves.ts";
+import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/battle-object-lifecycle.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -69,25 +70,63 @@ export function ammunitionForAttackIsReady(
 }
 
 /**
- * Loading takes a hand that holds nothing and grapples no one: for a
- * one-handed weapon, the other hand (SRD "Ammunition"). A Two-Handed weapon
- * "requires two hands when you attack with it" (SRD "Two-Handed"), so a
- * grapple or held object in its second hand refuses the attack through the
- * same check. A stat block never states what each hand holds, so its loading
- * hand is not checked (ASSUMPTIONS.md A64).
+ * A one-handed weapon needs a free loading hand; a Two-Handed weapon uses
+ * the hands operating that same weapon. Stat Block hand occupancy is not
+ * represented (ASSUMPTIONS.md A64).
  */
 function ammunitionCanBeDrawn(
   state: BattleState,
   combatant: BattleCreatureState,
   attack: SupportedAttackActionOption,
 ): boolean {
-  return Match.value(attack.kind).pipe(
-    Match.when(
-      "weapon",
-      () => firstFreeHand(state, combatant, state.grapples) !== undefined,
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (weaponAttack) =>
+      ammunitionWeaponHandsAreAvailable(state, combatant, weaponAttack),
     ),
-    Match.whenOr("unarmedStrike", "statBlockAttack", () => true),
+    Match.whenOr(
+      { kind: "unarmedStrike" },
+      { kind: "statBlockAttack" },
+      () => true,
+    ),
     Match.exhaustive,
+  );
+}
+
+function ammunitionWeaponHandsAreAvailable(
+  state: BattleState,
+  combatant: BattleCreatureState,
+  attack: Extract<SupportedAttackActionOption, { readonly kind: "weapon" }>,
+): boolean {
+  if (combatant.origin.kind !== "character") return false;
+  const loadout = characterEffectiveLoadoutFromOrigin(
+    state,
+    combatant.combatantId,
+    combatant.origin,
+  );
+  const holdsMainWeapon = loadout.weapon?.itemId === attack.weaponObjectId;
+  const holdsOffHandWeapon =
+    loadout.offHandWeapon?.itemId === attack.weaponObjectId;
+  const hands = combatantHandUses(state, combatant, state.grapples);
+  const handUses = [hands.left, hands.right];
+  if (
+    attack.weapon.properties.some((property) => property.kind === "two_handed")
+  ) {
+    return (
+      holdsMainWeapon &&
+      loadout.weapon?.grip === "two_handed" &&
+      handUses.some((hand) => hand === "mainWeapon") &&
+      handUses.every((hand) => hand === "mainWeapon" || hand === "free")
+    );
+  }
+  const weaponHandUse = holdsMainWeapon
+    ? "mainWeapon"
+    : holdsOffHandWeapon
+      ? "offWeapon"
+      : undefined;
+  return (
+    weaponHandUse !== undefined &&
+    handUses.includes(weaponHandUse) &&
+    handUses.includes("free")
   );
 }
 

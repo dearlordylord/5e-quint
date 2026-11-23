@@ -164,7 +164,11 @@ export function characterCreature(input: {
           weapon: {
             itemId: battleObjectId(`main:${attack.weapon.weaponUnitId}`),
             unitId: attack.weapon.weaponUnitId,
-            grip: "one_handed" as const,
+            grip: attack.weapon.properties.some(
+              (property) => property.kind === "two_handed",
+            )
+              ? ("two_handed" as const)
+              : ("one_handed" as const),
           },
         });
   const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
