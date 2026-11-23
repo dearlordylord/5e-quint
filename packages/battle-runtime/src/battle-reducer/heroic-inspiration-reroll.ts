@@ -48,16 +48,20 @@ const HEROIC_INSPIRATION_REROLL_OPTION = {
 } as const satisfies BattleHeroicInspirationRerollOption;
 
 /**
- * Where the roller's Heroic Inspiration stands for one roll:
+ * Where the roller's Heroic Inspiration can stand for one roll:
  * - "available": it has Heroic Inspiration, or this roll spent it before a replay;
  * - "spentOnAnotherRoll": another roll of the same subject spent it, so a
  *   decline made before that spend still stands;
  * - "unavailable": it has no Heroic Inspiration to decide about.
  */
+export const HEROIC_INSPIRATION_REROLL_AVAILABILITIES = [
+  "available",
+  "spentOnAnotherRoll",
+  "unavailable",
+] as const;
+/** One of {@link HEROIC_INSPIRATION_REROLL_AVAILABILITIES}. */
 export type HeroicInspirationRerollAvailability =
-  | "available"
-  | "spentOnAnotherRoll"
-  | "unavailable";
+  (typeof HEROIC_INSPIRATION_REROLL_AVAILABILITIES)[number];
 
 type HeroicInspirationRollFacts = {
   readonly availability: HeroicInspirationRerollAvailability;

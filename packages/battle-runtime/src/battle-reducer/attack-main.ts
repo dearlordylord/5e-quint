@@ -1406,7 +1406,7 @@ function ordinaryObjectAttackRollIssue<
     !attackRollResultIsValid(input.attackRoll) ||
     input.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
     input.attackRoll.missToHitReplacementProcedureRef !== undefined ||
-    input.attackRoll.spellAttackReroll !== undefined
+    spellAttackRerollUnsupportedIssue(input.attackRoll) !== null
   ) {
     return "Object attack roll does not match the ordinary attack-roll protocol.";
   }

@@ -16,6 +16,7 @@ import { D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE } from "./battle-reducer/d2
 import { HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/heroic-inspiration-reroll.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
+  PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE,
   settleBattleRuntimeTransaction,
   type BattleRuntimeTransactionResult,
 } from "./battle-runtime-transaction.ts";
@@ -678,6 +679,18 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
         ]),
       ).toMatchObject({ tag: "settled" });
     }
+    expect(
+      settle(rolled, [
+        attackRollFill(askedAgain, {
+          total: 25,
+          naturalD20: 20,
+          d20TestRerolls: [declineReroll()],
+        }),
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      resolution: { message: PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE },
+    });
   });
 
   test("an earlier roll's decline stays valid when a replay finds Heroic Inspiration spent", () => {
@@ -866,7 +879,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           value: {
             ...fill.value,
             d20TestRerolls: [
-              { kind: "decline", effectKind: "missed_spell_attack_reroll" },
+              { kind: "decline", effectKind: "not_a_reroll_source" },
             ],
           },
         }),

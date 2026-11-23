@@ -62,6 +62,7 @@ import {
   type AdmittedBonusActionSpellBattleResolutionInput,
   type ActionSpellBattleResolutionInput,
   type BattleAttackRollResult,
+  type BattleSpellAttackRerollDecision,
   type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
@@ -123,12 +124,13 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollAfterD20TestRerolls,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
   battleStateAfterHeroicInspirationReroll,
   type AttackRollHeroicInspirationUse,
+  type MissedSpellAttackRerollSource,
 } from "./attack-roll-d20-test-rerolls.ts";
+import { d20TestRollReplacementKeepsModifier } from "./d20-test-roll-reroll.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -205,7 +207,7 @@ import {
   seekingSpellAttackRerollOption,
   seekingSpellCombinedUseIssue,
   seekingSpellMetamagicApplication,
-  seekingSpellRerollApplicationForAttackRoll,
+  seekingSpellRerollApplication,
   spellInvocationHasMagicActionCastingTime,
   transmutedSpellDamageInvocation,
   twinnedSpellTargetCountInvocation,
@@ -409,7 +411,10 @@ type InitialSpellAttackRollResolution =
       readonly tag: "admitted";
       readonly actor: BattleCreatureState | undefined;
       readonly attackRoll: BattleAttackRollResult;
+      /** The roll after its reroll decisions, the one that hits or misses. */
+      readonly effectiveAttackRoll: BattleAttackRollResult;
       readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly missedSpellAttackRerollTaken: boolean;
       readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
@@ -422,6 +427,11 @@ function resolveInitialSpellAttackRoll(input: {
   readonly targetId: CombatantId;
   readonly invocation: Parameters<typeof spellAttackRollHole>[2];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  /** What Seeking Spell needs to decide on this roll, when it applies. */
+  readonly seekingSpell?: {
+    readonly targetArmorClass: number;
+    readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
+  };
 }): InitialSpellAttackRollResolution {
   const requiredRollMode = requiredSpellAttackRollMode(
     input.castingState,
@@ -468,24 +478,41 @@ function resolveInitialSpellAttackRoll(input: {
   }
   /* v8 ignore stop -- @preserve */
   const actor = input.castingState.combatants.get(input.actorId);
+  const missedSpellAttackReroll =
+    input.seekingSpell === undefined
+      ? undefined
+      : missedSpellAttackRerollSource({
+          actor,
+          invocation: input.invocation,
+          requiredRollMode,
+          ...input.seekingSpell,
+        });
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.castingState,
     attackerId: input.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.fillSet.attackRoll,
     requiredRollMode,
+    ...optionalProperty("missedSpellAttackReroll", missedSpellAttackReroll),
   });
   if (d20TestRerolls.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.castingState, input.subject, [
         attackRollHoleWithD20TestRerollOptions(
-          spellAttackRollHole(
-            input.castingState,
-            input.actorId,
-            input.invocation,
-            requiredRollMode,
-          ),
+          d20TestRerolls.options.missedSpellAttack
+            ? spellAttackRollHoleWithSeekingOption(
+                input.castingState,
+                input.actorId,
+                input.invocation,
+                requiredRollMode,
+              )
+            : spellAttackRollHole(
+                input.castingState,
+                input.actorId,
+                input.invocation,
+                requiredRollMode,
+              ),
           d20TestRerolls.options,
         ),
       ]),
@@ -508,7 +535,9 @@ function resolveInitialSpellAttackRoll(input: {
     tag: "admitted",
     actor,
     attackRoll: input.fillSet.attackRoll,
+    effectiveAttackRoll: d20TestRerolls.effectiveAttackRoll,
     heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
+    missedSpellAttackRerollTaken: d20TestRerolls.missedSpellAttackRerollTaken,
     requiredRollMode,
   };
 }
@@ -1581,84 +1610,107 @@ function spellAttackPostDuplicateHitInterceptionFillsArePresent(
   );
 }
 
-function effectiveSpellAttackRoll(
-  attackRoll: BattleAttackRollResult,
-): BattleAttackRollResult {
-  const d20TestRerolledRoll = attackRollAfterD20TestRerolls(attackRoll);
-  return d20TestRerolledRoll.spellAttackReroll?.kind === "reroll"
-    ? {
-        ...d20TestRerolledRoll.spellAttackReroll.replacement,
-        ...(d20TestRerolledRoll.activatedOngoingFeatureProcedureRef ===
-        undefined
-          ? {}
-          : {
-              activatedOngoingFeatureProcedureRef:
-                d20TestRerolledRoll.activatedOngoingFeatureProcedureRef,
-            }),
-        ...(d20TestRerolledRoll.missToHitReplacementProcedureRef === undefined
-          ? {}
-          : {
-              missToHitReplacementProcedureRef:
-                d20TestRerolledRoll.missToHitReplacementProcedureRef,
-            }),
-      }
-    : d20TestRerolledRoll;
-}
+type BattleSpellAttackRerollReplacement = Extract<
+  BattleSpellAttackRerollDecision,
+  { readonly kind: "reroll" }
+>["replacement"];
 
-/* v8 ignore start -- @preserve -- Malformed Seeking Spell decision: discovery offers reroll or decline only for an eligible missed single spell attack with compatible Metamagic, replacement, and roll-mode facts. */
-function spellAttackRerollValidationIssue(input: {
+export const SEEKING_SPELL_REPLACEMENT_MODIFIER_MESSAGE =
+  "Seeking Spell replacement roll must keep the original roll's modifiers; only the d20 changes.";
+
+/**
+ * Seeking Spell as a reroll source on a single spell attack roll: it may
+ * reroll the roll as it stands when that roll misses the target and the caster
+ * can use Seeking Spell with the spell's other Metamagic.
+ */
+function missedSpellAttackRerollSource(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly originalAttackRoll: BattleAttackRollResult;
-  readonly originalHit: boolean;
+  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly targetArmorClass: number;
+  readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
+}): MissedSpellAttackRerollSource {
+  return {
+    offered: (roll) =>
+      spellAttackSeekingRerollAvailable({
+        ...input,
+        hit: attackRollHits(roll, input.targetArmorClass),
+      }),
+    decisionIssue: (roll, decision) =>
+      spellAttackRerollDecisionIssue({
+        ...input,
+        roll,
+        decision,
+        hit: attackRollHits(roll, input.targetArmorClass),
+      }),
+  };
+}
+
+/* v8 ignore start -- @preserve -- Malformed Seeking Spell decision: discovery offers reroll or decline only for an eligible missed single spell attack with compatible Metamagic and roll-mode facts. */
+function spellAttackRerollDecisionIssue(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly roll: BattleAttackRollResult;
+  readonly decision: BattleSpellAttackRerollDecision;
+  readonly hit: boolean;
   readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
   readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
 }): string | null {
-  const decision = input.originalAttackRoll.spellAttackReroll;
-  if (decision === undefined) {
-    return null;
-  }
   if (input.invocation.procedure !== "spellAttackDamage") {
     return "Seeking Spell is supported only for the promoted single spell attack damage procedure.";
   }
-  if (input.originalAttackRoll.missToHitReplacementProcedureRef !== undefined) {
+  if (input.roll.missToHitReplacementProcedureRef !== undefined) {
     return "A spell attack reroll cannot be combined with an attack-roll miss-to-hit replacement.";
   }
-  if (input.originalHit) {
+  if (input.hit) {
     return "Seeking Spell can reroll only a missed spell attack roll.";
   }
-  const application = seekingSpellRerollApplicationForAttackRoll({
+  const application = seekingSpellRerollApplication({
     actor: input.actor,
-    attackRoll: input.originalAttackRoll,
     castApplications: input.castMetamagicApplications,
   });
   if (typeof application === "string") {
     return application;
   }
-  if (decision.kind === "decline") {
+  if (input.decision.kind === "decline") {
     return null;
   }
-  if (!attackRollResultIsValid(decision.replacement)) {
-    return "Seeking Spell replacement roll is outside the d20 attack-roll protocol.";
-  }
-  return attackRollModeMatches(decision.replacement, input.requiredRollMode)
-    ? null
-    : "Seeking Spell replacement roll mode does not match the current attack-roll rule.";
+  return spellAttackRerollReplacementIssue(
+    input.roll,
+    input.decision.replacement,
+    input.requiredRollMode,
+  );
 }
 /* v8 ignore stop -- @preserve */
 
-function spellAttackNeedsSeekingRerollDecision(input: {
+function spellAttackRerollReplacementIssue(
+  roll: BattleAttackRollResult,
+  replacement: BattleSpellAttackRerollReplacement,
+  requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>,
+): string | null {
+  /* v8 ignore start -- @preserve -- Malformed Seeking Spell replacement: the parsed replacement is a d20 attack roll of the current mode. */
+  if (!attackRollResultIsValid(replacement)) {
+    return "Seeking Spell replacement roll is outside the d20 attack-roll protocol.";
+  }
+  if (!attackRollModeMatches(replacement, requiredRollMode)) {
+    return "Seeking Spell replacement roll mode does not match the current attack-roll rule.";
+  }
+  /* v8 ignore stop -- @preserve */
+  return d20TestRollReplacementKeepsModifier(roll, replacement)
+    ? null
+    : SEEKING_SPELL_REPLACEMENT_MODIFIER_MESSAGE;
+}
+
+function spellAttackSeekingRerollAvailable(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly attackRoll: BattleAttackRollResult;
-  readonly originalHit: boolean;
+  readonly hit: boolean;
   readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
 }): boolean {
   const seekingApplication = seekingSpellMetamagicApplication(input.actor);
   return (
     input.invocation.procedure === "spellAttackDamage" &&
-    !input.originalHit &&
-    input.attackRoll.spellAttackReroll === undefined &&
+    !input.hit &&
     seekingApplication !== null &&
     seekingSpellCombinedUseIssue({
       actor: input.actor,
@@ -2448,63 +2500,29 @@ function resolveSpellActInternal(
       targetId: target.combatantId,
       invocation: invocationForResolution,
       fillSet,
+      seekingSpell: {
+        targetArmorClass: currentArmorClass(
+          activeEffectArmorClass(input.state, target),
+        ),
+        castMetamagicApplications: metamagicApplicationsForResolution ?? [],
+      },
     });
     if (initialAttackRoll.tag === "result") {
       return initialAttackRoll.result;
     }
-    const requiredRollMode = initialAttackRoll.requiredRollMode;
     const actorBeforeSpellAttack = initialAttackRoll.actor;
     const attackRoll = initialAttackRoll.attackRoll;
-    const d20TestRerolledAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
-    const originalHit = attackRollHits(
-      d20TestRerolledAttackRoll,
-      currentArmorClass(activeEffectArmorClass(input.state, target)),
-    );
-    const spellAttackRerollIssue = spellAttackRerollValidationIssue({
-      actor: actorBeforeSpellAttack,
-      invocation: invocationForResolution,
-      originalAttackRoll: d20TestRerolledAttackRoll,
-      originalHit,
-      requiredRollMode,
-      castMetamagicApplications: metamagicApplicationsForResolution ?? [],
-    });
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (spellAttackRerollIssue !== null) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
-    }
-    /* v8 ignore stop -- @preserve */
-    if (
-      spellAttackNeedsSeekingRerollDecision({
-        actor: actorBeforeSpellAttack,
-        invocation: invocationForResolution,
-        attackRoll: d20TestRerolledAttackRoll,
-        originalHit,
-        castMetamagicApplications: metamagicApplicationsForResolution ?? [],
-      })
-    ) {
-      return needsHolesResult(castingState, input.subject, [
-        spellAttackRollHoleWithSeekingOption(
-          castingState,
-          subject.actorId,
-          invocationForResolution,
-          requiredRollMode,
-        ),
-      ]);
-    }
-    const seekingApplication =
-      attackRoll.spellAttackReroll?.kind === "reroll"
-        ? seekingSpellRerollApplicationForAttackRoll({
-            actor: actorBeforeSpellAttack,
-            attackRoll,
-            castApplications: metamagicApplicationsForResolution ?? [],
-          })
-        : null;
+    const seekingApplication = initialAttackRoll.missedSpellAttackRerollTaken
+      ? seekingSpellRerollApplication({
+          actor: actorBeforeSpellAttack,
+          castApplications: metamagicApplicationsForResolution ?? [],
+        })
+      : null;
     const metamagicApplicationsForDamageAndSpend =
       seekingApplication !== null && typeof seekingApplication !== "string"
         ? [...(metamagicApplicationsForResolution ?? []), seekingApplication]
         : metamagicApplicationsForResolution;
-    const effectiveAttackRoll = effectiveSpellAttackRoll(attackRoll);
+    const effectiveAttackRoll = initialAttackRoll.effectiveAttackRoll;
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(input.state, target)),

@@ -1,8 +1,9 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
-// Every D20 Test reroll source on one attack roll: the natural-1 reroll and
-// Heroic Inspiration. The roller decides for each source it has, in the order
-// it chooses, and each decision applies to the roll as the decisions before it
-// left it. See ASSUMPTIONS.md A55 on sequential rerolls from different sources.
+// Every D20 Test reroll source on one attack roll: the natural-1 reroll,
+// Heroic Inspiration and, on a spell attack, Seeking Spell. The roller decides
+// for each source it has, in the order it chooses, and each decision applies
+// to the roll as the decisions before it left it. See ASSUMPTIONS.md A55 on
+// sequential rerolls from different sources.
 
 import { NO_HEROIC_INSPIRATION } from "@dnd/shared/game-facts";
 import type {
@@ -17,6 +18,7 @@ import {
   type BattleAttackRollD20TestRerollDecision,
   type BattleAttackRollHole,
   type BattleAttackRollResult,
+  type BattleSpellAttackRerollDecision,
   type BattleSpellAttackRollHole,
   type BattleState,
   type BattleTurnResources,
@@ -35,11 +37,35 @@ import {
   heroicInspirationRerollRollIssue,
   type HeroicInspirationRerollAvailability,
 } from "./heroic-inspiration-reroll.ts";
+import { SEEKING_METAMAGIC_EFFECT_KIND } from "./metamagic-support.ts";
+import { SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE } from "./spell-reroll-issues.ts";
+
+/** The sources that may reroll an attack roll's d20. */
+export const ATTACK_ROLL_D20_TEST_REROLL_SOURCES = [
+  "naturalOne",
+  "heroicInspiration",
+  "missedSpellAttack",
+] as const;
+type AttackRollD20TestRerollSource =
+  (typeof ATTACK_ROLL_D20_TEST_REROLL_SOURCES)[number];
 
 /** The reroll sources an attack roll is asked again with. */
 export type AttackRollD20TestRerollOptions = {
-  readonly naturalOne: boolean;
-  readonly heroicInspiration: boolean;
+  readonly [Source in AttackRollD20TestRerollSource]: boolean;
+};
+
+/**
+ * Seeking Spell on a spell attack roll: whether it may reroll a roll as it
+ * stands (the roll misses and the caster can use it), and the issue with its
+ * decision on that roll. Only a spell attack that Seeking Spell applies to
+ * supplies one.
+ */
+export type MissedSpellAttackRerollSource = {
+  readonly offered: (roll: BattleAttackRollResult) => boolean;
+  readonly decisionIssue: (
+    roll: BattleAttackRollResult,
+    decision: BattleSpellAttackRerollDecision,
+  ) => string | null;
 };
 
 /**
@@ -69,6 +95,8 @@ export type AttackRollD20TestRerolls =
       readonly tag: "resolved";
       readonly effectiveAttackRoll: BattleAttackRollResult;
       readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      /** Whether Seeking Spell rerolled the roll, which spends its Sorcery Points. */
+      readonly missedSpellAttackRerollTaken: boolean;
     };
 
 type AttackRollD20TestRerollInput = {
@@ -78,6 +106,7 @@ type AttackRollD20TestRerollInput = {
   readonly attackRollHoleId: HoleId;
   readonly attackRoll: BattleAttackRollResult;
   readonly requiredRollMode: AttackRollMode | undefined;
+  readonly missedSpellAttackReroll?: MissedSpellAttackRerollSource;
 };
 
 /**
@@ -107,7 +136,7 @@ function heroicInspirationRerollAvailabilityForRoll(
 /**
  * Checks an attack roll's reroll decisions in the order the roller made them
  * and gives the roll that stands. Each decision is checked against the roll as
- * the decisions before it left it. While a source the attacker has is still
+ * the decisions before it left it. While a source that can still reroll is
  * undecided on that roll, the roll is asked again with its option.
  */
 export function attackRollD20TestRerolls(
@@ -122,26 +151,31 @@ export function attackRollD20TestRerolls(
   if (sequence.tag === "invalid") {
     return sequence;
   }
+  const open = (source: AttackRollD20TestRerollSource): boolean =>
+    !sequence.rerolled[source] && !sequence.decidedOnRoll[source];
   const options = {
     naturalOne:
-      !sequence.decided.naturalOne &&
+      open("naturalOne") &&
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: input.state.combatants.get(input.attackerId),
         originalD20TestRoll: sequence.attackRoll.d20TestRoll,
         decision: undefined,
       }),
     heroicInspiration:
-      !sequence.decided.heroicInspiration &&
+      open("heroicInspiration") &&
       heroicInspirationRerollAvailability === "available",
+    missedSpellAttack:
+      open("missedSpellAttack") &&
+      input.missedSpellAttackReroll?.offered(sequence.attackRoll) === true,
   } as const satisfies AttackRollD20TestRerollOptions;
-  if (options.naturalOne || options.heroicInspiration) {
+  if (ATTACK_ROLL_D20_TEST_REROLL_SOURCES.some((source) => options[source])) {
     return { tag: "decisionsRequired", options };
   }
   return {
     tag: "resolved",
     effectiveAttackRoll: sequence.attackRoll,
     heroicInspirationUse: AttackRollHeroicInspirationUse(
-      sequence.heroicInspirationTaken
+      sequence.rerolled.heroicInspiration
         ? {
             spends: true,
             actorId: input.attackerId,
@@ -149,16 +183,22 @@ export function attackRollD20TestRerolls(
           }
         : { spends: false },
     ),
+    missedSpellAttackRerollTaken: sequence.rerolled.missedSpellAttack,
   };
 }
 
 export const ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE =
-  "A reroll source decides only once on a D20 Test roll; only a different source may reroll the new roll.";
+  "A reroll source decides once on each roll and rerolls a D20 Test roll at most once; only a different source may reroll the new roll.";
 
-/** Which reroll sources have decided on a roll. Each decides at most once. */
-type AttackRollD20TestRerollSourcesDecided = {
-  readonly [Source in keyof AttackRollD20TestRerollOptions]: boolean;
+type AttackRollD20TestRerollSources = {
+  readonly [Source in AttackRollD20TestRerollSource]: boolean;
 };
+
+const NO_ATTACK_ROLL_D20_TEST_REROLL_SOURCES = {
+  naturalOne: false,
+  heroicInspiration: false,
+  missedSpellAttack: false,
+} as const satisfies AttackRollD20TestRerollSources;
 
 type AttackRollD20TestRerollSequence =
   | { readonly tag: "invalid"; readonly issue: string }
@@ -166,16 +206,22 @@ type AttackRollD20TestRerollSequence =
       readonly tag: "applied";
       /** The roll after every decision so far. */
       readonly attackRoll: BattleAttackRollResult;
-      readonly decided: AttackRollD20TestRerollSourcesDecided;
-      readonly heroicInspirationTaken: boolean;
+      /** Sources that rerolled the die: each rerolls it at most once. */
+      readonly rerolled: AttackRollD20TestRerollSources;
+      /** Sources that decided on the roll as it stands now. */
+      readonly decidedOnRoll: AttackRollD20TestRerollSources;
     };
 
 type AttackRollD20TestRerollStep = {
-  readonly source: keyof AttackRollD20TestRerollOptions;
+  readonly source: AttackRollD20TestRerollSource;
   readonly issue: string | null;
 };
 
-/** Applies an attack roll's reroll decisions in order, checking each one. */
+/**
+ * Applies an attack roll's reroll decisions in order, checking each one. A
+ * decline decides only for the roll it was made on; a reroll uses its source
+ * and gives a new roll the other sources may decide on again.
+ */
 function attackRollD20TestRerollSequence(
   input: AttackRollD20TestRerollInput,
   heroicInspirationRerollAvailability: HeroicInspirationRerollAvailability,
@@ -183,8 +229,8 @@ function attackRollD20TestRerollSequence(
   const initial: AttackRollD20TestRerollSequence = {
     tag: "applied",
     attackRoll: input.attackRoll,
-    decided: { naturalOne: false, heroicInspiration: false },
-    heroicInspirationTaken: false,
+    rerolled: NO_ATTACK_ROLL_D20_TEST_REROLL_SOURCES,
+    decidedOnRoll: NO_ATTACK_ROLL_D20_TEST_REROLL_SOURCES,
   };
   return (input.attackRoll.d20TestRerolls ?? []).reduce(
     (sequence: AttackRollD20TestRerollSequence, decision) => {
@@ -197,7 +243,10 @@ function attackRollD20TestRerollSequence(
         sequence.attackRoll,
         decision,
       );
-      if (sequence.decided[step.source]) {
+      if (
+        sequence.rerolled[step.source] ||
+        sequence.decidedOnRoll[step.source]
+      ) {
         return {
           tag: "invalid",
           issue: ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE,
@@ -206,18 +255,20 @@ function attackRollD20TestRerollSequence(
       if (step.issue !== null) {
         return { tag: "invalid", issue: step.issue };
       }
-      return {
-        tag: "applied",
-        attackRoll: attackRollAfterD20TestRollReroll(
-          sequence.attackRoll,
-          decision,
-        ),
-        decided: { ...sequence.decided, [step.source]: true },
-        heroicInspirationTaken:
-          sequence.heroicInspirationTaken ||
-          (step.source === "heroicInspiration" &&
-            d20TestRerollDecisionTakesReroll(decision)),
-      };
+      return d20TestRerollDecisionTakesReroll(decision)
+        ? {
+            tag: "applied",
+            attackRoll: attackRollAfterD20TestRollReroll(
+              sequence.attackRoll,
+              decision,
+            ),
+            rerolled: { ...sequence.rerolled, [step.source]: true },
+            decidedOnRoll: NO_ATTACK_ROLL_D20_TEST_REROLL_SOURCES,
+          }
+        : {
+            ...sequence,
+            decidedOnRoll: { ...sequence.decidedOnRoll, [step.source]: true },
+          };
     },
     initial,
   );
@@ -251,6 +302,16 @@ function attackRollD20TestRerollStep(
           decision: heroicInspiration,
           requiredRollMode: input.requiredRollMode,
         }),
+      }),
+      [SEEKING_METAMAGIC_EFFECT_KIND]: (missedSpellAttack) => ({
+        source: "missedSpellAttack" as const,
+        issue:
+          input.missedSpellAttackReroll === undefined
+            ? SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE
+            : input.missedSpellAttackReroll.decisionIssue(
+                roll,
+                missedSpellAttack,
+              ),
       }),
     }),
   );

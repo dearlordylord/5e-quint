@@ -358,10 +358,12 @@ describe("battle runtime complexity extraction route boundaries", () => {
           attackRollFill(opportunity.attackRoll, {
             total: 18,
             naturalD20: 12,
-            spellAttackReroll: {
-              kind: "decline",
-              effectKind: "missed_spell_attack_reroll",
-            },
+            d20TestRerolls: [
+              {
+                kind: "decline",
+                effectKind: "missed_spell_attack_reroll",
+              },
+            ],
           }),
         ],
       }),

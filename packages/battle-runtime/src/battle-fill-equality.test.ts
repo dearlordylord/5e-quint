@@ -154,20 +154,22 @@ const attackRollArbitrary: fc.Arbitrary<AttackRollFill> = fc
   .tuple(
     battleHoleIdArbitrary,
     baseAttackRollArbitrary,
-    fc.option(spellAttackRerollDecisionArbitrary, { nil: undefined }),
     fc.option(naturalOneRerollRollDecisionArbitrary, { nil: undefined }),
+    fc.option(spellAttackRerollDecisionArbitrary, { nil: undefined }),
   )
-  .map(([holeId, base, spellAttackReroll, d20TestNaturalOneReroll]) => ({
-    kind: "attackRoll",
-    holeId,
-    value: {
-      ...base,
-      ...(spellAttackReroll === undefined ? {} : { spellAttackReroll }),
-      ...(d20TestNaturalOneReroll === undefined
-        ? {}
-        : { d20TestNaturalOneReroll }),
-    },
-  }));
+  .map(([holeId, base, naturalOneReroll, spellAttackReroll]) => {
+    const [first, ...rest] = [naturalOneReroll, spellAttackReroll].filter(
+      (decision) => decision !== undefined,
+    );
+    return {
+      kind: "attackRoll",
+      holeId,
+      value: {
+        ...base,
+        ...(first === undefined ? {} : { d20TestRerolls: [first, ...rest] }),
+      },
+    };
+  });
 const concentrationSavingThrowArbitrary: fc.Arbitrary<ConcentrationSavingThrowFill> =
   fc
     .tuple(
@@ -344,18 +346,13 @@ describe("battle fill equality", () => {
 
   test("distinguishes reroll decision variants and their replacements", () => {
     const attackRoll = (
-      input: Partial<
-        Pick<BattleAttackRollResult, "spellAttackReroll" | "d20TestRerolls">
-      >,
+      input: Partial<Pick<BattleAttackRollResult, "d20TestRerolls">>,
     ): AttackRollFill => ({
       kind: "attackRoll",
       holeId: holeId("equality-hole:reroll-attack"),
       value: {
         total: 10,
         d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
-        ...(input.spellAttackReroll === undefined
-          ? {}
-          : { spellAttackReroll: input.spellAttackReroll }),
         ...(input.d20TestRerolls === undefined
           ? {}
           : { d20TestRerolls: input.d20TestRerolls }),
@@ -399,8 +396,8 @@ describe("battle fill equality", () => {
 
     expect(
       battleContinuationFillEquals(
-        attackRoll({ spellAttackReroll: spellDecline }),
-        attackRoll({ spellAttackReroll: spellReroll }),
+        attackRoll({ d20TestRerolls: [spellDecline] }),
+        attackRoll({ d20TestRerolls: [spellReroll] }),
       ),
     ).toBe(false);
     expect(

@@ -32,6 +32,7 @@ import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
+  D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
@@ -249,6 +250,20 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(
       Number(replacementNaturalOne.state.combatants.get(goblinId)?.hp),
     ).toBe(Number(state.combatants.get(goblinId)?.hp));
+
+    expect(
+      resolveAttack(state, subject, [
+        targetSelection,
+        attackRollFill(roll, {
+          total: 4,
+          naturalD20: 1,
+          d20TestRerolls: [rerollRoll({ total: 20, naturalD20: 12 })],
+        }),
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
+    });
 
     const declined = requireResolved(
       resolveAttack(state, subject, [
@@ -908,6 +923,25 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(hidden.combatants.get(fighterId)?.hidden).toEqual({
       discoveryDc: difficultyClass(18),
     });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          abilityCheckFill(check, {
+            total: 5,
+            naturalD20: 1,
+            d20TestNaturalOneReroll: rerollRoll({
+              total: 25,
+              naturalD20: 14,
+            }),
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
+    });
   });
 
   test("a low-level ongoing-spell emitter exposes the Dispel check natural-1 reroll choice", () => {
@@ -1428,7 +1462,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         }),
       ],
     });
-    expect(luckHole).not.toHaveProperty("spellAttackRerolls");
+    // A55: on a natural 1 that misses, the roller may take Luck or Seeking
+    // Spell first.
+    expect(luckHole).toMatchObject({
+      spellAttackRerolls: [
+        expect.objectContaining({ effectKind: SEEKING_METAMAGIC_EFFECT_KIND }),
+      ],
+    });
 
     const luckReplacementHit = attackRollFill(luckHole, {
       total: 6,
@@ -1471,15 +1511,15 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
               total: 18,
               naturalD20: 13,
             }),
-          ],
-          spellAttackReroll: {
-            kind: "reroll",
-            effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-            replacement: {
-              total: 18,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+            {
+              kind: "reroll",
+              effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+              replacement: {
+                total: 18,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+              },
             },
-          },
+          ],
         }),
       ],
     });
@@ -1487,6 +1527,53 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(stackedSeeking).toMatchObject({
       tag: "invalid",
       message: "Seeking Spell can reroll only a missed spell attack roll.",
+    });
+
+    // A natural 1 that Seeking Spell rolls can still take Luck (A55).
+    const seekingNaturalOne = {
+      kind: "reroll",
+      effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+      replacement: {
+        total: 6,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
+      },
+    } as const;
+    const afterSeeking = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        attackRollFill(attack, {
+          total: 8,
+          naturalD20: 3,
+          d20TestRerolls: [seekingNaturalOne],
+        }),
+      ],
+    });
+    expect(requireTypedHole(afterSeeking, "attackRoll")).toMatchObject({
+      d20TestNaturalOneRerolls: [
+        expect.objectContaining({
+          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+        }),
+      ],
+    });
+    const luckAfterSeeking = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        attackRollFill(attack, {
+          total: 8,
+          naturalD20: 3,
+          d20TestRerolls: [
+            seekingNaturalOne,
+            rerollRoll({ total: 18, naturalD20: 13 }),
+          ],
+        }),
+      ],
+    });
+    expect(requireTypedHole(luckAfterSeeking, "rolledDice")).toMatchObject({
+      kind: "rolledDice",
     });
   });
 

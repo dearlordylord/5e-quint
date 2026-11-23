@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
-import { Match, Option, Result, Schema } from "effect";
+import { Equal, Match, Option, Result, Schema } from "effect";
 import {
   BattleSnapshotSchema,
   BattleFillSchema,
@@ -1683,6 +1683,18 @@ function resolveOperation(input: {
           ),
         onSome: (pending) => {
           if (sameBattleSubject(pending.subject, subject)) {
+            const resubmissionIssue = pendingFrontierResubmissionIssue(
+              pending.fills,
+              fills,
+              pending.frontier,
+            );
+            if (resubmissionIssue !== null) {
+              return invalidTransactionRetryResolution(
+                input.session,
+                input.transaction,
+                { reason: "invalidFill", message: resubmissionIssue },
+              );
+            }
             return resolvePendingTransactionSubject({
               transaction: pending,
               subject: pending.subject,
@@ -2714,6 +2726,125 @@ function fillsAnsweringPendingFrontier(
   return appendFills(
     accepted.filter((fill) => !answeredHoleIds.has(fill.holeId)),
     submitted,
+  );
+}
+
+export const PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE =
+  "A hole asked again keeps its accepted fill; only reroll decisions may be added to it.";
+
+/**
+ * Decisions an asked-again hole's fill may add to its accepted fill: an
+ * attack roll's further reroll decisions, and a D20 Test's natural-1 reroll
+ * decision.
+ */
+const RESUBMITTED_FILL_DECISION_KEYS = [
+  "d20TestRerolls",
+  "d20TestNaturalOneReroll",
+] as const;
+
+/**
+ * The issue with fills that answer holes the pending frontier asks again: each
+ * must keep the accepted fill for that hole, adding only reroll decisions
+ * after the accepted ones.
+ */
+function pendingFrontierResubmissionIssue(
+  accepted: readonly BattleFill[],
+  submitted: readonly BattleFill[],
+  frontier: BattlePendingTransactionFrontier,
+): string | null {
+  if (frontier.kind !== "ordinaryHoles") {
+    return null;
+  }
+  const askedHoleIds = new Set(frontier.holes.map((hole) => hole.holeId));
+  return submitted.some((fill) => {
+    if (!askedHoleIds.has(fill.holeId)) return false;
+    const previous = accepted.find(
+      (candidate) => candidate.holeId === fill.holeId,
+    );
+    return previous !== undefined && !resubmittedFillContinues(previous, fill);
+  })
+    ? PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE
+    : null;
+}
+
+function resubmittedFillContinues(
+  previous: BattleFill,
+  resubmitted: BattleFill,
+): boolean {
+  const previousDecisions = fillValueDecisions(previous);
+  const resubmittedDecisions = fillValueDecisions(resubmitted);
+  return (
+    Equal.equals(
+      fillWithoutDecisions(previous),
+      fillWithoutDecisions(resubmitted),
+    ) &&
+    rerollDecisionsArePrefix(
+      previousDecisions.d20TestRerolls,
+      resubmittedDecisions.d20TestRerolls,
+    ) &&
+    (previousDecisions.d20TestNaturalOneReroll === undefined ||
+      Equal.equals(
+        previousDecisions.d20TestNaturalOneReroll,
+        resubmittedDecisions.d20TestNaturalOneReroll,
+      ))
+  );
+}
+
+type FillDecisions = {
+  readonly [Key in (typeof RESUBMITTED_FILL_DECISION_KEYS)[number]]?: unknown;
+};
+
+function isFillDecisionKey(key: string): boolean {
+  return RESUBMITTED_FILL_DECISION_KEYS.some(
+    (decisionKey) => decisionKey === key,
+  );
+}
+
+function plainRecord(value: unknown): Readonly<Record<string, unknown>> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value))
+    : null;
+}
+
+/** A fill's reroll decisions, on the fill itself or on its value. */
+function fillValueDecisions(fill: BattleFill): FillDecisions {
+  return Object.fromEntries(
+    [
+      ...Object.entries(fill),
+      ...Object.entries(plainRecord(fillValue(fill)) ?? {}),
+    ].filter(([key]) => isFillDecisionKey(key)),
+  );
+}
+
+/** The fill with its reroll decisions left out, for comparing the rest. */
+function fillWithoutDecisions(fill: BattleFill): unknown {
+  const value = plainRecord(fillValue(fill));
+  const withoutDecisions = (record: Readonly<Record<string, unknown>>) =>
+    Object.fromEntries(
+      Object.entries(record).filter(([key]) => !isFillDecisionKey(key)),
+    );
+  return {
+    ...withoutDecisions(fill),
+    value: value === null ? fillValue(fill) : withoutDecisions(value),
+  };
+}
+
+function fillValue(fill: BattleFill): unknown {
+  return "value" in fill ? fill.value : undefined;
+}
+
+function rerollDecisionsArePrefix(
+  previous: unknown,
+  resubmitted: unknown,
+): boolean {
+  if (previous === undefined) return true;
+  return (
+    Array.isArray(previous) &&
+    Array.isArray(resubmitted) &&
+    previous.length <= resubmitted.length &&
+    previous.every((decision: unknown, index) =>
+      Equal.equals(decision, resubmitted[index]),
+    )
   );
 }
 

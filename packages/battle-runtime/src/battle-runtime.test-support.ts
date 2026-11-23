@@ -3226,10 +3226,6 @@ export function attackRollFill(
     readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
     readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
-    readonly spellAttackReroll?: Extract<
-      BattleFill,
-      { readonly kind: "attackRoll" }
-    >["value"]["spellAttackReroll"];
     readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
@@ -3271,9 +3267,6 @@ export function attackRollFill(
             activatedOngoingFeatureProcedureRef:
               value.activatedOngoingFeatureProcedureRef,
           }),
-      ...(value.spellAttackReroll === undefined
-        ? {}
-        : { spellAttackReroll: value.spellAttackReroll }),
       ...(value.d20TestRerolls === undefined
         ? {}
         : { d20TestRerolls: value.d20TestRerolls }),

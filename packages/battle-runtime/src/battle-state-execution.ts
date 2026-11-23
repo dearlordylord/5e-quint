@@ -5423,16 +5423,14 @@ export type BattleSpellAttackRerollOption = {
   readonly label: string;
   readonly sorceryPointCost: ResourceCount;
 };
-export type BattleSpellAttackRerollDecision =
-  | {
-      readonly kind: "decline";
-      readonly effectKind: "missed_spell_attack_reroll";
-    }
-  | {
-      readonly kind: "reroll";
-      readonly effectKind: "missed_spell_attack_reroll";
-      readonly replacement: AttackRollResult;
-    };
+/**
+ * Seeking Spell's decision on a missed spell attack roll. It rerolls the whole
+ * roll, so it has no chosen-die form.
+ */
+export type BattleSpellAttackRerollDecision = Exclude<
+  BattleD20TestRollRerollDecision<BattleSpellAttackRerollOption["effectKind"]>,
+  { readonly kind: "rerollRolledDie" }
+>;
 export const D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND =
   "d20_test_natural_one_reroll";
 export type BattleD20TestNaturalOneRerollOption = {
@@ -5481,11 +5479,13 @@ export type BattleHeroicInspirationRerollDecision =
 /** One reroll source's decision on an attack roll's d20, named by its effect kind. */
 export type BattleAttackRollD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDecision
-  | BattleHeroicInspirationRerollDecision;
+  | BattleHeroicInspirationRerollDecision
+  | BattleSpellAttackRerollDecision;
 /**
  * An attack roll's D20 Test reroll decisions in the order the roller made
- * them. Each source decides at most once, on the roll as the decisions before
- * it left it (ASSUMPTIONS.md A55).
+ * them. Each decision applies to the roll as the decisions before it left it.
+ * A source that rerolls is used; a source that declines may decide again on a
+ * later roll (ASSUMPTIONS.md A55).
  */
 export type BattleAttackRollD20TestRerollDecisions = readonly [
   BattleAttackRollD20TestRerollDecision,
@@ -7029,7 +7029,6 @@ export type BattleHole =
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
   readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
-  readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
   readonly d20TestRerolls?: BattleAttackRollD20TestRerollDecisions;
 };
 export type BattleRolledDiceFill = {

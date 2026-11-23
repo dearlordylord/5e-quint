@@ -6303,7 +6303,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
       ],
-      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it and when no other source rerolls the same roll; an admitted reroll replaces the roll, or under Advantage or Disadvantage one chosen d20 of any face, and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls checks it with the natural-1 reroll and Seeking Spell on every weapon, Unarmed Strike, Opportunity, additional and spell attack roll. The executable parity witness covers the offer, decline, reroll and spend on hit and miss, the chosen die under Advantage, the shared stacking rule with the natural-1 reroll, Opportunity and spell attacks, fill equality and the codec.",
+      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it; an admitted reroll replaces the roll as it stands, the original or another source's reroll of it, or under Advantage or Disadvantage one chosen d20 of any face, keeps the roll's modifiers and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls applies it in turn with the natural-1 reroll and Seeking Spell on every weapon, Unarmed Strike, Opportunity, additional and spell attack roll. The executable parity witness covers the offer, decline, reroll and spend on hit and miss, the chosen die under Advantage, the kept modifiers, sources deciding in turn with the natural-1 reroll and Seeking Spell, Opportunity and spell attacks, interrupt replays, fill equality and the codec.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/heroic-inspiration-reroll.ts",
@@ -6314,9 +6314,9 @@
         ".references/srd-5.2.1/rules-glossary.md#Heroic-Inspiration",
         ".references/srd-5.2.1/playing-the-game.md#Interactions-with-Rerolls",
         "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
-        "ASSUMPTIONS.md#A55-A-D20-Test-roll-is-rerolled-at-most-once-whatever-its-sources"
+        "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die"
       ],
-      "title": "A player character who has Heroic Inspiration can expend it to reroll an attack roll and must use the new roll, with one reroll per roll"
+      "title": "A player character who has Heroic Inspiration can expend it to reroll an attack roll and must use the new roll, in turn with the other reroll sources"
     }
   ],
   "battleHoleFrontier": [

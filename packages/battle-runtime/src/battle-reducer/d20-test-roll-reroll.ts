@@ -1,5 +1,5 @@
 // Replacement checks shared by every D20 Test reroll source: the natural-1
-// reroll and Heroic Inspiration. Each source supplies its own messages and
+// reroll, Heroic Inspiration and Seeking Spell. Each source supplies its own messages and
 // which rolled faces it may replace.
 
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -31,13 +31,13 @@ export type D20TestRollFacts = {
 /** Whether a source may replace a rolled d20 showing `face`. */
 export type D20TestRerollableFace = (face: number) => boolean;
 
-/* v8 ignore start -- @preserve -- Malformed single-roll reroll protocol: the admitted roll cannot change its die shape, or violate replacement/mode validation. */
 export function d20TestRollReplacementRollIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRollReplacement;
   readonly requiredRollMode?: AttackRollMode | undefined;
   readonly messages: D20TestRollRerollMessages;
 }): string | null {
+  /* v8 ignore start -- @preserve -- Malformed single-roll reroll protocol: the admitted roll cannot change its die shape, or violate replacement/mode validation. */
   if (input.facts.d20TestRoll?.tag === "multiple") {
     return input.messages.dieSelectionRequired;
   }
@@ -47,11 +47,11 @@ export function d20TestRollReplacementRollIssue(input: {
   if (!d20TestRollModeMatches(input.replacement, input.requiredRollMode)) {
     return input.messages.mode;
   }
+  /* v8 ignore stop -- @preserve */
   return d20TestRollReplacementKeepsModifier(input.facts, input.replacement)
     ? null
     : input.messages.modifier;
 }
-/* v8 ignore stop -- @preserve */
 
 /* v8 ignore start -- @preserve -- A parsed multiple-die roll keeps both faces and its mode together. */
 export function d20TestRolledDieRollReplacementIssue(input: {
@@ -189,7 +189,7 @@ export function d20TestRollAfterRolledDieReplacement(
  * original total added to its d20. Without a known original total there is
  * nothing to compare.
  */
-function d20TestRollReplacementKeepsModifier(
+export function d20TestRollReplacementKeepsModifier(
   facts: D20TestRollFacts,
   replacement: BattleD20TestRollReplacement,
 ): boolean {

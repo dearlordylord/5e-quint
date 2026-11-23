@@ -816,14 +816,16 @@ describe("public spell-resolution frontiers", () => {
             battleProcedureExecutionRefForTest(
               "spell-complexity-activated-feature",
             ),
-          spellAttackReroll: {
-            kind: "reroll",
-            effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-            replacement: {
-              total: 20,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+          d20TestRerolls: [
+            {
+              kind: "reroll",
+              effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+              replacement: {
+                total: 18,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+              },
             },
-          },
+          ],
         }),
       ],
     });

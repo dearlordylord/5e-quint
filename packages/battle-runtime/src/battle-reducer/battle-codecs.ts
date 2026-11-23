@@ -3710,6 +3710,17 @@ const BattleD20TestNaturalOneRerollDecisionSchema =
   battleD20TestRollRerollDecisionSchema("d20_test_natural_one_reroll");
 const BattleHeroicInspirationRerollDecisionSchema =
   battleD20TestRollRerollDecisionSchema(HEROIC_INSPIRATION_REROLL_EFFECT_KIND);
+const BattleSpellAttackRerollDecisionSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("decline"),
+    effectKind: Schema.Literal("missed_spell_attack_reroll"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reroll"),
+    effectKind: Schema.Literal("missed_spell_attack_reroll"),
+    replacement: BattleD20TestRollReplacementSchema,
+  }),
+]);
 
 const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
@@ -3797,27 +3808,12 @@ const BattleAttackRollResultSchema = Schema.Struct({
     BattleProcedureExecutionRef,
   ),
   missToHitReplacementUnitId: Schema.optionalKey(Schema.Never),
-  spellAttackReroll: Schema.optionalKey(
-    Schema.Union([
-      Schema.Struct({
-        kind: Schema.Literal("decline"),
-        effectKind: Schema.Literal("missed_spell_attack_reroll"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("reroll"),
-        effectKind: Schema.Literal("missed_spell_attack_reroll"),
-        replacement: Schema.Struct({
-          total: Schema.Number.pipe(Schema.check(Schema.isInt())),
-          d20TestRoll: BattleD20TestRollSchema,
-        }).annotate({ parseOptions: { onExcessProperty: "error" } }),
-      }),
-    ]),
-  ),
   d20TestRerolls: Schema.optionalKey(
     Schema.NonEmptyArray(
       Schema.Union([
         BattleD20TestNaturalOneRerollDecisionSchema,
         BattleHeroicInspirationRerollDecisionSchema,
+        BattleSpellAttackRerollDecisionSchema,
       ]),
     ),
   ),
@@ -3842,7 +3838,8 @@ type BattleD20TestNaturalOneRerollDecisionEncoded = Schema.Codec.Encoded<
 >;
 type BattleAttackRollD20TestRerollDecisionEncoded =
   | BattleD20TestNaturalOneRerollDecisionEncoded
-  | Schema.Codec.Encoded<typeof BattleHeroicInspirationRerollDecisionSchema>;
+  | Schema.Codec.Encoded<typeof BattleHeroicInspirationRerollDecisionSchema>
+  | Schema.Codec.Encoded<typeof BattleSpellAttackRerollDecisionSchema>;
 type BattleD20TestRolledOutcomeEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestRolledOutcomeSchema
 >;
