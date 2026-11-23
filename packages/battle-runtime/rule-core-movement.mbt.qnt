@@ -6,6 +6,7 @@ module ruleCoreMovementMbt {
   import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import attackRollDamageDiceCore as WeaponDice from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
 
   var qCurrentActor: str
   var qMovementSpentFeet: int
@@ -39,8 +40,11 @@ module ruleCoreMovementMbt {
   // holds. A Grapple needs a free hand.
   pure val mainWeaponGrips: Set[str] = Set("one_handed", "two_handed")
 
+  pure def mainWeaponGrip(grip: str): WeaponDice::WeaponGrip =
+    if (grip == "two_handed") WeaponDice::TwoHandedGrip else WeaponDice::OneHandedGrip
+
   pure def mainWeaponHandsHeld(grip: str): int =
-    if (grip == "two_handed") 2 else 1
+    WeaponDice::weaponGripHandsHeld(mainWeaponGrip(grip))
 
   pure def qFighterFreeHands: int =
     2 - mainWeaponHandsHeld(qMainWeaponGrip) - (if (qGrappleActive) 1 else 0)
