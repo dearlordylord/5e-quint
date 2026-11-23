@@ -412,33 +412,7 @@ function resolveReactionAttackCommand(
     Match.exhaustive,
   );
   const target = input.state.combatants.get(subject.targetId);
-  const attack = Match.value(subject).pipe(
-    Match.when({ command: "retaliationAttack" }, (reaction) =>
-      meleeWeaponOrUnarmedStrikeOptionForReactor(
-        input.state,
-        reaction.reactorId,
-        reaction.targetId,
-        reaction,
-      ),
-    ),
-    Match.when({ command: "opportunityAttack" }, (reaction) =>
-      opportunityAttackOptionForReactor(
-        input.state,
-        reaction.reactorId,
-        reaction.targetId,
-        reaction,
-      ),
-    ),
-    Match.when({ command: "releaseReadiedAttack" }, (reaction) =>
-      readiedAttackOption(
-        input.state,
-        reaction.reactorId,
-        reaction.targetId,
-        reaction.procedureRef,
-      ),
-    ),
-    Match.exhaustive,
-  );
+  const attack = reactionAttackOption(input.state, subject);
   if (target === undefined || attack === undefined) {
     return invalidResult(
       input.state,
@@ -462,13 +436,6 @@ function resolveReactionAttackCommand(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   /* v8 ignore stop -- @preserve */
-  if (fillSet.targetId !== undefined && fillSet.targetId !== subject.targetId) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} target is fixed by the reaction trigger.`,
-    );
-  }
   const targetSpatialFacts = reactionAttackTargetSpatialFacts({
     state: input.state,
     commandLabel,
@@ -505,6 +472,40 @@ function resolveReactionAttackCommand(
   });
 }
 
+/** The attack a reaction makes: the one its trigger or Ready names. */
+function reactionAttackOption(
+  state: BattleState,
+  subject: OpportunityAttackResolutionInput["subject"],
+): BoundSupportedAttackActionOption | undefined {
+  return Match.value(subject).pipe(
+    Match.when({ command: "retaliationAttack" }, (reaction) =>
+      meleeWeaponOrUnarmedStrikeOptionForReactor(
+        state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction,
+      ),
+    ),
+    Match.when({ command: "opportunityAttack" }, (reaction) =>
+      opportunityAttackOptionForReactor(
+        state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction,
+      ),
+    ),
+    Match.when({ command: "releaseReadiedAttack" }, (reaction) =>
+      readiedAttackOption(
+        state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction.procedureRef,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
 function reactionAttackTargetSpatialFacts(input: {
   readonly state: BattleState;
   readonly commandLabel: string;
@@ -515,6 +516,15 @@ function reactionAttackTargetSpatialFacts(input: {
   | { readonly tag: "ok"; readonly facts: readonly BattleTargetSpatialFact[] }
   | { readonly tag: "needsTargetFacts" }
   | { readonly tag: "invalid"; readonly message: string } {
+  if (
+    input.fillSet.targetId !== undefined &&
+    input.fillSet.targetId !== input.subject.targetId
+  ) {
+    return {
+      tag: "invalid",
+      message: `${input.commandLabel} target is fixed by the reaction trigger.`,
+    };
+  }
   const suppliedDistanceFeet = attackTargetDistanceFeet(
     input.fillSet.targetSpatialFacts,
     input.subject.reactorId,
@@ -522,9 +532,7 @@ function reactionAttackTargetSpatialFacts(input: {
     input.attack,
   );
   if (
-    input.subject.command === "opportunityAttack" &&
-    suppliedDistanceFeet !== null &&
-    Number(suppliedDistanceFeet) !== Number(input.subject.distanceFeet)
+    opportunityAttackDistanceMismatches(input.subject, suppliedDistanceFeet)
   ) {
     return {
       tag: "invalid",
@@ -542,22 +550,44 @@ function reactionAttackTargetSpatialFacts(input: {
       : distanceFact === undefined
         ? undefined
         : [...input.fillSet.targetSpatialFacts, distanceFact];
-  if (facts === undefined) {
-    return input.fillSet.targetId === undefined &&
-      input.fillSet.targetSpatialFacts.length === 0
-      ? { tag: "needsTargetFacts" }
-      : {
-          tag: "invalid",
-          message:
-            "Fixed-target reaction attacks require an exact attack target distance fact.",
-        };
-  }
+  if (facts === undefined) return missingReactionAttackDistance(input.fillSet);
   return (
     reactionAttackTargetIssue(input, facts) ?? {
       tag: "ok",
       facts,
     }
   );
+}
+
+/** An Opportunity Attack's supplied distance must be its trigger's distance. */
+function opportunityAttackDistanceMismatches(
+  subject: OpportunityAttackResolutionInput["subject"],
+  suppliedDistanceFeet: ReturnType<typeof attackTargetDistanceFeet>,
+): boolean {
+  return (
+    subject.command === "opportunityAttack" &&
+    suppliedDistanceFeet !== null &&
+    Number(suppliedDistanceFeet) !== Number(subject.distanceFeet)
+  );
+}
+
+/**
+ * A fixed-target reaction attack with no distance: with no input yet it asks
+ * for its target's facts, and any other input lacks the distance fact.
+ */
+function missingReactionAttackDistance(
+  fillSet: ResolvedAttackFillSet,
+):
+  | { readonly tag: "needsTargetFacts" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  return fillSet.targetId === undefined &&
+    fillSet.targetSpatialFacts.length === 0
+    ? { tag: "needsTargetFacts" }
+    : {
+        tag: "invalid",
+        message:
+          "Fixed-target reaction attacks require an exact attack target distance fact.",
+      };
 }
 
 /**
