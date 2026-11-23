@@ -7,6 +7,7 @@
 module battleRuntimeLevitateCreature {
   import battleRuntimeControlledVerticalSuspension.* from "./battle-runtime-controlled-vertical-suspension"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
@@ -229,6 +230,10 @@ module battleRuntimeLevitateCreature {
     else
       state
 
+  /// SRD 5.2.1 Levitate: the target moves "as if it were climbing" by pushing
+  /// or pulling against a fixed object or surface within reach. Its path is
+  /// climbed at climbing cost, and the altitude change is part of that path.
+  /// A Prone target can't move this way (ASSUMPTIONS.md A61).
   pure def moveLevitatedTargetWithWitness(
     state: BattleState,
     target: Actor,
@@ -236,15 +241,18 @@ module battleRuntimeLevitateCreature {
     fixedObjectOrSurfaceWithinReach: bool,
     speedKind: MovementSpeedKind,
     movementCostFeet: int,
+    pathDistanceFeet: int,
     directionUp: bool,
     distanceFeet: int,
   ): BattleState =
     if (
       currentActor(state) == target and
+      not(combatantForActor(state, target).prone) and
       fixedObjectOrSurfaceWithinReach and
       targetHasLevitatedCreatureFrom(state, target, source) and
       levitateAltitudeChangeIsLegal(distanceFeet) and
-      movementCostFeet == levitatedClimbingMovementCost(speedKind, distanceFeet)
+      distanceFeet <= pathDistanceFeet and
+      movementCostFeet == levitatedClimbingMovementCost(speedKind, pathDistanceFeet)
     )
       stateWithLevitatedCreatureAltitudeChanged(state, target, source, directionUp, distanceFeet)
     else

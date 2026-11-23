@@ -95,6 +95,7 @@ import { movementHole } from "./movement-holes.ts";
 import {
   battleMovementPathCostFeet,
   battleMovementPathDragsGrappledCreature,
+  plainStepMovementActivity,
   priceBattleMovementPath,
   type BattleMovementPathCost,
 } from "./movement-path.ts";
@@ -654,7 +655,8 @@ export function parseBattleMovement(
       state,
       combatant: mover,
       fact: fill.value.controlledVerticalSuspensionMovement,
-      path: fill.value,
+      path: fill.value.path,
+      pathCost,
     });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (controlledVerticalSuspensionMovementValidation !== null) {
@@ -1504,14 +1506,22 @@ function creatureSpaceMovementPermissionProfileForCombatant(
   return null;
 }
 
+const PRONE_FIXED_COST_MOVEMENT_REPLACEMENT_MESSAGE =
+  "A Prone creature can only crawl or right itself, so it can't use a distance-multiplier effect movement replacement.";
+
 type FixedCostMovementReplacementCostResult =
   | { readonly tag: "ok"; readonly costFeet: MovementFeet }
   | { readonly tag: "invalid"; readonly message: string };
 
 /**
  * The move's cost. An ordinary move spends its priced path. A
- * distance-multiplier effect's jump replaces the path distance's cost with the
- * spell's fixed Movement cost, and still spends the path's extra costs.
+ * distance-multiplier effect's jump spends the spell's fixed Movement cost
+ * instead: SRD 5.2.1 Jump lets the target "jump up to 30 feet by spending 10
+ * feet of movement", so the path's crawling, climbing, swimming and table
+ * Difficult Terrain extras don't apply; landing in Difficult Terrain is the
+ * landing's Acrobatics check. Cited spell areas still add their surcharges.
+ * A Prone creature can't jump: its only movement options are to crawl or to
+ * right itself (Rules Glossary "Prone").
  */
 function validateFixedCostMovementReplacementFact(
   state: BattleState,
@@ -1540,6 +1550,13 @@ function validateFixedCostMovementReplacementFact(
     };
   }
   /* v8 ignore stop -- @preserve */
+  const mover = state.combatants.get(moverId);
+  if (mover !== undefined && plainStepMovementActivity(mover) === "crawling") {
+    return {
+      tag: "invalid",
+      message: PRONE_FIXED_COST_MOVEMENT_REPLACEMENT_MESSAGE,
+    };
+  }
   const effect = mode.effect;
   /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
   if (
@@ -1556,7 +1573,7 @@ function validateFixedCostMovementReplacementFact(
   return {
     tag: "ok",
     costFeet: movementFeet(
-      Number(effect.movementCostFeet) + Number(pathCost.extraCostFeet),
+      Number(effect.movementCostFeet) + Number(pathCost.spellAreaExtraCostFeet),
     ),
   };
 }

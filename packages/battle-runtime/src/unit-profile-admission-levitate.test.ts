@@ -1,4 +1,8 @@
-import { testMovementPath } from "./battle-runtime.test-support.ts";
+import {
+  applyCondition,
+  testBattleCreatureStateWithConditions,
+  testMovementPath,
+} from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME levitate
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-levitated-creature
@@ -713,6 +717,44 @@ describe("L12G deterministic Levitate creature admission", () => {
       tag: "invalid",
       message:
         "ControlledVerticalSuspension movement must climb along every segment of its path.",
+    });
+
+    // ASSUMPTIONS.md A61: Prone allows only crawling and Levitate only
+    // climbing, so a Prone Levitated creature can't move along a path.
+    const target = targetTurn.state.combatants.get(moveAct.subject.actorId);
+    if (target === undefined) {
+      throw new Error("Expected the levitated mover.");
+    }
+    const proneLevitated = resolveBattleSubject({
+      state: {
+        ...targetTurn.state,
+        combatants: new Map(targetTurn.state.combatants).set(
+          target.combatantId,
+          testBattleCreatureStateWithConditions(
+            target,
+            applyCondition(target.conditions, "prone"),
+          ),
+        ),
+      },
+      subject: moveAct.subject,
+      fills: [
+        movementFill(movementHole, {
+          path: testMovementPath({ distanceFeet: 5, activity: "crawling" }),
+          provokedOpportunityAttacks: [],
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
+            effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
+            sourceCombatantId: spellCasterId,
+            sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
+              .sourceProcedureRef,
+            fixedObjectOrSurfaceWithinReach: true,
+          },
+        }),
+      ],
+    });
+    expect(proneLevitated).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("A61"),
     });
 
     const moved = resolveBattleSubject({

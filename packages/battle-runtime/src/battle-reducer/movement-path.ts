@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
+//
 // Movement path pricing: the runtime derives a move's cost from the path
 // segments the table supplies, instead of accepting a caller-supplied total.
 //
@@ -44,6 +46,12 @@ export type BattleMovementPathCost = {
   readonly distanceFeet: MovementFeet;
   /** The feet the path costs beyond its distance. */
   readonly extraCostFeet: MovementFeet;
+  /**
+   * The part of `extraCostFeet` that cited spell areas impose: their
+   * Difficult Terrain and the directional persistent area's surcharge. A move
+   * that replaces its distance cost with a fixed cost still pays these.
+   */
+  readonly spellAreaExtraCostFeet: MovementFeet;
 };
 
 export type BattleMovementPathCostResult =
@@ -55,6 +63,16 @@ export function battleMovementPathCostFeet(
   cost: BattleMovementPathCost,
 ): MovementFeet {
   return movementFeet(Number(cost.distanceFeet) + Number(cost.extraCostFeet));
+}
+
+/**
+ * The activity of a mover's plain steps: Rules Glossary "Prone" leaves a Prone
+ * creature only crawling, and every other mover walks them.
+ */
+export function plainStepMovementActivity(
+  mover: BattleCreatureState,
+): Extract<BattleMovementPathActivity, "crawling" | "ordinary"> {
+  return hasCondition(mover.conditions, "prone") ? "crawling" : "ordinary";
 }
 
 export const PRONE_MOVEMENT_PATH_MESSAGE =
@@ -114,30 +132,31 @@ export function priceBattleMovementPath(
     }
     dragCosts.push(drag.extraCostPerFoot);
   }
-  const extraCostFeet = segments.reduce((total, segment, index) => {
+  let extraCostFeet = 0;
+  let spellAreaExtraCostFeet = 0;
+  segments.forEach((segment, index) => {
+    const directionalExtraCostPerFoot =
+      segment.movesCloserThroughDirectionalArea && directional.tag === "ok"
+        ? directional.effect.movementCost.multiplier - 1
+        : 0;
     const priced = movementCost({
       distanceFeet: segment.distanceFeet,
       activity: movementPathActivity(segment.activity, value.speedKind),
       difficultTerrain: segment.difficultTerrain !== "none",
-      squeezing: false,
-      grappleDragExtraCost: false,
+      effectExtraCostPerFoot:
+        (dragCosts[index] ?? 0) + directionalExtraCostPerFoot,
     });
-    const directionalExtraPerFoot =
-      segment.movesCloserThroughDirectionalArea && directional.tag === "ok"
-        ? directional.effect.movementCost.multiplier - 1
-        : 0;
-    return (
-      total +
-      Number(priced.costFeet) -
-      Number(priced.distanceFeet) +
+    extraCostFeet += Number(priced.costFeet) - Number(priced.distanceFeet);
+    spellAreaExtraCostFeet +=
       Number(segment.distanceFeet) *
-        ((dragCosts[index] ?? 0) + directionalExtraPerFoot)
-    );
-  }, 0);
+      ((segment.difficultTerrain === "areaDifficultTerrain" ? 1 : 0) +
+        directionalExtraCostPerFoot);
+  });
   return {
     tag: "ok",
     distanceFeet,
     extraCostFeet: movementFeet(extraCostFeet),
+    spellAreaExtraCostFeet: movementFeet(spellAreaExtraCostFeet),
   };
 }
 
@@ -170,9 +189,9 @@ export function battleMovementPathDragsGrappledCreature(
 
 /** Whether every segment of the path is climbing. */
 export function battleMovementPathIsClimbing(
-  value: BattleMovementFillValueCommon,
+  path: BattleMovementPath,
 ): boolean {
-  return value.path.every((segment) => segment.activity === "climbing");
+  return path.every((segment) => segment.activity === "climbing");
 }
 
 /**
@@ -216,7 +235,7 @@ function movementPathSegmentIssue(
     return "Movement path segment distance must be a positive integer.";
   }
   if (
-    hasCondition(mover.conditions, "prone") &&
+    plainStepMovementActivity(mover) === "crawling" &&
     segment.activity !== "crawling"
   ) {
     return PRONE_MOVEMENT_PATH_MESSAGE;
@@ -386,14 +405,15 @@ function areaDifficultTerrainSourcesIssue(
       if (damageIssue !== null) return damageIssue;
       damageDistanceFeet += Number(source.damageDistanceFeet);
     }
-    if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
-      return "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.";
-    }
   }
   if (damageDistanceFeet > Number(areaDifficultTerrainDistanceFeet)) {
     return "area movement-distance damage movement damage distances cannot exceed the path's area Difficult Terrain distance.";
   }
-  return null;
+  return sources.every((source) =>
+    activeAreaDifficultTerrainSourceMatches(state, source),
+  )
+    ? null
+    : "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.";
 }
 
 function areaMovementDistanceDamageSourceIssue(

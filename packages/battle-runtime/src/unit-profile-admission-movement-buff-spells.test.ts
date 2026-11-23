@@ -1,10 +1,12 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  applyCondition,
   assertBattleSnapshotCodecRoundTripForTest,
   attackExecutionSelectionForSubjectForTest,
   battleStateWithAllocatedEffectForTest,
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
+  testBattleCreatureStateWithConditions,
   testShortswordAttack,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -667,6 +669,87 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
           (effect) => effect.kind === "fixedCostMovementReplacement",
         ),
     ).toMatchObject({ usedThisTurn: true });
+    // SRD 5.2.1 Jump: "jump up to 30 feet by spending 10 feet of movement".
+    // The path's crawling, climbing and table Difficult Terrain extras don't
+    // add to that cost.
+    const roughJump = resolveBattleSubject({
+      state: cast.state,
+      subject: jumpAct.subject,
+      fills: [
+        movementFill(movement, {
+          path: [
+            {
+              distanceFeet: movementFeet(30),
+              activity: "climbing",
+              difficultTerrain: "tableTerrain",
+              movesCloserThroughDirectionalArea: false,
+              draggedGrappledTargetIds: [],
+            },
+          ],
+          provokedOpportunityAttacks: [],
+          fixedCostMovementReplacement: {
+            kind: "fixedCostMovementReplacement",
+            landing: {
+              kind: "legalLanding",
+              difficultTerrainAcrobatics: "notRequired",
+            },
+          },
+        }),
+      ],
+    });
+    expect(roughJump).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({ spentFeet: 10 }),
+          }),
+        ]),
+      },
+    });
+    // Rules Glossary "Prone": a Prone creature can only crawl or right itself.
+    const jumper = requireCombatant(cast.state, spellCasterId);
+    const proneState = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(
+        spellCasterId,
+        testBattleCreatureStateWithConditions(
+          jumper,
+          applyCondition(jumper.conditions, "prone"),
+        ),
+      ),
+    };
+    expect(
+      resolveBattleSubject({
+        state: proneState,
+        subject: jumpAct.subject,
+        fills: [
+          movementFill(movement, {
+            path: [
+              {
+                distanceFeet: movementFeet(30),
+                activity: "crawling",
+                difficultTerrain: "none",
+                movesCloserThroughDirectionalArea: false,
+                draggedGrappledTargetIds: [],
+              },
+            ],
+            provokedOpportunityAttacks: [],
+            fixedCostMovementReplacement: {
+              kind: "fixedCostMovementReplacement",
+              landing: {
+                kind: "legalLanding",
+                difficultTerrainAcrobatics: "notRequired",
+              },
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("Prone creature can only crawl"),
+    });
     const jumped = resolveBattleSubject({
       state: cast.state,
       subject: jumpAct.subject,

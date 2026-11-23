@@ -4,7 +4,6 @@ import { movementFeet } from "@dnd/shared/types";
 
 import {
   movementCost,
-  ordinaryMovementCost,
   type MovementCostFacts,
 } from "./movement-cost-algebra.ts";
 
@@ -12,14 +11,12 @@ const BASE_FACTS: MovementCostFacts = {
   distanceFeet: movementFeet(5),
   activity: { kind: "ordinary", speedType: "walk" },
   difficultTerrain: false,
-  squeezing: false,
-  grappleDragExtraCost: false,
+  effectExtraCostPerFoot: 0,
 };
 
 describe("movement cost algebra", () => {
   test("ordinary movement costs one foot per foot", () => {
     expect(cost(BASE_FACTS)).toEqual({ distance: 5, cost: 5 });
-    expect(ordinaryMovementCost(movementFeet(5), "walk").costFeet).toBe(5);
   });
 
   test("Difficult Terrain costs one extra foot per foot and is not cumulative", () => {
@@ -59,16 +56,16 @@ describe("movement cost algebra", () => {
     ).toEqual({ distance: 5, cost: 5 });
   });
 
-  test("crawling and squeezing each add their own cost factor", () => {
+  test("crawling and each effect surcharge add their own cost factor", () => {
     expect(
       cost({
         ...BASE_FACTS,
         activity: { kind: "crawling", speedType: "walk" },
       }),
     ).toEqual({ distance: 5, cost: 10 });
-    expect(cost({ ...BASE_FACTS, squeezing: true })).toEqual({
+    expect(cost({ ...BASE_FACTS, effectExtraCostPerFoot: 2 })).toEqual({
       distance: 5,
-      cost: 10,
+      cost: 15,
     });
   });
 
@@ -78,8 +75,7 @@ describe("movement cost algebra", () => {
         ...BASE_FACTS,
         difficultTerrain: true,
         activity: { kind: "climbing", speedType: "walk" },
-        squeezing: true,
-        grappleDragExtraCost: true,
+        effectExtraCostPerFoot: 2,
       }),
     ).toEqual({ distance: 5, cost: 25 });
   });

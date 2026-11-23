@@ -280,3 +280,19 @@ sequence rather than imposing a shared one-reroll limit across sources.
 `.references/srd-5.2.1/playing-the-game.md`, "Interactions with Rerolls,"
 still limits each reroll with Advantage or Disadvantage to one chosen die,
 not both.
+
+## A61: A Prone Levitated creature can't move along a path
+
+**Assumption:** A creature that is both Prone and the target of Levitate has no
+movement along a path. It can still spend movement to right itself.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Prone,"
+says: "Your only movement options are to crawl or to spend an amount of
+movement equal to half your Speed (round down) to right yourself."
+`.references/srd-5.2.1/spells.md`, "Levitate," says the target "can move only
+by pushing or pulling against a fixed object or surface within reach ..., which
+allows it to move as if it were climbing." Each rule names the only movement
+the creature has, and the SRD doesn't say how they combine. The model applies
+both limits, and no movement is both crawling and climbing, so every path is
+refused while righting itself stays available. The QNT owner is
+`moveLevitatedTargetWithWitness` in `battle-runtime-levitate-creature.qnt`.
