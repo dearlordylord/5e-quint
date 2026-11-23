@@ -2093,15 +2093,7 @@ function battleSubjectKey(subject: BattleSubject): string {
             command.tag,
             command.actorId,
             command.command,
-            "readiedSpellCasterId" in command
-              ? command.readiedSpellCasterId
-              : null,
-            "readiedMovementActorId" in command
-              ? command.readiedMovementActorId
-              : null,
-            "readiedActorId" in command ? command.readiedActorId : null,
-            "targetId" in command ? command.targetId : null,
-            "reactorId" in command ? command.reactorId : null,
+            ...runtimeCommandReferenceKey(command),
             "procedureRef" in command ? command.procedureRef : null,
             "attackAbility" in command ? (command.attackAbility ?? null) : null,
             "attackDamageType" in command
@@ -2124,6 +2116,20 @@ function battleSubjectKey(subject: BattleSubject): string {
       ),
     ),
   );
+}
+
+/** The creatures and the object a runtime command refers to. */
+function runtimeCommandReferenceKey(
+  command: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): readonly (string | null)[] {
+  return [
+    "readiedSpellCasterId" in command ? command.readiedSpellCasterId : null,
+    "readiedMovementActorId" in command ? command.readiedMovementActorId : null,
+    "readiedActorId" in command ? command.readiedActorId : null,
+    "targetId" in command ? command.targetId : null,
+    "reactorId" in command ? command.reactorId : null,
+    "objectId" in command ? command.objectId : null,
+  ];
 }
 
 function runtimeCommandEffectOccurrenceKey(

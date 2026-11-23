@@ -780,6 +780,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "battleRuntimeCommandBoundExecutionReferences",
     "runtimeCommandEffectOccurrenceKey",
     "runtimeCommandAreaMembershipTrigger",
+    "runtimeCommandReferenceKey",
   ].flatMap((identifier) =>
     exactCollision(
       "command",
@@ -2826,9 +2827,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "97af377c7ea7ed6d68f0a12f19e173c9aceb183cf52ea7af4fd664403722531b",
-  siteCount: 1721,
-  violationCount: 1841,
+  sha256: "82ee45ea86e06d75ca8261c416acb9af54f23c800586e80277a840fc8f59b01a",
+  siteCount: 1724,
+  violationCount: 1844,
 };
 
 function escapeForRegExp(text) {
