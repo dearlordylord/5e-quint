@@ -112,10 +112,13 @@ import {
   eligibleWeaponDamageDiceRollChoiceProcedureRefs,
 } from "./statblock-attacks.ts";
 
+import type { CombatantId } from "../identity.ts";
 import type {
   BattleAttackDamageEvent,
+  BattleCreatureState,
   BattleResolutionResult,
   BattleState,
+  BattleTargetSpatialFact,
   MartialArtsBonusUnarmedStrikeBattleResolutionInput,
   OffHandAttackBattleResolutionInput,
 } from "../battle-state-execution.ts";
@@ -192,6 +195,31 @@ type BonusActionAttackConfig = {
   ) => boolean;
 };
 
+/**
+ * A bonus action attack's roll mode once its target facts qualify it: a
+ * ranged attack's enemy proximity, and a thrown weapon's landing.
+ */
+function bonusActionAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  target: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
+): ReturnType<typeof qualifiedAttackRollMode> {
+  const rollMode = qualifiedAttackRollMode(
+    state,
+    attackerId,
+    target,
+    attack,
+    facts,
+  );
+  if (typeof rollMode === "object") return rollMode;
+  const landingIssue = thrownWeaponLandingIssue(attackerId, attack, facts);
+  return landingIssue === null
+    ? rollMode
+    : { tag: "invalid", message: landingIssue };
+}
+
 function resolveBonusActionAttack(
   input: BonusActionAttackBattleResolutionInput,
   config: BonusActionAttackConfig,
@@ -255,7 +283,7 @@ function resolveBonusActionAttack(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const initialRequiredRollMode = qualifiedAttackRollMode(
+  const initialRequiredRollMode = bonusActionAttackRollMode(
     input.state,
     input.subject.actorId,
     target,
@@ -268,14 +296,6 @@ function resolveBonusActionAttack(
       "invalidFill",
       initialRequiredRollMode.message,
     );
-  const landingIssue = thrownWeaponLandingIssue(
-    input.subject.actorId,
-    attack,
-    fillSet.targetSpatialFacts,
-  );
-  if (landingIssue !== null) {
-    return invalidResult(input.state, "invalidFill", landingIssue);
-  }
   if (fillSet.attackRoll == null) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
