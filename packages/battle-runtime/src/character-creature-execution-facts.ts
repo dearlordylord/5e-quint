@@ -1,4 +1,4 @@
-import type { MovementFeet } from "@dnd/shared/types";
+import type { MovementFeet, WeaponGrip } from "@dnd/shared/types";
 import type { UnitId } from "@dnd/shared/game-facts";
 import type {
   Ability,
@@ -26,7 +26,7 @@ export type CharacterBattleLoadoutRef = {
   readonly weapon?: {
     readonly itemId: BattleObjectId;
     readonly unitId: UnitId;
-    readonly grip: "one_handed" | "two_handed";
+    readonly grip: WeaponGrip;
   };
   readonly offHandWeapon?: {
     readonly itemId: BattleObjectId;

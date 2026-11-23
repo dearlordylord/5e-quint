@@ -67,6 +67,7 @@ import {
   PositiveInteger,
   resourceCount,
   spellSlotLevel,
+  WEAPON_GRIPS,
 } from "@dnd/shared/types";
 import type {
   Hp as HpType,
@@ -2033,6 +2034,11 @@ function parseStoredEquipment(
           `Character Build loadout weapon ${itemId} cannot be held one-handed.`,
       ),
       Match.when(
+        { tag: "twoHandedGripHandConflict" },
+        ({ itemId }) =>
+          `Character Build loadout weapon ${itemId} is held two-handed, so it cannot combine with a shield or off-hand weapon.`,
+      ),
+      Match.when(
         { tag: "shieldAndOffHandWeaponConflict" },
         () =>
           "Character Build loadout cannot combine shield and off-hand weapon.",
@@ -2315,8 +2321,12 @@ function parseStoredMainWeapon(
   CharacterSheetIssue
 > {
   if (value === undefined) return Result.succeed(undefined);
-  /* v8 ignore start -- @preserve -- Malformed stored build: a main-hand weapon loadout is not a one-handed item record with a valid main-slot item id. */
-  if (!isRecord(value) || value.grip !== "one_handed") {
+  /* v8 ignore start -- @preserve -- Malformed stored build: a main-hand weapon loadout is not an item record with a known grip and a valid main-slot item id. */
+  if (!isRecord(value)) {
+    return characterSheetIssue("Character Build weapon loadout is invalid.");
+  }
+  const grip = WEAPON_GRIPS.find((candidate) => candidate === value.grip);
+  if (grip === undefined) {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
   const itemId = parseOptionalEquipmentItemId(value.itemId, "main");
@@ -2328,7 +2338,7 @@ function parseStoredMainWeapon(
   if (Object.keys(value).some((key) => key !== "itemId" && key !== "grip")) {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
-  return Result.succeed({ itemId: itemId.success, grip: "one_handed" });
+  return Result.succeed({ itemId: itemId.success, grip });
 }
 
 function parseStoredOffHandWeapon(

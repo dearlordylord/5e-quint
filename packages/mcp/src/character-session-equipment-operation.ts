@@ -11,6 +11,7 @@ import {
   type CharacterSheetEquipmentLoadoutPatch,
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
+import type { WeaponGrip } from "@dnd/shared/types";
 import { Match, Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -24,7 +25,7 @@ type EquipmentLoadoutPatchInput = {
   readonly shield?: string | null;
   readonly weapon?: {
     readonly itemId: string;
-    readonly grip: "one_handed";
+    readonly grip: WeaponGrip;
   } | null;
   readonly offHandWeapon?: { readonly itemId: string } | null;
 };
@@ -107,6 +108,10 @@ function parseEquipmentLoadoutPatch(
     "main",
     issues,
   );
+  const weapon =
+    input.weapon == null || weaponItemId === undefined
+      ? undefined
+      : { itemId: weaponItemId, grip: input.weapon.grip };
   const offHandWeaponItemId = parseEquipmentLoadoutItemId(
     input.offHandWeapon?.itemId,
     "off",
@@ -130,10 +135,7 @@ function parseEquipmentLoadoutPatch(
     ...equipmentLoadoutPatchProperty(
       "weapon",
       Object.prototype.hasOwnProperty.call(input, "weapon"),
-      equipmentLoadoutPatchValue(input.weapon, weaponItemId, (itemId) => ({
-        itemId,
-        grip: "one_handed" as const,
-      })),
+      equipmentLoadoutPatchValue(input.weapon, weapon, (held) => held),
     ),
     ...equipmentLoadoutPatchProperty(
       "offHandWeapon",
@@ -256,6 +258,9 @@ function equipmentLoadoutIssueMessage(
       characterSheetEquipmentLoadoutIssueMessage(matched),
     ),
     Match.when({ tag: "weaponCannotBeHeldOneHanded" }, (matched) =>
+      characterSheetEquipmentLoadoutIssueMessage(matched),
+    ),
+    Match.when({ tag: "twoHandedGripHandConflict" }, (matched) =>
       characterSheetEquipmentLoadoutIssueMessage(matched),
     ),
     Match.when({ tag: "shieldAndOffHandWeaponConflict" }, (matched) =>

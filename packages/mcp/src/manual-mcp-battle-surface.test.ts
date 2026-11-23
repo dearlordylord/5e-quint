@@ -51,6 +51,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   abilityModifier as armorAbilityModifier,
   defaultArmorClassState,
+  loadoutHandUses,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { createMcpPlaySessionRoot, handleToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
@@ -2238,14 +2239,11 @@ function character(
         );
   const ac = {
     ...(input.armorClass ?? defaultArmorClassState()),
-    rightHandUse:
-      selectedLoadout.weapon === undefined
-        ? ("free" as const)
-        : ("mainWeapon" as const),
-    leftHandUse:
-      selectedLoadout.shield === undefined
-        ? ("free" as const)
-        : ("shield" as const),
+    ...loadoutHandUses({
+      holdsShield: selectedLoadout.shield !== undefined,
+      holdsOffHandWeapon: selectedLoadout.offHandWeapon !== undefined,
+      mainWeaponGrip: selectedLoadout.weapon?.grip,
+    }),
   };
   const characterUnitRefs = [...(input.characterUnitRefs ?? [])];
   if (input.omitWeaponPresentationSources !== true) {

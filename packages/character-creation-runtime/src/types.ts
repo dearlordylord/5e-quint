@@ -38,6 +38,7 @@ import {
   type Index as IndexType,
   type NonNegativeInteger as NonNegativeIntegerType,
   type PositiveInteger as PositiveIntegerType,
+  type WeaponGrip,
 } from "@dnd/shared/types";
 
 // KERNEL-COVERAGE: runtime-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
@@ -1558,7 +1559,7 @@ export type CharacterSpellcastingFocusKind =
 
 export type CharacterBuildHeldWeapon = {
   readonly itemId: CharacterEquipmentItemId<"main">;
-  readonly grip: "one_handed";
+  readonly grip: WeaponGrip;
 };
 
 export type CharacterBuildCatalogEquipmentItem = {

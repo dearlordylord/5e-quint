@@ -12,7 +12,7 @@ import {
   UnitId as SharedUnitIdSchema,
   type CharacterStartingLanguages,
 } from "@dnd/shared/game-facts";
-import { AbilityScore } from "@dnd/shared/types";
+import { AbilityScore, WeaponGripSchema } from "@dnd/shared/types";
 import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import {
@@ -422,7 +422,7 @@ const EquipmentSchema = Schema.Struct({
     weapon: Schema.optionalKey(
       Schema.Struct({
         itemId: characterEquipmentItemIdSchema("main"),
-        grip: Schema.Literal("one_handed"),
+        grip: WeaponGripSchema,
       }),
     ),
     offHandWeapon: Schema.optionalKey(

@@ -3907,7 +3907,7 @@
       "kind": "composition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "DRP-T11 keeps Character Battle initialization as a deterministic replay. The fixture is a fixed handoff projection over existing Character Sheet and Character Build owners into battle init: character identity, current and maximum Hit Points, Temporary Hit Points, Armor Class, conditions, Spell Slot counts and expenditures, Metamagic facts, supported Unit profile refs, build-derived max-HP rejection, and assumption-backed rejection of in-progress Stable recovery during battle entry. The TS witness derives its expected state from characterSheetBattleInit, battleCreatureInitFromCharacterBuild, startBattle, and shared projection readers; it does not introduce parallel battle-entry state. This boundary happens before random battle turns or action interleavings exist, so the portability risk is deterministic cross-runtime projection of facts into the battle combatant shape, not generative battle branch ordering.",
+          "deterministicReplayRationale": "DRP-T11 keeps Character Battle initialization as a deterministic replay. The fixture is a fixed handoff projection over existing Character Sheet and Character Build owners into battle init: character identity, current and maximum Hit Points, Temporary Hit Points, Armor Class, conditions, Spell Slot counts and expenditures, Metamagic facts, supported Unit profile refs, the main weapon's grip, the hands it holds and its Versatile damage die, build-derived max-HP rejection, and assumption-backed rejection of in-progress Stable recovery during battle entry. The TS witness derives its expected state from characterSheetBattleInit, battleCreatureInitFromCharacterBuild, startBattle, and shared projection readers; it does not introduce parallel battle-entry state. This boundary happens before random battle turns or action interleavings exist, so the portability risk is deterministic cross-runtime projection of facts into the battle combatant shape, not generative battle branch ordering.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts",
           "qntSpecPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
@@ -3923,11 +3923,14 @@
         "packages/character-battle-runtime/src/index.ts",
         "packages/character-battle-runtime/src/battle-creature-init.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.ts",
-        "packages/character-battle-runtime/src/battle-support-profiles.ts"
+        "packages/character-battle-runtime/src/battle-support-profiles.ts",
+        "packages/character-sheet-runtime/src/equipment-ownership.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/character-creation.md#Fill In Numbers",
+        ".references/srd-5.2.1/equipment.md#Two-Handed",
+        ".references/srd-5.2.1/equipment.md#Versatile",
         ".references/srd-5.2.1/playing-the-game.md#The Order of Combat",
         ".references/srd-5.2.1/playing-the-game.md#Armor Class",
         ".references/srd-5.2.1/playing-the-game.md#Hit Points",
@@ -3935,7 +3938,8 @@
         ".references/srd-5.2.1/rules-glossary.md#Condition",
         ".references/srd-5.2.1/rules-glossary.md#Stable",
         ".references/srd-5.2.1/spells.md#Spell Slots",
-        "ASSUMPTIONS.md#a26-stable-recovery-timers-do-not-cross-the-battle-handoff-boundary"
+        "ASSUMPTIONS.md#a26-stable-recovery-timers-do-not-cross-the-battle-handoff-boundary",
+        "ASSUMPTIONS.md#a58-any-weapon-may-be-held-with-both-hands"
       ],
       "title": "Character Sheet and Character Build projection into Battle initialization for identity, HP, Armor Class, conditions, Spell Slots, and supported Unit profiles"
     },

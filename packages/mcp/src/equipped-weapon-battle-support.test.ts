@@ -314,3 +314,26 @@ test("synthetic off-hand flat-damage weapons disclose the same slot-specific rej
     detail: { sheetProjection: { equippedWeaponBattleBlockers: [] } },
   });
 });
+
+test("a Versatile weapon can be equipped with the two-handed grip, which leaves no hand for an off-hand weapon", () => {
+  const { root, characterId, quarterstaff, offDagger, equip } = fixture();
+  const twoHanded = equip({
+    weapon: { itemId: quarterstaff, grip: "two_handed" },
+  });
+  expect(twoHanded, JSON.stringify(twoHanded)).not.toHaveProperty(
+    "isError",
+    true,
+  );
+  const sheet = root.sessionStore.characters.get(characterId);
+  assert(sheet?.tag === "available");
+  expect(sheet.build.equipment.loadout.weapon).toEqual({
+    itemId: quarterstaff,
+    grip: "two_handed",
+  });
+
+  const conflict = equip({ offHandWeapon: { itemId: offDagger } });
+  expect(conflict).toHaveProperty("isError", true);
+  expect(JSON.stringify(jsonContentPayload(conflict))).toContain(
+    `Weapon ${quarterstaff} is held two-handed, which leaves no hand for a shield or an off-hand weapon.`,
+  );
+});
