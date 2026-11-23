@@ -10,9 +10,10 @@ module attackWeaponChangeCore {
   // picking it up. Unequipping a weapon includes sheathing, stowing, or
   // dropping it."
   //
-  // A change before the attack rides on the attack. An attack made without
-  // one leaves a change after it, which lasts until the creature's next
-  // attack or the end of its turn (ASSUMPTIONS.md A63). handsFree is whether
+  // A change before the attack rides on the attack. An Attack action attack
+  // made without one leaves a change after it, which lasts until the
+  // creature's next Attack action attack or the end of its turn
+  // (ASSUMPTIONS.md A63). handsFree is whether
   // the hands the weapon's loadout grip uses are empty.
 
   type WeaponCustody = HeldWeapon | StowedWeapon | WeaponOnGround

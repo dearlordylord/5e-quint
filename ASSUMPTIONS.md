@@ -340,10 +340,11 @@ readied interaction take only the action Ready held.
 **Assumption:** Each attack a character makes as part of its Attack action on
 its own turn can equip or unequip one of its selected loadout's weapons. The
 change can come before the attack, carried on the attack itself, or after it.
-A change after the attack must come before the character's next attack. If
-that next attack carries its own change before its roll, any change still left
-from the attack before it is gone. Any change still left at the end of the turn
-is also gone.
+A change after the attack must come before the character's next attack as part
+of the Attack action. If that next attack carries its own change before its
+roll, any change still left from the attack before it is gone. Other attacks,
+such as an off-hand attack with a Bonus Action, leave a change still left as it
+was. Any change still left at the end of the turn is also gone.
 
 Equipping draws a stowed weapon, or picks up one lying on the ground, and puts
 it back in hand with its loadout grip. The hands the grip uses must be empty.
@@ -358,9 +359,10 @@ unequip one weapon when you make an attack as part of this action. You do so
 either before or after the attack." It also says "Equipping a weapon includes
 drawing it from a sheath or picking it up. Unequipping a weapon includes
 sheathing, stowing, or dropping it." The SRD doesn't say how long after the
-attack the change may wait, or where a dropped weapon lands. The model ends the
-window at the next attack, so that each change belongs to one attack, and asks
-the table where the weapon lands.
+attack the change may wait, or where a dropped weapon lands. The change belongs
+to the Attack action, so the model ends the window at the action's next attack,
+which keeps each change to one attack, and asks the table where the weapon
+lands.
 
 **Temporary implementation restriction (not a rules assumption):** Battle can
 change only the selected loadout's main-hand and off-hand weapons. Other owned

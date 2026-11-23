@@ -22,7 +22,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
-import { changeWeaponAfterAttackActs } from "./attack-weapon-change.ts";
+import {
+  changeWeaponAfterAttackActs,
+  weaponChangeInitialHoles,
+} from "./attack-weapon-change.ts";
 import {
   loadoutWeaponChanges,
   stateWithLoadoutWeaponChange,
@@ -410,7 +413,7 @@ function appendOrdinaryAttackActs(
       ...attackActionOptions.flatMap((attack) =>
         ordinaryAttackActs(state, actorId, attack, undefined),
       ),
-      ...drawnWeaponAttackActs(state, actorId),
+      ...weaponChangeAttackActs(state, actorId),
     );
   }
 }
@@ -446,41 +449,46 @@ function ordinaryAttackActs(
 }
 
 /**
- * The attacks with a loadout weapon the creature draws or picks up as part
- * of the attack (SRD 5.2.1 Rules Glossary, "Attack [Action]", Equipping and
- * Unequipping Weapons). Other changes before an attack ride on any attack
- * subject as its `weaponChange`.
+ * The attacks that carry a weapon change before the roll (SRD 5.2.1 Rules
+ * Glossary, "Attack [Action]", Equipping and Unequipping Weapons): for each
+ * change the character can make, every ordinary attack it could make once the
+ * change is done. A weapon equipped first needn't be the one used. A dropped
+ * weapon leaves the same attacks as a stowed one, and the act asks first where
+ * it lands.
  */
-function drawnWeaponAttackActs(
+function weaponChangeAttackActs(
   state: BattleState,
   actorId: CombatantId,
 ): BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) return [];
-  return loadoutWeaponChanges(state, actor)
-    .filter((change) => change.kind === "equip")
-    .flatMap((change) => {
-      const equipped = stateWithLoadoutWeaponChange(state, actorId, {
-        kind: "equip",
-        objectId: change.objectId,
-      });
-      /* v8 ignore next -- @preserve -- loadoutWeaponChanges admits only changes that apply. */
-      if (equipped.tag === "invalid") return [];
-      return attackActionOptionsForActor(equipped.state, actorId)
-        .filter(
-          (attack) =>
-            attack.kind === "weapon" &&
-            attack.weaponObjectId === change.objectId &&
-            attackActionOptionIsOrdinaryAttackAction(
-              equipped.state,
-              actorId,
-              attack,
-            ),
+  return loadoutWeaponChanges(state, actor).flatMap((change) => {
+    const changed = stateWithLoadoutWeaponChange(state, actorId, {
+      kind: change.kind === "drop" ? "stow" : change.kind,
+      objectId: change.objectId,
+    });
+    /* v8 ignore next -- @preserve -- loadoutWeaponChanges admits only changes that apply. */
+    if (changed.tag !== "applied") return [];
+    const dropHoles = weaponChangeInitialHoles(actorId, change);
+    return (
+      attackActionOptionsForActor(changed.state, actorId)
+        .filter((attack) =>
+          attackActionOptionIsOrdinaryAttackAction(
+            changed.state,
+            actorId,
+            attack,
+          ),
         )
         .flatMap((attack) =>
-          ordinaryAttackActs(equipped.state, actorId, attack, change),
-        );
-    });
+          ordinaryAttackActs(changed.state, actorId, attack, change),
+        )
+        // Only the character Attack action subject carries a weapon change.
+        .filter((act) => "weaponChange" in act.subject)
+        .map((act) =>
+          dropHoles.length === 0 ? act : { ...act, initialHoles: dropHoles },
+        )
+    );
+  });
 }
 
 function discoverBattleActsWithoutRouteEvents(

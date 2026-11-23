@@ -8,7 +8,7 @@
 // Before: the Attack action subject carries the change, which Battle applies
 // before it looks up the attack. After: an attack made without one leaves the
 // `weaponChangeAfterAttack` allowance, which the `changeWeaponAfterAttack`
-// command spends before the next attack (ASSUMPTIONS.md A63).
+// command spends before the Attack action's next attack (ASSUMPTIONS.md A63).
 import {
   holeId,
   holeInstanceKey,
@@ -17,6 +17,7 @@ import type {
   BattleActDiscoveryCandidate,
   BattleAttackHostSubject,
   BattleCreatureState,
+  BattleDroppedObjectOutcome,
   BattleFill,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -162,13 +163,40 @@ export function resolveChangeWeaponAfterAttack(
     input.fills,
   );
   if (applied.tag !== "applied") return applied.result;
-  return resolvedResult({
-    ...applied.state,
-    currentTurnResources: {
-      ...applied.state.currentTurnResources,
-      weaponChangeAfterAttack: "unavailable",
-    },
-  });
+  return withWeaponDropOutcome(
+    resolvedResult({
+      ...applied.state,
+      currentTurnResources: {
+        ...applied.state.currentTurnResources,
+        weaponChangeAfterAttack: "unavailable",
+      },
+    }),
+    input.subject.actorId,
+    input.subject.weaponChange,
+  );
+}
+
+/**
+ * A resolved result that reports a weapon the change dropped, as Battle
+ * reports every object that falls, so the caller learns that it lies on the
+ * ground.
+ */
+function withWeaponDropOutcome(
+  result: BattleResolutionResult,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+): BattleResolutionResult {
+  if (result.tag !== "resolved" || change.kind !== "drop") return result;
+  const dropped: BattleDroppedObjectOutcome = {
+    kind: "objectDropped",
+    actorId,
+    objectId: change.objectId,
+    source: { kind: "attackWeaponChange" },
+  };
+  return {
+    ...result,
+    droppedObjects: [...(result.droppedObjects ?? []), dropped],
+  };
 }
 
 /**
@@ -198,7 +226,11 @@ export function resolveAttackWithWeaponChange<
     input.state.subjectResolutionPhase.kind === "subjectContinuation" &&
     loadoutWeaponChangeIsApplied(input.state, actorId, change)
   ) {
-    return resolveAttack({ ...input, fills: attackFills });
+    return withWeaponDropOutcome(
+      resolveAttack({ ...input, fills: attackFills }),
+      actorId,
+      change,
+    );
   }
   const applied = appliedWeaponChange(
     input.state,
@@ -207,7 +239,11 @@ export function resolveAttackWithWeaponChange<
     input.fills,
   );
   if (applied.tag !== "applied") return applied.result;
-  return resolveAttack({ ...input, state: applied.state, fills: attackFills });
+  return withWeaponDropOutcome(
+    resolveAttack({ ...input, state: applied.state, fills: attackFills }),
+    actorId,
+    change,
+  );
 }
 
 function attackSubjectWeaponChange(

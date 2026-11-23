@@ -21341,6 +21341,30 @@
                   {
                     "tag": "action",
                     "actorId": "corpus:character",
+                    "action": "attack",
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"attackExecution\\\",\\\"ordinal\\\":1}\",\"kind\":\"procedure\",\"ordinal\":1}",
+                    "attackAbility": "str",
+                    "attackDamageType": "bludgeoning",
+                    "weaponChange": {
+                      "kind": "stow",
+                      "objectId": "main:weapon_longsword"
+                    }
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
+                    "action": "attack",
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"attackExecution\\\",\\\"ordinal\\\":1}\",\"kind\":\"procedure\",\"ordinal\":1}",
+                    "attackAbility": "str",
+                    "attackDamageType": "bludgeoning",
+                    "weaponChange": {
+                      "kind": "drop",
+                      "objectId": "main:weapon_longsword"
+                    }
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
                     "action": "dash",
                     "speedKind": "walk"
                   },

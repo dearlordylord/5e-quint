@@ -26,7 +26,7 @@ import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-cu
 // Equipping and Unequipping Weapons: one weapon equipped or unequipped with
 // each attack of the Attack action, before or after it; a weapon equipped
 // before an attack needn't be the one used. ASSUMPTIONS.md A63: an after
-// change comes before the creature's next attack; where a dropped weapon
+// change comes before the Attack action's next attack; where a dropped weapon
 // lands is the table's.
 
 const longswordId = battleObjectId("main:weapon_longsword");
@@ -163,23 +163,40 @@ describe("weapon change before an attack", () => {
     expect(afterAttackChanges(stowed)).toEqual([]);
   });
 
-  it("offers an attack that draws a stowed weapon, and draws it before the roll", () => {
+  it("offers attacks that draw a stowed weapon, and draws it before the roll", () => {
     const stowed = fighterWithStowedLongsword();
-    const longswordAttacks = attackActs(stowed).filter(
+    const draw = { kind: "equip", objectId: longswordId } as const;
+    const drawingAttacks = attackActs(stowed).filter(
       (subject) => "weaponChange" in subject,
     );
-    expect(longswordAttacks).toEqual([
-      withChange(fighterAttackSubject(fighterVsGoblinBattle()), {
-        kind: "equip",
-        objectId: longswordId,
-      }),
+    // A weapon equipped before an attack needn't be the one used.
+    expect(drawingAttacks).toEqual([
+      withChange(fighterAttackSubject(fighterVsGoblinBattle()), draw),
+      withChange(unarmedStrike(fighterVsGoblinBattle()), draw),
     ]);
-    const [drawAndAttack] = longswordAttacks;
+    const [drawAndAttack] = drawingAttacks;
     if (drawAndAttack === undefined) throw new Error("Expected the attack.");
 
     const drawn = missedAttack(stowed, drawAndAttack);
     expect(heldWeaponId(drawn)).toBe(longswordId);
     expect(drawn.stowedLoadoutWeapons.has(fighterId)).toBe(false);
+  });
+
+  it("offers attacks that stow or drop the held weapon first, asking where a dropped one lands", () => {
+    const state = fighterVsGoblinBattle();
+    const changing = discoverBattleActCandidates(state).filter(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        "weaponChange" in act.subject,
+    );
+    expect(changing.map((act) => act.subject)).toEqual([
+      withChange(unarmedStrike(state), { kind: "stow", objectId: longswordId }),
+      withChange(unarmedStrike(state), { kind: "drop", objectId: longswordId }),
+    ]);
+    expect(changing[1]?.initialHoles).toEqual([
+      weaponDropPositionHole(fighterId, longswordId),
+    ]);
   });
 
   it("asks where a weapon dropped before the attack lands", () => {
@@ -229,6 +246,50 @@ describe("weapon change before an attack", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  it("draws a weapon back into the hands of its loadout grip, whatever another object left there", () => {
+    const stowed = fighterWithStowedLongsword();
+    const fighter = stowed.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const gripHand =
+      fighter.armorClass.rightHandUse === "mainWeapon"
+        ? "rightHandUse"
+        : "leftHandUse";
+    // A spell-created object took the weapon's free hand and then ended,
+    // leaving the hand simply free.
+    const handLeftFree: BattleState = {
+      ...stowed,
+      combatants: new Map(stowed.combatants).set(fighterId, {
+        ...fighter,
+        armorClass: { ...fighter.armorClass, [gripHand]: "free" },
+      }),
+    };
+    const drawn = stateWithLoadoutWeaponChange(handLeftFree, fighterId, {
+      kind: "equip",
+      objectId: longswordId,
+    });
+    if (drawn.tag !== "applied") throw new Error(drawn.message);
+    expect(drawn.state.combatants.get(fighterId)?.armorClass[gripHand]).toBe(
+      "mainWeapon",
+    );
+
+    const handHoldingObject: BattleState = {
+      ...stowed,
+      combatants: new Map(stowed.combatants).set(fighterId, {
+        ...fighter,
+        armorClass: {
+          ...fighter.armorClass,
+          [gripHand]: "spellCreatedHeldObject",
+        },
+      }),
+    };
+    expect(
+      stateWithLoadoutWeaponChange(handHoldingObject, fighterId, {
+        kind: "equip",
+        objectId: longswordId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
   });
 
   it("refuses to draw a weapon into a hand that grapples", () => {
@@ -290,11 +351,20 @@ describe("weapon change after an attack", () => {
       ),
     ).toEqual(weaponDropPositionHole(fighterId, longswordId));
 
-    const dropped = requireResolved(
+    const droppedResult = requireResolved(
       changeAfterAttack(attacked, { kind: "drop", objectId: longswordId }, [
         dropFill(),
       ]),
-    ).state;
+    );
+    expect(droppedResult.droppedObjects).toEqual([
+      {
+        kind: "objectDropped",
+        actorId: fighterId,
+        objectId: longswordId,
+        source: { kind: "attackWeaponChange" },
+      },
+    ]);
+    const dropped = droppedResult.state;
     expect(battleObjectIsOnGround(dropped, fighterId, longswordId)).toBe(true);
     expect(
       discoverBattleActCandidates(dropped).some(

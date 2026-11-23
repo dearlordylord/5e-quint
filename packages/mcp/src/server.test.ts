@@ -2909,6 +2909,9 @@ describe("MCP server route", () => {
     ).toEqual([
       "Attack",
       "Attack",
+      // An Unarmed Strike that first stows, or first drops, the held weapon.
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
       "Adrenaline Rush: Dash",
       "Second Wind",
@@ -8292,6 +8295,9 @@ describe("MCP server route", () => {
         (act: { label: string }) => act.label,
       ),
     ).toEqual([
+      "Attack",
+      "Attack",
+      // An Unarmed Strike that first stows, or first drops, the held weapon.
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
