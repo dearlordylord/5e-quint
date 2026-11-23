@@ -12,6 +12,7 @@ export const CHATGPT_BATTLE_EXECUTION_TOOLS = {
   dodge: defineChatGptBattleTool("dodge"),
   drop_prone: defineChatGptBattleTool("drop_prone"),
   end_turn: defineChatGptBattleTool("end_turn"),
+  equip_or_unequip_weapon: defineChatGptBattleTool("equip_or_unequip_weapon"),
   escape_grapple: defineChatGptBattleTool("escape_grapple"),
   escape_spell_restraint: defineChatGptBattleTool("escape_spell_restraint"),
   focus_dash_and_disengage: defineChatGptBattleTool("focus_dash_and_disengage"),

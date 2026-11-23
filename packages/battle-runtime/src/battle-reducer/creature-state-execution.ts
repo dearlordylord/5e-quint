@@ -73,8 +73,8 @@ import {
   combatantInvisibleBenefitDenied,
   currentActorId,
   grappledBy,
-  groundedLoadoutObjects,
-  handUseWithGroundedLoadout,
+  unheldLoadoutObjects,
+  handUseWithUnheldLoadout,
 } from "./creature-state-leaves.ts";
 
 export {
@@ -608,9 +608,9 @@ function groundEffectiveCharacterArmorClass(
   );
   const armorGrounded =
     selected.armor !== undefined && effective.armor === undefined;
-  const grounded = groundedLoadoutObjects(selected, effective);
+  const unheld = unheldLoadoutObjects(selected, effective);
   const armorAvailable = !armorGrounded;
-  const shieldAvailable = !grounded.shield;
+  const shieldAvailable = !unheld.shield;
   const usesShield = selected.shield !== undefined && shieldAvailable;
   const usesArmoredBase =
     combatant.armorClass.base.kind === "armor" && !armorGrounded;
@@ -626,13 +626,13 @@ function groundEffectiveCharacterArmorClass(
       if (bonus.kind === "wearing_armor") return armorAvailable;
       return true;
     }),
-    leftHandUse: handUseWithGroundedLoadout(
+    leftHandUse: handUseWithUnheldLoadout(
       combatant.armorClass.leftHandUse,
-      grounded,
+      unheld,
     ),
-    rightHandUse: handUseWithGroundedLoadout(
+    rightHandUse: handUseWithUnheldLoadout(
       combatant.armorClass.rightHandUse,
-      grounded,
+      unheld,
     ),
   };
 }

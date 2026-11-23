@@ -1406,6 +1406,7 @@ export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
       procedureRef: BattleProcedureExecutionRef,
       formExecutionRef: BattleStatBlockExecutionScopeRef,
     }),
+    Schema.Struct({ kind: Schema.Literal("attackWeaponChange") }),
   ]),
 });
 

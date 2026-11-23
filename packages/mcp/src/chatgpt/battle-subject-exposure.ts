@@ -97,6 +97,7 @@ export const BATTLE_SUBJECT_EXPOSURE = {
   "runtimeCommand.movableZoneRam": tool("ram_with_spell_zone"),
   "runtimeCommand.movableZoneReposition": tool("move_spell_zone"),
   "runtimeCommand.movableZoneSave": tool("resolve_spell_save"),
+  "runtimeCommand.changeWeaponAfterAttack": tool("equip_or_unequip_weapon"),
   "runtimeCommand.interactWithObject": tool("interact_with_object"),
   "runtimeCommand.move": tool("move"),
   "runtimeCommand.opportunityAttack": tool("attack"),
