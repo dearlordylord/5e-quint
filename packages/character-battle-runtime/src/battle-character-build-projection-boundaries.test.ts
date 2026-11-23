@@ -75,7 +75,7 @@ function projectionLibraryReplacingUnit(
 function projectionLibraryWithUnresolvedMasteries(
   weaponUnitIds: readonly UnitRecord["id"][],
 ): UnitCatalog {
-  const replaced = new Map(
+  const replaced = new Map<string, UnitRecord>(
     weaponUnitIds.map((id) => {
       const weapon = unitLibrary.requireUnit(id);
       if (weapon.kind !== "weapon") {
@@ -353,6 +353,62 @@ describe("Character Build battle spell projection boundaries", () => {
         unitLibrary,
       }),
     ).toEqual([]);
+  });
+
+  test("blocks an equipped weapon only when its unsupported mastery is selected", () => {
+    const daggerBuild = levelFiveMartialBuild({
+      classUnitId: authoredUnitId("class_fighter"),
+      weaponUnitId: authoredUnitId("weapon_dagger"),
+    });
+    expect(
+      characterBuildEquippedWeaponBattleBlockers({
+        build: daggerBuild,
+        unitLibrary,
+      }),
+    ).toEqual([]);
+
+    const masteryBuild = {
+      ...daggerBuild,
+      features: [
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("weapon_dagger"),
+        },
+      ],
+    };
+    expect(
+      characterBuildEquippedWeaponBattleBlockers({
+        build: masteryBuild,
+        unitLibrary,
+      }),
+    ).toEqual([
+      {
+        slot: "main",
+        itemId: daggerBuild.equipment.loadout.weapon?.itemId,
+        weaponUnitId: "weapon_dagger",
+        messages: [expect.any(String)],
+        weaponDefinitionAdmittedOwnedAlternatives: [],
+      },
+    ]);
+    const result = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("selected-unsupported-mastery"),
+      characterId: characterId("character:selected-unsupported-mastery"),
+      displayName: "Selected unsupported mastery",
+      build: masteryBuild,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      resourceExpenditures: [],
+      unitLibrary,
+    });
+    expect(result._tag).toBe("Failure");
+    if (result._tag === "Success") return;
+    expect(battleCreatureInitIssueLeaves(result.failure)).toEqual([
+      expect.objectContaining({
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: "weapon_dagger" },
+      }),
+    ]);
   });
 
   test("reports a selected defensive feature that is unavailable", () => {

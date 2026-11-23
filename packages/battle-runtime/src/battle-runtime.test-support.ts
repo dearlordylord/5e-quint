@@ -985,22 +985,34 @@ function requireWeaponDefinition(
   return admission;
 }
 
+function requireBoundWeapon<T>(
+  bound: Result.Result<T, readonly { readonly message: string }[]>,
+): T {
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
+  return bound.success;
+}
+
 /** Test-only convenience around the production definition admission + bind. */
 export function admitCharacterWeaponAttackExecutionWeapon(
   weapon: WeaponRecord,
   objectId: ReturnType<typeof battleObjectId>,
 ) {
-  return bindCharacterWeaponAttackExecutionWeapon({
-    weaponUnitId: weapon.id,
-    definition: requireWeaponDefinition(weapon),
-    objectId,
-    weaponMasteries: [],
-  });
+  return requireBoundWeapon(
+    bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition: requireWeaponDefinition(weapon),
+      objectId,
+      weaponMasteries: [],
+    }),
+  );
 }
 
 /**
  * Bind canonical selected identity to weapon facts admitted from an honestly
- * synthetic definition when the canonical weapon's mastery is unsupported.
+ * synthetic definition with a supported mastery, for tests that need a
+ * mastery the canonical weapon's own mastery can't provide in Battle.
  */
 export function admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
   weapon: WeaponRecord,
@@ -1042,14 +1054,21 @@ export function admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       mastery: syntheticMastery,
     }),
   );
-  return bindCharacterWeaponAttackExecutionWeapon({
-    weaponUnitId: weapon.id,
-    definition,
-    objectId,
-    weaponMasteries: [],
-  });
+  return requireBoundWeapon(
+    bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition,
+      objectId,
+      weaponMasteries: [],
+    }),
+  );
 }
 
+/**
+ * The resolved weapon's execution facts with its mastery property, as for a
+ * character who selected that mastery: an unsupported mastery fails, as
+ * selecting it does in production.
+ */
 export function admitResolvedCharacterWeaponExecutionWeapon(
   resolution: WeaponMasteryReferenceResolution,
 ) {
@@ -1086,12 +1105,16 @@ export function admitResolvedCharacterWeaponAttackExecutionWeapon(
     resolution.weapon,
     catalogForResolvedWeaponDefinition(resolution),
   );
-  return Result.succeed(
+  return Result.mapError(
     bindCharacterWeaponAttackExecutionWeapon({
       weaponUnitId: resolution.weapon.id,
       definition,
       objectId,
       weaponMasteries,
+    }),
+    (issues) => ({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: issues.map(({ message }) => message).join(" "),
     }),
   );
 }
