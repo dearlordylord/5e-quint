@@ -2431,14 +2431,18 @@ function syntheticGrazeWeaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId: battleObjectId(`main:${weapon.id}`),
+    weaponMasteries: [{ weaponUnitId: weapon.id }],
+  });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
   return {
     kind: "weapon",
-    ...bindCharacterWeaponAttackExecutionWeapon({
-      weaponUnitId: weapon.id,
-      definition,
-      objectId: battleObjectId(`main:${weapon.id}`),
-      weaponMasteries: [{ weaponUnitId: weapon.id }],
-    }),
+    ...bound.success,
     ability: "str",
     abilityModifier: abilityModifier(3),
     attackBonus: attackBonus(5),
