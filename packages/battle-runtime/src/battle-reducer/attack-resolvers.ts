@@ -1,4 +1,4 @@
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
@@ -21,7 +21,7 @@ export type BattleAttackContinuationResolutionInput = {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
   readonly firstTargetId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
 };

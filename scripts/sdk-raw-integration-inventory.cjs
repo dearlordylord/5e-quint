@@ -1024,7 +1024,7 @@ const seededSdkScenarioRows = [
           "expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);",
           "expect(caster.concentration).toBeNull();",
           "input.expectedSpellSlots",
-          "temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(",
+          "temporaryAbilityCheckRollModeInfluenceSkillCheck(",
           "difficultyClass(13)",
           'ability: "cha"',
           'skill: "intimidation"',

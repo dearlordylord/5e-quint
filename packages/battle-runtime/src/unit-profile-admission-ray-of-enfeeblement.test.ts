@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -16,7 +17,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
-import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { breakBattleConcentration } from "./battle-reducer/damage-apply.ts";
@@ -262,7 +262,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       ),
     ).toBe(true);
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         cast.state,
         spellTargetId,
         requireCombatant(cast.state, spellCasterId),

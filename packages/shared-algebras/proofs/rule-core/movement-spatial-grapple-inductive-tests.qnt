@@ -60,4 +60,21 @@ module movementSpatialGrappleInductiveTests {
     }
   }
 
+  run drop_prone_preserves_resources_and_respects_condition_eligibility = {
+    val facts = { alive: true, proneImmune: false, commandHalt: false }
+    val spent = { ...initialMovementGrappleState, movementSpentFeet: 30 }
+    val dropped = dropProne(spent, facts)
+    all {
+      assert(dropped.prone),
+      assert(dropped.movementSpentFeet == spent.movementSpentFeet),
+      assert(dropped.turn == spent.turn),
+      assert(dropProne(spent, { ...facts, alive: false }) == spent),
+      assert(dropProne(spent, { ...facts, proneImmune: true }) == spent),
+      assert(dropProne(spent, { ...facts, commandHalt: true }) == spent),
+      assert(not(canDropProne(dropped, facts))),
+      assert(not(canDropProne({ ...spent, speedFeet: 0 }, facts))),
+      assert(not(canDropProne({ ...spent, turn: { ...spent.turn, currentActorOwnsTurn: false } }, facts))),
+    }
+  }
+
 }

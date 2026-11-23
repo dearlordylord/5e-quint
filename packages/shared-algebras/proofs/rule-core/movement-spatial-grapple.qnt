@@ -60,6 +60,12 @@ module movementSpatialGrapple {
     grapple: GrappleState,
   }
 
+  type DropProneFacts = {
+    alive: bool,
+    proneImmune: bool,
+    commandHalt: bool,
+  }
+
   pure def initialMovementGrappleState: MovementGrappleState = {
     turn: initialTurnProcedureState,
     speedFeet: 30,
@@ -77,6 +83,12 @@ module movementSpatialGrapple {
 
   pure def movementCostFeet(facts: MovementSpendFacts): int =
     facts.distanceFeet + facts.extraCostFeet
+
+  /// SRD 5.2.1 "Crawling": each foot of movement costs 1 extra foot (2 extra
+  /// feet in Difficult Terrain, whose own extra foot is counted separately).
+  /// A Prone creature's only movement is to crawl.
+  pure def crawlingExtraCostFeet(crawling: bool, distanceFeet: int): int =
+    if (crawling) distanceFeet else 0
 
   pure def creatureSpaceTraversalLegal(
     moverSize: RuleSize,
@@ -194,8 +206,18 @@ module movementSpatialGrapple {
     }
   }
 
-  pure def dropProne(state: MovementGrappleState): MovementGrappleState =
-    if (not(state.turn.currentActorOwnsTurn) or effectiveSpeedFeet(state) == 0) state
+  // SRD Dropping Prone, Immunity, and Dead; Command: Halt follows A52.
+  pure def canDropProne(state: MovementGrappleState, facts: DropProneFacts): bool = all {
+    state.turn.currentActorOwnsTurn,
+    effectiveSpeedFeet(state) > 0,
+    not(state.prone),
+    facts.alive,
+    not(facts.proneImmune),
+    not(facts.commandHalt),
+  }
+
+  pure def dropProne(state: MovementGrappleState, facts: DropProneFacts): MovementGrappleState =
+    if (not(canDropProne(state, facts))) state
     else {
       turn: state.turn,
       speedFeet: state.speedFeet,

@@ -738,6 +738,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "resolveMoveCommand",
     "resolveFixedCostMovementReplacementCommand",
     "resolveStandFromProneCommand",
+    "resolveDropProneCommand",
     "resolveOpportunityAttackCommand",
     "resolveReactionAttackCommand",
     "resolvePersistentSpatialSpellProcedureCommand",
@@ -2806,10 +2807,28 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
   ),
 );
 
+EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
+  ...exactCollisionsAt(
+    "command",
+    "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+    [
+      {
+        identifier: "INTERRUPT_COMMAND_REQUIRES_CHECKPOINT",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "commandRequiresCheckpoint",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "command names the runtime interrupt protocol, not the Command spell",
+  ),
+);
+
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "7d8ce957a2bae9adb1d5d8ed3098ac8b743bd013d3c9ee26a7b3c45668dc47da",
-  siteCount: 1703,
-  violationCount: 1819,
+  sha256: "64a3d33130da5ec6ec83f060910d371901b8040b619e41b357b2e7e1d53d868c",
+  siteCount: 1713,
+  violationCount: 1831,
 };
 
 function escapeForRegExp(text) {

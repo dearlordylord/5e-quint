@@ -1,4 +1,8 @@
-import { rangedAttackEnemyProximityQualificationIssue } from "./ranged-attack-close-combat.ts";
+import { prepareAttackRollInput } from "./attack-roll-admission.ts";
+import {
+  qualifyRangedAttackEnemyProximity,
+  type RangedAttackEnemyProximityEvidence,
+} from "./ranged-attack-close-combat.ts";
 // Chained spell attack-damage resolution, currently Chromatic Orb.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -138,6 +142,7 @@ type ChainedSpellTargetChoiceFill = Omit<
   BattleAttackTargetChoiceFill,
   "spatialFacts"
 > & {
+  readonly enemyProximity: RangedAttackEnemyProximityEvidence;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
 };
 
@@ -431,18 +436,17 @@ export function resolveChainedSpellAttackDamageAct(input: {
         );
       }
       /* v8 ignore stop -- @preserve */
+      const replacementTargetFill =
+        targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
+          fill: originalTargetFill,
+          replacement: interdictionCheck,
+        });
+
       const fills = input.input.fills
         .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map(
           (fill): BattleFill =>
-            fill === originalTargetFill
-              ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
-                  {
-                    fill,
-                    replacement: interdictionCheck,
-                  },
-                )
-              : fill,
+            fill === originalTargetFill ? replacementTargetFill : fill,
         );
       const replacementFillSet = chainedSpellFillSet(
         fills,
@@ -488,26 +492,33 @@ export function resolveChainedSpellAttackDamageAct(input: {
       }
     }
 
-    const requiredRollMode = requiredSpellAttackRollMode(
+    const calculatedRollMode = requiredSpellAttackRollMode(
       replayState,
       input.actorId,
       target,
       input.invocation,
       step.target.spatialFacts,
+      step.target.enemyProximity,
     );
-    if (step.attackRoll === undefined) {
-      return needsHolesResult(replayState, input.input.subject, [
-        chainedSpellAttackRollHole(
-          replayState,
-          input.actorId,
-          input.invocation,
-          stepIndex,
-          requiredRollMode,
-        ),
-      ]);
-    }
+    const rollInput = prepareAttackRollInput({
+      errorState: input.input.state,
+      requiredRollMode: calculatedRollMode,
+      attackRoll: step.attackRoll,
+      requestRoll: (requiredRollMode) =>
+        needsHolesResult(replayState, input.input.subject, [
+          chainedSpellAttackRollHole(
+            replayState,
+            input.actorId,
+            input.invocation,
+            stepIndex,
+            requiredRollMode,
+          ),
+        ]),
+    });
+    if (rollInput.tag === "result") return rollInput.result;
+    const { requiredRollMode, attackRoll } = rollInput;
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollResultIsValid(step.attackRoll.value)) {
+    if (!attackRollResultIsValid(attackRoll.value)) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
@@ -517,7 +528,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-      step.attackRoll.value,
+      attackRoll.value,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellAttackRerollIssue !== null) {
@@ -530,7 +541,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollModeMatches(step.attackRoll.value, requiredRollMode)) {
+    if (!attackRollModeMatches(attackRoll.value, requiredRollMode)) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
@@ -543,8 +554,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
     if (
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: actorBeforeSpellAttack,
-        originalD20TestRoll: step.attackRoll.value.d20TestRoll,
-        decision: step.attackRoll.value.d20TestNaturalOneReroll,
+        originalD20TestRoll: attackRoll.value.d20TestRoll,
+        decision: attackRoll.value.d20TestNaturalOneReroll,
       })
     ) {
       return needsHolesResult(input.input.state, input.input.subject, [
@@ -561,9 +572,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
       actor: actorBeforeSpellAttack,
-      total: step.attackRoll.value.total,
-      originalD20TestRoll: step.attackRoll.value.d20TestRoll,
-      decision: step.attackRoll.value.d20TestNaturalOneReroll,
+      total: attackRoll.value.total,
+      originalD20TestRoll: attackRoll.value.d20TestRoll,
+      decision: attackRoll.value.d20TestNaturalOneReroll,
       requiredRollMode,
     });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -577,7 +588,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-      step.attackRoll.value,
+      attackRoll.value,
     );
 
     const ordinaryHit = attackRollHits(
@@ -594,7 +605,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
-      step.attackRoll.value.missToHitReplacementProcedureRef !== undefined &&
+      attackRoll.value.missToHitReplacementProcedureRef !== undefined &&
       missToHitReplacement === null
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -1264,7 +1275,7 @@ export function chainedSpellFillSet(
         }
         /* v8 ignore stop -- @preserve */
         const spatialFacts = fill.spatialFacts ?? [];
-        const spatialValidation = chainedSpellAttackSpatialFactValidation({
+        const spatialValidation = qualifyChainedSpellAttackSpatialFacts({
           state,
           scope: {
             attackerId: actorId,
@@ -1272,10 +1283,14 @@ export function chainedSpellFillSet(
           },
           facts: spatialFacts,
         });
-        if (spatialValidation !== null) return spatialValidation;
+        if (spatialValidation.tag === "invalid") return spatialValidation;
         steps[stepIndex] = {
           ...step,
-          target: { ...parsed.fill, spatialFacts },
+          target: {
+            ...parsed.fill,
+            spatialFacts,
+            enemyProximity: spatialValidation,
+          },
         };
         continue;
       }
@@ -1396,13 +1411,15 @@ export function chainedSpellFillSet(
   };
 }
 
-function chainedSpellAttackSpatialFactValidation(
-  input: Parameters<typeof rangedAttackEnemyProximityQualificationIssue>[0],
-): Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> | null {
-  const proximityIssue = rangedAttackEnemyProximityQualificationIssue(input);
-  if (proximityIssue !== null) return proximityIssue;
+function qualifyChainedSpellAttackSpatialFacts(
+  input: Parameters<typeof qualifyRangedAttackEnemyProximity>[0],
+):
+  | RangedAttackEnemyProximityEvidence
+  | Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> {
+  const proximityIssue = qualifyRangedAttackEnemyProximity(input);
+  if (proximityIssue.tag === "invalid") return proximityIssue;
   const message = validateUniqueAttackSightFacts(input.facts);
-  return message === null ? null : { tag: "invalid", message };
+  return message === null ? proximityIssue : { tag: "invalid", message };
 }
 
 export function chainedSpellStepIndexForFill(

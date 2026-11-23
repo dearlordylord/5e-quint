@@ -351,6 +351,7 @@ function levelFiveBaseBuild(input: {
       advancements: Array.from({ length: 4 }, () => ({
         classUnitId: classUnitId(input.classUnitId),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        constitutionModifierAtGain: 2,
       })),
     },
     background: authoredUnitId("background_soldier"),

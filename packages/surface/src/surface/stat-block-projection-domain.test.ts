@@ -1,3 +1,4 @@
+import { STRICT_OBJECT_PARSE_OPTIONS } from "@dnd/shared/json-schema";
 import { Match, Result, Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -282,6 +283,7 @@ const projectionArbitrary = fc
 
 const decodeProjection = Schema.decodeUnknownResult(
   StatBlockScopedFidelityProjectionSchema,
+  STRICT_OBJECT_PARSE_OPTIONS,
 );
 
 type ProjectionProcedure =
@@ -544,6 +546,7 @@ describe("domain-valid scoped Stat Block projections", () => {
         expectIndependentProjectionInvariants(decoded.success);
         const encoded = Schema.encodeUnknownResult(
           StatBlockScopedFidelityProjectionSchema,
+          STRICT_OBJECT_PARSE_OPTIONS,
         )(decoded.success);
         expect(Result.isSuccess(encoded)).toBe(true);
         if (Result.isSuccess(encoded)) {
@@ -569,9 +572,11 @@ describe("domain-valid scoped Stat Block projections", () => {
     })[0];
     const sampledProjection = Schema.decodeUnknownSync(
       StatBlockScopedFidelityProjectionSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )(sampled);
     const candidate = Schema.decodeUnknownSync(
       StatBlockScopedFidelityProjectionSchema,
+      STRICT_OBJECT_PARSE_OPTIONS,
     )({
       ...sampledProjection,
       procedures: [sampledAttack],

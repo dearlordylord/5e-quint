@@ -1,6 +1,10 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.weapon-mastery-graze
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
@@ -10,6 +14,7 @@ import {
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleAmmunitionStock,
@@ -32,6 +37,7 @@ import {
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
 import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
+import { battleUnitRefWithSupportProfiles } from "../../battle-runtime/src/unit-feature-support.ts";
 import {
   Hp,
   abilityModifier,
@@ -495,6 +501,330 @@ describe("manual MCP battle surface coverage", () => {
       },
     });
   });
+
+  test("uses Weapon Mastery Graze decision through MCP battle tools", () => {
+    const root = createMcpPlaySessionRoot();
+    const grazeWeapon = syntheticGrazeWeaponUnit(root);
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        grazeCharacter(root, grazeWeapon, { initiative: 20 }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
+
+    const afterMiss = resolveAttackThroughRoll(
+      root,
+      SYNTHETIC_GRAZE_WEAPON_NAME,
+      "goblin",
+      10,
+      8,
+    );
+    const grazeDecision = requireHole(
+      requireBattleHoles(afterMiss).holes,
+      "unitFeatureDecision",
+    );
+    expect(grazeDecision).toMatchObject({
+      label: "Use Graze",
+      choices: ["use", "decline"],
+    });
+    const afterGrazeDecision = call(root, "fill_battle_hole", {
+      subject: requireBattleHoles(afterMiss).replaySubject,
+      fill: {
+        kind: "unitFeatureDecision",
+        holeId: grazeDecision.holeId,
+        value: "use",
+      },
+    });
+    if (afterGrazeDecision.result.tag === "invalid") {
+      throw new Error(JSON.stringify(afterGrazeDecision.result));
+    }
+
+    expect(afterGrazeDecision).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({ combatantId: "fighter" }),
+            expect.objectContaining({ combatantId: "goblin", hp: 7 }),
+          ],
+        },
+      },
+    });
+  });
+
+  test("resolves Opportunity Attack Graze and resumes movement through MCP", () => {
+    const root = createMcpPlaySessionRoot();
+    const grazeWeapon = syntheticGrazeWeaponUnit(root);
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        grazeCharacter(root, grazeWeapon, { initiative: 20 }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
+    const attack = requireAct(root, "Attack", SYNTHETIC_GRAZE_WEAPON_NAME);
+    const target = requireHole(attack.initialHoles, "targetChoice");
+    const subject = attack.subject;
+    if (
+      !("attackAbility" in subject) ||
+      subject.attackAbility === undefined ||
+      !("attackDamageType" in subject) ||
+      subject.attackDamageType === undefined
+    ) {
+      throw new Error("Expected the discovered character weapon selection.");
+    }
+    const selection = {
+      procedureRef: subject.procedureRef,
+      attackAbility: subject.attackAbility,
+      attackDamageType: subject.attackDamageType,
+    };
+    expect(call(root, "end_turn", { actorId: "fighter" }).result.tag).toBe(
+      "resolved",
+    );
+    const move = requireBattleActFrontier(
+      call(root, "discover_battle_acts", {}),
+    ).acts.find(
+      ({ subject }) =>
+        subject.tag === "runtimeCommand" && subject.command === "move",
+    );
+    if (move === undefined) throw new Error("Expected the goblin's Move act.");
+    const movement = requireHole(move.initialHoles, "movement");
+    const walking = movement.speedKinds.find(({ kind }) => kind === "walk");
+    if (walking === undefined || walking.movementBudgetFeet < 5) {
+      throw new Error(
+        "Expected at least 5 feet of available walking movement.",
+      );
+    }
+    const interrupted = call(root, "fill_battle_hole", {
+      subject: move.subject,
+      fill: {
+        kind: "movement",
+        holeId: movement.holeId,
+        value: {
+          speedKind: walking.kind,
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: "fighter", distanceFeet: 5, ...selection },
+          ],
+        },
+      },
+    });
+    const frontier = requireBattleInterruptFrontier(interrupted);
+    const opportunity = frontier.choices.find(
+      ({ choice }) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "opportunityAttack",
+    )?.choice;
+    if (
+      opportunity?.kind !== "nestedProcedure" ||
+      opportunity.subject.command !== "opportunityAttack"
+    ) {
+      throw new Error("Expected the surfaced Opportunity Attack choice.");
+    }
+    const startedAttack = call(root, "fill_battle_hole", {
+      subject: move.subject,
+      fill: {
+        kind: "interruptDecision",
+        holeId: frontier.decisionHole.holeId,
+        value: {
+          kind: "resolve",
+          responderId: "fighter",
+          choice: {
+            kind: "opportunityAttack",
+            selection,
+            fills: [
+              {
+                kind: "targetSpatialFacts",
+                holeId: target.holeId,
+                spatialFacts: [
+                  {
+                    kind: "attackTargetDistance",
+                    actorId: "fighter",
+                    targetId: "goblin",
+                    distanceFeet: 5,
+                    ...selection,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    });
+    const roll = requireHole(
+      requireBattleHoles(startedAttack).holes,
+      "attackRoll",
+    );
+    const missed = call(root, "fill_battle_hole", {
+      subject: requireBattleHoles(startedAttack).replaySubject,
+      fill: attackRollFill(roll.holeId, 10, 8, roll.rollMode),
+    });
+    const graze = requireHole(
+      requireBattleHoles(missed).holes,
+      "unitFeatureDecision",
+    );
+    expect(graze).toMatchObject({
+      label: "Use Graze",
+      choices: ["use", "decline"],
+    });
+    const resolved = call(root, "fill_battle_hole", {
+      subject: requireBattleHoles(missed).replaySubject,
+      fill: { kind: "unitFeatureDecision", holeId: graze.holeId, value: "use" },
+    });
+    expect(resolved.result.tag).toBe("resolved");
+    expect(resolved.envelope.checkpoint.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: "fighter",
+          reactionAvailable: false,
+        }),
+        expect.objectContaining({
+          combatantId: "goblin",
+          hp: 7,
+          movement: expect.objectContaining({ spentFeet: 5 }),
+        }),
+      ]),
+    );
+  });
+
+  test.each([
+    ["use", "decline"],
+    ["decline", "use"],
+  ] as const)(
+    "keeps primary Graze %s and Horde Breaker Graze %s independent through MCP",
+    (primaryChoice, followupChoice) => {
+      const root = createMcpPlaySessionRoot();
+      const grazeWeapon = syntheticGrazeWeaponUnit(root);
+      const huntersPrey = root.unitLibrary.requireUnit("ranger_hunters_prey");
+      const classLevels: CharacterBattleClassLevelInits = [
+        { className: "ranger", level: 3 },
+      ];
+      const hordeRef = battleUnitRefWithSupportProfiles({
+        unit: huntersPrey,
+        classLevels,
+        unitRef: {
+          unitId: huntersPrey.id,
+          selectedOption: {
+            kind: "huntersPrey",
+            selection: "nearbyDifferentTargetSameWeaponAttack",
+          },
+        },
+      });
+      if (Result.isFailure(hordeRef)) throw new Error(hordeRef.failure.message);
+      root.sessionStore.storeActiveBattle(
+        startBattleRight(root, [
+          grazeCharacter(root, grazeWeapon, {
+            initiative: 20,
+            classLevels,
+            unitRefs: [hordeRef.success],
+          }),
+          statBlock(root, { combatantId: goblinId, initiative: 10 }),
+          statBlock(root, { combatantId: allyId, initiative: 9 }),
+        ]),
+      );
+      const missed = resolveAttackThroughRoll(
+        root,
+        SYNTHETIC_GRAZE_WEAPON_NAME,
+        "goblin",
+        10,
+        8,
+      );
+      const primary = requireHole(
+        requireBattleHoles(missed).holes,
+        "unitFeatureDecision",
+      );
+      const afterPrimary = call(root, "fill_battle_hole", {
+        subject: requireBattleHoles(missed).replaySubject,
+        fill: {
+          kind: "unitFeatureDecision",
+          holeId: primary.holeId,
+          value: primaryChoice,
+        },
+      });
+      const horde = requireHole(
+        requireBattleHoles(afterPrimary).holes,
+        "unitFeatureDecision",
+      );
+      expect(horde.label).toBe("Use Horde Breaker");
+      const afterHorde = call(root, "fill_battle_hole", {
+        subject: requireBattleHoles(afterPrimary).replaySubject,
+        fill: {
+          kind: "unitFeatureDecision",
+          holeId: horde.holeId,
+          value: "use",
+        },
+      });
+      const target = requireHole(
+        requireBattleHoles(afterHorde).holes,
+        "targetChoice",
+      );
+      if (!("procedureRef" in target) || target.procedureRef === undefined) {
+        throw new Error(
+          "Expected the Horde Breaker target's procedure reference.",
+        );
+      }
+      const selected = attackTargetFill(
+        target.holeId,
+        "fighter",
+        "ally",
+        requireProcedureSubject(requireBattleHoles(afterHorde).replaySubject),
+      );
+      const targeted = call(root, "fill_battle_hole", {
+        subject: requireBattleHoles(afterHorde).replaySubject,
+        fill: {
+          ...selected,
+          spatialFacts: [
+            ...selected.spatialFacts,
+            {
+              kind: "hordeBreakerSecondTargetEligible",
+              attackerId: "fighter",
+              sourceProcedureRef: target.procedureRef,
+              originalTargetId: "goblin",
+              secondTargetId: "ally",
+            },
+          ],
+        },
+      });
+      const roll = requireHole(
+        requireBattleHoles(targeted).holes,
+        "attackRoll",
+      );
+      const secondMiss = call(root, "fill_battle_hole", {
+        subject: requireBattleHoles(targeted).replaySubject,
+        fill: attackRollFill(roll.holeId, 10, 8, roll.rollMode),
+      });
+      const followup = requireHole(
+        requireBattleHoles(secondMiss).holes,
+        "unitFeatureDecision",
+      );
+      expect(followup).toMatchObject({
+        label: "Use Graze",
+        choices: ["use", "decline"],
+      });
+      expect(followup.holeId).not.toBe(primary.holeId);
+      const resolved = call(root, "fill_battle_hole", {
+        subject: requireBattleHoles(secondMiss).replaySubject,
+        fill: {
+          kind: "unitFeatureDecision",
+          holeId: followup.holeId,
+          value: followupChoice,
+        },
+      });
+      expect(resolved.result.tag).toBe("resolved");
+      expect(resolved.envelope.checkpoint.combatants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: "goblin",
+            hp: primaryChoice === "use" ? 7 : 10,
+          }),
+          expect.objectContaining({
+            combatantId: "ally",
+            hp: followupChoice === "use" ? 7 : 10,
+          }),
+        ]),
+      );
+      expect(resolved.envelope.checkpoint.turn.actionResources).toEqual([]);
+    },
+  );
 
   test("uses Armor of Shadows Mage Armor through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
@@ -1799,6 +2129,11 @@ function call<const Name extends keyof BattleToolOutputByName>(
     throw new Error(`Expected ${toolName} to return a tool result.`);
   }
   const parsed: unknown = JSON.parse(result.content[0]?.text ?? "null");
+  if ("isError" in result && result.isError) {
+    throw new Error(
+      `${toolName} failed: ${JSON.stringify({ request: args, response: parsed })}`,
+    );
+  }
   const decoded =
     toolName === "discover_battle_acts"
       ? Schema.decodeUnknownSync(BattleSessionOutputSchema)(parsed)
@@ -2021,6 +2356,89 @@ function weaponAttack(
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),
     damageAbilityModifier: abilityModifier(mod),
+  };
+}
+
+const SYNTHETIC_GRAZE_WEAPON_NAME = "Synthetic Graze Weapon";
+
+function syntheticGrazeWeaponUnit(
+  root: Root,
+): Extract<UnitRecord, { readonly kind: "weapon" }> {
+  const greataxe = root.unitLibrary.requireUnit("weapon_greataxe");
+  const weapon = decodeUnitRecordSync({
+    ...greataxe,
+    id: authoredUnitId("synthetic:mcp-graze-weapon"),
+    name: SYNTHETIC_GRAZE_WEAPON_NAME,
+    masteryUnitId: authoredUnitId("mastery_graze"),
+    provenance: {
+      kind: "synthetic-test",
+      section: "MCP Graze weapon fixture",
+    },
+  });
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected the synthetic Graze weapon Unit.");
+  }
+  return weapon;
+}
+
+function grazeCharacter(
+  root: Root,
+  weapon: Extract<UnitRecord, { readonly kind: "weapon" }>,
+  input: {
+    readonly initiative: number;
+    readonly classLevels?: CharacterBattleClassLevelInits;
+    readonly unitRefs?: readonly BattleUnitRef[];
+  },
+): BattleCreatureInit {
+  return character(root, {
+    combatantId: fighterId,
+    initiative: input.initiative,
+    ...(input.classLevels === undefined
+      ? {}
+      : { classLevels: input.classLevels }),
+    attack: syntheticGrazeWeaponAttack(root, weapon),
+    selectedLoadout: {
+      weapon: {
+        itemId: battleObjectId(`main:${weapon.id}`),
+        unitId: weapon.id,
+        grip: "two_handed",
+      },
+    },
+    characterUnitRefs: [
+      { unit: weapon, supportProfiles: [] },
+      {
+        unit: root.unitLibrary.requireUnit("mastery_graze"),
+        supportProfiles: [WEAPON_MASTERY_GRAZE_SUPPORT_PROFILE],
+      },
+      ...(input.unitRefs ?? []),
+    ],
+    weaponMasteries: [{ weaponUnitId: weapon.id }],
+  });
+}
+
+function syntheticGrazeWeaponAttack(
+  root: Root,
+  weapon: Extract<UnitRecord, { readonly kind: "weapon" }>,
+): CharacterWeaponAttackActionOption {
+  const definition = admitWeaponDefinition({
+    weapon,
+    unitCatalog: root.unitLibrary,
+  });
+  if (definition.tag === "rejected") {
+    throw new Error(definition.issues.map(({ message }) => message).join(" "));
+  }
+  return {
+    kind: "weapon",
+    ...bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition,
+      objectId: battleObjectId(`main:${weapon.id}`),
+      weaponMasteries: [{ weaponUnitId: weapon.id }],
+    }),
+    ability: "str",
+    abilityModifier: abilityModifier(3),
+    attackBonus: attackBonus(5),
+    damageAbilityModifier: abilityModifier(3),
   };
 }
 

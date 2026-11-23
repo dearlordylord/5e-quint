@@ -352,14 +352,13 @@ function discoverMovementDamage(
     subject,
     fills: [fill],
   });
-  expect(result).toMatchObject({
-    tag: "needsHoles",
-    holes: [expect.objectContaining({ kind: "rolledDice" })],
-  });
+  expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Spike Growth movement damage hole.");
   }
-  expect(requireResultHole(result, "rolledDice")).toMatchObject({
+  const holes = battleResolutionHolesForTest(result);
+  expect(holes).toEqual([expect.objectContaining({ kind: "rolledDice" })]);
+  expect(requireHole(holes, "rolledDice")).toMatchObject({
     areaMovementDistanceDamage: {
       distanceFeet: movementFeet(damageDistanceFeet),
       damage: {
@@ -370,7 +369,7 @@ function discoverMovementDamage(
   });
   return {
     ...state,
-    holes: battleResolutionHolesForTest(result),
+    holes,
     pendingMovement: { subject, fill },
     lastResult: "needsHoles",
   };

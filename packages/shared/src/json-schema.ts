@@ -1,3 +1,36 @@
+import { Schema, type JsonSchema } from "effect";
+
+export const STRICT_OBJECT_PARSE_OPTIONS = {
+  onExcessProperty: "error",
+} as const;
+
+/** Publish the canonical JSON codec with closed object properties. */
+export function jsonSchemaDocument(
+  schema: Schema.Constraint,
+  options?: Omit<Schema.ToJsonSchemaOptions, "onExcessProperty">,
+): JsonSchema.Document<"draft-2020-12"> {
+  return Schema.toJsonSchemaDocument(schema, {
+    ...options,
+    ...STRICT_OBJECT_PARSE_OPTIONS,
+  });
+}
+
+/** Static schema constructor: JSON Schema cannot retain other RegExp flags. */
+export function jsonSchemaPattern(
+  pattern: RegExp,
+  annotations?: Omit<Schema.Annotations.Filter, "toJsonSchema">,
+) {
+  if (pattern.flags !== "" && pattern.flags !== "u") {
+    throw new Error(
+      "JSON Schema patterns require no flags or only the Unicode flag.",
+    );
+  }
+  return Schema.isPattern(pattern, {
+    ...annotations,
+    toJsonSchema: () => ({ pattern: pattern.source }),
+  });
+}
+
 /**
  * Removes generated Effect `$id` annotations from nested JSON Schema nodes
  * while retaining the root metadata by default. Traversal follows

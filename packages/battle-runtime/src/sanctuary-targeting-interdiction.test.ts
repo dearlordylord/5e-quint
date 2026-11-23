@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -366,57 +367,112 @@ describe("Sanctuary targeting interdiction", () => {
     ]);
   });
 
-  test("a ranged attack moved to a new target keeps the attacker's close-combat Disadvantage", () => {
-    const { warded, attack, targetFill } = wardedShortbowAttack([
-      {
-        enemyId: wardedId,
-        distanceFeet: movementFeet(5),
-        enemyCanSeeAttacker: true,
-      },
-    ]);
-    const needsSanctuary = resolveBattleSubject({
-      state: warded.state,
-      subject: attack.subject,
-      fills: [targetFill],
-    });
-    if (needsSanctuary.tag !== "needsHoles") {
-      throw new Error("Expected Sanctuary interdiction hole.");
-    }
-    const retargeted = resolveBattleSubject({
-      state: warded.state,
-      subject: attack.subject,
-      fills: [
-        targetFill,
-        sanctuaryOutcomeFill(
-          requireHole(
-            battleResolutionHolesForTest(needsSanctuary),
-            "targetingSaveInterdictionOutcome",
-          ),
-          {
-            saveSucceeded: false,
-            outcome: {
-              kind: "newTarget",
-              targetId: replacementId,
-              spatialFacts: [
-                {
-                  ...attackTargetFact(replacementId, attack.subject),
-                  distanceFeet: movementFeet(30),
-                },
-              ],
-              replacementTargetKind: "attackRoll",
+  test.each([
+    "coherent",
+    "contradictory",
+    "refreshed",
+    "checkedEmpty",
+    "missing",
+  ] as const)(
+    "Sanctuary ranged replacement independently qualifies proximity: %s",
+    (scenario) => {
+      const { warded, attack, targetFill } = wardedShortbowAttack([
+        {
+          enemyId: scenario === "refreshed" ? replacementId : wardedId,
+          distanceFeet: movementFeet(5),
+          enemyCanSeeAttacker: true,
+        },
+      ]);
+      const needsSanctuary = resolveBattleSubject({
+        state: warded.state,
+        subject: attack.subject,
+        fills: [targetFill],
+      });
+      if (needsSanctuary.tag !== "needsHoles") {
+        throw new Error("Expected Sanctuary interdiction hole.");
+      }
+      const request = requireHole(
+        battleResolutionHolesForTest(needsSanctuary),
+        "targetingSaveInterdictionOutcome",
+      );
+      if (request.replacementTargetKind !== "attackRoll")
+        throw new Error("Expected attack replacement.");
+      expect(request.attack?.targetConstraint.kind).toBe("rangedRange");
+      const retargeted = resolveBattleSubject({
+        state: warded.state,
+        subject: attack.subject,
+        fills: [
+          targetFill,
+          sanctuaryOutcomeFill(
+            requireHole(
+              battleResolutionHolesForTest(needsSanctuary),
+              "targetingSaveInterdictionOutcome",
+            ),
+            {
+              saveSucceeded: false,
+              outcome: {
+                kind: "newTarget",
+                targetId: replacementId,
+                spatialFacts: [
+                  {
+                    ...attackTargetFact(replacementId, attack.subject),
+                    distanceFeet: movementFeet(30),
+                  },
+                  ...(scenario === "missing"
+                    ? []
+                    : rangedAttackEnemyProximityFactsForTest(
+                        requireHole(attack.initialHoles, "targetChoice"),
+                        [],
+                        scenario === "checkedEmpty"
+                          ? []
+                          : [
+                              {
+                                enemyId:
+                                  scenario === "coherent"
+                                    ? wardedId
+                                    : replacementId,
+                                distanceFeet: movementFeet(
+                                  scenario === "refreshed" ? 30 : 5,
+                                ),
+                                enemyCanSeeAttacker: true,
+                              },
+                            ],
+                      )),
+                ],
+                replacementTargetKind: "attackRoll",
+              },
             },
-          },
-        ),
-      ],
-    });
-    if (retargeted.tag !== "needsHoles") {
-      throw new Error("Expected the retargeted attack's roll hole.");
-    }
-    expect(
-      requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
-        .rollMode,
-    ).toBe("disadvantage");
-  });
+          ),
+        ],
+      });
+      if (scenario === "coherent") {
+        if (retargeted.tag !== "needsHoles")
+          throw new Error("Expected the retargeted attack's roll hole.");
+        expect(
+          requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+            .rollMode,
+        ).toBe("disadvantage");
+      } else if (scenario === "refreshed" || scenario === "checkedEmpty") {
+        if (retargeted.tag !== "needsHoles")
+          throw new Error("Expected replacement attack roll.");
+        expect(
+          requireHole(battleResolutionHolesForTest(retargeted), "attackRoll")
+            .rollMode,
+        ).toBeUndefined();
+      } else {
+        expect(retargeted).toMatchObject({
+          tag: "invalid",
+          reason: "invalidFill",
+          message: expect.stringMatching(
+            scenario === "missing" ? /qualification/i : /distance/i,
+          ),
+        });
+        expect(combatant(warded.state, attackerId).ammunitionStocks).toEqual([
+          { ammunition: "arrow", remaining: resourceCount(20) },
+        ]);
+      }
+    },
+  );
 
   test("a thrown Dagger whose attack Sanctuary prevents before its roll stays in hand", () => {
     const { warded, attack, targetFill } = wardedThrownDaggerAttack();

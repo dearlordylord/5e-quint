@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../packages/shared/src/json-schema.ts";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
@@ -113,7 +114,7 @@ import {
 } from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),

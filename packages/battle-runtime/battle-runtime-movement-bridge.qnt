@@ -12,6 +12,7 @@ module battleRuntimeMovementBridge {
 
   type BattleRuntimeMovementProjection = {
     currentActorOwnsTurn: bool,
+    actionResourcesUsable: bool,
     actionAvailable: bool,
     bonusActionAvailable: bool,
     reactionAvailable: bool,
@@ -78,6 +79,11 @@ module battleRuntimeMovementBridge {
     startOfTurnHookActive: false,
     endOfTurnHookActive: false,
     currentActorOwnsTurn: projection.currentActorOwnsTurn,
+  }
+
+  pure def battleRuntimeActionTurnProjection(projection: BattleRuntimeMovementProjection): TurnProcedureState = {
+    val turn = battleRuntimeTurnProjection(projection)
+    { ...turn, currentActorOwnsTurn: turn.currentActorOwnsTurn and projection.actionResourcesUsable }
   }
 
   pure def battleRuntimeGrappleProjection(projection: BattleRuntimeMovementProjection): MovementRule::GrappleState =
@@ -148,12 +154,12 @@ module battleRuntimeMovementBridge {
   }
 
   pure def battleRuntimeDash(projection: BattleRuntimeMovementProjection, speedFeet: int): BattleRuntimeMovementStep = {
-    val turn = resolveDash(battleRuntimeTurnProjection(projection), speedFeet, StandardActionCost(DashAction))
+    val turn = resolveDash(battleRuntimeActionTurnProjection(projection), speedFeet, StandardActionCost(DashAction))
     battleRuntimeStepFromTurn(projection, turn)
   }
 
   pure def battleRuntimeBonusActionDash(projection: BattleRuntimeMovementProjection, speedFeet: int): BattleRuntimeMovementStep = {
-    val turn = resolveDash(battleRuntimeTurnProjection(projection), speedFeet, BonusActionCost)
+    val turn = resolveDash(battleRuntimeActionTurnProjection(projection), speedFeet, BonusActionCost)
     battleRuntimeStepFromTurn(projection, turn)
   }
 
@@ -161,7 +167,7 @@ module battleRuntimeMovementBridge {
     projection: BattleRuntimeMovementProjection,
     cost: ActionCost
   ): BattleRuntimeActionCostSpendResult = {
-    val spend = spendActionCost(battleRuntimeTurnProjection(projection), cost)
+    val spend = spendActionCost(battleRuntimeActionTurnProjection(projection), cost)
     {
       step: battleRuntimeStepFromTurn(projection, spend.turn),
       admitted: spend.admitted,
@@ -183,7 +189,7 @@ module battleRuntimeMovementBridge {
     differentLightWeapon: bool
   ): LightPropertyExtraAttackResult =
     resolveLightPropertyExtraAttack(
-      battleRuntimeTurnProjection(projection),
+      battleRuntimeActionTurnProjection(projection),
       {
         priorAttackActionLightWeaponAttack: priorAttackActionLightWeaponAttack,
         differentLightWeapon: differentLightWeapon,
@@ -233,23 +239,23 @@ module battleRuntimeMovementBridge {
   pure def battleRuntimeDisengage(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
     battleRuntimeStepFromTurn(
       projection,
-      resolveDisengage(battleRuntimeTurnProjection(projection), StandardActionCost(DisengageAction)),
+      resolveDisengage(battleRuntimeActionTurnProjection(projection), StandardActionCost(DisengageAction)),
     )
 
   pure def battleRuntimeDodge(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
-    battleRuntimeStepFromTurn(projection, resolveDodge(battleRuntimeTurnProjection(projection)))
+    battleRuntimeStepFromTurn(projection, resolveDodge(battleRuntimeActionTurnProjection(projection)))
 
   pure def battleRuntimeReadyMovement(
     projection: BattleRuntimeMovementProjection,
     triggerSelected: bool
   ): BattleRuntimeMovementStep =
-    battleRuntimeStepFromTurn(projection, resolveReadyMovement(battleRuntimeTurnProjection(projection), triggerSelected))
+    battleRuntimeStepFromTurn(projection, resolveReadyMovement(battleRuntimeActionTurnProjection(projection), triggerSelected))
 
   pure def battleRuntimeHelpAttack(
     projection: BattleRuntimeMovementProjection,
     targetFactSatisfied: bool
   ): BattleRuntimeMovementStep =
-    battleRuntimeStepFromTurn(projection, resolveHelpAttack(battleRuntimeTurnProjection(projection), targetFactSatisfied))
+    battleRuntimeStepFromTurn(projection, resolveHelpAttack(battleRuntimeActionTurnProjection(projection), targetFactSatisfied))
 
   pure def battleRuntimeHide(
     projection: BattleRuntimeMovementProjection,
@@ -260,7 +266,7 @@ module battleRuntimeMovementBridge {
     battleRuntimeStepFromTurn(
       projection,
       resolveHide(
-        battleRuntimeTurnProjection(projection),
+        battleRuntimeActionTurnProjection(projection),
         {
           prerequisiteSatisfied: prerequisiteSatisfied,
           checkTotal: checkTotal,
@@ -279,7 +285,7 @@ module battleRuntimeMovementBridge {
     battleRuntimeStepFromTurn(
       projection,
       resolveSearch(
-        battleRuntimeTurnProjection(projection),
+        battleRuntimeActionTurnProjection(projection),
         {
           hiddenTargetExists: hiddenTargetExists,
           checkTotal: checkTotal,
@@ -350,7 +356,7 @@ module battleRuntimeMovementBridge {
 
   pure def battleRuntimeEscapeGrapple(projection: BattleRuntimeMovementProjection, checkTotal: int): BattleRuntimeMovementStep = {
     val escaped = MovementRule::escapeGrapple(
-      battleRuntimeTurnProjection(projection),
+      battleRuntimeActionTurnProjection(projection),
       battleRuntimeGrappleProjection(projection),
       checkTotal,
     )
@@ -379,9 +385,9 @@ module battleRuntimeMovementBridge {
       targetIsGrappler,
     )
 
-  pure def battleRuntimeDifficultTerrainMovementCost(active: bool, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
+  pure def battleRuntimeDifficultTerrainMovementCost(active: bool, moverProne: bool, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
     if (active and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
-      totalDistanceFeet + difficultTerrainDistanceFeet
+      totalDistanceFeet + difficultTerrainDistanceFeet + MovementRule::crawlingExtraCostFeet(moverProne, totalDistanceFeet)
     else
       0
 
@@ -409,7 +415,8 @@ module battleRuntimeMovementBridge {
   }
 
   pure def movementProjectionForFighter(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
-    currentActorOwnsTurn: currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated),
+    currentActorOwnsTurn: currentActor(state) == Fighter and not(state.fighter.unconscious),
+    actionResourcesUsable: not(state.fighter.incapacitated),
     actionAvailable: state.actionAvailable,
     bonusActionAvailable: state.bonusActionAvailable,
     reactionAvailable: state.fighter.reactionAvailable,
@@ -426,7 +433,8 @@ module battleRuntimeMovementBridge {
   }
 
   pure def movementProjectionForGoblin(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
-    currentActorOwnsTurn: currentActor(state) == Goblin and not(state.goblin.unconscious) and not(state.goblin.incapacitated),
+    currentActorOwnsTurn: currentActor(state) == Goblin and not(state.goblin.unconscious),
+    actionResourcesUsable: not(state.goblin.incapacitated),
     actionAvailable: state.actionAvailable,
     bonusActionAvailable: state.bonusActionAvailable,
     reactionAvailable: state.goblin.reactionAvailable,

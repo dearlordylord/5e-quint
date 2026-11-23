@@ -50,6 +50,8 @@ import {
   type CharacterEquipmentItemSlot,
   type CopperPieceAmount,
   type UnitCatalog,
+  ConstitutionModifierAtGainSchema,
+  HigherLevelClassHitPointRuleSchema,
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   ABILITIES,
@@ -870,6 +872,33 @@ function knownWarlockCantripIdsForStoredBuild(
   return cantripIds;
 }
 
+const decodeStoredHigherLevelHitPointRule = Schema.decodeUnknownResult(
+  HigherLevelClassHitPointRuleSchema,
+);
+const decodeStoredConstitutionModifierAtGain = Schema.decodeUnknownResult(
+  ConstitutionModifierAtGainSchema,
+);
+
+function parseStoredProgressionAdvancement(
+  value: unknown,
+): CharacterBuild["progression"]["advancements"][number] | undefined {
+  if (!isRecord(value) || typeof value.classUnitId !== "string") {
+    return undefined;
+  }
+  const hitPointRule = decodeStoredHigherLevelHitPointRule(value.hitPointRule);
+  const constitutionModifierAtGain = decodeStoredConstitutionModifierAtGain(
+    value.constitutionModifierAtGain,
+  );
+  return Result.isFailure(hitPointRule) ||
+    Result.isFailure(constitutionModifierAtGain)
+    ? undefined
+    : {
+        classUnitId: classUnitId(authoredUnitId(value.classUnitId)),
+        hitPointRule: hitPointRule.success,
+        constitutionModifierAtGain: constitutionModifierAtGain.success,
+      };
+}
+
 function parseStoredProgression(
   value: unknown,
 ): Result.Result<CharacterBuild["progression"], CharacterSheetIssue> {
@@ -883,20 +912,13 @@ function parseStoredProgression(
   }
   const advancements = [];
   for (const advancement of value.advancements) {
-    if (
-      !isRecord(advancement) ||
-      typeof advancement.classUnitId !== "string" ||
-      !isRecord(advancement.hitPointRule) ||
-      advancement.hitPointRule.tag !== "fixedHigherLevelGain"
-    ) {
+    const parsed = parseStoredProgressionAdvancement(advancement);
+    if (parsed === undefined) {
       return characterSheetIssue(
         "Character Build progression advancement is invalid.",
       );
     }
-    advancements.push({
-      classUnitId: classUnitId(authoredUnitId(advancement.classUnitId)),
-      hitPointRule: { tag: "fixedHigherLevelGain" as const },
-    });
+    advancements.push(parsed);
   }
   const totalLevel = 1 + advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === totalLevel)) {

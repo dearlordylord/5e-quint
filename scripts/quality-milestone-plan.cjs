@@ -115,15 +115,40 @@ const PRE_COVERAGE_CHECKS = Object.freeze([
   ...BUILD_DEPENDENT_CHECKS,
 ]);
 
-function qualityMilestonePlan({ collectAll = false } = {}) {
-  return Object.freeze([
+function completeQualityMilestonePlan(collectAll) {
+  return [
     ...PRE_COVERAGE_CHECKS,
     check(
       "coverage",
       ["run", "coverage:body"],
       collectAll ? ["build"] : PRE_COVERAGE_CHECKS.map(({ id }) => id),
     ),
-  ]);
+  ];
+}
+
+// `deferred` names checks that another job runs instead, such as CI's
+// parallel coverage shards. A deferred check must exist, and no check left in
+// the plan may depend on it.
+function qualityMilestonePlan({ collectAll = false, deferred = [] } = {}) {
+  const plan = completeQualityMilestonePlan(collectAll);
+  const deferredIds = new Set(deferred);
+  for (const id of deferredIds) {
+    if (!plan.some((entry) => entry.id === id)) {
+      throw new Error(`Cannot defer unknown quality check: ${id}.`);
+    }
+  }
+  const retained = plan.filter((entry) => !deferredIds.has(entry.id));
+  for (const entry of retained) {
+    const deferredPrerequisite = entry.prerequisites.find((prerequisite) =>
+      deferredIds.has(prerequisite),
+    );
+    if (deferredPrerequisite !== undefined) {
+      throw new Error(
+        `Cannot defer ${deferredPrerequisite}: ${entry.id} depends on it.`,
+      );
+    }
+  }
+  return Object.freeze(retained);
 }
 
 const QUALITY_MILESTONE_PLAN = qualityMilestonePlan();

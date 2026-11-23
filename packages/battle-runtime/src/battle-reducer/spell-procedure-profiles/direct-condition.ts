@@ -1069,7 +1069,7 @@ const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
+      maxTargets: Schema.Finite,
     }),
     activeEffect: Schema.Struct({
       ...BattleEffectOccurrenceTemplateSchemaFields,

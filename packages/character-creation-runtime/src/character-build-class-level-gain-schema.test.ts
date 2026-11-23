@@ -27,3 +27,33 @@ test("gained choices may be omitted but cannot be supplied empty", () => {
     ),
   ).toBe(true);
 });
+
+test("a level gain takes the fixed value or a rolled Hit Die of at least 1", () => {
+  const decode = Schema.decodeUnknownResult(CharacterBuildClassLevelGainSchema);
+  const gain = (hitPointRule: unknown) => ({
+    tag: "classLevelGain",
+    classUnitId: "class_fighter",
+    hitPointRule,
+  });
+  expect(
+    decode(gain({ tag: "rolledHigherLevelGain", hitDieResult: 7 })),
+  ).toMatchObject({
+    _tag: "Success",
+    success: {
+      hitPointRule: { tag: "rolledHigherLevelGain", hitDieResult: 7 },
+    },
+  });
+  for (const hitDieResult of [0, 2.5, "7"]) {
+    expect(
+      Result.isFailure(
+        decode(gain({ tag: "rolledHigherLevelGain", hitDieResult })),
+      ),
+    ).toBe(true);
+  }
+  expect(Result.isFailure(decode(gain({ tag: "rolledHigherLevelGain" })))).toBe(
+    true,
+  );
+  expect(Result.isFailure(decode(gain({ tag: "levelOneMaximumHitDie" })))).toBe(
+    true,
+  );
+});

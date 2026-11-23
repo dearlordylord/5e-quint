@@ -16,6 +16,7 @@ import {
 import { Match, Result, Schema } from "effect";
 
 import {
+  McpEmptyArgumentsSchema,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
   type ToolError,
@@ -32,7 +33,6 @@ import {
 
 import { CancelBattleActionArgsSchema } from "./battle-action-selection-id.ts";
 
-const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.annotate({
     description:
@@ -73,9 +73,12 @@ const EndTurnArgsSchema = Schema.Struct({
 export const selectStatBlockInputSchema = mcpObjectJsonSchema(
   SelectStatBlockArgsSchema,
 );
-export const readBattleStateInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
-export const discoverBattleActsInputSchema =
-  mcpObjectJsonSchema(EmptyArgsSchema);
+export const readBattleStateInputSchema = mcpObjectJsonSchema(
+  McpEmptyArgumentsSchema,
+);
+export const discoverBattleActsInputSchema = mcpObjectJsonSchema(
+  McpEmptyArgumentsSchema,
+);
 export const fillBattleHoleInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   FillBattleHoleArgsSchema,
   {
@@ -95,7 +98,9 @@ export const endTurnInputSchema = mcpObjectJsonSchema(EndTurnArgsSchema);
 export const cancelBattleActionInputSchema = mcpObjectJsonSchema(
   CancelBattleActionArgsSchema,
 );
-export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+export const endBattleInputSchema = mcpObjectJsonSchema(
+  McpEmptyArgumentsSchema,
+);
 
 export const battleToolNames = {
   selectStatBlock: "select_stat_block",
@@ -389,7 +394,7 @@ function decodeEmptyArgs(
   args: unknown,
   toolName: EmptyBattleToolName,
 ): Result.Result<EmptyToolInput, ToolError> {
-  const decoded = decodeBattleToolArgs(EmptyArgsSchema, args, toolName);
+  const decoded = decodeBattleToolArgs(McpEmptyArgumentsSchema, args, toolName);
   return Result.map(decoded, () => ({}));
 }
 

@@ -21,6 +21,11 @@ module statBlockMultiattackExamples {
       assert(statBlockMultiattackPendingProcedureRefs(firstDispatch) == List(0, 0)),
       assert(statBlockMultiattackPendingProcedureRefs(secondDispatch) == List(0)),
       assert(multiattackDispatchSubjectPermitted(activated, StatBlockMovementSubject)),
+      assert(multiattackDispatchSubjectPermitted(firstDispatch, StatBlockMovementSubject)),
+      assert(multiattackDispatchSubjectPermitted(secondDispatch, StatBlockMovementSubject)),
+      assert(multiattackDispatchSubjectPermitted(activated, StatBlockDropProneSubject)),
+      assert(multiattackDispatchSubjectPermitted(firstDispatch, StatBlockDropProneSubject)),
+      assert(multiattackDispatchSubjectPermitted(secondDispatch, StatBlockDropProneSubject)),
       assert(not(multiattackDispatchSubjectPermitted(activated, StatBlockBonusActionSubject))),
       assert(not(statBlockMultiattackContinuationOpen(thirdDispatch))),
     }

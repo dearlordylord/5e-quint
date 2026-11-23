@@ -1,3 +1,4 @@
+import { jsonSchemaPattern } from "../../../packages/shared/src/json-schema.ts";
 import { Result, Schema } from "effect";
 
 import {
@@ -34,7 +35,7 @@ export type BattleEnvelopeSessionIdentityCheck = {
 };
 
 const HashSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),

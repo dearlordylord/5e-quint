@@ -72,6 +72,7 @@ type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
 import {
   activeDruidWildShape,
+  combatantSkillProficiencies,
   spendActiveDruidWildShapeProcedureResources,
 } from "./battle-reducer/druid-wild-shape.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
@@ -2505,7 +2506,11 @@ test("projects Beast physical and retained character mental Ability Scores", () 
   expect(combatantD20AbilityScore(druid, "cha")).toBe(12);
 });
 
-test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
+// RAW: .references/srd-5.2.1/classes.md, Druid, Wild Shape, "Game Statistics.":
+// "You also retain your skill and saving throw proficiencies and use your
+// Proficiency Bonus for them, in addition to gaining the proficiencies of the
+// creature."
+test("projects retained and Beast Skill modifiers and proficiencies while in Wild Shape", () => {
   const ridingHorseWithSkills: StatBlockRecord = {
     ...assertStatBlockForTest(statBlockCatalog, ridingHorseId),
     statBlock: {
@@ -2550,6 +2555,11 @@ test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
   ).toBe(5);
   expect(combatantSkillModifier(druid, "stealth")).toBe(5);
   expect(combatantSkillModifier(druid, "perception")).toBe(5);
+  expect(combatantSkillProficiencies(druid)).toEqual([
+    "nature",
+    "perception",
+    "stealth",
+  ]);
 });
 
 test("projects retained and higher Beast Saving Throw modifiers while in Wild Shape", () => {

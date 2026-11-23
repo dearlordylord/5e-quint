@@ -1,3 +1,7 @@
+import {
+  jsonSchemaDocument,
+  jsonSchemaPattern,
+} from "../../packages/shared/src/json-schema.ts";
 import { createHash, randomUUID } from "node:crypto";
 import {
   Array as EffectArray,
@@ -49,7 +53,7 @@ const PositiveIntegerSchema = Schema.Number.pipe(
 
 export function codexOutputJsonSchema<A, I>(schema: Schema.Codec<A, I>) {
   const document = JsonSchema.toDocumentDraft07(
-    Schema.toJsonSchemaDocument(Schema.Struct({ result: schema })),
+    jsonSchemaDocument(Schema.Struct({ result: schema })),
   );
   return {
     $schema: JsonSchema.META_SCHEMA_URI_DRAFT_07,
@@ -311,7 +315,7 @@ export type ScenarioCompositeReviewForIntents<
   readonly sdkCapability: ScenarioSdkCapabilityReviewForIntent<SdkIntent>;
 };
 export const ScenarioSha256Schema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  Schema.check(jsonSchemaPattern(/^[0-9a-f]{64}$/)),
   Schema.brand("RawSwarmScenarioSha256"),
 );
 export type ScenarioSha256 = Schema.Schema.Type<typeof ScenarioSha256Schema>;

@@ -1526,6 +1526,9 @@ describe("MCP server route", () => {
           {
             classUnitId: wizardClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
+            constitutionModifierAtGain: Math.floor(
+              (build.abilityScores.con - 10) / 2,
+            ),
           },
         ],
       },
@@ -2910,6 +2913,7 @@ describe("MCP server route", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -2923,7 +2927,7 @@ describe("MCP server route", () => {
     expect(read.envelope.checkpoint.combatants).toHaveLength(2);
   });
 
-  test("discovers Stat Block Multiattack dispatch and Movement continuations through MCP tools", () => {
+  test("executes Drop Prone and Stand from Prone between Multiattack attacks through MCP tools", () => {
     const baseRoot = createMcpPlaySessionRoot();
     const multiattackStatBlock = goblinWarriorMultiattackStatBlock(baseRoot);
     const catalogResult = buildStatBlockCatalog({
@@ -3048,7 +3052,7 @@ describe("MCP server route", () => {
       continuationActs
         .filter(({ label }) => label !== "Attack")
         .map(({ label }) => label),
-    ).toEqual(["Move", "End Turn"]);
+    ).toEqual(["Move", "Drop Prone", "End Turn"]);
     expect(attackSubjects).toHaveLength(8);
     expect(
       attackSubjects.every(
@@ -3074,6 +3078,133 @@ describe("MCP server route", () => {
       ["rolled,rolled", "rolled,static", "static,rolled", "static,static"],
       ["rolled,rolled", "rolled,static", "static,rolled", "static,static"],
     ]);
+
+    function missAttackThroughMcp(attackName: string) {
+      const subject = battleAttackSubjectForName(root, "goblin", attackName);
+      const afterTarget = readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject,
+          fill: {
+            kind: "targetChoice",
+            holeId: "battle:attack:target",
+            value: "fighter",
+            spatialFacts: [
+              {
+                kind: "attackTargetDistance",
+                actorId: "goblin",
+                targetId: "fighter",
+                distanceFeet: movementFeet(5),
+                ...battleAttackSelection(subject, attackName),
+              },
+              ...(attackName === "Shortbow"
+                ? [
+                    {
+                      kind: "rangedAttackEnemyProximity",
+                      attackerId: "goblin",
+                      procedureRef: subject.procedureRef,
+                      enemies: [
+                        {
+                          enemyId: "fighter",
+                          distanceFeet: movementFeet(5),
+                          enemyCanSeeAttacker: true,
+                        },
+                      ],
+                    },
+                  ]
+                : []),
+            ],
+          },
+        }),
+      );
+      const roll = afterTarget.envelope.frontier.holes.find(
+        (hole: { readonly kind: string }) => hole.kind === "attackRoll",
+      );
+      if (roll === undefined) {
+        throw new Error("Expected the MCP Multiattack attack-roll hole.");
+      }
+      const resolved = readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject,
+          fill: {
+            kind: "attackRoll",
+            holeId: roll.holeId,
+            value: {
+              total: 5,
+              d20TestRoll: mcpD20TestRoll(1, roll.rollMode),
+            },
+          },
+        }),
+      );
+      expect(resolved.result.tag).toBe("resolved");
+      expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
+      return resolved;
+    }
+
+    const firstAttack = missAttackThroughMcp("Scimitar");
+    const betweenAttacks = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const drop = betweenAttacks.envelope.frontier.acts.find(
+      (act: { readonly subject: BattleSubject }) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "dropProne",
+    );
+    if (drop === undefined) {
+      throw new Error(
+        "Expected MCP discovery to offer Drop Prone between attacks.",
+      );
+    }
+    const dropped = readPayload(
+      handleToolCall(root, "resolve_battle_act", { subject: drop.subject }),
+    );
+    expect(dropped.result.tag).toBe("resolved");
+    expect(dropped.envelope.checkpoint.turn).toEqual(
+      firstAttack.envelope.checkpoint.turn,
+    );
+    expect(dropped.envelope.checkpoint.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: "goblin",
+        conditions: expect.arrayContaining(["prone"]),
+        movement: expect.objectContaining({ speedFeet: 30, spentFeet: 0 }),
+      }),
+    );
+
+    const proneFrontier = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const stand = proneFrontier.envelope.frontier.acts.find(
+      (act: { readonly subject: BattleSubject }) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "standFromProne",
+    );
+    if (stand === undefined) {
+      throw new Error(
+        "Expected MCP discovery to offer Stand from Prone between attacks.",
+      );
+    }
+    const stood = readPayload(
+      handleToolCall(root, "resolve_battle_act", { subject: stand.subject }),
+    );
+    expect(stood.result.tag).toBe("resolved");
+    expect(stood.envelope.checkpoint.turn.actionResources).toEqual(
+      firstAttack.envelope.checkpoint.turn.actionResources,
+    );
+    expect(stood.envelope.checkpoint.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: "goblin",
+        conditions: expect.not.arrayContaining(["prone"]),
+        movement: expect.objectContaining({ speedFeet: 30, spentFeet: 15 }),
+      }),
+    );
+
+    const secondAttack = missAttackThroughMcp("Shortbow");
+    expect(secondAttack.envelope.checkpoint.currentActorId).toBe("goblin");
+    expect(
+      secondAttack.envelope.checkpoint.turn.actionResources.some(
+        (resource: { readonly source: string }) =>
+          resource.source === "statBlockMultiattack",
+      ),
+    ).toBe(false);
   });
 
   test("fills a battle movement hole through MCP", () => {
@@ -3614,7 +3745,13 @@ describe("MCP server route", () => {
       afterDamage.envelope.frontier.acts.map(
         (act: { label: string }) => act.label,
       ),
-    ).toEqual(["Adrenaline Rush: Dash", "Second Wind", "Move", "End Turn"]);
+    ).toEqual([
+      "Adrenaline Rush: Dash",
+      "Second Wind",
+      "Move",
+      "Drop Prone",
+      "End Turn",
+    ]);
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
 
     const battleBeforeWrongActorEnd = root.sessionStore.battleSession;
@@ -3703,10 +3840,12 @@ describe("MCP server route", () => {
         .map(({ label }) => label),
     ).toEqual([
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -4679,6 +4818,19 @@ describe("MCP server route", () => {
         initiative: 14,
       },
     ]);
+    const session = root.sessionStore.battleSession;
+    if (session === null) throw new Error("Expected the retained Battle.");
+    const [present] = session.state.companions.values();
+    expect(present).toBeDefined();
+    for (const field of [
+      "reappearanceCombatantId",
+      "resolvedStatBlockId",
+      "hitPoints",
+      "ammunitionStocks",
+      "reactionAvailable",
+    ]) {
+      expect(present).not.toHaveProperty(field);
+    }
   });
 
   test("end_battle preserves the active battle when character handoff ownership is invalid", () => {
@@ -8136,10 +8288,13 @@ describe("MCP server route", () => {
     ).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -8243,10 +8398,12 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Help (Ability Check)",
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Drop Prone",
       "Ready",
       "End Turn",
     ]);
@@ -12095,6 +12252,9 @@ function characterBuildForClassProgression(input: {
     advancements: Array.from({ length: classLevel - 1 }, () => ({
       classUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      constitutionModifierAtGain: Math.floor(
+        (input.base.abilityScores.con - 10) / 2,
+      ),
     })),
   };
   return {

@@ -13,6 +13,7 @@ import type { CharacterSheetInput } from "@dnd/character-sheet-runtime";
 
 import {
   decodeToolArgs,
+  McpEmptyArgumentsSchema,
   mcpObjectJsonSchema,
   type ToolInputResult,
 } from "./schema-codec.ts";
@@ -30,8 +31,6 @@ import {
   decodeQueryCharacterSessionArgs,
   type QueryCharacterSessionToolInput,
 } from "./character-session-query-tool-input.ts";
-
-const EmptyArgsSchema = Schema.Struct({});
 
 const DraftIdArgsSchema = Schema.Struct({
   draftId: Schema.String.annotate({
@@ -161,7 +160,7 @@ export const fillCreationHolesInputSchema = mcpObjectJsonSchema(
 export const applyCharacterSessionOperationInputSchema = mcpObjectJsonSchema(
   Schema.toType(ApplyCharacterSessionOperationArgsSchema),
 );
-export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+export const emptyInputSchema = mcpObjectJsonSchema(McpEmptyArgumentsSchema);
 export const characterSessionIdInputSchema = mcpObjectJsonSchema(
   CharacterSessionIdArgsSchema,
 );
@@ -301,7 +300,7 @@ function decodeFinalizeCharacterArgs(
 
 function decodeEmptyArgs(args: unknown): ToolInputResult<EmptyToolInput> {
   const decoded = decodeToolArgs(
-    EmptyArgsSchema,
+    McpEmptyArgumentsSchema,
     args,
     characterToolNames.listCharacters,
   );

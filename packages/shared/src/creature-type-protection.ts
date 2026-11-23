@@ -8,13 +8,6 @@ import {
 } from "./game-facts.ts";
 import type { ReadonlyNonEmptyArray } from "./non-empty-array.d.ts";
 
-const strictStruct = <Fields extends Schema.Struct.Fields>(fields: Fields) =>
-  Schema.Struct(fields).pipe(
-    Schema.annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
-  );
-
 const CreatureTypeSchema = Schema.Literals(CREATURE_TYPES);
 const SurfaceConditionSchema = Schema.Literals(SURFACE_CONDITIONS);
 
@@ -52,22 +45,22 @@ export interface CreatureTypeProtectionPolicy {
 }
 
 const CreatureTypeProtectionOutcomeSchema = Schema.Union([
-  strictStruct({
+  Schema.Struct({
     kind: Schema.Literal("new_applications"),
     result: Schema.Literal("prevented"),
   }),
-  strictStruct({
+  Schema.Struct({
     kind: Schema.Literal("new_saves_against_existing_effects"),
     mode: Schema.Literal("advantage"),
   }),
 ]);
 
 const CreatureTypeProtectionCapabilitySchema = Schema.Union([
-  strictStruct({
+  Schema.Struct({
     kind: Schema.Literal("attack_rolls_against_target"),
     mode: Schema.Literal("disadvantage"),
   }),
-  strictStruct({
+  Schema.Struct({
     kind: Schema.Literal("relevant_effect_protection"),
     conditions: Schema.NonEmptyArray(SurfaceConditionSchema).pipe(
       Schema.check(
@@ -89,7 +82,7 @@ const CreatureTypeProtectionCapabilitySchema = Schema.Union([
   }),
 ]);
 
-export const CreatureTypeProtectionPolicySchema = strictStruct({
+export const CreatureTypeProtectionPolicySchema = Schema.Struct({
   creatureTypes: Schema.NonEmptyArray(CreatureTypeSchema).pipe(
     Schema.check(
       Schema.makeFilter(distinctValues, {

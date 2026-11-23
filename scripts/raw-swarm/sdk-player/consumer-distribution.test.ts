@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
-import { execFile, execFileSync, spawn } from "node:child_process";
+import { execFile, execFileSync, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   appendFileSync,
@@ -11,6 +11,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -35,6 +36,7 @@ import {
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
   retainReachableDeclarations,
+  publicDeclarationBundleManifest,
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -212,6 +214,123 @@ describe("SDK player consumer distribution", () => {
     );
   });
 
+  test("declaration ledgers are invariant under an aliased root and keep rejecting linked files", () => {
+    const parent = mkdtempSync(join(tmpdir(), "declaration-ledger-alias-"));
+    try {
+      const physical = join(parent, "physical");
+      const alias = join(parent, "alias");
+      mkdirSync(physical);
+      writeDeclaration(physical, "entry.d.ts", "export {};\n");
+      symlinkSync(physical, alias, "dir");
+      const expected = {
+        measure: { files: 1, bytes: 11 },
+        pathLedgerSha256: createHash("sha256")
+          .update("entry.d.ts\n")
+          .digest("hex"),
+        contentLedgerSha256: createHash("sha256")
+          .update(
+            `entry.d.ts\t${createHash("sha256").update("export {};\n").digest("hex")}\n`,
+          )
+          .digest("hex"),
+      };
+      expect(publicDeclarationBundleManifest(physical)).toEqual(expected);
+      expect(publicDeclarationBundleManifest(alias)).toEqual(expected);
+      symlinkSync(join(physical, "entry.d.ts"), join(physical, "linked.d.ts"));
+      expect(() => publicDeclarationBundleManifest(alias)).toThrow(
+        /symbolic link/,
+      );
+    } finally {
+      rmSync(parent, { recursive: true, force: true });
+    }
+  });
+
+  test("compiler support aliases produce the same review diagnostics", () => {
+    const parent = mkdtempSync(join(tmpdir(), "compiler-support-alias-"));
+    try {
+      const physical = join(parent, "physical");
+      const alias = join(parent, "alias");
+      mkdirSync(physical);
+      for (const [name, version] of Object.entries(
+        EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.versions,
+      )) {
+        mkdirSync(join(physical, name));
+        writeFileSync(
+          join(physical, name, "package.json"),
+          JSON.stringify({ version }),
+        );
+        writeFileSync(
+          join(physical, name, "LICENSE"),
+          "synthetic fixture license\n",
+        );
+      }
+      symlinkSync(physical, alias, "dir");
+      const diagnostic = (directory: string): string => {
+        try {
+          assertEffectDeclarationCompilerSupport(directory);
+        } catch (error) {
+          if (!(error instanceof Error)) throw error;
+          expect(error.message).toContain(
+            "Effect declaration compiler support differs",
+          );
+          return error.message;
+        }
+        throw new Error(
+          "The fixture omits the reviewed declarations and must fail admission.",
+        );
+      };
+      expect(diagnostic(alias)).toBe(diagnostic(physical));
+    } finally {
+      rmSync(parent, { recursive: true, force: true });
+    }
+  });
+
+  test("declaration diagnostic inspects an aliased tree without running a compiler", () => {
+    const parent = mkdtempSync(join(tmpdir(), "declaration-diagnostic-"));
+    try {
+      const physical = join(parent, "physical");
+      const alias = join(parent, "alias");
+      mkdirSync(physical);
+      writeDeclaration(physical, "entry.d.ts", "export {};\n");
+      symlinkSync(physical, alias, "dir");
+      const result = spawnSync(
+        process.execPath,
+        [
+          resolve(repoRoot, "scripts/raw-swarm/declaration-diagnostics.mjs"),
+          "--inspect",
+          alias,
+        ],
+        { encoding: "utf8" },
+      );
+      expect(result.status).toBe(1);
+      const report = JSON.parse(result.stdout);
+      expect(report).toMatchObject({
+        mode: "inspect",
+        matchesReview: false,
+        actual: { measure: { files: 1, bytes: 11 } },
+      });
+      expect(report).not.toHaveProperty("cache");
+      expect(report.actual).toEqual(publicDeclarationBundleManifest(physical));
+      expect(readdirSync(physical)).toEqual(["entry.d.ts"]);
+    } finally {
+      rmSync(parent, { recursive: true, force: true });
+    }
+  });
+
+  test("declaration diagnostic rejects invalid emission destinations before starting verification", () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(repoRoot, "scripts/raw-swarm/declaration-diagnostics.mjs"),
+        "--out",
+        "../not-an-artifact",
+      ],
+      { encoding: "utf8" },
+    );
+    expect(result.status).toBe(64);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("beneath .audit");
+  });
+
   test("retains exactly the declarations reachable from public roots", () => {
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
     writeDeclaration(
@@ -348,6 +467,7 @@ describe("SDK player consumer distribution", () => {
             path.endsWith(".d.ts") ||
             path.endsWith(".d.cts") ||
             path.endsWith("/LICENSE") ||
+            path.endsWith("/THIRD_PARTY_NOTICES.md") ||
             path.endsWith("/package.json"),
         ),
       ).toBe(true);

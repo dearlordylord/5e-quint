@@ -57,6 +57,16 @@ module battleRuntimeGreaseGroundHazardTests {
     }
   }
 
+  run test_grease_difficult_terrain_movement_cost_adds_crawling_cost_for_a_prone_mover = {
+    val resolved = resolveGrease(initialState, false, true)
+    val prone = { ...resolved, fighter: { ...resolved.fighter, prone: true } }
+    val moved = moveFighterThroughGreaseGroundDifficultTerrain(prone, greaseAreaId, 10, 5, false)
+    all {
+      assert(greaseGroundDifficultTerrainMovementCost(prone, greaseAreaId, 10, 5) == 25),
+      assert(moved.fighter.movementSpent == 25),
+    }
+  }
+
   run test_grease_ground_hazard_end_turn_save_advances_turn = {
     val resolved = resolveGrease(initialState, false, true)
     val goblinTurn = endTurn(resolved)

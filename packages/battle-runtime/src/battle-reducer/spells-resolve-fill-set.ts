@@ -1,3 +1,4 @@
+import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -101,7 +102,11 @@ import {
   spellTargetRequiresAttackRollRelationshipFact,
   spellAttackRequiresExactDistance,
 } from "./spells-targeting.ts";
-import { rangedAttackEnemyProximityQualificationIssue } from "./ranged-attack-close-combat.ts";
+import {
+  qualifyRangedAttackEnemyProximity,
+  type RangedAttackEnemyProximityEvidence,
+  type SpatialQualificationIssue,
+} from "./ranged-attack-close-combat.ts";
 import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
 import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
 import {
@@ -126,12 +131,14 @@ const DUPLICATE_HIT_INTERCEPTION_ROLL_PROCEDURE_SET: ReadonlySet<
 export type SpellAttackSequencePartTargetFill =
   | {
       readonly kind: "combatant";
+      readonly enemyProximity: RangedAttackEnemyProximityEvidence | null;
       readonly targetId: CombatantId;
       readonly spatialFacts: readonly BattleTargetSpatialFact[];
       readonly relationshipFacts: readonly BattleAttackRollRelationshipFact[];
     }
   | {
       readonly kind: "object";
+      readonly enemyProximity: RangedAttackEnemyProximityEvidence | null;
       readonly objectId: BattleObjectId;
       readonly spatialFacts: readonly Extract<
         BattleTargetSpatialFact,
@@ -265,6 +272,7 @@ export type SpellFillSet =
         BattleFill,
         { readonly kind: "abilityCheck" }
       >[];
+      readonly targetEnemyProximity: RangedAttackEnemyProximityEvidence | null;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
       readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
@@ -425,6 +433,7 @@ export function spellFillSet(
     BattleFill,
     { readonly kind: "abilityCheck" }
   >[] = [];
+  let targetEnemyProximity: RangedAttackEnemyProximityEvidence | null = null;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
@@ -525,14 +534,14 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
-    const proximityIssue = spellAttackFillQualificationIssue({
+    const enemyProximity = qualifySpellAttackFill({
       fill,
       invocation,
       state,
       actorId,
       sourceProcedureRef,
     });
-    if (proximityIssue !== null) return proximityIssue;
+    if (isSpatialQualificationIssue(enemyProximity)) return enemyProximity;
 
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
@@ -690,6 +699,7 @@ export function spellFillSet(
       /* v8 ignore stop -- @preserve */
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      targetEnemyProximity = enemyProximity;
       targetRelationshipFacts = parsed?.fill.relationshipFacts ?? [];
       const sightFactValidation = attackSightFactValidation(targetSpatialFacts);
       if (sightFactValidation !== null) return sightFactValidation;
@@ -787,6 +797,7 @@ export function spellFillSet(
           ...attackSequencePartFill,
           target: {
             kind: "combatant",
+            enemyProximity,
             targetId: fill.value,
             spatialFacts,
             relationshipFacts: parsed.fill.relationshipFacts ?? [],
@@ -828,6 +839,7 @@ export function spellFillSet(
             ...attackSequencePartFill,
             target: {
               kind: "object",
+              enemyProximity,
               objectId: fill.value,
               spatialFacts: fill.spatialFacts.filter(
                 isSpellAttackSequenceObjectTargetSpatialFact,
@@ -873,6 +885,7 @@ export function spellFillSet(
         };
       }
       /* v8 ignore stop -- @preserve */
+      targetEnemyProximity = enemyProximity;
       objectTarget = {
         objectId: fill.value,
         spatialFacts: fill.spatialFacts.filter(isSpellObjectTargetFact),
@@ -2248,6 +2261,7 @@ export function spellFillSet(
     ongoingSpellTarget,
     ongoingSpellAbilityChecks,
     targetSpatialFacts,
+    targetEnemyProximity,
     damageRelationshipDecisions:
       relationshipDecisions.decisionsByRelationshipHole,
     targetRelationshipFacts,
@@ -2401,25 +2415,14 @@ function isSpellAttackProximityTargetFill(
   );
 }
 
-function spellAttackFillQualificationIssue(input: {
+function qualifySpellAttackFill(input: {
   readonly fill: BattleFill;
   readonly invocation: RuntimeSpellProcedure;
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-}): Extract<SpellFillSet, { readonly tag: "invalid" }> | null {
+}): RangedAttackEnemyProximityEvidence | SpatialQualificationIssue | null {
   const { fill, invocation } = input;
-  if (isSpellAttackProximityTargetFill(fill, invocation)) {
-    const proximityIssue = rangedAttackEnemyProximityQualificationIssue({
-      state: input.state,
-      scope: {
-        attackerId: input.actorId,
-        procedureRef: input.sourceProcedureRef,
-      },
-      facts: fill.spatialFacts ?? [],
-    });
-    if (proximityIssue !== null) return proximityIssue;
-  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.kind === "attackRoll" && fill.relationshipFacts !== undefined) {
     /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
@@ -2430,6 +2433,17 @@ function spellAttackFillQualificationIssue(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  if (isSpellAttackProximityTargetFill(fill, invocation)) {
+    const proximityIssue = qualifyRangedAttackEnemyProximity({
+      state: input.state,
+      scope: {
+        attackerId: input.actorId,
+        procedureRef: input.sourceProcedureRef,
+      },
+      facts: fill.spatialFacts ?? [],
+    });
+    return proximityIssue;
+  }
   return null;
 }
 

@@ -8,9 +8,12 @@ import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import type { BattleState, BattleTargetSpatialFact } from "./index.ts";
+import { combatantId } from "./identity.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   battleProcedureExecutionRefForTest,
+  battleId,
+  characterSeed,
   endTurn,
   fighterAttackSubject,
   fighterId,
@@ -20,6 +23,8 @@ import {
   requireHole,
   requireResolved,
   resolveBattleSubject,
+  startBattleRight,
+  statBlockCreatureInit,
   targetFill,
 } from "./battle-runtime.test-support.ts";
 
@@ -126,13 +131,29 @@ describe("battle runtime: Ranged Attacks in Close Combat", () => {
   });
 
   test("an enemy other than the target counts, independently of the target", () => {
-    const state = goblinTurn();
+    const nearbyEnemyId = combatantId("synthetic-nearby-enemy");
+    const state = startBattleRight({
+      battleId: battleId("synthetic-third-enemy"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+        characterSeed({ combatantId: nearbyEnemyId, initiative: 5 }),
+      ],
+    });
     expect(
       rollModeOf(
         shortbowAttack({
           state,
           distanceFeet: movementFeet(30),
-          proximity: [shortbowProximity(state, [fighterWithin5Feet()])],
+          proximity: [
+            shortbowProximity(state, [
+              {
+                enemyId: nearbyEnemyId,
+                distanceFeet: movementFeet(5),
+                enemyCanSeeAttacker: true,
+              },
+            ]),
+          ],
         }),
       ),
     ).toBe("disadvantage");
@@ -161,6 +182,7 @@ describe("battle runtime: Ranged Attacks in Close Combat", () => {
         rollModeOf(
           shortbowAttack({
             state,
+            distanceFeet: enemies[0]?.distanceFeet ?? movementFeet(5),
             proximity: [shortbowProximity(state, enemies)],
           }),
         ),
@@ -174,7 +196,6 @@ describe("battle runtime: Ranged Attacks in Close Combat", () => {
       rollModeOf(
         shortbowAttack({
           state,
-          distanceFeet: movementFeet(30),
           proximity: [shortbowProximity(state, [fighterWithin5Feet()])],
         }),
       ),

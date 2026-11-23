@@ -1,3 +1,4 @@
+import type { BoundSupportedAttackActionOption } from "./battle-action-options.ts";
 import type { AuthoredSpellInvocationCastingFacts } from "./procedure-execution/spell-invocation-casting-facts.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type { AttackPresentationJoinIssue } from "./attack-presentation-contract.ts";
@@ -767,13 +768,21 @@ export type BattleReadiedResponse = {
 // SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
 // enemy within 5 feet, granting Advantage to one ally's next attack roll
 // against that enemy; the benefit expires at the start of the helper's
-// next turn. This runtime slice models that attack-roll branch only, not
-// Help's ability-check branch or first-aid action summary.
+// next turn. BattleHelpAbilityCheck owns Help's "Assist an Ability Check"
+// branch.
 export type BattleHelpAttack = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
   readonly targetEnemyId: CombatantId;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
+};
+// The skill-assistance benefit stored by Battle. SRD 5.2.1 Help [Action]
+// permits choosing a skill or tool proficiency; this type represents a skill.
+// The unused benefit expires at the start of the helper's next turn.
+export type BattleHelpAbilityCheck = {
+  readonly helperId: CombatantId;
+  readonly allyId: CombatantId;
+  readonly skill: Skill;
 };
 export type GlyphStoredSpellReleaseReplayContext = {
   readonly profile: GlyphStoredSpellReleaseProfile;
@@ -785,7 +794,7 @@ export type GlyphStoredSpellReleaseReplayInput = {
 };
 export type BattleAttackDamageCriticalConsequence =
   | {
-      readonly kind: "ordinaryHit";
+      readonly kind: "nonCritical";
     }
   | {
       readonly kind: "criticalHit";
@@ -817,7 +826,7 @@ export type BattleAttackDamageInterruptionContinuation =
        * first target remain on the enclosing frame and are intentionally not
        * copied here.
        */
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
     });
 export type BattleAttackDamageInterruptionFrame = {
@@ -923,7 +932,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "afterDamageSequenceWithPrimaryAttackFollowUp";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
@@ -934,14 +943,14 @@ export type BattleInterruptedProcedure =
       readonly kind: "weaponMasteryCleave";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
     }
   | {
       readonly kind: "huntersPreyHordeBreaker";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
-      readonly attack: SupportedAttackActionOption;
+      readonly attack: BoundSupportedAttackActionOption;
       readonly fills: readonly BattleFill[];
     }
   | {
@@ -4496,6 +4505,7 @@ export type BattleState = {
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
   readonly readiedResponses: ReadonlyMap<CombatantId, BattleReadiedResponse>;
   readonly helpAttacks: readonly BattleHelpAttack[];
+  readonly helpAbilityChecks: readonly BattleHelpAbilityCheck[];
   readonly grapples: readonly BattleGrappleLink[];
   readonly interruptStack: readonly BattleInterruptFrame[];
   readonly legendaryActionWindow: LegendaryActionWindow | null;
@@ -4941,6 +4951,11 @@ export type BattleSpellObjectTargetSpatialFactRequest = {
   readonly requiresExactDistance: true;
   readonly requiresEnemyProximityQualification: true;
 };
+export type BattleAttackTargetRequest = {
+  readonly actorId: CombatantId;
+  readonly selection: BattleAttackExecutionSelection;
+  readonly targetConstraint: AttackTargetConstraint;
+};
 export type BattleTargetChoiceHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "targetChoice" }
@@ -4951,10 +4966,7 @@ export type BattleTargetChoiceHole = Extract<
   readonly relationshipFactRequest?: BattleTargetChoiceRelationshipFactRequest;
   readonly spellTargetSpatialFactRequest?: BattleSpellTargetSpatialFactRequest;
   readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
-  readonly attack?: {
-    readonly actorId: CombatantId;
-    readonly selection: BattleAttackExecutionSelection;
-    readonly targetConstraint: AttackTargetConstraint;
+  readonly attack?: BattleAttackTargetRequest & {
     readonly acceptsObjectTarget?: true;
     /** The attack throws its weapon: the fill needs a thrownWeaponLanding fact. */
     readonly requiresThrownWeaponLanding?: true;
@@ -4976,6 +4988,15 @@ export type BattleHelpAttackEnemyDecisionHole = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
   readonly choices: readonly CombatantId[];
+};
+export type BattleHelpAbilityCheckDecisionHole = {
+  readonly kind: "helpAbilityCheckDecision";
+  readonly holeId: BattleHoleId;
+  readonly holeInstanceKey: BattleHoleInstanceKey;
+  readonly label: string;
+  readonly helperId: CombatantId;
+  readonly allyChoices: ReadonlyNonEmptyArray<CombatantId>;
+  readonly skillChoices: ReadonlyNonEmptyArray<Skill>;
 };
 export type BattleObjectTargetChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6855,6 +6876,7 @@ export type BattleTargetingSaveInterdictionOutcomeHole =
     (
       | {
           readonly replacementTargetKind: "attackRoll";
+          readonly attack?: BattleAttackTargetRequest;
           readonly relationshipFactRequest?: Extract<
             BattleTargetChoiceRelationshipFactRequest,
             { readonly kind: "attackRollTargetIsEnemy" }
@@ -6906,6 +6928,7 @@ export type BattleHole =
   | BattleTargetChoiceHole
   | BattleHelpAttackAllyDecisionHole
   | BattleHelpAttackEnemyDecisionHole
+  | BattleHelpAbilityCheckDecisionHole
   | BattleSpellCastReactionFactsHole
   | BattleTurnConstraintSomaticSpellFailureOutcomeHole
   | BattleLinkedEffectSeparationFactsHole
@@ -7152,6 +7175,13 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly targetEnemyId: CombatantId;
       readonly targetWithinFiveFeetOfHelper: boolean;
+    }
+  | {
+      readonly kind: "helpAbilityCheckDecision";
+      readonly holeId: BattleHoleId;
+      readonly allyId: CombatantId;
+      readonly skill: Skill;
+      readonly allyCanBeAssisted: boolean;
     }
   | {
       readonly kind: "attackRoll";
@@ -8006,6 +8036,7 @@ export type BattleSnapshot = {
     readonly actionsOrMovements: readonly BattleReadiedResponseSnapshot[];
   };
   readonly helpAttackMarkers: readonly BattleHelpAttackSnapshot[];
+  readonly helpAbilityCheckMarkers: readonly BattleHelpAbilityCheckSnapshot[];
 };
 
 /**
@@ -8160,6 +8191,8 @@ export type BattleReadiedResponseSnapshot = Omit<
 };
 
 export type BattleHelpAttackSnapshot = BattleHelpAttack;
+
+export type BattleHelpAbilityCheckSnapshot = BattleHelpAbilityCheck;
 
 export type BattleCreatureOriginSnapshot =
   | {

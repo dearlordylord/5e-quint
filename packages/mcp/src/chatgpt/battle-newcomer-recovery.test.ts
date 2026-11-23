@@ -461,6 +461,24 @@ describe("ChatGPT newcomer battle recovery", () => {
       spatialFacts: [objectFact, objectIgnition, qualification],
     };
     expect(validateObject(objectFill).valid).toBe(true);
+    for (const change of [
+      { attackerId: spellTargetId },
+      { procedureRef: "synthetic-foreign-spell" },
+    ]) {
+      const foreign = { ...qualification, ...change };
+      expect(
+        validate({
+          ...fill,
+          spatialFacts: [...fill.spatialFacts, foreign],
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateObject({
+          ...objectFill,
+          spatialFacts: [...objectFill.spatialFacts, foreign],
+        }).valid,
+      ).toBe(false);
+    }
     expect(
       validateObject({
         ...objectFill,

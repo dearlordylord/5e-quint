@@ -1,3 +1,4 @@
+import { attackRollModeForTest } from "./attack-roll-spatial.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY heat_metal
@@ -5,7 +6,6 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 import type { DiceAmount, SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
-import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
@@ -975,7 +975,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAbilityCheckRollMode(resolved.state, spellTargetId, "wis"),
     ).toBe("disadvantage");
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         resolved.state,
         spellTargetId,
         requireCombatant(resolved.state, spellCasterId),
@@ -1017,7 +1017,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     });
     expect(attackRoll).toMatchObject({ rollMode: "disadvantage" });
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         afterMiss,
         spellTargetId,
         requireCombatant(afterMiss, spellCasterId),
@@ -1036,7 +1036,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAbilityCheckRollMode(casterTurn.state, spellTargetId, "str"),
     ).toBeUndefined();
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         casterTurn.state,
         spellTargetId,
         requireCombatant(casterTurn.state, spellCasterId),
@@ -1154,7 +1154,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       throw new Error("Expected Heat Metal failed save drop to resolve.");
     }
     expect(
-      requiredAttackRollMode(
+      attackRollModeForTest(
         resolved.state,
         spellTargetId,
         requireCombatant(resolved.state, spellCasterId),

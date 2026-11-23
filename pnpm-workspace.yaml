@@ -14,9 +14,12 @@ packages:
   - "packages/tactical-space-cli-prototype"
   - "packages/tactical-space-prototype"
 catalog:
-  "@firfi/quint-connect": "2.0.2-effect4.2"
+  "@firfi/quint-connect": "2.0.2-effect4.3"
 allowBuilds:
   "@parcel/watcher": true
   esbuild: true
   msgpackr-extract: true
   unrs-resolver: true
+
+overrides:
+  "@effect/sql-libsql": "4.1.4"
