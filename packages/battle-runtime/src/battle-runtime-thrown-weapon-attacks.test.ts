@@ -986,6 +986,67 @@ describe("battle runtime: thrown weapon attacks", () => {
     expect(missed.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
   });
 
+  test("a released readied throw with no input asks for its fixed target's facts", () => {
+    const { state, attack, release } = withReadiedThrownDagger(
+      battleWithDaggers({ mainHand: "dagger", goblinActsFirst: true }),
+    );
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject: release, fills: [] }),
+      "targetChoice",
+    );
+    expect(hole).toMatchObject({
+      holeId: ATTACK_TARGET_HOLE_ID,
+      choices: [goblinId],
+      requiresTableSpatialFact: true,
+      attack: {
+        actorId: fighterId,
+        selection: { procedureRef: attack.procedureRef },
+        targetConstraint: { kind: "rangedRange" },
+        requiresThrownWeaponLanding: true,
+      },
+    });
+    if (hole.attack === undefined) {
+      throw new Error("Expected the readied attack's target hole.");
+    }
+    const target = targetFill(hole, goblinId, [
+      attackTargetSpatialFact(
+        fighterId,
+        goblinId,
+        hole.attack.selection,
+        movementFeet(15),
+      ),
+      noEnemyNear(attack),
+      landingFact(attack),
+    ]);
+    requireHole(
+      resolveBattleSubject({ state, subject: release, fills: [target] }),
+      "attackRoll",
+    );
+
+    const otherTargetId = combatantId("thrown-release-other-target");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: release,
+        fills: [{ ...target, value: otherTargetId }],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Readied target is fixed by the reaction trigger.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: release,
+        fills: [targetFill(hole, goblinId, [landingFact(attack)])],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Fixed-target reaction attacks require an exact attack target distance fact.",
+    });
+  });
+
   test("a thrown Dagger whose hit opens a Reaction window is reported by the attack's end", () => {
     const state = battleWithUncannyDodgeTarget();
     const subject = attackSubjectFor(state, "thrown");

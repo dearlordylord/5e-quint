@@ -84,7 +84,7 @@ import {
 } from "./attack-damage-events.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { revealHidden } from "./hole-helpers.ts";
+import { attackTargetHole, revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   cunningStrikeDamageContinuation,
@@ -462,16 +462,13 @@ function resolveReactionAttackCommand(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.targetId !== undefined) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+  if (fillSet.targetId !== undefined && fillSet.targetId !== subject.targetId) {
     return invalidResult(
       input.state,
       "invalidFill",
       `${commandLabel} target is fixed by the reaction trigger.`,
     );
   }
-  /* v8 ignore stop -- @preserve */
   const targetSpatialFacts = reactionAttackTargetSpatialFacts({
     state: input.state,
     commandLabel,
@@ -479,6 +476,11 @@ function resolveReactionAttackCommand(
     attack,
     fillSet,
   });
+  if (targetSpatialFacts.tag === "needsTargetFacts") {
+    return needsHolesResult(input.state, subject, [
+      fixedReactionAttackTargetHole(input.state, subject, attack),
+    ]);
+  }
   if (targetSpatialFacts.tag === "invalid") {
     return invalidResult(
       input.state,
@@ -511,6 +513,7 @@ function reactionAttackTargetSpatialFacts(input: {
   readonly fillSet: ResolvedAttackFillSet;
 }):
   | { readonly tag: "ok"; readonly facts: readonly BattleTargetSpatialFact[] }
+  | { readonly tag: "needsTargetFacts" }
   | { readonly tag: "invalid"; readonly message: string } {
   const suppliedDistanceFeet = attackTargetDistanceFeet(
     input.fillSet.targetSpatialFacts,
@@ -540,11 +543,14 @@ function reactionAttackTargetSpatialFacts(input: {
         ? undefined
         : [...input.fillSet.targetSpatialFacts, distanceFact];
   if (facts === undefined) {
-    return {
-      tag: "invalid",
-      message:
-        "Fixed-target reaction attacks require an exact attack target distance fact.",
-    };
+    return input.fillSet.targetId === undefined &&
+      input.fillSet.targetSpatialFacts.length === 0
+      ? { tag: "needsTargetFacts" }
+      : {
+          tag: "invalid",
+          message:
+            "Fixed-target reaction attacks require an exact attack target distance fact.",
+        };
   }
   return (
     reactionAttackTargetIssue(input, facts) ?? {
@@ -552,6 +558,23 @@ function reactionAttackTargetSpatialFacts(input: {
       facts,
     }
   );
+}
+
+/**
+ * The attack target hole for a reaction attack whose target the trigger fixed
+ * but whose distance it didn't measure, such as a released readied attack.
+ * Its only choice is that target, and it asks for the same facts as an
+ * ordinary attack target: distance, enemy proximity and a thrown landing.
+ */
+function fixedReactionAttackTargetHole(
+  state: BattleState,
+  subject: OpportunityAttackResolutionInput["subject"],
+  attack: BoundSupportedAttackActionOption,
+): ReturnType<typeof attackTargetHole> {
+  return {
+    ...attackTargetHole(state, subject.reactorId, attack),
+    choices: [subject.targetId],
+  };
 }
 
 function reactionAttackTargetIssue(
