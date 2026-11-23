@@ -8276,6 +8276,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -15269,6 +15274,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -21402,6 +21412,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:character",
                     "command": "dropProne"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:character",
+                    "command": "interactWithObject"
                   },
                   {
                     "tag": "action",
@@ -33499,6 +33514,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -39693,6 +39713,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:stat-block-a",
                     "command": "dropProne"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
                   },
                   {
                     "tag": "action",
@@ -45893,6 +45918,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -46028,6 +46058,11 @@
                           "tag": "runtimeCommand",
                           "actorId": "corpus:stat-block-a",
                           "command": "dropProne"
+                        },
+                        {
+                          "tag": "runtimeCommand",
+                          "actorId": "corpus:stat-block-a",
+                          "command": "interactWithObject"
                         },
                         {
                           "tag": "action",
@@ -52158,6 +52193,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -52370,6 +52410,11 @@
                                 "tag": "runtimeCommand",
                                 "actorId": "corpus:stat-block-a",
                                 "command": "dropProne"
+                              },
+                              {
+                                "tag": "runtimeCommand",
+                                "actorId": "corpus:stat-block-a",
+                                "command": "interactWithObject"
                               },
                               {
                                 "tag": "action",
