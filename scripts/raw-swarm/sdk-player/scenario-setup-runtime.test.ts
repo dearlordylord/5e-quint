@@ -2943,6 +2943,7 @@ describe("scenario setup public-SDK boundary", () => {
             objectId,
             range: { kind: "meleeReach" },
             attackerCanSeeObject: true,
+            cover: "none",
             armorClass: 17,
             damageDisposition: {
               kind: "hitPointsWithDamageThreshold",

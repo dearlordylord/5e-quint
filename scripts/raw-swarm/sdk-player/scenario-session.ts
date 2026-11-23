@@ -3100,7 +3100,7 @@ export function scenarioObjectAttackFills(input: {
           Match.exhaustive,
         ),
         attackerCanSeeObject: relation.relation.attackerCanSeeTarget,
-        ...ruledCoverField(relation.relation.cover),
+        cover: relation.relation.cover,
         armorClass: object.armorClass,
         damageDisposition: object.damageDisposition,
       },
