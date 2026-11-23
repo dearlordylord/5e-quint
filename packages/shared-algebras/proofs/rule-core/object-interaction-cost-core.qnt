@@ -15,7 +15,10 @@ module objectInteractionCostCore {
   //
   // requiresUtilize is the table's ruling on the object. The free interaction
   // belongs to the creature's own turn and comes back at the start of its
-  // next turn.
+  // next turn. Off its turn the creature holds an action only when it
+  // releases a readied Utilize action (rules-glossary.md "Ready [Action]"),
+  // so that release can interact with an object but never for free
+  // (ASSUMPTIONS.md A60).
 
   type ObjectInteractionCharge = FreeObjectInteraction | UtilizeAction
 
@@ -35,9 +38,9 @@ module objectInteractionCostCore {
     turn: ObjectInteractionTurn,
     requiresUtilize: bool,
   ): Set[ObjectInteractionOutcome] =
-    if (not(turn.ownTurn and turn.canAct))
+    if (not(turn.canAct))
       Set()
-    else if (not(requiresUtilize) and turn.freeInteractionAvailable)
+    else if (not(requiresUtilize) and turn.ownTurn and turn.freeInteractionAvailable)
       Set({
         charge: FreeObjectInteraction,
         turn: { ...turn, freeInteractionAvailable: false },
@@ -54,6 +57,15 @@ module objectInteractionCostCore {
     ...turn,
     ownTurn: true,
     freeInteractionAvailable: true,
+    actionAvailable: true,
+  }
+
+  // Off-turn, releasing a readied Utilize action: the action Ready held, and
+  // no free interaction.
+  pure def releaseReadiedUtilize(turn: ObjectInteractionTurn): ObjectInteractionTurn = {
+    ...turn,
+    ownTurn: false,
+    freeInteractionAvailable: false,
     actionAvailable: true,
   }
 }

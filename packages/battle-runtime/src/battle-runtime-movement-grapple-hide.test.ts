@@ -2237,7 +2237,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     }
     const dodgeResponse = declarationHole.responseChoices.find(
       (response) =>
-        response.kind === "action" && response.subject.action === "dodge",
+        response.kind === "action" &&
+        response.subject.tag === "action" &&
+        response.subject.action === "dodge",
     );
     if (dodgeResponse?.kind !== "action") {
       throw new Error("Expected an offered Dodge response.");
@@ -2315,7 +2317,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     }
     const helpResponse = declarationHole.responseChoices.find(
       (response) =>
-        response.kind === "action" && response.subject.action === "helpAttack",
+        response.kind === "action" &&
+        response.subject.tag === "action" &&
+        response.subject.action === "helpAttack",
     );
     if (helpResponse?.kind !== "action") {
       throw new Error("Expected an offered Help response.");

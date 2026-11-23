@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
 //
-// Object interactions on a creature's own turn. SRD 5.2.1 "Your Turn",
+// Object interactions on a creature's own turn, and its readied Utilize action.
+// SRD 5.2.1 "Your Turn",
 // Interacting with Things: "You can interact with one object or feature of
 // the environment for free, during either your move or action ... If you want
 // to interact with a second object, you need to take the Utilize action."
@@ -73,15 +74,17 @@ const FREE_INTERACTION_RULING: ObjectInteractionRuling = {
 };
 
 /**
- * Whether the actor can interact with an object now: on its own turn, able to
- * act, with the free interaction or the Utilize action left.
+ * Whether the actor can interact with an object with the resources it holds:
+ * able to act, with the free interaction or the Utilize action left. On its
+ * own turn these are its turn's resources; a released readied interaction
+ * holds only the readied Utilize action (ASSUMPTIONS.md A60). The dispatcher
+ * admits the actor.
  */
 function objectInteractionAvailable(
   state: BattleState,
   actor: BattleCreatureState,
 ): boolean {
   return (
-    actor.combatantId === currentActorId(state) &&
     combatantCanTakeActions(actor) &&
     canChargeObjectInteraction(
       state.currentTurnResources,
@@ -90,12 +93,17 @@ function objectInteractionAvailable(
   );
 }
 
-/** The object interactions the current actor can start now. */
+/** The object interactions the current actor can start on its own turn. */
 export function objectInteractionActs(
   state: BattleState,
   actor: BattleCreatureState,
 ): BattleActDiscoveryCandidate[] {
-  if (!objectInteractionAvailable(state, actor)) return [];
+  if (
+    actor.combatantId !== currentActorId(state) ||
+    !objectInteractionAvailable(state, actor)
+  ) {
+    return [];
+  }
   const actorId = actor.combatantId;
   return [
     {

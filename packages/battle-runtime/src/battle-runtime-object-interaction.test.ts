@@ -7,8 +7,13 @@ import {
   discoverBattleActCandidates,
   fighterId,
   fighterVsGoblinBattle,
+  findAct,
   goblinId,
+  interruptDecisionFill,
+  readyDeclarationFillForTest,
+  requireHole,
   requireResolved,
+  resolveBattleInterrupt,
 } from "./battle-runtime.test-support.ts";
 import type { BattleFill, BattleState } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -19,13 +24,16 @@ import {
 } from "./index.ts";
 import type { CombatantId } from "./identity.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
+import { objectInteractionRulingHole } from "./battle-reducer/object-interaction.ts";
 
 // RAW trace:
 // - .references/srd-5.2.1/playing-the-game.md#Your Turn, Interacting with
 //   Things: one object for free during the move or action, the Utilize
 //   action for a second object, and an action when the object needs one.
 // - .references/srd-5.2.1/rules-glossary.md#Utilize [Action].
-// - ASSUMPTIONS.md A60: object interactions belong to the creature's own turn.
+// - .references/srd-5.2.1/rules-glossary.md#Ready [Action].
+// - ASSUMPTIONS.md A60: the free interaction belongs to the creature's own
+//   turn; a readied interaction takes the readied Utilize action.
 
 const longswordId = battleObjectId("main:weapon_longsword");
 
@@ -197,6 +205,102 @@ describe("object interaction", () => {
     expect(
       objectInteractionActs(fighterTurn).map((act) => act.subject),
     ).toEqual([interactSubject(fighterId)]);
+  });
+
+  it("releases a readied interaction with the Utilize action Ready held", () => {
+    const start = fighterVsGoblinBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(start, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const interactResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "action" &&
+        response.subject.tag === "runtimeCommand" &&
+        response.subject.command === "interactWithObject",
+    );
+    if (interactResponse?.kind !== "action") {
+      throw new Error("Expected an offered object interaction response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state: start,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin reaches the lever",
+            interactResponse,
+          ),
+        ],
+      }),
+    ).state;
+    const goblinTurn = endTurn(readied, fighterId);
+    const reported = resolveBattleSubject({
+      state: goblinTurn,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a reported Ready trigger interrupt.");
+    }
+    const asked = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: { kind: "releaseReadiedAction", fills: [] },
+      }),
+    });
+    // Off its turn the Fighter has no free interaction, only the readied
+    // Utilize action.
+    expect(asked).toMatchObject({
+      tag: "needsHoles",
+      frontier: {
+        holes: [
+          { kind: "objectInteractionRuling", objectInteraction: "spent" },
+        ],
+      },
+    });
+    const released = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAction",
+          fills: [
+            {
+              kind: "objectInteractionRuling",
+              holeId: objectInteractionRulingHole(reported.state, fighterId)
+                .holeId,
+              value: { requiresUtilize: false },
+            },
+          ],
+        },
+      }),
+    });
+    if (released.tag !== "resolved") {
+      throw new Error("Expected the readied interaction to resolve.");
+    }
+    expect(released.state.readiedResponses.has(fighterId)).toBe(false);
+    expect(released.state.combatants.get(fighterId)).toMatchObject({
+      reactionAvailable: false,
+    });
+    // The Goblin's turn resources are untouched by the Fighter's release.
+    expect(released.state.currentTurnResources).toEqual(
+      goblinTurn.currentTurnResources,
+    );
   });
 
   it("refuses a fill for another hole", () => {

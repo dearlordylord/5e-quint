@@ -33,9 +33,26 @@ module objectInteractionCostCoreExamples {
     assert(objectInteractionCharge({ ...freshTurn, actionAvailable: false }, true) == Set()),
   }
 
+  pure val offTurn: ObjectInteractionTurn = {
+    ownTurn: false,
+    canAct: true,
+    freeInteractionAvailable: false,
+    actionAvailable: false,
+  }
+
   run noInteractionOffTurnOrWhileUnableToAct = all {
-    assert(objectInteractionCharge({ ...freshTurn, ownTurn: false }, false) == Set()),
+    assert(objectInteractionCharge(offTurn, false) == Set()),
+    assert(objectInteractionCharge({ ...offTurn, freeInteractionAvailable: true }, false) == Set()),
     assert(objectInteractionCharge({ ...freshTurn, canAct: false }, false) == Set()),
+  }
+
+  run aReleasedReadiedInteractionTakesTheReadiedUtilizeAction = all {
+    assert(objectInteractionCharge(releaseReadiedUtilize(offTurn), false)
+      == Set({ charge: UtilizeAction, turn: offTurn })),
+    assert(objectInteractionCharge(releaseReadiedUtilize(offTurn), true)
+      == Set({ charge: UtilizeAction, turn: offTurn })),
+    assert(objectInteractionCharge({ ...releaseReadiedUtilize(offTurn), canAct: false }, false)
+      == Set()),
   }
 
   run theFreeInteractionComesBackOnTheNextTurn = all {

@@ -1272,6 +1272,24 @@ export const OPERATION_ACCOUNTING = {
       ),
       "Release resolves the retained action subject. The ChatGPT route must narrow that subject to its named action tool before calling the shared runtime resolver.",
     ),
+    "runtimeCommand.interactWithObject": account(
+      "operation",
+      "runtimeCommand.interactWithObject",
+      at(
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "resolveReleaseReadiedActionCommand",
+      ),
+      "Release resolves the retained object interaction with the readied Utilize action. The ChatGPT route must narrow that subject to interact_with_object before calling the shared runtime resolver.",
+    ),
+    "runtimeCommand.pickUpHeldWeapon": account(
+      "operation",
+      "runtimeCommand.pickUpHeldWeapon",
+      at(
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "resolveReleaseReadiedActionCommand",
+      ),
+      "Release resolves the retained object interaction with the readied Utilize action. The ChatGPT route must narrow that subject to interact_with_object before calling the shared runtime resolver.",
+    ),
   },
   battleAdmissions: {
     bonusActionStandardAction: account(

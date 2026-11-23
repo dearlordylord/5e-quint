@@ -704,6 +704,21 @@ export const BattleInterruptSubjectSchema = Schema.Union([
 ]);
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
 
+// SRD 5.2.1 "Your Turn", Interacting with Things, and "Utilize [Action]": an
+// object interaction, charged as the turn's free interaction or the Utilize
+// action. Ready can hold one as its readied Utilize action (ASSUMPTIONS.md A60).
+const BattleInteractWithObjectSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("interactWithObject"),
+});
+const BattlePickUpHeldWeaponSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("pickUpHeldWeapon"),
+  objectId: BattleObjectId,
+});
+
 export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -774,6 +789,8 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     actorId: CombatantId,
     action: Schema.Literal("shakeAwakeFromAreaControl"),
   }),
+  BattleInteractWithObjectSubjectSchema,
+  BattlePickUpHeldWeaponSubjectSchema,
 ]);
 export type BattleReadyActionSubject =
   typeof BattleReadyActionSubjectSchema.Type;
@@ -1028,17 +1045,8 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("dropProne"),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("interactWithObject"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("pickUpHeldWeapon"),
-    objectId: BattleObjectId,
-  }),
+  BattleInteractWithObjectSubjectSchema,
+  BattlePickUpHeldWeaponSubjectSchema,
   BattleInterruptReleaseReadiedSpellSubjectSchema,
   BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
