@@ -24,7 +24,7 @@ module battleRuntimeGreaseGroundHazard {
     state.fighter.activeEffects.exists(effect => match effect { | GreaseGroundHazard(data) => data.areaId == areaId | _ => false })
 
   pure def greaseGroundDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
-    battleRuntimeDifficultTerrainMovementCost(greaseGroundHazardActive(state, areaId), totalDistanceFeet, difficultTerrainDistanceFeet)
+    battleRuntimeDifficultTerrainMovementCost(greaseGroundHazardActive(state, areaId), state.fighter.prone, totalDistanceFeet, difficultTerrainDistanceFeet)
 
   type GreaseGroundHazardSaveTrigger =
     | GreaseGroundHazardAppears
