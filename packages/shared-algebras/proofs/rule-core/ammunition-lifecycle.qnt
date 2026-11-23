@@ -40,25 +40,23 @@ module ammunitionLifecycle {
     legalAmmunitionStock(stock) and
     ammunitionRemaining(stock, ammunitionKind) > 0
 
-  // A Two-Handed weapon is loaded by the hands that hold it.
-  type AmmunitionWeaponHands =
-    | OneHandedAmmunitionWeapon
-    | TwoHandedAmmunitionWeapon
+  // Loading takes a hand that holds nothing and grapples no one: the other
+  // hand of a one-handed weapon, or the second hand of a Two-Handed weapon,
+  // which needs both hands to attack.
+  type LoadingHand =
+    | LoadingHandFree
+    | LoadingHandOccupied
 
-  pure def ammunitionCanBeDrawn(
-    weaponHands: AmmunitionWeaponHands,
-    freeHands: int,
-  ): bool =
-    weaponHands == TwoHandedAmmunitionWeapon or freeHands > 0
+  pure def ammunitionCanBeDrawn(loadingHand: LoadingHand): bool =
+    loadingHand == LoadingHandFree
 
   pure def ammunitionAttackReady(
     stock: AmmunitionStock,
     ammunitionKind: AmmunitionKind,
-    weaponHands: AmmunitionWeaponHands,
-    freeHands: int,
+    loadingHand: LoadingHand,
   ): bool =
     ammunitionAttackAvailable(stock, ammunitionKind) and
-    ammunitionCanBeDrawn(weaponHands, freeHands)
+    ammunitionCanBeDrawn(loadingHand)
 
   pure def ammunitionAfterAcceptedAttack(
     stock: AmmunitionStock,

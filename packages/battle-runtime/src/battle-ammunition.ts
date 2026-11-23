@@ -7,7 +7,7 @@ import {
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
-import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { firstFreeHand } from "./battle-reducer/movement-speed.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -67,9 +67,12 @@ export function ammunitionForAttackIsReady(
 }
 
 /**
- * A Two-Handed weapon is loaded by the hands that hold it. A one-handed
- * weapon needs another hand that holds nothing and grapples no one. Stat block
- * attacks have no weapon grip, so only character weapons are checked.
+ * Loading takes a hand that holds nothing and grapples no one. For a
+ * one-handed weapon that is the other hand. A Two-Handed grip leaves its
+ * second hand free of anything else, and a grapple or held object that takes
+ * it leaves the weapon in one hand, so the same check refuses that attack too.
+ * Stat block attacks have no weapon grip, so only character weapons are
+ * checked (ASSUMPTIONS.md A64).
  */
 function ammunitionCanBeDrawn(
   state: BattleState,
@@ -77,11 +80,7 @@ function ammunitionCanBeDrawn(
   attack: SupportedAttackActionOption,
 ): boolean {
   if (attack.kind !== "weapon" || combatant === undefined) return true;
-  if (attack.weapon.properties.some(({ kind }) => kind === "two_handed")) {
-    return true;
-  }
-  const hands = combatantHandUses(state, combatant, state.grapples);
-  return hands.left === "free" || hands.right === "free";
+  return firstFreeHand(state, combatant, state.grapples) !== undefined;
 }
 
 export function ammunitionStockIssues(

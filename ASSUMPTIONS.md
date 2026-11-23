@@ -284,14 +284,15 @@ not both.
 ## A64: A stat block's ammunition attack needs no free hand
 
 **Assumption:** Battle checks the free hand for loading only for a character's
-one-handed Ammunition weapon. A stat block attack that spends ammunition is
-offered whatever its hands hold, as long as the creature carries the
-ammunition.
+Ammunition weapon. A stat block attack that spends ammunition is offered
+whatever else the creature holds, as long as it carries the ammunition.
 
 **Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Ammunition,"
 says drawing the ammunition is part of the attack and that "you need a free
 hand to load a one-handed weapon." `.references/srd-5.2.1/monsters.md`,
 "Ammunition and Ranged Attacks," says only that a monster carries the
-ammunition it needs. A stat block attack names no weapon grip, and Battle
-doesn't track what a stat block creature holds in each hand, so the model
-doesn't apply the loading hand to it.
+ammunition it needs. A stat block lists its attacks, and sometimes its Gear,
+such as the Spy's Hand Crossbow and Shortsword in
+`.references/srd-5.2.1/monsters-A-Z.md`, but it never says what the creature
+holds in each hand when it attacks. The SRD gives no fact to test the free
+hand against, so Battle takes each stat block attack as usable as written.

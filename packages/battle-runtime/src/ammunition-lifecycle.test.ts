@@ -39,6 +39,9 @@ import {
   skeletonCreatureInit,
   startBattleSessionRight,
   statBlockCreatureInit,
+  longbowWeaponMasterySelections,
+  testRangedCleaveLongbowAttack,
+  testRangedCleaveLongbowUnitRef,
   testSlingAttack,
   testSlingUnitRef,
   wizardId,
@@ -593,6 +596,53 @@ describe("ammunition lifecycle", () => {
         ],
       };
       expect(weaponNames(grappling)).toEqual([]);
+    });
+
+    // SRD "Two-Handed": "A Two-Handed weapon requires two hands when you
+    // attack with it." Its second hand also loads it.
+    const longbowWielder = (grappling: boolean) => {
+      const state = startBattleSessionRight({
+        battleId: battleId("battle-ammunition-two-handed-loading"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: [testRangedCleaveLongbowUnitRef()],
+            attack: testRangedCleaveLongbowAttack(),
+            weaponMasteries: longbowWeaponMasterySelections(),
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            selectedLoadout: {
+              weapon: {
+                itemId: battleObjectId("main:weapon_longbow"),
+                unitId: parseUnitId("weapon_longbow"),
+                grip: "two_handed",
+              },
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }).state;
+      return grappling
+        ? {
+            ...state,
+            grapples: [
+              {
+                grapplerId: fighterId,
+                targetId: goblinId,
+                escapeDc: difficultyClass(13),
+                reachFeet: movementFeet(5),
+                hand: "left" as const,
+              },
+            ],
+          }
+        : state;
+    };
+
+    it("offers a Two-Handed Ammunition weapon held in both hands", () => {
+      expect(weaponNames(longbowWielder(false))).toEqual(["weapon_longbow"]);
+    });
+
+    it("withholds a Two-Handed Ammunition weapon while its second hand grapples", () => {
+      expect(weaponNames(longbowWielder(true))).toEqual([]);
     });
   });
 });
