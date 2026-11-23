@@ -46,12 +46,6 @@ export type BattleMovementPathCost = {
   readonly distanceFeet: MovementFeet;
   /** The feet the path costs beyond its distance. */
   readonly extraCostFeet: MovementFeet;
-  /**
-   * The part of `extraCostFeet` that cited spell areas impose: their
-   * Difficult Terrain and the directional persistent area's surcharge. A move
-   * that replaces its distance cost with a fixed cost still pays these.
-   */
-  readonly spellAreaExtraCostFeet: MovementFeet;
 };
 
 export type BattleMovementPathCostResult =
@@ -133,7 +127,6 @@ export function priceBattleMovementPath(
     dragCosts.push(drag.extraCostPerFoot);
   }
   let extraCostFeet = 0;
-  let spellAreaExtraCostFeet = 0;
   segments.forEach((segment, index) => {
     const directionalExtraCostPerFoot =
       segment.movesCloserThroughDirectionalArea && directional.tag === "ok"
@@ -147,16 +140,11 @@ export function priceBattleMovementPath(
         (dragCosts[index] ?? 0) + directionalExtraCostPerFoot,
     });
     extraCostFeet += Number(priced.costFeet) - Number(priced.distanceFeet);
-    spellAreaExtraCostFeet +=
-      Number(segment.distanceFeet) *
-      ((segment.difficultTerrain === "areaDifficultTerrain" ? 1 : 0) +
-        directionalExtraCostPerFoot);
   });
   return {
     tag: "ok",
     distanceFeet,
     extraCostFeet: movementFeet(extraCostFeet),
-    spellAreaExtraCostFeet: movementFeet(spellAreaExtraCostFeet),
   };
 }
 

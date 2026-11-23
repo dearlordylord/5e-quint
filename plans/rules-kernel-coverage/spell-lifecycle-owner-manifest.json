@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "961bf459028ce78e303a1fe9a11262021d5ff570",
+    "registryCommit": "425930023242df7279f6e89bf62b7788e621d4f8",
     "generator": {
       "path": "scripts/spell-lifecycle-owner-manifest.cjs",
       "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
@@ -12,7 +12,7 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "d7531e49aa30005d54634a3b36e5a22d1d1ec19c148c6a89459067367126bc35"
+        "sha256": "44e4bee645d17ac778249deef68ed764e75eb060b2ced140823d07dd0c15dbca"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
@@ -488,6 +488,7 @@
     "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
     "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
     "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
+    "packages/battle-runtime/src/battle-reducer/movement-path.ts",
     "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
     "packages/battle-runtime/src/battle-reducer/ongoing-feature-helpers.ts",
     "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts",
@@ -950,7 +951,7 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 247,
+    "sourceOrPure": 248,
     "parityOrFixture": 102,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2

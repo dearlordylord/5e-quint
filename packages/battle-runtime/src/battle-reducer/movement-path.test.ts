@@ -68,7 +68,7 @@ function price(
 }
 
 describe("movement path pricing", () => {
-  it("prices each segment and keeps the spell-area surcharge apart", () => {
+  it("prices each segment's activity and Difficult Terrain", () => {
     expect(
       price(
         testMovementPath(
@@ -80,7 +80,6 @@ describe("movement path pricing", () => {
       tag: "ok",
       distanceFeet: 15,
       extraCostFeet: 15,
-      spellAreaExtraCostFeet: 0,
     });
   });
 

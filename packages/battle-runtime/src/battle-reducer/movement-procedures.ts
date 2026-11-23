@@ -1572,9 +1572,9 @@ function validateFixedCostMovementReplacementFact(
   /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
-    costFeet: movementFeet(
-      Number(effect.movementCostFeet) + Number(pathCost.spellAreaExtraCostFeet),
-    ),
+    // A Jump spends its fixed movement whatever the path crosses
+    // (ASSUMPTIONS.md A62).
+    costFeet: effect.movementCostFeet,
   };
 }
 

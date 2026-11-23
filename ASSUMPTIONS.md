@@ -296,3 +296,20 @@ the creature has, and the SRD doesn't say how they combine. The model applies
 both limits, and no movement is both crawling and climbing, so every path is
 refused while righting itself stays available. The QNT owner is
 `moveLevitatedTargetWithWitness` in `battle-runtime-levitate-creature.qnt`.
+
+## A62: A Jump spends its fixed movement whatever its path crosses
+
+**Assumption:** A creature that jumps with the Jump spell spends exactly 10
+feet of movement, even when its path crosses Difficult Terrain, a spell's
+Difficult Terrain, or a Gust of Wind Line it moves closer through. The areas'
+other effects, such as damage for each distance moved, still apply.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Jump," says the
+creature "can jump up to 30 feet by spending 10 feet of movement," a fixed
+spend rather than a cost per foot. `.references/srd-5.2.1/rules-glossary.md`,
+"Long Jump," says only that landing in Difficult Terrain needs a DC 10
+Dexterity (Acrobatics) check, so a jump doesn't pay Difficult Terrain's extra
+foot for each foot it passes over. The SRD doesn't say whether a surcharge for
+each foot moved, such as Gust of Wind's, changes the fixed spend. The model
+treats every such surcharge alike and leaves the spend at 10 feet. The QNT
+owner is `battle-runtime-jump-movement.qnt`, which admits only that spend.
