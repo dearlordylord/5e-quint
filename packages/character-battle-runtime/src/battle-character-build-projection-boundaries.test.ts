@@ -411,6 +411,36 @@ describe("Character Build battle spell projection boundaries", () => {
     ]);
   });
 
+  test("checks equipped weapons without masteries when a mastery selection can't be resolved", () => {
+    const daggerBuild = levelFiveMartialBuild({
+      classUnitId: authoredUnitId("class_fighter"),
+      weaponUnitId: authoredUnitId("weapon_dagger"),
+    });
+    const malformedSelectionBuild = {
+      ...daggerBuild,
+      features: [
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("weapon_dagger"),
+        },
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("synthetic:missing-mastery-weapon"),
+        },
+      ],
+    };
+    // Battle support reports the unresolvable selection; the blocker check
+    // reads no mastery selections, so the Dagger alone doesn't block.
+    expect(
+      characterBuildEquippedWeaponBattleBlockers({
+        build: malformedSelectionBuild,
+        unitLibrary,
+      }),
+    ).toEqual([]);
+  });
+
   test("reports a selected defensive feature that is unavailable", () => {
     const build = magicInitiateBuild();
     const [featureUnitId] = characterBuildFeatureUnitIds(build, unitLibrary);

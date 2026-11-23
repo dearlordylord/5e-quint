@@ -94,9 +94,7 @@ describe("weapon definition admission", () => {
       ].sort(),
     );
     expect(surfaceGraph.issues).toEqual([]);
-    expect(surfaceGraph.resolved).toHaveLength(
-      canonicalWeaponMasteries.length,
-    );
+    expect(surfaceGraph.resolved).toHaveLength(canonicalWeaponMasteries.length);
     expect(
       surfaceGraph.resolved
         .map(({ weapon, mastery }) => ({
@@ -280,7 +278,9 @@ describe("weapon definition admission", () => {
       admission.tag !== "admitted" ||
       admission.masterySupport !== "unsupported"
     ) {
-      throw new Error("Expected the Dagger to be admitted without its mastery.");
+      throw new Error(
+        "Expected the Dagger to be admitted without its mastery.",
+      );
     }
     expect(admission.facts).not.toHaveProperty("masteryProperty");
     expect(admission.resolvedMastery.issues).toEqual([

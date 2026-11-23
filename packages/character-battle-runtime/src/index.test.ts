@@ -1140,7 +1140,9 @@ describe("Character Sheet battle handoff", () => {
     expect(admittedInit.creatureInit.attack?.weapon).toMatchObject({
       weaponUnitId: "weapon_dagger",
     });
-    expect(admittedInit.creatureInit.attack?.weapon).not.toHaveProperty("masteryProperty");
+    expect(admittedInit.creatureInit.attack?.weapon).not.toHaveProperty(
+      "masteryProperty",
+    );
 
     const sheet = expectSuccess(
       rebuildCharacterSheetFixture({
@@ -1171,6 +1173,76 @@ describe("Character Sheet battle handoff", () => {
       },
     ]);
     expect(roster).toMatchObject({ tag: "admitted" });
+  });
+
+  test("rejects a roster Fighter whose held Dagger has its unsupported mastery selected", () => {
+    const daggerItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
+    });
+    const base = defenseBuild({ wearingArmor: false });
+    const daggerBuild: CharacterBuild = {
+      ...base,
+      features: [
+        ...base.features,
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("weapon_dagger"),
+        },
+      ],
+      equipment: {
+        ...base.equipment,
+        owned: [
+          ...base.equipment.owned,
+          characterBuildCatalogEquipmentItem({ itemId: daggerItemId }),
+        ],
+        loadout: { weapon: { itemId: daggerItemId, grip: "one_handed" } },
+      },
+    };
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:roster-selected-dagger-mastery",
+        ),
+        build: daggerBuild,
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const roster = composeBattleRoster([
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            sheet,
+            unitLibrary,
+            statBlockCatalog,
+            combatantId: combatantId("roster-selected-dagger-mastery"),
+            displayName: "Roster Selected Dagger Mastery",
+            initiative: initiativeScore(10),
+            ammunitionStocks: [],
+          },
+        },
+      },
+    ]);
+    expect(roster).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: sheet.characterId,
+          issueTag: "battleWeaponDefinitionAdmissionIssue",
+          root: { kind: "unit", id: "weapon_dagger" },
+          admissionReason: "unsupported_mechanics",
+        },
+      ],
+    });
   });
 
   test("propagates support-profile selection, source-fact, and catalog failures", () => {

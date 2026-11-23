@@ -890,8 +890,7 @@ function battleExecutableChoiceOptions(
       unitCatalog: unitLibrary,
     });
     return (
-      definition.tag === "admitted" &&
-      definition.masterySupport === "supported"
+      definition.tag === "admitted" && definition.masterySupport === "supported"
     );
   });
 }
