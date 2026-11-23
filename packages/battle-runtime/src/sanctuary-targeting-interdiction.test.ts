@@ -530,6 +530,11 @@ describe("Sanctuary targeting interdiction", () => {
               ...attackTargetFact(replacementId, attack.subject),
               distanceFeet: movementFeet(15),
             },
+            ...rangedAttackEnemyProximityFactsForTest(
+              requireHole(attack.initialHoles, "targetChoice"),
+              [],
+              [],
+            ),
           ],
           replacementTargetKind: "attackRoll",
         },
