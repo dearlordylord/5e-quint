@@ -1181,7 +1181,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...[
     "applyStepOfTheWindJumpDistanceMultiplier",
     "jumpDistanceMultiplier",
-    "jumpMovementValidation",
     "maxJumpDistanceFeet",
     "withJumpDistanceMultiplier",
   ].flatMap((identifier) =>
@@ -2826,9 +2825,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "f963cc28e259baeb39ebbd0696647edf42f9f2b7e8a1af9e97a765ca7ad8048f",
-  siteCount: 1713,
-  violationCount: 1831,
+  sha256: "034345737f9e1e4fa46e545533f3f0b051d03a276c25775cc4bf18a050355a4b",
+  siteCount: 1712,
+  violationCount: 1830,
 };
 
 function escapeForRegExp(text) {

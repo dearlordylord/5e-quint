@@ -19,6 +19,7 @@ import {
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import { Match } from "effect";
 import type {
+  BattleActiveEffect,
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
   BattleCreatureState,
@@ -357,35 +358,61 @@ function areaDifficultTerrainMovementFactIssue(
   if (Number(path.areaDifficultTerrainDistanceFeet) === 0) {
     return "Area Difficult Terrain movement fact requires a movement path segment in that area's Difficult Terrain.";
   }
+  return areaDifficultTerrainSourcesIssue(
+    state,
+    fact.sources,
+    path.areaDifficultTerrainDistanceFeet,
+  );
+}
+
+function areaDifficultTerrainSourcesIssue(
+  state: BattleState,
+  sources: BattleAreaDifficultTerrainMovementFact["sources"],
+  areaDifficultTerrainDistanceFeet: MovementFeet,
+): string | null {
   const sourceKeys = new Set<string>();
   let damageDistanceFeet = 0;
-  for (const source of fact.sources) {
+  for (const source of sources) {
     const key = areaDifficultTerrainSourceKey(source);
     if (sourceKeys.has(key)) {
       return "Area Difficult Terrain movement fact repeats a source.";
     }
     sourceKeys.add(key);
     if (source.kind === "areaMovementDistanceDamage") {
-      if (
-        !Number.isInteger(source.damageDistanceFeet) ||
-        source.damageDistanceFeet <= 0
-      ) {
-        return "area movement-distance damage movement damage distance must be a positive integer.";
-      }
-      if (
-        Number(source.damageDistanceFeet) >
-        Number(path.areaDifficultTerrainDistanceFeet)
-      ) {
-        return "area movement-distance damage movement damage distance cannot exceed the path's area Difficult Terrain distance.";
-      }
+      const damageIssue = areaMovementDistanceDamageSourceIssue(
+        source,
+        areaDifficultTerrainDistanceFeet,
+      );
+      if (damageIssue !== null) return damageIssue;
       damageDistanceFeet += Number(source.damageDistanceFeet);
     }
     if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
       return "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.";
     }
   }
-  if (damageDistanceFeet > Number(path.areaDifficultTerrainDistanceFeet)) {
+  if (damageDistanceFeet > Number(areaDifficultTerrainDistanceFeet)) {
     return "area movement-distance damage movement damage distances cannot exceed the path's area Difficult Terrain distance.";
+  }
+  return null;
+}
+
+function areaMovementDistanceDamageSourceIssue(
+  source: Extract<
+    BattleAreaDifficultTerrainSource,
+    { readonly kind: "areaMovementDistanceDamage" }
+  >,
+  areaDifficultTerrainDistanceFeet: MovementFeet,
+): string | null {
+  if (
+    !Number.isInteger(source.damageDistanceFeet) ||
+    source.damageDistanceFeet <= 0
+  ) {
+    return "area movement-distance damage movement damage distance must be a positive integer.";
+  }
+  if (
+    Number(source.damageDistanceFeet) > Number(areaDifficultTerrainDistanceFeet)
+  ) {
+    return "area movement-distance damage movement damage distance cannot exceed the path's area Difficult Terrain distance.";
   }
   return null;
 }
@@ -439,13 +466,23 @@ function activeDirectionalPersistentAreaForMovementFact(
     (candidate) => candidate.effectRef === fact.effectRef,
   );
   if (effect?.kind !== "directionalPersistentArea") return null;
-  if (
-    effect.sourceCombatantId !== fact.sourceCombatantId ||
-    effect.sourceProcedureRef !== fact.sourceProcedureRef ||
-    effect.areaId !== fact.areaId ||
-    effect.directionId !== fact.directionId
-  ) {
+  if (!directionalPersistentAreaEffectMatchesMovementFact(effect, fact)) {
     return null;
   }
   return boundDirectionalPersistentAreaEffect(state, effect) ?? null;
+}
+
+function directionalPersistentAreaEffectMatchesMovementFact(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "directionalPersistentArea" }
+  >,
+  fact: BattleDirectionalPersistentAreaMovementFact,
+): boolean {
+  return (
+    effect.sourceCombatantId === fact.sourceCombatantId &&
+    effect.sourceProcedureRef === fact.sourceProcedureRef &&
+    effect.areaId === fact.areaId &&
+    effect.directionId === fact.directionId
+  );
 }
