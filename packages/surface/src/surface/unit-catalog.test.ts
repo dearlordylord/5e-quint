@@ -2858,7 +2858,7 @@ describe("SRD Unit catalog boundary", () => {
       unitCatalog: result.catalog,
     });
 
-    expect(weaponRoots).toHaveLength(9);
+    expect(weaponRoots).toHaveLength(13);
     expect(
       graph.resolved.map(({ weapon, mastery }) => ({
         weaponUnitId: weapon.id,
@@ -2877,6 +2877,10 @@ describe("SRD Unit catalog boundary", () => {
         weaponUnitId: "weapon_quarterstaff",
         masteryUnitId: "mastery_topple",
       },
+      { weaponUnitId: "weapon_mace", masteryUnitId: "mastery_sap" },
+      { weaponUnitId: "weapon_morningstar", masteryUnitId: "mastery_sap" },
+      { weaponUnitId: "weapon_whip", masteryUnitId: "mastery_slow" },
+      { weaponUnitId: "weapon_sling", masteryUnitId: "mastery_slow" },
     ]);
     expect(graph.issues).toEqual([]);
   });

@@ -60,6 +60,26 @@ const canonicalWeaponMasteries = [
     masteryUnitId: "mastery_topple",
     masteryProperty: "topple",
   },
+  {
+    weaponUnitId: "weapon_mace",
+    masteryUnitId: "mastery_sap",
+    masteryProperty: "sap",
+  },
+  {
+    weaponUnitId: "weapon_morningstar",
+    masteryUnitId: "mastery_sap",
+    masteryProperty: "sap",
+  },
+  {
+    weaponUnitId: "weapon_whip",
+    masteryUnitId: "mastery_slow",
+    masteryProperty: "slow",
+  },
+  {
+    weaponUnitId: "weapon_sling",
+    masteryUnitId: "mastery_slow",
+    masteryProperty: "slow",
+  },
 ] as const;
 
 const weaponMasteryReferencePath = {
@@ -80,21 +100,21 @@ describe("weapon definition admission", () => {
     );
   });
 
-  test("admits six of the canonical nine roots after all nine Surface refs resolve", () => {
+  test("admits ten of the canonical thirteen roots after all thirteen Surface refs resolve", () => {
     const weaponRoots = unitLibrary.listUnits().filter(isWeaponDefinitionUnit);
     const surfaceGraph = inspectWeaponMasteryReferenceGraph({
       weaponRoots,
       unitCatalog: unitLibrary,
     });
 
-    expect(weaponRoots).toHaveLength(9);
+    expect(weaponRoots).toHaveLength(13);
     expect([...weaponRoots.map(({ id }) => id)].sort()).toEqual(
       [
         ...canonicalWeaponMasteries.map(({ weaponUnitId }) => weaponUnitId),
       ].sort(),
     );
     expect(surfaceGraph.issues).toEqual([]);
-    expect(surfaceGraph.resolved).toHaveLength(9);
+    expect(surfaceGraph.resolved).toHaveLength(13);
     expect(
       surfaceGraph.resolved
         .map(({ weapon, mastery }) => ({
@@ -144,7 +164,7 @@ describe("weapon definition admission", () => {
         : [],
     );
 
-    expect(admitted).toHaveLength(6);
+    expect(admitted).toHaveLength(10);
     expect(rejected).toHaveLength(3);
     expect(
       admitted
