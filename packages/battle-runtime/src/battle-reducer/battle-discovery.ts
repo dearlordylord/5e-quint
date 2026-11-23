@@ -485,7 +485,9 @@ function weaponChangeAttackActs(
         // Only the character Attack action subject carries a weapon change.
         .filter((act) => "weaponChange" in act.subject)
         .map((act) =>
-          dropHoles.length === 0 ? act : { ...act, initialHoles: dropHoles },
+          dropHoles.length === 0
+            ? act
+            : { ...act, initialHoles: [...dropHoles, ...act.initialHoles] },
         )
     );
   });

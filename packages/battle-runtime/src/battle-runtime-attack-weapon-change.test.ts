@@ -194,8 +194,12 @@ describe("weapon change before an attack", () => {
       withChange(unarmedStrike(state), { kind: "stow", objectId: longswordId }),
       withChange(unarmedStrike(state), { kind: "drop", objectId: longswordId }),
     ]);
+    // The stow-first act asks only for the attack's own holes, such as its target.
+    const attackHoles = changing[0]?.initialHoles ?? [];
+    expect(attackHoles.map((hole) => hole.kind)).toContain("targetChoice");
     expect(changing[1]?.initialHoles).toEqual([
       weaponDropPositionHole(fighterId, longswordId),
+      ...attackHoles,
     ]);
   });
 
