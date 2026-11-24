@@ -23,6 +23,29 @@ module attackWeaponChangeCoreExamples {
     assert(weaponChangeCustody(StowedWeapon, EquipWeapon, false) == Set()),
   }
 
+  pure val freeSlot: EquipSlot = {
+    slotWeaponHeld: false,
+    twoHandedIntoOffHand: false,
+    slotHandsFree: true,
+  }
+
+  run anOwnedWeaponGoesInASlotWhoseWeaponIsOutOfHand = all {
+    assert(slotTakesWeapon(freeSlot)),
+    assert(weaponChangeCustody(StowedWeapon, EquipWeapon, slotTakesWeapon(freeSlot)) == Set(HeldWeapon)),
+    assert(weaponChangeCustody(WeaponOnGround, EquipWeapon, slotTakesWeapon(freeSlot)) == Set(HeldWeapon)),
+    // The slot's previous weapon leaves the loadout where it is.
+    assert(departingWeaponCustody(StowedWeapon) == Set(StowedWeapon)),
+    assert(departingWeaponCustody(WeaponOnGround) == Set(WeaponOnGround)),
+    assert(departingWeaponCustody(HeldWeapon) == Set()),
+  }
+
+  run noSlotForAWeaponWhileItsWeaponIsHeldOrForATwoHandedOneInTheOffHand = all {
+    assert(not(slotTakesWeapon({ ...freeSlot, slotWeaponHeld: true }))),
+    assert(not(slotTakesWeapon({ ...freeSlot, twoHandedIntoOffHand: true }))),
+    assert(not(slotTakesWeapon({ ...freeSlot, slotHandsFree: false }))),
+    assert(weaponChangeCustody(StowedWeapon, EquipWeapon, slotTakesWeapon({ ...freeSlot, slotWeaponHeld: true })) == Set()),
+  }
+
   run anAttackWithoutAChangeLeavesOneAfterIt = all {
     assert(canChangeAfterAttack(afterAttack(ownTurn, false))),
     assert(not(canChangeAfterAttack(afterAttack(ownTurn, true)))),

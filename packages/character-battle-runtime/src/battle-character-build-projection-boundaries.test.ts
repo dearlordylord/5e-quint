@@ -345,6 +345,64 @@ describe("Character Build battle spell projection boundaries", () => {
     }
   });
 
+  test("brings each carried copy of an owned weapon into the battle as its own object", () => {
+    // Three Daggers and a second Longsword ride along outside the loadout.
+    const build = levelFiveMartialBuild({
+      classUnitId: authoredUnitId("class_fighter"),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
+    });
+    const mainItemId = (unit: string) => {
+      const parsed = characterEquipmentItemUnitId(authoredUnitId(unit));
+      if (parsed._tag === "Failure") throw new Error(`Expected ${unit}.`);
+      return characterEquipmentItemId({ slot: "main", unitId: parsed.success });
+    };
+    const longswordItemId = mainItemId("weapon_longsword");
+    const daggerItemId = mainItemId("weapon_dagger");
+    const projection = requireSuccess(
+      characterBattleWeaponAttackInitProjection({
+        build: {
+          ...build,
+          equipment: {
+            ...build.equipment,
+            owned: [
+              ...build.equipment.owned.filter(
+                (item) =>
+                  item.kind !== "catalogItem" ||
+                  item.itemId !== longswordItemId,
+              ),
+              {
+                kind: "catalogItem",
+                itemId: longswordItemId,
+                quantity: PositiveInteger(2),
+              },
+              {
+                kind: "catalogItem",
+                itemId: daggerItemId,
+                quantity: PositiveInteger(3),
+              },
+            ],
+          },
+        },
+        unitLibrary,
+        weaponMasteries: [],
+        classLevels: [{ className: "fighter", level: 5 }],
+      }),
+    );
+
+    expect(projection.attack?.weapon.weaponUnitId).toBe("weapon_longsword");
+    expect(
+      projection.otherOwnedWeapons.map(({ itemId, attack }) => [
+        itemId,
+        attack.weapon.weaponUnitId,
+      ]),
+    ).toEqual([
+      ["main:weapon_longsword#2", "weapon_longsword"],
+      ["main:weapon_dagger", "weapon_dagger"],
+      ["main:weapon_dagger#2", "weapon_dagger"],
+      ["main:weapon_dagger#3", "weapon_dagger"],
+    ]);
+  });
+
   test("discloses no equipped weapon blockers when the weapon definition is admitted", () => {
     expect(
       requireSuccess(

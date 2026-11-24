@@ -6544,17 +6544,17 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
       ],
-      "reason": "The QNT owner models a loadout weapon held, stowed or on the ground; equipping a weapon that is not in hand into empty hands, and stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle applies a change carried on the attack before it looks up the attack, offers the change after it as its own command, and asks the table where a dropped weapon lands.",
+      "reason": "The QNT owner models a weapon held, stowed or on the ground; equipping a weapon that is not in hand into a hand slot whose weapon is out of hand, with the slot's hands empty and no Two-Handed weapon in the off hand, and the slot's previous weapon leaving the loadout where it is; stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle binds an attack for every owned weapon it can execute at battle start, moves the bindings with the weapons between the hand slots and the other owned weapons, applies a change carried on the attack before it looks up the attack, offers the change after it as its own command, and asks the table where a dropped weapon lands. The focused MBT witnesses one loadout weapon.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
-        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts"
+        "packages/battle-runtime/src/battle-reducer/owned-weapon-custody.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/rules-glossary.md#Attack [Action]"
       ],
-      "title": "Attack weapon change: each Attack action attack can equip or unequip one loadout weapon, before or after the attack"
+      "title": "Attack weapon change: each Attack action attack can equip or unequip one owned weapon, before or after the attack"
     },
     {
       "id": "BATTLE.ATTACK.TARGET_COVER",

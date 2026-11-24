@@ -1,4 +1,8 @@
-import { movementDeltaFeet, movementFeet } from "@dnd/shared/types";
+import {
+  movementDeltaFeet,
+  movementFeet,
+  NonNegativeInteger,
+} from "@dnd/shared/types";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Result, Schema } from "effect";
@@ -38,6 +42,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
+  battleAttackProcedureExecutionRef,
   battleAttackExecutionScopeRefBelongsToBattle,
   battleAttackExecutionScopeRefBelongsToCombatant,
   battleProcedureExecutionRefBelongsToScope,
@@ -544,6 +549,7 @@ describe("character attack execution references", () => {
           attackProcedureRef: origin.attack?.procedureRef,
           unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
           offHandAttackProcedureRef: origin.offHandAttack?.procedureRef,
+          otherOwnedWeaponAttackProcedureRefs: [],
         },
       }),
     );
@@ -582,11 +588,23 @@ describe("character attack execution references", () => {
     ).toBe(true);
   });
 
-  test("rejects character attack snapshots with swapped semantic ordinals", () => {
+  test("rejects character attack snapshots whose refs repeat or leave an ordinal unbound", () => {
+    // Equipping a weapon moves its binding between the hand slots and the
+    // other owned weapons, so the refs may come in any order, but battle start
+    // bound each ordinal of the attack scope once.
+    const state = identicalDaggerBattle();
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(
-      snapshotBattle(identicalDaggerBattle()),
+      snapshotBattle(state),
     );
-    const swapped = {
+    type CharacterSnapshotAttackExecution = Extract<
+      (typeof encoded.combatants)[number]["origin"],
+      { readonly kind: "character" }
+    >["attackExecution"];
+    const withFighterAttackExecution = (
+      forge: (
+        attackExecution: CharacterSnapshotAttackExecution,
+      ) => CharacterSnapshotAttackExecution,
+    ) => ({
       ...encoded,
       combatants: encoded.combatants.map((combatant) =>
         combatant.combatantId !== fighterId ||
@@ -596,23 +614,46 @@ describe("character attack execution references", () => {
               ...combatant,
               origin: {
                 ...combatant.origin,
-                attackExecution: {
-                  ...combatant.origin.attackExecution,
-                  attackProcedureRef:
-                    combatant.origin.attackExecution.unarmedStrikeProcedureRef,
-                  unarmedStrikeProcedureRef:
-                    combatant.origin.attackExecution.attackProcedureRef,
-                },
+                attackExecution: forge(combatant.origin.attackExecution),
               },
             },
       ),
-    };
+    });
+    const decodes = (snapshot: unknown) =>
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(snapshot),
+      );
 
     expect(
-      Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(swapped),
+      decodes(
+        withFighterAttackExecution((attackExecution) => ({
+          ...attackExecution,
+          attackProcedureRef: attackExecution.offHandAttackProcedureRef,
+          offHandAttackProcedureRef: attackExecution.attackProcedureRef,
+        })),
       ),
     ).toBe(true);
+    expect(
+      decodes(
+        withFighterAttackExecution((attackExecution) => ({
+          ...attackExecution,
+          attackProcedureRef: attackExecution.unarmedStrikeProcedureRef,
+        })),
+      ),
+    ).toBe(false);
+    expect(
+      decodes(
+        withFighterAttackExecution((attackExecution) => ({
+          ...attackExecution,
+          otherOwnedWeaponAttackProcedureRefs: [
+            battleAttackProcedureExecutionRef(
+              fighterAttackScope(state),
+              NonNegativeInteger(4),
+            ),
+          ],
+        })),
+      ),
+    ).toBe(false);
   });
 
   test("rejects snapshot Acts whose attack holes use another combatant's bound procedure", () => {

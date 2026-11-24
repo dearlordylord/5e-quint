@@ -4243,7 +4243,9 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     revertedMainAttacks.map((act) =>
       "weaponChange" in act.subject ? act.subject.weaponChange : undefined,
     ),
-  ).toEqual([{ kind: "equip", objectId: quarterstaff.objectId }]);
+  ).toEqual([
+    { kind: "equip", objectId: quarterstaff.objectId, slot: "mainWeapon" },
+  ]);
   expect(
     resolveBattleSubject({
       state: revertedSession.state,

@@ -135,7 +135,7 @@
       "module/binding:combatantCanStillHoldBoundWeaponItem": 11
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 30
+      "module/binding:battleCreatureStateAdmissionFromInit": 25
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,

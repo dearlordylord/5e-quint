@@ -553,6 +553,7 @@ export function battleCreatureInitFromCharacterBuild(
         ...(weaponAttackOptions.offHandAttack === undefined
           ? {}
           : { offHandAttack: weaponAttackOptions.offHandAttack }),
+        otherOwnedWeapons: weaponAttackOptions.otherOwnedWeapons,
         unitFeatures,
         resources,
         ...heroicInspirationInit(input.heroicInspiration),

@@ -1,5 +1,5 @@
 import { loadoutHandUses } from "@dnd/shared-algebras/armor-class-algebra";
-import type { HandUse } from "@dnd/shared/types";
+import type { WeaponGrip } from "@dnd/shared/types";
 import { combatantHandUses } from "./creature-state-leaves.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
@@ -17,6 +17,7 @@ import type {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
+import type { LoadoutWeaponSlot } from "../battle-subjects.ts";
 
 export type BattleGroundObjectPlacement = BattleGroundObjectState & {
   readonly actorId: CombatantId;
@@ -225,9 +226,6 @@ function heldWeaponPickupIssue(
   return null;
 }
 
-/** The hand use a selected-loadout weapon has in its loadout. */
-export type LoadoutWeaponSlot = Extract<HandUse, "mainWeapon" | "offWeapon">;
-
 /** Which loadout slot this weapon fills, or null when it isn't a loadout weapon. */
 export function loadoutWeaponSlot(
   actor: CharacterBattleCreatureState,
@@ -246,14 +244,27 @@ export function loadoutWeaponSlot(
  * the other hand might hold is left out, and under a two-handed grip the main
  * weapon holds the off hand, so an off-hand weapon has no hand to go back to.
  */
-export function loadoutWeaponHands(
+function loadoutWeaponHands(
   actor: CharacterBattleCreatureState,
   slot: LoadoutWeaponSlot,
+): readonly ("left" | "right")[] {
+  return weaponSlotHands(slot, actor.origin.selectedLoadout.weapon?.grip);
+}
+
+/**
+ * The hands a weapon in this hand slot holds when the main weapon has this
+ * grip (or there is none): the main weapon takes the right hand, and the left
+ * too with a two-handed grip; an off-hand weapon takes the left hand unless a
+ * two-handed main weapon holds it.
+ */
+export function weaponSlotHands(
+  slot: LoadoutWeaponSlot,
+  mainWeaponGrip: WeaponGrip | undefined,
 ): readonly ("left" | "right")[] {
   const loadout = loadoutHandUses({
     holdsShield: false,
     holdsOffHandWeapon: slot === "offWeapon",
-    mainWeaponGrip: actor.origin.selectedLoadout.weapon?.grip,
+    mainWeaponGrip,
   });
   return (
     [

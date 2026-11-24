@@ -1,0 +1,366 @@
+import { describe, expect, it } from "vitest";
+import { unitId as parseUnitId } from "@dnd/shared/game-facts";
+import { Result, Schema } from "effect";
+import {
+  attackRollFill,
+  attackTargetFill,
+  battleId,
+  battleObjectId,
+  battleTablePositionId,
+  BattleSnapshotSchema,
+  characterSeed,
+  discoverBattleActCandidates,
+  fighterAttackSubject,
+  fighterId,
+  goblinId,
+  requireHole,
+  requireResolved,
+  startBattleRight,
+  statBlockCreatureInit,
+  testCharacterWeaponAttackForUnit,
+  testDaggerAttack,
+  testShortswordAttack,
+} from "./battle-runtime.test-support.ts";
+import type {
+  BattleState,
+  CharacterBattleCreatureState,
+} from "./battle-state-execution.ts";
+import type { BattleSubject } from "./battle-subjects.ts";
+import { resolveBattleSubject, snapshotBattle, startBattle } from "./index.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
+import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { battleObjectIsOnGround } from "./battle-reducer/object-custody-queries.ts";
+import {
+  ownedWeaponChangeIssue,
+  stateWithOwnedWeaponChange,
+  type AppliedAttackWeaponChange,
+} from "./battle-reducer/owned-weapon-custody.ts";
+
+// RAW trace: .references/srd-5.2.1/rules-glossary.md#Attack [Action],
+// Equipping and Unequipping Weapons: "Equipping a weapon includes drawing it
+// from a sheath or picking it up." Any weapon the character owns can be
+// equipped, into a hand slot whose weapon is out of hand (ASSUMPTIONS.md A63).
+// .references/srd-5.2.1/equipment.md "Two-Handed": "A Two-Handed weapon
+// requires two hands when you attack with it."
+
+const longswordId = battleObjectId("main:weapon_longsword");
+const shortswordId = battleObjectId("main:weapon_shortsword");
+const daggerId = battleObjectId("main:weapon_dagger");
+const greataxeId = battleObjectId("main:weapon_greataxe");
+
+function greataxeAttack() {
+  return testCharacterWeaponAttackForUnit(parseUnitId("weapon_greataxe"));
+}
+
+/** A Fighter with a Longsword in hand, carrying a Dagger and a Greataxe. */
+function armedFighterBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-owned-weapons"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        otherOwnedWeapons: [
+          { itemId: daggerId, attack: testDaggerAttack() },
+          { itemId: greataxeId, attack: greataxeAttack() },
+        ],
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function fighter(state: BattleState): CharacterBattleCreatureState {
+  const actor = state.combatants.get(fighterId);
+  if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
+    throw new Error("Expected the Fighter.");
+  }
+  return actor;
+}
+
+function changed(
+  state: BattleState,
+  change: AppliedAttackWeaponChange,
+): BattleState {
+  const result = stateWithOwnedWeaponChange(state, fighterId, change);
+  if (result.tag !== "applied") throw new Error(result.message);
+  return result.state;
+}
+
+function stowedLongsword(): BattleState {
+  return changed(armedFighterBattle(), {
+    kind: "stow",
+    objectId: longswordId,
+  });
+}
+
+function attackActs(state: BattleState) {
+  return discoverBattleActCandidates(state).flatMap((act) =>
+    act.subject.tag === "action" && act.subject.action === "attack"
+      ? [act.subject]
+      : [],
+  );
+}
+
+/** Resolves an attack on the Goblin to a miss. */
+function missedAttack(state: BattleState, subject: BattleSubject): BattleState {
+  const targetHole = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(targetHole, fighterId, goblinId);
+  const rollHole = requireHole(
+    resolveBattleSubject({ state, subject, fills: [targetFill] }),
+    "attackRoll",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill,
+        attackRollFill(rollHole, { total: 2, naturalD20: 2 }),
+      ],
+    }),
+  ).state;
+}
+
+describe("weapons the character owns outside its loadout", () => {
+  it("binds one attack for each owned weapon at battle start, carried", () => {
+    const state = armedFighterBattle();
+    const { origin } = fighter(state);
+
+    expect(origin.attack?.weaponObjectId).toBe(longswordId);
+    expect(
+      origin.otherOwnedWeaponAttacks.map(
+        ({ weaponObjectId }) => weaponObjectId,
+      ),
+    ).toEqual([daggerId, greataxeId]);
+    const procedureRefs = [
+      origin.attack?.procedureRef,
+      origin.unarmedStrike.procedureRef,
+      ...origin.otherOwnedWeaponAttacks.map(({ procedureRef }) => procedureRef),
+    ];
+    expect(new Set(procedureRefs).size).toBe(4);
+    expect(state.objectCustody.has(fighterId)).toBe(false);
+  });
+
+  it("refuses an owned weapon that shares a battle object with the loadout", () => {
+    const started = startBattle({
+      battleId: battleId("battle-owned-weapon-clash"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          otherOwnedWeapons: [
+            { itemId: longswordId, attack: testDaggerAttack() },
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Result.isFailure(started)).toBe(true);
+    expect(JSON.stringify(started)).toContain(
+      "owned weapons outside the loadout must each be a battle object of their own",
+    );
+  });
+
+  it("offers to draw a carried weapon into the main slot once its weapon is out of hand", () => {
+    expect(
+      ownedWeaponChangeIssue(armedFighterBattle(), fighterId, {
+        kind: "equip",
+        objectId: daggerId,
+        slot: "mainWeapon",
+      }),
+    ).toMatchObject({ reason: "slotWeaponHeld" });
+
+    const stowed = stowedLongsword();
+    const draws = attackActs(stowed).flatMap((subject) =>
+      "weaponChange" in subject ? [subject.weaponChange] : [],
+    );
+    expect(draws).toEqual(
+      expect.arrayContaining([
+        { kind: "equip", objectId: longswordId, slot: "mainWeapon" },
+        { kind: "equip", objectId: daggerId, slot: "mainWeapon" },
+        { kind: "equip", objectId: greataxeId, slot: "mainWeapon" },
+      ]),
+    );
+  });
+
+  it("draws the Dagger in place of the stowed Longsword and attacks with it", () => {
+    const drawn = changed(stowedLongsword(), {
+      kind: "equip",
+      objectId: daggerId,
+      slot: "mainWeapon",
+    });
+    const { origin } = fighter(drawn);
+
+    expect(origin.selectedLoadout.weapon).toEqual({
+      itemId: daggerId,
+      unitId: parseUnitId("weapon_dagger"),
+      grip: "one_handed",
+    });
+    expect(origin.attack?.weaponObjectId).toBe(daggerId);
+    expect(
+      origin.otherOwnedWeaponAttacks.map(
+        ({ weaponObjectId }) => weaponObjectId,
+      ),
+    ).toEqual([greataxeId, longswordId]);
+    // The Longsword left the loadout, still carried.
+    expect(drawn.objectCustody.has(fighterId)).toBe(false);
+    expect(combatantHandUses(drawn, fighter(drawn), [])).toEqual({
+      left: "free",
+      right: "mainWeapon",
+    });
+
+    const attacked = missedAttack(drawn, fighterAttackSubject(drawn, "Dagger"));
+    expect(attacked.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+  });
+
+  it("draws a Two-Handed weapon into both hands, and never into the off hand", () => {
+    const stowed = stowedLongsword();
+    expect(
+      ownedWeaponChangeIssue(armedFighterBattle(), fighterId, {
+        kind: "equip",
+        objectId: greataxeId,
+        slot: "offWeapon",
+      }),
+    ).toMatchObject({ reason: "twoHandedWeaponInOffHand" });
+
+    const drawn = changed(stowed, {
+      kind: "equip",
+      objectId: greataxeId,
+      slot: "mainWeapon",
+    });
+    expect(fighter(drawn).origin.selectedLoadout.weapon?.grip).toBe(
+      "two_handed",
+    );
+    expect(combatantHandUses(drawn, fighter(drawn), [])).toEqual({
+      left: "mainWeapon",
+      right: "mainWeapon",
+    });
+  });
+
+  it("puts a weapon in the off hand only beside a main weapon in hand", () => {
+    expect(
+      ownedWeaponChangeIssue(stowedLongsword(), fighterId, {
+        kind: "equip",
+        objectId: daggerId,
+        slot: "offWeapon",
+      }),
+    ).toMatchObject({ reason: "noMainWeaponInHand" });
+
+    const drawn = changed(armedFighterBattle(), {
+      kind: "equip",
+      objectId: daggerId,
+      slot: "offWeapon",
+    });
+    const { origin } = fighter(drawn);
+    expect(origin.offHandAttack?.weaponObjectId).toBe(daggerId);
+    expect(combatantHandUses(drawn, fighter(drawn), [])).toEqual({
+      left: "offWeapon",
+      right: "mainWeapon",
+    });
+  });
+
+  it("draws a Light Dagger into the off hand before a Shortsword attack, for the Light Bonus Action attack", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-owned-light-weapons"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testShortswordAttack(),
+          otherOwnedWeapons: [{ itemId: daggerId, attack: testDaggerAttack() }],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const drawDagger = {
+      kind: "equip",
+      objectId: daggerId,
+      slot: "offWeapon",
+    } as const;
+    const attack = attackActs(state).find(
+      (subject) =>
+        "weaponChange" in subject &&
+        subject.procedureRef === fighter(state).origin.attack?.procedureRef &&
+        subject.weaponChange.kind === "equip" &&
+        subject.weaponChange.objectId === daggerId,
+    );
+    expect(attack).toMatchObject({ weaponChange: drawDagger });
+    if (attack === undefined) throw new Error("Expected the attack.");
+
+    const attacked = missedAttack(state, attack);
+    expect(fighter(attacked).origin.selectedLoadout.weapon?.itemId).toBe(
+      shortswordId,
+    );
+    expect(fighter(attacked).origin.offHandAttack?.weaponObjectId).toBe(
+      daggerId,
+    );
+    expect(
+      discoverBattleActCandidates(attacked).some(
+        (act) =>
+          act.subject.tag === "bonusAction" &&
+          act.subject.action === "offHandAttack",
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves a dropped weapon lying when another takes its slot, and picks it back up later", () => {
+    const dropped = changed(armedFighterBattle(), {
+      kind: "drop",
+      objectId: longswordId,
+      positionId: battleTablePositionId("dropped-longsword"),
+    });
+    const withDagger = changed(dropped, {
+      kind: "equip",
+      objectId: daggerId,
+      slot: "mainWeapon",
+    });
+    expect(battleObjectIsOnGround(withDagger, fighterId, longswordId)).toBe(
+      true,
+    );
+    expect(
+      fighter(withDagger).origin.otherOwnedWeaponAttacks.map(
+        ({ weaponObjectId }) => weaponObjectId,
+      ),
+    ).toContain(longswordId);
+    expect(
+      ownedWeaponChangeIssue(withDagger, fighterId, {
+        kind: "equip",
+        objectId: longswordId,
+        slot: "mainWeapon",
+      }),
+    ).toMatchObject({ reason: "slotWeaponHeld" });
+
+    const daggerStowed = changed(withDagger, {
+      kind: "stow",
+      objectId: daggerId,
+    });
+    const pickedUp = changed(daggerStowed, {
+      kind: "equip",
+      objectId: longswordId,
+      slot: "mainWeapon",
+    });
+    expect(battleObjectIsOnGround(pickedUp, fighterId, longswordId)).toBe(
+      false,
+    );
+    expect(fighter(pickedUp).origin.attack?.weaponObjectId).toBe(longswordId);
+    // The stowed Dagger left the loadout, carried like any other owned weapon.
+    expect(pickedUp.objectCustody.has(fighterId)).toBe(false);
+  });
+
+  it("keeps a snapshot of the moved bindings decodable", () => {
+    const drawn = changed(stowedLongsword(), {
+      kind: "equip",
+      objectId: daggerId,
+      slot: "mainWeapon",
+    });
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(drawn),
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+    ).not.toThrow();
+  });
+});

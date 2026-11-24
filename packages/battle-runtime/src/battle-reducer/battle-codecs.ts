@@ -113,7 +113,10 @@ import {
   escapeSpellRestraintAbilityCheckHoleKey,
   grantedAreaSaveDamageActionHoleKey,
 } from "./selected-effect-hole-key.ts";
-import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
+import {
+  characterAttackExecutionProcedureRefs,
+  characterAttackExecutionRefsMatchLayout,
+} from "../attack-execution.ts";
 import type { SupportedCreatureAttackRollMechanics } from "../battle-action-options.ts";
 import type { BattlePendingProcedure } from "../battle-pending-procedure.ts";
 import {
@@ -7152,6 +7155,9 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
       BattleAttackProcedureExecutionRef,
       Schema.Null,
     ]),
+    otherOwnedWeaponAttackProcedureRefs: Schema.Array(
+      BattleAttackProcedureExecutionRef,
+    ),
   }),
   resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
   heroicInspiration: HeroicInspirationSchema,
@@ -7276,11 +7282,6 @@ function characterBattleCreatureSnapshotInvariantsHold(
   characterOrigin: EncodedCharacterBattleCreatureOrigin,
   combatantId: CombatantId,
 ): boolean {
-  const attackProcedureRefs = [
-    characterOrigin.attackExecution.attackProcedureRef,
-    characterOrigin.attackExecution.unarmedStrikeProcedureRef,
-    characterOrigin.attackExecution.offHandAttackProcedureRef,
-  ].filter((reference) => reference !== null);
   return (
     battleCharacterExecutionScopeRefBelongsToCombatant(
       characterOrigin.execution.scopeRef,
@@ -7304,7 +7305,6 @@ function characterBattleCreatureSnapshotInvariantsHold(
       characterOrigin.attackExecution.scopeRef,
       characterOrigin.attackExecution,
     ) &&
-    new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
     characterWildShapeFormScopesAreValid(characterOrigin, combatantId)
   );
 }
@@ -9029,13 +9029,7 @@ function serializedCombatantAuthoritativeExecutionReferences(
     ),
     ...origin.resources.map((resource) => resource.resourcePoolRef),
     origin.attackExecution.scopeRef,
-    ...(origin.attackExecution.attackProcedureRef === null
-      ? []
-      : [origin.attackExecution.attackProcedureRef]),
-    origin.attackExecution.unarmedStrikeProcedureRef,
-    ...(origin.attackExecution.offHandAttackProcedureRef === null
-      ? []
-      : [origin.attackExecution.offHandAttackProcedureRef]),
+    ...characterAttackExecutionProcedureRefs(origin.attackExecution),
     ...origin.druidWildShapeAvailableForms.flatMap((form) =>
       serializedStatBlockAuthoritativeExecutionReferences(form.execution),
     ),
@@ -9140,12 +9134,9 @@ function serializedCharacterAttackProcedureRefIsBound(
   procedureRef: BattleProcedureExecutionRef,
 ): boolean {
   if (combatant?.origin.kind !== "character") return false;
-  const attackExecution = combatant.origin.attackExecution;
-  return (
-    attackExecution.attackProcedureRef === procedureRef ||
-    attackExecution.unarmedStrikeProcedureRef === procedureRef ||
-    attackExecution.offHandAttackProcedureRef === procedureRef
-  );
+  return characterAttackExecutionProcedureRefs(
+    combatant.origin.attackExecution,
+  ).some((reference) => reference === procedureRef);
 }
 
 function serializedOpportunityAttackProcedureRefIsBound(
@@ -10413,6 +10404,7 @@ type EncodedCharacterBattleCreatureOriginSnapshot = {
     readonly offHandAttackProcedureRef:
       | typeof BattleAttackProcedureExecutionRef.Encoded
       | null;
+    readonly otherOwnedWeaponAttackProcedureRefs: readonly (typeof BattleAttackProcedureExecutionRef.Encoded)[];
   };
   readonly resources: readonly (typeof BattleCharacterResourceSnapshotSchema.Encoded)[];
   readonly heroicInspiration: typeof HeroicInspirationSchema.Encoded;

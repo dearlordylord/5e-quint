@@ -8820,7 +8820,13 @@ describe("Character Build battle projection", () => {
         weaponMasteries: [],
         classLevels: [],
       }),
-    ).toEqual(Result.succeed({ attack: null, offHandAttack: undefined }));
+    ).toEqual(
+      Result.succeed({
+        attack: null,
+        offHandAttack: undefined,
+        otherOwnedWeapons: [],
+      }),
+    );
 
     const init = {
       combatantId: combatantId("missing-projection-unit"),
@@ -9385,7 +9391,13 @@ describe("Character Build battle projection", () => {
         weaponMasteries: [],
         classLevels: [],
       }),
-    ).toEqual(Result.succeed({ attack: null, offHandAttack: undefined }));
+    ).toEqual(
+      Result.succeed({
+        attack: null,
+        offHandAttack: undefined,
+        otherOwnedWeapons: [],
+      }),
+    );
     const leatherArmorUnitId = authoredUnitId("armor_leather");
     const leatherArmorItemId = characterEquipmentItemId({
       slot: "off",

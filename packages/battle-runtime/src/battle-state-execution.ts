@@ -4481,6 +4481,12 @@ type BattleCreatureStateCommon = {
         readonly attack: BoundCharacterWeaponAttackActionOption | null;
         readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
+        /**
+         * The bindings of the owned weapons outside the selected loadout.
+         * Equipping one into a hand slot moves its binding to `attack` or
+         * `offHandAttack`, and the slot's previous weapon here.
+         */
+        readonly otherOwnedWeaponAttacks: readonly BoundCharacterWeaponAttackActionOption[];
         readonly resources: readonly CharacterBattleResourceState[];
         readonly heroicInspiration: HeroicInspiration;
         readonly metamagic?: CharacterBattleMetamagicState;
@@ -8377,6 +8383,7 @@ export type BattleCreatureOriginSnapshot =
         readonly attackProcedureRef: BattleAttackProcedureExecutionRef | null;
         readonly unarmedStrikeProcedureRef: BattleAttackProcedureExecutionRef;
         readonly offHandAttackProcedureRef: BattleAttackProcedureExecutionRef | null;
+        readonly otherOwnedWeaponAttackProcedureRefs: readonly BattleAttackProcedureExecutionRef[];
       };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
       readonly heroicInspiration: HeroicInspiration;

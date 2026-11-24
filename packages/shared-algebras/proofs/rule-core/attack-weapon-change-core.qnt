@@ -14,11 +14,41 @@ module attackWeaponChangeCore {
   // made without one leaves a change after it, which lasts until the
   // creature's next Attack action attack or the end of its turn
   // (ASSUMPTIONS.md A63). handsFree is whether
-  // the hands the weapon's loadout grip uses are empty.
+  // the slot can take the weapon: see slotTakesWeapon.
+  //
+  // Any weapon the creature owns can be equipped, into one hand slot of its
+  // loadout: the main hand or the off hand. The slot's own weapon goes back
+  // with the loadout's grip. Another weapon takes the slot once the slot's
+  // weapon, if any, is out of hand; that weapon then leaves the loadout, still
+  // carried, or lying where it fell (ASSUMPTIONS.md A63).
 
   type WeaponCustody = HeldWeapon | StowedWeapon | WeaponOnGround
 
   type WeaponChange = EquipWeapon | StowWeapon | DropWeapon
+
+  // A hand slot an equip names, as the equipped weapon finds it.
+  type EquipSlot = {
+    // The slot's weapon is another one, still in hand.
+    slotWeaponHeld: bool,
+    // The weapon has the Two-Handed property and the slot is the off hand.
+    // .references/srd-5.2.1/equipment.md "Two-Handed": "A Two-Handed weapon
+    // requires two hands when you attack with it."
+    twoHandedIntoOffHand: bool,
+    // Every hand the slot gives the weapon, with its grip, is empty.
+    slotHandsFree: bool,
+  }
+
+  pure def slotTakesWeapon(slot: EquipSlot): bool =
+    not(slot.slotWeaponHeld) and not(slot.twoHandedIntoOffHand) and slot.slotHandsFree
+
+  // Where the slot's previous weapon is once another weapon takes the slot.
+  // It is out of hand, and leaving the loadout doesn't move it.
+  pure def departingWeaponCustody(custody: WeaponCustody): Set[WeaponCustody] =
+    match custody {
+      | HeldWeapon => Set()
+      | StowedWeapon => Set(StowedWeapon)
+      | WeaponOnGround => Set(WeaponOnGround)
+    }
 
   type AttackWeaponChangeTurn = {
     ownTurn: bool,

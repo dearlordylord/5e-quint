@@ -333,7 +333,7 @@ readied interaction take only the action Ready held.
 ## A63: A weapon change after an attack comes before the next attack
 
 **Assumption:** Each attack a character makes as part of its Attack action on
-its own turn can equip or unequip one of its selected loadout's weapons. The
+its own turn can equip or unequip one of the weapons it owns. The
 change can come before the attack, carried on the attack itself, or after it.
 A change after the attack must come before the character's next attack as part
 of the Attack action. If that next attack carries its own change before its
@@ -344,12 +344,21 @@ off-hand attack with a Bonus Action, or a Grapple or Shove with a Flurry of
 Blows Unarmed Strike, leave a change still left as it was. Any change still
 left at the end of the turn is also gone.
 
-Equipping draws a stowed weapon, or picks up one lying on the ground, and puts
-it back in hand with its loadout grip. The hands the grip uses must be empty.
-Unequipping either sheathes or stows a held weapon, which Battle treats the
-same, or drops it. A dropped weapon lands where the table places it, and stays
-on the ground for its owner to pick up again. As with A60, whether the creature
-can reach a fallen weapon is the table's call.
+Equipping draws a carried weapon, or picks up one lying on the ground, into
+one hand slot of the character's loadout: the main hand or the off hand. The
+slot's own weapon goes back with its loadout grip. Another weapon takes the
+slot once the slot's weapon, if any, is out of hand; that weapon then leaves
+the loadout, still carried or lying where it fell. In the main hand a
+Two-Handed weapon takes a two-handed grip and any other weapon a one-handed
+one, which A65's grip change can then change. Battle's Attack action attacks
+with the main weapon, and the off hand holds the second weapon of the Light
+property's Bonus Action attack, so another weapon goes in the off hand only
+beside a main weapon in hand, and a Two-Handed weapon never does. The hands the
+slot gives the weapon must be empty. Unequipping either sheathes or stows a
+held weapon, which Battle treats the same, or drops it. A dropped weapon lands
+where the table places it, and stays on the ground for its owner to pick up
+again. As with A60, whether the creature can reach a fallen weapon is the
+table's call.
 
 **Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Attack
 [Action]," Equipping and Unequipping Weapons, says "You can either equip or
@@ -362,12 +371,12 @@ to the Attack action, so the model ends the window at the action's next attack,
 which keeps each change to one attack, and asks the table where the weapon
 lands.
 
-**Temporary implementation restriction (not a rules assumption):** Battle can
-change only the selected loadout's main-hand and off-hand weapons. Other owned
-weapons don't enter the battle yet (#230), and a weapon goes back to the hands
-and grip its loadout gives it (#669). A Grapple or Shove can't carry a change
-before it yet: a character makes that change after the attack before it, or
-with another attack.
+**Temporary implementation restriction (not a rules assumption):** Battle
+brings into the battle only owned weapons it can execute; one it can't stays
+out, as if left behind. A Grapple or Shove can't carry a change before it yet:
+a character makes that change after the attack before it, or with another
+attack. The object interaction that picks a fallen weapon up puts back only a
+loadout weapon, into its own slot.
 
 ## A58: Any weapon may be held with both hands
 

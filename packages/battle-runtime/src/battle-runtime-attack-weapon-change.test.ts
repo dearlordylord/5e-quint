@@ -45,7 +45,7 @@ import {
   battleGroundObjectState,
   battleObjectIsOnGround,
 } from "./battle-reducer/object-custody-queries.ts";
-import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-custody.ts";
+import { stateWithOwnedWeaponChange } from "./battle-reducer/owned-weapon-custody.ts";
 import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 
 // RAW trace: .references/srd-5.2.1/rules-glossary.md#Attack [Action],
@@ -155,7 +155,7 @@ function dropFill(): BattleFill {
 
 /** The Fighter on its turn, with its Longsword stowed and its action left. */
 function fighterWithStowedLongsword(): BattleState {
-  const stowed = stateWithLoadoutWeaponChange(
+  const stowed = stateWithOwnedWeaponChange(
     fighterVsGoblinBattle(),
     fighterId,
     { kind: "stow", objectId: longswordId },
@@ -186,7 +186,11 @@ describe("weapon change before an attack", () => {
 
   it("offers attacks that draw a stowed weapon, and draws it before the roll", () => {
     const stowed = fighterWithStowedLongsword();
-    const draw = { kind: "equip", objectId: longswordId } as const;
+    const draw = {
+      kind: "equip",
+      objectId: longswordId,
+      slot: "mainWeapon",
+    } as const;
     const drawingAttacks = attackActs(stowed).filter(
       (subject) => "weaponChange" in subject,
     );
@@ -210,7 +214,11 @@ describe("weapon change before an attack", () => {
     const fighter = stowed.combatants.get(fighterId);
     if (fighter === undefined) throw new Error("Expected the Fighter.");
     const alone = { ...stowed, combatants: new Map([[fighterId, fighter]]) };
-    const draw = { kind: "equip", objectId: longswordId } as const;
+    const draw = {
+      kind: "equip",
+      objectId: longswordId,
+      slot: "mainWeapon",
+    } as const;
 
     expect(attackActs(alone)).toEqual([
       withChange(fighterAttackSubject(fighterVsGoblinBattle()), draw),
@@ -267,8 +275,8 @@ describe("weapon change before an attack", () => {
     const cases = [
       {
         before: stowed,
-        change: { kind: "equip", objectId: longswordId },
-        applied: { kind: "equip", objectId: longswordId },
+        change: { kind: "equip", objectId: longswordId, slot: "mainWeapon" },
+        applied: { kind: "equip", objectId: longswordId, slot: "mainWeapon" },
       },
       {
         before: ready,
@@ -287,7 +295,7 @@ describe("weapon change before an attack", () => {
     ] as const;
     for (const { before, change, applied } of cases) {
       const subject = withChange(unarmedStrike(before), change);
-      const changed = stateWithLoadoutWeaponChange(before, fighterId, applied);
+      const changed = stateWithOwnedWeaponChange(before, fighterId, applied);
       if (changed.tag !== "applied") throw new Error(changed.message);
       const resuming: BattleState = {
         ...changed.state,
@@ -320,6 +328,7 @@ describe("weapon change before an attack", () => {
         subject: withChange(fighterAttackSubject(state), {
           kind: "equip",
           objectId: longswordId,
+          slot: "mainWeapon",
         }),
         fills: [],
       }),
@@ -357,9 +366,10 @@ describe("weapon change before an attack", () => {
         armorClass: { ...fighter.armorClass, [gripHand]: "free" },
       }),
     };
-    const drawn = stateWithLoadoutWeaponChange(handLeftFree, fighterId, {
+    const drawn = stateWithOwnedWeaponChange(handLeftFree, fighterId, {
       kind: "equip",
       objectId: longswordId,
+      slot: "mainWeapon",
     });
     if (drawn.tag !== "applied") throw new Error(drawn.message);
     expect(drawn.state.combatants.get(fighterId)?.armorClass[gripHand]).toBe(
@@ -377,9 +387,10 @@ describe("weapon change before an attack", () => {
       }),
     };
     expect(
-      stateWithLoadoutWeaponChange(handHoldingObject, fighterId, {
+      stateWithOwnedWeaponChange(handHoldingObject, fighterId, {
         kind: "equip",
         objectId: longswordId,
+        slot: "mainWeapon",
       }),
     ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
   });
@@ -429,7 +440,11 @@ describe("weapon change after an attack", () => {
     );
     expect(afterAttackChanges(stowed)).toEqual([]);
     expect(
-      changeAfterAttack(stowed, { kind: "equip", objectId: longswordId }),
+      changeAfterAttack(stowed, {
+        kind: "equip",
+        objectId: longswordId,
+        slot: "mainWeapon",
+      }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 

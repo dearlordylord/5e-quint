@@ -22,7 +22,7 @@
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
-import { WeaponGripSchema } from "@dnd/shared/types";
+import { WeaponGripSchema, type HandUse } from "@dnd/shared/types";
 import {
   RULED_COVER_TYPES,
   MovementFeet,
@@ -103,16 +103,30 @@ export type BattleSubjectBonusAction =
 
 /**
  * The one weapon an Attack action attack equips or unequips: equip draws a
- * stowed loadout weapon or picks a fallen one up, stow sheathes or stows a
- * held one, and drop lets a held one fall.
+ * carried weapon the character owns, or picks a fallen one up, into a hand
+ * slot; stow sheathes or stows a held one, and drop lets a held one fall.
  */
 export const ATTACK_WEAPON_CHANGE_KINDS = ["equip", "stow", "drop"] as const;
 export type AttackWeaponChangeKind =
   (typeof ATTACK_WEAPON_CHANGE_KINDS)[number];
-export const AttackWeaponChangeSchema = Schema.Struct({
-  kind: Schema.Literals(ATTACK_WEAPON_CHANGE_KINDS),
-  objectId: BattleObjectId,
-});
+/**
+ * The hand slots of a character's loadout a weapon goes in: the main hand,
+ * held with the loadout's grip, or the off hand.
+ */
+export const LOADOUT_WEAPON_SLOTS = [
+  "mainWeapon",
+  "offWeapon",
+] as const satisfies readonly HandUse[];
+export type LoadoutWeaponSlot = (typeof LOADOUT_WEAPON_SLOTS)[number];
+export const AttackWeaponChangeSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("equip"),
+    objectId: BattleObjectId,
+    slot: Schema.Literals(LOADOUT_WEAPON_SLOTS),
+  }),
+  Schema.Struct({ kind: Schema.Literal("stow"), objectId: BattleObjectId }),
+  Schema.Struct({ kind: Schema.Literal("drop"), objectId: BattleObjectId }),
+]);
 export type AttackWeaponChange = typeof AttackWeaponChangeSchema.Type;
 
 export const BATTLE_RUNTIME_COMMANDS = [

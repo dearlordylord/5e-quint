@@ -20,6 +20,8 @@ import {
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
   type CharacterBattleCreatureInit,
+  type CharacterBattleOtherOwnedWeaponInit,
+  type BattleObjectId,
   type BattleStateInitIssue,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
@@ -554,6 +556,7 @@ function armorDefenseBonus(
 export type CharacterBattleWeaponAttackInitProjection = {
   readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
   readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
+  readonly otherOwnedWeapons: readonly CharacterBattleOtherOwnedWeaponInit[];
 };
 
 export const CHARACTER_WEAPON_ATTACK_SLOTS = ["main", "offHand"] as const;
@@ -681,7 +684,58 @@ export function characterBattleWeaponAttackInitProjectionFromWeaponProficiencies
   return Result.succeed({
     attack: attack ?? null,
     offHandAttack,
+    otherOwnedWeapons: characterOtherOwnedWeapons({
+      ...input,
+      weaponProficiencies,
+    }),
   });
+}
+
+/**
+ * One battle object for each copy of an owned weapon the selected loadout
+ * doesn't hold, with the attack Battle binds for it. The loadout holds the
+ * first copy of an item it names, whose battle object is the item itself;
+ * the other copies are `<item>#2`, `<item>#3` and so on. A weapon Battle
+ * can't execute stays out of the battle, as it would anywhere but a hand.
+ */
+function characterOtherOwnedWeapons(
+  input: CharacterBattleWeaponAttackInitProjectionInput & {
+    readonly weaponProficiencies: readonly WeaponProficiency[];
+  },
+): readonly CharacterBattleOtherOwnedWeaponInit[] {
+  const { weapon, offHandWeapon } = input.build.equipment.loadout;
+  const loadoutItemIds = [weapon?.itemId, offHandWeapon?.itemId];
+  return input.build.equipment.owned.flatMap((item) => {
+    if (item.kind !== "catalogItem" && item.kind !== "authoredCatalogItem")
+      return [];
+    const { slot } = characterEquipmentItemSourceFromId(item.itemId);
+    if (slot !== "main" && slot !== "off") return [];
+    const projected = projectCharacterWeaponLoadoutRequest(input, {
+      slot: "main",
+      itemId: item.itemId,
+      grip: "one_handed",
+    });
+    if (Result.isFailure(projected) || projected.success.attack === null)
+      return [];
+    const { attack } = projected.success;
+    const heldCopies = loadoutItemIds.filter(
+      (itemId) => itemId === item.itemId,
+    ).length;
+    return Array.from(
+      { length: Math.max(Number(item.quantity) - heldCopies, 0) },
+      (_, index) => ({
+        itemId: ownedWeaponCopyObjectId(item.itemId, heldCopies + index + 1),
+        attack,
+      }),
+    );
+  });
+}
+
+function ownedWeaponCopyObjectId(
+  itemId: CharacterEquipmentItemId,
+  copy: number,
+): BattleObjectId {
+  return battleObjectId(copy === 1 ? itemId : `${itemId}#${copy}`);
 }
 
 export function characterBattleLoadoutFromBuild(

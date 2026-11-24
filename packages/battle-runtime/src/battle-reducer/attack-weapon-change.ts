@@ -33,12 +33,12 @@ import {
   currentActorId,
 } from "./creature-state-leaves.ts";
 import {
-  loadoutWeaponChangeIsApplied,
-  loadoutWeaponChangeIssue,
-  loadoutWeaponChanges,
-  stateWithLoadoutWeaponChange,
+  ownedWeaponChangeIsApplied,
+  ownedWeaponChangeIssue,
+  ownedWeaponChanges,
+  stateWithOwnedWeaponChange,
   type AppliedAttackWeaponChange,
-} from "./loadout-weapon-custody.ts";
+} from "./owned-weapon-custody.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult, resolvedResult } from "./result-helpers.ts";
 
@@ -174,7 +174,7 @@ export function changeWeaponAfterAttackActs(
   actor: BattleCreatureState,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!weaponChangeAfterAttackIsAvailable(state, actor)) return [];
-  return loadoutWeaponChanges(state, actor).map((weaponChange) => ({
+  return ownedWeaponChanges(state, actor).map((weaponChange) => ({
     subject: {
       tag: "runtimeCommand",
       actorId: actor.combatantId,
@@ -269,7 +269,7 @@ export function resolveAttackWithWeaponChange<
   );
   if (
     input.state.subjectResolutionPhase.kind === "subjectContinuation" &&
-    loadoutWeaponChangeIsApplied(input.state, actorId, change)
+    ownedWeaponChangeIsApplied(input.state, actorId, change)
   ) {
     return withWeaponDropOutcome(
       resolveAttack({ ...input, fills: attackFills }),
@@ -317,7 +317,7 @@ function appliedWeaponChange(
   | { readonly tag: "applied"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
   const actorId = subject.actorId;
-  const issue = loadoutWeaponChangeIssue(state, actorId, change);
+  const issue = ownedWeaponChangeIssue(state, actorId, change);
   if (issue !== null) {
     return {
       tag: "result",
@@ -331,12 +331,8 @@ function appliedWeaponChange(
       result: needsHolesResult(state, subject, [withFacts.hole]),
     };
   }
-  const changed = stateWithLoadoutWeaponChange(
-    state,
-    actorId,
-    withFacts.change,
-  );
-  /* v8 ignore start -- @preserve -- loadoutWeaponChangeIssue has just admitted this change against the same state. */
+  const changed = stateWithOwnedWeaponChange(state, actorId, withFacts.change);
+  /* v8 ignore start -- @preserve -- ownedWeaponChangeIssue has just admitted this change against the same state. */
   if (changed.tag === "invalid") {
     return {
       tag: "result",
@@ -358,10 +354,7 @@ function appliedWeaponChangeFacts(
       readonly hole: BattleWeaponDropPositionHole;
     } {
   if (change.kind !== "drop") {
-    return {
-      tag: "applied",
-      change: { kind: change.kind, objectId: change.objectId },
-    };
+    return { tag: "applied", change };
   }
   const hole = weaponDropPositionHole(actorId, change.objectId);
   const fill = fills.find(

@@ -19,6 +19,7 @@ import {
   Hp,
   movementFeet,
   type ReadonlyNonEmptyArray,
+  type WeaponGrip,
 } from "@dnd/shared/types";
 import {
   applyCondition,
@@ -60,7 +61,6 @@ import type {
   CharacterBattleCreatureInitWeaponAttack,
 } from "../battle-init.ts";
 import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
-import type { CharacterWeaponAttackExecutionWeapon } from "../character-weapon-execution-schema.ts";
 import {
   weaponMasteryIsSelectedForWeapon,
   type CharacterBattleWeaponMasterySelection,
@@ -167,59 +167,7 @@ function isNonEmptyReadonlyArray<T>(
   return values.length > 0;
 }
 
-function characterInitWeaponAttackExecutionRefs(
-  slot: "main-hand" | "off-hand",
-  attack: CharacterBattleCreatureInitWeaponAttack,
-  loadoutWeapon: CharacterBattleCreatureInit["selectedLoadout"][
-    | "weapon"
-    | "offHandWeapon"],
-  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): Result.Result<
-  {
-    readonly weaponObjectId: BattleObjectId;
-    readonly weapon: CharacterWeaponAttackExecutionWeapon;
-    readonly loadoutWeapon: NonNullable<
-      CharacterBattleCreatureInit["selectedLoadout"]["weapon" | "offHandWeapon"]
-    >;
-  },
-  BattleStateInitLeafIssue
-> {
-  if (
-    loadoutWeapon === undefined ||
-    loadoutWeapon.unitId !== attack.weapon.weaponUnitId
-  ) {
-    return weaponLoadoutMismatchIssue(slot);
-  }
-  const masteryIsSelected = weaponMasteryIsSelectedForWeapon(
-    attack.weapon.weaponUnitId,
-    weaponMasteries,
-  );
-  if (masteryIsSelected && !("masteryProperty" in attack.weapon)) {
-    return battleStateInitIssue(
-      `Character battle init ${slot} weapon ${attack.weapon.weaponUnitId} has a selected mastery but no admitted mastery execution projection.`,
-    );
-  }
-  if (masteryIsSelected) {
-    return Result.succeed({
-      weaponObjectId: loadoutWeapon.itemId,
-      weapon: attack.weapon,
-      loadoutWeapon,
-    });
-  }
-  const weapon =
-    "masteryProperty" in attack.weapon
-      ? (({ masteryProperty: _property, ...withoutMastery }) => withoutMastery)(
-          attack.weapon,
-        )
-      : attack.weapon;
-  return Result.succeed({
-    weaponObjectId: loadoutWeapon.itemId,
-    weapon,
-    loadoutWeapon,
-  });
-}
-
-function characterInitWeaponAttackWithExecutionRefs(
+function characterInitLoadoutWeaponAttackWithExecutionRefs(
   slot: "main-hand" | "off-hand",
   attack: CharacterBattleCreatureInitWeaponAttack,
   loadoutWeapon: CharacterBattleCreatureInit["selectedLoadout"][
@@ -227,36 +175,162 @@ function characterInitWeaponAttackWithExecutionRefs(
     | "offHandWeapon"],
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Result.Result<CharacterWeaponAttackActionOption, BattleStateInitLeafIssue> {
+  if (
+    loadoutWeapon === undefined ||
+    loadoutWeapon.unitId !== attack.weapon.weaponUnitId
+  ) {
+    return weaponLoadoutMismatchIssue(slot);
+  }
+  return characterInitWeaponAttackWithExecutionRefs({
+    label: `${slot} weapon`,
+    attack,
+    weaponObjectId: loadoutWeapon.itemId,
+    startingGrip: "grip" in loadoutWeapon ? loadoutWeapon.grip : "one_handed",
+    weaponMasteries,
+  });
+}
+
+/**
+ * The attack Battle binds for one owned weapon. Its Versatile damage is
+ * admitted whichever slot the weapon starts in, because the weapon can be
+ * equipped into the main hand later; the damage reads the grip when it
+ * applies.
+ */
+function characterInitWeaponAttackWithExecutionRefs(input: {
+  readonly label: string;
+  readonly attack: CharacterBattleCreatureInitWeaponAttack;
+  readonly weaponObjectId: BattleObjectId;
+  readonly startingGrip: WeaponGrip;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+}): Result.Result<CharacterWeaponAttackActionOption, BattleStateInitLeafIssue> {
+  const { attack } = input;
   if ("meleeGripDamage" in attack || "weaponDelivery" in attack)
     return battleStateInitIssue(
       "Character battle init weapon attacks must not supply derived grip or delivery evidence.",
     );
-  const refs = characterInitWeaponAttackExecutionRefs(
-    slot,
-    attack,
-    loadoutWeapon,
-    weaponMasteries,
+  const masteryIsSelected = weaponMasteryIsSelectedForWeapon(
+    attack.weapon.weaponUnitId,
+    input.weaponMasteries,
   );
-  if (Result.isFailure(refs)) {
-    return Result.fail(refs.failure);
+  if (masteryIsSelected && !("masteryProperty" in attack.weapon)) {
+    return battleStateInitIssue(
+      `Character battle init ${input.label} ${attack.weapon.weaponUnitId} has a selected mastery but no admitted mastery execution projection.`,
+    );
   }
-  const meleeGripDamage =
-    slot === "main-hand"
-      ? admitVersatileMeleeDamage(
-          refs.success.weapon,
-          "grip" in refs.success.loadoutWeapon
-            ? refs.success.loadoutWeapon.grip
-            : "one_handed",
-        )
-      : Result.succeed(undefined);
+  const weapon =
+    masteryIsSelected || !("masteryProperty" in attack.weapon)
+      ? attack.weapon
+      : (({ masteryProperty: _property, ...withoutMastery }) => withoutMastery)(
+          attack.weapon,
+        );
+  const meleeGripDamage = admitVersatileMeleeDamage(weapon, input.startingGrip);
   if (Result.isFailure(meleeGripDamage))
     return battleStateInitIssue(meleeGripDamage.failure.message);
   return Result.succeed({
     ...attack,
     ...optionalProperty("meleeGripDamage", meleeGripDamage.success),
-    weapon: refs.success.weapon,
-    weaponObjectId: refs.success.weaponObjectId,
+    weapon,
+    weaponObjectId: input.weaponObjectId,
   });
+}
+
+function characterInitOffHandAttack(
+  creatureInit: CharacterBattleCreatureInit,
+): Result.Result<
+  CharacterWeaponAttackActionOption | undefined,
+  BattleStateInitLeafIssue
+> {
+  return creatureInit.offHandAttack === undefined
+    ? Result.succeed(undefined)
+    : characterInitLoadoutWeaponAttackWithExecutionRefs(
+        "off-hand",
+        creatureInit.offHandAttack,
+        creatureInit.selectedLoadout.offHandWeapon,
+        creatureInit.weaponMasteries,
+      );
+}
+
+/**
+ * The weapon attacks Battle binds at battle start: the main and off-hand
+ * loadout weapons', and each other owned weapon's. Every refusal is kept.
+ */
+function characterInitWeaponAttacks(
+  creatureInit: CharacterBattleCreatureInit,
+): Result.Result<
+  {
+    readonly attack: CharacterWeaponAttackActionOption | null;
+    readonly offHandAttack?: CharacterWeaponAttackActionOption;
+    readonly otherOwnedWeaponAttacks: readonly CharacterWeaponAttackActionOption[];
+  },
+  ReadonlyNonEmptyArray<BattleStateInitLeafIssue>
+> {
+  const attack =
+    creatureInit.attack === null
+      ? Result.succeed(null)
+      : characterInitLoadoutWeaponAttackWithExecutionRefs(
+          "main-hand",
+          creatureInit.attack,
+          creatureInit.selectedLoadout.weapon,
+          creatureInit.weaponMasteries,
+        );
+  const offHandAttack = characterInitOffHandAttack(creatureInit);
+  const others = characterInitOtherOwnedWeaponAttacks(creatureInit);
+  if (
+    Result.isFailure(attack) ||
+    Result.isFailure(offHandAttack) ||
+    Result.isFailure(others)
+  ) {
+    const [firstIssue, ...remainingIssues] = [
+      ...(Result.isFailure(attack) ? [attack.failure] : []),
+      ...(Result.isFailure(offHandAttack) ? [offHandAttack.failure] : []),
+      ...(Result.isFailure(others) ? [others.failure] : []),
+    ];
+    return Result.fail([firstIssue, ...remainingIssues]);
+  }
+  return Result.succeed({
+    attack: attack.success,
+    ...optionalProperty("offHandAttack", offHandAttack.success),
+    otherOwnedWeaponAttacks: others.success,
+  });
+}
+
+/**
+ * The bindings of the weapons the character owns outside its selected
+ * loadout. Each is its own battle object, apart from every loadout object.
+ */
+function characterInitOtherOwnedWeaponAttacks(
+  creatureInit: CharacterBattleCreatureInit,
+): Result.Result<
+  readonly CharacterWeaponAttackActionOption[],
+  BattleStateInitLeafIssue
+> {
+  const others = creatureInit.otherOwnedWeapons ?? [];
+  const { armor, shield, weapon, offHandWeapon } = creatureInit.selectedLoadout;
+  const loadoutObjectIds = [armor, shield, weapon, offHandWeapon].flatMap(
+    (item) => (item === undefined ? [] : [item.itemId]),
+  );
+  const objectIds = others.map(({ itemId }) => itemId);
+  if (
+    new Set(objectIds).size !== objectIds.length ||
+    objectIds.some((objectId) => loadoutObjectIds.includes(objectId))
+  ) {
+    return battleStateInitIssue(
+      "Character battle init owned weapons outside the loadout must each be a battle object of their own.",
+    );
+  }
+  const bindings: CharacterWeaponAttackActionOption[] = [];
+  for (const other of others) {
+    const binding = characterInitWeaponAttackWithExecutionRefs({
+      label: "owned weapon",
+      attack: other.attack,
+      weaponObjectId: other.itemId,
+      startingGrip: "one_handed",
+      weaponMasteries: creatureInit.weaponMasteries,
+    });
+    if (Result.isFailure(binding)) return Result.fail(binding.failure);
+    bindings.push(binding.success);
+  }
+  return Result.succeed(bindings);
 }
 
 type CharacterWildShapeExecutionAdmission =
@@ -481,51 +555,16 @@ export function battleCreatureStateAdmissionFromInit(
     const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
     );
-    const initAttackResult =
-      creatureInit.attack === null
-        ? Result.succeed(null)
-        : characterInitWeaponAttackWithExecutionRefs(
-            "main-hand",
-            creatureInit.attack,
-            creatureInit.selectedLoadout.weapon,
-            creatureInit.weaponMasteries,
-          );
-    const initOffHandAttackResult =
-      creatureInit.offHandAttack === undefined
-        ? Result.succeed(undefined)
-        : characterInitWeaponAttackWithExecutionRefs(
-            "off-hand",
-            creatureInit.offHandAttack,
-            creatureInit.selectedLoadout.offHandWeapon,
-            creatureInit.weaponMasteries,
-          );
-    if (
-      Result.isFailure(initAttackResult) ||
-      Result.isFailure(initOffHandAttackResult)
-    ) {
-      const issues = [
-        ...(Result.isFailure(initAttackResult)
-          ? [initAttackResult.failure]
-          : []),
-        ...(Result.isFailure(initOffHandAttackResult)
-          ? [initOffHandAttackResult.failure]
-          : []),
-      ];
-      const [firstIssue, ...remainingIssues] = issues;
-      return {
-        tag: "invalid",
-        issues: [firstIssue, ...remainingIssues],
-      };
+    const initWeaponAttacks = characterInitWeaponAttacks(creatureInit);
+    if (Result.isFailure(initWeaponAttacks)) {
+      return { tag: "invalid", issues: initWeaponAttacks.failure };
     }
-    const initAttack = initAttackResult.success;
-    const initOffHandAttack = initOffHandAttackResult.success;
     const attackExecution = admitCharacterAttackExecution({
       battleId,
       combatantId: input.combatantId,
       startingScopeOrdinal: attackScopeOrdinal,
-      attack: initAttack,
       unarmedStrike: creatureInit.unarmedStrike,
-      ...optionalProperty("offHandAttack", initOffHandAttack),
+      ...initWeaponAttacks.success,
     });
     const wildShapeAdmission = admitCharacterWildShapeExecution(
       battleId,
@@ -707,6 +746,8 @@ export function battleCreatureStateAdmissionFromInit(
           "offHandAttack",
           attackExecution.execution.offHandAttack,
         ),
+        otherOwnedWeaponAttacks:
+          attackExecution.execution.otherOwnedWeaponAttacks,
         resources,
         heroicInspiration: heroicInspirationAtBattleEntry(creatureInit),
         ...optionalProperty("metamagic", metamagic),
