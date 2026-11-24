@@ -31,10 +31,14 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
+  HAND_USES,
   Hp,
   PositiveInteger,
   resourceCount,
   spellSlotLevel,
+  WEAPON_GRIPS,
+  type HandUse,
+  type WeaponGrip,
 } from "@dnd/shared/types";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
@@ -62,6 +66,10 @@ const battleInitProjectionScenarios = [
   "mixed-spell-and-pact-slot-init-rejected",
   "build-maximum-above-build-maximum-rejected",
   "stable-recovery-progress-during-init-rejected",
+  "versatile-weapon-one-handed",
+  "versatile-weapon-two-handed",
+  "two-handed-weapon",
+  "non-versatile-weapon-two-handed",
 ] as const;
 type BattleInitProjectionScenario =
   (typeof battleInitProjectionScenarios)[number];
@@ -82,6 +90,11 @@ const battleInitProjectionScenarioByVariant = {
     "build-maximum-above-build-maximum-rejected",
   BattleInitProjectionStableRecoveryProgressDuringInitRejected:
     "stable-recovery-progress-during-init-rejected",
+  BattleInitProjectionVersatileWeaponOneHanded: "versatile-weapon-one-handed",
+  BattleInitProjectionVersatileWeaponTwoHanded: "versatile-weapon-two-handed",
+  BattleInitProjectionTwoHandedWeapon: "two-handed-weapon",
+  BattleInitProjectionNonVersatileWeaponTwoHanded:
+    "non-versatile-weapon-two-handed",
 } as const satisfies Readonly<Record<string, BattleInitProjectionScenario>>;
 
 type BattleInitProjection = {
@@ -106,6 +119,10 @@ type BattleInitProjection = {
   readonly projectedCantripCount: number;
   readonly selectedLeveledSpellCount: number;
   readonly projectedLeveledSpellCount: number;
+  readonly mainWeaponGrip: WeaponGrip | "none";
+  readonly leftHandUse: HandUse;
+  readonly rightHandUse: HandUse;
+  readonly mainWeaponDamageDieSize: number;
   readonly replayIndex: number;
 };
 
@@ -125,6 +142,10 @@ const driverSchema = {
   doRejectMixedSpellAndPactSlotInit: {},
   doRejectBuildMaximumAboveBuildMaximum: {},
   doRejectStableRecoveryProgressDuringInit: {},
+  doProjectVersatileWeaponOneHanded: {},
+  doProjectVersatileWeaponTwoHanded: {},
+  doProjectTwoHandedWeapon: {},
+  doProjectNonVersatileWeaponTwoHanded: {},
   step: {},
 } as const;
 
@@ -192,6 +213,38 @@ function createBattleInitProjectionDriver() {
       },
       doRejectStableRecoveryProgressDuringInit: () => {
         projection = rejectStableRecoveryProgressDuringInitProjection();
+      },
+      doProjectVersatileWeaponOneHanded: () => {
+        projection = mainWeaponProjection({
+          outcome: "versatile-weapon-one-handed",
+          replayIndex: 8,
+          weaponUnitId: "weapon_longsword",
+          grip: "one_handed",
+        });
+      },
+      doProjectVersatileWeaponTwoHanded: () => {
+        projection = mainWeaponProjection({
+          outcome: "versatile-weapon-two-handed",
+          replayIndex: 9,
+          weaponUnitId: "weapon_longsword",
+          grip: "two_handed",
+        });
+      },
+      doProjectTwoHandedWeapon: () => {
+        projection = mainWeaponProjection({
+          outcome: "two-handed-weapon",
+          replayIndex: 10,
+          weaponUnitId: "weapon_greataxe",
+          grip: "two_handed",
+        });
+      },
+      doProjectNonVersatileWeaponTwoHanded: () => {
+        projection = mainWeaponProjection({
+          outcome: "non-versatile-weapon-two-handed",
+          replayIndex: 11,
+          weaponUnitId: "weapon_club",
+          grip: "two_handed",
+        });
       },
       step: () => {},
       getState: () => projection,
@@ -401,6 +454,71 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
     message: Result.isFailure(result) ? result.failure.message : "none",
     replayIndex: 7,
   });
+}
+
+// The main weapon's grip, the hands it holds, and the damage die of a melee
+// attack with it, read from the battle combatant a sheet starts.
+function mainWeaponProjection(input: {
+  readonly outcome: BattleInitProjectionScenario;
+  readonly replayIndex: number;
+  readonly weaponUnitId: string;
+  readonly grip: WeaponGrip;
+}): BattleInitProjection {
+  const identity = `character:battle-init-${input.outcome}`;
+  const sheet = expectSuccess(
+    rebuildCharacterSheet({
+      characterId: characterSheetId(identity),
+      build: mainWeaponBuild(input),
+      currentHp: Hp(9),
+      tempHp: Hp(0),
+      unitLibrary,
+    }),
+  );
+  const combatant = startCharacterBattle({
+    battleIdText: `battle:init-${input.outcome}`,
+    combatantId: combatantId(`combatant:battle-init-${input.outcome}`),
+    sheet,
+  });
+  const damage = combatant.origin.attack?.weapon.damage;
+  return projectFromParts({
+    outcome: input.outcome,
+    accepted: true,
+    message: "none",
+    characterIdentity: combatant.origin.characterId,
+    mainWeaponGrip: combatant.origin.selectedLoadout.weapon?.grip ?? "none",
+    leftHandUse: combatant.armorClass.leftHandUse,
+    rightHandUse: combatant.armorClass.rightHandUse,
+    mainWeaponDamageDieSize: damage?.kind === "dice" ? damage.dieSize : 0,
+    replayIndex: input.replayIndex,
+  });
+}
+
+function mainWeaponBuild(input: {
+  readonly weaponUnitId: string;
+  readonly grip: WeaponGrip;
+}): CharacterBuild {
+  const weaponItemId = characterEquipmentItemId({
+    slot: "main",
+    unitId: expectSuccess(
+      characterEquipmentItemUnitId(authoredUnitId(input.weaponUnitId)),
+    ),
+  });
+  const build = defenseBuild({ wearingArmor: false });
+  return {
+    ...build,
+    equipment: {
+      ...build.equipment,
+      owned: [
+        ...build.equipment.owned,
+        {
+          kind: "catalogItem",
+          itemId: weaponItemId,
+          quantity: PositiveInteger(1),
+        },
+      ],
+      loadout: { weapon: { itemId: weaponItemId, grip: input.grip } },
+    },
+  };
 }
 
 function startCharacterBattle(input: {
@@ -838,6 +956,10 @@ function projectFromParts(
     projectedCantripCount: input.projectedCantripCount ?? 0,
     selectedLeveledSpellCount: input.selectedLeveledSpellCount ?? 0,
     projectedLeveledSpellCount: input.projectedLeveledSpellCount ?? 0,
+    mainWeaponGrip: input.mainWeaponGrip ?? "none",
+    leftHandUse: input.leftHandUse ?? "free",
+    rightHandUse: input.rightHandUse ?? "free",
+    mainWeaponDamageDieSize: input.mainWeaponDamageDieSize ?? 0,
     replayIndex: input.replayIndex,
   };
 }
@@ -911,6 +1033,25 @@ function normalizeBattleInitProjectionQuintState(
       facts["projectedLeveledSpellCount"],
       "facts.projectedLeveledSpellCount",
     ),
+    mainWeaponGrip: literalField(
+      facts["mainWeaponGrip"],
+      "facts.mainWeaponGrip",
+      [...WEAPON_GRIPS, "none"] as const,
+    ),
+    leftHandUse: literalField(
+      facts["leftHandUse"],
+      "facts.leftHandUse",
+      HAND_USES,
+    ),
+    rightHandUse: literalField(
+      facts["rightHandUse"],
+      "facts.rightHandUse",
+      HAND_USES,
+    ),
+    mainWeaponDamageDieSize: numberFromQuintInt(
+      facts["mainWeaponDamageDieSize"],
+      "facts.mainWeaponDamageDieSize",
+    ),
     replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
@@ -946,6 +1087,19 @@ function numberFromQuintInt(raw: unknown, field: string): number {
 function booleanField(raw: unknown, field: string): boolean {
   if (typeof raw === "boolean") return raw;
   throw new Error(`Expected Quint boolean field ${field}.`);
+}
+
+function literalField<const Values extends readonly string[]>(
+  raw: unknown,
+  field: string,
+  values: Values,
+): Values[number] {
+  const value = stringField(raw, field);
+  const literal = values.find((candidate) => candidate === value);
+  if (literal === undefined) {
+    throw new Error(`Expected ${field} to be one of ${values.join(", ")}.`);
+  }
+  return literal;
 }
 
 function stringField(raw: unknown, field: string): string {

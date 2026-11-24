@@ -1,9 +1,10 @@
 import {
   CHARACTER_WEAPON_ATTACK_SLOTS,
   characterBuildEquippedWeaponBattleBlockers,
+  type BattleCreatureInitIssue,
 } from "@dnd/character-battle-runtime";
 import { UnitId } from "@dnd/shared/game-facts";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 
 const OWNED_ALTERNATIVE_INSTRUCTIONS =
@@ -33,22 +34,29 @@ export const EquippedWeaponBattleBlockersSchema = Schema.Array(
 
 export function equippedWeaponBattleBlockersOutput(
   input: Parameters<typeof characterBuildEquippedWeaponBattleBlockers>[0],
-): typeof EquippedWeaponBattleBlockersSchema.Type {
-  return characterBuildEquippedWeaponBattleBlockers(input).map(
-    ({ weaponDefinitionAdmittedOwnedAlternatives, ...blocker }) => ({
-      ...blocker,
-      nextStep: isReadonlyArrayNonEmpty(
-        weaponDefinitionAdmittedOwnedAlternatives,
-      )
-        ? {
-            tag: "reviewWeaponDefinitionAdmittedOwnedAlternatives" as const,
-            itemIds: weaponDefinitionAdmittedOwnedAlternatives,
-            instructions: OWNED_ALTERNATIVE_INSTRUCTIONS,
-          }
-        : {
-            tag: "inspectCatalogForAdmittedWeapon" as const,
-            instructions: CATALOG_ALTERNATIVE_INSTRUCTIONS,
-          },
-    }),
+): Result.Result<
+  typeof EquippedWeaponBattleBlockersSchema.Type,
+  BattleCreatureInitIssue
+> {
+  return Result.map(
+    characterBuildEquippedWeaponBattleBlockers(input),
+    (blockers) =>
+      blockers.map(
+        ({ weaponDefinitionAdmittedOwnedAlternatives, ...blocker }) => ({
+          ...blocker,
+          nextStep: isReadonlyArrayNonEmpty(
+            weaponDefinitionAdmittedOwnedAlternatives,
+          )
+            ? {
+                tag: "reviewWeaponDefinitionAdmittedOwnedAlternatives" as const,
+                itemIds: weaponDefinitionAdmittedOwnedAlternatives,
+                instructions: OWNED_ALTERNATIVE_INSTRUCTIONS,
+              }
+            : {
+                tag: "inspectCatalogForAdmittedWeapon" as const,
+                instructions: CATALOG_ALTERNATIVE_INSTRUCTIONS,
+              },
+        }),
+      ),
   );
 }

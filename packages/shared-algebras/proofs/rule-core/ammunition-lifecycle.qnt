@@ -40,25 +40,41 @@ module ammunitionLifecycle {
     legalAmmunitionStock(stock) and
     ammunitionRemaining(stock, ammunitionKind) > 0
 
-  // Drawing the ammunition is part of the attack, and loading a one-handed
-  // weapon needs a free hand: one that holds nothing and grapples no one.
-  // A stat block never states what each hand holds (ASSUMPTIONS.md A64), so
-  // its loading hand is not stated and does not refuse the attack.
-  type LoadingHand =
-    | LoadingHandFree
-    | LoadingHandOccupied
-    | LoadingHandNotStated
+  // equipment.md "Ammunition" requires a free loading hand for a one-handed
+  // weapon. "Two-Handed" requires two hands for the attack; those hands may
+  // operate that same weapon, but may not hold or grapple something else.
+  type AmmunitionHandUse =
+    | AmmunitionHandFree
+    | AmmunitionHandHoldsAttackingWeapon
+    | AmmunitionHandOccupied
 
-  pure def ammunitionCanBeDrawn(loadingHand: LoadingHand): bool =
-    loadingHand != LoadingHandOccupied
+  type AmmunitionHands =
+    | OneHandedLoadingHand(AmmunitionHandUse)
+    | TwoHandedOperatingHands({ left: AmmunitionHandUse, right: AmmunitionHandUse })
+    | AttackingWeaponGripUnavailable
+    | StatBlockHandsNotStated
+
+  pure def ammunitionCanBeDrawn(hands: AmmunitionHands): bool =
+    match hands {
+      | OneHandedLoadingHand(hand) => hand == AmmunitionHandFree
+      | TwoHandedOperatingHands(operating) => all {
+          operating.left != AmmunitionHandOccupied,
+          operating.right != AmmunitionHandOccupied,
+          operating.left == AmmunitionHandHoldsAttackingWeapon or
+            operating.right == AmmunitionHandHoldsAttackingWeapon,
+        }
+      | AttackingWeaponGripUnavailable => false
+      // Stat Blocks do not state individual hand occupancy (A64).
+      | StatBlockHandsNotStated => true
+    }
 
   pure def ammunitionAttackReady(
     stock: AmmunitionStock,
     ammunitionKind: AmmunitionKind,
-    loadingHand: LoadingHand,
+    hands: AmmunitionHands,
   ): bool =
     ammunitionAttackAvailable(stock, ammunitionKind) and
-    ammunitionCanBeDrawn(loadingHand)
+    ammunitionCanBeDrawn(hands)
 
   pure def ammunitionAfterAcceptedAttack(
     stock: AmmunitionStock,

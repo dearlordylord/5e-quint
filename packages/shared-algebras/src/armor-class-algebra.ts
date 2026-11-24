@@ -3,6 +3,7 @@ import { Match } from "effect";
 import type {
   Ability,
   HandUse,
+  WeaponGrip,
   ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
@@ -109,6 +110,29 @@ export function defaultUnarmoredArmorClassBase(): Extract<
     base: armorClass(10),
     abilityModifiers: ["dex"],
     source: "default_unarmored",
+  };
+}
+
+/**
+ * The hands a selected loadout holds. The main weapon takes the right hand,
+ * and the left too when held with the `two_handed` grip; otherwise the left
+ * hand holds the shield or the off-hand weapon, or is free. A hand the loadout
+ * holds isn't free for a grapple or a held object.
+ */
+export function loadoutHandUses(loadout: {
+  readonly holdsShield: boolean;
+  readonly holdsOffHandWeapon: boolean;
+  readonly mainWeaponGrip: WeaponGrip | undefined;
+}): Pick<ArmorClassState, "leftHandUse" | "rightHandUse"> {
+  return {
+    leftHandUse: loadout.holdsShield
+      ? "shield"
+      : loadout.holdsOffHandWeapon
+        ? "offWeapon"
+        : loadout.mainWeaponGrip === "two_handed"
+          ? "mainWeapon"
+          : "free",
+    rightHandUse: loadout.mainWeaponGrip === undefined ? "free" : "mainWeapon",
   };
 }
 

@@ -241,6 +241,28 @@ describe("Character Sheet runtime / armor class", () => {
     expect(state.rightHandUse).toBe("mainWeapon");
   });
 
+  test.each([
+    { grip: "one_handed", leftHandUse: "free" },
+    { grip: "two_handed", leftHandUse: "mainWeapon" },
+  ] as const)(
+    "holds a $grip main weapon in the hands its grip uses",
+    ({ grip, leftHandUse }) => {
+      const state = requireSuccess(
+        characterSheetArmorClassState({
+          build: armorClassBuild({
+            startingClass: "class_fighter",
+            weapon: "weapon_longsword",
+            weaponGrip: grip,
+          }),
+          unitLibrary,
+        }),
+      );
+
+      expect(state.leftHandUse).toBe(leftHandUse);
+      expect(state.rightHandUse).toBe("mainWeapon");
+    },
+  );
+
   test("projects Armor Class selected-reference qRoute through the public projection entrypoint", () => {
     const projection = requireSuccess(
       characterSheetArmorClassProjection({

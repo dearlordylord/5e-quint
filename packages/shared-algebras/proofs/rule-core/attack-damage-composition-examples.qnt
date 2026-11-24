@@ -10,6 +10,40 @@ module attackDamageCompositionExamples {
   import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import attackDamageComposition.* from "./attack-damage-composition"
 
+  run test_versatile_weapon_uses_its_two_handed_die_only_for_a_two_handed_melee_attack = {
+    val longsword = {
+      damageDieSize: 8,
+      versatile: VersatileDamageDie(10),
+      grip: OneHandedGrip,
+      meleeAttack: true,
+    }
+    all {
+      assert(weaponAttackDamageDieSize(longsword) == 8),
+      assert(weaponAttackDamageDieSize(longsword.with("grip", TwoHandedGrip)) == 10),
+      assert(weaponAttackDamageDieSize(
+        longsword.with("grip", TwoHandedGrip).with("meleeAttack", false)
+      ) == 8),
+    }
+  }
+
+  run test_weapon_without_versatile_keeps_its_die_with_either_grip = {
+    val greataxe = {
+      damageDieSize: 12,
+      versatile: NotVersatile,
+      grip: TwoHandedGrip,
+      meleeAttack: true,
+    }
+    all {
+      assert(weaponAttackDamageDieSize(greataxe) == 12),
+      assert(weaponAttackDamageDieSize(greataxe.with("grip", OneHandedGrip)) == 12),
+    }
+  }
+
+  run test_two_handed_grip_holds_both_hands = all {
+    assert(weaponGripHandsHeld(OneHandedGrip) == 1),
+    assert(weaponGripHandsHeld(TwoHandedGrip) == 2),
+  }
+
   run test_natural_one_misses_regardless_of_total = {
     val outcome = resolveAttackRoll({
       naturalD20: 1,

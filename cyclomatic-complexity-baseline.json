@@ -133,11 +133,7 @@
       "module/binding:conditionImmunityTemporaryHitPointRouteForResolution": 11
     },
     "packages/battle-runtime/src/battle-reducer/creature-state-execution.ts": {
-      "module/binding:combatantCanStillHoldBoundWeaponItem": 11,
-      "module/binding:groundEffectiveCharacterArmorClass": 14
-    },
-    "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts": {
-      "module/binding:combatantHandUses": 18
+      "module/binding:combatantCanStillHoldBoundWeaponItem": 11
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
       "module/binding:battleCreatureStateAdmissionFromInit": 30

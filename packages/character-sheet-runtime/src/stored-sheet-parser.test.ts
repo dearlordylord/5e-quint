@@ -804,6 +804,26 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test("parses a Two-Handed weapon held with the two-handed grip", () => {
+    const build = armorClassBuild({
+      startingClass: "class_fighter",
+      weapon: "weapon_greataxe",
+    });
+    const weapon = build.equipment.loadout.weapon;
+    if (weapon === undefined) throw new Error("Expected a held weapon.");
+    const twoHanded = {
+      ...build,
+      equipment: {
+        ...build.equipment,
+        loadout: { weapon: { ...weapon, grip: "two_handed" as const } },
+      },
+    };
+
+    expect(parseCharacterBuild(twoHanded, unitLibrary)).toEqual(
+      Result.succeed(twoHanded),
+    );
+  });
+
   test("parses a weapon moved from its owned main reference into the off hand", () => {
     const build = armorClassBuild({
       startingClass: "class_fighter",
@@ -1537,6 +1557,47 @@ describe("stored Character Build parser", () => {
       }),
       expected:
         "Character Build loadout weapon main:weapon_greataxe cannot be held one-handed.",
+    },
+    {
+      name: "a weapon loadout with an unknown grip",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            weapon: {
+              itemId: "main:weapon_quarterstaff",
+              grip: "three_handed",
+            },
+          },
+        },
+      },
+      expected: "Character Build weapon loadout is invalid.",
+    },
+    {
+      name: "a two-handed grip beside a shield",
+      value: (() => {
+        const build = armorClassBuild({
+          startingClass: "class_fighter",
+          shield: true,
+          weapon: "weapon_longsword",
+        });
+        const weapon = build.equipment.loadout.weapon;
+        return {
+          ...build,
+          equipment: {
+            ...build.equipment,
+            loadout: {
+              ...build.equipment.loadout,
+              ...(weapon === undefined
+                ? {}
+                : { weapon: { ...weapon, grip: "two_handed" as const } }),
+            },
+          },
+        };
+      })(),
+      expected:
+        "Character Build loadout weapon main:weapon_longsword is held two-handed, so it cannot combine with a shield or off-hand weapon.",
     },
     {
       name: "an off-hand weapon with an extra field",

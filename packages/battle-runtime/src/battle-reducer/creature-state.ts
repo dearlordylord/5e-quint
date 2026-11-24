@@ -19,7 +19,6 @@ import {
   movementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import type { HandUse } from "@dnd/shared/types";
 import {
   applyCondition,
   EMPTY_CONDITION_STATE,
@@ -28,6 +27,7 @@ import {
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import {
   defaultUnarmoredArmorClassBase,
+  loadoutHandUses,
   statBlockArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -1039,17 +1039,14 @@ function characterBattleLoadoutHandStateIssues(
   const shield = creatureInit.selectedLoadout.shield;
   const weapon = creatureInit.selectedLoadout.weapon;
   const offHandWeapon = creatureInit.selectedLoadout.offHandWeapon;
-  const expectedLeftHandUse: HandUse =
-    shield === undefined
-      ? offHandWeapon === undefined
-        ? "free"
-        : "offWeapon"
-      : "shield";
-  const expectedRightHandUse: HandUse =
-    weapon === undefined ? "free" : "mainWeapon";
+  const expected = loadoutHandUses({
+    holdsShield: shield !== undefined,
+    holdsOffHandWeapon: offHandWeapon !== undefined,
+    mainWeaponGrip: weapon?.grip,
+  });
   if (
-    creatureInit.armorClass.leftHandUse !== expectedLeftHandUse ||
-    creatureInit.armorClass.rightHandUse !== expectedRightHandUse
+    creatureInit.armorClass.leftHandUse !== expected.leftHandUse ||
+    creatureInit.armorClass.rightHandUse !== expected.rightHandUse
   ) {
     return [
       {

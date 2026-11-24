@@ -281,6 +281,29 @@ sequence rather than imposing a shared one-reroll limit across sources.
 still limits each reroll with Advantage or Disadvantage to one chosen die,
 not both.
 
+## A58: Any weapon may be held with both hands
+
+**Assumption:** A loadout's main weapon has a grip. Any weapon may take the
+`two_handed` grip, and a Two-Handed weapon needs it. A `two_handed` grip
+occupies both hands, so the same loadout can't also hold a shield or an
+off-hand weapon, and neither hand is free for a grapple or a held object. A
+Versatile weapon deals its Versatile damage on a melee attack while it is held
+with the `two_handed` grip.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Two-Handed"
+says such a weapon "requires two hands when you attack with it", and
+"Versatile" says the weapon "can be used with one or two hands" and deals its
+Versatile damage "when used with two hands to make a melee attack". The SRD
+says when two hands are required, not that any other weapon can't be held in
+both.
+
+**Temporary implementation restriction (not a rules assumption):** Battle
+Runtime keeps the loadout's grip for the whole battle; a creature can't yet
+change grip during a battle. Changing grip in battle, and offering the starting
+grip in equipment setup, is tracked in
+[#669](https://github.com/dearlordylord/5e-quint/issues/669), which retires
+this restriction.
+
 ## A64: A stat block's ammunition attack needs no free hand
 
 **Assumption:** Battle checks the free hand for loading only for a character's

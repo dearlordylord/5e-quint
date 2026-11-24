@@ -885,11 +885,12 @@ function battleExecutableChoiceOptions(
         ? Option.none()
         : unitLibrary.getUnit(option.unitRef.unitId);
     if (Option.isNone(unit) || unit.value.kind !== "weapon") return false;
+    const definition = admitWeaponDefinition({
+      weapon: unit.value,
+      unitCatalog: unitLibrary,
+    });
     return (
-      admitWeaponDefinition({
-        weapon: unit.value,
-        unitCatalog: unitLibrary,
-      }).tag === "admitted"
+      definition.tag === "admitted" && definition.masterySupport === "supported"
     );
   });
 }

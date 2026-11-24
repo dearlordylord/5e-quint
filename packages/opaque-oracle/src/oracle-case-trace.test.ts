@@ -199,7 +199,10 @@ describe("Opaque Oracle Case and Trace contract", () => {
             weapon: weapon.value,
             unitCatalog: unitLibrary,
           });
-          expect(definition.tag).toBe("admitted");
+          expect(definition).toMatchObject({
+            tag: "admitted",
+            masterySupport: "supported",
+          });
           if (definition.tag === "rejected") continue;
           admittedMasterySelections += 1;
         }

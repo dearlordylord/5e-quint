@@ -2,7 +2,17 @@
 
 // KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 
+// RAW trace for the main weapon steps:
+// - .references/srd-5.2.1/equipment.md#Versatile: a Versatile weapon deals its
+//   parenthesized damage "when used with two hands to make a melee attack".
+// - .references/srd-5.2.1/equipment.md#Two-Handed: a Two-Handed weapon
+//   "requires two hands when you attack with it".
+// - ASSUMPTIONS.md A58: any weapon may be held with both hands, and that grip
+//   occupies both.
+
 module characterBattleInitProjectionMbt {
+  import attackRollDamageDiceCore.* from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
+
   type BattleInitProjectionOutcome =
     | BattleInitProjectionInit
     | BattleInitProjectionSheetHitPointsArmorClassConditionsAndProfiles
@@ -12,6 +22,10 @@ module characterBattleInitProjectionMbt {
     | BattleInitProjectionMixedSpellAndPactSlotInitRejected
     | BattleInitProjectionBuildMaximumAboveBuildMaximumRejected
     | BattleInitProjectionStableRecoveryProgressDuringInitRejected
+    | BattleInitProjectionVersatileWeaponOneHanded
+    | BattleInitProjectionVersatileWeaponTwoHanded
+    | BattleInitProjectionTwoHandedWeapon
+    | BattleInitProjectionNonVersatileWeaponTwoHanded
 
   type BattleInitProjectionFacts = {
     characterIdentity: str,
@@ -32,6 +46,10 @@ module characterBattleInitProjectionMbt {
     projectedCantripCount: int,
     selectedLeveledSpellCount: int,
     projectedLeveledSpellCount: int,
+    mainWeaponGrip: str,
+    leftHandUse: str,
+    rightHandUse: str,
+    mainWeaponDamageDieSize: int,
   }
 
   type BattleInitProjectionState = {
@@ -63,6 +81,53 @@ module characterBattleInitProjectionMbt {
     projectedCantripCount: 0,
     selectedLeveledSpellCount: 0,
     projectedLeveledSpellCount: 0,
+    mainWeaponGrip: "none",
+    leftHandUse: "free",
+    rightHandUse: "free",
+    mainWeaponDamageDieSize: 0,
+  }
+
+  type MainWeaponFacts = {
+    damageDieSize: int,
+    versatile: VersatileDamage,
+  }
+
+  pure def weaponGripName(grip: WeaponGrip): str =
+    match grip {
+      | OneHandedGrip => "one_handed"
+      | TwoHandedGrip => "two_handed"
+    }
+
+  // The main weapon holds the right hand, and the left too when both hands
+  // hold it. Its damage die is the one a melee attack with it deals.
+  pure def mainWeaponProjectionFacts(
+    characterIdentity: str,
+    weapon: MainWeaponFacts,
+    grip: WeaponGrip,
+  ): BattleInitProjectionFacts =
+    emptyProjectionFacts
+      .with("characterIdentity", characterIdentity)
+      .with("mainWeaponGrip", weaponGripName(grip))
+      .with("leftHandUse", if (weaponGripHandsHeld(grip) == 2) "mainWeapon" else "free")
+      .with("rightHandUse", "mainWeapon")
+      .with("mainWeaponDamageDieSize", weaponAttackDamageDieSize({
+        damageDieSize: weapon.damageDieSize,
+        versatile: weapon.versatile,
+        grip: grip,
+        meleeAttack: true,
+      }))
+
+  pure val versatileD8D10Weapon: MainWeaponFacts = {
+    damageDieSize: 8,
+    versatile: VersatileDamageDie(10),
+  }
+  pure val twoHandedD12Weapon: MainWeaponFacts = {
+    damageDieSize: 12,
+    versatile: NotVersatile,
+  }
+  pure val nonVersatileD4Weapon: MainWeaponFacts = {
+    damageDieSize: 4,
+    versatile: NotVersatile,
   }
 
   action recordProjection(
@@ -196,6 +261,50 @@ module characterBattleInitProjectionMbt {
     ),
   }
 
+  action doProjectVersatileWeaponOneHanded = all {
+    qState.replayIndex == 7,
+    recordProjection(
+      BattleInitProjectionVersatileWeaponOneHanded,
+      true,
+      "none",
+      mainWeaponProjectionFacts("character:battle-init-versatile-weapon-one-handed", versatileD8D10Weapon, OneHandedGrip),
+      8,
+    ),
+  }
+
+  action doProjectVersatileWeaponTwoHanded = all {
+    qState.replayIndex == 8,
+    recordProjection(
+      BattleInitProjectionVersatileWeaponTwoHanded,
+      true,
+      "none",
+      mainWeaponProjectionFacts("character:battle-init-versatile-weapon-two-handed", versatileD8D10Weapon, TwoHandedGrip),
+      9,
+    ),
+  }
+
+  action doProjectTwoHandedWeapon = all {
+    qState.replayIndex == 9,
+    recordProjection(
+      BattleInitProjectionTwoHandedWeapon,
+      true,
+      "none",
+      mainWeaponProjectionFacts("character:battle-init-two-handed-weapon", twoHandedD12Weapon, TwoHandedGrip),
+      10,
+    ),
+  }
+
+  action doProjectNonVersatileWeaponTwoHanded = all {
+    qState.replayIndex == 10,
+    recordProjection(
+      BattleInitProjectionNonVersatileWeaponTwoHanded,
+      true,
+      "none",
+      mainWeaponProjectionFacts("character:battle-init-non-versatile-weapon-two-handed", nonVersatileD4Weapon, TwoHandedGrip),
+      11,
+    ),
+  }
+
   action step = any {
     doProjectSheetHitPointsArmorClassConditionsAndProfiles,
     doProjectSheetSpellcastingAndMetamagic,
@@ -204,5 +313,9 @@ module characterBattleInitProjectionMbt {
     doRejectMixedSpellAndPactSlotInit,
     doRejectBuildMaximumAboveBuildMaximum,
     doRejectStableRecoveryProgressDuringInit,
+    doProjectVersatileWeaponOneHanded,
+    doProjectVersatileWeaponTwoHanded,
+    doProjectTwoHandedWeapon,
+    doProjectNonVersatileWeaponTwoHanded,
   }
 }

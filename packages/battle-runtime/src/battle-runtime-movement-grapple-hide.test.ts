@@ -36,6 +36,7 @@ import {
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
 import { GRAPPLE_TARGET_REACH_FEET } from "./battle-reducer/domain-constants.ts";
+import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -3354,6 +3355,73 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(grappled.state.grapples).toEqual([
       expect.objectContaining({ targetId: goblinId, escapeDc: 13 }),
     ]);
+  });
+
+  test("a main weapon held two-handed leaves no hand free to Grapple", () => {
+    const grappleSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    };
+    const longswordObjectId = battleObjectId("main:weapon_longsword");
+    const battleWithLongswordGrip = (grip: "one_handed" | "two_handed") =>
+      startBattleRight({
+        battleId: battleId(`battle-grapple-longsword-${grip}`),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            selectedLoadout: {
+              weapon: {
+                itemId: longswordObjectId,
+                unitId: parseSharedUnitId("weapon_longsword"),
+                grip,
+              },
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+    const grappleAfterTarget = (state: BattleState) => {
+      const target = requireHole(
+        resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+        "targetChoice",
+      );
+      return resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [targetFill(target, goblinId)],
+      });
+    };
+
+    const twoHanded = battleWithLongswordGrip("two_handed");
+    expect(grappleAfterTarget(twoHanded)).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Grapple requires a free hand.",
+    });
+    requireHole(
+      grappleAfterTarget(battleWithLongswordGrip("one_handed")),
+      "grappleOutcome",
+    );
+
+    const dropped = battleStateWithGroundObjects(twoHanded, [
+      {
+        actorId: fighterId,
+        objectId: longswordObjectId,
+        positionId: battleTablePositionId("two-handed-longsword-drop"),
+        source: {
+          kind: "spell",
+          sourceCombatantId: fighterId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "two-handed-longsword-drop",
+          ),
+        },
+      },
+    ]);
+    if (dropped.tag !== "applied") {
+      throw new Error("Expected the two-handed Longsword drop to apply.");
+    }
+    requireHole(grappleAfterTarget(dropped.state), "grappleOutcome");
   });
 
   test("Grapple escape DC derives from the attacker's Strength", () => {

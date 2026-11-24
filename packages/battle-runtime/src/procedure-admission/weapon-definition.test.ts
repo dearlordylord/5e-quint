@@ -100,21 +100,21 @@ describe("weapon definition admission", () => {
     );
   });
 
-  test("admits ten of the canonical thirteen roots after all thirteen Surface refs resolve", () => {
+  test("admits every published weapon root, and marks the Nick and Vex masteries unsupported", () => {
     const weaponRoots = unitLibrary.listUnits().filter(isWeaponDefinitionUnit);
     const surfaceGraph = inspectWeaponMasteryReferenceGraph({
       weaponRoots,
       unitCatalog: unitLibrary,
     });
 
-    expect(weaponRoots).toHaveLength(13);
+    expect(weaponRoots).toHaveLength(canonicalWeaponMasteries.length);
     expect([...weaponRoots.map(({ id }) => id)].sort()).toEqual(
       [
         ...canonicalWeaponMasteries.map(({ weaponUnitId }) => weaponUnitId),
       ].sort(),
     );
     expect(surfaceGraph.issues).toEqual([]);
-    expect(surfaceGraph.resolved).toHaveLength(13);
+    expect(surfaceGraph.resolved).toHaveLength(canonicalWeaponMasteries.length);
     expect(
       surfaceGraph.resolved
         .map(({ weapon, mastery }) => ({
@@ -143,39 +143,38 @@ describe("weapon definition admission", () => {
       }),
     }));
     const admitted = admissions.flatMap(({ weapon, admission }) =>
-      admission.tag === "admitted"
+      admission.tag === "admitted" ? [{ weapon, admission }] : [],
+    );
+    expect(admitted).toHaveLength(canonicalWeaponMasteries.length);
+    const supported = admitted.flatMap(({ weapon, admission }) =>
+      admission.masterySupport === "supported"
         ? [
             {
               weaponUnitId: weapon.id,
               masteryProperty: admission.facts.masteryProperty,
-              facts: admission.facts,
             },
           ]
         : [],
     );
-    const rejected = admissions.flatMap(({ weapon, admission }) =>
-      admission.tag === "rejected"
+    const unsupported = admitted.flatMap(({ weapon, admission }) =>
+      admission.masterySupport === "unsupported"
         ? [
             {
               weaponUnitId: weapon.id,
-              issues: admission.issues,
+              masteryUnitId: admission.resolvedMastery.unit.id,
+              issueCount: admission.resolvedMastery.issues.length,
+              reason: admission.resolvedMastery.issues[0].reason,
+              mechanicsPath: admission.resolvedMastery.issues[0].mechanicsPath,
+              hasMasteryProperty: "masteryProperty" in admission.facts,
             },
           ]
         : [],
     );
-
-    expect(admitted).toHaveLength(10);
-    expect(rejected).toHaveLength(3);
-    expect(
-      admitted
-        .map(({ weaponUnitId, masteryProperty }) => ({
-          weaponUnitId,
-          masteryProperty,
-        }))
-        .sort((left, right) =>
-          left.weaponUnitId.localeCompare(right.weaponUnitId),
-        ),
-    ).toEqual(
+    const byWeapon = <T extends { readonly weaponUnitId: string }>(
+      left: T,
+      right: T,
+    ) => left.weaponUnitId.localeCompare(right.weaponUnitId);
+    expect(supported.sort(byWeapon)).toEqual(
       [...canonicalWeaponMasteries]
         .filter(({ masteryProperty }) =>
           ["cleave", "sap", "slow", "topple"].includes(masteryProperty),
@@ -184,51 +183,30 @@ describe("weapon definition admission", () => {
           weaponUnitId,
           masteryProperty,
         }))
-        .sort((left, right) =>
-          left.weaponUnitId.localeCompare(right.weaponUnitId),
-        ),
+        .sort(byWeapon),
     );
-    const rejectedFacts = rejected
-      .map(({ weaponUnitId, issues }) => ({
-        weaponUnitId,
-        issueCount: issues.length,
-        reason: issues[0]?.reason,
-        mechanicsPath: issues[0]?.mechanicsPath,
-      }))
-      .sort((left, right) =>
-        left.weaponUnitId.localeCompare(right.weaponUnitId),
-      );
-    expect(rejectedFacts).toEqual(
+    expect(unsupported.sort(byWeapon)).toEqual(
       [
-        {
-          weaponUnitId: "weapon_dagger",
+        { weaponUnitId: "weapon_dagger", masteryUnitId: "mastery_nick" },
+        { weaponUnitId: "weapon_shortsword", masteryUnitId: "mastery_vex" },
+        { weaponUnitId: "weapon_shortbow", masteryUnitId: "mastery_vex" },
+      ]
+        .map((expected) => ({
+          ...expected,
           issueCount: 1,
           reason: "unsupported_mechanics",
           mechanicsPath: weaponMasteryReferencePath,
-        },
-        {
-          weaponUnitId: "weapon_shortsword",
-          issueCount: 1,
-          reason: "unsupported_mechanics",
-          mechanicsPath: weaponMasteryReferencePath,
-        },
-        {
-          weaponUnitId: "weapon_shortbow",
-          issueCount: 1,
-          reason: "unsupported_mechanics",
-          mechanicsPath: weaponMasteryReferencePath,
-        },
-      ].sort((left, right) =>
-        left.weaponUnitId.localeCompare(right.weaponUnitId),
-      ),
+          hasMasteryProperty: false,
+        }))
+        .sort(byWeapon),
     );
-    for (const { facts } of admitted) {
-      expect(facts).not.toHaveProperty("weaponUnitId");
-      expect(facts).not.toHaveProperty("masteryUnitId");
+    for (const { admission } of admitted) {
+      expect(admission.facts).not.toHaveProperty("weaponUnitId");
+      expect(admission.facts).not.toHaveProperty("masteryUnitId");
     }
   });
 
-  test("accumulates independent missing, wrong-kind, ambiguous, and unsupported rooted issues", () => {
+  test("accumulates independent missing, wrong-kind and ambiguous rooted issues", () => {
     const canonicalWeapon = requireWeapon("weapon_longsword");
     const canonicalMastery = unitLibrary.requireUnit("mastery_sap");
     const armor = unitLibrary.requireUnit("armor_chain_mail");
@@ -257,7 +235,6 @@ describe("weapon definition admission", () => {
     if (duplicateMastery.kind !== "mastery") {
       throw new Error("Expected a mastery duplicate fixture.");
     }
-    const unsupportedWeapon = requireWeapon("weapon_dagger");
 
     const cases = [
       { weapon: missingWeapon, unitCatalog: unitLibrary },
@@ -266,7 +243,6 @@ describe("weapon definition admission", () => {
         weapon: ambiguousWeapon,
         unitCatalog: catalogFor([canonicalMastery, duplicateMastery]),
       },
-      { weapon: unsupportedWeapon, unitCatalog: unitLibrary },
     ] as const;
     const diagnostics = cases.flatMap(({ weapon, unitCatalog }) => {
       const admission = admitWeaponDefinition({ weapon, unitCatalog });
@@ -310,8 +286,25 @@ describe("weapon definition admission", () => {
         message:
           "The weapon mastery reference mastery_sap matches 2 Unit roots.",
       },
+    ]);
+  });
+
+  test("admits a weapon for ordinary use when Battle doesn't support its mastery", () => {
+    const admission = admitWeaponDefinition({
+      weapon: requireWeapon("weapon_dagger"),
+      unitCatalog: unitLibrary,
+    });
+    if (
+      admission.tag !== "admitted" ||
+      admission.masterySupport !== "unsupported"
+    ) {
+      throw new Error(
+        "Expected the Dagger to be admitted without its mastery.",
+      );
+    }
+    expect(admission.facts).not.toHaveProperty("masteryProperty");
+    expect(admission.resolvedMastery.issues).toEqual([
       {
-        root: { kind: "unit", id: "weapon_dagger" },
         reason: "unsupported_mechanics",
         mechanicsPath: weaponMasteryReferencePath,
         message:
@@ -354,7 +347,11 @@ describe("weapon definition admission", () => {
       weapon: renamedWeapon,
       unitCatalog: catalogFor([renamedWeapon, renamedMastery]),
     });
-    if (canonical.tag !== "admitted" || renamed.tag !== "admitted") {
+    if (
+      canonical.tag !== "admitted" ||
+      renamed.tag !== "admitted" ||
+      renamed.masterySupport !== "supported"
+    ) {
       throw new Error("Expected canonical and renamed weapons to be admitted.");
     }
 
