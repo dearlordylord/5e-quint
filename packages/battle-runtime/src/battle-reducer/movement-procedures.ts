@@ -1518,8 +1518,9 @@ type FixedCostMovementReplacementCostResult =
  * distance-multiplier effect's jump spends the spell's fixed Movement cost
  * instead: SRD 5.2.1 Jump lets the target "jump up to 30 feet by spending 10
  * feet of movement", so the path's crawling, climbing, swimming and table
- * Difficult Terrain extras don't apply; landing in Difficult Terrain is the
- * landing's Acrobatics check. Cited spell areas still add their surcharges.
+ * Difficult Terrain extras don't apply. Under ASSUMPTIONS.md A62, cited spell
+ * areas also leave this fixed cost unchanged; their other effects still apply.
+ * Landing in Difficult Terrain requires the landing's Acrobatics check.
  * A Prone creature can't jump: its only movement options are to crawl or to
  * right itself (Rules Glossary "Prone").
  */

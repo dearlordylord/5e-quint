@@ -118,16 +118,13 @@ export function priceBattleMovementPath(
   if (directional.tag === "invalid") {
     return directional;
   }
-  const dragCosts: number[] = [];
+  let extraCostFeet = 0;
   for (const segment of segments) {
     const drag = grappleDragExtraCostPerFoot(state, mover, segment);
     if (drag.tag === "invalid") {
       return drag;
     }
-    dragCosts.push(drag.extraCostPerFoot);
-  }
-  let extraCostFeet = 0;
-  segments.forEach((segment, index) => {
+
     const directionalExtraCostPerFoot =
       segment.movesCloserThroughDirectionalArea && directional.tag === "ok"
         ? directional.effect.movementCost.multiplier - 1
@@ -137,10 +134,10 @@ export function priceBattleMovementPath(
       activity: movementPathActivity(segment.activity, value.speedKind),
       difficultTerrain: segment.difficultTerrain !== "none",
       effectExtraCostPerFoot:
-        (dragCosts[index] ?? 0) + directionalExtraCostPerFoot,
+        drag.extraCostPerFoot + directionalExtraCostPerFoot,
     });
     extraCostFeet += Number(priced.costFeet) - Number(priced.distanceFeet);
-  });
+  }
   return {
     tag: "ok",
     distanceFeet,
