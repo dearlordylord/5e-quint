@@ -3068,16 +3068,10 @@ export function resolveSelectedAttackProcedure<
     // A weapon has one mastery property per attack, so Slow never applies to
     // Graze miss damage.
     const fixedDamageWithWeaponMasterySpeedReductionState =
-      applyWeaponMasterySlowAfterDamage({
+      applyWeaponMasterySlowToPresentParticipants({
         state: fixedDamageAppliedState,
-        attacker: requireCurrentAttackParticipant(
-          fixedDamageAppliedState,
-          attacker,
-        ),
-        target: requireCurrentAttackParticipant(
-          fixedDamageAppliedState,
-          target,
-        ),
+        attacker,
+        target,
         attack,
         damageAmount: Number(reducedFixedDamageAmount),
       });
@@ -3657,13 +3651,10 @@ export function resolveSelectedAttackProcedure<
     }
     /* v8 ignore stop -- @preserve */
     const damageWithWeaponMasterySpeedReductionState =
-      applyWeaponMasterySlowAfterDamage({
+      applyWeaponMasterySlowToPresentParticipants({
         state: cunningStrike.state,
-        attacker: requireCurrentAttackParticipant(
-          cunningStrike.state,
-          attacker,
-        ),
-        target: requireCurrentAttackParticipant(cunningStrike.state, target),
+        attacker,
+        target,
         attack,
         damageAmount: Number(reducedDamageAmount),
       });
@@ -3823,6 +3814,33 @@ function weaponMasteryGrazeMissDamage(input: {
     byTag("notApplicable", () => ({ tag: "ok" as const, damageByType: null })),
     Match.exhaustive,
   );
+}
+
+function applyWeaponMasterySlowToPresentParticipants(
+  input: Parameters<typeof applyWeaponMasterySlowAfterDamage>[0],
+): BattleState {
+  const attacker = attackParticipantAfterDamage(input.state, input.attacker);
+  const target = attackParticipantAfterDamage(input.state, input.target);
+  return attacker === null || target === null
+    ? input.state
+    : applyWeaponMasterySlowAfterDamage({ ...input, attacker, target });
+}
+
+/** Damage can retire a participant; other missing resolved participants violate roster ownership. */
+function attackParticipantAfterDamage(
+  state: BattleState,
+  resolvedParticipant: BattleCreatureState,
+): BattleCreatureState | null {
+  const current = state.combatants.get(resolvedParticipant.combatantId);
+  if (current !== undefined) return current;
+  if (
+    state.executionScopeCursors.get(resolvedParticipant.combatantId)?.kind ===
+    "retired"
+  )
+    return null;
+  /* v8 ignore start -- @preserve -- Internal invariant: a previously resolved participant's absence after damage requires the canonical roster-removal operation to have retired its execution scope. */
+  throw new Error("Attack damage must retain or retire resolved participants.");
+  /* v8 ignore stop -- @preserve */
 }
 
 function requireCurrentAttackParticipant(
