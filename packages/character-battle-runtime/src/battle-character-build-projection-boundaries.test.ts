@@ -21,7 +21,7 @@ import {
 } from "./sdk-integration.test-support.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Option } from "effect";
+import { Option, Result } from "effect";
 import { PositiveInteger } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
@@ -311,10 +311,12 @@ describe("Character Build battle spell projection boundaries", () => {
         admissionReason: "incomplete_graph",
       }),
     ]);
-    const blockers = characterBuildEquippedWeaponBattleBlockers({
-      build: equippedBuild,
-      unitLibrary: projectionLibrary,
-    });
+    const blockers = requireSuccess(
+      characterBuildEquippedWeaponBattleBlockers({
+        build: equippedBuild,
+        unitLibrary: projectionLibrary,
+      }),
+    );
     expect(blockers).toEqual([
       {
         slot: "main",
@@ -345,13 +347,15 @@ describe("Character Build battle spell projection boundaries", () => {
 
   test("discloses no equipped weapon blockers when the weapon definition is admitted", () => {
     expect(
-      characterBuildEquippedWeaponBattleBlockers({
-        build: levelFiveMartialBuild({
-          classUnitId: authoredUnitId("class_fighter"),
-          weaponUnitId: authoredUnitId("weapon_longsword"),
+      requireSuccess(
+        characterBuildEquippedWeaponBattleBlockers({
+          build: levelFiveMartialBuild({
+            classUnitId: authoredUnitId("class_fighter"),
+            weaponUnitId: authoredUnitId("weapon_longsword"),
+          }),
+          unitLibrary,
         }),
-        unitLibrary,
-      }),
+      ),
     ).toEqual([]);
   });
 
@@ -361,10 +365,12 @@ describe("Character Build battle spell projection boundaries", () => {
       weaponUnitId: authoredUnitId("weapon_dagger"),
     });
     expect(
-      characterBuildEquippedWeaponBattleBlockers({
-        build: daggerBuild,
-        unitLibrary,
-      }),
+      requireSuccess(
+        characterBuildEquippedWeaponBattleBlockers({
+          build: daggerBuild,
+          unitLibrary,
+        }),
+      ),
     ).toEqual([]);
 
     const masteryBuild = {
@@ -378,10 +384,12 @@ describe("Character Build battle spell projection boundaries", () => {
       ],
     };
     expect(
-      characterBuildEquippedWeaponBattleBlockers({
-        build: masteryBuild,
-        unitLibrary,
-      }),
+      requireSuccess(
+        characterBuildEquippedWeaponBattleBlockers({
+          build: masteryBuild,
+          unitLibrary,
+        }),
+      ),
     ).toEqual([
       {
         slot: "main",
@@ -411,7 +419,7 @@ describe("Character Build battle spell projection boundaries", () => {
     ]);
   });
 
-  test("checks equipped weapons without masteries when a mastery selection can't be resolved", () => {
+  test("preserves all unresolved mastery selections instead of claiming no weapon blockers", () => {
     const daggerBuild = levelFiveMartialBuild({
       classUnitId: authoredUnitId("class_fighter"),
       weaponUnitId: authoredUnitId("weapon_dagger"),
@@ -429,16 +437,29 @@ describe("Character Build battle spell projection boundaries", () => {
           selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
           unitId: authoredUnitId("synthetic:missing-mastery-weapon"),
         },
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("synthetic:another-missing-mastery-weapon"),
+        },
       ],
     };
-    // Battle support reports the unresolvable selection; the blocker check
-    // reads no mastery selections, so the Dagger alone doesn't block.
-    expect(
-      characterBuildEquippedWeaponBattleBlockers({
-        build: malformedSelectionBuild,
-        unitLibrary,
+    const assessment = characterBuildEquippedWeaponBattleBlockers({
+      build: malformedSelectionBuild,
+      unitLibrary,
+    });
+    expect(assessment).toMatchObject({ _tag: "Failure" });
+    if (Result.isSuccess(assessment)) return;
+    expect(battleCreatureInitIssueLeaves(assessment.failure)).toEqual([
+      expect.objectContaining({
+        message: expect.stringContaining("synthetic:missing-mastery-weapon"),
       }),
-    ).toEqual([]);
+      expect.objectContaining({
+        message: expect.stringContaining(
+          "synthetic:another-missing-mastery-weapon",
+        ),
+      }),
+    ]);
   });
 
   test("reports a selected defensive feature that is unavailable", () => {
