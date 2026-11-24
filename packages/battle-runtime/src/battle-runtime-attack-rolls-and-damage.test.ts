@@ -59,8 +59,8 @@ import {
 import type {
   BattleState,
   BattleSubject,
-  CombatantId,
 } from "./battle-runtime.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
 import {
   statBlockBaseDamageComponentOrdinal,
@@ -1966,12 +1966,4 @@ function isFixedStatBlockAttackOption(
     (damage.advantageBonus === undefined ||
       damage.advantageBonus.kind === "fixed")
   );
-}
-
-function requireCombatant(state: BattleState, id: CombatantId) {
-  const combatant = state.combatants.get(id);
-  if (combatant === undefined) {
-    throw new Error(`Expected combatant ${id}.`);
-  }
-  return combatant;
 }

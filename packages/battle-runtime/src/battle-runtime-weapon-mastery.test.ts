@@ -103,6 +103,7 @@ import {
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 
 function requireMechanicalCharacterProcedureRef(
   state: BattleState,
@@ -3107,11 +3108,3 @@ describe("battle runtime: Weapon Mastery", () => {
     });
   });
 });
-
-function requireCombatant(state: BattleState, id: CombatantId) {
-  const combatant = state.combatants.get(id);
-  if (combatant === undefined) {
-    throw new Error(`Expected combatant ${id}.`);
-  }
-  return combatant;
-}

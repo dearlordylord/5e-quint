@@ -1254,8 +1254,9 @@ export function tacticalMasterAttackWithReplacement<
 }
 
 /**
- * The caller passes the attacker and target as they are in `state`, so the
- * only no-op is an attack without the Push mastery.
+ * The caller passes the attacker and target as they are in `state`. The
+ * result is `ok` with no shove pushes only when the attack lacks the Push
+ * mastery; malformed fills return `invalid`.
  */
 export function applyWeaponMasteryPushOnHit(input: {
   readonly state: BattleState;
