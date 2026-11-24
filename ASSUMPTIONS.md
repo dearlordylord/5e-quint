@@ -337,3 +337,18 @@ such as the Spy's Hand Crossbow and Shortsword in
 `.references/srd-5.2.1/monsters-A-Z.md`, but it never says what the creature
 holds in each hand when it attacks. The SRD gives no fact to test the free
 hand against, so Battle takes each stat block attack as usable as written.
+
+## A59: A Chromatic Orb leap measures cover from the previous target
+
+**Assumption:** When the orb leaps, the new target's cover against the new
+attack roll is measured from the creature the orb leaps from, not from the
+caster. The table supplies that degree on the leap's geometry fact; a new target
+with Total Cover from the previous target can't be leapt to.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Chromatic Orb," says
+the orb "leaps to a different target of your choice within 30 feet of the
+target" and that you "make an attack roll against the new target," but not
+where that attack originates. `.references/srd-5.2.1/playing-the-game.md`,
+"Cover," says a target benefits from cover only "when an attack or other effect
+originates on the opposite side of the cover." The model reads the leap as
+travelling from the previous target, so the attack originates there.

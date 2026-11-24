@@ -853,10 +853,11 @@ function opportunityAttackThreatAttackIssue(
     targetId: moverId,
     ...attackExecutionSelectionForOption(attack),
     distanceFeet: threat.distanceFeet,
+    ...optionalProperty("cover", threat.cover),
   };
   return attackTargetIsLegal(state, reactorId, moverId, attack, [distanceFact])
     ? null
-    : "Movement Opportunity Attack threat distance is outside the selected attack's reach.";
+    : "Movement Opportunity Attack threat distance is outside the selected attack's reach, or the mover has Total Cover from the reactor.";
 }
 
 function opportunityAttackThreatIdentityKey(

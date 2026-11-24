@@ -18,7 +18,6 @@ import { thrownWeaponLandingIssue } from "./thrown-weapon-attack.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import {
   damageAmount as toDamageAmount,
@@ -46,7 +45,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -106,7 +105,8 @@ import {
 } from "./movement-speed.ts";
 import {
   qualifyAttackEnemyProximity,
-  attackTargetIsLegal,
+  attackTargetAdmission,
+  attackTargetStatedCover,
 } from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
@@ -186,6 +186,7 @@ type ReactionAttackDamagePath =
     };
 
 type ReactionAttackCommandContext = {
+  readonly targetCover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
   readonly input: OpportunityAttackResolutionInput;
   readonly commandLabel: string;
   readonly reactor: BattleCreatureState;
@@ -501,6 +502,7 @@ function resolveReactionAttackCommand(
     attack,
     fillSet,
     targetSpatialFacts: targetSpatialFacts.facts,
+    targetCover: targetSpatialFacts.cover,
     enemyProximity: targetSpatialFacts.enemyProximity,
   };
   const rollPreparation = prepareReactionAttackRoll(context);
@@ -580,6 +582,34 @@ function reactionAttackBinding(
   return { tag: "ready", reactor, target, attack };
 }
 
+/**
+ * Why a reactor's own attack target fact for an Opportunity Attack can't be
+ * used: its distance and cover must be the ones ruled on the threat.
+ */
+function suppliedOpportunityAttackTargetFactIssue(
+  input: {
+    readonly subject: OpportunityAttackResolutionInput["subject"];
+    readonly attack: BoundSupportedAttackActionOption;
+    readonly fillSet: ResolvedAttackFillSet;
+  },
+  suppliedDistanceFeet: NonNullable<
+    ReturnType<typeof attackTargetDistanceFeet>
+  >,
+): string | null {
+  if (input.subject.command !== "opportunityAttack") return null;
+  if (Number(suppliedDistanceFeet) !== Number(input.subject.distanceFeet)) {
+    return "Opportunity Attack target distance must match the reach-leaving trigger distance.";
+  }
+  return attackTargetStatedCover(
+    input.fillSet.targetSpatialFacts,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+  ) === input.subject.cover
+    ? null
+    : "Opportunity Attack target cover must match the cover the table ruled on its threat.";
+}
+
 function reactionAttackTargetSpatialFacts(input: {
   readonly state: BattleState;
   readonly commandLabel: string;
@@ -590,6 +620,7 @@ function reactionAttackTargetSpatialFacts(input: {
   | {
       readonly tag: "ok";
       readonly facts: readonly BattleTargetSpatialFact[];
+      readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
       readonly enemyProximity:
         | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
         | null;
@@ -602,21 +633,27 @@ function reactionAttackTargetSpatialFacts(input: {
     input.subject.targetId,
     input.attack,
   );
-  if (
-    input.subject.command === "opportunityAttack" &&
-    suppliedDistanceFeet !== null &&
-    Number(suppliedDistanceFeet) !== Number(input.subject.distanceFeet)
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "Opportunity Attack target distance must match the reach-leaving trigger distance.",
-    };
+  const suppliedFactIssue =
+    suppliedDistanceFeet === null
+      ? null
+      : suppliedOpportunityAttackTargetFactIssue(input, suppliedDistanceFeet);
+  if (suppliedFactIssue !== null) {
+    return { tag: "invalid", message: suppliedFactIssue };
   }
   const facts = reactionAttackDistanceFacts(input, suppliedDistanceFeet);
   if (facts === undefined) return missingReactionAttackDistance(input.fillSet);
-  const targetIssue = reactionAttackTargetIssue(input, facts);
-  if (targetIssue !== null) return targetIssue;
+  const admission = attackTargetAdmission(
+    input.state,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+    facts,
+  );
+  if (admission === null)
+    return {
+      tag: "invalid",
+      message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
+    };
   const enemyProximity = qualifyAttackEnemyProximity(
     input.state,
     input.subject.reactorId,
@@ -630,7 +667,7 @@ function reactionAttackTargetSpatialFacts(input: {
     facts,
   );
   if (landingIssue !== null) return { tag: "invalid", message: landingIssue };
-  return { tag: "ok", facts, enemyProximity };
+  return { tag: "ok", facts, enemyProximity, cover: admission.cover };
 }
 
 /**
@@ -669,24 +706,6 @@ function fixedReactionAttackTargetHole(
   };
 }
 
-function reactionAttackTargetIssue(
-  input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
-  facts: readonly BattleTargetSpatialFact[],
-): { readonly tag: "invalid"; readonly message: string } | null {
-  return attackTargetIsLegal(
-    input.state,
-    input.subject.reactorId,
-    input.subject.targetId,
-    input.attack,
-    facts,
-  )
-    ? null
-    : {
-        tag: "invalid",
-        message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
-      };
-}
-
 function reactionAttackDistanceFact(input: {
   readonly subject: OpportunityAttackResolutionInput["subject"];
   readonly attack: BoundSupportedAttackActionOption;
@@ -700,6 +719,7 @@ function reactionAttackDistanceFact(input: {
       targetId: subject.targetId,
       ...attackExecutionSelectionForOption(input.attack),
       distanceFeet: subject.distanceFeet,
+      ...optionalProperty("cover", subject.cover),
     })),
     Match.when({ command: "retaliationAttack" }, () => undefined),
     Match.when({ command: "releaseReadiedAttack" }, () => undefined),
@@ -733,9 +753,14 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     input.state.combatants.get(subject.reactorId),
     attack,
   );
+  const targetArmorClass = armorClassAgainstAttack(
+    input.state,
+    target,
+    afterRollInput.context.targetCover,
+  );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.state, target)),
+    targetArmorClass,
     criticalThreshold,
   );
   let attackRolledState = consumeHelpAttackForAttackRoll(

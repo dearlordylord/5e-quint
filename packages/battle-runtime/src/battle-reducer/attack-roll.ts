@@ -162,7 +162,7 @@ import {
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
-  creatureAttackTargetIsLegal,
+  creatureAttackTargetAdmission,
   attackTargetDistanceFeet,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
@@ -1723,7 +1723,7 @@ export function huntersPreyHordeBreakerDamageHole(
   };
 }
 
-export function huntersPreyHordeBreakerTargetIsLegal(input: {
+export function huntersPreyHordeBreakerTargetAdmission(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -1731,16 +1731,10 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
   readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-}): boolean {
-  return (
-    input.secondTarget.combatantId !== input.firstTargetId &&
-    creatureAttackTargetIsLegal(
-      input.attackerId,
-      input.secondTarget,
-      input.attack,
-      input.targetSpatialFacts,
-    ) &&
-    input.targetSpatialFacts.some(
+}): ReturnType<typeof creatureAttackTargetAdmission> {
+  if (
+    input.secondTarget.combatantId === input.firstTargetId ||
+    !input.targetSpatialFacts.some(
       (fact) =>
         fact.kind === "hordeBreakerSecondTargetEligible" &&
         fact.attackerId === input.attackerId &&
@@ -1748,7 +1742,20 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
         fact.originalTargetId === input.firstTargetId &&
         fact.secondTargetId === input.secondTarget.combatantId,
     )
+  )
+    return null;
+  return creatureAttackTargetAdmission(
+    input.attackerId,
+    input.secondTarget,
+    input.attack,
+    input.targetSpatialFacts,
   );
+}
+
+export function huntersPreyHordeBreakerTargetIsLegal(
+  input: Parameters<typeof huntersPreyHordeBreakerTargetAdmission>[0],
+): boolean {
+  return huntersPreyHordeBreakerTargetAdmission(input) !== null;
 }
 
 export function recordHuntersPreyHordeBreakerUsed(
@@ -1833,29 +1840,36 @@ function cleaveAbilityChoice(
   };
 }
 
-export function weaponMasteryCleaveTargetIsLegal(input: {
+export function weaponMasteryCleaveTargetAdmission(input: {
   readonly attackerId: CombatantId;
   readonly firstTargetId: CombatantId;
   readonly secondTarget: BattleCreatureState;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-}): boolean {
-  return (
-    input.secondTarget.combatantId !== input.firstTargetId &&
-    creatureAttackTargetIsLegal(
-      input.attackerId,
-      input.secondTarget,
-      input.attack,
-      input.targetSpatialFacts,
-    ) &&
-    input.targetSpatialFacts.some(
+}): ReturnType<typeof creatureAttackTargetAdmission> {
+  if (
+    input.secondTarget.combatantId === input.firstTargetId ||
+    !input.targetSpatialFacts.some(
       (fact) =>
         fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
         fact.attackerId === input.attackerId &&
         fact.firstTargetId === input.firstTargetId &&
         fact.secondTargetId === input.secondTarget.combatantId,
     )
+  )
+    return null;
+  return creatureAttackTargetAdmission(
+    input.attackerId,
+    input.secondTarget,
+    input.attack,
+    input.targetSpatialFacts,
   );
+}
+
+export function weaponMasteryCleaveTargetIsLegal(
+  input: Parameters<typeof weaponMasteryCleaveTargetAdmission>[0],
+): boolean {
+  return weaponMasteryCleaveTargetAdmission(input) !== null;
 }
 
 export function recordWeaponMasteryCleaveUsed(

@@ -500,7 +500,7 @@
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
       "module/binding:spellTargetHasNonSpatialPrerequisites": 17,
       "module/binding:spellTargetRequiresAttackRollRelationshipFact": 9,
-      "module/binding:spellTargetSpatialFactMatches": 11,
+      "module/binding:spellTargetSpatialFactMatches": 9,
       "module/binding:validateSpellTargetAllocation": 10,
       "module/binding:validateSpellTargetList": 9
     },

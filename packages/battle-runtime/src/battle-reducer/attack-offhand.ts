@@ -1,3 +1,4 @@
+import { attackTargetAdmission } from "./attack-spatial.ts";
 import { qualifiedAttackRollMode } from "./attack-roll.ts";
 // Light-property off-hand attack resolution extracted from attack-resolution.ts.
 
@@ -12,8 +13,6 @@ import { qualifiedAttackRollMode } from "./attack-roll.ts";
 import { optionalProperty } from "../optional-property.ts";
 import type { CharacterAttackExecutionSelection } from "../battle-action-options.ts";
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
@@ -41,7 +40,7 @@ import {
 
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -100,7 +99,6 @@ import {
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
-  attackTargetIsLegal,
 } from "./movement-speed.ts";
 
 import { attackFillSet } from "./attack-fill-set.ts";
@@ -266,17 +264,15 @@ function resolveBonusActionAttack(
     ]);
   }
   const target = input.state.combatants.get(fillSet.targetId);
+  const targetAdmission = attackTargetAdmission(
+    input.state,
+    input.subject.actorId,
+    fillSet.targetId,
+    attack,
+    fillSet.targetSpatialFacts,
+  );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    target == null ||
-    !attackTargetIsLegal(
-      input.state,
-      input.subject.actorId,
-      target.combatantId,
-      attack,
-      fillSet.targetSpatialFacts,
-    )
-  ) {
+  if (target == null || targetAdmission === null) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -431,9 +427,14 @@ function resolveBonusActionAttack(
     input.state.combatants.get(input.subject.actorId),
     attack,
   );
+  const targetArmorClass = armorClassAgainstAttack(
+    input.state,
+    target,
+    targetAdmission.cover,
+  );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.state, target)),
+    targetArmorClass,
     criticalThreshold,
   );
   let attackRolledState = consumeHelpAttackForAttackRoll(

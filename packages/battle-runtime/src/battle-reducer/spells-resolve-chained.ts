@@ -10,7 +10,6 @@ import {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollResultIsValid,
@@ -64,7 +63,7 @@ import {
   DamageRelationshipDecisionsByHole,
   damageRelationshipDecisionFillCheck,
 } from "./damage-relationship-decisions.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,
@@ -113,12 +112,12 @@ import {
   chainedSpellAttackRollHoleId,
   chainedSpellDamageRollHole,
   chainedSpellDamageRollHoleId,
-  chainedSpellLeapTargetIsLegal,
+  chainedSpellLeapTargetAdmission,
   chainedSpellTargetHole,
   chainedSpellTargetHoleId,
   spellDamageTypeChoiceHole,
   spellTargetInterdictionRequests,
-  spellTargetIsLegal,
+  spellTargetAdmission,
 } from "./spells-holes-fills.ts";
 import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-kind.ts";
 import {
@@ -198,7 +197,7 @@ function matchingHoleIdFills<F extends { readonly holeId: unknown }>(
   return fills.filter((fill) => holeIds.has(String(fill.holeId)));
 }
 
-function chainedSpellStepTargetIsLegal(input: {
+function chainedSpellStepTargetAdmission(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
@@ -209,22 +208,25 @@ function chainedSpellStepTargetIsLegal(input: {
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
   readonly stepIndex: number;
   readonly previousTargetId: CombatantId;
-}): boolean {
-  return (
-    spellTargetIsLegal(
-      input.state,
-      input.actorId,
-      input.targetId,
-      input.invocation,
-      input.spatialFacts,
-    ) &&
-    (input.stepIndex === 0 ||
-      chainedSpellLeapTargetIsLegal(
-        input.invocation,
-        input.previousTargetId,
-        input.targetId,
-        input.spatialFacts,
-      ))
+}): {
+  readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
+} | null {
+  const targetAdmission = spellTargetAdmission(
+    input.state,
+    input.actorId,
+    input.targetId,
+    input.invocation,
+    input.spatialFacts,
+    {
+      coverOrigin: input.stepIndex === 0 ? "caster" : "previousTarget",
+    },
+  );
+  if (targetAdmission === null || input.stepIndex === 0) return targetAdmission;
+  return chainedSpellLeapTargetAdmission(
+    input.invocation,
+    input.previousTargetId,
+    input.targetId,
+    input.spatialFacts,
   );
 }
 
@@ -317,17 +319,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      !chainedSpellStepTargetIsLegal({
-        state: replayState,
-        actorId: input.actorId,
-        targetId: target.combatantId,
-        invocation: input.invocation,
-        spatialFacts: step.target.spatialFacts,
-        stepIndex,
-        previousTargetId: targeted[stepIndex - 1],
-      })
-    ) {
+    const targetAdmission = chainedSpellStepTargetAdmission({
+      state: replayState,
+      actorId: input.actorId,
+      targetId: target.combatantId,
+      invocation: input.invocation,
+      spatialFacts: step.target.spatialFacts,
+      stepIndex,
+      previousTargetId: targeted[stepIndex - 1],
+    });
+    if (targetAdmission === null) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
@@ -399,7 +400,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
       const replacementIsLegal =
         replacementTarget !== undefined &&
-        chainedSpellStepTargetIsLegal({
+        chainedSpellStepTargetAdmission({
           state: replayState,
           actorId: input.actorId,
           targetId: replacementTarget.combatantId,
@@ -407,7 +408,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           spatialFacts: interdictionCheck.spatialFacts,
           stepIndex,
           previousTargetId: targeted[stepIndex - 1],
-        });
+        }) !== null;
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementTarget === undefined || !replacementIsLegal) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -593,7 +594,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
 
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(replayState, target)),
+      armorClassAgainstAttack(replayState, target, targetAdmission.cover),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: replayState,

@@ -115,6 +115,16 @@ export type ActivationTiming = (typeof ACTIVATION_TIMINGS)[number];
 
 export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const;
 export type CoverType = (typeof COVER_TYPES)[number];
+/**
+ * A degree of cover the table rules on a creature target. A target the table
+ * rules no cover for has none stated, so "none" isn't one of these.
+ */
+export const RULED_COVER_TYPES = [
+  "half",
+  "threeQuarters",
+  "total",
+] as const satisfies readonly CoverType[];
+export type RuledCoverType = (typeof RULED_COVER_TYPES)[number];
 
 export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const;
 export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number];

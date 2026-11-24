@@ -19,6 +19,7 @@ import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execu
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import { optionalProperty } from "./optional-property.ts";
 import { spawnedCompanionEntryForOwner } from "./spawned-companion-state.ts";
 import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import type {
@@ -441,14 +442,20 @@ function spawnedCompanionTouchDeliveryFills(input: {
     }
     /* v8 ignore stop -- @preserve */
     const facts = fill.spatialFacts ?? [];
-    const deliveryFact = facts.find((fact) =>
-      spawnedCompanionTouchSpellTargetFactMatches({
+    const deliveryFact = facts.find(
+      (
         fact,
-        ownerId: input.ownerId,
-        familiarId: input.familiarId,
-        targetId: fill.value,
-        sourceProcedureRef: input.sourceProcedureRef,
-      }),
+      ): fact is Extract<
+        BattleTargetSpatialFact,
+        { readonly kind: "spawnedCompanionTouchSpellTarget" }
+      > =>
+        spawnedCompanionTouchSpellTargetFactMatches({
+          fact,
+          ownerId: input.ownerId,
+          familiarId: input.familiarId,
+          targetId: fill.value,
+          sourceProcedureRef: input.sourceProcedureRef,
+        }),
     );
     if (deliveryFact === undefined) {
       fills.push(fill);
@@ -466,6 +473,7 @@ function spawnedCompanionTouchDeliveryFills(input: {
           casterId: input.ownerId,
           targetId: fill.value,
           sourceProcedureRef: input.sourceProcedureRef,
+          ...optionalProperty("cover", deliveryFact.cover),
         },
       ],
     });
