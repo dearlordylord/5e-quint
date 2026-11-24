@@ -232,6 +232,41 @@ describe("changing a weapon grip during a battle", () => {
     });
   });
 
+  it("gives a dropped off-hand weapon no hand while the main weapon's grip is two-handed, even with the main weapon dropped too", () => {
+    const twoHanded = requireResolved(
+      changeGrip(
+        withDropped(
+          battle({
+            weapon: longsword("one_handed"),
+            offHandWeapon: {
+              itemId: daggerId,
+              unitId: unitId("weapon_dagger"),
+            },
+          }),
+          daggerId,
+        ),
+        "two_handed",
+      ),
+    ).state;
+    const bothDropped = withDropped(twoHanded, swordId);
+    expect(hands(bothDropped)).toEqual({ left: "free", right: "free" });
+    expect(
+      heldWeaponPickupTransition(bothDropped, {
+        actorId: fighterId,
+        objectId: daggerId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
+    const swordBack = heldWeaponPickupTransition(bothDropped, {
+      actorId: fighterId,
+      objectId: swordId,
+    });
+    if (swordBack.tag !== "applied") throw new Error(swordBack.message);
+    expect(hands(swordBack.state)).toEqual({
+      left: "mainWeapon",
+      right: "mainWeapon",
+    });
+  });
+
   it("keeps a Two-Handed weapon in two hands", () => {
     const state = startBattleRight({
       battleId: battleId("synthetic-weapon-grip-two-handed"),
@@ -264,5 +299,42 @@ describe("changing a weapon grip during a battle", () => {
       }),
     ).state;
     expectRefused(goblinTurn, "two_handed", "notOwnTurn", "wrongActor");
+    const goblin = goblinTurn.combatants.get(goblinId);
+    if (goblin === undefined) throw new Error("Expected the Goblin.");
+    expect(
+      weaponGripChangeAdmission(goblinTurn, goblin, "two_handed"),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { reason: "actorNotCharacter" },
+    });
+  });
+
+  it("refuses a grip change while the character can't act or Battle can't tell its main weapon", () => {
+    const incapacitated = startBattleRight({
+      battleId: battleId("synthetic-weapon-grip-incapacitated"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          selectedLoadout: { weapon: longsword("one_handed") },
+          conditions: ["incapacitated"],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(offeredGrips(incapacitated)).toEqual([]);
+    expect(refusalReason(incapacitated, "two_handed")).toBe("cannotAct");
+
+    const unknownAttack = startBattleRight({
+      battleId: battleId("synthetic-weapon-grip-unknown-attack"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          selectedLoadout: { weapon: longsword("one_handed") },
+          attack: null,
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expectRefused(unknownAttack, "two_handed", "mainWeaponAttackUnknown");
   });
 });
