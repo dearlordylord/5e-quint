@@ -48,7 +48,7 @@
       "module/binding:attackActionOptionsForActor": 9,
       "module/binding:attackDamageHole": 12,
       "module/binding:martialArtsLoadoutEligible": 10,
-      "module/binding:offHandAttackActionOptionsForActor": 13,
+      "module/binding:offHandAttackActionOptionsForActor": 12,
       "module/binding:weaponAttackWithActiveSacredWeapon": 13
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-redirect.ts": {

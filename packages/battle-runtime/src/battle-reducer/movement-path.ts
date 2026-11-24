@@ -120,28 +120,54 @@ export function priceBattleMovementPath(
   }
   let extraCostFeet = 0;
   for (const segment of segments) {
-    const drag = grappleDragExtraCostPerFoot(state, mover, segment);
-    if (drag.tag === "invalid") {
-      return drag;
-    }
-
-    const directionalExtraCostPerFoot =
-      segment.movesCloserThroughDirectionalArea && directional.tag === "ok"
-        ? directional.effect.movementCost.multiplier - 1
-        : 0;
-    const priced = movementCost({
-      distanceFeet: segment.distanceFeet,
-      activity: movementPathActivity(segment.activity, value.speedKind),
-      difficultTerrain: segment.difficultTerrain !== "none",
-      effectExtraCostPerFoot:
-        drag.extraCostPerFoot + directionalExtraCostPerFoot,
-    });
-    extraCostFeet += Number(priced.costFeet) - Number(priced.distanceFeet);
+    const priced = priceBattleMovementPathSegment(
+      state,
+      mover,
+      segment,
+      value.speedKind,
+      directional,
+    );
+    if (priced.tag === "invalid") return priced;
+    extraCostFeet += Number(priced.extraCostFeet);
   }
   return {
     tag: "ok",
     distanceFeet,
     extraCostFeet: movementFeet(extraCostFeet),
+  };
+}
+
+function priceBattleMovementPathSegment(
+  state: BattleState,
+  mover: BattleCreatureState,
+  segment: BattleMovementPathSegment,
+  speedKind: BattleMovementSpeedKind,
+  directional: Exclude<
+    DirectionalPersistentAreaMovementFactResult,
+    { readonly tag: "invalid" }
+  >,
+): BattleMovementPathCostResult {
+  const drag = grappleDragExtraCostPerFoot(state, mover, segment);
+  if (drag.tag === "invalid") {
+    return drag;
+  }
+
+  const directionalExtraCostPerFoot =
+    segment.movesCloserThroughDirectionalArea && directional.tag === "ok"
+      ? directional.effect.movementCost.multiplier - 1
+      : 0;
+  const priced = movementCost({
+    distanceFeet: segment.distanceFeet,
+    activity: movementPathActivity(segment.activity, speedKind),
+    difficultTerrain: segment.difficultTerrain !== "none",
+    effectExtraCostPerFoot: drag.extraCostPerFoot + directionalExtraCostPerFoot,
+  });
+  return {
+    tag: "ok",
+    distanceFeet: priced.distanceFeet,
+    extraCostFeet: movementFeet(
+      Number(priced.costFeet) - Number(priced.distanceFeet),
+    ),
   };
 }
 

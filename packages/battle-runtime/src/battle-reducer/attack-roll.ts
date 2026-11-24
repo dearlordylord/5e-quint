@@ -1723,33 +1723,40 @@ export function huntersPreyHordeBreakerDamageHole(
   };
 }
 
+type AdditionalWeaponAttackTargetAdmission = NonNullable<
+  ReturnType<typeof creatureAttackTargetAdmission>
+> & { readonly target: BattleCreatureState };
+
 export function huntersPreyHordeBreakerTargetAdmission(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly firstTargetId: CombatantId;
-  readonly secondTarget: BattleCreatureState;
+  readonly secondTarget: BattleCreatureState | undefined;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-}): ReturnType<typeof creatureAttackTargetAdmission> {
+}): AdditionalWeaponAttackTargetAdmission | null {
+  const secondTarget = input.secondTarget;
+  if (secondTarget === undefined) return null;
   if (
-    input.secondTarget.combatantId === input.firstTargetId ||
+    secondTarget.combatantId === input.firstTargetId ||
     !input.targetSpatialFacts.some(
       (fact) =>
         fact.kind === "hordeBreakerSecondTargetEligible" &&
         fact.attackerId === input.attackerId &&
         fact.sourceProcedureRef === input.sourceProcedureRef &&
         fact.originalTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTarget.combatantId,
+        fact.secondTargetId === secondTarget.combatantId,
     )
   )
     return null;
-  return creatureAttackTargetAdmission(
+  const admission = creatureAttackTargetAdmission(
     input.attackerId,
-    input.secondTarget,
+    secondTarget,
     input.attack,
     input.targetSpatialFacts,
   );
+  return admission === null ? null : { ...admission, target: secondTarget };
 }
 
 export function huntersPreyHordeBreakerTargetIsLegal(
@@ -1843,27 +1850,30 @@ function cleaveAbilityChoice(
 export function weaponMasteryCleaveTargetAdmission(input: {
   readonly attackerId: CombatantId;
   readonly firstTargetId: CombatantId;
-  readonly secondTarget: BattleCreatureState;
+  readonly secondTarget: BattleCreatureState | undefined;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-}): ReturnType<typeof creatureAttackTargetAdmission> {
+}): AdditionalWeaponAttackTargetAdmission | null {
+  const secondTarget = input.secondTarget;
+  if (secondTarget === undefined) return null;
   if (
-    input.secondTarget.combatantId === input.firstTargetId ||
+    secondTarget.combatantId === input.firstTargetId ||
     !input.targetSpatialFacts.some(
       (fact) =>
         fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
         fact.attackerId === input.attackerId &&
         fact.firstTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTarget.combatantId,
+        fact.secondTargetId === secondTarget.combatantId,
     )
   )
     return null;
-  return creatureAttackTargetAdmission(
+  const admission = creatureAttackTargetAdmission(
     input.attackerId,
-    input.secondTarget,
+    secondTarget,
     input.attack,
     input.targetSpatialFacts,
   );
+  return admission === null ? null : { ...admission, target: secondTarget };
 }
 
 export function weaponMasteryCleaveTargetIsLegal(

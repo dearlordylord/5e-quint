@@ -1216,29 +1216,19 @@ function resolveOrdinaryObjectAttack<
       "This attack procedure does not support an ordinary object target.",
     );
   }
-  const objectFact =
-    fillSet.target.spatialFacts.length === 1
-      ? fillSet.target.spatialFacts[0]
-      : undefined;
-  const targetCover = directTargetCover(objectFact?.cover);
-  const objectFactIssues = ordinaryObjectAttackTargetIssues({
-    targetCover,
-    objectFact,
+  const targetAdmission = admitOrdinaryObjectAttackTarget({
+    target: fillSet.target,
     attackerId,
-    objectId: fillSet.target.objectId,
     attack,
   });
-  if (
-    objectFact === undefined ||
-    targetCover === null ||
-    objectFactIssues.length > 0
-  ) {
+  if (Result.isFailure(targetAdmission)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `Invalid object attack target: ${objectFactIssues.join("; ")}.`,
+      targetAdmission.failure,
     );
   }
+  const { objectFact, targetCover } = targetAdmission.success;
   const rollPreparation = prepareOrdinaryObjectAttackRoll({
     input: input.input,
     attack,
@@ -1289,6 +1279,36 @@ function ordinaryObjectAttackIsUnsupported<
       input.attack,
     )
   );
+}
+
+function admitOrdinaryObjectAttackTarget<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly target: OrdinaryObjectAttackFillSet["target"];
+  readonly attackerId: CombatantId;
+  readonly attack: Attack;
+}): Result.Result<
+  {
+    readonly objectFact: OrdinaryObjectAttackTableFact;
+    readonly targetCover: DirectTargetCover;
+  },
+  string
+> {
+  const objectFact =
+    input.target.spatialFacts.length === 1
+      ? input.target.spatialFacts[0]
+      : undefined;
+  const targetCover = directTargetCover(objectFact?.cover);
+  const issues = ordinaryObjectAttackTargetIssues({
+    objectFact,
+    targetCover,
+    attackerId: input.attackerId,
+    objectId: input.target.objectId,
+    attack: input.attack,
+  });
+  return objectFact === undefined || targetCover === null || issues.length > 0
+    ? Result.fail(`Invalid object attack target: ${issues.join("; ")}.`)
+    : Result.succeed({ objectFact, targetCover });
 }
 
 function ordinaryObjectAttackTargetIssues<
@@ -5070,19 +5090,15 @@ function prepareWeaponMasteryCleaveAttack(input: {
   const secondTargetId = targetFill.value;
   const cleaveTargetFacts =
     additionalWeaponAttackTargetSpatialFacts(targetFill);
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  const targetAdmission =
-    secondTarget === undefined
-      ? null
-      : weaponMasteryCleaveTargetAdmission({
-          attackerId: input.subject.actorId,
-          firstTargetId: input.firstTargetId,
-          secondTarget,
-          attack: cleaveAttack,
-          targetSpatialFacts: cleaveTargetFacts,
-        });
+  const targetAdmission = weaponMasteryCleaveTargetAdmission({
+    attackerId: input.subject.actorId,
+    firstTargetId: input.firstTargetId,
+    secondTarget: input.state.combatants.get(secondTargetId),
+    attack: cleaveAttack,
+    targetSpatialFacts: cleaveTargetFacts,
+  });
   /* v8 ignore start -- @preserve -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
-  if (secondTarget === undefined || targetAdmission === null) {
+  if (targetAdmission === null) {
     return {
       tag: "result",
       result: invalidResult(
@@ -5093,6 +5109,7 @@ function prepareWeaponMasteryCleaveAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const secondTarget = targetAdmission.target;
   const cleaveRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,
@@ -5887,21 +5904,17 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   }
   const secondTargetId = targetFill.value;
   const targetFacts = additionalWeaponAttackTargetSpatialFacts(targetFill);
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  const targetAdmission =
-    secondTarget === undefined
-      ? null
-      : huntersPreyHordeBreakerTargetAdmission({
-          state: input.state,
-          attackerId: input.subject.actorId,
-          sourceProcedureRef: procedureRef,
-          firstTargetId: input.firstTargetId,
-          secondTarget,
-          attack: hordeBreakerAttack,
-          targetSpatialFacts: targetFacts,
-        });
+  const targetAdmission = huntersPreyHordeBreakerTargetAdmission({
+    state: input.state,
+    attackerId: input.subject.actorId,
+    sourceProcedureRef: procedureRef,
+    firstTargetId: input.firstTargetId,
+    secondTarget: input.state.combatants.get(secondTargetId),
+    attack: hordeBreakerAttack,
+    targetSpatialFacts: targetFacts,
+  });
   /* v8 ignore start -- @preserve -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
-  if (secondTarget === undefined || targetAdmission === null) {
+  if (targetAdmission === null) {
     return {
       tag: "result",
       result: invalidResult(
@@ -5912,6 +5925,7 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const secondTarget = targetAdmission.target;
   const hordeBreakerRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,
