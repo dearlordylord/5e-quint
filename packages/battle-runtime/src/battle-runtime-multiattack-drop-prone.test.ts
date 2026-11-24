@@ -100,7 +100,7 @@ function expectFreeDrop(
   return dropped.state;
 }
 
-function move(state: BattleState, movementCostFeet: number): BattleState {
+function move(state: BattleState, distanceFeet: number): BattleState {
   const subject = {
     tag: "runtimeCommand",
     actorId: goblinId,
@@ -116,7 +116,7 @@ function move(state: BattleState, movementCostFeet: number): BattleState {
       subject,
       fills: [
         movementFill(hole, {
-          movementCostFeet,
+          distanceFeet,
           provokedOpportunityAttacks: [],
         }),
       ],

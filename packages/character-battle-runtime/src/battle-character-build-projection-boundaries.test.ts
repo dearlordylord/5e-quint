@@ -12,7 +12,7 @@ import {
   characterArmorClassState,
   characterBuildEquippedWeaponBattleBlockers,
   characterSpellcasting,
-  characterWeaponAttackActionOptions,
+  characterBattleWeaponAttackInitProjection,
 } from "./index.ts";
 import {
   levelFiveMartialBuild,
@@ -179,7 +179,7 @@ describe("Character Build battle spell projection boundaries", () => {
       slot: "off",
       unitId: offHandUnitId.success,
     });
-    const result = characterWeaponAttackActionOptions({
+    const result = characterBattleWeaponAttackInitProjection({
       build: {
         ...build,
         equipment: {
@@ -290,7 +290,7 @@ describe("Character Build battle spell projection boundaries", () => {
       authoredUnitId("weapon_dagger"),
       authoredUnitId("weapon_shortbow"),
     ]);
-    const result = characterWeaponAttackActionOptions({
+    const result = characterBattleWeaponAttackInitProjection({
       build: equippedBuild,
       unitLibrary: projectionLibrary,
       weaponMasteries: [],

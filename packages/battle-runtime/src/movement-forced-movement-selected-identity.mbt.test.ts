@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
@@ -463,7 +464,7 @@ function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleRe
       saveFill,
       damageFill,
       movementFill(movement, {
-        movementCostFeet: 30,
+        distanceFeet: 30,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -525,7 +526,7 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
     subject: flee.subject,
     fills: [
       executeCompelledFleeMovementFill(movement, {
-        movementCostFeet: 30,
+        distanceFeet: 30,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -570,7 +571,7 @@ function replayRangerRovingSpecialSpeedMovementRoute(): readonly BattleReducerRo
     fills: [
       movementFill(movement, {
         speedKind: "climb",
-        movementCostFeet: 15,
+        distanceFeet: 15,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -1411,7 +1412,7 @@ function resolveDissonantWhispersForcedReactionMovement(
       saveFill,
       damageFill,
       movementFill(movement, {
-        movementCostFeet: 30,
+        distanceFeet: 30,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -1478,7 +1479,7 @@ function resolveCommandFleeTargetTurn(
     subject: flee.subject,
     fills: [
       executeCompelledFleeMovementFill(movement, {
-        movementCostFeet: 30,
+        distanceFeet: 30,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -1503,7 +1504,7 @@ function resolveRovingClimbSwimMovement(
     fills: [
       movementFill(climbMovement, {
         speedKind: "climb",
-        movementCostFeet: 15,
+        distanceFeet: 15,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -1520,7 +1521,7 @@ function resolveRovingClimbSwimMovement(
     fills: [
       movementFill(swimMovement, {
         speedKind: "swim",
-        movementCostFeet: 25,
+        distanceFeet: 25,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -1973,7 +1974,7 @@ function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["speedKind"];
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -1985,7 +1986,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };
@@ -1994,7 +1995,7 @@ function movementFill(
 function executeCompelledFleeMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -2006,7 +2007,7 @@ function executeCompelledFleeMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       compelledFlee: {
         kind: "compelledFleeFastestAvailableRouteAwayFromSource",

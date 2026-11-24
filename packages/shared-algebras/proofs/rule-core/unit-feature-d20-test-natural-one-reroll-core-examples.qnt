@@ -25,14 +25,14 @@ module unitFeatureD20TestNaturalOneRerollCoreExamples {
       hasFeature: true,
       original: { naturalD20: 1, total: 5 },
       decision: D20TestNaturalOneRerollSelected({
-        replacement: { naturalD20: 1, total: 4 },
+        replacement: { naturalD20: 1, total: 5 },
       }),
     })
     all {
       assert(result.admitted),
       assert(not(result.invalid)),
       assert(result.effective.naturalD20 == 1),
-      assert(result.effective.total == 4),
+      assert(result.effective.total == 5),
     }
   }
 

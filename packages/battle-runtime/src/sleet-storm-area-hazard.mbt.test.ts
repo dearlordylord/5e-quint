@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -9,7 +10,6 @@ import { isDeepStrictEqual } from "node:util";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleet-storm-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { movementFeet } from "@dnd/shared/types";
 import {
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -506,10 +506,22 @@ function moveWithDifficultTerrain(
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: requireCombatant(state.battle.state, spellTargetId)
-            .conditions.prone
-            ? 25
-            : sleetStormMovementSpentFeet,
+          // SRD 5.2.1 "Crawling": a Prone mover crawls 5 feet of Difficult
+          // Terrain for 15 and 5 open feet for 10, so 25 in all.
+          path: requireCombatant(state.battle.state, spellTargetId).conditions
+            .prone
+            ? testMovementPath(
+                {
+                  distanceFeet: 5,
+                  activity: "crawling",
+                  difficultTerrain: "areaDifficultTerrain",
+                },
+                { distanceFeet: 5, activity: "crawling" },
+              )
+            : testMovementPath(
+                { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+                { distanceFeet: 5 },
+              ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -522,8 +534,6 @@ function moveWithDifficultTerrain(
                 areaId: sleetStormAreaId,
               },
             ],
-            totalDistanceFeet: movementFeet(10),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
         }),
       ],

@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-shield
 
@@ -5,7 +6,12 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
+  type HeroicInspiration,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 
 import {
   abilityModifier,
@@ -46,6 +52,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { HEROIC_INSPIRATION_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { completeReactionSpellSlotCast } from "./battle-reducer/reaction-spell-resolution.ts";
 import {
@@ -257,6 +264,87 @@ describe("Shield Reaction spell", () => {
     });
   });
 
+  test("an attack rerolled with Heroic Inspiration completes after the Shield Reaction", () => {
+    const session = battleWithShieldReactionSpell(
+      srdSpellRecord(shieldUnitId),
+      { attackerHeroicInspiration: HEROIC_INSPIRATION_AVAILABLE },
+    );
+    const attackAct = discoverBattleActCandidates(session.state).find(
+      (act): act is AttackAct =>
+        act.subject.tag === "action" && act.subject.action === "attack",
+    );
+    if (attackAct === undefined) {
+      throw new Error("Expected an Unarmed Strike attack act.");
+    }
+    const targetSelection = attackTargetFill(
+      requireHole(attackAct.initialHoles, "targetChoice"),
+      spellTargetId,
+      spellCasterId,
+    );
+    const awaitingAttackRoll = resolveBattleSubject({
+      state: session.state,
+      subject: attackAct.subject,
+      fills: [targetSelection],
+    });
+    if (awaitingAttackRoll.tag !== "needsHoles") {
+      throw new Error("Expected Attack Roll hole after target selection.");
+    }
+    const attackRollHole = requireHole(
+      battleResolutionHolesForTest(awaitingAttackRoll),
+      "attackRoll",
+    );
+
+    const originalRoll = attackRollFill(attackRollHole, {
+      total: 4,
+      naturalD20: 2,
+    });
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: attackAct.subject,
+      fills: [
+        targetSelection,
+        {
+          ...originalRoll,
+          value: {
+            ...originalRoll.value,
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: {
+                  total: 14,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Shield to open an attack-hit Reaction window.");
+    }
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "attackHit" });
+
+    const resolved = resolveShieldReactionChoice(awaitingReaction, session);
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected the rerolled attack to complete after Shield.");
+    }
+    const attacker = resolved.snapshot.combatants.find(
+      (combatant) => combatant.combatantId === spellTargetId,
+    );
+    expect(attacker?.origin).toMatchObject({
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+    });
+    expect(
+      resolved.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      ),
+    ).toMatchObject({ armorClass: 15, hp: 12, reactionAvailable: false });
+  });
+
   test("Armor Class bonus applies to later attacks before Duration expiration at the start of the caster's next turn", () => {
     const shield = srdSpellRecord(shieldUnitId);
     const attackerOneId = combatantId("shield-reaction-attacker-1");
@@ -371,7 +459,7 @@ describe("Shield Reaction spell", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: attackerThreeId,
@@ -770,7 +858,10 @@ function spellBattle(input: {
 
 function battleWithShieldReactionSpell(
   spell: SpellRecord,
-  options: { readonly sourceScopedFreeCast?: boolean } = {},
+  options: {
+    readonly sourceScopedFreeCast?: boolean;
+    readonly attackerHeroicInspiration?: HeroicInspiration;
+  } = {},
 ): BattleRuntimeSession {
   const freeCastSource = {
     id: authoredUnitId("feat_synthetic_shield_dabbler"),
@@ -790,6 +881,9 @@ function battleWithShieldReactionSpell(
         combatantId: spellTargetId,
         displayName: "Attacker",
         initiative: 20,
+        ...(options.attackerHeroicInspiration === undefined
+          ? {}
+          : { heroicInspiration: options.attackerHeroicInspiration }),
       }),
       characterCreature({
         combatantId: spellCasterId,
@@ -1035,6 +1129,7 @@ function characterCreature(input: {
     CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly heroicInspiration?: HeroicInspiration;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
@@ -1072,6 +1167,9 @@ function characterCreature(input: {
         ? {}
         : { spellcasting: input.spellcasting }),
       resources: input.resources ?? [],
+      ...(input.heroicInspiration === undefined
+        ? {}
+        : { heroicInspiration: input.heroicInspiration }),
     },
   };
 }
@@ -1221,7 +1319,7 @@ function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["speedKind"];
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -1233,7 +1331,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };

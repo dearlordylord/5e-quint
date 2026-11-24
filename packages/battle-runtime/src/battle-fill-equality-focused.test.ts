@@ -7,6 +7,7 @@ import {
   battleFillPrefixAccumulated,
   type BattleContinuationComparableFill,
 } from "./battle-reducer/battle-fill-equality.ts";
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import {
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
@@ -44,7 +45,7 @@ function movementFill(
     holeId: holeId(hole),
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(5),
+      path: ordinaryMovementPath(movementFeet(5)),
       provokedOpportunityAttacks: threats,
     },
   };

@@ -45,7 +45,7 @@ import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { loadoutHasUsableHeldWeaponItem } from "../wild-shape-equipment.ts";
-import { characterEffectiveLoadout } from "../battle-object-lifecycle.ts";
+import { characterEffectiveLoadout } from "../character-effective-loadout.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   weaponAttackDamageEnhancementTargetItemHole,

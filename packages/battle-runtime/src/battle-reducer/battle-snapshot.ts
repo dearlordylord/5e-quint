@@ -128,6 +128,7 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
     actionResources: resources.actionResources,
     actionTakenThisTurn: resources.actionTakenThisTurn,
     bonusActionQuotaAvailable: resources.currentHasBonusAction,
+    objectInteraction: resources.objectInteraction,
     jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
     heightenedStepOfTheWindCarriedCreatures:
       resources.heightenedStepOfTheWindCarriedCreatures,

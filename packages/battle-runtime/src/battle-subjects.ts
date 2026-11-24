@@ -23,6 +23,7 @@
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
+  RULED_COVER_TYPES,
   MovementFeet,
   SpellSlotLevel,
   spellSlotLevel,
@@ -58,7 +59,10 @@ import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
-import { attackExecutionSelectionKey } from "./battle-action-options.ts";
+import {
+  attackExecutionSelectionKey,
+  WEAPON_ATTACK_DELIVERIES,
+} from "./battle-action-options.ts";
 import {
   StatBlockAttackDamageSelection,
   statBlockAttackDamageSelectionKey,
@@ -104,6 +108,8 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "move",
   "standFromProne",
   "dropProne",
+  "interactWithObject",
+  "pickUpHeldWeapon",
   "releaseReadiedSpell",
   "releaseReadiedMovement",
   "reportReadyTrigger",
@@ -569,10 +575,15 @@ export const BattleAttackExecutionAbilitySchema = Schema.Union([
   Schema.Literal("spellcasting"),
 ]);
 
+export const WeaponAttackDeliverySchema = Schema.Literals(
+  WEAPON_ATTACK_DELIVERIES,
+);
+
 export const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleAttackProcedureExecutionRef,
   attackAbility: BattleAttackExecutionAbilitySchema,
   attackDamageType: DamageTypeSchema,
+  weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
   attackName: Schema.optionalKey(Schema.Never),
   statBlockDamageSelection: Schema.optionalKey(Schema.Never),
 });
@@ -679,6 +690,7 @@ const BattleInterruptOpportunityAttackSubjectSchema =
     reactorId: CombatantId,
     targetId: CombatantId,
     distanceFeet: MovementFeet,
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   });
 
 const BattleInterruptRetaliationAttackSubjectSchema =
@@ -701,6 +713,21 @@ export const BattleInterruptSubjectSchema = Schema.Union([
   BattleInterruptRetaliationAttackSubjectSchema,
 ]);
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
+// SRD 5.2.1 "Your Turn", Interacting with Things, and "Utilize [Action]": an
+// object interaction, charged as the turn's free interaction or the Utilize
+// action. Ready can hold one as its readied Utilize action (ASSUMPTIONS.md A60).
+const BattleInteractWithObjectSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("interactWithObject"),
+});
+const BattlePickUpHeldWeaponSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("pickUpHeldWeapon"),
+  objectId: BattleObjectId,
+});
 
 export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
@@ -772,6 +799,8 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     actorId: CombatantId,
     action: Schema.Literal("shakeAwakeFromAreaControl"),
   }),
+  BattleInteractWithObjectSubjectSchema,
+  BattlePickUpHeldWeaponSubjectSchema,
 ]);
 export type BattleReadyActionSubject =
   typeof BattleReadyActionSubjectSchema.Type;
@@ -787,6 +816,7 @@ export const BattleSubjectSchema = Schema.Union([
     procedureRef: BattleAttackProcedureExecutionRef,
     attackAbility: BattleAttackExecutionAbilitySchema,
     attackDamageType: DamageTypeSchema,
+    weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
     attackName: Schema.optionalKey(Schema.Never),
     statBlockSection: Schema.optionalKey(Schema.Never),
     statBlockDamageSelection: Schema.optionalKey(Schema.Never),
@@ -829,6 +859,7 @@ export const BattleSubjectSchema = Schema.Union([
       procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
+      weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
     }),
     Schema.Struct({
       tag: Schema.Literal("bonusAction"),
@@ -1026,6 +1057,8 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("dropProne"),
   }),
+  BattleInteractWithObjectSubjectSchema,
+  BattlePickUpHeldWeaponSubjectSchema,
   BattleInterruptReleaseReadiedSpellSubjectSchema,
   BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
@@ -1377,6 +1410,8 @@ function battleRuntimeCommandProcedureRefs(
       move: noProcedureExecutionReferences,
       standFromProne: noProcedureExecutionReferences,
       dropProne: noProcedureExecutionReferences,
+      interactWithObject: noProcedureExecutionReferences,
+      pickUpHeldWeapon: noProcedureExecutionReferences,
       releaseReadiedSpell: (value) => [value.procedureRef],
       releaseReadiedMovement: noProcedureExecutionReferences,
       reportReadyTrigger: noProcedureExecutionReferences,
@@ -1466,6 +1501,8 @@ export function battleSubjectProcedureRefsBelongToOwners(
         move: (v) => v.actorId,
         standFromProne: (v) => v.actorId,
         dropProne: (v) => v.actorId,
+        interactWithObject: (v) => v.actorId,
+        pickUpHeldWeapon: (v) => v.actorId,
         releaseReadiedSpell: (v) => v.readiedSpellCasterId,
         releaseReadiedMovement: (v) => v.actorId,
         reportReadyTrigger: (v) => v.actorId,
@@ -1662,6 +1699,8 @@ function battleRuntimeCommandBoundExecutionReferences(
       move: noBoundExecutionReferences,
       standFromProne: noBoundExecutionReferences,
       dropProne: noBoundExecutionReferences,
+      interactWithObject: noBoundExecutionReferences,
+      pickUpHeldWeapon: noBoundExecutionReferences,
       releaseReadiedSpell: noBoundExecutionReferences,
       releaseReadiedMovement: noBoundExecutionReferences,
       reportReadyTrigger: noBoundExecutionReferences,
@@ -2066,15 +2105,7 @@ function battleSubjectKey(subject: BattleSubject): string {
             command.tag,
             command.actorId,
             command.command,
-            "readiedSpellCasterId" in command
-              ? command.readiedSpellCasterId
-              : null,
-            "readiedMovementActorId" in command
-              ? command.readiedMovementActorId
-              : null,
-            "readiedActorId" in command ? command.readiedActorId : null,
-            "targetId" in command ? command.targetId : null,
-            "reactorId" in command ? command.reactorId : null,
+            ...runtimeCommandReferenceKey(command),
             "procedureRef" in command ? command.procedureRef : null,
             "attackAbility" in command ? (command.attackAbility ?? null) : null,
             "attackDamageType" in command
@@ -2097,6 +2128,20 @@ function battleSubjectKey(subject: BattleSubject): string {
       ),
     ),
   );
+}
+
+/** The creatures and the object a runtime command refers to. */
+function runtimeCommandReferenceKey(
+  command: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): readonly (string | null)[] {
+  return [
+    "readiedSpellCasterId" in command ? command.readiedSpellCasterId : null,
+    "readiedMovementActorId" in command ? command.readiedMovementActorId : null,
+    "readiedActorId" in command ? command.readiedActorId : null,
+    "targetId" in command ? command.targetId : null,
+    "reactorId" in command ? command.reactorId : null,
+    "objectId" in command ? command.objectId : null,
+  ];
 }
 
 function runtimeCommandEffectOccurrenceKey(

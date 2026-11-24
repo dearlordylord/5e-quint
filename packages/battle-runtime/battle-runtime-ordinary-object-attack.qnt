@@ -5,14 +5,9 @@
 // RAW anchors:
 // - Rules Glossary, "Attack [Action]": choose a target, determine modifiers,
 //   resolve the attack roll, and roll damage only on a hit.
-// - Rules Glossary, "Cover": Half Cover adds 2 to AC and Total Cover prevents
-//   direct targeting.
+// - Rules Glossary, "Cover": owned by coverDefenseCore.
 module battleRuntimeOrdinaryObjectAttack {
-  type ObjectAttackCover =
-    | NoObjectCover
-    | HalfObjectCover
-    | ThreeQuartersObjectCover
-    | TotalObjectCover
+  import coverDefenseCore.* from "../shared-algebras/proofs/rule-core/cover-defense-core"
 
   type OrdinaryObjectAttackProcedureResult = {
     valid: bool,
@@ -24,21 +19,17 @@ module battleRuntimeOrdinaryObjectAttack {
   }
 
   pure def ordinaryObjectAttackProcedure(
-    cover: ObjectAttackCover,
+    cover: CoverDegree,
     attackRollSupplied: bool,
     naturalD20: int,
     attackTotal: int,
     armorClass: int,
     damageRollSupplied: bool
   ): OrdinaryObjectAttackProcedureResult = {
-    val targetLegal = cover != TotalObjectCover
-    val coverArmorClassBonus =
-      if (cover == HalfObjectCover) 2
-      else if (cover == ThreeQuartersObjectCover) 5
-      else 0
+    val targetLegal = coverAllowsDirectTargeting(cover)
     val attackHits =
       attackRollSupplied and naturalD20 != 1 and
-        (naturalD20 == 20 or attackTotal >= armorClass + coverArmorClassBonus)
+        (naturalD20 == 20 or attackTotal >= armorClassBehindCover(armorClass, cover))
     val fillOrderValid = not(damageRollSupplied) or (attackRollSupplied and attackHits)
     val valid = targetLegal and fillOrderValid
     val needsAttackRoll = valid and not(attackRollSupplied)

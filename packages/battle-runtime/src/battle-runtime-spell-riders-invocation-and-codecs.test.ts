@@ -237,7 +237,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         subject: moveSubject,
         fills: [
           movementFill(move, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               {
                 reactorId: skeletonId,
@@ -981,12 +981,28 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       holeId: "battle:test:forceful-blow-movement",
       value: {
         speedKind: "walk",
-        movementCostFeet: 10,
+        path: [
+          {
+            distanceFeet: 10,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
         additionalSpeedSegments: [
           {
             speedKind: "fly",
-            movementCostFeet: 5,
+            path: [
+              {
+                distanceFeet: 5,
+                activity: "ordinary",
+                difficultTerrain: "none",
+                movesCloserThroughDirectionalArea: false,
+                draggedGrappledTargetIds: [],
+              },
+            ],
             provokedOpportunityAttacks: [],
           },
         ],
@@ -1009,7 +1025,15 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ...fill,
       value: {
         speedKind: "walk",
-        movementCostFeet: 10,
+        path: [
+          {
+            distanceFeet: 10,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
         additionalSpeedSegments: [],
       },

@@ -142,7 +142,7 @@ it("observes selected Halfling Nimbleness qRoute through public reducer events",
           "halfling-nimbleness-beyond-blocker-budget-failure",
         ),
       },
-      movementCostFeet: 40,
+      distanceFeet: 40,
     },
   );
   expect(movementBudgetFailure.result).toMatchObject({
@@ -433,7 +433,7 @@ function resolveMovement(
     subject,
     fills: [
       movementFill(hole, {
-        movementCostFeet: 10,
+        distanceFeet: 10,
         provokedOpportunityAttacks: [],
         creatureSpaceTraversal: {
           kind: "occupiedCreatureSpaceTraversal",
@@ -480,7 +480,7 @@ function observeMovementRoute(
 function observeMovementRouteResult(
   state: BattleState,
   input: Parameters<typeof resolveMovement>[1] & {
-    readonly movementCostFeet?: number;
+    readonly distanceFeet?: number;
     readonly provokedOpportunityAttacks?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -513,7 +513,7 @@ function observeMovementRouteResult(
     subject,
     fills: [
       movementFill(hole, {
-        movementCostFeet: input.movementCostFeet ?? 10,
+        distanceFeet: input.distanceFeet ?? 10,
         provokedOpportunityAttacks: input.provokedOpportunityAttacks ?? [],
         creatureSpaceTraversal: {
           kind: "occupiedCreatureSpaceTraversal",
@@ -558,7 +558,7 @@ function observeOrdinaryMovementRoute(
     subject,
     fills: [
       movementFill(hole, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [],
       }),
     ],

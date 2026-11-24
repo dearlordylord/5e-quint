@@ -10,7 +10,6 @@ import { isReadonlyArrayNonEmpty } from "effect/Array";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollResultIsValid,
@@ -55,7 +54,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
@@ -72,11 +71,11 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+} from "./attack-roll-d20-test-rerolls.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
@@ -99,7 +98,8 @@ import {
   spellSavingThrowOutcomeHole,
   spellTargetHole,
   spellTargetInterdictionRequests,
-  spellTargetIsLegal,
+  spellTargetAdmission,
+  storedSpellTargetCover,
   validateSpellBurstDamageFill,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
@@ -182,7 +182,7 @@ function storedGlyphTargetMatches(input: {
   );
 }
 
-function attackBurstTargetIsLegal(
+function admitAttackBurstTarget(
   target: BattleCreatureState | undefined,
   input: {
     readonly state: BattleState;
@@ -197,18 +197,27 @@ function attackBurstTargetIsLegal(
       { readonly tag: "ok" }
     >["targetSpatialFacts"];
   },
-): target is BattleCreatureState {
-  return (
-    target !== undefined &&
-    (input.releaseKind === "storedGlyphRelease" ||
-      spellTargetIsLegal(
-        input.state,
-        input.actorId,
-        target.combatantId,
-        input.invocation,
-        input.spatialFacts,
-      ))
-  );
+): {
+  readonly target: BattleCreatureState;
+  readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
+} | null {
+  if (target === undefined) return null;
+  const cover =
+    input.releaseKind === "storedGlyphRelease"
+      ? storedSpellTargetCover(
+          input.spatialFacts,
+          input.actorId,
+          target.combatantId,
+          input.invocation,
+        )
+      : (spellTargetAdmission(
+          input.state,
+          input.actorId,
+          target.combatantId,
+          input.invocation,
+          input.spatialFacts,
+        )?.cover ?? null);
+  return cover === null ? null : { target, cover };
 }
 
 function resolveAttackBurstSaveDamageSpellAct(input: {
@@ -259,17 +268,17 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       spellTargetHole(input.input.state, input.actorId, input.invocation),
     ]);
   }
-  const target = input.input.state.combatants.get(input.fillSet.targetId);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !attackBurstTargetIsLegal(target, {
+  const targetAdmission = admitAttackBurstTarget(
+    input.input.state.combatants.get(input.fillSet.targetId),
+    {
       state: input.input.state,
       actorId: input.actorId,
       invocation: input.invocation,
       releaseKind: input.release.kind,
       spatialFacts: input.fillSet.targetSpatialFacts,
-    })
-  ) {
+    },
+  );
+  if (targetAdmission === null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -278,6 +287,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
+  const { target } = targetAdmission;
 
   if (input.release.kind === "ordinaryCast") {
     const originalTargetHole = spellTargetHole(
@@ -329,13 +339,13 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       );
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        !attackBurstTargetIsLegal(replacementTarget, {
+        admitAttackBurstTarget(replacementTarget, {
           state: input.input.state,
           actorId: input.actorId,
           invocation: input.invocation,
           releaseKind: "ordinaryCast",
           spatialFacts: interdictionCheck.spatialFacts,
-        })
+        }) === null
       ) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
@@ -470,51 +480,45 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.input.state.combatants.get(
-    input.actorId,
-  );
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: attackRoll.d20TestRoll,
-      decision: attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.input.state,
+    subject: input.input.subject,
+    attackerId: input.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         spellAttackRollHole(
           input.input.state,
           input.actorId,
           input.invocation,
           requiredRollMode,
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: attackRoll.total,
-    originalD20TestRoll: attackRoll.d20TestRoll,
-    decision: attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      d20TestNaturalOneRerollIssue,
+      d20TestRerolls.issue,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
 
-  const ordinaryHit = attackRollHits(
-    effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.input.state, target)),
+  const targetArmorClass = armorClassAgainstAttack(
+    input.input.state,
+    target,
+    targetAdmission.cover,
   );
+  const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.input.state,
     subject: input.input.subject,
@@ -543,7 +547,10 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        input.input.state,
+        battleStateAfterHeroicInspirationReroll(
+          input.input.state,
+          d20TestRerolls.heroicInspirationUse,
+        ),
         input.actorId,
         target.combatantId,
         null,

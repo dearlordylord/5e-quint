@@ -1642,6 +1642,59 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(8));
   });
 
+  test("Horde Breaker isn't offered after a thrown attack, whose weapon has left the hand", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("battle-hunters-prey-horde-breaker-thrown-dagger"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: [huntersPreyUnitRef("hordeBreaker")],
+          attack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: testDaggerAttack().weaponObjectId,
+              unitId: unitLibrary.requireUnit("weapon_dagger").id,
+              grip: "one_handed",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          statBlockName: "Second Target",
+          initiative: 9,
+        }),
+      ],
+    }).state;
+    const melee = fighterAttackSubject(state, "Dagger");
+    const afterMiss = (
+      subject: typeof melee & { readonly weaponDelivery?: "thrown" },
+    ) => {
+      const target = targetFill(
+        requireHole(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "targetChoice",
+        ),
+        goblinId,
+      );
+      const roll = requireHole(
+        resolveBattleSubject({ state, subject, fills: [target] }),
+        "attackRoll",
+      );
+      return resolveBattleSubject({
+        state,
+        subject,
+        fills: [target, attackRollFill(roll, { total: 7, naturalD20: 2 })],
+      });
+    };
+
+    requireHole(afterMiss(melee), "unitFeatureDecision");
+    expect(
+      requireResolved(afterMiss({ ...melee, weaponDelivery: "thrown" })).state
+        .groundObjects.size,
+    ).toBe(1);
+  });
+
   test("Horde Breaker can be declined after the original weapon attack misses", () => {
     const { state, subject, primaryFills, decision } =
       hordeBreakerAfterPrimaryMissFixture({

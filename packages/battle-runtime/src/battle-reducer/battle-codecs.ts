@@ -42,10 +42,15 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
-import { AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
+  OBJECT_INTERACTION_STATES,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
   STANDARD_ACTION_KINDS,
   StatBlockId,
   UnitId,
@@ -54,6 +59,7 @@ import {
 import {
   CONDITIONS as ALL_CONDITIONS,
   COVER_TYPES,
+  RULED_COVER_TYPES,
   CreatureId,
   DeathSavingThrowCount,
   D20Roll,
@@ -80,6 +86,10 @@ import {
   SpellWeaponDamageRiderSchema,
 } from "../active-effect/codecs.ts";
 import { BattleRoundSchema } from "../active-effect/round-codec.ts";
+import {
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
+} from "../active-effect/execution-vocabulary.ts";
 import {
   BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
   CUNNING_STRIKE_END_TURN_COVER_DEGREES,
@@ -122,6 +132,7 @@ import {
   battleSubjectProcedureRefs,
   BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
+  WeaponAttackDeliverySchema,
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
@@ -211,7 +222,10 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
-import { BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES } from "../battle-state-execution.ts";
+import {
+  BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
+  HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+} from "../battle-state-execution.ts";
 import type {
   BattleCreatureOriginSnapshot,
   BattleCreatureSnapshot,
@@ -818,6 +832,13 @@ const UnitFeatureAreaInputRequestSchema = Schema.Struct({
     AttackActionAreaSaveDamageReplacementProcedureExecutionSchema.fields.breath
       .fields.area.fields.shapeChoice,
 });
+const ThrownWeaponLandingFactSchema = Schema.Struct({
+  kind: Schema.Literal("thrownWeaponLanding"),
+  attackerId: CombatantId,
+  procedureRef: BattleAttackProcedureExecutionRef,
+  positionId: BattleTablePositionId,
+});
+
 const BattleTargetSpatialFactSchema = Schema.Union([
   BattleAttackObjectTargetSpatialFactSchema,
   Schema.Struct({
@@ -838,6 +859,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     procedureRef: BattleAttackProcedureExecutionRef,
     attackAbility: BattleAttackExecutionAbilitySchema,
     attackDamageType: DamageTypeSchema,
+    weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
     attackName: Schema.optionalKey(Schema.Never),
     statBlockDamageSelection: Schema.optionalKey(Schema.Never),
     disposition: BattleImmediateAreaPushDispositionSchema,
@@ -850,9 +872,11 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
+      weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
       attackName: Schema.optionalKey(Schema.Never),
       statBlockDamageSelection: Schema.optionalKey(Schema.Never),
       distanceFeet: MovementFeet,
+      cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     }),
     Schema.Struct({
       kind: Schema.Literal("attackTargetDistance"),
@@ -864,6 +888,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackName: Schema.optionalKey(Schema.Never),
       statBlockDamageSelection: StatBlockAttackDamageSelection,
       distanceFeet: MovementFeet,
+      cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     }),
   ]),
   Schema.Struct({
@@ -896,6 +921,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     distanceFeet: Schema.optionalKey(MovementFeet),
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("rangedAttackEnemyProximity"),
@@ -909,6 +935,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       }),
     ),
   }),
+  ThrownWeaponLandingFactSchema,
   Schema.Struct({
     ...UnitFeatureVisibleTargetFactRequestFields,
     targetId: CombatantId,
@@ -919,6 +946,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     familiarId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTargetKnownWilling"),
@@ -938,6 +966,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     forcePositionId: BattleTablePositionId,
     reachFeet: MovementFeet,
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("linkedEffectPairedWornComponents"),
@@ -959,6 +988,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
     distanceFeet: MovementFeet,
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     armorClass: BattleArmorClassSchema,
     damageDisposition: BattleObjectDamageDispositionSchema,
   }),
@@ -1070,6 +1100,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
+    cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTargetsInPointOriginSphere"),
@@ -1400,6 +1431,10 @@ export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
       procedureRef: BattleProcedureExecutionRef,
       formExecutionRef: BattleStatBlockExecutionScopeRef,
     }),
+    Schema.Struct({
+      kind: Schema.Literal("thrownWeaponAttack"),
+      procedureRef: BattleAttackProcedureExecutionRef,
+    }),
   ]),
 });
 
@@ -1709,6 +1744,24 @@ const D20TestNaturalOneRerollHoleOptionsFields = (() => {
   return {
     labeled: { d20TestNaturalOneRerolls: schemas.labeled },
     mechanical: { d20TestNaturalOneRerolls: schemas.mechanical },
+  };
+})();
+
+const HeroicInspirationRerollHoleOptionsFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(HEROIC_INSPIRATION_REROLL_EFFECT_KIND),
+  });
+  return {
+    labeled: {
+      heroicInspirationRerolls: Schema.optionalKey(
+        Schema.Tuple([member.labeled]),
+      ),
+    },
+    mechanical: {
+      heroicInspirationRerolls: Schema.optionalKey(
+        Schema.Tuple([member.mechanical]),
+      ),
+    },
   };
 })();
 
@@ -2344,6 +2397,7 @@ const BattleHolePayloadMembers = [
       Schema.Struct({
         ...BattleAttackTargetRequestFields,
         acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
+        requiresThrownWeaponLanding: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
   }),
@@ -2485,6 +2539,12 @@ const BattleHolePayloadMembers = [
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("objectInteractionRuling"),
+    actorId: CombatantId,
+    objectInteraction: Schema.Literals(OBJECT_INTERACTION_STATES),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("toolPossessionFacts"),
     actorId: CombatantId,
     toolIds: Schema.Tuple([Schema.Literal("poisoners_kit")]),
@@ -2602,7 +2662,10 @@ const BattleHolePayloadMembers = [
       ),
       mergeBattleHoleFieldPairs(
         AttackRollMissToHitReplacementFields,
-        D20TestNaturalOneRerollHoleOptionsFields,
+        mergeBattleHoleFieldPairs(
+          D20TestNaturalOneRerollHoleOptionsFields,
+          HeroicInspirationRerollHoleOptionsFields,
+        ),
       ),
     ),
   ),
@@ -2618,7 +2681,10 @@ const BattleHolePayloadMembers = [
       AttackRollMissToHitReplacementFields,
       mergeBattleHoleFieldPairs(
         SpellAttackRerollHoleOptionsFields,
-        D20TestNaturalOneRerollHoleOptionsFields,
+        mergeBattleHoleFieldPairs(
+          D20TestNaturalOneRerollHoleOptionsFields,
+          HeroicInspirationRerollHoleOptionsFields,
+        ),
       ),
     ),
   ),
@@ -3654,20 +3720,40 @@ const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
   result: BattleD20TestRollReplacementSchema,
 });
 
-const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union([
+function battleD20TestRollRerollDecisionSchema<const EffectKind extends string>(
+  effectKind: EffectKind,
+) {
+  return Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("decline"),
+      effectKind: Schema.Literal(effectKind),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("reroll"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: BattleD20TestRollReplacementSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rerollRolledDie"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: BattleD20TestRolledDieRollReplacementSchema,
+    }),
+  ]);
+}
+
+const BattleD20TestNaturalOneRerollDecisionSchema =
+  battleD20TestRollRerollDecisionSchema("d20_test_natural_one_reroll");
+const BattleHeroicInspirationRerollDecisionSchema =
+  battleD20TestRollRerollDecisionSchema(HEROIC_INSPIRATION_REROLL_EFFECT_KIND);
+const BattleSpellAttackRerollDecisionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("decline"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    effectKind: Schema.Literal("missed_spell_attack_reroll"),
   }),
   Schema.Struct({
     kind: Schema.Literal("reroll"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    effectKind: Schema.Literal("missed_spell_attack_reroll"),
     replacement: BattleD20TestRollReplacementSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("rerollRolledDie"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: BattleD20TestRolledDieRollReplacementSchema,
   }),
 ]);
 
@@ -3757,24 +3843,14 @@ const BattleAttackRollResultSchema = Schema.Struct({
     BattleProcedureExecutionRef,
   ),
   missToHitReplacementUnitId: Schema.optionalKey(Schema.Never),
-  spellAttackReroll: Schema.optionalKey(
-    Schema.Union([
-      Schema.Struct({
-        kind: Schema.Literal("decline"),
-        effectKind: Schema.Literal("missed_spell_attack_reroll"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("reroll"),
-        effectKind: Schema.Literal("missed_spell_attack_reroll"),
-        replacement: Schema.Struct({
-          total: Schema.Number.pipe(Schema.check(Schema.isInt())),
-          d20TestRoll: BattleD20TestRollSchema,
-        }),
-      }),
-    ]),
-  ),
-  d20TestNaturalOneReroll: Schema.optionalKey(
-    BattleD20TestNaturalOneRerollDecisionSchema,
+  d20TestRerolls: Schema.optionalKey(
+    Schema.NonEmptyArray(
+      Schema.Union([
+        BattleD20TestNaturalOneRerollDecisionSchema,
+        BattleHeroicInspirationRerollDecisionSchema,
+        BattleSpellAttackRerollDecisionSchema,
+      ]),
+    ),
   ),
 });
 
@@ -3795,6 +3871,10 @@ type BattleD20TestRollEncoded = Schema.Codec.Encoded<
 type BattleD20TestNaturalOneRerollDecisionEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestNaturalOneRerollDecisionSchema
 >;
+type BattleAttackRollD20TestRerollDecisionEncoded =
+  | BattleD20TestNaturalOneRerollDecisionEncoded
+  | Schema.Codec.Encoded<typeof BattleHeroicInspirationRerollDecisionSchema>
+  | Schema.Codec.Encoded<typeof BattleSpellAttackRerollDecisionSchema>;
 type BattleD20TestRolledOutcomeEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestRolledOutcomeSchema
 >;
@@ -3881,7 +3961,6 @@ type BattleOrdinaryMovementFillValueEncoded =
     };
     readonly fixedCostMovementReplacement?: {
       readonly kind: "fixedCostMovementReplacement";
-      readonly distanceFeet: number;
       readonly landing:
         | {
             readonly kind: "legalLanding";
@@ -4004,6 +4083,7 @@ type BattleFillEncoded =
             readonly sourceProcedureRef: string;
             readonly rangeFeet: number;
             readonly distanceFeet: number;
+            readonly cover?: (typeof RULED_COVER_TYPES)[number];
             readonly armorClass: number;
             readonly damageDisposition:
               | { readonly kind: "hitPoints"; readonly hitPoints: number }
@@ -4040,6 +4120,12 @@ type BattleFillEncoded =
               readonly distanceFeet: number;
               readonly enemyCanSeeAttacker: boolean;
             }[];
+          }
+        | {
+            readonly kind: "thrownWeaponLanding";
+            readonly attackerId: string;
+            readonly procedureRef: string;
+            readonly positionId: string;
           }
         | {
             readonly kind: "spellObjectLightTarget";
@@ -4431,6 +4517,7 @@ type BattleFillEncoded =
             readonly targetId: string;
             readonly sourceProcedureRef: string;
             readonly distanceFeet?: number;
+            readonly cover?: (typeof RULED_COVER_TYPES)[number];
           }
         | {
             readonly kind: "reactionSpellDamagerVisibleWithinRange";
@@ -4454,6 +4541,7 @@ type BattleFillEncoded =
             readonly targetId: string;
             readonly sourceProcedureRef: string;
             readonly distanceFeet?: number;
+            readonly cover?: (typeof RULED_COVER_TYPES)[number];
           }
         | {
             readonly kind: "spellTargetKnownWilling";
@@ -4487,7 +4575,10 @@ type BattleFillEncoded =
         readonly d20TestRoll: BattleD20TestRollEncoded;
         readonly activatedOngoingFeatureProcedureRef?: string;
         readonly missToHitReplacementProcedureRef?: string;
-        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
+        readonly d20TestRerolls?: readonly [
+          BattleAttackRollD20TestRerollDecisionEncoded,
+          ...BattleAttackRollD20TestRerollDecisionEncoded[],
+        ];
       };
       readonly relationshipFacts?: BattleAttackRollRelationshipFactsEncoded;
     }
@@ -4614,6 +4705,13 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly objectIds: readonly string[];
+      };
+    }
+  | {
+      readonly kind: "objectInteractionRuling";
+      readonly holeId: string;
+      readonly value: {
+        readonly requiresUtilize: boolean;
       };
     }
   | {
@@ -4896,13 +4994,22 @@ type BattleFillEncoded =
       readonly relationshipFacts?: BattleSavingThrowRelationshipFactsEncoded;
     };
 
+const BattleMovementPathSegmentSchema = Schema.Struct({
+  distanceFeet: MovementFeet,
+  activity: Schema.Literals(BATTLE_MOVEMENT_PATH_ACTIVITIES),
+  difficultTerrain: Schema.Literals(BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN),
+  movesCloserThroughDirectionalArea: Schema.Boolean,
+  draggedGrappledTargetIds: Schema.Array(CombatantId),
+});
+
 const BattleMovementFillValueCommonSchemaFields = {
   speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
-  movementCostFeet: MovementFeet,
+  path: Schema.NonEmptyArray(BattleMovementPathSegmentSchema),
   provokedOpportunityAttacks: Schema.Array(
     battleInterruptAttackExecutionSelectionWithFields({
       reactorId: CombatantId,
       distanceFeet: MovementFeet,
+      cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
     }),
   ),
   acrobaticMovement: Schema.optionalKey(
@@ -4957,8 +5064,6 @@ const BattleMovementFillValueCommonSchemaFields = {
           }),
         ]),
       ),
-      totalDistanceFeet: MovementFeet,
-      difficultTerrainDistanceFeet: MovementFeet,
     }),
   ),
   directionalPersistentAreaMovement: Schema.optionalKey(
@@ -4969,20 +5074,6 @@ const BattleMovementFillValueCommonSchemaFields = {
       sourceProcedureRef: BattleProcedureExecutionRef,
       areaId: BattleAreaId,
       directionId: BattleLineDirectionId,
-      totalDistanceFeet: MovementFeet,
-      closerDistanceFeet: MovementFeet,
-    }),
-  ),
-  grappleDrag: Schema.optionalKey(
-    Schema.Struct({
-      kind: Schema.Literal("grappleDrag"),
-      totalDistanceFeet: MovementFeet,
-      targets: Schema.NonEmptyArray(
-        Schema.Struct({
-          targetId: CombatantId,
-          distanceFeet: MovementFeet,
-        }),
-      ),
     }),
   ),
   creatureSpaceTraversal: Schema.optionalKey(
@@ -5028,7 +5119,6 @@ const BattleOrdinaryMovementFillValueSchema = Schema.Struct({
   fixedCostMovementReplacement: Schema.optionalKey(
     Schema.Struct({
       kind: Schema.Literal("fixedCostMovementReplacement"),
-      distanceFeet: MovementFeet,
       landing: Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("legalLanding"),
@@ -5248,6 +5338,7 @@ export const BattleFillSchema: Schema.Codec<
             sourceProcedureRef: BattleProcedureExecutionRef,
             rangeFeet: MovementFeet,
             distanceFeet: MovementFeet,
+            cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
             armorClass: BattleArmorClassSchema,
             damageDisposition: BattleObjectDamageDispositionSchema,
           }),
@@ -5277,6 +5368,7 @@ export const BattleFillSchema: Schema.Codec<
               }),
             ),
           }),
+          ThrownWeaponLandingFactSchema,
           Schema.Struct({
             kind: Schema.Literal("spellObjectLightTarget"),
             casterId: CombatantId,
@@ -5452,6 +5544,7 @@ export const BattleFillSchema: Schema.Codec<
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             distanceFeet: Schema.optionalKey(MovementFeet),
+            cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
           }),
           Schema.Struct({
             kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
@@ -5477,6 +5570,7 @@ export const BattleFillSchema: Schema.Codec<
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             distanceFeet: Schema.optionalKey(MovementFeet),
+            cover: Schema.optionalKey(Schema.Literals(RULED_COVER_TYPES)),
           }),
           Schema.Struct({
             kind: Schema.Literal("spellTargetKnownWilling"),
@@ -5765,6 +5859,13 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         objectIds: Schema.Array(BattleObjectId),
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("objectInteractionRuling"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        requiresUtilize: Schema.Boolean,
       }),
     }),
     Schema.Struct({
@@ -6165,6 +6266,7 @@ const BattleTurnSnapshotInferredSchema = Schema.Struct({
   actionResources: Schema.Array(RuntimeActionResourceSchema),
   actionTakenThisTurn: Schema.Boolean,
   bonusActionQuotaAvailable: Schema.Boolean,
+  objectInteraction: Schema.Literals(OBJECT_INTERACTION_STATES),
   spellSlotUsesThisTurn: Schema.Array(
     Schema.Union([
       Schema.Struct({
@@ -7000,6 +7102,11 @@ type CharacterProcedureBindingSnapshotCodec = Schema.Union<
 const CharacterProcedureBindingSnapshotSchema: CharacterProcedureBindingSnapshotCodec =
   Schema.Union(CharacterProcedureBindingSnapshotMembers);
 
+const HeroicInspirationSchema = Schema.Union([
+  Schema.Struct({ tag: Schema.Literal(NO_HEROIC_INSPIRATION.tag) }),
+  Schema.Struct({ tag: Schema.Literal(HEROIC_INSPIRATION_AVAILABLE.tag) }),
+]);
+
 const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   kind: Schema.Literal("character"),
   characterId: CharacterIdSchema,
@@ -7024,6 +7131,7 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
     ]),
   }),
   resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
+  heroicInspiration: HeroicInspirationSchema,
   druidWildShapeAvailableForms: Schema.Array(
     Schema.Struct({
       statBlockId: StatBlockId,
@@ -8518,6 +8626,7 @@ function serializedBattleHoleExecutionReferences(
         ),
       ],
       heldObjectFacts: noSerializedExecutionReferences,
+      objectInteractionRuling: noSerializedExecutionReferences,
       weaponAttackDamageEnhancementTargetItem: (value) => [
         source(value.sourceProcedureRef),
       ],
@@ -8831,6 +8940,8 @@ function serializedRuntimeCommandReferencePolicy(
       persistentAreaSaveCompositeSave: actorOwned,
       standFromProne: actorOwned,
       dropProne: actorOwned,
+      interactWithObject: actorOwned,
+      pickUpHeldWeapon: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
       endPersistentAreaSaveConditionEscapeForDeparture: actorOwned,
@@ -10278,6 +10389,7 @@ type EncodedCharacterBattleCreatureOriginSnapshot = {
       | null;
   };
   readonly resources: readonly (typeof BattleCharacterResourceSnapshotSchema.Encoded)[];
+  readonly heroicInspiration: typeof HeroicInspirationSchema.Encoded;
   readonly druidWildShapeAvailableForms: readonly {
     readonly statBlockId: typeof StatBlockId.Encoded;
     readonly execution: typeof StatBlockExecutionSnapshotSchema.Encoded;

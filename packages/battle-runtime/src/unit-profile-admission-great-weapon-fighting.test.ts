@@ -9,6 +9,7 @@ import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterUnitProcedureRefForTest,
+  thrownWeaponLandingFactsForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
@@ -311,6 +312,42 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     });
   });
 
+  test("a thrown Versatile Spear does not floor damage dice, though its two-handed melee attack does", () => {
+    const attack = zeroAbilityWeaponAttack("weapon_spear");
+    const state = greatWeaponFightingBattle({
+      attack,
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_spear"),
+        "two_handed",
+      ),
+    });
+
+    expect(
+      resolveWeaponHit({
+        state,
+        attackName: "Spear",
+        damageGroups: [[1]],
+        attackDamageDieFloorChoice: { selection: "apply" },
+      }),
+    ).toMatchObject({ tag: "resolved" });
+    expect(
+      resolveWeaponHit({
+        state,
+        attackName: "Spear",
+        weaponDelivery: "thrown",
+        damageGroups: [[1]],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: spellCasterId },
+          { combatantId: spellTargetId, hp: 11 },
+        ],
+      },
+    });
+  });
+
   test("Melee weapons without Two-Handed or Versatile do not floor damage dice", () => {
     const attack = zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger");
     const state = greatWeaponFightingBattle({
@@ -356,6 +393,7 @@ function mainWeaponLoadout(
 function resolveWeaponHit(input: {
   readonly state: BattleRuntimeSession;
   readonly attackName: string;
+  readonly weaponDelivery?: "thrown";
   readonly damageGroups: readonly (readonly number[])[];
   readonly expectsAttackDamageDieFloorChoice?: true;
   readonly attackDamageDieFloorChoice?: {
@@ -370,16 +408,27 @@ function resolveWeaponHit(input: {
     >["selection"];
   };
 }) {
-  const subject = weaponAttackSubject(input.state, input.attackName);
+  const subject = {
+    ...weaponAttackSubject(input.state, input.attackName),
+    ...(input.weaponDelivery === undefined
+      ? {}
+      : { weaponDelivery: input.weaponDelivery }),
+  };
   const target = requireResultHole(
     resolveBattleSubject({ state: input.state.state, subject, fills: [] }),
     "targetChoice",
+  );
+  const targetChoice = attackTargetFill(
+    target,
+    spellCasterId,
+    spellTargetId,
+    thrownWeaponLandingFactsForTest(target),
   );
   const roll = requireResultHole(
     resolveBattleSubject({
       state: input.state.state,
       subject,
-      fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
+      fills: [targetChoice],
     }),
     "attackRoll",
   );
@@ -388,7 +437,7 @@ function resolveWeaponHit(input: {
       state: input.state.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId),
+        targetChoice,
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
       ],
     }),
@@ -416,7 +465,7 @@ function resolveWeaponHit(input: {
     state: input.state.state,
     subject,
     fills: [
-      attackTargetFill(target, spellCasterId, spellTargetId),
+      targetChoice,
       attackRollFill(roll, { total: 15, naturalD20: 10 }),
       damageRollFillWithGroups(
         damage,

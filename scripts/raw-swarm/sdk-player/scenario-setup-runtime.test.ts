@@ -19,6 +19,7 @@ import {
   battleProcedureExecutionRef,
   battleStatBlockExecutionScopeRef,
   combatantId,
+  ordinaryMovementPath,
   discoverBattleActs,
   endBattleRuntimeTurn,
   readyTriggerDescription,
@@ -1703,7 +1704,7 @@ describe("scenario setup public-SDK boundary", () => {
       },
       answer: {
         kind: "movementRoute" as const,
-        movementCostFeet: movementFeet(5),
+        path: ordinaryMovementPath(movementFeet(5)),
         provokedOpportunityAttacks: [],
         creatureSpaceTraversal: { kind: "notRequired" as const },
         postMoveSpatialState: {
@@ -1731,34 +1732,42 @@ describe("scenario setup public-SDK boundary", () => {
     expect(Result.isSuccess(tableMovementSession)).toBe(true);
     if (Result.isFailure(tableMovementSession)) return;
 
-    const malformedMovementCost = tableAuthoredSpatialDecision({
-      decisionId: "malformed-movement-cost",
+    const malformedMovementPath = tableAuthoredSpatialDecision({
+      decisionId: "malformed-movement-path",
       question: tableMovementDecision.question,
       answer: {
         ...tableMovementDecision.answer,
-        movementCostFeet: "5",
+        path: [{ distanceFeet: "5" }],
       },
     });
-    expect(malformedMovementCost).toMatchObject({
+    expect(malformedMovementPath).toMatchObject({
       _tag: "Failure",
       failure: {
         tag: "invalid-spatial-decision",
-        message: expect.stringContaining("finite non-negative movement cost"),
+        message: expect.stringContaining("nonempty path of segments"),
       },
     });
-    const fractionalMovementCost = tableAuthoredSpatialDecision({
-      decisionId: "fractional-movement-cost",
+    const fractionalMovementPath = tableAuthoredSpatialDecision({
+      decisionId: "fractional-movement-path",
       question: tableMovementDecision.question,
       answer: {
         ...tableMovementDecision.answer,
-        movementCostFeet: 2.5,
+        path: [
+          {
+            distanceFeet: 2.5,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
       },
     });
-    expect(fractionalMovementCost).toMatchObject({
+    expect(fractionalMovementPath).toMatchObject({
       _tag: "Failure",
       failure: {
         tag: "invalid-spatial-decision",
-        message: expect.stringContaining("movement cost"),
+        message: expect.stringContaining("positive whole-foot distance"),
       },
     });
     const malformedMovementThreat = tableAuthoredSpatialDecision({
@@ -2122,7 +2131,12 @@ describe("scenario setup public-SDK boundary", () => {
     expect(tableMovementPlan).toMatchObject({
       _tag: "Success",
       success: {
-        fills: [{ kind: "movement", value: { movementCostFeet: 5 } }],
+        fills: [
+          {
+            kind: "movement",
+            value: { path: [{ distanceFeet: 5, difficultTerrain: "none" }] },
+          },
+        ],
         session: {
           movementResolution: { kind: "tableAuthoredPending" },
         },
@@ -2287,7 +2301,10 @@ describe("scenario setup public-SDK boundary", () => {
           {
             kind: "movement",
             value: {
-              movementCostFeet: 15,
+              path: [
+                { distanceFeet: 5, difficultTerrain: "tableTerrain" },
+                { distanceFeet: 5, difficultTerrain: "none" },
+              ],
               creatureSpaceTraversal: {
                 occupiedSpaces: [{ occupantId: "skeleton" }],
                 destination: { kind: "unoccupiedSpace" },
@@ -2346,7 +2363,10 @@ describe("scenario setup public-SDK boundary", () => {
           {
             kind: "movement",
             value: {
-              movementCostFeet: 10,
+              path: [
+                { distanceFeet: 5, difficultTerrain: "none" },
+                { distanceFeet: 5, difficultTerrain: "none" },
+              ],
             },
           },
         ],
@@ -2366,7 +2386,18 @@ describe("scenario setup public-SDK boundary", () => {
       ),
     ).toMatchObject({
       _tag: "Success",
-      success: { fills: [{ value: { movementCostFeet: 10 } }] },
+      success: {
+        fills: [
+          {
+            value: {
+              path: [
+                { distanceFeet: 5, difficultTerrain: "none" },
+                { distanceFeet: 5, difficultTerrain: "none" },
+              ],
+            },
+          },
+        ],
+      },
     });
     expect(
       plan(
@@ -2376,7 +2407,18 @@ describe("scenario setup public-SDK boundary", () => {
       ),
     ).toMatchObject({
       _tag: "Success",
-      success: { fills: [{ value: { movementCostFeet: 10 } }] },
+      success: {
+        fills: [
+          {
+            value: {
+              path: [
+                { distanceFeet: 5, difficultTerrain: "none" },
+                { distanceFeet: 5, difficultTerrain: "none" },
+              ],
+            },
+          },
+        ],
+      },
     });
     const deadAndIncapacitated = battleRuntimeSessionWithState(
       setup.session.battle,
@@ -2396,7 +2438,18 @@ describe("scenario setup public-SDK boundary", () => {
       plan(scenarioWithOccupant(deadAndIncapacitated).pipe(Result.getOrThrow)),
     ).toMatchObject({
       _tag: "Success",
-      success: { fills: [{ value: { movementCostFeet: 10 } }] },
+      success: {
+        fills: [
+          {
+            value: {
+              path: [
+                { distanceFeet: 5, difficultTerrain: "none" },
+                { distanceFeet: 5, difficultTerrain: "none" },
+              ],
+            },
+          },
+        ],
+      },
     });
     expect(
       planScenarioMovement({
@@ -3816,7 +3869,7 @@ describe("scenario setup public-SDK boundary", () => {
             },
             answer: {
               kind: "movementRoute" as const,
-              movementCostFeet: movementFeet(5),
+              path: ordinaryMovementPath(movementFeet(5)),
               provokedOpportunityAttacks: [
                 {
                   ...knownThreat,
@@ -4054,7 +4107,7 @@ describe("scenario setup public-SDK boundary", () => {
     if (Result.isSuccess(plannedMove)) {
       expect(plannedMove.success.fills[0]).toMatchObject({
         kind: "movement",
-        value: { movementCostFeet: 5 },
+        value: { path: [{ distanceFeet: 5, difficultTerrain: "none" }] },
       });
       const interrupted = scenarioSessionWithBattleResult(
         plannedMove.success.session,
@@ -4085,7 +4138,12 @@ describe("scenario setup public-SDK boundary", () => {
           success: {
             subject: moveSubject,
             fills: [
-              { kind: "movement", value: { movementCostFeet: 5 } },
+              {
+                kind: "movement",
+                value: {
+                  path: [{ distanceFeet: 5, difficultTerrain: "none" }],
+                },
+              },
               {
                 kind: "rolledDice",
                 holeId: "battle:spike-growth-movement-damage",
@@ -4163,7 +4221,17 @@ describe("scenario setup public-SDK boundary", () => {
     expect(difficultTerrain).toMatchObject({
       _tag: "Success",
       success: {
-        fills: [{ kind: "movement", value: { movementCostFeet: 15 } }],
+        fills: [
+          {
+            kind: "movement",
+            value: {
+              path: [
+                { distanceFeet: 5, difficultTerrain: "none" },
+                { distanceFeet: 5, difficultTerrain: "tableTerrain" },
+              ],
+            },
+          },
+        ],
       },
     });
     const totalCoverBoundaries = resultSpatial.arena.boundaries.filter(

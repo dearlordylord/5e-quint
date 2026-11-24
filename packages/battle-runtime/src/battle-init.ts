@@ -14,7 +14,7 @@ import type {
   ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import { Hp as toHp } from "@dnd/shared/types";
-import type { Language } from "@dnd/shared/game-facts";
+import type { HeroicInspiration, Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
   Size,
@@ -590,6 +590,8 @@ export type CharacterBattleCreatureInit = {
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly invocationFeatures?: readonly CharacterBattleInvocationFeature[];
   readonly resources?: readonly CharacterBattleResourceInit[];
+  /** The Character Sheet's Heroic Inspiration. Omission means the character has none. */
+  readonly heroicInspiration?: HeroicInspiration;
   readonly metamagic?: CharacterBattleMetamagicInit;
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };

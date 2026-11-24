@@ -141,7 +141,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       subject: approachAct.subject,
       fills: [
         executeCompelledApproachMovementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 10,
           movedWithinFiveFeetOfCaster: false,
           provokedOpportunityAttacks: [
             {
@@ -268,7 +268,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     const approachEffectRef = approachAct.subject.effectRef;
     const movement = requireHole(approachAct.initialHoles, "movement");
     const movementFill = executeCompelledApproachMovementFill(movement, {
-      movementCostFeet: 10,
+      distanceFeet: 10,
       movedWithinFiveFeetOfCaster: true,
       provokedOpportunityAttacks: [],
     });
@@ -611,7 +611,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       subject: fleeAct.subject,
       fills: [
         executeCompelledFleeMovementFill(movement, {
-          movementCostFeet: 30,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -703,7 +703,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         subject: fleeAct.subject,
         fills: [
           executeCompelledFleeMovementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -896,7 +896,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     }
     const movement = requireHole(fleeAct.initialHoles, "movement");
     const movementFill = executeCompelledFleeMovementFill(movement, {
-      movementCostFeet: 30,
+      distanceFeet: 30,
       provokedOpportunityAttacks: [
         {
           reactorId: spellCasterId,

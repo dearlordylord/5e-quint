@@ -780,7 +780,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         critical,
         unitFeatureDecisionFill(decision, "use"),
         movementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 10,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -868,7 +868,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
             speedKind: "fly",
-            movementCostFeet: 20,
+            distanceFeet: 20,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -884,7 +884,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         unitFeatureDecisionFill(decision, "use"),
         movementFill(movement, {
           speedKind: "fly",
-          movementCostFeet: 20,
+          distanceFeet: 20,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -988,7 +988,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           critical,
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -1129,7 +1129,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         critical,
         unitFeatureDecisionFill(decision, "use"),
         movementFill(movement, {
-          movementCostFeet: 16,
+          distanceFeet: 16,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -1229,7 +1229,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           critical,
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -1246,7 +1246,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           critical,
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
           damageRollFillWithGroups(damage, [[1, 1, 1, 1]]),
@@ -1354,7 +1354,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           critical,
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -1433,7 +1433,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           critical,
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
-            movementCostFeet: 16,
+            distanceFeet: 16,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -1452,7 +1452,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           critical,
           unitFeatureDecisionFill(decision, "use"),
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [
               {
                 reactorId: remarkableAthleteTargetId,

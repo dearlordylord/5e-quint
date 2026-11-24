@@ -113,6 +113,11 @@ export const CHATGPT_BATTLE_TOOLS = {
     description:
       "Attempt to hide with the admitted circumstances and action cost.",
   },
+  interact_with_object: {
+    family: "battleActions",
+    description:
+      "Use when the active combatant interacts with an object, including picking up its fallen selected weapon. The table rules whether the object needs an action; the engine charges the free object interaction or the Utilize action.",
+  },
   move: {
     family: "battleActions",
     description:

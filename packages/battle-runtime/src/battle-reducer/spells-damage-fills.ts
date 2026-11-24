@@ -22,6 +22,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
 import {
+  directTargetCover,
+  type DirectTargetCover,
+} from "@dnd/shared-algebras/cover-algebra";
+import {
   nonEmptyArrayProperty,
   optionalProperty,
 } from "../optional-property.ts";
@@ -700,7 +704,7 @@ export function chainedSpellDamageExpression(
   return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(invocation.damage.expr.flat ?? 0)}-${damageType}`;
 }
 
-export function chainedSpellLeapTargetIsLegal(
+export function chainedSpellLeapTargetAdmission(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       RuntimeSpellProcedure,
@@ -710,18 +714,58 @@ export function chainedSpellLeapTargetIsLegal(
   previousTargetId: CombatantId | undefined,
   targetId: CombatantId,
   facts: readonly BattleTargetSpatialFact[],
+): { readonly cover: DirectTargetCover } | null {
+  const leap = chainedSpellLeapFact(
+    invocation,
+    previousTargetId,
+    targetId,
+    facts,
+  );
+  if (leap === undefined) return null;
+  const cover = directTargetCover(leap.cover);
+  return cover === null ? null : { cover };
+}
+
+export function chainedSpellLeapTargetIsLegal(
+  ...args: Parameters<typeof chainedSpellLeapTargetAdmission>
 ): boolean {
-  return (
-    previousTargetId !== undefined &&
-    previousTargetId !== targetId &&
-    facts.some(
-      (fact) =>
-        fact.kind === "spellLeapTargetWithinRange" &&
-        fact.previousTargetId === previousTargetId &&
-        fact.targetId === targetId &&
-        fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.rangeFeet === invocation.leapRangeFeet,
-    )
+  return chainedSpellLeapTargetAdmission(...args) !== null;
+}
+
+/** The invocation of a chained Spell Attack whose orb leaps between targets. */
+export type ChainedSpellLeapInvocation = BattleExecutableSpellInvocation<
+  Extract<
+    RuntimeSpellProcedure,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >
+>;
+
+function chainedSpellLeapFact(
+  invocation: ChainedSpellLeapInvocation,
+  previousTargetId: CombatantId | undefined,
+  targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
+):
+  | Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "spellLeapTargetWithinRange" }
+    >
+  | undefined {
+  if (previousTargetId === undefined || previousTargetId === targetId) {
+    return undefined;
+  }
+  return facts.find(
+    (
+      fact,
+    ): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "spellLeapTargetWithinRange" }
+    > =>
+      fact.kind === "spellLeapTargetWithinRange" &&
+      fact.previousTargetId === previousTargetId &&
+      fact.targetId === targetId &&
+      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
+      fact.rangeFeet === invocation.leapRangeFeet,
   );
 }
 

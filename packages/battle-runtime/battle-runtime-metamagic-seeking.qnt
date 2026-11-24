@@ -58,6 +58,15 @@ module battleRuntimeMetamagicSeeking {
     selectedMetamagicOptionsAffordable(seekingSpellSelectedMetamagicOptions(castOptions), sorceryPointsRemaining) and
     seekingSpellProcedureSupportsMissedSpellAttackReroll(procedure) and
     not(seekingSpellAttackRollHits(originalTotal, originalNaturalD20, armorClass))
+  // A reroll changes only the d20: the replacement keeps everything the
+  // original total added to its die.
+  pure def seekingSpellReplacementKeepsModifiers(
+    originalTotal: int,
+    originalNaturalD20: int,
+    replacementTotal: int,
+    replacementNaturalD20: int,
+  ): bool =
+    replacementTotal - replacementNaturalD20 == originalTotal - originalNaturalD20
   pure def resolveSeekingSpellAttackReroll(
     procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
     originalTotal: int,
@@ -77,6 +86,11 @@ module battleRuntimeMetamagicSeeking {
       knownOptions,
       castOptions,
       sorceryPointsRemaining,
+    ) and seekingSpellReplacementKeepsModifiers(
+      originalTotal,
+      originalNaturalD20,
+      replacementTotal,
+      replacementNaturalD20,
     )
     val finalTotal = if (admitted) replacementTotal else originalTotal
     val finalNaturalD20 =

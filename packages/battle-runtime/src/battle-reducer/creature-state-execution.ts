@@ -62,10 +62,8 @@ import {
   combatantEffectiveSize,
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
-import {
-  battleObjectIsOnGround,
-  characterEffectiveLoadoutFromOrigin,
-} from "./battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
@@ -477,6 +475,7 @@ export function combatantOriginSnapshot(
         offHandAttackProcedureRef: origin.offHandAttack?.procedureRef ?? null,
       },
       resources: origin.resources.map(characterResourceSnapshot),
+      heroicInspiration: origin.heroicInspiration,
       druidWildShapeAvailableForms: (
         origin.druidWildShapeAvailableForms ?? []
       ).map((admission) => ({

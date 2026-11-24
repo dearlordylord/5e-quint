@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-insect-plague-area-hazard
 //
@@ -239,7 +240,10 @@ describe("Insect Plague area-hazard MBT parity", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -252,8 +256,6 @@ describe("Insect Plague area-hazard MBT parity", () => {
                 areaId: insectPlagueAreaId,
               },
             ],
-            totalDistanceFeet: movementFeet(10),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
         }),
       ],

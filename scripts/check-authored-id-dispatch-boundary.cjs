@@ -471,7 +471,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "lightPropertyDamageAbilityModifier",
     "lightPropertyDamageAbilityModifierForAbilityChoice",
     "lightPropertyDamageAbilityModifierForAttack",
-    "lightPropertyOffHand",
     "lightRiders",
     "lightWeaponAttackMade",
     "movableLight",
@@ -780,6 +779,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "battleRuntimeCommandBoundExecutionReferences",
     "runtimeCommandEffectOccurrenceKey",
     "runtimeCommandAreaMembershipTrigger",
+    "runtimeCommandReferenceKey",
   ].flatMap((identifier) =>
     exactCollision(
       "command",
@@ -1181,7 +1181,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...[
     "applyStepOfTheWindJumpDistanceMultiplier",
     "jumpDistanceMultiplier",
-    "jumpMovementValidation",
     "maxJumpDistanceFeet",
     "withJumpDistanceMultiplier",
   ].flatMap((identifier) =>
@@ -2795,6 +2794,18 @@ for (const [spellId, relativePath, identifiers, reason] of [
 EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
   ...exactCollisionsAt(
     "light",
+    "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+    [
+      { identifier: "lightExtraAttack", roles: ["discriminant-literal"] },
+      {
+        identifier: "lightExtraAttackWithAbilityChoices",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the parsed Light weapon-property mechanic, not the spell",
+  ),
+  ...exactCollisionsAt(
+    "light",
     "packages/battle-runtime/src/spell-procedure-execution-admission.ts",
     [{ identifier: "light", roles: ["registry-key"] }],
     "light is a projected illumination fact field",
@@ -2826,9 +2837,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "3ff390808a434bcae95ee8e383c4dfef81de232d639a42c36c1fd8f0b9ce7a32",
-  siteCount: 1714,
-  violationCount: 1832,
+  sha256: "59d480993351cf2ff08b28cc79d0ba9b7f28b3291f15a114c6ec337538667df7",
+  siteCount: 1727,
+  violationCount: 1847,
 };
 
 function escapeForRegExp(text) {

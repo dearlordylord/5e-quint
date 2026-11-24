@@ -20,12 +20,17 @@ export type MovementActivity =
       readonly speedType: "walk";
     };
 
+/**
+ * One stretch of movement to price. Difficult Terrain isn't cumulative, so it
+ * is one flag. `effectExtraCostPerFoot` holds the per-foot surcharges that
+ * stack on top: each Grappled creature dragged (Rules Glossary "Grappled") and
+ * each effect that prices a foot of movement above 1 foot adds its own.
+ */
 export type MovementCostFacts = {
   readonly distanceFeet: MovementFeet;
   readonly activity: MovementActivity;
   readonly difficultTerrain: boolean;
-  readonly squeezing: boolean;
-  readonly grappleDragExtraCost: boolean;
+  readonly effectExtraCostPerFoot: number;
 };
 
 export type MovementCost = {
@@ -37,8 +42,7 @@ export function movementCost(facts: MovementCostFacts): MovementCost {
   const extraCostPerFoot =
     (facts.difficultTerrain ? 1 : 0) +
     activityExtraCostPerFoot(facts.activity) +
-    (facts.squeezing ? 1 : 0) +
-    (facts.grappleDragExtraCost ? 1 : 0);
+    facts.effectExtraCostPerFoot;
 
   return {
     distanceFeet: facts.distanceFeet,
@@ -58,17 +62,4 @@ function activityExtraCostPerFoot(activity: MovementActivity): number {
     Match.when({ kind: "crawling" }, () => 1),
     Match.exhaustive,
   );
-}
-
-export function ordinaryMovementCost(
-  distanceFeet: MovementFeet,
-  speedType: SpeedType,
-): MovementCost {
-  return movementCost({
-    distanceFeet,
-    activity: { kind: "ordinary", speedType },
-    difficultTerrain: false,
-    squeezing: false,
-    grappleDragExtraCost: false,
-  });
 }

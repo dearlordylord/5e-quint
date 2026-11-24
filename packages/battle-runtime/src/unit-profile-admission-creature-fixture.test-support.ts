@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import {
   battleResolutionHolesForTest,
   rangedAttackEnemyProximityFactsForTest,
@@ -25,6 +26,7 @@ import type {
 import { expect } from "vitest";
 import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import weaponClubInput from "../../surface/content/weapon_club.json";
+import weaponDartInput from "../../surface/content/weapon_dart.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
 import {
   characterId,
@@ -68,6 +70,7 @@ import {
 
 const testUnitRecords = [
   decodeUnitRecordSync(weaponClubInput),
+  decodeUnitRecordSync(weaponDartInput),
   decodeUnitRecordSync(weaponGreatswordInput),
 ] satisfies ReadonlyArray<UnitRecord>;
 
@@ -777,10 +780,10 @@ export function attackRollFill(
     readonly naturalD20?: number;
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
     readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
-    readonly d20TestNaturalOneReroll?: Extract<
+    readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
-    >["value"]["d20TestNaturalOneReroll"];
+    >["value"]["d20TestRerolls"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   return {
@@ -799,21 +802,29 @@ export function attackRollFill(
             missToHitReplacementProcedureRef:
               value.missToHitReplacementProcedureRef,
           }),
-      ...(value.d20TestNaturalOneReroll === undefined
+      ...(value.d20TestRerolls === undefined
         ? {}
-        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: value.d20TestRerolls }),
     },
   };
 }
 
 export function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  value: {
+  value: (
+    | { readonly distanceFeet: number; readonly path?: never }
+    | {
+        readonly path: Extract<
+          BattleFill,
+          { readonly kind: "movement" }
+        >["value"]["path"];
+        readonly distanceFeet?: never;
+      }
+  ) & {
     readonly speedKind?: Extract<
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["speedKind"];
-    readonly movementCostFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -845,7 +856,8 @@ export function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path:
+        value.path ?? ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       ...(value.fixedCostMovementReplacement === undefined
         ? {}

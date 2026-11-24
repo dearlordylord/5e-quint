@@ -1,3 +1,4 @@
+import { attackActionOptionsForActor } from "../../battle-runtime/src/battle-reducer/attack-damage-apply.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -19,7 +20,11 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
-import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import {
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
+  statBlockId as authoredStatBlockId,
+} from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import type {
   BattleFill,
@@ -156,7 +161,7 @@ import {
   admitCharacterSheetCompanionToBattle,
   battleCreatureInitFromCharacterBuild as battleCreatureInitFromCharacterBuildRuntime,
   battleCreatureInitFromCharacterBuildWithRoute as battleCreatureInitFromCharacterBuildWithRouteRuntime,
-  characterWeaponAttackActionOptions,
+  characterBattleWeaponAttackInitProjection,
   characterBaseUnarmedStrikeActionOption,
   characterBattleSupportProjection,
   characterSheetBattleInit,
@@ -228,6 +233,37 @@ function battleCreatureInitFromCharacterBuild(
     ...input,
     resourceExpenditures: input.resourceExpenditures ?? [],
   });
+}
+
+function runtimeWeaponAttackFromInit(init: BattleCreatureInit) {
+  const state = expectSuccess(
+    startBattle({
+      battleId: battleId("weapon-damage-projection"),
+      combatants: [init],
+    }),
+  ).state;
+  const attack = attackActionOptionsForActor(state, init.combatantId).find(
+    (option) => option.kind === "weapon" && option.weaponDelivery === undefined,
+  );
+  if (attack?.kind !== "weapon")
+    throw new Error("Expected an admitted melee weapon attack.");
+  return attack;
+}
+
+function runtimeWeaponAttackForBuild(build: CharacterBuild) {
+  return runtimeWeaponAttackFromInit(
+    expectSuccess(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("weapon-damage-projection"),
+        characterId: characterId("character:weapon-damage-projection"),
+        displayName: "Weapon damage projection",
+        build,
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        unitLibrary,
+      }),
+    ),
+  );
 }
 
 function battleCreatureInitFromCharacterBuildWithRoute(
@@ -491,11 +527,10 @@ describe("Character Sheet battle handoff", () => {
 
   test.each([
     {
-      name: "non-spellcasting exhaustion and Heroic Inspiration",
+      name: "non-spellcasting exhaustion",
       input: () => ({
         build: defenseBuild({ wearingArmor: false }),
         exhaustionLevel: 2 as const,
-        heroicInspiration: { tag: "available" as const },
       }),
     },
     {
@@ -604,6 +639,81 @@ describe("Character Sheet battle handoff", () => {
     expect(characterSheetCurrentHp(settled)).toBe(8);
     expect(characterSheetTempHp(settled)).toBe(3);
     expect({ ...settled, hitPoints: sheet.hitPoints }).toEqual(sheet);
+  });
+
+  test("carries the Sheet's Heroic Inspiration into battle", () => {
+    for (const heroicInspiration of [
+      HEROIC_INSPIRATION_AVAILABLE,
+      NO_HEROIC_INSPIRATION,
+    ]) {
+      const sheet = expectSuccess(
+        rebuildCharacterSheetFixture({
+          characterId: characterSheetId("character:heroic-inspiration-entry"),
+          build: defenseBuild({ wearingArmor: false }),
+          currentHp: Hp(10),
+          tempHp: Hp(0),
+          heroicInspiration,
+          unitLibrary,
+          statBlockCatalog,
+        }),
+      );
+      const init = expectSuccess(
+        characterSheetBattleInit({
+          sheet,
+          unitLibrary,
+          statBlockCatalog,
+          combatantId: combatantId("combatant:heroic-inspiration-entry"),
+          displayName: "Fighter",
+          initiative: initiativeScore(20),
+          ammunitionStocks: [],
+        }),
+      );
+      expect(init.creatureInit.heroicInspiration).toEqual(heroicInspiration);
+    }
+  });
+
+  test.each([
+    {
+      name: "spent in battle",
+      sheet: HEROIC_INSPIRATION_AVAILABLE,
+      battle: NO_HEROIC_INSPIRATION,
+    },
+    {
+      name: "gained in battle",
+      sheet: NO_HEROIC_INSPIRATION,
+      battle: HEROIC_INSPIRATION_AVAILABLE,
+    },
+  ])("settles Heroic Inspiration $name onto the Sheet", (input) => {
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:heroic-inspiration-settle"),
+        build: defenseBuild({ wearingArmor: false }),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        heroicInspiration: input.sheet,
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+    const settled = expectSuccess(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:heroic-inspiration-settle"),
+            heroicInspiration: input.battle,
+          },
+          hp: Hp(10),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(settled.heroicInspiration).toEqual(input.battle);
   });
 
   test("projects every State init leaf into a structured handoff fact", () => {
@@ -8585,7 +8695,7 @@ describe("Character Build battle projection", () => {
       },
     } satisfies CharacterBuild;
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build: missingEquipmentBuild,
         unitLibrary,
         weaponMasteries: [],
@@ -8653,7 +8763,7 @@ describe("Character Build battle projection", () => {
       ),
     });
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build: {
           ...build,
           features: [
@@ -8691,7 +8801,7 @@ describe("Character Build battle projection", () => {
       ),
     });
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build: {
           ...build,
           equipment: {
@@ -9269,7 +9379,7 @@ describe("Character Build battle projection", () => {
 
   test("projects an empty weapon loadout and rejects a non-Weapon off-hand reference", () => {
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build,
         unitLibrary,
         weaponMasteries: [],
@@ -9282,7 +9392,7 @@ describe("Character Build battle projection", () => {
       unitId: expectSuccess(characterEquipmentItemUnitId(leatherArmorUnitId)),
     });
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build: {
           ...build,
           equipment: {
@@ -10928,7 +11038,7 @@ describe("Character Build battle projection", () => {
       expectedAlternates,
     }) => {
       const attack = expectSuccess(
-        characterWeaponAttackActionOptions({
+        characterBattleWeaponAttackInitProjection({
           build: equippedFighterBuild({ weaponUnitId, ...scores }),
           unitLibrary: weaponUnitLibrary,
           weaponMasteries: [],
@@ -10968,19 +11078,14 @@ describe("Character Build battle projection", () => {
   ] as const)(
     "projects the weapon damage of $label from its grip",
     ({ weaponUnitId, grip, dieSize }) => {
-      const attack = expectSuccess(
-        characterWeaponAttackActionOptions({
-          build: equippedFighterBuild({
-            weaponUnitId: authoredUnitId(weaponUnitId),
-            str: 16,
-            dex: 10,
-            grip,
-          }),
-          unitLibrary,
-          weaponMasteries: [],
-          classLevels: [{ className: "fighter", level: 1 }],
+      const attack = runtimeWeaponAttackForBuild(
+        equippedFighterBuild({
+          weaponUnitId: authoredUnitId(weaponUnitId),
+          str: 16,
+          dex: 10,
+          grip,
         }),
-      ).attack;
+      );
 
       expect(attack?.weapon.damage).toEqual(
         expect.objectContaining({ kind: "dice", dice: 1, dieSize }),
@@ -11028,20 +11133,15 @@ describe("Character Build battle projection", () => {
     ({ grip, dieSize }) => {
       // Level 11 Martial Arts (d10) beats both the one-handed d6 and the
       // two-handed Versatile d8, so the Versatile swap must run first.
-      const attack = expectSuccess(
-        characterWeaponAttackActionOptions({
-          build: monkBuild({
-            level: 11,
-            weaponUnitId: "weapon_quarterstaff",
-            str: 12,
-            dex: 16,
-            grip,
-          }),
-          unitLibrary,
-          weaponMasteries: [],
-          classLevels: [{ className: "monk", level: 11 }],
+      const attack = runtimeWeaponAttackForBuild(
+        monkBuild({
+          level: 11,
+          weaponUnitId: "weapon_quarterstaff",
+          str: 12,
+          dex: 16,
+          grip,
         }),
-      ).attack;
+      );
 
       expect(attack?.weapon.damage).toEqual(
         expect.objectContaining({ kind: "dice", dice: 1, dieSize }),
@@ -11050,20 +11150,15 @@ describe("Character Build battle projection", () => {
   );
 
   test("keeps a level 1 Monk's two-handed Quarterstaff at its Versatile d8", () => {
-    const attack = expectSuccess(
-      characterWeaponAttackActionOptions({
-        build: monkBuild({
-          level: 1,
-          weaponUnitId: "weapon_quarterstaff",
-          str: 12,
-          dex: 16,
-          grip: "two_handed",
-        }),
-        unitLibrary,
-        weaponMasteries: [],
-        classLevels: [{ className: "monk", level: 1 }],
+    const attack = runtimeWeaponAttackForBuild(
+      monkBuild({
+        level: 1,
+        weaponUnitId: "weapon_quarterstaff",
+        str: 12,
+        dex: 16,
+        grip: "two_handed",
       }),
-    ).attack;
+    );
 
     expect(attack?.weapon.damage).toEqual(
       expect.objectContaining({ kind: "dice", dice: 1, dieSize: 8 }),
@@ -11077,7 +11172,7 @@ describe("Character Build battle projection", () => {
       dex: 14,
     });
     const attack = expectSuccess(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build: {
           ...fighterBuild,
           progression: {
@@ -11348,7 +11443,7 @@ describe("Character Build battle projection", () => {
 
     expect(init.creatureInit.kind).toBe("character");
     if (init.creatureInit.kind !== "character") return;
-    expect(init.creatureInit.attack).toMatchObject({
+    expect(runtimeWeaponAttackFromInit(init)).toMatchObject({
       kind: "weapon",
       ability: "dex",
       abilityModifier: abilityModifier(3),
@@ -11374,8 +11469,8 @@ describe("Character Build battle projection", () => {
       },
     });
 
-    const shortsword = expectSuccess(
-      characterWeaponAttackActionOptions({
+    const weaponAttackInit = expectSuccess(
+      characterBattleWeaponAttackInitProjection({
         build: monkBuild({
           weaponUnitId: syntheticFinesseWeaponUnitId,
           str: 12,
@@ -11386,7 +11481,7 @@ describe("Character Build battle projection", () => {
         classLevels: [{ className: "monk", level: 1 }],
       }),
     ).attack;
-    expect(shortsword).toMatchObject({
+    expect(weaponAttackInit).toMatchObject({
       ability: "dex",
       abilityModifier: abilityModifier(3),
       attackBonus: attackBonus(5),
@@ -11396,7 +11491,7 @@ describe("Character Build battle projection", () => {
         damage: {
           kind: "dice",
           dice: 1,
-          dieSize: 6,
+          dieSize: 4,
         },
         properties: expect.arrayContaining([{ kind: "finesse" }]),
       },
@@ -11411,7 +11506,7 @@ describe("Character Build battle projection", () => {
     });
 
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build: daggerBuild,
         unitLibrary,
         weaponMasteries: [{ weaponUnitId: authoredUnitId("weapon_dagger") }],
@@ -11504,7 +11599,7 @@ describe("Character Build battle projection", () => {
       }
       expect(
         expectSuccess(
-          characterWeaponAttackActionOptions({
+          characterBattleWeaponAttackInitProjection({
             build: pactBuild,
             unitLibrary: catalog,
             weaponMasteries: [],
@@ -11569,7 +11664,7 @@ describe("Character Build battle projection", () => {
       throw new Error("Expected Pact of the Blade finesse weapon fixture.");
     }
     const attack = expectSuccess(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build,
         unitLibrary: syntheticFinesseWeaponUnitLibrary,
         weaponMasteries: [],
@@ -12069,7 +12164,7 @@ describe("Character Build battle projection", () => {
 
       expect(init.creatureInit.kind).toBe("character");
       if (init.creatureInit.kind !== "character") return;
-      expect(init.creatureInit.attack).toMatchObject({
+      expect(runtimeWeaponAttackFromInit(init)).toMatchObject({
         kind: "weapon",
         ability: "dex",
         abilityModifier: abilityModifier(3),
@@ -12110,7 +12205,7 @@ describe("Character Build battle projection", () => {
 
     expect(init.creatureInit.kind).toBe("character");
     if (init.creatureInit.kind !== "character") return;
-    expect(init.creatureInit.attack).toMatchObject({
+    expect(runtimeWeaponAttackFromInit(init)).toMatchObject({
       kind: "weapon",
       ability: "str",
       abilityModifier: abilityModifier(3),
@@ -12341,7 +12436,7 @@ describe("Character battle runtime boundary coverage", () => {
       },
     });
     expect(
-      characterWeaponAttackActionOptions({
+      characterBattleWeaponAttackInitProjection({
         build,
         unitLibrary: incompleteCatalog,
         weaponMasteries: [],
@@ -14893,6 +14988,7 @@ function handoffBranchCombatant(
     origin: {
       classLevels: [{ className: "fighter", level: classLevel(1) }],
       resources: [],
+      heroicInspiration: NO_HEROIC_INSPIRATION,
       ...combatant.origin,
     },
   } as BattleCreatureState;

@@ -79,7 +79,7 @@ function startFighterOpportunityAttackAfterMovement(
     subject: moveSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           {
             reactorId: fighterAttack.actorId,
@@ -296,16 +296,18 @@ describe("battle runtime complexity extraction route boundaries", () => {
       subject: opportunity.subject,
       fills: [
         attackRollFill(rerollHole, {
-          total: 20,
+          total: 3,
           naturalD20: 1,
-          d20TestNaturalOneReroll: {
-            kind: "reroll",
-            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            replacement: {
-              total: 20,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
+          d20TestRerolls: [
+            {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                total: 20,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
+              },
             },
-          },
+          ],
         }),
       ],
     });
@@ -356,10 +358,12 @@ describe("battle runtime complexity extraction route boundaries", () => {
           attackRollFill(opportunity.attackRoll, {
             total: 18,
             naturalD20: 12,
-            spellAttackReroll: {
-              kind: "decline",
-              effectKind: "missed_spell_attack_reroll",
-            },
+            d20TestRerolls: [
+              {
+                kind: "decline",
+                effectKind: "missed_spell_attack_reroll",
+              },
+            ],
           }),
         ],
       }),

@@ -1,8 +1,15 @@
+import {
+  checkpointWithAcceptedAttackReplayEvidence,
+  interruptedProcedureSubject,
+} from "./subject-continuation-phase.ts";
 import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
-import { nonEmptyArrayProperty } from "../optional-property.ts";
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match, Option } from "effect";
 import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
@@ -96,7 +103,9 @@ export function openBattleInterruptWindow(input: {
     ...input.state,
     interruptStack: [
       ...input.state.interruptStack,
-      interruptCheckpointFrame(input.frame),
+      interruptCheckpointFrame(
+        checkpointWithAcceptedAttackReplayEvidence(input.state, input.frame),
+      ),
     ],
   };
 }
@@ -361,14 +370,6 @@ export function attackDamageContinuationRepeatSaveFrame(
     continuation,
     handledInterruptTrigger,
   };
-}
-
-export function interruptedProcedureSubject(
-  procedure: BattleInterruptedProcedure,
-): BattleSubject {
-  return procedure.kind === "attackDamage"
-    ? procedure.participant
-    : procedure.subject;
 }
 
 export function interruptedProcedureSupportsAttackDamageChanges(
@@ -933,6 +934,7 @@ export function opportunityAttackReactionChoices(
           reactorId,
           targetId: moverId,
           distanceFeet: threat.distanceFeet,
+          ...optionalProperty("cover", threat.cover),
           ...selection,
         },
       },

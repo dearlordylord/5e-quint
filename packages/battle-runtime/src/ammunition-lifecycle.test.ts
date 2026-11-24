@@ -237,7 +237,8 @@ describe("ammunition lifecycle", () => {
       attack: shortbow,
     });
     expect(completed.subjectResolutionPhase).toEqual({
-      kind: "subjectSelection",
+      kind: "subjectContinuation",
+      subject,
     });
     const completedActor = completed.combatants.get(skeletonId);
     expect(completedActor).toBeDefined();
