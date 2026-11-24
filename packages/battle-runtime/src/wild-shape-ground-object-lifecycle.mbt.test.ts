@@ -42,7 +42,6 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   activeDruidWildShapeEffect,
-  applyBattleHeldWeaponPickup,
   discoverBattleActs,
   type BattleFill,
   type BattleRuntimeSession,
@@ -408,24 +407,33 @@ function assumeFormWhileQuarterstaffIsGrounded(
 }
 
 function pickUpQuarterstaff(state: RuntimeState): RuntimeState {
-  const result = applyBattleHeldWeaponPickup(state.battle.state, {
-    interaction: {
-      actorId: druidId,
-      objectId: quarterstaffObjectId,
-      actorSpace: {
-        kind: "actorSpace",
-        positionId: groundPositionId,
-      },
-    },
-    loadoutSlot: "mainWeapon",
-  });
-  if (result.tag !== "applied") {
-    throw new Error(result.message);
+  const act = discoverBattleActs(state.battle).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "pickUpHeldWeapon" &&
+      candidate.subject.objectId === quarterstaffObjectId,
+  );
+  const [ruling] = act?.initialHoles ?? [];
+  if (act === undefined || ruling?.kind !== "objectInteractionRuling") {
+    throw new Error("Expected the Quarterstaff pickup act.");
   }
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "objectInteractionRuling",
+          holeId: ruling.holeId,
+          value: { requiresUtilize: false },
+        },
+      ],
+    }),
+  );
   return {
     battle: battleRuntimeSessionForTest({
       ...state.battle,
-      state: result.state,
+      state: resolved.state,
     }),
   };
 }

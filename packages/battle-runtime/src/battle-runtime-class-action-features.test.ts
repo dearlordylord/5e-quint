@@ -202,6 +202,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
@@ -246,6 +247,11 @@ describe("battle runtime: class action features", () => {
       }),
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "dropProne" },
+      {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "interactWithObject",
+      },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
 
@@ -374,6 +380,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
@@ -433,6 +440,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
@@ -459,6 +467,11 @@ describe("battle runtime: class action features", () => {
     ).toEqual([
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "dropProne" },
+      {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "interactWithObject",
+      },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(
@@ -900,6 +913,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
+        objectInteraction: "available",
         compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],

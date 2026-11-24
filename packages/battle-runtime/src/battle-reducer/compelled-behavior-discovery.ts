@@ -4,7 +4,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { type BattleSubject } from "../battle-subjects.ts";
 import { type BattleObjectId, CombatantId } from "../identity.ts";
-import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
 import type {
   BattleActiveEffect,
   BattleHeldObjectFactsHole,

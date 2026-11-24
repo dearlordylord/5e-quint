@@ -106,8 +106,7 @@
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
     },
-    "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts": {
-      "module/binding:applyBattleHeldWeaponPickup": 10,
+    "packages/battle-runtime/src/battle-reducer/character-effective-loadout.ts": {
       "module/binding:characterEffectiveLoadoutFromOrigin": 13
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
@@ -162,7 +161,7 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 69
+      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 68
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,
@@ -547,7 +546,7 @@
       "module/binding:testCharacterD20Statistics": 13
     },
     "packages/battle-runtime/src/battle-subjects.ts": {
-      "module/binding:battleSubjectKey/call:Match.orElse:argument-0/call:Match.when:argument-1:selector-2299b7f5d44c": 18,
+      "module/binding:battleSubjectKey/call:Match.orElse:argument-0/call:Match.when:argument-1:selector-2299b7f5d44c": 13,
       "module/binding:isCharacterProcedureBattleSubject": 9
     },
     "packages/battle-runtime/src/character-battle-resources.ts": {

@@ -649,6 +649,7 @@ describe("Help: Assist an Ability Check", () => {
     const helpResponse = declarationHole.responseChoices.find(
       (response) =>
         response.kind === "action" &&
+        response.subject.tag === "action" &&
         response.subject.action === "helpAbilityCheck",
     );
     if (helpResponse?.kind !== "action") {

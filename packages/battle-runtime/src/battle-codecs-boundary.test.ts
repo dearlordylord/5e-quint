@@ -3421,7 +3421,9 @@ describe("battle codec act ownership boundaries", () => {
     }
     const dodgeResponse = declarationHole.responseChoices.find(
       (response) =>
-        response.kind === "action" && response.subject.action === "dodge",
+        response.kind === "action" &&
+        response.subject.tag === "action" &&
+        response.subject.action === "dodge",
     );
     if (dodgeResponse?.kind !== "action") {
       throw new Error("Expected Ready to offer Dodge as an ordinary action.");

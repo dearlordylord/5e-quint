@@ -68,7 +68,7 @@ import {
 } from "./wild-shape-equipment.ts";
 import { attackActionOptionName } from "./statblock-attacks.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
-import { characterEffectiveLoadout } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadout } from "./character-effective-loadout.ts";
 import type {
   BattleActDiscoveryCandidate,
   BattleCreatureState,

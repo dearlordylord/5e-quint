@@ -104,6 +104,9 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeEffectControl";
     case "releaseSpellCreatedHeldObject":
       return "runtimeHeldObjectRelease";
+    case "interactWithObject":
+    case "pickUpHeldWeapon":
+      return "runtimeObjectInteraction";
     case "protectionRelevantEffectSave":
       return "runtimeProtectionSave";
     case "creatureTypeProtectionConditionAttempt":

@@ -1,3 +1,4 @@
+import { objectInteractionRulingHole } from "./battle-reducer/object-interaction.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // SRD 5.2.1 "Thrown": a Melee weapon with the Thrown property can be thrown to
 // make a ranged attack with the ability modifier of its melee attack, and the
@@ -19,7 +20,6 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import {
-  applyBattleHeldWeaponPickup,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -522,17 +522,26 @@ describe("battle runtime: thrown weapon attacks", () => {
       ),
     ).toEqual(["unarmedStrike"]);
 
-    const pickedUp = applyBattleHeldWeaponPickup(completed.state, {
-      interaction: {
-        actorId: fighterId,
-        objectId: mainDaggerId,
-        actorSpace: { kind: "actorSpace", positionId: landingPosition },
-      },
-      loadoutSlot: "mainWeapon",
-    });
-    if (pickedUp.tag !== "applied") {
-      throw new Error(`Expected the pickup, got ${pickedUp.reason}.`);
-    }
+    const rulingHole = objectInteractionRulingHole(completed.state, fighterId);
+    const pickedUp = requireResolved(
+      resolveBattleSubject({
+        state: completed.state,
+        subject: {
+          tag: "runtimeCommand",
+          command: "pickUpHeldWeapon",
+          actorId: fighterId,
+          objectId: mainDaggerId,
+        },
+        fills: [
+          {
+            kind: "objectInteractionRuling",
+            holeId: rulingHole.holeId,
+            value: { requiresUtilize: false },
+          },
+        ],
+      }),
+    );
+    expect(pickedUp.state.currentTurnResources.objectInteraction).toBe("spent");
     expect(
       attackActionOptionsForActor(pickedUp.state, fighterId)
         .filter((attack) => attack.kind === "weapon")

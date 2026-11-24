@@ -2914,6 +2914,7 @@ describe("MCP server route", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -3052,7 +3053,7 @@ describe("MCP server route", () => {
       continuationActs
         .filter(({ label }) => label !== "Attack")
         .map(({ label }) => label),
-    ).toEqual(["Move", "Drop Prone", "End Turn"]);
+    ).toEqual(["Move", "Drop Prone", "Interact with an Object", "End Turn"]);
     expect(attackSubjects).toHaveLength(8);
     expect(
       attackSubjects.every(
@@ -3758,6 +3759,7 @@ describe("MCP server route", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "End Turn",
     ]);
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
@@ -3854,6 +3856,7 @@ describe("MCP server route", () => {
       "Nimble Escape",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -8303,6 +8306,7 @@ describe("MCP server route", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -8412,6 +8416,7 @@ describe("MCP server route", () => {
       "Nimble Escape",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);

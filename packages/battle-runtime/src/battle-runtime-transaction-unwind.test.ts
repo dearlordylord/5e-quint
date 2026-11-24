@@ -292,7 +292,9 @@ function readySession(
   const response = declarationHole.responseChoices.find((candidate) =>
     responseKind === "movement"
       ? candidate.kind === "movement"
-      : candidate.kind === "action" && candidate.subject.action === "dodge",
+      : candidate.kind === "action" &&
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "dodge",
   );
   if (response === undefined) {
     throw new Error(`Expected a Ready ${responseKind} response.`);

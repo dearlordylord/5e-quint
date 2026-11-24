@@ -327,6 +327,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "toolPossessionFacts" as const,
       ),
       byBattleHoleKind(
+        "objectInteractionRuling",
+        () => "objectInteractionRuling" as const,
+      ),
+      byBattleHoleKind(
         "temporaryHitPointChoice",
         () => "temporaryHitPointChoice" as const,
       ),
@@ -334,6 +338,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,
       ),
+    )
+    .pipe(
       byBattleHoleKind(
         "wildShapeEquipmentDisposition",
         () => "wildShapeEquipmentDisposition" as const,

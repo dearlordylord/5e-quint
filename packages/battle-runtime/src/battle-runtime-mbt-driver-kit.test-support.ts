@@ -18836,6 +18836,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Battle runtime MBT does not model held-object fact holes.",
           );
         }),
+        Match.when({ kind: "objectInteractionRuling" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model object interaction ruling holes.",
+          );
+        }),
         Match.when({ kind: "concentrationSavingThrow" }, () => {
           throw new Error(
             "Battle runtime MBT does not model concentration saving throw holes.",

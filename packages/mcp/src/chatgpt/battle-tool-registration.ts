@@ -22,6 +22,7 @@ export const CHATGPT_BATTLE_EXECUTION_TOOLS = {
   help_ability_check: defineChatGptBattleTool("help_ability_check"),
   help_attack: defineChatGptBattleTool("help_attack"),
   hide: defineChatGptBattleTool("hide"),
+  interact_with_object: defineChatGptBattleTool("interact_with_object"),
   move: defineChatGptBattleTool("move"),
   multiattack: defineChatGptBattleTool("multiattack"),
   ready_action: defineChatGptBattleTool("ready_action"),

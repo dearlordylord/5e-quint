@@ -712,17 +712,15 @@ export {
   type WildShapeLoadoutObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
-  applyBattleHeldWeaponPickup,
   battleObjectIsOnGround,
   battleStateWithGroundObjects,
-  characterEffectiveLoadout,
-  characterEffectiveLoadoutFromOrigin,
   type BattleGroundObjectPlacement,
   type BattleGroundObjectPlacementResult,
-  type BattleHeldWeaponPickup,
-  type BattleHeldWeaponPickupResult,
-  type ResolvedBattleObjectInteraction,
 } from "./battle-reducer/battle-object-lifecycle.ts";
+export {
+  characterEffectiveLoadout,
+  characterEffectiveLoadoutFromOrigin,
+} from "./battle-reducer/character-effective-loadout.ts";
 export {
   type AttackDamageAbilityModifierChoice,
   type AttackDamageAbilityModifierChoiceFill,
