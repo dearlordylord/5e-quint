@@ -68,7 +68,7 @@ import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
-import { Equal, Match, Option, Result } from "effect";
+import { Array as EffectArray, Equal, Match, Option, Result } from "effect";
 import {
   battleCreatureInitIssue,
   battleCreatureInitIssueFromLeaves,
@@ -553,7 +553,11 @@ export function battleCreatureInitFromCharacterBuild(
         ...(weaponAttackOptions.offHandAttack === undefined
           ? {}
           : { offHandAttack: weaponAttackOptions.offHandAttack }),
-        otherOwnedWeapons: weaponAttackOptions.otherOwnedWeapons,
+        ...(EffectArray.isReadonlyArrayNonEmpty(
+          weaponAttackOptions.otherOwnedWeapons,
+        )
+          ? { otherOwnedWeapons: weaponAttackOptions.otherOwnedWeapons }
+          : {}),
         unitFeatures,
         resources,
         ...heroicInspirationInit(input.heroicInspiration),

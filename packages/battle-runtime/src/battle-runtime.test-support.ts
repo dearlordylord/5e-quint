@@ -26,7 +26,13 @@ import {
   resolveSpawnedCompanionForm,
   resolvePactOfTheChainSpawnedCompanionForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Result, Schema, SchemaIssue } from "effect";
+import {
+  Array as EffectArray,
+  Match,
+  Result,
+  Schema,
+  SchemaIssue,
+} from "effect";
 import { expect } from "vitest";
 import {
   battleStatBlockCombatantSource,
@@ -87,6 +93,7 @@ import {
   resourceCount,
   type Condition,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
   statBlockId,
@@ -4129,10 +4136,10 @@ export function characterSeed(input: {
   >["unarmedStrike"];
   readonly offHandAttack?: TestCharacterWeaponAttack;
   /** Weapons the character carries outside its loadout, each its own object. */
-  readonly otherOwnedWeapons?: readonly {
+  readonly otherOwnedWeapons?: ReadonlyNonEmptyArray<{
     readonly itemId: BattleObjectId;
     readonly attack: TestCharacterWeaponAttack;
-  }[];
+  }>;
   readonly resources?: Extract<
     CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
@@ -4360,7 +4367,8 @@ export function characterSeed(input: {
       ...(input.otherOwnedWeapons === undefined
         ? {}
         : {
-            otherOwnedWeapons: input.otherOwnedWeapons.map(
+            otherOwnedWeapons: EffectArray.map(
+              input.otherOwnedWeapons,
               ({ itemId, attack: ownedAttack }) => ({
                 itemId,
                 attack: characterBattleCreatureInitWeaponAttack(

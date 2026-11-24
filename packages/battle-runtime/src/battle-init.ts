@@ -604,7 +604,7 @@ export type CharacterBattleCreatureInit = {
   readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: CharacterBattleCreatureInitWeaponAttack | undefined;
   /** Omission means the character owns no weapon outside its selected loadout. */
-  readonly otherOwnedWeapons?: readonly CharacterBattleOtherOwnedWeaponInit[];
+  readonly otherOwnedWeapons?: ReadonlyNonEmptyArray<CharacterBattleOtherOwnedWeaponInit>;
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly invocationFeatures?: readonly CharacterBattleInvocationFeature[];
   readonly resources?: readonly CharacterBattleResourceInit[];

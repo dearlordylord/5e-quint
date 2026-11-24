@@ -54,6 +54,48 @@ function projectionLibraryWithMissingUnit(
   };
 }
 
+function projectionLibraryWithMissingUnits(
+  missingUnitIds: readonly UnitRecord["id"][],
+): UnitCatalog {
+  return {
+    getUnit: (id) =>
+      missingUnitIds.some((missing) => missing === id)
+        ? Option.none()
+        : unitLibrary.getUnit(id),
+    listUnits: () => unitLibrary.listUnits(),
+    requireUnit: (id) => unitLibrary.requireUnit(id),
+  };
+}
+
+/** A Longsword Fighter who also carries one of each named weapon. */
+function buildOwningSpareWeapons(
+  weaponUnitIds: readonly string[],
+): ReturnType<typeof levelFiveMartialBuild> {
+  const build = levelFiveMartialBuild({
+    classUnitId: authoredUnitId("class_fighter"),
+    weaponUnitId: authoredUnitId("weapon_longsword"),
+  });
+  return {
+    ...build,
+    equipment: {
+      ...build.equipment,
+      owned: [
+        ...build.equipment.owned,
+        ...weaponUnitIds.map((unit) => ({
+          kind: "catalogItem" as const,
+          itemId: characterEquipmentItemId({
+            slot: "main",
+            unitId: requireSuccess(
+              characterEquipmentItemUnitId(authoredUnitId(unit)),
+            ),
+          }),
+          quantity: PositiveInteger(1),
+        })),
+      ],
+    },
+  };
+}
+
 function projectionLibraryReplacingUnit(
   replacedUnitId: UnitRecord["id"],
   replacement: UnitRecord,
@@ -451,6 +493,67 @@ describe("Character Build battle spell projection boundaries", () => {
     expect(projection.otherOwnedWeapons.map(({ itemId }) => itemId)).toEqual([
       "main:weapon_quarterstaff",
       "main:weapon_quarterstaff#2",
+    ]);
+  });
+
+  test("reports every owned weapon whose Unit is missing", () => {
+    const build = buildOwningSpareWeapons(["weapon_dagger", "weapon_shortbow"]);
+    const result = characterBattleWeaponAttackInitProjection({
+      build,
+      unitLibrary: projectionLibraryWithMissingUnits([
+        authoredUnitId("weapon_dagger"),
+        authoredUnitId("weapon_shortbow"),
+      ]),
+      weaponMasteries: [],
+      classLevels: [{ className: "fighter", level: 5 }],
+    });
+
+    expect(result._tag).toBe("Failure");
+    if (result._tag === "Success") return;
+    const message = battleCreatureInitIssueMessage(result.failure);
+    expect(battleCreatureInitIssueLeaves(result.failure)).toHaveLength(2);
+    expect(message).toContain("weapon_dagger");
+    expect(message).toContain("weapon_shortbow");
+  });
+
+  test("leaves out an owned weapon Battle can't execute, as it would outside a hand", () => {
+    const build = buildOwningSpareWeapons(["weapon_dagger", "weapon_shortbow"]);
+    const projection = requireSuccess(
+      characterBattleWeaponAttackInitProjection({
+        build,
+        unitLibrary: projectionLibraryWithUnresolvedMasteries([
+          authoredUnitId("weapon_dagger"),
+        ]),
+        weaponMasteries: [],
+        classLevels: [{ className: "fighter", level: 5 }],
+      }),
+    );
+
+    expect(projection.otherOwnedWeapons.map(({ itemId }) => itemId)).toEqual([
+      "main:weapon_shortbow",
+    ]);
+  });
+
+  test("leaves out an owned main-hand item that deals no weapon damage dice", () => {
+    const build = buildOwningSpareWeapons(["weapon_dagger", "weapon_shortbow"]);
+    const notAWeapon: UnitRecord = {
+      ...unitLibrary.requireUnit("equipment_shield"),
+      id: authoredUnitId("weapon_dagger"),
+    };
+    const projection = requireSuccess(
+      characterBattleWeaponAttackInitProjection({
+        build,
+        unitLibrary: projectionLibraryReplacingUnit(
+          authoredUnitId("weapon_dagger"),
+          notAWeapon,
+        ),
+        weaponMasteries: [],
+        classLevels: [{ className: "fighter", level: 5 }],
+      }),
+    );
+
+    expect(projection.otherOwnedWeapons.map(({ itemId }) => itemId)).toEqual([
+      "main:weapon_shortbow",
     ]);
   });
 
