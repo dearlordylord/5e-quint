@@ -3,35 +3,29 @@ import { sameDomainValue } from "../domain-value-equality.ts";
 // SRD 5.2.1 equipment.md "Versatile": its damage applies only to a melee
 // attack made with two hands. Keep the admitted property beside the base weapon.
 import { Result, Schema } from "effect";
-import { WeaponPropertyDetailSchema } from "@dnd/surface/surface/schema";
+import {
+  DiceWeaponDamageSchema,
+  VersatileWeaponPropertyDetailSchema,
+} from "@dnd/surface/surface/schema";
 import type { WeaponGrip } from "@dnd/shared/types";
 import type { CharacterWeaponAttackExecutionWeapon } from "../character-weapon-execution-schema.ts";
 
 type WeaponProperty =
   CharacterWeaponAttackExecutionWeapon["properties"][number];
-export type AdmittedVersatileMeleeDamage = Extract<
-  WeaponProperty,
-  { readonly kind: "versatile" }
-> & {
-  readonly damage: Extract<
-    Extract<WeaponProperty, { readonly kind: "versatile" }>["damage"],
-    { readonly kind: "dice" }
-  >;
-};
+
+export const AdmittedVersatileMeleeDamageSchema = Schema.Struct({
+  ...VersatileWeaponPropertyDetailSchema.fields,
+  damage: DiceWeaponDamageSchema,
+});
+
+export type AdmittedVersatileMeleeDamage =
+  typeof AdmittedVersatileMeleeDamageSchema.Type;
 
 function isVersatileMeleeDamage(
   property: WeaponProperty,
 ): property is AdmittedVersatileMeleeDamage {
   return property.kind === "versatile" && property.damage.kind === "dice";
 }
-
-export const AdmittedVersatileMeleeDamageSchema =
-  WeaponPropertyDetailSchema.pipe(
-    Schema.refine(isVersatileMeleeDamage, {
-      expected: "a Versatile property with dice damage",
-    }),
-    Schema.toType,
-  );
 
 export function admitWeaponMeleeGripDamage(
   weapon: CharacterWeaponAttackExecutionWeapon,

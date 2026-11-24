@@ -755,13 +755,15 @@ export const WeaponUsageSchema = Schema.Literals(
   SURFACE_WEAPON_FILTER_CATEGORIES,
 );
 
+export const DiceWeaponDamageSchema = Schema.Struct({
+  kind: Schema.Literal("dice"),
+  dice: Schema.Finite,
+  dieSize: Schema.Finite,
+  damageType: DamageTypeSchema,
+});
+
 export const WeaponDamageSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("dice"),
-    dice: Schema.Finite,
-    dieSize: Schema.Finite,
-    damageType: DamageTypeSchema,
-  }),
+  DiceWeaponDamageSchema,
   Schema.Struct({
     kind: Schema.Literal("flat"),
     amount: Schema.Finite,
@@ -775,6 +777,11 @@ export const WeaponRangeSchema = Schema.Struct({
 });
 
 export { AmmunitionKindSchema };
+
+export const VersatileWeaponPropertyDetailSchema = Schema.Struct({
+  kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_VERSATILE),
+  damage: WeaponDamageSchema,
+});
 
 export const WeaponPropertyDetailSchema = Schema.Union([
   Schema.Struct({
@@ -795,10 +802,7 @@ export const WeaponPropertyDetailSchema = Schema.Union([
     kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_TWO_HANDED),
     unless: exactOptional(Schema.Literal("mounted")),
   }),
-  Schema.Struct({
-    kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_VERSATILE),
-    damage: WeaponDamageSchema,
-  }),
+  VersatileWeaponPropertyDetailSchema,
 ]);
 
 export const WeaponMasteryNameSchema = Schema.Literals([

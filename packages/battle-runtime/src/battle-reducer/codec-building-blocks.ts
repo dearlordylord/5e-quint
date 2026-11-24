@@ -258,7 +258,10 @@ const WeaponAttackAdmissionFilter = Schema.makeFilter(
   ) =>
     meleeGripDamageBelongsToWeapon(attack) &&
     weaponDeliveryBelongsToWeapon(attack),
-  { message: "Weapon grip and delivery evidence must belong to this weapon." },
+  {
+    ...semanticRefinement("weaponAttackEvidenceOwnershipCorrelation"),
+    message: "Weapon grip and delivery evidence must belong to this weapon.",
+  },
 );
 
 export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
