@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.combat-turn-start-heroic-inspiration
 
 module combatTurnStartHeroicInspirationCore {
   // RAW anchors:
@@ -10,7 +11,6 @@ module combatTurnStartHeroicInspirationCore {
   //   start of a player character's turn, the player decides which of the
   //   effects happens first."
   // "Can" makes taking it the creature's choice.
-  import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
   import heroicInspirationRerollCore.* from "./heroic-inspiration-reroll-core"
 
   type TurnStartHeroicInspirationChoice =

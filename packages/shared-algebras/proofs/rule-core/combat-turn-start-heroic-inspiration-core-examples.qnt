@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.combat-turn-start-heroic-inspiration
 
 module combatTurnStartHeroicInspirationCoreExamples {
-  import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
   import heroicInspirationRerollCore.* from "./heroic-inspiration-reroll-core"
   import combatTurnStartHeroicInspirationCore.* from "./combat-turn-start-heroic-inspiration-core"
 

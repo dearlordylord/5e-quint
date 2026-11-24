@@ -902,6 +902,18 @@ export type ClassFeatureDuration = Schema.Schema.Type<
 export type CombatTurnStartHeroicInspirationMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CombatTurnStartHeroicInspirationMechanicsSchema
 >;
+
+/**
+ * Whether feature mechanics give Heroic Inspiration at the start of a combat
+ * turn begun without it. The family's trigger and grant fields are all
+ * literals, so the family alone names the whole shape; the Character Sheet and
+ * the battle admit the feature through this one guard.
+ */
+export function isCombatTurnStartHeroicInspirationMechanics(mechanics: {
+  readonly family: string;
+}): mechanics is CombatTurnStartHeroicInspirationMechanics {
+  return mechanics.family === "combat_turn_start_heroic_inspiration";
+}
 export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureResourceContainerMechanicsSchema
 >;

@@ -6,6 +6,7 @@ import type { AttackRollDefenseSelection as SharedAttackRollDefenseSelection } f
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.combat-turn-start-heroic-inspiration
 import { optionalProperty } from "./optional-property.ts";
 import { Match, Result } from "effect";
 import { sameStringSet } from "./same-string-set.ts";
@@ -45,7 +46,10 @@ import type {
   StandardActionKind,
   AuthoredUnitSource,
 } from "@dnd/surface/surface/types";
-import { isEffectAtom } from "@dnd/surface/surface/types";
+import {
+  isCombatTurnStartHeroicInspirationMechanics,
+  isEffectAtom,
+} from "@dnd/surface/surface/types";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type {
   CharacterBattleClassLevel,
@@ -1268,13 +1272,12 @@ function markedCreatureDisclosureSupportProfiles(
 
 // SRD 5.2.1 classes.md, Champion, Heroic Warrior: "During combat, you can give
 // yourself Heroic Inspiration whenever you start your turn without it." The
-// Surface family's trigger and grant fields are all literals, so the family
-// alone names the whole shape.
+// Character Sheet admits the same feature through the same Surface guard.
 function combatTurnStartHeroicInspirationSupportProfiles(
   unit: BattleUnitSupportSource,
 ): BattleUnitSupportProfile[] {
   return unit.kind === "class_feature" &&
-    unit.mechanics.family === "combat_turn_start_heroic_inspiration"
+    isCombatTurnStartHeroicInspirationMechanics(unit.mechanics)
     ? [COMBAT_TURN_START_HEROIC_INSPIRATION_SUPPORT_PROFILE]
     : [];
 }

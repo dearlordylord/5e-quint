@@ -4149,7 +4149,7 @@ export const OPERATION_ACCOUNTING = {
       "combatTurnStartHeroicInspiration",
       at(
         "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts",
-        "turnStartHeroicInspirationOfferSource",
+        "turnStartHeroicInspirationOffer",
       ),
       REASONS.unitFact,
     ),

@@ -6596,11 +6596,11 @@
           "ownerPath": "packages/battle-runtime/src/combat-turn-start-heroic-inspiration.test.ts"
         }
       ],
-      "profiles": [],
+      "profiles": ["unit-feature.combat-turn-start-heroic-inspiration"],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
       ],
-      "reason": "The QNT owner offers the grant only to a creature with the feature that starts its turn in combat without Heroic Inspiration; giving it sets Heroic Inspiration and declining leaves it. turn-start-heroic-inspiration finds the feature's support procedure, builds the choice hole and applies the choice on the battle creature, whose Heroic Inspiration settlement writes back; the turn boundary offers it as a start-turn occurrence the player orders with the others.",
+      "reason": "The QNT owner offers the grant only to a creature with the feature that starts its turn in combat without Heroic Inspiration; giving it sets Heroic Inspiration and declining leaves it. turn-start-heroic-inspiration finds the feature's support procedure, builds the choice hole and applies the choice on the battle creature, whose Heroic Inspiration settlement writes back; the turn boundary offers it as a start-turn occurrence the player orders with the others. Known gap: startBattle begins the opening turn without any turn-boundary start-turn occurrences (Death Saving Throw, Recharge and the rest included), so a Heroic Warrior who takes the first turn of a battle is not offered the grant at the start of that turn, though RAW says whenever it starts its turn.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts"
@@ -9751,6 +9751,10 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.weapon-mastery-graze"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION"],
+      "profileId": "unit-feature.combat-turn-start-heroic-inspiration"
     }
   ],
   "qntOwnerRoles": [
@@ -21490,6 +21494,7 @@
     "unit-feature.bonus-action-healing-movement-rider",
     "unit-feature.bonus-action-ongoing-rage",
     "unit-feature.brutal-strike",
+    "unit-feature.combat-turn-start-heroic-inspiration",
     "unit-feature.creature-space-movement-permission",
     "unit-feature.cunning-strike",
     "unit-feature.cunning-strike-option-grant",

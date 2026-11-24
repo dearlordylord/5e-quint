@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.combat-turn-start-heroic-inspiration
 // RAW: .references/srd-5.2.1/classes.md, Champion, Level 10: Heroic Warrior:
 // "During combat, you can give yourself Heroic Inspiration whenever you start
 // your turn without it." rules-glossary.md, Simultaneous Effects: the player
@@ -106,6 +107,33 @@ function choiceFill(
   };
 }
 
+function occurrenceOrderFill(
+  hole: BattleHole | undefined,
+  first: "turnStartHeroicInspiration" | "deathSavingThrow",
+): BattleFill {
+  if (hole?.kind !== "startTurnOccurrenceOrder") {
+    throw new Error("Expected the simultaneous start-turn order.");
+  }
+  const heroic = hole.occurrences.find(
+    (occurrence) => occurrence.kind === "turnStartHeroicInspiration",
+  );
+  const deathSave = hole.occurrences.find(
+    (occurrence) => occurrence.kind === "deathSavingThrow",
+  );
+  if (heroic === undefined || deathSave === undefined) {
+    throw new Error("Expected both start-turn occurrences.");
+  }
+  const [firstId, secondId] =
+    first === "turnStartHeroicInspiration"
+      ? [heroic.occurrenceId, deathSave.occurrenceId]
+      : [deathSave.occurrenceId, heroic.occurrenceId];
+  return {
+    kind: "startTurnOccurrenceOrder",
+    holeId: hole.holeId,
+    value: { occurrenceIds: [firstId, secondId] },
+  };
+}
+
 describe("Heroic Warrior at the start of a combat turn", () => {
   test("offers Heroic Inspiration to a creature that starts its turn without it", () => {
     const state = goblinTurnBeforeFighter({
@@ -178,25 +206,7 @@ describe("Heroic Warrior at the start of a combat turn", () => {
       currentHp: 0,
     });
     const [orderHole] = holesWhenFighterTurnStarts(state);
-    if (orderHole?.kind !== "startTurnOccurrenceOrder") {
-      throw new Error("Expected the simultaneous start-turn order.");
-    }
-    const heroic = orderHole.occurrences.find(
-      (occurrence) => occurrence.kind === "turnStartHeroicInspiration",
-    );
-    const deathSave = orderHole.occurrences.find(
-      (occurrence) => occurrence.kind === "deathSavingThrow",
-    );
-    if (heroic === undefined || deathSave === undefined) {
-      throw new Error("Expected both start-turn occurrences.");
-    }
-    const order: BattleFill = {
-      kind: "startTurnOccurrenceOrder",
-      holeId: orderHole.holeId,
-      value: {
-        occurrenceIds: [heroic.occurrenceId, deathSave.occurrenceId],
-      },
-    };
+    const order = occurrenceOrderFill(orderHole, "turnStartHeroicInspiration");
 
     const [choiceHole] = holesWhenFighterTurnStarts(state, [order]);
     const choice = choiceFill(choiceHole, "giveHeroicInspiration");
@@ -214,6 +224,80 @@ describe("Heroic Warrior at the start of a combat turn", () => {
 
     expect(deathSaveHole.kind).toBe("deathSavingThrow");
     expect(heroicInspirationOf(resolved)).toEqual(HEROIC_INSPIRATION_AVAILABLE);
+  });
+
+  test("is offered after a Death Saving Throw ordered first, and can be declined", () => {
+    const state = goblinTurnBeforeFighter({
+      heroicWarrior: true,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+      currentHp: 0,
+    });
+    const [orderHole] = holesWhenFighterTurnStarts(state);
+    const order = occurrenceOrderFill(orderHole, "deathSavingThrow");
+
+    const [deathSaveHole] = holesWhenFighterTurnStarts(state, [order]);
+    if (deathSaveHole?.kind !== "deathSavingThrow") {
+      throw new Error("Expected the Death Saving Throw first.");
+    }
+    const deathSave = deathSavingThrowFill(deathSaveHole, 12);
+    const [choiceHole] = holesWhenFighterTurnStarts(state, [order, deathSave]);
+    const resolved = requireResolved(
+      endTurn({
+        state,
+        actorId: goblinId,
+        fills: [order, deathSave, choiceFill(choiceHole, "decline")],
+      }),
+    ).state;
+
+    expect(choiceHole?.kind).toBe("turnStartHeroicInspirationChoice");
+    expect(heroicInspirationOf(resolved)).toEqual(NO_HEROIC_INSPIRATION);
+  });
+
+  test("rejects two answers to one choice", () => {
+    const state = goblinTurnBeforeFighter({
+      heroicWarrior: true,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+    });
+    const [hole] = holesWhenFighterTurnStarts(state);
+
+    const result = endTurn({
+      state,
+      actorId: goblinId,
+      fills: [
+        choiceFill(hole, "giveHeroicInspiration"),
+        choiceFill(hole, "decline"),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      message:
+        "Heroic Inspiration choice must answer its exact occurrence once.",
+    });
+  });
+
+  test("rejects a choice when nothing is offered", () => {
+    const offered = goblinTurnBeforeFighter({
+      heroicWarrior: true,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+    });
+    const [hole] = holesWhenFighterTurnStarts(offered);
+    const notOffered = goblinTurnBeforeFighter({
+      heroicWarrior: true,
+      heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+    });
+
+    const result = endTurn({
+      state: notOffered,
+      actorId: goblinId,
+      fills: [choiceFill(hole, "giveHeroicInspiration")],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      message:
+        "End Turn received a fill unrelated to its current turn-boundary holes.",
+    });
   });
 
   test("its hole and fill survive the codecs, and a resubmitted choice compares equal", () => {
@@ -242,6 +326,14 @@ describe("Heroic Warrior at the start of a combat turn", () => {
     ) {
       throw new Error("Expected comparable start-turn fills.");
     }
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          ...Schema.encodeSync(BattleFillSchema)(give),
+          value: "takeHeroicInspiration",
+        }),
+      ),
+    ).toBe(true);
     expect(battleContinuationFillEquals(give, give)).toBe(true);
     expect(battleContinuationFillEquals(give, decline)).toBe(false);
   });

@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.combat-turn-start-heroic-inspiration
 import { HEROIC_INSPIRATION_AVAILABLE } from "@dnd/shared/game-facts";
 import {
   holeId,
@@ -9,6 +10,7 @@ import { Match } from "effect";
 import type {
   BattleCreatureState,
   BattleStartTurnOccurrenceSequenceCheckpoint,
+  CharacterBattleCreatureState,
   BattleState,
   BattleTurnStartHeroicInspirationChoice,
   BattleTurnStartHeroicInspirationChoiceHole,
@@ -22,24 +24,42 @@ import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 // without Heroic Inspiration. "Can" makes it the creature's choice.
 
 /**
- * The feature procedure that offers the starting creature Heroic Inspiration,
- * when the creature has that feature and starts its turn without Heroic
- * Inspiration; otherwise `undefined`.
+ * The starting creature's Heroic Inspiration offer: the creature, narrowed to
+ * a character, and the feature procedure that makes the offer.
  */
-export function turnStartHeroicInspirationOfferSource(
+export type TurnStartHeroicInspirationOffer = {
+  readonly actor: CharacterBattleCreatureState;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+};
+
+/**
+ * The offer of Heroic Inspiration to the starting creature, when the creature
+ * has that feature and starts its turn without Heroic Inspiration; otherwise
+ * `undefined`.
+ */
+export function turnStartHeroicInspirationOffer(
   actor: BattleCreatureState | undefined,
-): BattleProcedureExecutionRef | undefined {
-  if (
-    actor?.origin.kind !== "character" ||
-    actor.origin.heroicInspiration.tag === "available"
-  ) {
-    return undefined;
-  }
-  return characterUnitProcedureBindings(actor.origin.execution).find(
+): TurnStartHeroicInspirationOffer | undefined {
+  if (!isCharacterWithoutHeroicInspiration(actor)) return undefined;
+  const sourceProcedureRef = characterUnitProcedureBindings(
+    actor.origin.execution,
+  ).find(
     ({ procedure }) =>
       procedure.kind === "unitSupportProfile" &&
       procedure.execution === "combatTurnStartHeroicInspiration",
   )?.procedureRef;
+  return sourceProcedureRef === undefined
+    ? undefined
+    : { actor, sourceProcedureRef };
+}
+
+function isCharacterWithoutHeroicInspiration(
+  actor: BattleCreatureState | undefined,
+): actor is CharacterBattleCreatureState {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.heroicInspiration.tag !== "available"
+  );
 }
 
 /** The starting creature's choice whether to give itself Heroic Inspiration. */
@@ -62,30 +82,26 @@ export function turnStartHeroicInspirationChoiceHole(input: {
 
 /**
  * The battle after the starting creature's choice: giving itself Heroic
- * Inspiration sets it on the creature, which settlement writes back to the
- * character; declining leaves the battle as it was.
+ * Inspiration sets it on the offered creature, which settlement writes back to
+ * the character; declining leaves the battle as it was.
  */
 export function battleStateAfterTurnStartHeroicInspirationChoice(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
+  readonly offer: TurnStartHeroicInspirationOffer;
   readonly choice: BattleTurnStartHeroicInspirationChoice;
 }): BattleState {
   return Match.value(input.choice).pipe(
-    Match.when("giveHeroicInspiration", () => {
-      const actor = input.state.combatants.get(input.actorId);
-      /* v8 ignore next -- @preserve -- The choice is offered only to a character in the battle. */
-      if (actor?.origin.kind !== "character") return input.state;
-      return {
-        ...input.state,
-        combatants: new Map(input.state.combatants).set(input.actorId, {
-          ...actor,
-          origin: {
-            ...actor.origin,
-            heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
-          },
-        }),
-      };
-    }),
+    Match.when("giveHeroicInspiration", () => ({
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(input.actorId, {
+        ...input.offer.actor,
+        origin: {
+          ...input.offer.actor.origin,
+          heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+        },
+      }),
+    })),
     Match.when("decline", () => input.state),
     Match.exhaustive,
   );
