@@ -815,6 +815,7 @@ export async function verifyBaselineVertical(
     "Second Wind",
     "Move",
     "Drop Prone",
+    "Interact with an Object",
     "Ready",
     "End Turn",
   ]);
@@ -867,6 +868,7 @@ export async function verifyBaselineVertical(
     "Nimble Escape",
     "Move",
     "Drop Prone",
+    "Interact with an Object",
     "Ready",
     "End Turn",
   ]);
@@ -1280,6 +1282,7 @@ export async function verifyWidthVertical(client: Client) {
     "Action Surge",
     "Move",
     "Drop Prone",
+    "Interact with an Object",
     "Ready",
     "End Turn",
   ]);

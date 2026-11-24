@@ -1,3 +1,4 @@
+import { Match } from "effect";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack unit-feature.druid-wild-shape-known-form unit-feature.light-extra-attack-damage-ability-modifier unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
@@ -30,6 +31,7 @@ import type { BattleSubject } from "../battle-subjects.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
+  type UnitFeatureProcedureExecution,
 } from "../character-execution-queries.ts";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import {
@@ -84,7 +86,8 @@ import {
 } from "./damage-apply.ts";
 import {
   attackActionOptionName,
-  attackActionVariantOptions,
+  attackAbilityAndDamageTypeOptions,
+  characterWeaponAttackDeliveryOptions,
   attackCanCarryKnockOutChoice,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
@@ -103,10 +106,8 @@ import {
   type WildShapeLoadoutObjectRef,
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
-import {
-  battleObjectIsOnGround,
-  characterEffectiveLoadoutFromOrigin,
-} from "./battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -450,16 +451,14 @@ export function attackActionOptionsForActor(
         ? [unarmedStrike]
         : [
             ...uniqueAttackExecutionSelectionOptions(
-              attackActionVariantOptions(
-                weaponAttackWithActiveSpellEffects(
+              weaponAttackOptionsForActor(
+                state,
+                actor,
+                actor.origin.attack,
+                mainHandWeaponItemIdForAttack(
                   state,
                   actor,
                   actor.origin.attack,
-                  mainHandWeaponItemIdForAttack(
-                    state,
-                    actor,
-                    actor.origin.attack,
-                  ),
                 ),
               ),
             ),
@@ -526,11 +525,9 @@ export function offHandAttackActionOptionsForActor(
   const main = actor.origin.attack;
   const offHand = actor.origin.offHandAttack;
   if (main === null || offHand === undefined) return [];
-  if (
-    (main.kind === "weapon" &&
-      battleObjectIsOnGround(state, actorId, main.weaponObjectId)) ||
-    battleObjectIsOnGround(state, actorId, offHand.weaponObjectId)
-  ) {
+  // The Light extra attack needs the off-hand weapon in hand, not the main one:
+  // a thrown main-hand Dagger has already made the Light attack it follows.
+  if (battleObjectIsOnGround(state, actorId, offHand.weaponObjectId)) {
     return [];
   }
   if (
@@ -561,43 +558,19 @@ export function offHandAttackActionOptionsForActor(
     activeWildShapeEffect === null
       ? offHand
       : wildShapeWornWeaponAttackWithFormStatistics(actor, offHand);
-  const projectedOffHand = weaponAttackWithActiveSpellEffects(
+  return weaponAttackOptionsForActor(
     state,
     actor,
     offHandAttack,
     offHandWeaponItemIdForAttack(state, actor, offHand),
-  );
-  const {
-    attackDamageAbilityModifierChoice:
-      _projectedOffHandDamageAbilityModifierChoice,
-    ...projectedOffHandWithoutDamageAbilityModifierChoice
-  } = projectedOffHand;
-  const twoWeaponFightingSupportProcedureRefs =
-    characterLightExtraAttackDamageAbilityModifierSupportProcedureRefs(actor);
-  const lightPropertyOffHand = {
-    ...projectedOffHandWithoutDamageAbilityModifierChoice,
-    damageAbilityModifier: lightPropertyDamageAbilityModifierForAttack(
-      projectedOffHand,
-      twoWeaponFightingSupportProcedureRefs.length > 0,
-    ),
-    ...lightPropertyAttackDamageAbilityModifierChoice(
-      projectedOffHand,
-      twoWeaponFightingSupportProcedureRefs,
-    ),
-    ...(projectedOffHand.alternateAbilityChoices === undefined
-      ? {}
-      : {
-          alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
-            projectedOffHand.alternateAbilityChoices,
-            twoWeaponFightingSupportProcedureRefs,
-          ),
-        }),
-  };
-  return attackActionVariantOptions(lightPropertyOffHand).filter(
-    (attack): attack is BoundCharacterWeaponAttackActionOption =>
-      attack.kind === "weapon" &&
-      ammunitionForAttackIsReady(state, actor, attack),
-  );
+    {
+      kind: "lightExtraAttack",
+      procedureRefs:
+        characterLightExtraAttackDamageAbilityModifierSupportProcedureRefs(
+          actor,
+        ),
+    },
+  ).filter((attack) => ammunitionForAttackIsReady(state, actor, attack));
 }
 
 function wildShapeWornWeaponAttackOptions(
@@ -634,22 +607,19 @@ function wildShapeWornWeaponAttackOption(input: {
     input.objectKind,
     input.attack,
   );
-  return item === undefined
+  // A worn weapon thrown in this form rests on the ground until picked up.
+  return item === undefined ||
+    battleObjectIsOnGround(input.state, input.actor.combatantId, item.objectId)
     ? []
     : [
-        ...attackActionVariantOptions(
-          weaponAttackWithActiveSpellEffects(
-            input.state,
+        ...weaponAttackOptionsForActor(
+          input.state,
+          input.actor,
+          wildShapeWornWeaponAttackWithFormStatistics(
             input.actor,
-            wildShapeWornWeaponAttackWithFormStatistics(
-              input.actor,
-              input.attack,
-            ),
-            item.objectId,
+            input.attack,
           ),
-        ).filter(
-          (attack): attack is BoundCharacterWeaponAttackActionOption =>
-            attack.kind === "weapon",
+          item.objectId,
         ),
       ];
 }
@@ -768,6 +738,130 @@ function isCharacterBattleCreatureState(
   actor: BattleCreatureState | undefined,
 ): actor is CharacterBattleCreatureState {
   return actor?.origin.kind === "character";
+}
+
+type WeaponAttackAbilityMode =
+  | { readonly kind: "ordinary" }
+  | {
+      readonly kind: "lightExtraAttack";
+      readonly procedureRefs: readonly BattleProcedureExecutionRef[];
+    };
+
+function weaponAttackOptionsForActor(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+  attachedWeaponItemId: BattleObjectId | undefined,
+  abilityMode: WeaponAttackAbilityMode = { kind: "ordinary" },
+): readonly BoundCharacterWeaponAttackActionOption[] {
+  return characterWeaponAttackDeliveryOptions(attack).flatMap((delivery) => {
+    const projected = weaponAttackWithActiveSpellEffects(
+      state,
+      actor,
+      weaponAttackWithMeleeGripAndMartialArtsDamage(state, actor, delivery),
+      attachedWeaponItemId,
+    );
+    const withAbilityMode = Match.value(abilityMode).pipe(
+      Match.when({ kind: "ordinary" }, () => projected),
+      Match.when({ kind: "lightExtraAttack" }, ({ procedureRefs }) =>
+        lightExtraAttackWithAbilityChoices(projected, procedureRefs),
+      ),
+      Match.exhaustive,
+    );
+    return attackAbilityAndDamageTypeOptions(withAbilityMode);
+  });
+}
+
+function lightExtraAttackWithAbilityChoices(
+  attack: BoundCharacterWeaponAttackActionOption,
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+): BoundCharacterWeaponAttackActionOption {
+  const { attackDamageAbilityModifierChoice: _choice, ...withoutChoice } =
+    attack;
+  return {
+    ...withoutChoice,
+    damageAbilityModifier: lightPropertyDamageAbilityModifierForAttack(
+      attack,
+      procedureRefs.length > 0,
+    ),
+    ...lightPropertyAttackDamageAbilityModifierChoice(attack, procedureRefs),
+    ...(attack.alternateAbilityChoices === undefined
+      ? {}
+      : {
+          alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
+            attack.alternateAbilityChoices,
+            procedureRefs,
+          ),
+        }),
+  };
+}
+
+function weaponAttackWithMeleeGripAndMartialArtsDamage(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+): BoundCharacterWeaponAttackActionOption {
+  const gripDamage = meleeGripDamageForAttack(state, actor, attack);
+  const martialArts = martialArtsWeaponDamageReplacement(state, actor, attack);
+  const damage =
+    martialArts === undefined
+      ? gripDamage
+      : weaponDamageWithMartialArtsDie(gripDamage, martialArts);
+  return damage === attack.weapon.damage
+    ? attack
+    : { ...attack, weapon: { ...attack.weapon, damage } };
+}
+
+function meleeGripDamageForAttack(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption["weapon"]["damage"] {
+  if (
+    attack.weaponDelivery !== undefined ||
+    attack.weapon.usage !== "melee" ||
+    attack.meleeGripDamage === undefined
+  )
+    return attack.weapon.damage;
+  const mainWeapon = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  ).weapon;
+  return mainWeapon?.itemId === attack.weaponObjectId &&
+    mainWeapon.grip === "two_handed"
+    ? attack.meleeGripDamage.damage
+    : attack.weapon.damage;
+}
+
+function martialArtsWeaponDamageReplacement(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+):
+  | NonNullable<
+      ReturnType<typeof martialArtsAttackProjectionForActor>
+    >["damageReplacement"]
+  | undefined {
+  const profile = martialArtsAttackProjectionForActor(actor);
+  return profile !== undefined &&
+    isMonkWeapon(attack.weapon) &&
+    martialArtsLoadoutEligible(state, actor.combatantId, actor.origin)
+    ? profile.damageReplacement
+    : undefined;
+}
+
+function weaponDamageWithMartialArtsDie(
+  damage: CharacterWeaponAttackActionOption["weapon"]["damage"],
+  replacement: NonNullable<
+    ReturnType<typeof martialArtsWeaponDamageReplacement>
+  >,
+): CharacterWeaponAttackActionOption["weapon"]["damage"] {
+  return damage.kind === "dice" &&
+    damage.dice === 1 &&
+    damage.dieSize < replacement.dieSize
+    ? { ...damage, dice: replacement.dice, dieSize: replacement.dieSize }
+    : damage;
 }
 
 function weaponAttackWithActiveSpellEffects(
@@ -1354,7 +1448,7 @@ export function martialArtsBonusUnarmedStrikeActionOptionForActor(
   if (
     actor === undefined ||
     actor.origin.kind !== "character" ||
-    !hasMartialArtsAttackProjectionSupport(actor) ||
+    martialArtsAttackProjectionForActor(actor) === undefined ||
     !martialArtsLoadoutEligible(state, actor.combatantId, actor.origin)
   ) {
     return undefined;
@@ -1469,20 +1563,25 @@ export function isLightMeleeWeapon(
   );
 }
 
-function hasMartialArtsAttackProjectionSupport(
+function martialArtsAttackProjectionForActor(
   actor: BattleCreatureState,
-): boolean {
-  if (actor.origin.kind !== "character") return false;
-  return actor.origin.execution.procedureBindings.some((binding) => {
+):
+  | Extract<
+      UnitFeatureProcedureExecution,
+      { readonly kind: "martialArtsAttackProjection" }
+    >["martialArts"]
+  | undefined {
+  if (actor.origin.kind !== "character") return undefined;
+  for (const binding of actor.origin.execution.procedureBindings) {
     const procedure = binding.procedure;
-    return (
-      (procedure.kind === "unitFeature" &&
-        procedure.execution.kind ===
-          MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE) ||
-      (procedure.kind === "unitSupportProfile" &&
-        procedure.execution === MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE)
-    );
-  });
+    if (
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind ===
+        MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE
+    )
+      return procedure.execution.martialArts;
+  }
+  return undefined;
 }
 
 function martialArtsLoadoutEligible(

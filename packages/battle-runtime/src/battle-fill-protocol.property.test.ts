@@ -655,7 +655,7 @@ describe("battle fill protocol boundary owners", () => {
       "movement",
     );
     const malformedMovement = movementFill(movement, {
-      movementCostFeet: 10,
+      distanceFeet: 10,
       provokedOpportunityAttacks: [],
     });
     expectInvalid(
@@ -1176,7 +1176,7 @@ describe("battle fill protocol boundary owners", () => {
         kind: "movement",
         holeId: REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
       } as BattleHole,
-      { movementCostFeet: 5, provokedOpportunityAttacks: [] },
+      { distanceFeet: 5, provokedOpportunityAttacks: [] },
     );
     expect(
       spellFillSet(

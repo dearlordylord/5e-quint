@@ -13,7 +13,6 @@ import * as Result from "effect/Result";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { abilityScoreToMod, type DieRollResult } from "@dnd/shared/types";
 import type {
-  BattleAttackRollResult,
   BattleCreatureState,
   BattleRolledDiceFill,
   BattleSpellDamageDieReroll,
@@ -427,14 +426,11 @@ export function empoweredSpellDamageRerollValidationIssue(input: {
   return null;
 }
 
-export function seekingSpellRerollApplicationForAttackRoll(input: {
+/** Seeking Spell's application for a reroll, or why the caster can't use it. */
+export function seekingSpellRerollApplication(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly attackRoll: BattleAttackRollResult;
   readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
-}): SeekingSpellApplicationFact | string | null {
-  if (input.attackRoll.spellAttackReroll === undefined) {
-    return null;
-  }
+}): SeekingSpellApplicationFact | string {
   const application = seekingSpellMetamagicApplication(input.actor);
   if (application === null) {
     return "Seeking Spell requires a character that knows Seeking Spell and has enough Sorcery Points.";

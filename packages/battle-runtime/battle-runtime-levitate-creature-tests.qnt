@@ -31,15 +31,21 @@ module battleRuntimeLevitateCreatureTests {
   run test_levitate_creature_movement_witness_and_caster_control = {
     val cast = resolveLevitateCreature(initialState, Goblin, true, false, 10, 2)
     val goblinTurn = { ...cast, initiative: { ...cast.initiative, alreadyActed: [Fighter], stillToAct: { actor: Goblin, waiting: [] } }, actionAvailable: true }
-    val missingWitness = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, false, WalkSpeedKind, 10, true, 5)
-    val underpaidClimb = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 5, true, 5)
-    val witnessedMove = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 10, true, 5)
+    val missingWitness = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, false, WalkSpeedKind, 10, 5, true, 5)
+    val underpaidClimb = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 5, 5, true, 5)
+    val shortPath = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 10, 5, true, 10)
+    val longerPath = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 30, 15, true, 5)
+    val proneMove = moveLevitatedTargetWithWitness({ ...goblinTurn, goblin: { ...goblinTurn.goblin, prone: true } }, Goblin, Fighter, true, WalkSpeedKind, 10, 5, true, 5)
+    val witnessedMove = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 10, 5, true, 5)
     val fighterTurn = { ...witnessedMove, initiative: { ...witnessedMove.initiative, alreadyActed: [], stillToAct: { actor: Fighter, waiting: [Goblin] } }, actionAvailable: true }
     val outOfRange = controlLevitatedCreatureAltitude(fighterTurn, Goblin, Fighter, false, true, 5)
     val controlled = controlLevitatedCreatureAltitude(fighterTurn, Goblin, Fighter, true, false, 10)
     all {
       assert(targetLevitatedCreatureAltitudeFrom(missingWitness, Goblin, Fighter) == 10),
       assert(targetLevitatedCreatureAltitudeFrom(underpaidClimb, Goblin, Fighter) == 10),
+      assert(targetLevitatedCreatureAltitudeFrom(shortPath, Goblin, Fighter) == 10),
+      assert(targetLevitatedCreatureAltitudeFrom(longerPath, Goblin, Fighter) == 15),
+      assert(targetLevitatedCreatureAltitudeFrom(proneMove, Goblin, Fighter) == 10),
       assert(targetLevitatedCreatureAltitudeFrom(witnessedMove, Goblin, Fighter) == 15),
       assert(targetLevitatedCreatureAltitudeFrom(outOfRange, Goblin, Fighter) == 15),
       assert(targetLevitatedCreatureAltitudeFrom(controlled, Goblin, Fighter) == 5),
@@ -51,7 +57,7 @@ module battleRuntimeLevitateCreatureTests {
     val cast = resolveLevitateCreature(initialState, Fighter, true, false, 10, 2)
     val fighterTurn = { ...cast, actionAvailable: true }
     val magicActionControl = controlLevitatedCreatureAltitude(fighterTurn, Fighter, Fighter, true, true, 5)
-    val witnessedMove = moveLevitatedTargetWithWitness(fighterTurn, Fighter, Fighter, true, WalkSpeedKind, 10, true, 5)
+    val witnessedMove = moveLevitatedTargetWithWitness(fighterTurn, Fighter, Fighter, true, WalkSpeedKind, 10, 5, true, 5)
     all {
       assert(targetLevitatedCreatureAltitudeFrom(magicActionControl, Fighter, Fighter) == 10),
       assert(magicActionControl.actionAvailable),

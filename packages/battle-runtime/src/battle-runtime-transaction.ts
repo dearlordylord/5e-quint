@@ -58,7 +58,8 @@ import {
   restoreInterruptCheckpointIdentity,
   type InterruptCheckpointIdentity,
 } from "./battle-reducer/interrupt-checkpoint-identity.ts";
-import { interruptedProcedureSubject } from "./battle-reducer/interrupt-execution.ts";
+import { interruptedProcedureSubject } from "./battle-reducer/subject-continuation-phase.ts";
+import { battleResubmittedFillKeepsAcceptedFill } from "./battle-reducer/battle-fill-equality.ts";
 import { handledInterruptOccurrenceForCheckpoint } from "./battle-reducer/interrupt-lifecycle.ts";
 import {
   isBattleReadyTriggerReportSubject,
@@ -1699,10 +1700,26 @@ function resolveOperation(input: {
           ),
         onSome: (pending) => {
           if (sameBattleSubject(pending.subject, subject)) {
+            const resubmissionIssue = pendingFrontierResubmissionIssue(
+              pending.fills,
+              fills,
+              pending.frontier,
+            );
+            if (resubmissionIssue !== null) {
+              return invalidTransactionRetryResolution(
+                input.session,
+                input.transaction,
+                { reason: "invalidFill", message: resubmissionIssue },
+              );
+            }
             return resolvePendingTransactionSubject({
               transaction: pending,
               subject: pending.subject,
-              fills: appendFills(pending.fills, fills),
+              fills: fillsAnsweringPendingFrontier(
+                pending.fills,
+                fills,
+                pending.frontier,
+              ),
               ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
             });
           }
@@ -1900,7 +1917,11 @@ function transactionForNeedsHoles(
               baseSession: pending.baseSession,
               currentSession: resolution.session,
               subject: requestedSubject,
-              fills: appendFills(pending.fills, fills),
+              fills: fillsAnsweringPendingFrontier(
+                pending.fills,
+                fills,
+                pending.frontier,
+              ),
               frontier,
               completion: pending.completion,
             });
@@ -2697,6 +2718,63 @@ function appendFills(
   submitted: readonly BattleFill[],
 ): readonly BattleFill[] {
   return Object.freeze([...accepted, ...submitted]);
+}
+
+/**
+ * The fills after answering the pending ordinary frontier. When that frontier
+ * asks a hole again (an attack roll asked again with its reroll decision), the
+ * submitted fill for that hole replaces the accepted one instead of filling
+ * the hole twice.
+ */
+function fillsAnsweringPendingFrontier(
+  accepted: readonly BattleFill[],
+  submitted: readonly BattleFill[],
+  frontier: BattlePendingTransactionFrontier,
+): readonly BattleFill[] {
+  if (frontier.kind !== "ordinaryHoles") {
+    return appendFills(accepted, submitted);
+  }
+  const askedHoleIds = new Set(frontier.holes.map((hole) => hole.holeId));
+  const answeredHoleIds = new Set(
+    submitted
+      .map((fill) => fill.holeId)
+      .filter((holeId) => askedHoleIds.has(holeId)),
+  );
+  return appendFills(
+    accepted.filter((fill) => !answeredHoleIds.has(fill.holeId)),
+    submitted,
+  );
+}
+
+export const PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE =
+  "A hole asked again keeps its accepted fill; only reroll decisions may be added to it.";
+
+/**
+ * The issue with fills that answer holes the pending frontier asks again: each
+ * must keep the accepted fill for that hole, adding only reroll decisions
+ * after the accepted ones.
+ */
+function pendingFrontierResubmissionIssue(
+  accepted: readonly BattleFill[],
+  submitted: readonly BattleFill[],
+  frontier: BattlePendingTransactionFrontier,
+): string | null {
+  if (frontier.kind !== "ordinaryHoles") {
+    return null;
+  }
+  const askedHoleIds = new Set(frontier.holes.map((hole) => hole.holeId));
+  return submitted.some((fill) => {
+    if (!askedHoleIds.has(fill.holeId)) return false;
+    const previous = accepted.find(
+      (candidate) => candidate.holeId === fill.holeId,
+    );
+    return (
+      previous !== undefined &&
+      !battleResubmittedFillKeepsAcceptedFill(previous, fill)
+    );
+  })
+    ? PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE
+    : null;
 }
 
 function nonEmpty<T>(

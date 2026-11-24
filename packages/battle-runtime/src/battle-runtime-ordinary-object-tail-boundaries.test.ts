@@ -213,19 +213,21 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
         attackRollFill(rollHole, {
           total: 2,
           naturalD20: 1,
-          d20TestNaturalOneReroll: {
-            kind: "reroll",
-            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            replacement: {
-              total: 15,
-              d20TestRoll: {
-                tag: "multiple",
-                first: DieRollResult(15),
-                second: DieRollResult(15),
-                rollMode: "advantage",
+          d20TestRerolls: [
+            {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                total: 15,
+                d20TestRoll: {
+                  tag: "multiple",
+                  first: DieRollResult(15),
+                  second: DieRollResult(15),
+                  rollMode: "advantage",
+                },
               },
             },
-          },
+          ],
         }),
       ],
     });
@@ -242,16 +244,18 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
       fills: [
         target,
         attackRollFill(rollHole, {
-          total: 2,
+          total: 4,
           naturalD20: 1,
-          d20TestNaturalOneReroll: {
-            kind: "reroll",
-            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            replacement: {
-              total: 18,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+          d20TestRerolls: [
+            {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                total: 18,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+              },
             },
-          },
+          ],
         }),
       ],
     });

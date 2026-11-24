@@ -713,7 +713,15 @@ describe("character attack execution references", () => {
       holeId: "battle:test:opportunity-selection",
       value: {
         speedKind: "walk",
-        movementCostFeet: 5,
+        path: [
+          {
+            distanceFeet: 5,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [
           { reactorId: fighterId, distanceFeet: movementFeet(5), ...selection },
         ],

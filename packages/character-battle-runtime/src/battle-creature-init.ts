@@ -80,7 +80,7 @@ import {
   battleSupportProfileIssuesToBattleCreatureInitIssue,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
-  characterWeaponAttackActionOptionsFromWeaponProficiencies,
+  characterBattleWeaponAttackInitProjectionFromWeaponProficiencies,
   characterWeaponProficiencies,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
@@ -89,7 +89,7 @@ import {
   characterSpellcasting,
   getRequiredUnit,
   type BattleCreatureInitIssue,
-  type CharacterWeaponAttackActionOptions,
+  type CharacterBattleWeaponAttackInitProjection,
 } from "./battle-character-build-projection.ts";
 import {
   characterBattleSupportAdmission,
@@ -120,6 +120,7 @@ export type CharacterBuildCreatureInput = {
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+  readonly heroicInspiration?: CharacterBattleCreatureInit["heroicInspiration"];
   readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
   readonly ammunitionStocks: CharacterBattleCreatureInit["ammunitionStocks"];
   readonly armorClassBaseChoices?:
@@ -158,6 +159,7 @@ export type CharacterSheetBattleInitInput = Omit<
   | "spellSlots"
   | "bookOfShadowsPresence"
   | "resourceExpenditures"
+  | "heroicInspiration"
   | "druidWildShapeAvailableForms"
 > & {
   readonly sheet: CharacterSheet;
@@ -276,7 +278,7 @@ function characterWeaponAndSupportAdmission(input: {
 }): Result.Result<
   {
     readonly support: CharacterBattleSupportAdmission;
-    readonly weaponAttackOptions: CharacterWeaponAttackActionOptions;
+    readonly weaponAttackOptions: CharacterBattleWeaponAttackInitProjection;
   },
   BattleCreatureInitIssue
 > {
@@ -553,6 +555,7 @@ export function battleCreatureInitFromCharacterBuild(
           : { offHandAttack: weaponAttackOptions.offHandAttack }),
         unitFeatures,
         resources,
+        ...heroicInspirationInit(input.heroicInspiration),
         ...(metamagic === undefined ? {} : { metamagic }),
         ...(spellcasting === undefined ? {} : { spellcasting }),
         ...(druidWildShapeAvailableForms === undefined
@@ -578,7 +581,7 @@ function characterBattleWeaponAttackOptions(input: {
         unitLibrary: input.unitLibrary,
         itemId: input.pactBladeBondedWeaponItemId,
       });
-    return yield* characterWeaponAttackActionOptionsFromWeaponProficiencies(
+    return yield* characterBattleWeaponAttackInitProjectionFromWeaponProficiencies(
       {
         build: input.build,
         unitLibrary: input.unitLibrary,
@@ -1226,4 +1229,10 @@ function characterBattleFeatures(
     }
   }
   return Result.succeed(features);
+}
+
+function heroicInspirationInit(
+  heroicInspiration: CharacterBattleCreatureInit["heroicInspiration"],
+): Pick<CharacterBattleCreatureInit, "heroicInspiration"> {
+  return heroicInspiration === undefined ? {} : { heroicInspiration };
 }

@@ -71,6 +71,7 @@ function classifyWeaponAttackOverrideFill(
       hitPointHealingDistribution: ordinaryFillIsInvalid,
       heldObjectFacts: ordinaryFillIsInvalid,
       toolPossessionFacts: ordinaryFillIsInvalid,
+      objectInteractionRuling: ordinaryFillIsInvalid,
       cunningStrikeEndTurnCoverFacts: ordinaryFillIsInvalid,
       spawnedCompanionConnection: ordinaryFillIsInvalid,
       companionReappearancePlacement: ordinaryFillIsInvalid,

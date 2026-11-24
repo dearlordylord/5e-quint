@@ -282,11 +282,12 @@ function intrinsicActPresentation(
       (subject.tag === "bonusAction" && subject.action === "offHandAttack"))
   ) {
     const isOffHandAttack = subject.tag === "bonusAction";
+    const weapon = attackWeaponPhrase(subject, presentation.name);
     return {
       label: isOffHandAttack ? "Light Property Bonus Action Attack" : "Attack",
       summary: isOffHandAttack
-        ? `Make the Light property Bonus Action attack with ${presentation.name}.`
-        : `Take the Attack action with ${presentation.name}.`,
+        ? `Make the Light property Bonus Action attack ${weapon}.`
+        : `Take the Attack action ${weapon}.`,
       presentation,
     };
   }
@@ -410,6 +411,19 @@ function statBlockProcedureOrIntrinsicPresentation(
       issues: presentations.failure,
     },
   };
+}
+
+/**
+ * A thrown attack shares its weapon's name with the melee attack, so its
+ * summary names the throw.
+ */
+function attackWeaponPhrase(
+  subject: IntrinsicBattleSubject,
+  name: string,
+): string {
+  return "weaponDelivery" in subject && subject.weaponDelivery === "thrown"
+    ? `by throwing ${name}`
+    : `with ${name}`;
 }
 
 function intrinsicActPresentationText(
@@ -770,6 +784,8 @@ const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   move: "Move",
   standFromProne: "Stand",
   dropProne: "Drop Prone",
+  interactWithObject: "Interact with an Object",
+  pickUpHeldWeapon: "Pick Up Weapon",
   releaseReadiedSpell: "Release Readied Spell",
   releaseReadiedMovement: "Release Readied Movement",
   reportReadyTrigger: "Report Ready Trigger",

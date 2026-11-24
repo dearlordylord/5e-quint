@@ -22,8 +22,10 @@ import type {
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantCanMoveInState } from "./movement-speed.ts";
 import type { CombatantId } from "../identity.ts";
+import { optionalProperty } from "../optional-property.ts";
 import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 import { attackTargetChoices } from "./hole-helpers.ts";
+import { isObjectInteractionSubject } from "./object-interaction.ts";
 
 export const READY_DECLARATION_HOLE_ID = holeId("battle:ready:declaration");
 export const READY_DECLARATION_HOLE_INSTANCE = holeInstanceKey(
@@ -55,6 +57,7 @@ export function readyResponseChoices(
                   procedureRef: subject.procedureRef,
                   attackAbility: subject.attackAbility,
                   attackDamageType: subject.attackDamageType,
+                  ...optionalProperty("weaponDelivery", subject.weaponDelivery),
                 },
         },
       ];
@@ -129,6 +132,7 @@ function readyResponsesEqual(
 export function readyActionSubject(
   subject: import("../battle-subjects.ts").BattleSubject,
 ): BattleReadyActionSubject | null {
+  if (isObjectInteractionSubject(subject)) return subject;
   return subject.tag === "action" &&
     subject.action !== "attack" &&
     subject.action !== "multiattack" &&

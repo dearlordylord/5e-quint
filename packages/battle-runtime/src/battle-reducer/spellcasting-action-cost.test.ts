@@ -14,6 +14,7 @@ function readyTurn(): ActionEconomyState {
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
+    objectInteraction: "available",
   });
 }
 

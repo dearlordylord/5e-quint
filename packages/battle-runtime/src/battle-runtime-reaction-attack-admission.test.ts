@@ -18,6 +18,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   snapshotBattle,
+  targetFill,
   type BattleFill,
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -43,7 +44,7 @@ function discoveredOpportunityAttack() {
     subject: movementSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           { reactorId: fighterId, distanceFeet: movementFeet(5), ...selection },
         ],
@@ -205,11 +206,22 @@ test("an admitted readied attack requires its exact target distance before reque
     }),
     "attackRoll",
   );
-  expect(
+  // With no input, the release asks for its fixed target's facts; a target
+  // fill without the distance fact can't request a roll.
+  const targetHole = requireHole(
     resolveOpportunityAttackCommand({
       state,
       subject: choice.subject,
       fills: [],
+    }),
+    "targetChoice",
+  );
+  expect(targetHole.choices).toEqual([goblinId]);
+  expect(
+    resolveOpportunityAttackCommand({
+      state,
+      subject: choice.subject,
+      fills: [targetFill(targetHole, goblinId, [])],
     }),
   ).toMatchObject({
     tag: "invalid",

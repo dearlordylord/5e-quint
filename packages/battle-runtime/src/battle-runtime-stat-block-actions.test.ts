@@ -1607,9 +1607,14 @@ describe("battle runtime: Stat Block actions", () => {
       ["static", "rolled"],
       ["static", "static"],
     ]);
-    expect(continuationSubjects.slice(-3)).toEqual([
+    expect(continuationSubjects.slice(-4)).toEqual([
       { tag: "runtimeCommand", actorId: goblinId, command: "move" },
       { tag: "runtimeCommand", actorId: goblinId, command: "dropProne" },
+      {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "interactWithObject",
+      },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
     expect(continuationSubjects).not.toContainEqual(subject);
@@ -1624,6 +1629,7 @@ describe("battle runtime: Stat Block actions", () => {
       "Attack",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "End Turn",
     ]);
     const moveSubject: BattleSubject = {
@@ -1645,7 +1651,7 @@ describe("battle runtime: Stat Block actions", () => {
         subject: moveSubject,
         fills: [
           movementFill(moveHole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [],
           }),
         ],

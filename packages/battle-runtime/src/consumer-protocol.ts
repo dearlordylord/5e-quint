@@ -85,11 +85,18 @@ export type {
   BattleObjectDamageOutcome,
   BattleOpportunityAttackThreat,
   BattleCreatureSpaceTraversalMovementFact,
+  BattleMovementPath,
+  BattleMovementPathSegment,
   BattleResolvedMovement,
   BattleTargetChoiceHole,
   BattleTargetSpatialFact,
   BattleStateInitIssue,
 } from "./battle-state-execution.ts";
+export {
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
+} from "./battle-state-execution.ts";
+export { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 export type {
   BattlePendingProcedure,
   BattlePendingStartTurnOccurrence,
@@ -168,3 +175,5 @@ export {
   spellBattleSupport,
   type SpellBattleSupport,
 } from "./spell-battle-support.ts";
+
+export { admitWeaponMeleeGripDamage } from "./weapon-melee-grip-damage.ts";

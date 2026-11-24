@@ -11,6 +11,7 @@ export const SEMANTIC_REFINEMENT_REASONS = [
   "checkpointFrontierCorrelation",
   "corpusBatchTraceLengthCorrelation",
   "statBlockDamageComponentRoleCorrelation",
+  "weaponAttackEvidenceOwnershipCorrelation",
   "constraintFreeBrand",
 ] as const;
 

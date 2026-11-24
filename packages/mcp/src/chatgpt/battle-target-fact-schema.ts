@@ -48,24 +48,57 @@ export function enemyProximityConstraint(
   definitions: McpOutputSchema,
   scope: { readonly attackerId: string; readonly procedureRef: string },
 ): McpOutputSchema {
-  const qualification = facts.filter((fact) =>
-    hasKind(fact, "rangedAttackEnemyProximity", definitions),
+  return exactlyOneScopedFact(
+    "rangedAttackEnemyProximity",
+    facts,
+    definitions,
+    scope,
   );
-  if (qualification.length === 0)
-    throw new Error(
-      "The canonical target fill must contain the ranged attack enemy proximity fact.",
-    );
+}
+
+/** Any other attack takes no thrown weapon landing fact. */
+export const NO_THROWN_WEAPON_LANDING: McpOutputSchema = {
+  not: { contains: factOfKind("thrownWeaponLanding") },
+};
+
+/** A thrown weapon attack needs exactly one landing fact scoped to it. */
+export function thrownWeaponLandingConstraint(
+  facts: readonly McpOutputSchema[],
+  definitions: McpOutputSchema,
+  scope: { readonly attackerId: string; readonly procedureRef: string },
+): McpOutputSchema {
+  return exactlyOneScopedFact("thrownWeaponLanding", facts, definitions, scope);
+}
+
+function exactlyOneScopedFact(
+  kind: "rangedAttackEnemyProximity" | "thrownWeaponLanding",
+  facts: readonly McpOutputSchema[],
+  definitions: McpOutputSchema,
+  scope: { readonly attackerId: string; readonly procedureRef: string },
+): McpOutputSchema {
+  const scoped = facts.filter((fact) => hasKind(fact, kind, definitions));
+  if (scoped.length === 0)
+    throw new Error(`The canonical target fill must contain the ${kind} fact.`);
+  // The runtime takes exactly one fact of the kind in all, so the scoped fact
+  // must be there and no other fact of the kind may sit beside it.
   return {
     allOf: [
-      { contains: { anyOf: qualification }, maxContains: 1 },
+      { contains: { anyOf: scoped }, maxContains: 1 },
       {
         contains: {
-          anyOf: qualification.map((fact) =>
-            pinFact(fact, { kind: "rangedAttackEnemyProximity", ...scope }),
-          ),
+          anyOf: scoped.map((fact) => pinFact(fact, { kind, ...scope })),
         },
       },
     ],
+  };
+}
+
+/** Any fact of one kind, whatever else it states. */
+function factOfKind(kind: string): McpOutputSchema {
+  return {
+    type: "object",
+    required: ["kind"],
+    properties: { kind: { const: kind } },
   };
 }
 

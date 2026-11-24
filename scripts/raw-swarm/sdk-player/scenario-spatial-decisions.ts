@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import type {
   BattleCreatureSpaceTraversalMovementFact,
   BattleId,
+  BattleMovementPath,
+  BattleMovementPathSegment,
   BattleMovementSpeedKind,
   BattleObjectId,
   BattleOpportunityAttackThreat,
@@ -11,6 +13,8 @@ import type {
   CombatantId,
 } from "@dnd/battle-runtime/consumer-protocol";
 import {
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
   battleObjectId,
   battleTablePositionId,
   combatantId,
@@ -24,7 +28,6 @@ import {
   DAMAGE_TYPES,
   movementFeet,
   type CoverType,
-  type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "../../../packages/shared/src/types.ts";
 import {
@@ -151,7 +154,7 @@ export type ScenarioTableSpatialPostMoveState = Readonly<{
 
 type ScenarioMovementRouteAnswerInput = Readonly<{
   readonly kind: "movementRoute";
-  readonly movementCostFeet: MovementFeet;
+  readonly path: BattleMovementPath;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly creatureSpaceTraversal:
     | Readonly<{ readonly kind: "notRequired" }>
@@ -164,7 +167,7 @@ type ScenarioMovementRouteAnswerInput = Readonly<{
 
 type ScenarioMovementRouteAnswer = Readonly<{
   readonly kind: "movementRoute";
-  readonly movementCostFeet: MovementFeet;
+  readonly path: BattleMovementPath;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly creatureSpaceTraversal:
     | Readonly<{ readonly kind: "notRequired" }>
@@ -1151,6 +1154,61 @@ function parseRelationAnswer(
   });
 }
 
+function parseMovementPathInput(
+  value: unknown,
+): BattleMovementPath | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const segments: BattleMovementPathSegment[] = [];
+  for (const segmentInput of value) {
+    const segment = parseMovementPathSegmentInput(segmentInput);
+    if (segment === undefined) return undefined;
+    segments.push(segment);
+  }
+  const [first, ...rest] = segments;
+  return first === undefined ? undefined : [first, ...rest];
+}
+
+function parseMovementPathSegmentInput(
+  value: unknown,
+): BattleMovementPathSegment | undefined {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, [
+      "distanceFeet",
+      "activity",
+      "difficultTerrain",
+      "movesCloserThroughDirectionalArea",
+      "draggedGrappledTargetIds",
+    ]) ||
+    !isFiniteNonNegativeInteger(value.distanceFeet) ||
+    !Number.isInteger(value.distanceFeet) ||
+    value.distanceFeet <= 0 ||
+    typeof value.movesCloserThroughDirectionalArea !== "boolean" ||
+    !Array.isArray(value.draggedGrappledTargetIds) ||
+    !value.draggedGrappledTargetIds.every(isNonEmptyTrimmedString)
+  ) {
+    return undefined;
+  }
+  const activity = BATTLE_MOVEMENT_PATH_ACTIVITIES.find(
+    (candidate) => candidate === value.activity,
+  );
+  const difficultTerrain = BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN.find(
+    (candidate) => candidate === value.difficultTerrain,
+  );
+  if (activity === undefined || difficultTerrain === undefined) {
+    return undefined;
+  }
+  return {
+    distanceFeet: movementFeet(value.distanceFeet),
+    activity,
+    difficultTerrain,
+    movesCloserThroughDirectionalArea: value.movesCloserThroughDirectionalArea,
+    draggedGrappledTargetIds: value.draggedGrappledTargetIds.map((id) =>
+      combatantId(id),
+    ),
+  };
+}
+
 function parseOpportunityAttackThreatInput(
   value: unknown,
 ): BattleOpportunityAttackThreat | undefined {
@@ -1338,18 +1396,23 @@ function parseMovementAnswer(
     !isRecord(value) ||
     !hasOnlyKeys(value, [
       "kind",
-      "movementCostFeet",
+      "path",
       "provokedOpportunityAttacks",
       "creatureSpaceTraversal",
       "postMoveSpatialState",
     ]) ||
-    value.kind !== "movementRoute" ||
-    !isFiniteNonNegativeInteger(value.movementCostFeet) ||
-    !Number.isInteger(value.movementCostFeet)
+    value.kind !== "movementRoute"
   ) {
     return malformedDecision(
       input,
-      "A movement-route answer requires a finite non-negative movement cost.",
+      "A movement-route answer requires a tagged answer with a movement path.",
+    );
+  }
+  const path = parseMovementPathInput(value.path);
+  if (path === undefined) {
+    return malformedDecision(
+      input,
+      "A movement-route answer requires a nonempty path of segments, each with a positive whole-foot distance, an activity, a Difficult Terrain kind, whether it moves closer through a directional area, and the Grappled creatures it drags.",
     );
   }
   if (!Array.isArray(value.provokedOpportunityAttacks)) {
@@ -1431,7 +1494,7 @@ function parseMovementAnswer(
   }
   return Result.succeed({
     kind: "movementRoute",
-    movementCostFeet: movementFeet(value.movementCostFeet),
+    path,
     provokedOpportunityAttacks,
     creatureSpaceTraversal: traversal.success,
     postMoveSpatialState: {
@@ -1627,13 +1690,6 @@ function validateSpatialDecisionInput(
           `The Table-authored movement route contains an invalid coordinate: ${parsed.error.message}`,
         );
       }
-    }
-    if (!isFiniteNonNegativeInteger(input.answer.movementCostFeet)) {
-      return spatialDecisionIssue(
-        "invalid-spatial-decision",
-        decisionId,
-        "A movement-route decision must provide a non-negative movement cost.",
-      );
     }
     const postMoveSpatialState = input.answer.postMoveSpatialState;
     const nestedDecisionsByQuestion = new Map<

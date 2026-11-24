@@ -1,3 +1,4 @@
+import { stateForSubjectContinuation } from "./subject-continuation-phase.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
@@ -266,22 +267,26 @@ function replayContinuationSemanticFillEquals(
 export function resolveReplayContinuationFromState(
   input: ReplayContinuationResolutionInput,
 ): BattleResolutionResult {
+  const replayState = stateForSubjectContinuation(
+    input.state,
+    input.continuation,
+  );
   const glyphStoredSpellReleaseReplay =
     input.continuation.glyphStoredSpellReleaseReplay;
   if (glyphStoredSpellReleaseReplay !== undefined) {
     return resolveGlyphStoredSpellReplayContinuationFromState(
-      input,
+      { ...input, state: replayState },
       glyphStoredSpellReleaseReplay,
     );
   }
   const admission = admitBattleResolutionInput({
-    state: input.state,
+    state: replayState,
     subject: input.continuation.subject,
     fills: input.fills,
   });
   if (admission.tag === "staleCharacterProcedure") {
     return invalidResult(
-      input.state,
+      replayState,
       "staleSubject",
       "The interrupted character procedure reference is no longer bound to its actor.",
     );

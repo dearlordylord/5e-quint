@@ -217,7 +217,7 @@ function resolveWithdrawMove(): CunningStrikeProjection {
         fills: [
           ...window.damageAppliedFills,
           movementFill(move, {
-            movementCostFeet: 15,
+            distanceFeet: 15,
             provokedOpportunityAttacks: [],
           }),
         ],

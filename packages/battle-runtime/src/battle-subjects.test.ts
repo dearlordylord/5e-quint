@@ -155,6 +155,8 @@ describe("BattleSubject identity", () => {
       move: {},
       standFromProne: {},
       dropProne: {},
+      interactWithObject: {},
+      pickUpHeldWeapon: { objectId: battleObjectId("subject-pickup-weapon") },
       releaseReadiedSpell: {
         readiedSpellCasterId: targetId,
         procedureRef: targetProcedureRef,
@@ -736,6 +738,21 @@ describe("BattleSubject identity", () => {
     } satisfies BattleSubject;
 
     expect(sameBattleSubject(charmedAttempt, frightenedAttempt)).toBe(false);
+  });
+
+  test("weapon pickups include the weapon in subject identity", () => {
+    const mainWeaponPickup = {
+      tag: "runtimeCommand",
+      actorId: combatantId("dual-wielder"),
+      command: "pickUpHeldWeapon",
+      objectId: battleObjectId("main-weapon"),
+    } satisfies BattleSubject;
+    const offHandPickup = {
+      ...mainWeaponPickup,
+      objectId: battleObjectId("off-hand-weapon"),
+    } satisfies BattleSubject;
+
+    expect(sameBattleSubject(mainWeaponPickup, offHandPickup)).toBe(false);
   });
 
   test("admitted character procedures include their execution ref in subject identity", () => {

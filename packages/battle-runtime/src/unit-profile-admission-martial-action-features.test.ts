@@ -1573,6 +1573,69 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     );
   });
 
+  test.each(["monk", "fighter"] as const)(
+    "validates the Martial Arts execution for a %s class",
+    (className) => {
+      const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
+      const unitRef = battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      });
+      if (Result.isFailure(unitRef)) throw new Error(unitRef.failure.message);
+      const result = startBattle({
+        battleId: battleId("martial-arts-profile-admission"),
+        combatants: [
+          characterCreature({
+            combatantId: combatantId("martial-arts-profile-admission"),
+            displayName: "Martial Arts admission",
+            initiative: 10,
+            classLevels: [{ className, level: 1 }],
+            unitFeatures:
+              className === "monk"
+                ? [
+                    characterBattleFeatureInitForTest(unit, [
+                      { className, level: classLevel(1) },
+                    ]),
+                  ]
+                : [],
+            characterUnitRefs: [unitRef.success],
+          }),
+        ],
+      });
+      if (Result.isFailure(result)) {
+        expect(className).toBe("fighter");
+        expect(battleInitializationIssueMessage(result.failure)).toContain(
+          "Unit support profile martialArtsAttackProjection references an unavailable mechanical execution resource or procedure.",
+        );
+        return;
+      }
+      expect(className).toBe("monk");
+      const actor = result.success.state.combatants.get(
+        combatantId("martial-arts-profile-admission"),
+      );
+      if (actor?.origin.kind !== "character")
+        throw new Error("Expected the admitted Monk's character origin.");
+      expect(actor.origin.execution.procedureBindings).toContainEqual(
+        expect.objectContaining({
+          procedure: expect.objectContaining({
+            kind: "unitFeature",
+            execution: expect.objectContaining({
+              kind: "martialArtsAttackProjection",
+              classLevel: classLevel(1),
+              martialArts: expect.objectContaining({
+                damageReplacement: {
+                  scope: "unarmedOrMonkWeapon",
+                  dice: 1,
+                  dieSize: 6,
+                },
+              }),
+            }),
+          }),
+        }),
+      );
+    },
+  );
+
   test("monk_martial_arts admission requires its Bonus Action Unarmed Strike grant", () => {
     const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
     expect(unit.kind).toBe("class_feature");

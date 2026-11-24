@@ -215,6 +215,8 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
+      objectInteractionRuling: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       helpAttackAllyDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
       helpAttackEnemyDecision: (value) =>
@@ -349,38 +351,62 @@ function projectMechanicalAttackRollHole(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): Extract<BattleMechanicalOrdinaryHole, { readonly kind: "attackRoll" }> {
   if ("attack" in hole) {
-    const { label, d20TestNaturalOneRerolls, attack, ...mechanical } = hole;
-    void label;
+    const {
+      label,
+      d20TestNaturalOneRerolls,
+      heroicInspirationRerolls,
+      attack,
+      ...mechanical
+    } = hole;
+    void [label, d20TestNaturalOneRerolls, heroicInspirationRerolls];
     return {
       ...mechanical,
       attack: projectMechanicalAttackActionOption(attack),
-      ...(d20TestNaturalOneRerolls === undefined
-        ? {}
-        : {
-            d20TestNaturalOneRerolls: d20TestNaturalOneRerolls.map(
-              projectNestedPresentationLabel,
-            ),
-          }),
+      ...mechanicalD20TestRerollOptions(hole),
     };
   }
-  const { label, d20TestNaturalOneRerolls, spellAttackRerolls, ...mechanical } =
-    hole;
-  void label;
+  const {
+    label,
+    d20TestNaturalOneRerolls,
+    heroicInspirationRerolls,
+    spellAttackRerolls,
+    ...mechanical
+  } = hole;
+  void [label, d20TestNaturalOneRerolls, heroicInspirationRerolls];
   return {
     ...mechanical,
-    ...(d20TestNaturalOneRerolls === undefined
-      ? {}
-      : {
-          d20TestNaturalOneRerolls: d20TestNaturalOneRerolls.map(
-            projectNestedPresentationLabel,
-          ),
-        }),
+    ...mechanicalD20TestRerollOptions(hole),
     ...(spellAttackRerolls === undefined
       ? {}
       : {
           spellAttackRerolls: spellAttackRerolls.map(
             projectNestedPresentationLabel,
           ),
+        }),
+  };
+}
+
+/** The D20 Test reroll options of an attack roll hole, without their labels. */
+function mechanicalD20TestRerollOptions(
+  options: Pick<
+    Extract<BattleHole, { readonly kind: "attackRoll" }>,
+    "d20TestNaturalOneRerolls" | "heroicInspirationRerolls"
+  >,
+) {
+  return {
+    ...(options.d20TestNaturalOneRerolls === undefined
+      ? {}
+      : {
+          d20TestNaturalOneRerolls: options.d20TestNaturalOneRerolls.map(
+            projectNestedPresentationLabel,
+          ),
+        }),
+    ...(options.heroicInspirationRerolls === undefined
+      ? {}
+      : {
+          heroicInspirationRerolls: [
+            projectNestedPresentationLabel(options.heroicInspirationRerolls[0]),
+          ] as const,
         }),
   };
 }

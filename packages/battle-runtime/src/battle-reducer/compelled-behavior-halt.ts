@@ -101,6 +101,10 @@ const COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND = {
   standFromProne: true,
   // ASSUMPTIONS.md A52: "doesn't move" also rules out Dropping Prone.
   dropProne: true,
+  // "doesn't move and takes no action": with neither a move nor an action,
+  // there is none to interact with an object during (SRD 5.2.1 "Your Turn").
+  interactWithObject: true,
+  pickUpHeldWeapon: true,
   releaseReadiedSpell: false,
   releaseReadiedMovement: false,
   reportReadyTrigger: false,

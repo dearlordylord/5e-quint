@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "ca716a994c584ea8cf057cafe6733c321c9691e9",
+    "registryCommit": "f1fc0eca09b4feb03dd3e2f45f59ae6b244205a9",
     "generator": {
       "path": "scripts/spell-lifecycle-owner-manifest.cjs",
       "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "cbc03d6a8ff64ab1374627589121a449e1e4b21b0dcb5bc2e71cc56d7fba0492"
+        "sha256": "05d2db222ff8e3ebe5fd2fa16202a0b3cc1375bbfc36aafb9e546460f065d737"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "570a27330b2745a1626872885f1819941d9bd1609d44e54cecd5c8140a3da58b"
+        "sha256": "70ce93164cabcc9ff9c5517bb4bbaff7ef34eb86420aaed9054c7c8e5afb2143"
       }
     ]
   },
@@ -488,6 +488,7 @@
     "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
     "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
     "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
+    "packages/battle-runtime/src/battle-reducer/movement-path.ts",
     "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
     "packages/battle-runtime/src/battle-reducer/ongoing-feature-helpers.ts",
     "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage-binding.ts",
@@ -950,7 +951,7 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 247,
+    "sourceOrPure": 248,
     "parityOrFixture": 102,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2

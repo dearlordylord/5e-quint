@@ -41,6 +41,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   currentHasBonusAction: false,
   actionOrBonusActionExclusion: { kind: "notRestricted" },
   movementActionBonusActionExclusion: { kind: "notRestricted" },
+  objectInteraction: "available",
   compelledHalt: null,
   jumpDistanceMultiplier: null,
   heightenedStepOfTheWindCarriedCreatures: [],

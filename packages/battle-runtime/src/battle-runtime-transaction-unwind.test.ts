@@ -2,7 +2,11 @@
 
 import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
-import { classLevel } from "@dnd/shared/types";
+import {
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
+} from "@dnd/shared/game-facts";
+import { classLevel, DieRollResult } from "@dnd/shared/types";
 import {
   armorClass,
   defaultArmorClassState,
@@ -79,7 +83,11 @@ import {
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import type { BattleHole } from "./battle-state-execution.ts";
+import {
+  HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+  type BattleHole,
+  type BattleState,
+} from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { CombatantId } from "./identity.ts";
 
@@ -218,7 +226,7 @@ function movementWithOpportunityAttack(
   >,
 ) {
   return movementFill(hole, {
-    movementCostFeet: 5,
+    distanceFeet: 5,
     provokedOpportunityAttacks: [
       {
         reactorId,
@@ -233,7 +241,7 @@ function movementWithoutOpportunityAttacks(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
 ) {
   return movementFill(hole, {
-    movementCostFeet: 5,
+    distanceFeet: 5,
     provokedOpportunityAttacks: [],
   });
 }
@@ -292,7 +300,9 @@ function readySession(
   const response = declarationHole.responseChoices.find((candidate) =>
     responseKind === "movement"
       ? candidate.kind === "movement"
-      : candidate.kind === "action" && candidate.subject.action === "dodge",
+      : candidate.kind === "action" &&
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "dodge",
   );
   if (response === undefined) {
     throw new Error(`Expected a Ready ${responseKind} response.`);
@@ -1613,6 +1623,166 @@ describe("battle runtime transaction completion unwind", () => {
     });
   });
 
+  test("keeps a spent Heroic Inspiration reroll while a second attack-hit responder is pending", () => {
+    const base = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const secondReadiedSpell = base.readiedSpells.get(secondWizardId);
+    const fighter = base.combatants.get(fighterId);
+    if (
+      secondReadiedSpell === undefined ||
+      fighter?.origin.kind !== "character"
+    ) {
+      throw new Error("Expected the Fighter and the second readied spell.");
+    }
+    const state: BattleState = {
+      ...base,
+      combatants: new Map(base.combatants).set(fighterId, {
+        ...fighter,
+        origin: {
+          ...fighter.origin,
+          heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+        },
+      }),
+      readiedSpells: new Map(base.readiedSpells).set(secondWizardId, {
+        ...secondReadiedSpell,
+        trigger: "attackHit" as const,
+      }),
+    };
+    const session = battleRuntimeSessionForTest({
+      state,
+      context: battleRuntimeContextForStateForTest(state),
+    });
+    const subject = fighterAttackSubject(state);
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(state, target, subject);
+    const opened = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject,
+          fills: [
+            targetFill(target, goblinId),
+            attackRollFill(attackRoll, {
+              total: 7,
+              naturalD20: 2,
+              d20TestRerolls: [
+                {
+                  kind: "reroll",
+                  effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                  replacement: {
+                    total: 15,
+                    d20TestRoll: {
+                      tag: "single",
+                      naturalD20: DieRollResult(10),
+                    },
+                  },
+                },
+              ],
+            }),
+          ],
+        },
+      }),
+      "rerolled attack-hit interrupt",
+    );
+    const openedFrontier = requireInterruptFrontier(
+      opened.frontier,
+      "rerolled attack-hit interrupt",
+    );
+    expect(requireHole(opened, "interruptDecision").eligibleResponders).toEqual(
+      [wizardId, secondWizardId],
+    );
+    expect(
+      heroicInspirationOf(opened.resolution.session.state, fighterId),
+    ).toEqual(NO_HEROIC_INSPIRATION);
+    const releaseChoice = openedFrontier.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedSpell" &&
+        choice.subject.readiedSpellCasterId === wizardId,
+    );
+    if (
+      releaseChoice?.kind !== "nestedProcedure" ||
+      releaseChoice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected the first Wizard's readied-spell release.");
+    }
+    const released = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: opened.resolution.session,
+        transaction: opened.transaction,
+        operation: {
+          kind: "interruptDecision",
+          fill: interruptDecisionFill(
+            requireHole(opened, "interruptDecision"),
+            {
+              kind: "resolve",
+              responderId: wizardId,
+              choice: {
+                kind: "releaseReadiedSpell",
+                procedureRef: releaseChoice.subject.procedureRef,
+                fills: [],
+              },
+            },
+          ),
+        },
+      }),
+      "first Wizard's readied-spell release",
+    );
+    const afterSave = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: released.resolution.session,
+        transaction: released.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: transactionSubject(released),
+          fills: [
+            savingThrowOutcomeFill(
+              requireHole(released, "savingThrowOutcome"),
+              [
+                {
+                  targetId: goblinId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
+            ),
+          ],
+        },
+      }),
+      "the first Wizard's readied spell damage",
+    );
+    const reaction = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: afterSave.resolution.session,
+        transaction: afterSave.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: transactionSubject(afterSave),
+          fills: [
+            damageRollFillWithGroups(requireHole(afterSave, "rolledDice"), [
+              [1],
+            ]),
+          ],
+        },
+      }),
+      "the second Wizard's offer",
+    );
+    requireInterruptFrontier(reaction.frontier, "the second Wizard's offer");
+    expect(
+      requireHole(reaction, "interruptDecision").eligibleResponders,
+    ).toEqual([secondWizardId]);
+
+    const resumed = requireNeedsHoles(
+      settledByDeclining(reaction, secondWizardId),
+      "the rerolled attack after the second Wizard declines",
+    );
+    expect(resumed.frontier.kind).toBe("ordinaryHoles");
+    expect(requireHole(resumed, "rolledDice")).toMatchObject({
+      kind: "rolledDice",
+    });
+  });
+
   test("preserves sequential attack fills while opening the reaction frontier", () => {
     const base = fighterTurnWithReadiedAcidAndSecondReadiedRay();
     const secondReadiedSpell = base.readiedSpells.get(secondWizardId);
@@ -2239,3 +2409,10 @@ describe("battle runtime transaction completion unwind", () => {
     }
   });
 });
+
+function heroicInspirationOf(state: BattleState, id: CombatantId) {
+  const creature = state.combatants.get(id);
+  return creature?.origin.kind === "character"
+    ? creature.origin.heroicInspiration
+    : undefined;
+}

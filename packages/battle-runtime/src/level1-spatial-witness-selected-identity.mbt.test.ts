@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   battleEffectExecutionRefForTest,
@@ -1562,7 +1563,6 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
     fills: [
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
-        movementCostFeet: greaseDifficultTerrainMovementCostFeet,
         effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
         sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
           .sourceProcedureRef,
@@ -1641,7 +1641,6 @@ function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
     fills: [
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
-        movementCostFeet: greaseDifficultTerrainMovementCostFeet,
         effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
         sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
           .sourceProcedureRef,
@@ -2360,7 +2359,6 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         fills: [
           greaseMovementFill(movement, {
             areaId: staleGreaseAreaId,
-            movementCostFeet: greaseDifficultTerrainMovementCostFeet,
             effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
             sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
               .sourceProcedureRef,
@@ -2374,7 +2372,6 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         fills: [
           greaseMovementFill(movement, {
             areaId: greaseAreaId,
-            movementCostFeet: greaseDifficultTerrainMovementCostFeet,
             effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
             sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
               .sourceProcedureRef,
@@ -2527,7 +2524,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const missingLandingFactRejected =
         missingLandingFact.tag === "invalid" &&
         missingLandingFact.message ===
-          "Jump movement replacement requires caller-supplied jump distance and landing facts.";
+          "distance-multiplier effect movement replacement requires caller-supplied landing facts.";
       const jumped = resolveBattleSubject({
         state: targetTurn,
         subject: jumpAct.subject,
@@ -4057,7 +4054,6 @@ function greaseMovementFill(
   input: {
     readonly areaId: BattleAreaId;
     readonly effectRef: BattleEffectExecutionRef;
-    readonly movementCostFeet: MovementFeet;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
@@ -4066,7 +4062,25 @@ function greaseMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: input.movementCostFeet,
+      path: [
+        {
+          distanceFeet: greaseDifficultTerrainDistanceFeet,
+          activity: "ordinary",
+          difficultTerrain: "areaDifficultTerrain",
+          movesCloserThroughDirectionalArea: false,
+          draggedGrappledTargetIds: [],
+        },
+        {
+          distanceFeet: movementFeet(
+            Number(greaseTotalMovementDistanceFeet) -
+              Number(greaseDifficultTerrainDistanceFeet),
+          ),
+          activity: "ordinary",
+          difficultTerrain: "none",
+          movesCloserThroughDirectionalArea: false,
+          draggedGrappledTargetIds: [],
+        },
+      ],
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: {
         kind: "areaDifficultTerrain",
@@ -4079,8 +4093,6 @@ function greaseMovementFill(
             areaId: input.areaId,
           },
         ],
-        totalDistanceFeet: greaseTotalMovementDistanceFeet,
-        difficultTerrainDistanceFeet: greaseDifficultTerrainDistanceFeet,
       },
     },
   };
@@ -4114,14 +4126,14 @@ function jumpTargetListFill(
 
 function ordinaryMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  movementCostFeet: MovementFeet,
+  distanceFeet: MovementFeet,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
     kind: "movement",
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet,
+      path: ordinaryMovementPath(distanceFeet),
       provokedOpportunityAttacks: [],
     },
   };
@@ -4143,11 +4155,10 @@ function fixedCostMovementReplacementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: jumpMovementCostFeet,
+      path: ordinaryMovementPath(jumpMaxDistanceFeet),
       provokedOpportunityAttacks: [],
       fixedCostMovementReplacement: {
         kind: "fixedCostMovementReplacement",
-        distanceFeet: jumpMaxDistanceFeet,
         landing: {
           kind: "legalLanding",
           difficultTerrainAcrobatics: input.difficultTerrainAcrobatics,

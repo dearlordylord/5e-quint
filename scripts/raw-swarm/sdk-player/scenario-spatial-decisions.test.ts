@@ -109,7 +109,15 @@ function movementDecision(spatialFingerprint: string): unknown {
     },
     answer: {
       kind: "movementRoute",
-      movementCostFeet: 5,
+      path: [
+        {
+          distanceFeet: 5,
+          activity: "ordinary",
+          difficultTerrain: "none",
+          movesCloserThroughDirectionalArea: false,
+          draggedGrappledTargetIds: [],
+        },
+      ],
       provokedOpportunityAttacks: [],
       creatureSpaceTraversal: { kind: "notRequired" },
       postMoveSpatialState: {

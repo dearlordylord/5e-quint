@@ -98,7 +98,15 @@ export const ChatGptBattleGuidanceSchema = Schema.Union([
           holeId: BattleHoleIdSchema,
           value: Schema.Struct({
             speedKind: Schema.Literal("walk"),
-            movementCostFeet: Schema.Literal(5),
+            path: Schema.Tuple([
+              Schema.Struct({
+                distanceFeet: Schema.Literal(5),
+                activity: Schema.Literal("ordinary"),
+                difficultTerrain: Schema.Literal("none"),
+                movesCloserThroughDirectionalArea: Schema.Literal(false),
+                draggedGrappledTargetIds: Schema.Tuple([]),
+              }),
+            ]),
             provokedOpportunityAttacks: Schema.Tuple([]),
           }),
         }),

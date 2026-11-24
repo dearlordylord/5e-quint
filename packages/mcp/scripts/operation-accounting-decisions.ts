@@ -1016,6 +1016,24 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.interactWithObject": account(
+      "operation",
+      "runtimeCommand.interactWithObject",
+      at(
+        "packages/battle-runtime/src/battle-reducer/object-interaction.ts",
+        "resolveObjectInteraction",
+      ),
+      REASONS.admittedSubject,
+    ),
+    "runtimeCommand.pickUpHeldWeapon": account(
+      "operation",
+      "runtimeCommand.pickUpHeldWeapon",
+      at(
+        "packages/battle-runtime/src/battle-reducer/object-interaction.ts",
+        "resolveObjectInteraction",
+      ),
+      REASONS.admittedSubject,
+    ),
     "runtimeCommand.dropProne": account(
       "operation",
       "runtimeCommand.dropProne",
@@ -1253,6 +1271,24 @@ export const OPERATION_ACCOUNTING = {
         "resolveReleaseReadiedActionCommand",
       ),
       "Release resolves the retained action subject. The ChatGPT route must narrow that subject to its named action tool before calling the shared runtime resolver.",
+    ),
+    "runtimeCommand.interactWithObject": account(
+      "operation",
+      "runtimeCommand.interactWithObject",
+      at(
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "resolveReleaseReadiedActionCommand",
+      ),
+      "Release resolves the retained object interaction with the readied Utilize action. The ChatGPT route must narrow that subject to interact_with_object before calling the shared runtime resolver.",
+    ),
+    "runtimeCommand.pickUpHeldWeapon": account(
+      "operation",
+      "runtimeCommand.pickUpHeldWeapon",
+      at(
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "resolveReleaseReadiedActionCommand",
+      ),
+      "Release resolves the retained object interaction with the readied Utilize action. The ChatGPT route must narrow that subject to interact_with_object before calling the shared runtime resolver.",
     ),
   },
   battleAdmissions: {
@@ -1567,6 +1603,15 @@ export const OPERATION_ACCOUNTING = {
     objectDropResolution: account(
       "continuation",
       "objectDropResolution",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
+    objectInteractionRuling: account(
+      "continuation",
+      "objectInteractionRuling",
       at(
         "packages/battle-runtime/src/battle-runtime-transaction.ts",
         "settleBattleRuntimeTransaction",
@@ -4253,15 +4298,6 @@ export const OPERATION_ACCOUNTING = {
       at(
         "packages/battle-runtime/src/marked-creature-defenses.ts",
         "markedCreatureDisclosureSpellRefs",
-      ),
-      REASONS.unitFact,
-    ),
-    martialArtsAttackProjection: account(
-      "internal",
-      "martialArtsAttackProjection",
-      at(
-        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "unarmedStrikeAttackDamage",
       ),
       REASONS.unitFact,
     ),

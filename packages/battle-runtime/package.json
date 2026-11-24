@@ -27,6 +27,7 @@
     "test:mbt:after-hit-damage-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/after-hit-damage-riders.mbt.test.ts",
     "test:mbt:weapon-hosted-attack-and-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts",
     "test:mbt:command-option-next-turn": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/command-option-next-turn.mbt.test.ts",
+    "test:mbt:object-interaction-cost": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/object-interaction-cost.mbt.test.ts",
     "test:mbt:ability-check-choice-search": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/ability-check-choice-search.mbt.test.ts",
     "test:mbt:antimagic-field-action-interdiction": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/antimagic-field-action-interdiction.mbt.test.ts",
     "test:mbt:antimagic-field-magical-effect-interdiction": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/antimagic-field-magical-effect-interdiction.mbt.test.ts",

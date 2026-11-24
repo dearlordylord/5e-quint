@@ -186,6 +186,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "toolPossessionFacts" as const,
       ),
       byBattleFillKind(
+        "objectInteractionRuling",
+        () => "objectInteractionRuling" as const,
+      ),
+      byBattleFillKind(
         "temporaryHitPointChoice",
         () => "temporaryHitPointChoice" as const,
       ),
@@ -486,6 +490,11 @@ function runtimeCommandSubjectKind(
       ),
       byCommand("creatureFalls", () => "runtimeMovement" as const),
       byCommand("dropProne", () => "runtimeMovement" as const),
+      byCommand(
+        "interactWithObject",
+        () => "runtimeObjectInteraction" as const,
+      ),
+      byCommand("pickUpHeldWeapon", () => "runtimeObjectInteraction" as const),
       Match.exhaustive,
     );
 }

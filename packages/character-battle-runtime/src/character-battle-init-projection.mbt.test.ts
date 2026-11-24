@@ -1,3 +1,4 @@
+import { attackActionOptionsForActor } from "../../battle-runtime/src/battle-reducer/attack-damage-apply.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
@@ -474,12 +475,15 @@ function mainWeaponProjection(input: {
       unitLibrary,
     }),
   );
-  const combatant = startCharacterBattle({
+  const { combatant, state } = projectCharacterBattle({
     battleIdText: `battle:init-${input.outcome}`,
     combatantId: combatantId(`combatant:battle-init-${input.outcome}`),
     sheet,
   });
-  const damage = combatant.origin.attack?.weapon.damage;
+  const attack = attackActionOptionsForActor(state, combatant.combatantId).find(
+    (option) => option.kind === "weapon" && option.weaponDelivery === undefined,
+  );
+  const damage = attack?.kind === "weapon" ? attack.weapon.damage : undefined;
   return projectFromParts({
     outcome: input.outcome,
     accepted: true,
@@ -566,7 +570,7 @@ function projectCharacterBattle(input: {
   if (!isCharacterBattleCombatant(combatant)) {
     throw new Error("Expected character-origin battle combatant.");
   }
-  return { combatant, init: characterInit };
+  return { combatant, init: characterInit, state: session.state };
 }
 
 function isCharacterBattleCombatant(

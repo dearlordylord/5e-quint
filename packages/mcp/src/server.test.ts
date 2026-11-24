@@ -2914,6 +2914,7 @@ describe("MCP server route", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -3052,7 +3053,7 @@ describe("MCP server route", () => {
       continuationActs
         .filter(({ label }) => label !== "Attack")
         .map(({ label }) => label),
-    ).toEqual(["Move", "Drop Prone", "End Turn"]);
+    ).toEqual(["Move", "Drop Prone", "Interact with an Object", "End Turn"]);
     expect(attackSubjects).toHaveLength(8);
     expect(
       attackSubjects.every(
@@ -3249,7 +3250,15 @@ describe("MCP server route", () => {
           holeId: "battle:movement",
           value: {
             speedKind: "walk",
-            movementCostFeet: 10,
+            path: [
+              {
+                distanceFeet: 10,
+                activity: "ordinary",
+                difficultTerrain: "none",
+                movesCloserThroughDirectionalArea: false,
+                draggedGrappledTargetIds: [],
+              },
+            ],
             provokedOpportunityAttacks: [],
           },
         },
@@ -3750,6 +3759,7 @@ describe("MCP server route", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "End Turn",
     ]);
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
@@ -3846,6 +3856,7 @@ describe("MCP server route", () => {
       "Nimble Escape",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -8295,6 +8306,7 @@ describe("MCP server route", () => {
       "Second Wind",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -8404,6 +8416,7 @@ describe("MCP server route", () => {
       "Nimble Escape",
       "Move",
       "Drop Prone",
+      "Interact with an Object",
       "Ready",
       "End Turn",
     ]);
@@ -12016,6 +12029,7 @@ function battleAttackSubjectForName(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
+      !("weaponDelivery" in candidate.subject) &&
       (candidate.subject.statBlockDamageSelection === undefined ||
         candidate.subject.statBlockDamageSelection.every(
           ({ notation }) => notation === "rolled",

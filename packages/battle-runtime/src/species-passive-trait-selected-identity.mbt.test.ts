@@ -1129,7 +1129,7 @@ function observeCreatureSpaceMovementRoute(
     subject,
     fills: [
       movementFill(hole, {
-        movementCostFeet: 10,
+        distanceFeet: 10,
         provokedOpportunityAttacks: [],
         creatureSpaceTraversal: {
           kind: "occupiedCreatureSpaceTraversal",

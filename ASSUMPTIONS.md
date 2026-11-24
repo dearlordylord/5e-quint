@@ -59,6 +59,10 @@ extra attack with a different Light weapon, but does not say that the weapons
 must be melee weapons. The melee-only restriction is therefore a deliberate
 interpretation of that omission, not a quoted SRD requirement.
 
+"Melee weapon" here is the weapon's category, not how the attack is made. A
+Light Melee weapon thrown with the Thrown property (a Dagger) is still a Melee
+weapon, so its thrown ranged attack can make or follow the extra attack.
+
 ## A17: Standing from Prone requires a nonzero movement expenditure
 
 **Assumption:** Standing from Prone is unavailable when half the creature's
@@ -281,6 +285,51 @@ sequence rather than imposing a shared one-reroll limit across sources.
 still limits each reroll with Advantage or Disadvantage to one chosen die,
 not both.
 
+## A57: A thrown weapon is not held with two hands for its damage
+
+**Assumption:** A thrown attack with a Two-Handed or Versatile Melee weapon
+doesn't use the attack damage die floor that a Melee weapon held with two
+hands grants, whatever grip the loadout records.
+
+**Rules basis / gap:** `.references/srd-5.2.1/feats.md`, "Great Weapon
+Fighting" applies "when you roll damage for an attack you make with a Melee
+weapon that you are holding with two hands". `.references/srd-5.2.1/equipment.md`,
+"Thrown" makes the throw a ranged attack, and "Versatile" grants its two-handed
+damage only "to make a melee attack". The SRD doesn't say whether a thrown
+weapon counts as held with two hands when its damage is rolled. The model reads
+the throw as releasing the weapon, so it is no longer held then.
+
+## A60: The free object interaction belongs to the creature's own turn
+
+**Assumption:** Battle offers the free object interaction only on the
+creature's own turn, while it can act (it isn't Incapacitated), and not while
+Command's Halt applies. The first interaction each turn is free unless the
+table rules that the object needs an action; any other takes the Utilize
+action. The free interaction isn't tied to a moment of the move or the action:
+the table says when it happens. Off its turn a creature has no free
+interaction, not even during readied movement, but Ready can hold an object
+interaction as its readied action. Releasing it takes that readied Utilize
+action, whatever the table rules about the object. Any other off-turn
+interaction is the table's ruling, outside Battle's costs. Battle also leaves
+reach to the table: it offers the pickup of a fallen weapon wherever the weapon
+lies, and the caller takes it only when the table rules the creature can reach
+it.
+
+**Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Your
+Turn," lets a creature "interact with one object or feature of the environment
+for free, during either your move or action," and requires the Utilize action
+for a second object. `.references/srd-5.2.1/rules-glossary.md`, "Ready
+[Action]," lets a creature choose "the action you will take in response to
+that trigger, or ... to move up to your Speed," with the example "I'll pull
+the lever that opens it." `.references/srd-5.2.1/rules-glossary.md`,
+"Incapacitated," says "You can't take any action, Bonus Action, or Reaction,"
+and `.references/srd-5.2.1/spells.md`, "Command," says that under Halt the
+target "doesn't move and takes no action." The SRD doesn't say whether a
+creature that can't act may still interact during its move, or whether a
+Reaction, including readied movement, comes with a free interaction. The model
+ties the free interaction to a turn the creature can act on, and lets a
+readied interaction take only the action Ready held.
+
 ## A58: Any weapon may be held with both hands
 
 **Assumption:** A loadout's main weapon has a grip. Any weapon may take the
@@ -319,3 +368,51 @@ such as the Spy's Hand Crossbow and Shortsword in
 `.references/srd-5.2.1/monsters-A-Z.md`, but it never says what the creature
 holds in each hand when it attacks. The SRD gives no fact to test the free
 hand against, so Battle takes each stat block attack as usable as written.
+
+## A59: A Chromatic Orb leap measures cover from the previous target
+
+**Assumption:** When the orb leaps, the new target's cover against the new
+attack roll is measured from the creature the orb leaps from, not from the
+caster. The table supplies that degree on the leap's geometry fact; a new target
+with Total Cover from the previous target can't be leapt to.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Chromatic Orb," says
+the orb "leaps to a different target of your choice within 30 feet of the
+target" and that you "make an attack roll against the new target," but not
+where that attack originates. `.references/srd-5.2.1/playing-the-game.md`,
+"Cover," says a target benefits from cover only "when an attack or other effect
+originates on the opposite side of the cover." The model reads the leap as
+travelling from the previous target, so the attack originates there.
+
+## A61: A Prone Levitated creature can't move along a path
+
+**Assumption:** A creature that is both Prone and the target of Levitate has no
+movement along a path. It can still spend movement to right itself.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Prone,"
+says: "Your only movement options are to crawl or to spend an amount of
+movement equal to half your Speed (round down) to right yourself."
+`.references/srd-5.2.1/spells.md`, "Levitate," says the target "can move only
+by pushing or pulling against a fixed object or surface within reach ..., which
+allows it to move as if it were climbing." Each rule names the only movement
+the creature has, and the SRD doesn't say how they combine. The model applies
+both limits, and no movement is both crawling and climbing, so every path is
+refused while righting itself stays available. The QNT owner is
+`moveLevitatedTargetWithWitness` in `battle-runtime-levitate-creature.qnt`.
+
+## A62: A Jump spends its fixed movement whatever its path crosses
+
+**Assumption:** A creature that jumps with the Jump spell spends exactly 10
+feet of movement, even when its path crosses Difficult Terrain, a spell's
+Difficult Terrain, or a Gust of Wind Line it moves closer through. The areas'
+other effects, such as damage for each distance moved, still apply.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Jump," says the
+creature "can jump up to 30 feet by spending 10 feet of movement," a fixed
+spend rather than a cost per foot. `.references/srd-5.2.1/rules-glossary.md`,
+"Long Jump," says only that landing in Difficult Terrain needs a DC 10
+Dexterity (Acrobatics) check, so a jump doesn't pay Difficult Terrain's extra
+foot for each foot it passes over. The SRD doesn't say whether a surcharge for
+each foot moved, such as Gust of Wind's, changes the fixed spend. The model
+treats every such surcharge alike and leaves the spend at 10 feet. The QNT
+owner is `battle-runtime-jump-movement.qnt`, which admits only that spend.

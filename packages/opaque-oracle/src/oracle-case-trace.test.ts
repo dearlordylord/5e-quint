@@ -4,6 +4,7 @@ import {
   combatantId,
   BattleSubjectSchema,
   initiativeScore,
+  ordinaryMovementPath,
   type BattleFill,
 } from "@dnd/battle-runtime";
 import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
@@ -575,7 +576,15 @@ describe("Opaque Oracle Case and Trace contract", () => {
       holeId: "oracle:movement",
       value: {
         speedKind: "walk",
-        movementCostFeet: 5,
+        path: [
+          {
+            distanceFeet: 5,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
       },
     });
@@ -1024,7 +1033,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         holeId: movementHole.holeId,
         value: {
           speedKind: "walk" as const,
-          movementCostFeet: movementFeet(10),
+          path: ordinaryMovementPath(movementFeet(10)),
           provokedOpportunityAttacks: [
             {
               reactorId: combatantId("oracle:skeleton-b"),
@@ -1485,7 +1494,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         holeId: movementHole.holeId,
         value: {
           speedKind: "walk",
-          movementCostFeet: movementFeet(10),
+          path: ordinaryMovementPath(movementFeet(10)),
           provokedOpportunityAttacks: [
             {
               reactorId: distinctReactorId,
@@ -1891,7 +1900,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             initiative: initiativeScore(0),
           },
         ),
-        movementCostFeet: 5,
+        distanceFeet: 5,
       });
       const caseB = caseWithMoveAttempt({
         battle: twoStatBlockBattleFor(
@@ -1904,7 +1913,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             initiative: initiativeScore(1),
           },
         ),
-        movementCostFeet: 10,
+        distanceFeet: 10,
       });
       const singletonA = evaluateDecodedCase({
         case: caseA,
@@ -1948,7 +1957,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               initiative: initiativeScore(0),
             },
           ),
-          movementCostFeet: 5,
+          distanceFeet: 5,
         }),
         caseWithMoveAttempt({
           battle: twoStatBlockBattleFor(
@@ -1961,7 +1970,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               initiative: initiativeScore(2),
             },
           ),
-          movementCostFeet: 15,
+          distanceFeet: 15,
         }),
       ];
       const individual = cases.map((oracleCase) =>
@@ -1993,12 +2002,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
           initiative: initiativeScore(0),
         },
       ),
-      movementCostFeet: 5,
+      distanceFeet: 5,
     });
 
     fc.assert(
-      fc.property(fc.integer({ min: 1, max: 10 }), (movementCost) => {
-        const oracleCase = caseWithMovementCost(baseCase, movementCost);
+      fc.property(fc.integer({ min: 1, max: 10 }), (movementDistance) => {
+        const oracleCase = caseWithMovementDistance(baseCase, movementDistance);
         const first = evaluateDecodedCase({
           case: oracleCase,
           unitLibrary,
@@ -2416,7 +2425,7 @@ function twoStatBlockBattleFor(
 
 function caseWithMoveAttempt(input: {
   readonly battle: OracleBattleInput;
-  readonly movementCostFeet: number;
+  readonly distanceFeet: number;
 }): OracleCaseCandidate {
   const baseCase: OracleCaseCandidate = {
     creation: { fillBatches: standardCreationFillBatches },
@@ -2466,7 +2475,7 @@ function caseWithMoveAttempt(input: {
     holeId: movementHole.holeId,
     value: {
       speedKind: "walk" as const,
-      movementCostFeet: movementFeet(input.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(input.distanceFeet)),
       provokedOpportunityAttacks: [],
     },
   } satisfies BattleFill;
@@ -2481,9 +2490,9 @@ function caseWithMoveAttempt(input: {
   };
 }
 
-function caseWithMovementCost(
+function caseWithMovementDistance(
   baseCase: OracleCaseCandidate,
-  movementCostFeet: number,
+  distanceFeet: number,
 ): OracleCaseCandidate {
   const moveAttempt = baseCase.battle.attempts[0];
   if (
@@ -2491,11 +2500,11 @@ function caseWithMovementCost(
     moveAttempt.subject.tag !== "runtimeCommand" ||
     moveAttempt.subject.command !== "move"
   ) {
-    throw new Error("movement-cost fixture must contain a Move attempt");
+    throw new Error("movement-distance fixture must contain a Move attempt");
   }
   const movement = moveAttempt.fills[0];
   if (movement?.kind !== "movement") {
-    throw new Error("movement-cost fixture must contain a movement fill");
+    throw new Error("movement-distance fixture must contain a movement fill");
   }
   const updatedMoveAttempt = {
     ...moveAttempt,
@@ -2504,7 +2513,7 @@ function caseWithMovementCost(
         ...movement,
         value: {
           ...movement.value,
-          movementCostFeet: movementFeet(movementCostFeet),
+          path: ordinaryMovementPath(movementFeet(distanceFeet)),
         },
       },
     ],

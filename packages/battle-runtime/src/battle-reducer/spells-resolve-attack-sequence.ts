@@ -1,3 +1,4 @@
+import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import type { BattleCreatureState } from "../battle-state-execution.ts";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -7,7 +8,6 @@ import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 import { optionalProperty } from "../optional-property.ts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollResultIsValid,
@@ -53,7 +53,7 @@ import {
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -78,13 +78,13 @@ import {
   saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget,
 } from "./staged-condition-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollOutcomeIssue,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+} from "./attack-roll-d20-test-rerolls.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellCastInterruptFrame,
@@ -111,6 +111,7 @@ import {
   spellObjectTargetFact,
   spellObjectTargetSightFact,
   spellTargetIsLegal,
+  spellTargetAdmission,
   spellTargetInterdictionRequests,
   validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
@@ -348,9 +349,10 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     { readonly kind: "combatant" }
   >;
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
-  const target = admittedSequenceCreatureTarget(input);
-  if ("tag" in target)
-    return invalidResult(input.input.state, "invalidFill", target.message);
+  const admission = admittedSequenceCreatureTarget(input);
+  if ("tag" in admission)
+    return invalidResult(input.input.state, "invalidFill", admission.message);
+  const { target, cover } = admission;
   const requiredRollMode = requiredSpellAttackRollMode(
     input.state,
     input.actorId,
@@ -494,48 +496,44 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: input.partFill.attackRoll.d20TestRoll,
-      decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.state,
+    subject: input.input.subject,
+    attackerId: input.actorId,
+    attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+      input.invocation,
+      input.partIndex,
+    ),
+    attackRoll: input.partFill.attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         spellAttackSequencePartAttackRollHole(
           input.invocation,
           input.partIndex,
           requiredRollMode,
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: input.partFill.attackRoll.total,
-    originalD20TestRoll: input.partFill.attackRoll.d20TestRoll,
-    decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      d20TestNaturalOneRerollIssue,
+      d20TestRerolls.issue,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(
     input.partFill.attackRoll,
   );
-  const ordinaryHit = attackRollHits(
-    effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(input.state, target)),
-  );
+  const targetArmorClass = armorClassAgainstAttack(input.state, target, cover);
+  const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
     subject: input.input.subject,
@@ -564,7 +562,10 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        input.state,
+        battleStateAfterHeroicInspirationReroll(
+          input.state,
+          d20TestRerolls.heroicInspirationUse,
+        ),
         input.actorId,
         target.combatantId,
         null,
@@ -1175,38 +1176,36 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: attackRoll.d20TestRoll,
-      decision: attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.state,
+    subject: input.input.subject,
+    attackerId: input.actorId,
+    attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+      input.invocation,
+      input.partIndex,
+    ),
+    attackRoll: attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         spellAttackSequencePartAttackRollHole(
           input.invocation,
           input.partIndex,
           requiredRollMode,
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: attackRoll.total,
-    originalD20TestRoll: attackRoll.d20TestRoll,
-    decision: attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      d20TestNaturalOneRerollIssue,
+      d20TestRerolls.issue,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1223,15 +1222,21 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
-  const hit = attackRollHits(effectiveAttackRoll, objectFact.armorClass);
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
+  const hit = attackRollHits(
+    effectiveAttackRoll,
+    armorClassBehindCover(objectFact.armorClass, objectFact.cover),
+  );
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
+  const spentState = battleStateAfterHeroicInspirationReroll(
+    input.state,
+    d20TestRerolls.heroicInspirationUse,
+  );
   const attackRolledState = consumeSelfAttackRollEffects(
     {
-      ...input.state,
+      ...spentState,
       currentTurnResources: {
-        ...input.state.currentTurnResources,
+        ...spentState.currentTurnResources,
         attackRollMadeThisTurn: true,
       },
     },
@@ -1469,22 +1474,23 @@ function spellAttackSequencePartDamageDispositionHoleKey(
 function admittedSequenceCreatureTarget(
   input: Parameters<typeof resolveSpellAttackSequenceCreaturePart>[0],
 ):
-  | BattleCreatureState
+  | {
+      readonly target: BattleCreatureState;
+      readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
+    }
   | import("./ranged-attack-close-combat.ts").SpatialQualificationIssue {
   const target = input.state.combatants.get(input.target.targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      input.state,
-      input.actorId,
-      input.target.targetId,
-      input.invocation,
-      input.target.spatialFacts,
-    )
-  )
+  const admission = spellTargetAdmission(
+    input.state,
+    input.actorId,
+    input.target.targetId,
+    input.invocation,
+    input.target.spatialFacts,
+  );
+  if (target === undefined || admission === null)
     return {
       tag: "invalid",
       message: `Spell ${spellAttackSequencePartName()} target must be a combatant within the selected spell's supported range.`,
     };
-  return target;
+  return { target, cover: admission.cover };
 }

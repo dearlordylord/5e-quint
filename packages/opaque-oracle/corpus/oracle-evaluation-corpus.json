@@ -1499,7 +1499,15 @@
                   "holeId": "battle:movement",
                   "value": {
                     "speedKind": "walk",
-                    "movementCostFeet": 10,
+                    "path": [
+                      {
+                        "distanceFeet": 10,
+                        "activity": "ordinary",
+                        "difficultTerrain": "none",
+                        "movesCloserThroughDirectionalArea": false,
+                        "draggedGrappledTargetIds": []
+                      }
+                    ],
                     "provokedOpportunityAttacks": []
                   }
                 }
@@ -1728,7 +1736,15 @@
                   "holeId": "battle:movement",
                   "value": {
                     "speedKind": "walk",
-                    "movementCostFeet": 10,
+                    "path": [
+                      {
+                        "distanceFeet": 10,
+                        "activity": "ordinary",
+                        "difficultTerrain": "none",
+                        "movesCloserThroughDirectionalArea": false,
+                        "draggedGrappledTargetIds": []
+                      }
+                    ],
                     "provokedOpportunityAttacks": [
                       {
                         "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
@@ -8274,6 +8290,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:stat-block-combatant",
                     "command": "dropProne"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "interactWithObject"
                   },
                   {
                     "tag": "action",
@@ -15269,6 +15290,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -21402,6 +21428,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:character",
                     "command": "dropProne"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:character",
+                    "command": "interactWithObject"
                   },
                   {
                     "tag": "action",
@@ -33499,6 +33530,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -39693,6 +39729,11 @@
                     "tag": "runtimeCommand",
                     "actorId": "corpus:stat-block-a",
                     "command": "dropProne"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
                   },
                   {
                     "tag": "action",
@@ -45893,6 +45934,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -46028,6 +46074,11 @@
                           "tag": "runtimeCommand",
                           "actorId": "corpus:stat-block-a",
                           "command": "dropProne"
+                        },
+                        {
+                          "tag": "runtimeCommand",
+                          "actorId": "corpus:stat-block-a",
+                          "command": "interactWithObject"
                         },
                         {
                           "tag": "action",
@@ -52158,6 +52209,11 @@
                     "command": "dropProne"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-a",
+                    "command": "interactWithObject"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "ready"
@@ -52370,6 +52426,11 @@
                                 "tag": "runtimeCommand",
                                 "actorId": "corpus:stat-block-a",
                                 "command": "dropProne"
+                              },
+                              {
+                                "tag": "runtimeCommand",
+                                "actorId": "corpus:stat-block-a",
+                                "command": "interactWithObject"
                               },
                               {
                                 "tag": "action",

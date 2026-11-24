@@ -2,6 +2,7 @@ import {
   battleResolutionHolesForTest,
   rangedAttackEnemyProximityFactsForTest,
 } from "./battle-runtime.test-support.ts";
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as parseSharedStatBlockId,
@@ -10840,7 +10841,7 @@ function createCommandOrderingDriverWithRoute<
         const movement = requireHole(holes, "movement");
         fills = [
           executeCompelledApproachMovementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             movedWithinFiveFeetOfCaster: false,
           }),
         ];
@@ -10852,7 +10853,7 @@ function createCommandOrderingDriverWithRoute<
         const movement = requireHole(holes, "movement");
         fills = [
           executeCompelledApproachMovementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             movedWithinFiveFeetOfCaster: true,
           }),
         ];
@@ -10875,7 +10876,7 @@ function createCommandOrderingDriverWithRoute<
         const movement = requireHole(holes, "movement");
         fills = [
           executeCompelledFleeMovementFill(movement, {
-            movementCostFeet: 30,
+            distanceFeet: 30,
             provokedOpportunityAttacks: [],
           }),
         ];
@@ -10890,7 +10891,7 @@ function createCommandOrderingDriverWithRoute<
           subject,
           fills: [
             executeCompelledFleeMovementFill(movement, {
-              movementCostFeet: 10,
+              distanceFeet: 10,
               provokedOpportunityAttacks: [],
             }),
           ],
@@ -10908,7 +10909,7 @@ function createCommandOrderingDriverWithRoute<
         const movement = requireHole(holes, "movement");
         fills = [
           executeCompelledFleeMovementFill(movement, {
-            movementCostFeet: 30,
+            distanceFeet: 30,
             provokedOpportunityAttacks: [
               {
                 reactorId: fighterId,
@@ -11044,7 +11045,7 @@ export function createExtraAttackDriver(
           resolveBattleSubject({
             state,
             subject,
-            fills: [movementFill(movement, { movementCostFeet: 5 })],
+            fills: [movementFill(movement, { distanceFeet: 5 })],
           }),
         );
       },
@@ -18332,7 +18333,7 @@ function commandOptionFill(
 
 function movementFill(
   hole: BattleHole,
-  value: { readonly movementCostFeet: number },
+  value: { readonly distanceFeet: number },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
     throw new Error("Expected movement hole.");
@@ -18343,7 +18344,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: [],
     },
   };
@@ -18352,7 +18353,7 @@ function movementFill(
 function executeCompelledApproachMovementFill(
   hole: BattleHole,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly movedWithinFiveFeetOfCaster: boolean;
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
@@ -18364,7 +18365,7 @@ function executeCompelledApproachMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: [],
       compelledApproach: {
         kind: "compelledApproachShortestDirectRouteTowardSource",
@@ -18377,7 +18378,7 @@ function executeCompelledApproachMovementFill(
 function executeCompelledFleeMovementFill(
   hole: BattleHole,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -18392,7 +18393,7 @@ function executeCompelledFleeMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       compelledFlee: {
         kind: "compelledFleeFastestAvailableRouteAwayFromSource",
@@ -18833,6 +18834,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "heldObjectFacts" }, () => {
           throw new Error(
             "Battle runtime MBT does not model held-object fact holes.",
+          );
+        }),
+        Match.when({ kind: "objectInteractionRuling" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model object interaction ruling holes.",
           );
         }),
         Match.when({ kind: "concentrationSavingThrow" }, () => {

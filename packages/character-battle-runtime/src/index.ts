@@ -160,7 +160,7 @@ export {
   battleCreatureInitIssueMessage,
   battleCreatureInitIssues,
   characterArmorClassState,
-  characterWeaponAttackActionOptions,
+  characterBattleWeaponAttackInitProjection,
   characterBuildEquippedWeaponBattleBlockers,
   CHARACTER_WEAPON_ATTACK_SLOTS,
   characterBaseUnarmedStrikeActionOption,
@@ -498,6 +498,7 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     hitPoints: hitPoints.success,
     conditions: characterSheetConditionsFromBattle(input.combatant),
     resourceExpenditures: resourceExpenditures.success,
+    heroicInspiration: input.combatant.origin.heroicInspiration,
   };
   const settled =
     sheet.spellSlotExpenditures === undefined

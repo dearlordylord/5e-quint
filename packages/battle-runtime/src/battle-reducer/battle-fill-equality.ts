@@ -1,5 +1,7 @@
 import type {
   BattleAttackRollResult,
+  BattleD20TestOutcome,
+  BattleD20TestRollRerollDecision,
   BattleFill,
   BattleOpportunityAttackThreat,
   BattleRolledDiceFill,
@@ -167,6 +169,158 @@ export function battleFillPrefixAccumulated(
   );
 }
 
+/**
+ * Fill kinds whose holes the pending frontier asks again for a reroll
+ * decision: an attack roll's ordered reroll decisions, and a D20 Test's
+ * natural-1 reroll decision.
+ */
+const BATTLE_REROLL_DECISION_FILL_KINDS = [
+  "attackRoll",
+  "abilityCheck",
+  "concentrationSavingThrow",
+  "savingThrowOutcome",
+  "deathSavingThrow",
+] as const satisfies ReadonlyArray<BattleFill["kind"]>;
+
+type BattleRerollDecisionFill = Extract<
+  BattleFill,
+  { readonly kind: (typeof BATTLE_REROLL_DECISION_FILL_KINDS)[number] }
+>;
+
+function isBattleRerollDecisionFill(
+  fill: BattleFill,
+): fill is BattleRerollDecisionFill {
+  return BATTLE_REROLL_DECISION_FILL_KINDS.some((kind) => kind === fill.kind);
+}
+
+/**
+ * Whether a fill submitted again for a hole the pending frontier asks again
+ * keeps the accepted fill: it is the same fill, except that it may add reroll
+ * decisions after the accepted ones.
+ */
+export function battleResubmittedFillKeepsAcceptedFill(
+  accepted: BattleFill,
+  resubmitted: BattleFill,
+): boolean {
+  const atAcceptedDecisions = isBattleRerollDecisionFill(resubmitted)
+    ? resubmittedFillAtAcceptedDecisions(accepted, resubmitted)
+    : resubmitted;
+  return (
+    atAcceptedDecisions !== null &&
+    canonicalStructuralKey(accepted) ===
+      canonicalStructuralKey(atAcceptedDecisions)
+  );
+}
+
+/**
+ * The resubmitted fill with only the reroll decisions the accepted fill made,
+ * or null when its decisions don't extend the accepted ones.
+ */
+function resubmittedFillAtAcceptedDecisions(
+  accepted: BattleFill,
+  resubmitted: BattleRerollDecisionFill,
+): BattleFill | null {
+  return Match.value(resubmitted).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      attackRoll: (fill) => {
+        const acceptedRerolls =
+          accepted.kind === "attackRoll"
+            ? accepted.value.d20TestRerolls
+            : undefined;
+        if (
+          !attackRollD20TestRerollDecisionsExtend(
+            acceptedRerolls,
+            fill.value.d20TestRerolls,
+          )
+        ) {
+          return null;
+        }
+        const { d20TestRerolls: _resubmittedRerolls, ...value } = fill.value;
+        return {
+          ...fill,
+          value:
+            acceptedRerolls === undefined
+              ? value
+              : { ...value, d20TestRerolls: acceptedRerolls },
+        };
+      },
+      abilityCheck: (fill) => {
+        if (
+          accepted.kind !== "abilityCheck" ||
+          accepted.value.d20TestNaturalOneReroll !== undefined
+        ) {
+          return fill;
+        }
+        const { d20TestNaturalOneReroll: _added, ...value } = fill.value;
+        return { ...fill, value };
+      },
+      concentrationSavingThrow: (fill) =>
+        accepted.kind === "concentrationSavingThrow" &&
+        accepted.value.d20TestNaturalOneReroll === undefined
+          ? {
+              ...fill,
+              value: d20TestOutcomeWithoutNaturalOneDecision(fill.value),
+            }
+          : fill,
+      savingThrowOutcome: (fill) =>
+        accepted.kind === "savingThrowOutcome"
+          ? {
+              ...fill,
+              value: {
+                ...fill.value,
+                outcomes: fill.value.outcomes.map((outcome, index) =>
+                  accepted.value.outcomes[index]?.d20TestNaturalOneReroll ===
+                  undefined
+                    ? savingThrowOutcomeWithoutNaturalOneDecision(outcome)
+                    : outcome,
+                ),
+              },
+            }
+          : fill,
+      deathSavingThrow: (fill) => {
+        if (
+          accepted.kind !== "deathSavingThrow" ||
+          accepted.d20TestNaturalOneReroll !== undefined
+        ) {
+          return fill;
+        }
+        const { d20TestNaturalOneReroll: _added, ...withoutDecision } = fill;
+        return withoutDecision;
+      },
+    }),
+  );
+}
+
+function attackRollD20TestRerollDecisionsExtend(
+  accepted: BattleAttackRollResult["d20TestRerolls"],
+  resubmitted: BattleAttackRollResult["d20TestRerolls"],
+): boolean {
+  if (accepted === undefined) return true;
+  return (
+    resubmitted !== undefined &&
+    accepted.length <= resubmitted.length &&
+    accepted.every((decision, index) =>
+      d20TestRollRerollDecisionsEqual(decision, resubmitted[index]),
+    )
+  );
+}
+
+function d20TestOutcomeWithoutNaturalOneDecision(
+  outcome: BattleD20TestOutcome,
+): BattleD20TestOutcome {
+  if (outcome.withoutRoll === true) return outcome;
+  const { d20TestNaturalOneReroll: _added, ...rolled } = outcome;
+  return rolled;
+}
+
+function savingThrowOutcomeWithoutNaturalOneDecision(
+  outcome: BattleSavingThrowOutcome,
+): BattleSavingThrowOutcome {
+  if (outcome.withoutRoll === true) return outcome;
+  const { d20TestNaturalOneReroll: _added, ...rolled } = outcome;
+  return rolled;
+}
+
 type ComparableAttackRollResult = Pick<
   BattleAttackRollResult,
   "total" | "d20TestRoll"
@@ -176,8 +330,7 @@ type ComparableAttackRollResult = Pick<
       BattleAttackRollResult,
       | "activatedOngoingFeatureProcedureRef"
       | "missToHitReplacementProcedureRef"
-      | "spellAttackReroll"
-      | "d20TestNaturalOneReroll"
+      | "d20TestRerolls"
     >
   >;
 
@@ -191,33 +344,31 @@ function attackRollResultsEqual(
     a.activatedOngoingFeatureProcedureRef ===
       b.activatedOngoingFeatureProcedureRef &&
     a.missToHitReplacementProcedureRef === b.missToHitReplacementProcedureRef &&
-    spellAttackRerollDecisionsEqual(a.spellAttackReroll, b.spellAttackReroll) &&
-    d20TestNaturalOneRerollDecisionsEqual(
-      a.d20TestNaturalOneReroll,
-      b.d20TestNaturalOneReroll,
+    attackRollD20TestRerollDecisionListsEqual(
+      a.d20TestRerolls,
+      b.d20TestRerolls,
     )
   );
 }
 
-function spellAttackRerollDecisionsEqual(
-  a: BattleAttackRollResult["spellAttackReroll"],
-  b: BattleAttackRollResult["spellAttackReroll"],
+function attackRollD20TestRerollDecisionListsEqual(
+  a: BattleAttackRollResult["d20TestRerolls"],
+  b: BattleAttackRollResult["d20TestRerolls"],
 ): boolean {
   if (a === undefined || b === undefined) {
     return a === b;
   }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  if (a.kind === "decline" || b.kind === "decline") {
-    return a.kind === b.kind;
-  }
-  return attackRollResultsEqual(a.replacement, b.replacement);
+  return (
+    a.length === b.length &&
+    a.every((decision, index) =>
+      d20TestRollRerollDecisionsEqual(decision, b[index]),
+    )
+  );
 }
 
-function d20TestNaturalOneRerollDecisionsEqual(
-  a: BattleAttackRollResult["d20TestNaturalOneReroll"],
-  b: BattleAttackRollResult["d20TestNaturalOneReroll"],
+function d20TestRollRerollDecisionsEqual<EffectKind extends string>(
+  a: BattleD20TestRollRerollDecision<EffectKind> | undefined,
+  b: BattleD20TestRollRerollDecision<EffectKind> | undefined,
 ): boolean {
   if (a === undefined || b === undefined) {
     return a === b;
@@ -333,12 +484,36 @@ function movementFillValuesEqual(
 ): boolean {
   return (
     a.speedKind === b.speedKind &&
-    a.movementCostFeet === b.movementCostFeet &&
+    movementPathsEqual(a.path, b.path) &&
     acrobaticMovementFactsEqual(a.acrobaticMovement, b.acrobaticMovement) &&
     opportunityAttackThreatListsEqual(
       a.provokedOpportunityAttacks,
       b.provokedOpportunityAttacks,
     )
+  );
+}
+
+function movementPathsEqual(
+  a: Extract<BattleFill, { readonly kind: "movement" }>["value"]["path"],
+  b: Extract<BattleFill, { readonly kind: "movement" }>["value"]["path"],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every((segment, index) => {
+      const other = b[index];
+      return (
+        other !== undefined &&
+        segment.distanceFeet === other.distanceFeet &&
+        segment.activity === other.activity &&
+        segment.difficultTerrain === other.difficultTerrain &&
+        segment.movesCloserThroughDirectionalArea ===
+          other.movesCloserThroughDirectionalArea &&
+        arrayValuesEqual(
+          segment.draggedGrappledTargetIds,
+          other.draggedGrappledTargetIds,
+        )
+      );
+    })
   );
 }
 

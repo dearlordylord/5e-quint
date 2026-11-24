@@ -3,7 +3,7 @@ import { requireCombatant } from "./unit-profile-admission-creature-fixture.test
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { classLevel, movementFeet } from "@dnd/shared/types";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { describe, expect, test } from "vitest";
@@ -17,6 +17,7 @@ import {
   battleObjectId,
   battleTablePositionId,
   characterSeed,
+  characterBattleFeatureInitForTest,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
   attackRollFill,
@@ -360,6 +361,12 @@ describe("battle runtime: attack pipeline boundaries", () => {
           attack: mainAttack,
           offHandAttack,
           unarmedStrike: testUnarmedStrikeDieAttack(),
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             supportedBattleUnitRef(
               unitLibrary.requireUnit("monk_martial_arts"),

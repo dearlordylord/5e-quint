@@ -140,6 +140,8 @@ export type {
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 import type {
   ActionEconomyState,
+  ObjectInteractionRuling,
+  ObjectInteractionState,
   RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
@@ -165,7 +167,10 @@ import {
   type RolledDiceGroup,
   type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { type CreatureType } from "@dnd/shared/game-facts";
+import {
+  type CreatureType,
+  type HeroicInspiration,
+} from "@dnd/shared/game-facts";
 import {
   AbilityModifier,
   AttackBonus,
@@ -178,6 +183,7 @@ import {
   movementFeet,
   type Condition,
   type CoverType,
+  type RuledCoverType,
   type D6RollResult,
   type DamageDieSize,
   type ReadonlyNonEmptyArray,
@@ -338,11 +344,17 @@ import type {
   BattleCompelledBehaviorOption,
   BattleOngoingSpellEffectRef,
   BattleOngoingSpellOccurrenceRef,
+  BattleMovementPathActivity,
+  BattleMovementPathDifficultTerrain,
   WeaponAttackDamageEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "./active-effect/execution-vocabulary.ts";
 export {
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
+  type BattleMovementPathActivity,
+  type BattleMovementPathDifficultTerrain,
   WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES,
   type BattleMagicSuppressionEmanationMembership,
   type BattleMagicSuppressionOngoingSpellEffectRef,
@@ -881,93 +893,98 @@ export type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly operation: "createAndAttack" | "repositionAndAttack";
 };
-export type BattleInterruptedProcedure =
-  | {
-      readonly kind: "replay";
-      readonly subject: BattleSubject;
-      readonly fills: readonly BattleFill[];
-      readonly parentPosition?: never;
-      readonly glyphStoredSpellReleaseReplay?: never;
-      readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
-      readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
-      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
-      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
-    }
-  | {
-      readonly kind: "replay";
-      readonly subject: BattleSubject;
-      readonly fills: readonly BattleFill[];
-      readonly parentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
-      readonly glyphStoredSpellReleaseReplay?: never;
-      readonly attackDamageReductions?: never;
-      readonly attackDamageAdditions?: never;
-      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
-      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
-    }
-  | {
-      readonly kind: "replay";
-      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
-      readonly fills: readonly BattleFill[];
-      readonly parentPosition?: never;
-      readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
-      readonly attackDamageReductions?: never;
-      readonly attackDamageAdditions?: never;
-      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
-      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
-    }
-  | {
-      readonly kind: "resolved";
-      readonly subject: BattleSubject;
-      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
-    }
-  | {
-      readonly kind: "afterDamageSequence";
-      readonly subject: BattleSubject;
-      readonly events: readonly BattleAfterDamageEvent[];
-      readonly objectDamages: readonly BattleObjectDamageOutcome[];
-      readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
-      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-    }
-  | {
-      readonly kind: "afterDamageSequenceWithPrimaryAttackFollowUp";
-      readonly subject: BattleAttackHostSubject;
-      readonly firstTargetId: CombatantId;
-      readonly attack: BoundSupportedAttackActionOption;
-      readonly fills: readonly BattleFill[];
-      readonly events: readonly BattleAfterDamageEvent[];
-      readonly objectDamages: readonly BattleObjectDamageOutcome[];
-      readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
-      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-    }
-  | {
-      readonly kind: "weaponMasteryCleave";
-      readonly subject: BattleAttackHostSubject;
-      readonly firstTargetId: CombatantId;
-      readonly attack: BoundSupportedAttackActionOption;
-      readonly fills: readonly BattleFill[];
-    }
-  | {
-      readonly kind: "huntersPreyHordeBreaker";
-      readonly subject: BattleAttackHostSubject;
-      readonly firstTargetId: CombatantId;
-      readonly attack: BoundSupportedAttackActionOption;
-      readonly fills: readonly BattleFill[];
-    }
-  | {
-      readonly kind: "movement";
-      readonly subject: BattleSubject;
-      readonly movement: BattleResolvedMovement;
-    }
-  | {
-      readonly kind: "movementThenAfterDamageSequence";
-      readonly subject: BattleSubject;
-      readonly movement: BattleResolvedMovement;
-      readonly events: readonly BattleAfterDamageEvent[];
-      readonly objectDamages: readonly BattleObjectDamageOutcome[];
-      readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
-      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-    }
-  | BattleAttackDamageInterruptionFrame;
+export type BattleInterruptedProcedure = BattleAcceptedAttackReplayEvidence &
+  (
+    | {
+        readonly kind: "replay";
+        readonly subject: BattleSubject;
+        readonly fills: readonly BattleFill[];
+        readonly parentPosition?: never;
+        readonly glyphStoredSpellReleaseReplay?: never;
+        readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+        readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+        readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+        readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
+      }
+    | {
+        readonly kind: "replay";
+        readonly subject: BattleSubject;
+        readonly fills: readonly BattleFill[];
+        readonly parentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
+        readonly glyphStoredSpellReleaseReplay?: never;
+        readonly attackDamageReductions?: never;
+        readonly attackDamageAdditions?: never;
+        readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+        readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
+      }
+    | {
+        readonly kind: "replay";
+        readonly subject: Extract<
+          BattleSubject,
+          { readonly tag: "actionSpell" }
+        >;
+        readonly fills: readonly BattleFill[];
+        readonly parentPosition?: never;
+        readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
+        readonly attackDamageReductions?: never;
+        readonly attackDamageAdditions?: never;
+        readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+        readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
+      }
+    | {
+        readonly kind: "resolved";
+        readonly subject: BattleSubject;
+        readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+      }
+    | {
+        readonly kind: "afterDamageSequence";
+        readonly subject: BattleSubject;
+        readonly events: readonly BattleAfterDamageEvent[];
+        readonly objectDamages: readonly BattleObjectDamageOutcome[];
+        readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+        readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+      }
+    | {
+        readonly kind: "afterDamageSequenceWithPrimaryAttackFollowUp";
+        readonly subject: BattleAttackHostSubject;
+        readonly firstTargetId: CombatantId;
+        readonly attack: BoundSupportedAttackActionOption;
+        readonly fills: readonly BattleFill[];
+        readonly events: readonly BattleAfterDamageEvent[];
+        readonly objectDamages: readonly BattleObjectDamageOutcome[];
+        readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+        readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+      }
+    | {
+        readonly kind: "weaponMasteryCleave";
+        readonly subject: BattleAttackHostSubject;
+        readonly firstTargetId: CombatantId;
+        readonly attack: BoundSupportedAttackActionOption;
+        readonly fills: readonly BattleFill[];
+      }
+    | {
+        readonly kind: "huntersPreyHordeBreaker";
+        readonly subject: BattleAttackHostSubject;
+        readonly firstTargetId: CombatantId;
+        readonly attack: BoundSupportedAttackActionOption;
+        readonly fills: readonly BattleFill[];
+      }
+    | {
+        readonly kind: "movement";
+        readonly subject: BattleSubject;
+        readonly movement: BattleResolvedMovement;
+      }
+    | {
+        readonly kind: "movementThenAfterDamageSequence";
+        readonly subject: BattleSubject;
+        readonly movement: BattleResolvedMovement;
+        readonly events: readonly BattleAfterDamageEvent[];
+        readonly objectDamages: readonly BattleObjectDamageOutcome[];
+        readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+        readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+      }
+    | BattleAttackDamageInterruptionFrame
+  );
 export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
@@ -1508,14 +1525,29 @@ export type BattleHidePrerequisite =
       readonly kind: "obscuredOnlyByCreatureOutOfEnemyLineOfSight";
       readonly obscuringCreatureId: CombatantId;
     };
+/**
+ * One part of a move's path, as the table adjudicates it. The runtime prices
+ * every foot of the move from these parts: the distance, the activity
+ * (climbing, crawling and swimming cost extra), Difficult Terrain, moving
+ * closer through a directional persistent area, and dragging Grappled
+ * creatures. A move's total distance is the sum of its parts.
+ */
+export type BattleMovementPathSegment = {
+  readonly distanceFeet: MovementFeet;
+  readonly activity: BattleMovementPathActivity;
+  readonly difficultTerrain: BattleMovementPathDifficultTerrain;
+  readonly movesCloserThroughDirectionalArea: boolean;
+  readonly draggedGrappledTargetIds: readonly CombatantId[];
+};
+export type BattleMovementPath =
+  ReadonlyNonEmptyArray<BattleMovementPathSegment>;
 export type BattleMovementFillValueCommon = {
   readonly speedKind: BattleMovementSpeedKind;
-  readonly movementCostFeet: MovementFeet;
+  readonly path: BattleMovementPath;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly acrobaticMovement?: BattleAcrobaticMovementFact;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly directionalPersistentAreaMovement?: BattleDirectionalPersistentAreaMovementFact;
-  readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
 };
 export type BattleOrdinaryMovementFillValue = BattleMovementFillValueCommon & {
@@ -1592,8 +1624,6 @@ export type BattleAreaDifficultTerrainSource =
 export type BattleAreaDifficultTerrainMovementFact = {
   readonly kind: "areaDifficultTerrain";
   readonly sources: readonly BattleAreaDifficultTerrainSource[];
-  readonly totalDistanceFeet: MovementFeet;
-  readonly difficultTerrainDistanceFeet: MovementFeet;
 };
 export type BattleDirectionalPersistentAreaMovementFact = {
   readonly kind: "directionalPersistentAreaMovement";
@@ -1602,16 +1632,6 @@ export type BattleDirectionalPersistentAreaMovementFact = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly areaId: BattleAreaId;
   readonly directionId: BattleLineDirectionId;
-  readonly totalDistanceFeet: MovementFeet;
-  readonly closerDistanceFeet: MovementFeet;
-};
-export type BattleGrappleDragMovementFact = {
-  readonly kind: "grappleDrag";
-  readonly totalDistanceFeet: MovementFeet;
-  readonly targets: ReadonlyNonEmptyArray<{
-    readonly targetId: CombatantId;
-    readonly distanceFeet: MovementFeet;
-  }>;
 };
 export type BattleCreatureSpaceTraversalMovementFact = {
   readonly kind: "occupiedCreatureSpaceTraversal";
@@ -1643,7 +1663,6 @@ export type BattleBrutalStrikeForcefulBlowMovementFact = {
 };
 export type BattleFixedCostMovementReplacementFact = {
   readonly kind: "fixedCostMovementReplacement";
-  readonly distanceFeet: MovementFeet;
   readonly landing: BattleJumpLandingFact;
 };
 export type BattleVerticalSuspensionAltitudeDirection = "up" | "down";
@@ -1699,6 +1718,11 @@ export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
   /** Distance at the reach-leaving trigger, before the mover's step. */
   readonly distanceFeet: MovementFeet;
+  /**
+   * The degree of cover the table rules between the reactor and the mover.
+   * Without it, no cover applies.
+   */
+  readonly cover?: RuledCoverType;
 } & BattleOpportunityAttackSelection;
 export type BattleTargetSpatialFact =
   | {
@@ -1739,6 +1763,11 @@ export type BattleTargetSpatialFact =
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
       readonly distanceFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the actor and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: RuledCoverType;
     } & BattleAttackExecutionSelection)
   | {
       readonly kind: "attackAttackerCannotSeeTarget";
@@ -1768,6 +1797,11 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly distanceFeet?: MovementFeet;
+      /**
+       * The degree of cover the table rules between the caster and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: RuledCoverType;
     }
   | {
       /**
@@ -1785,6 +1819,16 @@ export type BattleTargetSpatialFact =
       }[];
     }
   | {
+      /**
+       * Table-supplied ground position where a thrown weapon comes to rest
+       * once its attack roll is accepted, hit or miss.
+       */
+      readonly kind: "thrownWeaponLanding";
+      readonly attackerId: CombatantId;
+      readonly procedureRef: BattleAttackProcedureExecutionRef;
+      readonly positionId: BattleTablePositionId;
+    }
+  | {
       readonly kind: "unitFeatureVisibleTargetWithinRange";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
@@ -1797,6 +1841,11 @@ export type BattleTargetSpatialFact =
       readonly familiarId: CombatantId;
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      /**
+       * The degree of cover the table rules between the familiar and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: RuledCoverType;
     }
   | {
       readonly kind: "spellTargetKnownWilling";
@@ -1816,6 +1865,11 @@ export type BattleTargetSpatialFact =
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly forcePositionId: BattleTablePositionId;
       readonly reachFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the force and the target.
+       * Without it, no cover applies.
+       */
+      readonly cover?: RuledCoverType;
     }
   | {
       readonly kind: "linkedEffectPairedWornComponents";
@@ -1837,6 +1891,11 @@ export type BattleTargetSpatialFact =
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly rangeFeet: MovementFeet;
       readonly distanceFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the caster and the object.
+       * Without it, no cover applies.
+       */
+      readonly cover?: RuledCoverType;
       readonly armorClass: ArmorClass;
       readonly damageDisposition: BattleObjectDamageDisposition;
     }
@@ -1932,6 +1991,11 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly rangeFeet: MovementFeet;
+      /**
+       * The degree of cover the table rules between the previous target and this one.
+       * Without it, no cover applies.
+       */
+      readonly cover?: RuledCoverType;
     }
   | {
       readonly kind: "spellTargetsInPointOriginSphere";
@@ -2270,7 +2334,6 @@ export type BattleResolvedMovement = {
   readonly spendsTurnMovement: boolean;
   readonly acrobaticMovement?: BattleAcrobaticMovementFact;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
-  readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
   readonly fixedCostMovementReplacement?: BattleFixedCostMovementReplacementFact;
   readonly controlledVerticalSuspensionMovement?: BattleControlledVerticalSuspensionMovementFact;
@@ -4149,6 +4212,12 @@ export type PendingAttackRollMissToHitReplacementContext = {
   readonly targetId: CombatantId;
   readonly attackRoll: BattleAttackRollResult;
 };
+/** The attack roll that spent a creature's Heroic Inspiration on its reroll. */
+export type BattleAcceptedHeroicInspirationReroll = {
+  readonly actorId: CombatantId;
+  readonly attackRollHoleId: HoleId;
+};
+
 type PendingAttackRollMissToHitReplacementSelection = {
   readonly attackerId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -4400,6 +4469,7 @@ type BattleCreatureStateCommon = {
         readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
+        readonly heroicInspiration: HeroicInspiration;
         readonly metamagic?: CharacterBattleMetamagicState;
         readonly spellcasting?: CharacterBattleSpellcastingExecutionState;
       }
@@ -4448,22 +4518,38 @@ export type LegendaryActionWindow = {
   readonly consumed: boolean;
 };
 
+/** Accepted attack outcomes owned by a subject while its resolution can replay. */
+export type BattleAcceptedAttackReplayEvidence = {
+  readonly acceptedHeroicInspirationReroll?: BattleAcceptedHeroicInspirationReroll;
+  readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
+  readonly acceptedThrownWeaponRelease?: BattleAcceptedThrownWeaponRelease;
+};
+
 export type BattleSubjectResolutionPhase =
   | { readonly kind: "subjectSelection" }
-  | {
+  | (BattleAcceptedAttackReplayEvidence & {
       readonly kind: "subjectContinuation";
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
-      readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
       readonly admittedMovement?: Extract<
         BattleInterruptedProcedure,
         { readonly kind: "movement" }
       >["movement"];
-    };
+    });
 
 export type BattleAcceptedAttackAmmunitionSpend = {
   readonly actorId: CombatantId;
   readonly attackSelection: BoundAttackExecutionSelection;
+};
+
+/**
+ * The thrown weapon that the pending subject's accepted attack roll put on the
+ * ground. Resuming the subject replays that roll, so the replay starts with the
+ * weapon back in its thrower's hand and the accepted roll throws it again.
+ */
+export type BattleAcceptedThrownWeaponRelease = {
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
 };
 
 export type BattleState = {
@@ -4947,6 +5033,8 @@ export type BattleTargetChoiceHole = Extract<
   readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
   readonly attack?: BattleAttackTargetRequest & {
     readonly acceptsObjectTarget?: true;
+    /** The attack throws its weapon: the fill needs a thrownWeaponLanding fact. */
+    readonly requiresThrownWeaponLanding?: true;
   };
 };
 export type BattleHelpAttackAllyDecisionHole = {
@@ -5168,6 +5256,19 @@ export type BattleHeldObjectFactsHole = {
   readonly label: string;
   readonly actorId: CombatantId;
 };
+/**
+ * Asks the table to rule on one object interaction: whether the object needs
+ * an action for its use. Battle then charges the free object interaction or
+ * the Utilize action.
+ */
+export type BattleObjectInteractionRulingHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "objectInteractionRuling";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly objectInteraction: ObjectInteractionState;
+};
 export type BattleToolPossessionFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5302,6 +5403,11 @@ export type BattleDroppedObjectSource =
       readonly kind: "druidWildShape";
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
+    }
+  | {
+      /** SRD 5.2.1 "Thrown": the weapon left its owner's hand in an attack. */
+      readonly kind: "thrownWeaponAttack";
+      readonly procedureRef: BattleAttackProcedureExecutionRef;
     };
 export type BattleGroundObjectState = {
   readonly positionId: BattleTablePositionId;
@@ -5411,6 +5517,9 @@ export type BattleAttackRollHole = Extract<
   readonly ongoingFeatureActivations?: ReadonlyNonEmptyArray<AttackRollFeatureActivation>;
   readonly missToHitReplacements?: ReadonlyNonEmptyArray<AttackRollMissToHitReplacement>;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleAttackRollRelationshipFactRequest;
 };
 export type AttackRollFeatureActivation = {
@@ -5425,16 +5534,14 @@ export type BattleSpellAttackRerollOption = {
   readonly label: string;
   readonly sorceryPointCost: ResourceCount;
 };
-export type BattleSpellAttackRerollDecision =
-  | {
-      readonly kind: "decline";
-      readonly effectKind: "missed_spell_attack_reroll";
-    }
-  | {
-      readonly kind: "reroll";
-      readonly effectKind: "missed_spell_attack_reroll";
-      readonly replacement: AttackRollResult;
-    };
+/**
+ * Seeking Spell's decision on a missed spell attack roll. It rerolls the whole
+ * roll, so it has no chosen-die form.
+ */
+export type BattleSpellAttackRerollDecision = Exclude<
+  BattleD20TestRollRerollDecision<BattleSpellAttackRerollOption["effectKind"]>,
+  { readonly kind: "rerollRolledDie" }
+>;
 export const D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND =
   "d20_test_natural_one_reroll";
 export type BattleD20TestNaturalOneRerollOption = {
@@ -5448,21 +5555,53 @@ export type BattleD20TestRolledDieRollReplacement = {
   readonly die: BattleD20TestRolledDieKey;
   readonly result: BattleD20TestRollReplacement;
 };
-export type BattleD20TestNaturalOneRerollDecision =
+/**
+ * A decision on one D20 Test reroll source after a roll: decline it, replace
+ * the roll, or (under Advantage or Disadvantage) replace one rolled die.
+ * `EffectKind` names the source.
+ */
+export type BattleD20TestRollRerollDecision<EffectKind extends string> =
   | {
       readonly kind: "decline";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
     }
   | {
       readonly kind: "reroll";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestRollReplacement;
     }
   | {
       readonly kind: "rerollRolledDie";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestRolledDieRollReplacement;
     };
+export type BattleD20TestNaturalOneRerollDecision =
+  BattleD20TestRollRerollDecision<
+    typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND
+  >;
+export const HEROIC_INSPIRATION_REROLL_EFFECT_KIND =
+  "heroic_inspiration_reroll";
+export type BattleHeroicInspirationRerollOption = {
+  readonly effectKind: typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND;
+  readonly label: string;
+};
+export type BattleHeroicInspirationRerollDecision =
+  BattleD20TestRollRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+/** One reroll source's decision on an attack roll's d20, named by its effect kind. */
+export type BattleAttackRollD20TestRerollDecision =
+  | BattleD20TestNaturalOneRerollDecision
+  | BattleHeroicInspirationRerollDecision
+  | BattleSpellAttackRerollDecision;
+/**
+ * An attack roll's D20 Test reroll decisions in the order the roller made
+ * them. Each decision applies to the roll as the decisions before it left it.
+ * A source that rerolls is used; a source that declines may decide again on a
+ * later roll (ASSUMPTIONS.md A55).
+ */
+export type BattleAttackRollD20TestRerollDecisions = readonly [
+  BattleAttackRollD20TestRerollDecision,
+  ...BattleAttackRollD20TestRerollDecision[],
+];
 export type BattleD20TestOutcomeReplacement = {
   readonly succeeded: boolean;
   readonly d20TestRoll: BattleD20TestRoll;
@@ -5525,6 +5664,9 @@ export type BattleSpellAttackRollHole = Extract<
   readonly missToHitReplacements?: ReadonlyNonEmptyArray<AttackRollMissToHitReplacement>;
   readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleCunningStrikeOptionSelection = {
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -6914,6 +7056,7 @@ export type BattleHole =
   | BattleTeleportDestinationHole
   | BattleSpatialMeleeSpellAttackProxyPositionHole
   | BattleHeldObjectFactsHole
+  | BattleObjectInteractionRulingHole
   | BattleToolPossessionFactsHole
   | BattleCunningStrikeEndTurnCoverFactsHole
   | BattleSpawnedCompanionConnectionHole
@@ -7000,8 +7143,7 @@ export type BattleHole =
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
   readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
-  readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
-  readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
+  readonly d20TestRerolls?: BattleAttackRollD20TestRerollDecisions;
 };
 export type BattleRolledDiceFill = {
   readonly kind: "rolledDice";
@@ -7253,6 +7395,11 @@ export type BattleFill =
       };
     }
   | {
+      readonly kind: "objectInteractionRuling";
+      readonly holeId: BattleHoleId;
+      readonly value: ObjectInteractionRuling;
+    }
+  | {
       readonly kind: "toolPossessionFacts";
       readonly holeId: BattleHoleId;
       readonly value: {
@@ -7330,6 +7477,7 @@ export type BattleFill =
             | "spellObjectTarget"
             | "spellObjectTargetSight"
             | "rangedAttackEnemyProximity"
+            | "thrownWeaponLanding"
             | "attackObjectTarget";
         }
       >[];
@@ -8127,6 +8275,8 @@ export type BattleTurnSnapshot = {
   readonly actionTakenThisTurn: boolean;
   /** The current turn's unspent Bonus Action quota, not discovered action availability. */
   readonly bonusActionQuotaAvailable: boolean;
+  /** The current turn's free object interaction. */
+  readonly objectInteraction: ObjectInteractionState;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
@@ -8182,6 +8332,7 @@ export type BattleCreatureOriginSnapshot =
         readonly offHandAttackProcedureRef: BattleAttackProcedureExecutionRef | null;
       };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
+      readonly heroicInspiration: HeroicInspiration;
       readonly druidWildShapeAvailableForms: readonly {
         readonly statBlockId: StatBlockId;
         readonly execution: StatBlockExecutionSnapshot;

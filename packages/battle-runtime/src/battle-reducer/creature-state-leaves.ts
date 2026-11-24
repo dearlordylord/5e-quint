@@ -11,7 +11,7 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
-import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
 import {
   type WildShapeArmorClassWornKind,
   wildShapeEquipmentDispositionWearsKind,

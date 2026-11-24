@@ -48,7 +48,7 @@
       "module/binding:attackActionOptionsForActor": 9,
       "module/binding:attackDamageHole": 12,
       "module/binding:martialArtsLoadoutEligible": 10,
-      "module/binding:offHandAttackActionOptionsForActor": 15,
+      "module/binding:offHandAttackActionOptionsForActor": 13,
       "module/binding:weaponAttackWithActiveSacredWeapon": 13
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-redirect.ts": {
@@ -106,8 +106,7 @@
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
     },
-    "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts": {
-      "module/binding:applyBattleHeldWeaponPickup": 11,
+    "packages/battle-runtime/src/battle-reducer/character-effective-loadout.ts": {
       "module/binding:characterEffectiveLoadoutFromOrigin": 13
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
@@ -162,7 +161,7 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 69
+      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 68
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,
@@ -219,7 +218,7 @@
       "module/binding:metamagicCastingOptionRouteForResolution": 33,
       "module/binding:metamagicDamageDiceRerollRouteForResolution": 11,
       "module/binding:metamagicDamageTypeSubstitutionRouteForResolution": 10,
-      "module/binding:metamagicMissedSpellAttackRerollRouteForResolution": 10,
+      "module/binding:metamagicMissedSpellAttackRerollRouteForResolution": 9,
       "module/binding:metamagicSavingThrowProtectionRouteForResolution": 10,
       "module/binding:metamagicSavingThrowRollModeRouteForResolution": 11
     },
@@ -239,13 +238,10 @@
       "module/binding:resolveMonkFocusOption": 11
     },
     "packages/battle-runtime/src/battle-reducer/movement-procedures.ts": {
-      "module/binding:parseBattleMovement": 26,
+      "module/binding:parseBattleMovement": 25,
       "module/binding:resolveFixedCostMovementReplacementCommand": 12,
       "module/binding:resolveMoveCommand": 9,
-      "module/binding:resolveMovementEffectsAfterMovement": 16,
-      "module/binding:validateAreaDifficultTerrainMovementFact": 18,
-      "module/binding:validateGrappleDragMovementFact": 13,
-      "module/binding:validateMovementCostFacts": 21
+      "module/binding:resolveMovementEffectsAfterMovement": 16
     },
     "packages/battle-runtime/src/battle-reducer/movement-routes.ts": {
       "module/binding:creatureSpaceMovementPermissionRouteForResolution": 12,
@@ -493,20 +489,18 @@
       "module/binding:resolveBonusActionDashSpellAct": 11,
       "module/binding:resolveBonusActionSpellAct": 27,
       "module/binding:resolveSpellActInternal": 192,
-      "module/binding:resolveSpellActInternal/call:iife:argument--1": 54,
-      "module/binding:spellAttackRerollValidationIssue": 9
+      "module/binding:resolveSpellActInternal/call:iife:argument--1": 50
     },
     "packages/battle-runtime/src/battle-reducer/spells-targeting.ts": {
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
       "module/binding:spellTargetHasNonSpatialPrerequisites": 17,
       "module/binding:spellTargetRequiresAttackRollRelationshipFact": 9,
-      "module/binding:spellTargetSpatialFactMatches": 11,
+      "module/binding:spellTargetSpatialFactMatches": 9,
       "module/binding:validateSpellTargetAllocation": 10,
       "module/binding:validateSpellTargetList": 9
     },
     "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts": {
       "module/binding:attackRollMissToHitReplacementForProcedure": 9,
-      "module/binding:eligibleAttackDamageDieFloorProcedureRefsForAttacker": 10,
       "module/binding:eligibleAttackDamageRiders/call:attacker.origin.execution.procedureBindings.flatMap:argument-0": 10,
       "module/binding:passiveRangedAttackRollBonus": 12,
       "module/binding:selectedAttackDamageTypeForProfile": 9
@@ -551,7 +545,7 @@
       "module/binding:testCharacterD20Statistics": 13
     },
     "packages/battle-runtime/src/battle-subjects.ts": {
-      "module/binding:battleSubjectKey/call:Match.orElse:argument-0/call:Match.when:argument-1:selector-2299b7f5d44c": 18,
+      "module/binding:battleSubjectKey/call:Match.orElse:argument-0/call:Match.when:argument-1:selector-2299b7f5d44c": 13,
       "module/binding:isCharacterProcedureBattleSubject": 9
     },
     "packages/battle-runtime/src/character-battle-resources.ts": {

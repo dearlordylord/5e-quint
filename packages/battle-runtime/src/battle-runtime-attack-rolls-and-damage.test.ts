@@ -29,6 +29,7 @@ import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
+  characterBattleFeatureInitForTest,
   combatantId,
   concentrationSavingThrowFill,
   concentrationSavingThrowDc,
@@ -77,7 +78,7 @@ import { parseSelectedStatBlockAttackDamage } from "./statblock-attack-damage-su
 import {
   attackActionBonus,
   attackActionOptionName,
-  attackActionVariantOptions,
+  attackAbilityAndDamageTypeOptions,
   attackDamage,
   attackDamageModifier,
   attackDamageComponents,
@@ -639,10 +640,10 @@ describe("battle runtime: attack rolls and damage", () => {
       "Unarmed Strike",
     );
     expect(attackActionOptionName(scimitar)).toBe("Stat Block Attack");
-    expect(attackActionVariantOptions(fighter.origin.unarmedStrike)).toEqual([
-      fighter.origin.unarmedStrike,
-    ]);
-    expect(attackActionVariantOptions(scimitar)).toEqual([scimitar]);
+    expect(
+      attackAbilityAndDamageTypeOptions(fighter.origin.unarmedStrike),
+    ).toEqual([fighter.origin.unarmedStrike]);
+    expect(attackAbilityAndDamageTypeOptions(scimitar)).toEqual([scimitar]);
 
     expect(attackDamage(fighter.origin.attack)).toEqual({
       kind: "dice",
@@ -1555,6 +1556,12 @@ describe("battle runtime: attack rolls and damage", () => {
           attack: null,
           unarmedStrike: testUnarmedStrikeDieAttack(),
           selectedLoadout: {},
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             supportedBattleUnitRef(
               unitLibrary.requireUnit("monk_martial_arts"),
@@ -1625,6 +1632,12 @@ describe("battle runtime: attack rolls and damage", () => {
           attack: null,
           unarmedStrike: testUnarmedStrikeDieAttack(),
           selectedLoadout: {},
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             supportedBattleUnitRef(
               unitLibrary.requireUnit("monk_martial_arts"),
@@ -1719,6 +1732,12 @@ describe("battle runtime: attack rolls and damage", () => {
             ...(loadout.armorClass === undefined
               ? {}
               : { armorClass: loadout.armorClass }),
+            unitFeatures: [
+              characterBattleFeatureInitForTest(
+                unitLibrary.requireUnit("monk_martial_arts"),
+                [{ className: "monk", level: classLevel(1) }],
+              ),
+            ],
             characterUnitRefs: [
               supportedBattleUnitRef(
                 unitLibrary.requireUnit("monk_martial_arts"),

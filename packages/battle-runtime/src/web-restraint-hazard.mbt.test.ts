@@ -1,10 +1,10 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { movementFeet } from "@dnd/shared/types";
 import {
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -447,7 +447,10 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: webMovementSpentFeet,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -460,8 +463,6 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
                 areaId: webAreaId,
               },
             ],
-            totalDistanceFeet: movementFeet(10),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
         }),
       ],

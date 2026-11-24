@@ -35,6 +35,7 @@ import type {
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleTurnResources,
 } from "../battle-state-execution.ts";
 import { MOVEMENT_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { INITIAL_TURN_RESOURCES } from "./battle-runtime-protocol.ts";
@@ -61,6 +62,17 @@ function readiedActionCheckpointMatches(
     sameBattleSubject(activeInterrupt.subject, input.subject)
   );
 }
+
+/**
+ * The resources a released readied action resolves with: the action that
+ * Ready held, and no free object interaction, because that belongs to the
+ * creature's own turn (ASSUMPTIONS.md A60). A readied object interaction so
+ * takes the Utilize action.
+ */
+const READIED_ACTION_RELEASE_RESOURCES: BattleTurnResources = {
+  ...INITIAL_TURN_RESOURCES,
+  objectInteraction: "spent",
+};
 
 export function resolveReleaseReadiedActionCommand(
   input: BattleResolutionInputForSubject<
@@ -93,7 +105,7 @@ export function resolveReleaseReadiedActionCommand(
   const actionResult = resolveAction({
     state: {
       ...input.state,
-      currentTurnResources: INITIAL_TURN_RESOURCES,
+      currentTurnResources: READIED_ACTION_RELEASE_RESOURCES,
     },
     subject: readied.response.subject,
     fills: input.fills,

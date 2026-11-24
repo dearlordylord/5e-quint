@@ -72,7 +72,15 @@ export const setupScenario: ScenarioSetup = (context) => {
           },
           answer: {
             kind: "movementRoute",
-            movementCostFeet: sdk.movementFeet(5),
+            path: [
+              {
+                distanceFeet: sdk.movementFeet(5),
+                activity: "ordinary",
+                difficultTerrain: "none",
+                movesCloserThroughDirectionalArea: false,
+                draggedGrappledTargetIds: [],
+              },
+            ],
             provokedOpportunityAttacks: [],
             creatureSpaceTraversal: { kind: "notRequired" },
             postMoveSpatialState: {

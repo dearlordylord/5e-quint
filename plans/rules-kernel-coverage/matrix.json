@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 177,
-    "covered": 166,
+    "total": 181,
+    "covered": 170,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 137,
+      "battle": 141,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 166,
+      "covered": 170,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 197,
+    "total": 200,
     "bySubject": {
-      "battle-hole-family": 99,
-      "battle-fill-kind": 58,
-      "battle-subject-kind": 40
+      "battle-hole-family": 100,
+      "battle-fill-kind": 59,
+      "battle-subject-kind": 41
     },
     "byClassification": {
-      "semantic-frontier": 151,
+      "semantic-frontier": 152,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 46,
+      "table-owned-fact": 48,
       "unsupported-dead-branch": 0
     }
   },
@@ -98,7 +98,8 @@
         "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
         "scripts/raw-swarm/sdk-player/scenario-session.ts",
         "packages/battle-runtime/src/battle-reducer/drop-prone-policy.ts",
-        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-path.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1167,7 +1168,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-path.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6399,6 +6401,65 @@
       "title": "Stat Block source concentration"
     },
     {
+      "id": "BATTLE.ATTACK.THROWN_WEAPON_ATTACK",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-thrown-weapon-attacks.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt"
+      ],
+      "reason": "The QNT owner models the thrown option a Melee weapon with Thrown adds beside its melee one, that the throw is a ranged attack using the melee ability, that an accepted throw (but not one prevented before its roll, nor a melee or Ammunition attack) leaves the weapon on the ground, and that the Light extra attack needs only its own weapon in hand. statblock-attacks adds the thrown variant and its Thrown range; thrown-weapon-attack owns the one thrownWeaponLanding fact, scoped by attacker and procedure ref, and the release onto the owner's ground objects; attack-main and attack-offhand release it when an Attack action or Light extra attack roll is accepted. The executable parity witness covers the thrown option and its range, a hit and a miss landing and the pickup, a melee attack keeping its weapon, the missing, misscoped or stray landing fact, long range and close-combat Disadvantage, and a thrown Light extra attack before and after a main-hand throw.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/thrown-weapon-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/equipment.md#Thrown",
+        ".references/srd-5.2.1/equipment.md#Range",
+        ".references/srd-5.2.1/equipment.md#Light",
+        ".references/srd-5.2.1/equipment.md#Melee or Ranged",
+        "UBIQUITOUS_LANGUAGE.md#Equipment"
+      ],
+      "title": "A held Melee weapon with the Thrown property also offers a thrown ranged attack with its Thrown range and melee ability, and an accepted thrown attack roll, hit or miss, puts the weapon on the ground at one required table-supplied landing position"
+    },
+    {
+      "id": "BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/heroic-inspiration-reroll.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
+      ],
+      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it; an admitted reroll replaces the roll as it stands, the original or another source's reroll of it, or under Advantage or Disadvantage one chosen d20 of any face, keeps the roll's modifiers and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls applies it in turn with the natural-1 reroll and Seeking Spell on every weapon, Unarmed Strike, Opportunity, additional and spell attack roll. The executable parity witness covers the offer, decline, reroll and spend on hit and miss, the chosen die under Advantage, the kept modifiers, sources deciding in turn with the natural-1 reroll and Seeking Spell, Opportunity and spell attacks, interrupt replays, fill equality and the codec.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/heroic-inspiration-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Heroic-Inspiration",
+        ".references/srd-5.2.1/playing-the-game.md#Interactions-with-Rerolls",
+        "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
+        "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die"
+      ],
+      "title": "A player character who has Heroic Inspiration can expend it to reroll an attack roll and must use the new roll, in turn with the other reroll sources"
+    },
+    {
       "id": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -6467,6 +6528,64 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage"
       ],
       "title": "Help's Assist an Ability Check option: the helper's skill proficiency and a table-decided ally give Advantage on that ally's next check with the skill, used by that check or expired at the start of the helper's next turn"
+    },
+    {
+      "id": "BATTLE.ATTACK.TARGET_COVER",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-target-cover.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
+      ],
+      "reason": "The QNT owner models the three degrees' AC bonuses and Total Cover's refusal of direct targeting; the ordinary object Attack owner imports it. The table adjudicates the degree from the geometry and supplies it, when it rules some, as an optional cover field on the attack and spell target geometry facts; a fact without one gets no cover. The facts are attackTargetDistance, an Opportunity Attack threat, spellTarget, a spatial melee spell attack proxy target, a chained spell leap, a familiar's touch delivery, and the creature and spell object target facts. attack-spatial and spell targeting refuse a target with Total Cover; attack-target-cover adds the bonus at every creature attack-roll hit decision, and object attacks add it through the same algebra. The executable parity witness covers weapon attacks with each degree and with no degree, Total Cover refusal, the reported attack total of 19 missing AC 19 behind Half Cover, an Opportunity Attack threat with Total Cover, and a Spell Attack with each degree.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/shared-algebras/src/cover-algebra.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-target-cover.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-spatial.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/playing-the-game.md#Cover",
+        ".references/srd-5.2.1/spells.md#Targets",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "An attack roll on a creature or object, with a weapon, a Stat Block attack, an Opportunity Attack or a spell, meets the target's AC plus the bonus of the table-supplied degree of cover, and Total Cover refuses direct targeting by attacks and spells"
+    },
+    {
+      "id": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/object-interaction-cost.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-object-interaction.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt"
+      ],
+      "reason": "The QNT owner models one free object interaction per own turn, the Utilize action for a second object or for an object the table rules needs an action, no interaction off-turn or while unable to act, and the free interaction's return at the start of the next turn. Battle charges every object interaction through one cost operation: a table-described interaction and the held-weapon pickup transition both spend the turn's free interaction or the Utilize action.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/object-interaction.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Your Turn",
+        ".references/srd-5.2.1/rules-glossary.md#Utilize [Action]"
+      ],
+      "title": "Object interaction: the first object a creature interacts with on its turn is free unless the table rules it needs an action, and any other costs the Utilize action"
     }
   ],
   "battleHoleFrontier": [
@@ -8592,6 +8711,39 @@
       "id": "damageRelationshipDecisions",
       "reason": "Damage relationship decision fills answer every question from one emitted damage-event hole exactly once and are carried only through that event's damage application.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.OBJECT_INTERACTION_COST"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "objectInteractionRuling",
+      "id": "BattleObjectInteractionRulingHole",
+      "reason": "Whether an object needs an action for its use is the table's ruling on that object. The reducer requests and consumes the ruling and owns the charge: the turn's free object interaction or the Utilize action.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.OBJECT_INTERACTION_COST"
+      ],
+      "fillKind": "objectInteractionRuling",
+      "followUpTaskIds": [],
+      "id": "objectInteractionRuling",
+      "reason": "Object interaction ruling fills carry the table's ruling on whether the object needs an action; what happens to the world beyond a held-weapon pickup stays with the table.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
+      "followUpTaskIds": [],
+      "id": "runtimeObjectInteraction",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeObjectInteraction"
     }
   ],
   "profileObligations": [
@@ -13302,6 +13454,30 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns the thrown delivery a Melee weapon with Thrown adds, the throw's ranged attack and melee ability, the accepted-throw release onto the ground, and the Light extra attack's own-weapon custody.",
+      "obligationIds": ["BATTLE.ATTACK.THROWN_WEAPON_ATTACK"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-block proof evidence for thrown deliveries, ranged thrown attacks with the melee ability, release on an accepted roll only, a Dart's release, and the Light extra attack after a throw.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns Heroic Inspiration reroll admission, the effective roll after a whole-roll or chosen-die replacement, the one-reroll-per-roll rule and the spend, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover reroll, forced lower roll, decline, availability, stacking and the chosen die under Advantage and Disadvantage for the Heroic Inspiration reroll core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Owns when Weapon Mastery Graze is offered after an attack roll and the miss damage it deals, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
@@ -13329,6 +13505,30 @@
       "evidence": "Executable closed examples cover Help ability check admission and its rejections, the chosen-skill Advantage, two helpers' benefits used by one check, and start-of-turn expiry for the Help ability check core.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-independent Cover semantics: a table-supplied degree of cover either refuses direct targeting (Total Cover) or adds 0, 2 or 5 to the Armor Class an attack roll must meet. Object and creature attack owners import it instead of keeping their own cover arithmetic.",
+      "obligationIds": ["BATTLE.ATTACK.TARGET_COVER"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable Cover targeting and Armor Class examples; it is proof evidence rather than generator input.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns what an object interaction costs on a creature's turn: the free interaction, then the Utilize action, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.ACTION.OBJECT_INTERACTION_COST"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover a free first object and a Utilize second object, an object that needs an action, no interaction off-turn or while unable to act, and the free interaction's return on the next turn.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt",
       "role": "proof-only"
     }
   ],
@@ -14748,6 +14948,16 @@
       "role": "semantic-core"
     },
     {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "category": "leaf-type-vocabulary",
       "classification": "exempt",
       "evidence": "Shared creature size order leaf imported by registered movement and Unit feature procedure owners.",
@@ -14820,6 +15030,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt",
       "role": "proof-only"
     },
@@ -14882,6 +15102,16 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -15272,6 +15502,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt",
       "role": "semantic-core"
     },
     {
@@ -20659,6 +20894,53 @@
     {
       "blockedBy": [],
       "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set"
+      ],
+      "obligationId": "BATTLE.ATTACK.THROWN_WEAPON_ATTACK",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/thrown-weapon-attack.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block",
+        "let-binding"
+      ],
+      "obligationId": "BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
         "record",
         "pure-def",
         "int",
@@ -20702,6 +20984,46 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "pure-def",
+        "int",
+        "bool",
+        "pattern-match",
+        "arithmetic",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.ATTACK.TARGET_COVER",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "bool",
+        "boolean-connective",
+        "set",
+        "if-expression",
+        "variant"
+      ],
+      "obligationId": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

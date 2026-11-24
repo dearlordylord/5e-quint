@@ -421,7 +421,7 @@ function executeCompelledApproachContinuesScenario(): CommandOptionNextTurnProje
       subject: command.subject,
       fills: [
         executeCompelledApproachMovementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 10,
           movedWithinFiveFeetOfCaster: false,
           provokedOpportunityAttacks: [],
         }),
@@ -450,7 +450,7 @@ function executeCompelledApproachWithinFiveScenario(): CommandOptionNextTurnProj
       subject: command.subject,
       fills: [
         executeCompelledApproachMovementFill(movement, {
-          movementCostFeet: 10,
+          distanceFeet: 10,
           movedWithinFiveFeetOfCaster: true,
           provokedOpportunityAttacks: [],
         }),
@@ -478,7 +478,7 @@ function executeCompelledApproachMovementRejectedScenario(): CommandOptionNextTu
     subject: command.subject,
     fills: [
       executeCompelledApproachMovementFill(movement, {
-        movementCostFeet: 35,
+        distanceFeet: 35,
         movedWithinFiveFeetOfCaster: false,
         provokedOpportunityAttacks: [],
       }),
@@ -530,7 +530,7 @@ function executeCompelledFleeScenario(): CommandOptionNextTurnProjection {
       subject: command.subject,
       fills: [
         executeCompelledFleeMovementFill(movement, {
-          movementCostFeet: 30,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -557,7 +557,7 @@ function executeCompelledFleePartialRejectedScenario(): CommandOptionNextTurnPro
     subject: command.subject,
     fills: [
       executeCompelledFleeMovementFill(movement, {
-        movementCostFeet: 10,
+        distanceFeet: 10,
         provokedOpportunityAttacks: [],
       }),
     ],
@@ -640,7 +640,7 @@ function executeCompelledFleeOpportunityAttackWindow(): Extract<
     subject: command.subject,
     fills: [
       executeCompelledFleeMovementFill(movement, {
-        movementCostFeet: 30,
+        distanceFeet: 30,
         provokedOpportunityAttacks: [
           {
             reactorId: spellCasterId,

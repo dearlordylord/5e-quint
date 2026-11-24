@@ -876,6 +876,102 @@ describe("Opaque Oracle document JSON Schemas", () => {
     }
   });
 
+  it("publishes dice-only melee grip evidence and retains runtime weapon ownership", () => {
+    const damage = {
+      kind: "dice",
+      dice: 1,
+      dieSize: 8,
+      damageType: "piercing",
+    };
+    const evidence = { kind: "versatile", damage };
+    const traceWithEvidence = (meleeGripDamage: unknown) => {
+      const frontier = {
+        ...ordinaryHolesFrontier,
+        holes: [
+          {
+            holeInstanceKey: "oracle:grip-proof:instance",
+            holeId: "oracle:grip-proof",
+            kind: "attackRoll",
+            attackBonus: 3,
+            attack: {
+              kind: "weapon",
+              weapon: {
+                category: "simple",
+                usage: "melee",
+                damage: { ...damage, dieSize: 6 },
+                properties: [evidence],
+                costGp: 1,
+              },
+              weaponObjectId: "main:synthetic_oracle_grip_weapon",
+              ability: "str",
+              abilityModifier: 3,
+              meleeGripDamage,
+            },
+          },
+        ],
+      };
+      return {
+        ...builtTrace,
+        creation: {
+          ...builtTrace.creation,
+          outcome: {
+            ...builtTrace.creation.outcome,
+            sheet: {
+              ...builtTrace.creation.outcome.sheet,
+              battle: {
+                ...enteredBattle,
+                segment: {
+                  rejections: [],
+                  outcome: {
+                    tag: "next",
+                    continuation: {
+                      checkpoint,
+                      frontier,
+                      segment: enteredBattle.segment,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+    };
+    const cases = [
+      ["canonical dice evidence", evidence, true, true],
+      [
+        "flat damage",
+        {
+          kind: "versatile",
+          damage: { kind: "flat", amount: 8, damageType: "piercing" },
+        },
+        false,
+        false,
+      ],
+      ["wrong property kind", { kind: "finesse" }, false, false],
+      [
+        "another weapon's dice evidence",
+        { ...evidence, damage: { ...damage, dieSize: 10 } },
+        true,
+        false,
+      ],
+    ] as const;
+    for (const [name, proof, structuralAccepted, runtimeAccepted] of cases) {
+      const value = traceWithEvidence(proof);
+      expect(documentValidators.trace(value), `${name}: published JSON`).toBe(
+        structuralAccepted,
+      );
+      expect(
+        Result.isSuccess(decodeOracleTraceDocument(value)),
+        `${name}: Document codec`,
+      ).toBe(structuralAccepted);
+      expect(
+        Result.isSuccess(decodeOracleTrace(value)),
+        `${name}: runtime admission`,
+      ).toBe(runtimeAccepted);
+    }
+  });
+
   it("keeps owner structural predicates in Ajv, Document, and full admission parity", () => {
     const malformedEquipment = [
       [
@@ -1535,6 +1631,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       checkpointFrontierCorrelation: 4,
       corpusBatchTraceLengthCorrelation: 0,
       statBlockDamageComponentRoleCorrelation: 2,
+      weaponAttackEvidenceOwnershipCorrelation: 1,
       constraintFreeBrand: 0,
     });
 
