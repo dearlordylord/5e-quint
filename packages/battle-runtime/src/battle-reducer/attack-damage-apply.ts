@@ -107,10 +107,17 @@ import {
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
+import { combatantHandUses } from "./creature-state-leaves.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
   loadoutWeaponIsHeld,
+  loadoutWeaponIsStowed,
 } from "./character-effective-loadout.ts";
+import {
+  weaponHandsAreFree,
+  weaponSlotHands,
+} from "./battle-object-lifecycle.ts";
+import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -443,30 +450,11 @@ export function attackActionOptionsForActor(
       actor,
       actor.origin.unarmedStrike,
     );
-    const options =
-      actor.origin.attack == null ||
-      (actor.origin.attack.kind === "weapon" &&
-        !loadoutWeaponIsHeld(
-          state,
-          actor.combatantId,
-          actor.origin.attack.weaponObjectId,
-        ))
-        ? [unarmedStrike]
-        : [
-            ...uniqueAttackExecutionSelectionOptions(
-              weaponAttackOptionsForActor(
-                state,
-                actor,
-                actor.origin.attack,
-                mainHandWeaponItemIdForAttack(
-                  state,
-                  actor,
-                  actor.origin.attack,
-                ),
-              ),
-            ),
-            unarmedStrike,
-          ];
+    const options = [
+      ...mainWeaponAttackOptions(state, actor),
+      ...carriedThrownWeaponAttackOptions(state, actor),
+      unarmedStrike,
+    ];
     return options.filter((attack) =>
       ammunitionForAttackIsReady(state, actor, attack),
     );
@@ -502,6 +490,82 @@ export function attackActionOptionsForActor(
   }
 
   return [];
+}
+
+/** The attacks a character's main weapon can make now. */
+function mainWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly BoundSupportedAttackActionOption[] {
+  const main = actor.origin.attack;
+  if (main == null) return [];
+  if (!loadoutWeaponIsHeld(state, actor.combatantId, main.weaponObjectId)) {
+    return drawnThrownWeaponAttackOptions(state, actor, main);
+  }
+  return uniqueAttackExecutionSelectionOptions(
+    weaponAttackOptionsForActor(
+      state,
+      actor,
+      main,
+      mainHandWeaponItemIdForAttack(state, actor, main),
+    ),
+  );
+}
+
+/**
+ * The throws of a main weapon that is sheathed or stowed. SRD 5.2.1
+ * equipment.md "Thrown": "you can draw that weapon as part of the attack", so
+ * the draw belongs to the throw, not to the Attack action's one weapon change,
+ * once the hands its loadout gives it are free. A weapon on the ground is
+ * picked up, not drawn, so it has no such throw.
+ */
+function drawnThrownWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  main: BoundCharacterWeaponAttackActionOption,
+): readonly BoundSupportedAttackActionOption[] {
+  if (
+    !loadoutWeaponIsStowed(state, actor.combatantId, main.weaponObjectId) ||
+    !weaponHandsAreFree(
+      state,
+      actor,
+      weaponSlotHands("mainWeapon", actor.origin.selectedLoadout.weapon?.grip),
+    )
+  ) {
+    return [];
+  }
+  return uniqueAttackExecutionSelectionOptions(
+    weaponAttackOptionsForActor(state, actor, main, main.weaponObjectId).filter(
+      weaponAttackIsThrown,
+    ),
+  );
+}
+
+/**
+ * The throws of the weapons a character carries outside its loadout. SRD
+ * 5.2.1 equipment.md "Thrown": "you can draw that weapon as part of the
+ * attack", so a carried Thrown weapon is drawn into a free hand and thrown
+ * without the Attack action's weapon change. One on the ground is picked
+ * up, not drawn.
+ */
+function carriedThrownWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly BoundSupportedAttackActionOption[] {
+  const hands = combatantHandUses(state, actor, state.grapples);
+  if (hands.left !== "free" && hands.right !== "free") return [];
+  return actor.origin.otherOwnedWeaponAttacks.flatMap((carried) =>
+    battleObjectIsOnGround(state, actor.combatantId, carried.weaponObjectId)
+      ? []
+      : uniqueAttackExecutionSelectionOptions(
+          weaponAttackOptionsForActor(
+            state,
+            actor,
+            carried,
+            carried.weaponObjectId,
+          ).filter(weaponAttackIsThrown),
+        ),
+  );
 }
 
 function uniqueAttackExecutionSelectionOptions(

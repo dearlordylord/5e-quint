@@ -218,17 +218,17 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Battle Hole Frontier
 
-- Total classified rows: 203
+- Total classified rows: 204
 
 | Subject             | Count |
 | ------------------- | ----: |
 | battle-hole-family  |   101 |
 | battle-fill-kind    |    60 |
-| battle-subject-kind |    42 |
+| battle-subject-kind |    43 |
 
 | Classification                    | Count |
 | --------------------------------- | ----: |
-| semantic-frontier                 |   153 |
+| semantic-frontier                 |   154 |
 | deterministic-boundary-projection |     0 |
 | table-owned-fact                  |    50 |
 | unsupported-dead-branch           |     0 |
@@ -437,6 +437,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | battle-hole-family  | `BattleWeaponDropPositionHole`                                            | `weaponDropPosition`                             | table-owned-fact  | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ACTION.ATTACK_WEAPON_CHANGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | _none_    |
 | battle-fill-kind    | `weaponDropPosition`                                                      | `weaponDropPosition`                             | table-owned-fact  | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ACTION.ATTACK_WEAPON_CHANGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | _none_    |
 | battle-subject-kind | `runtimeObjectInteraction`                                                | `runtimeObjectInteraction`                       | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | _none_    |
+| battle-subject-kind | `runtimeAttackWeaponChange`                                               | `runtimeAttackWeaponChange`                      | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | _none_    |
 | battle-subject-kind | `runtimeWeaponGrip`                                                       | `runtimeWeaponGrip`                              | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | _none_    |
 
 ## QNT Owner Roles

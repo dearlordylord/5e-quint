@@ -21,6 +21,7 @@ import {
   type CharacterBattleClassLevelInit,
   type CharacterBattleWeaponMasterySelection,
   type CharacterBattleCreatureInit,
+  type CharacterBattleOtherOwnedWeaponInit,
   type CharacterZeroHpLifecycleInit,
   type CharacterId,
   type CombatantId,
@@ -553,11 +554,7 @@ export function battleCreatureInitFromCharacterBuild(
         ...(weaponAttackOptions.offHandAttack === undefined
           ? {}
           : { offHandAttack: weaponAttackOptions.offHandAttack }),
-        ...(EffectArray.isReadonlyArrayNonEmpty(
-          weaponAttackOptions.otherOwnedWeapons,
-        )
-          ? { otherOwnedWeapons: weaponAttackOptions.otherOwnedWeapons }
-          : {}),
+        ...otherOwnedWeaponsInit(weaponAttackOptions.otherOwnedWeapons),
         unitFeatures,
         resources,
         ...heroicInspirationInit(input.heroicInspiration),
@@ -1234,6 +1231,15 @@ function characterBattleFeatures(
     }
   }
   return Result.succeed(features);
+}
+
+/** Omission alone means the character carries no weapon outside its loadout. */
+function otherOwnedWeaponsInit(
+  otherOwnedWeapons: readonly CharacterBattleOtherOwnedWeaponInit[],
+): Pick<CharacterBattleCreatureInit, "otherOwnedWeapons"> {
+  return EffectArray.isReadonlyArrayNonEmpty(otherOwnedWeapons)
+    ? { otherOwnedWeapons }
+    : {};
 }
 
 function heroicInspirationInit(

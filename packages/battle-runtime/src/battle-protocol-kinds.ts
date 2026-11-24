@@ -503,7 +503,7 @@ function runtimeCommandSubjectKind(
       byCommand("pickUpHeldWeapon", () => "runtimeObjectInteraction" as const),
       byCommand(
         "changeWeaponAfterAttack",
-        () => "runtimeObjectInteraction" as const,
+        () => "runtimeAttackWeaponChange" as const,
       ),
       byCommand("changeWeaponGrip", () => "runtimeWeaponGrip" as const),
       Match.exhaustive,

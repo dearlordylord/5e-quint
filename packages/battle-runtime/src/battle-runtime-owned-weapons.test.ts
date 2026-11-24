@@ -10,10 +10,12 @@ import {
   battleTablePositionId,
   BattleSnapshotSchema,
   characterSeed,
+  difficultyClass,
   discoverBattleActCandidates,
   fighterAttackSubject,
   fighterId,
   goblinId,
+  movementFeet,
   requireHole,
   requireResolved,
   startBattleRight,
@@ -99,6 +101,21 @@ function attackActs(state: BattleState) {
     act.subject.tag === "action" && act.subject.action === "attack"
       ? [act.subject]
       : [],
+  );
+}
+
+/** The carried Dagger's thrown attacks that need no weapon change. */
+function carriedDaggerThrows(state: BattleState) {
+  const dagger = fighter(state).origin.otherOwnedWeaponAttacks.find(
+    ({ weaponObjectId }) => weaponObjectId === daggerId,
+  );
+  return attackActs(state).filter(
+    (subject) =>
+      !("weaponChange" in subject) &&
+      "procedureRef" in subject &&
+      subject.procedureRef === dagger?.procedureRef &&
+      "weaponDelivery" in subject &&
+      subject.weaponDelivery === "thrown",
   );
 }
 
@@ -381,6 +398,43 @@ describe("weapons the character owns outside its loadout", () => {
     expect(fighter(pickedUp).origin.attack?.weaponObjectId).toBe(longswordId);
     // The stowed Dagger left the loadout, carried like any other owned weapon.
     expect(pickedUp.objectCustody.has(fighterId)).toBe(false);
+  });
+
+  it("throws a carried Thrown weapon drawn as part of the attack, keeping the weapon change", () => {
+    // SRD 5.2.1 equipment.md "Thrown": "you can draw that weapon as part of
+    // the attack."
+    const state = armedFighterBattle();
+    const throwDagger = carriedDaggerThrows(state)[0];
+    if (throwDagger === undefined) throw new Error("Expected the throw.");
+
+    const thrown = missedAttack(state, throwDagger);
+    expect(battleObjectIsOnGround(thrown, fighterId, daggerId)).toBe(true);
+    expect(thrown.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+    expect(fighter(thrown).origin.attack?.weaponObjectId).toBe(longswordId);
+    expect(carriedDaggerThrows(thrown)).toEqual([]);
+  });
+
+  it("offers no carried throw while no hand is free", () => {
+    const state = armedFighterBattle();
+    const hands = combatantHandUses(state, fighter(state), []);
+    const freeHand = hands.left === "free" ? "left" : "right";
+    const grappling: BattleState = {
+      ...state,
+      grapples: [
+        {
+          grapplerId: fighterId,
+          targetId: goblinId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand: freeHand,
+        },
+      ],
+    };
+
+    expect(carriedDaggerThrows(state)).toHaveLength(1);
+    expect(carriedDaggerThrows(grappling)).toEqual([]);
   });
 
   it("keeps a snapshot of the moved bindings decodable", () => {

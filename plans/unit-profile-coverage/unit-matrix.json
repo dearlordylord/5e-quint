@@ -49,8 +49,8 @@
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 631,
-      "numerator": 449,
-      "percent": "71.2%"
+      "numerator": 453,
+      "percent": "71.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 450
+      "value": 454
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 244,
@@ -67,8 +67,8 @@
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 450,
-      "numerator": 450,
+      "denominator": 454,
+      "numerator": 454,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -53731,6 +53731,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
+      "unitId": "weapon_mace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_morningstar.json",
+      "unitId": "weapon_morningstar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_whip.json",
+      "unitId": "weapon_whip"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_sling.json",
+      "unitId": "weapon_sling"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-sheet.prepared-spell-rest-replacement",
@@ -57385,44 +57457,8 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
-      "unitId": "weapon_mace"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_maul.json",
       "unitId": "weapon_maul"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_morningstar.json",
-      "unitId": "weapon_morningstar"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -57547,24 +57583,6 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_sling.json",
-      "unitId": "weapon_sling"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_trident.json",
       "unitId": "weapon_trident"
     },
@@ -57603,24 +57621,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_warhammer.json",
       "unitId": "weapon_warhammer"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_whip.json",
-      "unitId": "weapon_whip"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

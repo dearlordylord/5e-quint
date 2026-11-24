@@ -2375,7 +2375,7 @@ export function resolveSelectedAttackProcedure<
     const duplicateInterceptionCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
       attacker: duplicateInterceptionAttacker,
-      target: requireCurrentAttackTarget(attackRolledState, target),
+      target: requireCurrentAttackParticipant(attackRolledState, target),
       targetSpatialFacts: fillSet.targetSpatialFacts,
       triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
       fill: fillSet.duplicateHitInterceptionRoll,
@@ -2699,8 +2699,14 @@ export function resolveSelectedAttackProcedure<
   const weaponMasteryPushApplied = hit
     ? applyWeaponMasteryPushOnHit({
         state: openHandTechniqueApplied.state,
-        attackerId,
-        targetId: target.combatantId,
+        attacker: requireCurrentAttackParticipant(
+          openHandTechniqueApplied.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(
+          openHandTechniqueApplied.state,
+          target,
+        ),
         attack,
         targetSpatialFacts: fillSet.targetSpatialFacts,
       })
@@ -2727,7 +2733,7 @@ export function resolveSelectedAttackProcedure<
     ? weaponMasteryToppleSavingThrowHole({
         state: weaponMasteryPushApplied.state,
         attacker,
-        target: requireCurrentAttackTarget(
+        target: requireCurrentAttackParticipant(
           weaponMasteryPushApplied.state,
           target,
         ),
@@ -2765,22 +2771,28 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
   const weaponHitAppliedState = hit
-    ? applyWeaponMasterySapOnHit(
-        toppleApplied.state,
-        attackerId,
-        target.combatantId,
+    ? applyWeaponMasterySapOnHit({
+        state: toppleApplied.state,
+        attacker: requireCurrentAttackParticipant(
+          toppleApplied.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(toppleApplied.state, target),
         attack,
-      )
+      })
     : toppleApplied.state;
   const hitAppliedState =
     hit && attack.kind === "statBlockAttack"
       ? applyStatBlockAttackHitConditionRiders({
           state: weaponHitAppliedState,
-          target: requireCurrentAttackTarget(weaponHitAppliedState, target),
+          target: requireCurrentAttackParticipant(
+            weaponHitAppliedState,
+            target,
+          ),
           attack,
         })
       : weaponHitAppliedState;
-  const damageTarget = requireCurrentAttackTarget(hitAppliedState, target);
+  const damageTarget = requireCurrentAttackParticipant(hitAppliedState, target);
   if (
     fixedDamageAmount !== null &&
     fixedDamageByTypeBeforeTargetAdjustments !== null
@@ -3069,10 +3081,10 @@ export function resolveSelectedAttackProcedure<
     // A weapon has one mastery property per attack, so Slow never applies to
     // Graze miss damage.
     const fixedDamageWithWeaponMasterySpeedReductionState =
-      applyWeaponMasterySlowAfterDamage({
+      applyWeaponMasterySlowToPresentParticipants({
         state: fixedDamageAppliedState,
-        attackerId,
-        targetId: target.combatantId,
+        attacker,
+        target,
         attack,
         damageAmount: Number(reducedFixedDamageAmount),
       });
@@ -3652,10 +3664,10 @@ export function resolveSelectedAttackProcedure<
     }
     /* v8 ignore stop -- @preserve */
     const damageWithWeaponMasterySpeedReductionState =
-      applyWeaponMasterySlowAfterDamage({
+      applyWeaponMasterySlowToPresentParticipants({
         state: cunningStrike.state,
-        attackerId,
-        targetId: target.combatantId,
+        attacker,
+        target,
         attack,
         damageAmount: Number(reducedDamageAmount),
       });
@@ -3817,19 +3829,48 @@ function weaponMasteryGrazeMissDamage(input: {
   );
 }
 
-function requireCurrentAttackTarget(
+function applyWeaponMasterySlowToPresentParticipants(
+  input: Parameters<typeof applyWeaponMasterySlowAfterDamage>[0],
+): BattleState {
+  const attacker = attackParticipantAfterDamage(input.state, input.attacker);
+  const target = attackParticipantAfterDamage(input.state, input.target);
+  return attacker === null || target === null
+    ? input.state
+    : applyWeaponMasterySlowAfterDamage({ ...input, attacker, target });
+}
+
+/** Damage can retire a participant; other missing resolved participants violate roster ownership. */
+function attackParticipantAfterDamage(
   state: BattleState,
-  resolvedTarget: BattleCreatureState,
+  resolvedParticipant: BattleCreatureState,
+): BattleCreatureState | null {
+  const current = state.combatants.get(resolvedParticipant.combatantId);
+  if (current !== undefined) return current;
+  if (
+    state.executionScopeCursors.get(resolvedParticipant.combatantId)?.kind ===
+    "retired"
+  )
+    return null;
+  /* v8 ignore start -- @preserve -- Internal invariant: a previously resolved participant's absence after damage requires the canonical roster-removal operation to have retired its execution scope. */
+  throw new Error("Attack damage must retain or retire resolved participants.");
+  /* v8 ignore stop -- @preserve */
+}
+
+function requireCurrentAttackParticipant(
+  state: BattleState,
+  resolvedParticipant: BattleCreatureState,
 ): BattleCreatureState {
-  const currentTarget = state.combatants.get(resolvedTarget.combatantId);
-  /* v8 ignore start -- @preserve -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved target combatant while possibly replacing its state value. */
-  if (currentTarget === undefined) {
+  const currentParticipant = state.combatants.get(
+    resolvedParticipant.combatantId,
+  );
+  /* v8 ignore start -- @preserve -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved attacker and target combatants while possibly replacing their state values. */
+  if (currentParticipant === undefined) {
     throw new Error(
-      "Attack-roll transitions must preserve the resolved target.",
+      "Attack-roll transitions must preserve the resolved attacker and target.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  return currentTarget;
+  return currentParticipant;
 }
 
 function withOpenHandTechniqueShovePushes(

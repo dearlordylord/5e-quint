@@ -42,6 +42,8 @@ import {
   weaponSlotHands,
 } from "./battle-object-lifecycle.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
+import { combatantActiveDruidWildShape } from "./creature-state-leaves.ts";
 import {
   loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
@@ -99,15 +101,13 @@ export function ownedWeaponChangeIssue(
       "A weapon change requires an actor in this battle.",
     );
   }
-  if (!isCharacter(actor)) {
+  if (!isCharacterBattleCreatureState(actor)) {
     return issue(
       "actorNotCharacter",
       "A weapon change applies to a character's owned weapons.",
     );
   }
-  if (
-    actor.activeEffects.some((effect) => effect.kind === "druidWildShapeForm")
-  ) {
+  if (combatantActiveDruidWildShape(actor) !== null) {
     return issue(
       "activeFormWeaponChangeUnsupported",
       "A creature in Wild Shape can't equip or unequip its weapons.",
@@ -328,7 +328,7 @@ export function ownedWeaponChanges(
   state: BattleState,
   actor: BattleCreatureState,
 ): readonly AttackWeaponChange[] {
-  if (!isCharacter(actor)) return [];
+  if (!isCharacterBattleCreatureState(actor)) return [];
   return ownedWeaponIds(actor).flatMap((objectId) =>
     weaponChangesOf(objectId).filter(
       (change) =>
@@ -358,7 +358,7 @@ export function groundedLoadoutWeaponPickups(
   state: BattleState,
   actor: BattleCreatureState,
 ): readonly Extract<AttackWeaponChange, { readonly kind: "equip" }>[] {
-  if (!isCharacter(actor)) return [];
+  if (!isCharacterBattleCreatureState(actor)) return [];
   return ownedWeaponChanges(state, actor).flatMap((change) =>
     change.kind === "equip" &&
     loadoutWeaponSlot(actor, change.objectId) === change.slot &&
@@ -418,7 +418,8 @@ export function ownedWeaponChangeIsApplied(
   change: AttackWeaponChange,
 ): boolean {
   const actor = state.combatants.get(actorId);
-  if (actor === undefined || !isCharacter(actor)) return false;
+  if (actor === undefined || !isCharacterBattleCreatureState(actor))
+    return false;
   return Match.value(change).pipe(
     Match.when(
       { kind: "equip" },
@@ -452,7 +453,8 @@ function equippedWeapon(
 ): OwnedWeaponChangeResult {
   const actor = state.combatants.get(actorId);
   /* v8 ignore next -- @preserve -- ownedWeaponChangeIssue has just admitted this character. */
-  if (actor === undefined || !isCharacter(actor)) return applied(state);
+  if (actor === undefined || !isCharacterBattleCreatureState(actor))
+    return applied(state);
   const plan = equipPlan(state, actor, objectId, slot);
   /* v8 ignore next -- @preserve -- the same admission planned this equip. */
   if (plan.tag === "invalid") return plan;
@@ -656,12 +658,6 @@ function slotAttack(
   return weapon !== undefined && attack?.weaponObjectId === weapon.itemId
     ? attack
     : undefined;
-}
-
-function isCharacter(
-  actor: BattleCreatureState,
-): actor is CharacterBattleCreatureState {
-  return actor.origin.kind === "character";
 }
 
 function applied(state: BattleState): OwnedWeaponChangeResult {
