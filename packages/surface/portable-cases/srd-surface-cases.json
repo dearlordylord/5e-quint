@@ -33420,6 +33420,107 @@
             "rulesExcerpt": "<tr>\n      <td>Quarterstaff</td>\n      <td>1d6 Bludgeoning</td>\n      <td>Versatile (1d8)</td>\n      <td>Topple</td>\n      <td>4 lb.</td>\n      <td>2 SP</td>\n    </tr>"
           },
           {
+            "id": "weapon_mace",
+            "name": "Mace",
+            "kind": "weapon",
+            "category": "simple",
+            "usage": "melee",
+            "damage": {
+              "kind": "dice",
+              "dice": 1,
+              "dieSize": 6,
+              "damageType": "bludgeoning"
+            },
+            "masteryUnitId": "mastery_sap",
+            "weightPounds": 4,
+            "costGp": 5,
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "equipment.md:179-186"
+            },
+            "rulesExcerpt": "<tr>\n      <td>Mace</td>\n      <td>1d6 Bludgeoning</td>\n      <td>—</td>\n      <td>Sap</td>\n      <td>4 lb.</td>\n      <td>5 GP</td>\n    </tr>"
+          },
+          {
+            "id": "weapon_morningstar",
+            "name": "Morningstar",
+            "kind": "weapon",
+            "category": "martial",
+            "usage": "melee",
+            "damage": {
+              "kind": "dice",
+              "dice": 1,
+              "dieSize": 8,
+              "damageType": "piercing"
+            },
+            "masteryUnitId": "mastery_sap",
+            "weightPounds": 4,
+            "costGp": 15,
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "equipment.md:321-328"
+            },
+            "rulesExcerpt": "<tr>\n      <td>Morningstar</td>\n      <td>1d8 Piercing</td>\n      <td>—</td>\n      <td>Sap</td>\n      <td>4 lb.</td>\n      <td>15 GP</td>\n    </tr>"
+          },
+          {
+            "id": "weapon_whip",
+            "name": "Whip",
+            "kind": "weapon",
+            "category": "martial",
+            "usage": "melee",
+            "damage": {
+              "kind": "dice",
+              "dice": 1,
+              "dieSize": 4,
+              "damageType": "slashing"
+            },
+            "properties": [
+              {
+                "kind": "finesse"
+              },
+              {
+                "kind": "reach"
+              }
+            ],
+            "masteryUnitId": "mastery_slow",
+            "weightPounds": 3,
+            "costGp": 2,
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "equipment.md:385-392"
+            },
+            "rulesExcerpt": "<tr>\n      <td>Whip</td>\n      <td>1d4 Slashing</td>\n      <td>Finesse, Reach</td>\n      <td>Slow</td>\n      <td>3 lb.</td>\n      <td>2 GP</td>\n    </tr>"
+          },
+          {
+            "id": "weapon_sling",
+            "name": "Sling",
+            "kind": "weapon",
+            "category": "simple",
+            "usage": "ranged",
+            "damage": {
+              "kind": "dice",
+              "dice": 1,
+              "dieSize": 4,
+              "damageType": "bludgeoning"
+            },
+            "properties": [
+              {
+                "kind": "ammunition",
+                "range": {
+                  "normal": 30,
+                  "long": 120
+                },
+                "ammunition": "sling_bullet"
+              }
+            ],
+            "masteryUnitId": "mastery_slow",
+            "costGp": 0.1,
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "equipment.md:238-245"
+            },
+            "rulesExcerpt": "<tr>\n      <td>Sling</td>\n      <td>1d4 Bludgeoning</td>\n      <td>Ammunition (Range 30/120; Bullet)</td>\n      <td>Slow</td>\n      <td>—</td>\n      <td>1 SP</td>\n    </tr>"
+          },
+          {
             "id": "wizard_memorize_spell",
             "name": "Memorize Spell",
             "kind": "class_feature",
