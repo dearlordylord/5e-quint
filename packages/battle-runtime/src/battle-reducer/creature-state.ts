@@ -1,3 +1,4 @@
+import { traverseValidation } from "@dnd/shared/validation";
 import { admitVersatileMeleeDamage } from "../weapon-melee-grip-damage.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.potent-cantrip unit-feature.remarkable-athlete unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
@@ -283,7 +284,7 @@ function characterInitWeaponAttacks(
     const [firstIssue, ...remainingIssues] = [
       ...(Result.isFailure(attack) ? [attack.failure] : []),
       ...(Result.isFailure(offHandAttack) ? [offHandAttack.failure] : []),
-      ...(Result.isFailure(others) ? [others.failure] : []),
+      ...(Result.isFailure(others) ? others.failure : []),
     ];
     return Result.fail([firstIssue, ...remainingIssues]);
   }
@@ -302,7 +303,7 @@ function characterInitOtherOwnedWeaponAttacks(
   creatureInit: CharacterBattleCreatureInit,
 ): Result.Result<
   readonly CharacterWeaponAttackActionOption[],
-  BattleStateInitLeafIssue
+  ReadonlyNonEmptyArray<BattleStateInitLeafIssue>
 > {
   const others = creatureInit.otherOwnedWeapons ?? [];
   const { armor, shield, weapon, offHandWeapon } = creatureInit.selectedLoadout;
@@ -314,23 +315,22 @@ function characterInitOtherOwnedWeaponAttacks(
     new Set(objectIds).size !== objectIds.length ||
     objectIds.some((objectId) => loadoutObjectIds.includes(objectId))
   ) {
-    return battleStateInitIssue(
-      "Character battle init owned weapons outside the loadout must each be a battle object of their own.",
+    return Result.mapError(
+      battleStateInitIssue(
+        "Character battle init owned weapons outside the loadout must each be a battle object of their own.",
+      ),
+      (issue) => [issue] as const,
     );
   }
-  const bindings: CharacterWeaponAttackActionOption[] = [];
-  for (const other of others) {
-    const binding = characterInitWeaponAttackWithExecutionRefs({
+  return traverseValidation(others, (other) =>
+    characterInitWeaponAttackWithExecutionRefs({
       label: "owned weapon",
       attack: other.attack,
       weaponObjectId: other.itemId,
       startingGrip: "one_handed",
       weaponMasteries: creatureInit.weaponMasteries,
-    });
-    if (Result.isFailure(binding)) return Result.fail(binding.failure);
-    bindings.push(binding.success);
-  }
-  return Result.succeed(bindings);
+    }),
+  );
 }
 
 type CharacterWildShapeExecutionAdmission =

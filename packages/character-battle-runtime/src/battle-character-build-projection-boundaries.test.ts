@@ -403,6 +403,57 @@ describe("Character Build battle spell projection boundaries", () => {
     ]);
   });
 
+  test("numbers the copies of an item across every owned entry that names it", () => {
+    // A Quarterstaff arcane focus and a bought Quarterstaff are separate
+    // owned entries for the same item.
+    const build = levelFiveMartialBuild({
+      classUnitId: authoredUnitId("class_fighter"),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
+    });
+    const quarterstaffUnitId = characterEquipmentItemUnitId(
+      authoredUnitId("weapon_quarterstaff"),
+    );
+    if (quarterstaffUnitId._tag === "Failure")
+      throw new Error("Expected the Quarterstaff.");
+    const quarterstaffItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: quarterstaffUnitId.success,
+    });
+    const projection = requireSuccess(
+      characterBattleWeaponAttackInitProjection({
+        build: {
+          ...build,
+          equipment: {
+            ...build.equipment,
+            owned: [
+              ...build.equipment.owned,
+              {
+                kind: "authoredCatalogItem",
+                itemId: quarterstaffItemId,
+                authoredItemId: "Synthetic Arcane Staff",
+                spellcastingFocusKind: "arcane",
+                quantity: PositiveInteger(1),
+              },
+              {
+                kind: "catalogItem",
+                itemId: quarterstaffItemId,
+                quantity: PositiveInteger(1),
+              },
+            ],
+          },
+        },
+        unitLibrary,
+        weaponMasteries: [],
+        classLevels: [{ className: "fighter", level: 5 }],
+      }),
+    );
+
+    expect(projection.otherOwnedWeapons.map(({ itemId }) => itemId)).toEqual([
+      "main:weapon_quarterstaff",
+      "main:weapon_quarterstaff#2",
+    ]);
+  });
+
   test("discloses no equipped weapon blockers when the weapon definition is admitted", () => {
     expect(
       requireSuccess(

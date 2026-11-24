@@ -1112,6 +1112,7 @@ function appendCharacterWeaponPresentationIssues(input: {
   for (const attack of [
     input.combatant.origin.attack,
     input.combatant.origin.offHandAttack,
+    ...input.combatant.origin.otherOwnedWeaponAttacks,
   ]) {
     if (attack == null) continue;
     const presentationSource = characterWeaponPresentationSource(

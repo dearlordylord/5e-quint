@@ -19,10 +19,8 @@ import {
   statBlockCreatureInit,
   testDaggerAttack,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleStateWithGroundObjects,
-  heldWeaponPickupTransition,
-} from "./battle-reducer/battle-object-lifecycle.ts";
+import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
+import { pickUpLoadoutWeapon } from "./loadout-weapon-pickup.test-support.ts";
 import { battleObjectIsOnGround } from "./battle-reducer/object-custody-queries.ts";
 import { characterEffectiveLoadout } from "./battle-reducer/character-effective-loadout.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
@@ -109,9 +107,7 @@ function expectOccupiedPickupRefused(
         act.subject.objectId === objectId,
     ),
   ).toBe(false);
-  expect(
-    heldWeaponPickupTransition(state, { actorId: fighterId, objectId }),
-  ).toMatchObject({
+  expect(pickUpLoadoutWeapon(state, fighterId, objectId)).toMatchObject({
     tag: "invalid",
     reason: "handsOccupied",
   });

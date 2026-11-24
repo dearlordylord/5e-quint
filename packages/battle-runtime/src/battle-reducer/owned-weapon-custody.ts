@@ -18,7 +18,6 @@ import { Match } from "effect";
 import type { HandUse, WeaponGrip } from "@dnd/shared/types";
 import type { UnitId } from "@dnd/shared/game-facts";
 import {
-  ATTACK_WEAPON_CHANGE_KINDS,
   LOADOUT_WEAPON_SLOTS,
   type AttackWeaponChange,
   type LoadoutWeaponSlot,
@@ -39,6 +38,7 @@ import {
   battleStateWithGroundObjects,
   battleStateWithObjectCustody,
   loadoutWeaponSlot,
+  weaponHandsAreFree,
   weaponSlotHands,
 } from "./battle-object-lifecycle.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
@@ -46,7 +46,6 @@ import {
   loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
 } from "./character-effective-loadout.ts";
-import { combatantHandUses } from "./creature-state-leaves.ts";
 
 /** A weapon change with the table's facts it needs: where a dropped one lands. */
 export type AppliedAttackWeaponChange =
@@ -157,9 +156,7 @@ function equipIssue(
 ): OwnedWeaponChangeIssue | null {
   const plan = equipPlan(state, actor, objectId, slot);
   if (plan.tag === "invalid") return plan;
-  const current = combatantHandUses(state, actor, state.grapples);
-  return plan.hands.length > 0 &&
-    plan.hands.every((hand) => current[hand] === "free")
+  return weaponHandsAreFree(state, actor, plan.hands)
     ? null
     : issue(
         "handsOccupied",
@@ -183,11 +180,16 @@ function equipPlan(
   slot: LoadoutWeaponSlot,
 ): EquipPlan | OwnedWeaponChangeIssue {
   if (loadoutWeaponSlot(actor, objectId) === slot) {
-    const grip =
-      slot === "mainWeapon"
-        ? actor.origin.selectedLoadout.weapon?.grip
-        : undefined;
-    return planned(state, actor, slot, grip, undefined);
+    // The slot's own weapon goes back as the loadout holds it: its hands
+    // follow the loadout's main grip, whether or not the main weapon is in
+    // hand, so a two-handed main weapon keeps the off hand.
+    const loadoutMainGrip = actor.origin.selectedLoadout.weapon?.grip;
+    const grip = Match.value(slot).pipe(
+      Match.when("mainWeapon", () => loadoutMainGrip),
+      Match.when("offWeapon", () => undefined),
+      Match.exhaustive,
+    );
+    return planned(slot, loadoutMainGrip, grip, undefined);
   }
   const binding = ownedWeaponAttack(actor, objectId);
   if (binding === undefined) {
@@ -199,21 +201,21 @@ function equipPlan(
   const refusal =
     slotVacancyIssue(state, actor, slot) ??
     slotFitIssue(state, actor, slot, binding);
-  return (
-    refusal ?? planned(state, actor, slot, enteringGrip(slot, binding), binding)
-  );
+  if (refusal !== null) return refusal;
+  const grip = enteringGrip(slot, binding);
+  return planned(slot, mainGripBeside(state, actor, slot, grip), grip, binding);
 }
 
+/** The plan to put a weapon in a slot beside a main weapon with this grip. */
 function planned(
-  state: BattleState,
-  actor: CharacterBattleCreatureState,
   slot: LoadoutWeaponSlot,
+  mainWeaponGrip: WeaponGrip | undefined,
   grip: WeaponGrip | undefined,
   moved: BoundCharacterWeaponAttackActionOption | undefined,
 ): EquipPlan {
   return {
     tag: "planned",
-    hands: weaponSlotHands(slot, mainGripBeside(state, actor, slot, grip)),
+    hands: weaponSlotHands(slot, mainWeaponGrip),
     grip,
     moved,
   };
@@ -248,8 +250,19 @@ function slotFitIssue(
   slot: LoadoutWeaponSlot,
   binding: BoundCharacterWeaponAttackActionOption,
 ): OwnedWeaponChangeIssue | null {
-  if (slot === "mainWeapon") return null;
-  if (mainGripBeside(state, actor, slot, undefined) === undefined) {
+  return Match.value(slot).pipe(
+    Match.when("mainWeapon", () => null),
+    Match.when("offWeapon", () => offHandFitIssue(state, actor, binding)),
+    Match.exhaustive,
+  );
+}
+
+function offHandFitIssue(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  binding: BoundCharacterWeaponAttackActionOption,
+): OwnedWeaponChangeIssue | null {
+  if (mainGripBeside(state, actor, "offWeapon", undefined) === undefined) {
     return issue(
       "noMainWeaponInHand",
       "A weapon goes in the off hand beside a main weapon in hand.",
@@ -268,8 +281,13 @@ function enteringGrip(
   slot: LoadoutWeaponSlot,
   binding: BoundCharacterWeaponAttackActionOption,
 ): WeaponGrip | undefined {
-  if (slot === "offWeapon") return undefined;
-  return isTwoHanded(binding) ? "two_handed" : "one_handed";
+  return Match.value(slot).pipe(
+    Match.when("mainWeapon", () =>
+      isTwoHanded(binding) ? ("two_handed" as const) : ("one_handed" as const),
+    ),
+    Match.when("offWeapon", () => undefined),
+    Match.exhaustive,
+  );
 }
 
 function isTwoHanded(binding: BoundCharacterWeaponAttackActionOption): boolean {
@@ -287,7 +305,17 @@ function mainGripBeside(
   slot: LoadoutWeaponSlot,
   grip: WeaponGrip | undefined,
 ): WeaponGrip | undefined {
-  if (slot === "mainWeapon") return grip;
+  return Match.value(slot).pipe(
+    Match.when("mainWeapon", () => grip),
+    Match.when("offWeapon", () => heldMainWeaponGrip(state, actor)),
+    Match.exhaustive,
+  );
+}
+
+function heldMainWeaponGrip(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): WeaponGrip | undefined {
   const main = actor.origin.selectedLoadout.weapon;
   return main !== undefined &&
     loadoutWeaponIsHeld(state, actor.combatantId, main.itemId)
@@ -302,22 +330,24 @@ export function ownedWeaponChanges(
 ): readonly AttackWeaponChange[] {
   if (!isCharacter(actor)) return [];
   return ownedWeaponIds(actor).flatMap((objectId) =>
-    ATTACK_WEAPON_CHANGE_KINDS.flatMap((kind): readonly AttackWeaponChange[] =>
-      Match.value(kind).pipe(
-        Match.when("equip", () =>
-          LOADOUT_WEAPON_SLOTS.map(
-            (slot): AttackWeaponChange => ({ kind: "equip", objectId, slot }),
-          ),
-        ),
-        Match.when("stow", () => [{ kind: "stow" as const, objectId }]),
-        Match.when("drop", () => [{ kind: "drop" as const, objectId }]),
-        Match.exhaustive,
-      ),
-    ).filter(
+    weaponChangesOf(objectId).filter(
       (change) =>
         ownedWeaponChangeIssue(state, actor.combatantId, change) === null,
     ),
   );
+}
+
+/** Every weapon change that names this weapon, possible now or not. */
+function weaponChangesOf(
+  objectId: BattleObjectId,
+): readonly AttackWeaponChange[] {
+  return [
+    ...LOADOUT_WEAPON_SLOTS.map(
+      (slot): AttackWeaponChange => ({ kind: "equip", objectId, slot }),
+    ),
+    { kind: "stow", objectId },
+    { kind: "drop", objectId },
+  ];
 }
 
 /**
@@ -551,9 +581,14 @@ function mainGrip(
   grip: WeaponGrip | undefined,
   origin: CharacterBattleCreatureState["origin"],
 ): WeaponGrip {
-  return slot === "mainWeapon"
-    ? (grip ?? "one_handed")
-    : (origin.selectedLoadout.weapon?.grip ?? "one_handed");
+  return Match.value(slot).pipe(
+    Match.when("mainWeapon", () => grip ?? "one_handed"),
+    Match.when(
+      "offWeapon",
+      () => origin.selectedLoadout.weapon?.grip ?? "one_handed",
+    ),
+    Match.exhaustive,
+  );
 }
 
 /** Whether one of the character's owned weapons is in its hand now. */
@@ -600,7 +635,11 @@ function slotWeapon(
   loadout: CharacterBattleLoadoutRef,
   slot: LoadoutWeaponSlot,
 ): { readonly itemId: BattleObjectId; readonly unitId: UnitId } | undefined {
-  return slot === "mainWeapon" ? loadout.weapon : loadout.offHandWeapon;
+  return Match.value(slot).pipe(
+    Match.when("mainWeapon", () => loadout.weapon),
+    Match.when("offWeapon", () => loadout.offHandWeapon),
+    Match.exhaustive,
+  );
 }
 
 /** The attack bound for the weapon in a slot, when it is that weapon's. */
@@ -609,10 +648,11 @@ function slotAttack(
   slot: LoadoutWeaponSlot,
 ): BoundCharacterWeaponAttackActionOption | undefined {
   const weapon = slotWeapon(actor.origin.selectedLoadout, slot);
-  const attack =
-    slot === "mainWeapon"
-      ? (actor.origin.attack ?? undefined)
-      : actor.origin.offHandAttack;
+  const attack = Match.value(slot).pipe(
+    Match.when("mainWeapon", () => actor.origin.attack ?? undefined),
+    Match.when("offWeapon", () => actor.origin.offHandAttack),
+    Match.exhaustive,
+  );
   return weapon !== undefined && attack?.weaponObjectId === weapon.itemId
     ? attack
     : undefined;

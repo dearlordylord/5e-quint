@@ -25,10 +25,8 @@ import {
   testDaggerAttack,
   testGreataxeAttack,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleStateWithGroundObjects,
-  heldWeaponPickupTransition,
-} from "./battle-reducer/battle-object-lifecycle.ts";
+import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
+import { pickUpLoadoutWeapon } from "./loadout-weapon-pickup.test-support.ts";
 import { characterEffectiveLoadout } from "./battle-reducer/character-effective-loadout.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
@@ -240,21 +238,16 @@ describe("changing a weapon grip during a battle", () => {
       left: "mainWeapon",
       right: "mainWeapon",
     });
-    expect(
-      heldWeaponPickupTransition(twoHanded, {
-        actorId: fighterId,
-        objectId: daggerId,
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
+    expect(pickUpLoadoutWeapon(twoHanded, fighterId, daggerId)).toMatchObject({
+      tag: "invalid",
+      reason: "handsOccupied",
+    });
 
     const oneHanded = requireResolved(
       changeGrip(twoHanded, "one_handed"),
     ).state;
     expect(hands(oneHanded)).toEqual({ left: "free", right: "mainWeapon" });
-    const pickedUp = heldWeaponPickupTransition(oneHanded, {
-      actorId: fighterId,
-      objectId: daggerId,
-    });
+    const pickedUp = pickUpLoadoutWeapon(oneHanded, fighterId, daggerId);
     if (pickedUp.tag !== "applied") throw new Error(pickedUp.message);
     expect(hands(pickedUp.state)).toEqual({
       left: "offWeapon",
@@ -280,16 +273,10 @@ describe("changing a weapon grip during a battle", () => {
     ).state;
     const bothDropped = withDropped(twoHanded, swordId);
     expect(hands(bothDropped)).toEqual({ left: "free", right: "free" });
-    expect(
-      heldWeaponPickupTransition(bothDropped, {
-        actorId: fighterId,
-        objectId: daggerId,
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
-    const swordBack = heldWeaponPickupTransition(bothDropped, {
-      actorId: fighterId,
-      objectId: swordId,
-    });
+    expect(pickUpLoadoutWeapon(bothDropped, fighterId, daggerId)).toMatchObject(
+      { tag: "invalid", reason: "handsOccupied" },
+    );
+    const swordBack = pickUpLoadoutWeapon(bothDropped, fighterId, swordId);
     if (swordBack.tag !== "applied") throw new Error(swordBack.message);
     expect(hands(swordBack.state)).toEqual({
       left: "mainWeapon",

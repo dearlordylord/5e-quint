@@ -350,11 +350,11 @@ slot's own weapon goes back with its loadout grip. Another weapon takes the
 slot once the slot's weapon, if any, is out of hand; that weapon then leaves
 the loadout, still carried or lying where it fell. In the main hand a
 Two-Handed weapon takes a two-handed grip and any other weapon a one-handed
-one, which A65's grip change can then change. Battle's Attack action attacks
-with the main weapon, and the off hand holds the second weapon of the Light
-property's Bonus Action attack, so another weapon goes in the off hand only
-beside a main weapon in hand, and a Two-Handed weapon never does. The hands the
-slot gives the weapon must be empty. Unequipping either sheathes or stows a
+one, which A65's grip change can then change. A Two-Handed weapon never goes
+in the off hand. The hands the slot gives the weapon must be empty; the slot's
+own weapon takes the hands its loadout grip gives it, so under a two-handed
+main grip an off-hand weapon has none, even while the main weapon is out of
+hand. Unequipping either sheathes or stows a
 held weapon, which Battle treats the same, or drops it. A dropped weapon lands
 where the table places it, and stays on the ground for its owner to pick up
 again. As with A60, whether the creature can reach a fallen weapon is the
@@ -376,7 +376,10 @@ brings into the battle only owned weapons it can execute; one it can't stays
 out, as if left behind. A Grapple or Shove can't carry a change before it yet:
 a character makes that change after the attack before it, or with another
 attack. The object interaction that picks a fallen weapon up puts back only a
-loadout weapon, into its own slot.
+loadout weapon, into its own slot. Battle's Attack action attacks with the
+main weapon, and its off hand holds only the second weapon of the Light
+property's Bonus Action attack, so another weapon goes in the off hand only
+beside a main weapon in hand; the SRD sets no such limit.
 
 ## A58: Any weapon may be held with both hands
 

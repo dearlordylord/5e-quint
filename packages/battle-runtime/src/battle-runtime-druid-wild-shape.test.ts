@@ -2,7 +2,7 @@ import {
   retainBattleRuntimeContinuation,
   restoreBattleRuntimeContinuation,
 } from "./battle-runtime-transaction.ts";
-import { heldWeaponPickupTransition } from "./battle-reducer/battle-object-lifecycle.ts";
+import { pickUpLoadoutWeapon } from "./loadout-weapon-pickup.test-support.ts";
 import {
   battleGroundObjectState,
   battleObjectIsOnGround,
@@ -1951,14 +1951,15 @@ test("does not turn fallen Heavy armor into worn armor through weapon pickup", (
     ),
   );
 
-  const invalidWeaponPickup = heldWeaponPickupTransition(reverted.state, {
-    actorId: druidId,
-    objectId: armorObjectId,
-  });
+  const invalidWeaponPickup = pickUpLoadoutWeapon(
+    reverted.state,
+    druidId,
+    armorObjectId,
+  );
 
   expect(invalidWeaponPickup).toMatchObject({
     tag: "invalid",
-    reason: "notSelectedLoadoutWeapon",
+    reason: "notOwnedWeapon",
   });
   expect(battleObjectIsOnGround(reverted.state, druidId, armorObjectId)).toBe(
     true,
@@ -2016,13 +2017,10 @@ test("does not turn a fallen Shield into a wielded Shield through weapon pickup"
   );
 
   expect(
-    heldWeaponPickupTransition(reverted.state, {
-      actorId: druidId,
-      objectId: shieldObjectId,
-    }),
+    pickUpLoadoutWeapon(reverted.state, druidId, shieldObjectId),
   ).toMatchObject({
     tag: "invalid",
-    reason: "notSelectedLoadoutWeapon",
+    reason: "notOwnedWeapon",
   });
   expect(battleObjectIsOnGround(reverted.state, druidId, shieldObjectId)).toBe(
     true,
@@ -2077,7 +2075,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   const placedDruid = requireCharacter(placed.state, druidId);
   expect(characterEffectiveLoadout(placed.state, placedDruid)).toEqual({});
   const pickup = (actorId: typeof druidId, objectId: typeof mainWeaponItemId) =>
-    heldWeaponPickupTransition(placed.state, { actorId, objectId });
+    pickUpLoadoutWeapon(placed.state, actorId, objectId);
 
   expect(
     pickup(combatantId("missing-pickup-actor"), mainWeaponItemId),
@@ -2088,7 +2086,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   });
   expect(
     pickup(druidId, battleObjectId("missing-ground-object")),
-  ).toMatchObject({ tag: "invalid", reason: "objectNotOnGround" });
+  ).toMatchObject({ tag: "invalid", reason: "notOwnedWeapon" });
 
   const pickedUp = pickup(druidId, mainWeaponItemId);
   if (pickedUp.tag !== "applied") {
@@ -4200,13 +4198,10 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     ]),
   );
   expect(
-    heldWeaponPickupTransition(fallen.state, {
-      actorId: druidId,
-      objectId: quarterstaff.objectId,
-    }),
+    pickUpLoadoutWeapon(fallen.state, druidId, quarterstaff.objectId),
   ).toMatchObject({
     tag: "invalid",
-    reason: "activeFormPickupUnsupported",
+    reason: "activeFormWeaponChangeUnsupported",
   });
   // Discovery uses the same admission, so it doesn't offer the pickup.
   expect(
@@ -4257,10 +4252,11 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     reason: "unsupportedSubject",
   });
 
-  const pickedUp = heldWeaponPickupTransition(revertedSession.state, {
-    actorId: druidId,
-    objectId: quarterstaff.objectId,
-  });
+  const pickedUp = pickUpLoadoutWeapon(
+    revertedSession.state,
+    druidId,
+    quarterstaff.objectId,
+  );
   if (pickedUp.tag !== "applied") {
     throw new Error(pickedUp.message);
   }

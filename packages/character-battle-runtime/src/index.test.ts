@@ -132,6 +132,7 @@ import {
   DieRollResult,
   difficultyClass,
   movementFeet,
+  PositiveInteger,
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
@@ -11581,6 +11582,73 @@ describe("Character Build battle projection", () => {
       damageTypeChoices: ["slashing", "necrotic", "psychic", "radiant"],
       weapon: { weaponUnitId: "weapon_longsword" },
     });
+  });
+
+  test("bonds Pact of the Blade to one copy of the bonded item only", () => {
+    const longswordItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_longsword")),
+      ),
+    });
+    const withLongswords = (build: CharacterBuild): CharacterBuild => ({
+      ...build,
+      equipment: {
+        ...build.equipment,
+        owned: [
+          ...build.equipment.owned.filter(
+            (item) =>
+              item.kind !== "catalogItem" || item.itemId !== longswordItemId,
+          ),
+          characterBuildCatalogEquipmentItem({
+            itemId: longswordItemId,
+            quantity: PositiveInteger(2),
+          }),
+        ],
+      },
+    });
+    const project = (build: CharacterBuild) =>
+      expectSuccess(
+        characterBattleWeaponAttackInitProjection({
+          build,
+          unitLibrary,
+          weaponMasteries: [],
+          classLevels: [{ className: "fighter", level: 1 }],
+          pactBladeBondedWeaponItemId: longswordItemId,
+        }),
+      );
+    const bonded = (
+      attack: { readonly damageTypeChoices?: unknown } | null | undefined,
+    ) => attack?.damageTypeChoices !== undefined;
+
+    // Held: the loadout's Longsword is the bonded one, the spare is not.
+    const held = project(
+      withLongswords(
+        pactBladeInvocationBuild(authoredUnitId("weapon_longsword")),
+      ),
+    );
+    expect(bonded(held.attack)).toBe(true);
+    expect(
+      held.otherOwnedWeapons.map(({ itemId, attack }) => [
+        itemId,
+        bonded(attack),
+      ]),
+    ).toEqual([["main:weapon_longsword#2", false]]);
+
+    // Carried: the first spare Longsword is the bonded one.
+    const carried = project(
+      withLongswords(pactBladeInvocationBuild(authoredUnitId("weapon_dagger"))),
+    );
+    expect(bonded(carried.attack)).toBe(false);
+    expect(
+      carried.otherOwnedWeapons.map(({ itemId, attack }) => [
+        itemId,
+        bonded(attack),
+      ]),
+    ).toEqual([
+      ["main:weapon_longsword", true],
+      ["main:weapon_longsword#2", false],
+    ]);
   });
 
   test("keeps Pact of the Blade damage choices distinct for magical weapon damage", () => {

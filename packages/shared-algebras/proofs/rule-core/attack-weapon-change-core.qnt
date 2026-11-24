@@ -20,7 +20,9 @@ module attackWeaponChangeCore {
   // loadout: the main hand or the off hand. The slot's own weapon goes back
   // with the loadout's grip. Another weapon takes the slot once the slot's
   // weapon, if any, is out of hand; that weapon then leaves the loadout, still
-  // carried, or lying where it fell (ASSUMPTIONS.md A63).
+  // carried, or lying where it fell (ASSUMPTIONS.md A63). That Battle puts
+  // another weapon in the off hand only beside a main weapon in hand is a
+  // limit of its slot model, not a rule, so it isn't modeled here (A63).
 
   type WeaponCustody = HeldWeapon | StowedWeapon | WeaponOnGround
 

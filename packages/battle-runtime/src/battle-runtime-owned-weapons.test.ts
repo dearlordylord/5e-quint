@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.ACTION.ATTACK_WEAPON_CHANGE
 import { describe, expect, it } from "vitest";
 import { unitId as parseUnitId } from "@dnd/shared/game-facts";
 import { Result, Schema } from "effect";
@@ -160,6 +161,38 @@ describe("weapons the character owns outside its loadout", () => {
     expect(Result.isFailure(started)).toBe(true);
     expect(JSON.stringify(started)).toContain(
       "owned weapons outside the loadout must each be a battle object of their own",
+    );
+  });
+
+  it("refuses an owned weapon without an authored presentation source, as it would one in hand", () => {
+    const character = characterSeed({
+      initiative: 20,
+      otherOwnedWeapons: [{ itemId: greataxeId, attack: greataxeAttack() }],
+    });
+    if (character.creatureInit.kind !== "character") {
+      throw new Error("Expected the Fighter.");
+    }
+    const started = startBattle({
+      battleId: battleId("battle-owned-weapon-presentation"),
+      combatants: [
+        {
+          ...character,
+          creatureInit: {
+            ...character.creatureInit,
+            characterUnitRefs: character.creatureInit.characterUnitRefs.filter(
+              ({ unit }) => unit.id !== "weapon_greataxe",
+            ),
+          },
+        },
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(started).toMatchObject(
+      Result.fail({
+        kind: "weaponPresentationUnavailable",
+        weaponUnitId: "weapon_greataxe",
+        availability: "missing",
+      }),
     );
   });
 
