@@ -59,6 +59,7 @@ import {
 import type {
   BattleState,
   BattleSubject,
+  CombatantId,
 } from "./battle-runtime.test-support.ts";
 import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
 import {
@@ -821,15 +822,15 @@ describe("battle runtime: attack rolls and damage", () => {
     }
     const slowedOnce = applyWeaponMasterySlowAfterDamage({
       state,
-      attackerId: fighterId,
-      targetId: goblinId,
+      attacker: requireCombatant(state, fighterId),
+      target: requireCombatant(state, goblinId),
       attack: slowedAttackResult.attack,
       damageAmount: 4,
     });
     const slowedTwice = applyWeaponMasterySlowAfterDamage({
       state: slowedOnce,
-      attackerId: fighterId,
-      targetId: goblinId,
+      attacker: requireCombatant(slowedOnce, fighterId),
+      target: requireCombatant(slowedOnce, goblinId),
       attack: slowedAttackResult.attack,
       damageAmount: 4,
     });
@@ -837,8 +838,8 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(
       applyWeaponMasterySlowAfterDamage({
         state: slowedTwice,
-        attackerId: fighterId,
-        targetId: goblinId,
+        attacker: requireCombatant(slowedTwice, fighterId),
+        target: requireCombatant(slowedTwice, goblinId),
         attack: slowedAttackResult.attack,
         damageAmount: 0,
       }),
@@ -855,18 +856,18 @@ describe("battle runtime: attack rolls and damage", () => {
     ) {
       throw new Error("Expected Sap weapon attack.");
     }
-    const sapOnce = applyWeaponMasterySapOnHit(
-      sapState,
-      fighterId,
-      goblinId,
-      sapFighter.origin.attack,
-    );
-    const sapTwice = applyWeaponMasterySapOnHit(
-      sapOnce,
-      fighterId,
-      goblinId,
-      sapFighter.origin.attack,
-    );
+    const sapOnce = applyWeaponMasterySapOnHit({
+      state: sapState,
+      attacker: requireCombatant(sapState, fighterId),
+      target: requireCombatant(sapState, goblinId),
+      attack: sapFighter.origin.attack,
+    });
+    const sapTwice = applyWeaponMasterySapOnHit({
+      state: sapOnce,
+      attacker: requireCombatant(sapOnce, fighterId),
+      target: requireCombatant(sapOnce, goblinId),
+      attack: sapFighter.origin.attack,
+    });
     expect(sapTwice.combatants.get(goblinId)?.activeEffects).toHaveLength(1);
   });
 
@@ -1965,4 +1966,12 @@ function isFixedStatBlockAttackOption(
     (damage.advantageBonus === undefined ||
       damage.advantageBonus.kind === "fixed")
   );
+}
+
+function requireCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected combatant ${id}.`);
+  }
+  return combatant;
 }

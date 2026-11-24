@@ -2362,7 +2362,7 @@ export function resolveSelectedAttackProcedure<
     const duplicateInterceptionCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
       attacker: duplicateInterceptionAttacker,
-      target: requireCurrentAttackTarget(attackRolledState, target),
+      target: requireCurrentAttackParticipant(attackRolledState, target),
       targetSpatialFacts: fillSet.targetSpatialFacts,
       triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
       fill: fillSet.duplicateHitInterceptionRoll,
@@ -2686,8 +2686,14 @@ export function resolveSelectedAttackProcedure<
   const weaponMasteryPushApplied = hit
     ? applyWeaponMasteryPushOnHit({
         state: openHandTechniqueApplied.state,
-        attackerId,
-        targetId: target.combatantId,
+        attacker: requireCurrentAttackParticipant(
+          openHandTechniqueApplied.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(
+          openHandTechniqueApplied.state,
+          target,
+        ),
         attack,
         targetSpatialFacts: fillSet.targetSpatialFacts,
       })
@@ -2714,7 +2720,7 @@ export function resolveSelectedAttackProcedure<
     ? weaponMasteryToppleSavingThrowHole({
         state: weaponMasteryPushApplied.state,
         attacker,
-        target: requireCurrentAttackTarget(
+        target: requireCurrentAttackParticipant(
           weaponMasteryPushApplied.state,
           target,
         ),
@@ -2752,22 +2758,28 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
   const weaponHitAppliedState = hit
-    ? applyWeaponMasterySapOnHit(
-        toppleApplied.state,
-        attackerId,
-        target.combatantId,
+    ? applyWeaponMasterySapOnHit({
+        state: toppleApplied.state,
+        attacker: requireCurrentAttackParticipant(
+          toppleApplied.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(toppleApplied.state, target),
         attack,
-      )
+      })
     : toppleApplied.state;
   const hitAppliedState =
     hit && attack.kind === "statBlockAttack"
       ? applyStatBlockAttackHitConditionRiders({
           state: weaponHitAppliedState,
-          target: requireCurrentAttackTarget(weaponHitAppliedState, target),
+          target: requireCurrentAttackParticipant(
+            weaponHitAppliedState,
+            target,
+          ),
           attack,
         })
       : weaponHitAppliedState;
-  const damageTarget = requireCurrentAttackTarget(hitAppliedState, target);
+  const damageTarget = requireCurrentAttackParticipant(hitAppliedState, target);
   if (
     fixedDamageAmount !== null &&
     fixedDamageByTypeBeforeTargetAdjustments !== null
@@ -3058,8 +3070,14 @@ export function resolveSelectedAttackProcedure<
     const fixedDamageWithWeaponMasterySpeedReductionState =
       applyWeaponMasterySlowAfterDamage({
         state: fixedDamageAppliedState,
-        attackerId,
-        targetId: target.combatantId,
+        attacker: requireCurrentAttackParticipant(
+          fixedDamageAppliedState,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(
+          fixedDamageAppliedState,
+          target,
+        ),
         attack,
         damageAmount: Number(reducedFixedDamageAmount),
       });
@@ -3641,8 +3659,11 @@ export function resolveSelectedAttackProcedure<
     const damageWithWeaponMasterySpeedReductionState =
       applyWeaponMasterySlowAfterDamage({
         state: cunningStrike.state,
-        attackerId,
-        targetId: target.combatantId,
+        attacker: requireCurrentAttackParticipant(
+          cunningStrike.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(cunningStrike.state, target),
         attack,
         damageAmount: Number(reducedDamageAmount),
       });
@@ -3804,19 +3825,21 @@ function weaponMasteryGrazeMissDamage(input: {
   );
 }
 
-function requireCurrentAttackTarget(
+function requireCurrentAttackParticipant(
   state: BattleState,
-  resolvedTarget: BattleCreatureState,
+  resolvedParticipant: BattleCreatureState,
 ): BattleCreatureState {
-  const currentTarget = state.combatants.get(resolvedTarget.combatantId);
-  /* v8 ignore start -- @preserve -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved target combatant while possibly replacing its state value. */
-  if (currentTarget === undefined) {
+  const currentParticipant = state.combatants.get(
+    resolvedParticipant.combatantId,
+  );
+  /* v8 ignore start -- @preserve -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved attacker and target combatants while possibly replacing their state values. */
+  if (currentParticipant === undefined) {
     throw new Error(
-      "Attack-roll transitions must preserve the resolved target.",
+      "Attack-roll transitions must preserve the resolved attacker and target.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  return currentTarget;
+  return currentParticipant;
 }
 
 function withOpenHandTechniqueShovePushes(

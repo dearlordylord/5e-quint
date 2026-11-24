@@ -519,12 +519,12 @@ describe("battle runtime: Weapon Mastery", () => {
         },
       ],
     });
-    const selectedNonSapWeapon = applyWeaponMasterySapOnHit(
-      selectedNonSapWeaponState,
-      fighterId,
-      goblinId,
-      testShortswordAttack(),
-    );
+    const selectedNonSapWeapon = applyWeaponMasterySapOnHit({
+      state: selectedNonSapWeaponState,
+      attacker: requireCombatant(selectedNonSapWeaponState, fighterId),
+      target: requireCombatant(selectedNonSapWeaponState, goblinId),
+      attack: testShortswordAttack(),
+    });
 
     for (const result of [
       hitWithoutSelection,
@@ -3107,3 +3107,11 @@ describe("battle runtime: Weapon Mastery", () => {
     });
   });
 });
+
+function requireCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected combatant ${id}.`);
+  }
+  return combatant;
+}
