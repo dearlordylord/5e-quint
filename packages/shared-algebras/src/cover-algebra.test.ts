@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   armorClassBehindCover,
+  bonusCover,
   coverArmorClassBonus,
   coverBonus,
   coverTargeting,
@@ -51,6 +52,12 @@ describe("cover algebra", () => {
   test("Half Cover adds 2 and Three-Quarters Cover adds 5 to a Dexterity saving throw", () => {
     expect(coverBonus("half")).toBe(2);
     expect(coverBonus("threeQuarters")).toBe(5);
+  });
+
+  test("only Half Cover and Three-Quarters Cover add a bonus", () => {
+    expect(bonusCover("none")).toBeNull();
+    expect(bonusCover("half")).toBe("half");
+    expect(bonusCover("threeQuarters")).toBe("threeQuarters");
   });
 
   test("only a Dexterity saving throw benefits from cover", () => {
