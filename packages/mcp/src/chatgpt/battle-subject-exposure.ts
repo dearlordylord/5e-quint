@@ -101,6 +101,7 @@ export const BATTLE_SUBJECT_EXPOSURE = {
   "runtimeCommand.move": tool("move"),
   "runtimeCommand.opportunityAttack": tool("attack"),
   "runtimeCommand.pickUpHeldWeapon": tool("interact_with_object"),
+  "runtimeCommand.changeWeaponGrip": tool("change_weapon_grip"),
   "runtimeCommand.persistentAreaSaveCompositeSave": tool("resolve_spell_save"),
   "runtimeCommand.persistentAreaSaveConditionEscapeSave":
     tool("resolve_spell_save"),

@@ -7,7 +7,7 @@ import {
   attackTargetConstraint,
   weaponAttackTargetConstraint,
 } from "./statblock-attacks.ts";
-import { admitWeaponMeleeGripDamage } from "../weapon-melee-grip-damage.ts";
+import { admitVersatileMeleeDamage } from "../weapon-melee-grip-damage.ts";
 import { Schema } from "effect";
 import { Result } from "effect";
 import { unitId } from "@dnd/shared/game-facts";
@@ -72,7 +72,7 @@ describe("battle action option codecs", () => {
 
   test("melee grip evidence must belong to the base weapon", () => {
     const weapon = testLongswordAttack();
-    const admitted = admitWeaponMeleeGripDamage(weapon.weapon, "two_handed");
+    const admitted = admitVersatileMeleeDamage(weapon.weapon, "two_handed");
     if (Result.isFailure(admitted) || admitted.success === undefined)
       throw new Error("Expected the fixture's admitted Versatile property.");
     const attack = {

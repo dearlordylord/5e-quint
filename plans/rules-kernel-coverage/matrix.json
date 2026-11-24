@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 181,
-    "covered": 170,
+    "total": 182,
+    "covered": 171,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 141,
+      "battle": 142,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 170,
+      "covered": 171,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 200,
+    "total": 201,
     "bySubject": {
       "battle-hole-family": 100,
       "battle-fill-kind": 59,
-      "battle-subject-kind": 41
+      "battle-subject-kind": 42
     },
     "byClassification": {
-      "semantic-frontier": 152,
+      "semantic-frontier": 153,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 48,
       "unsupported-dead-branch": 0
@@ -6586,6 +6586,35 @@
         ".references/srd-5.2.1/rules-glossary.md#Utilize [Action]"
       ],
       "title": "Object interaction: the first object a creature interacts with on its turn is free unless the table rules it needs an action, and any other costs the Utilize action"
+    },
+    {
+      "id": "BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt"
+      ],
+      "reason": "The QNT owner models a grip change allowed on the creature's own turn while it can act and holds the weapon, to a different grip, keeping a Two-Handed weapon two-handed and requiring the other hand free for a two-handed grip. The Movement MBT replays both directions and the refusal while a Grapple holds the other hand, projecting the grip, the hands it holds and the Longsword's Versatile damage die against Battle. Battle changes the selected loadout's grip and its hands together and costs nothing; the attack reads the grip when it deals damage.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/weapon-grip.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/equipment.md#Versatile",
+        ".references/srd-5.2.1/equipment.md#Two-Handed",
+        "ASSUMPTIONS.md#a58-any-weapon-may-be-held-with-both-hands",
+        "ASSUMPTIONS.md#a65-a-creature-changes-its-weapon-grip-for-free-on-its-own-turn"
+      ],
+      "title": "Weapon grip change: a character changes its held main weapon between one and two hands on its own turn at no cost, a two-handed grip needs the other hand free, and the grip sets the hands held and the Versatile damage die"
     }
   ],
   "battleHoleFrontier": [
@@ -8744,6 +8773,15 @@
       "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
       "subject": "battle-subject-kind",
       "subjectKind": "runtimeObjectInteraction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
+      "followUpTaskIds": [],
+      "id": "runtimeWeaponGrip",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeWeaponGrip"
     }
   ],
   "profileObligations": [
@@ -13530,6 +13568,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns when a creature can change how it holds its weapon between one and two hands, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover a Versatile weapon changing grip both ways with its damage die, a two-handed grip needing the other hand free, a Two-Handed weapon keeping its grip, and no change to the same grip, without the weapon, off-turn or while unable to act.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15822,6 +15872,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21024,6 +21084,18 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": ["record", "pure-def", "bool", "boolean-connective"],
+      "obligationId": "BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

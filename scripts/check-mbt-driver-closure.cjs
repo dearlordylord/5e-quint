@@ -55,6 +55,10 @@ const PURE_VOCABULARY_LEAF_MODULES = new Map([
     "packages/battle-runtime/rule-core-component-route.qnt",
     "rule-core component route vocabulary",
   ],
+  [
+    "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt",
+    "weapon grip change admission facts",
+  ],
 ]);
 
 const forbiddenName = (...parts) => parts.join("");

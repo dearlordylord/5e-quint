@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 181
-- Covered obligations: 170
+- Total obligations: 182
+- Covered obligations: 171
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   170 |
+| covered                  |   171 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   141 |
+| battle             |   142 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -213,20 +213,21 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.HELP.ABILITY_CHECK_ASSIST`                                | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.ATTACK.TARGET_COVER`                                      | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                           | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
-- Total classified rows: 200
+- Total classified rows: 201
 
 | Subject             | Count |
 | ------------------- | ----: |
 | battle-hole-family  |   100 |
 | battle-fill-kind    |    59 |
-| battle-subject-kind |    41 |
+| battle-subject-kind |    42 |
 
 | Classification                    | Count |
 | --------------------------------- | ----: |
-| semantic-frontier                 |   152 |
+| semantic-frontier                 |   153 |
 | deterministic-boundary-projection |     0 |
 | table-owned-fact                  |    48 |
 | unsupported-dead-branch           |     0 |
@@ -433,6 +434,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | battle-hole-family  | `BattleObjectInteractionRulingHole`                                       | `objectInteractionRuling`                        | table-owned-fact  | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ACTION.OBJECT_INTERACTION_COST`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | _none_    |
 | battle-fill-kind    | `objectInteractionRuling`                                                 | `objectInteractionRuling`                        | table-owned-fact  | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ACTION.OBJECT_INTERACTION_COST`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | _none_    |
 | battle-subject-kind | `runtimeObjectInteraction`                                                | `runtimeObjectInteraction`                       | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | _none_    |
+| battle-subject-kind | `runtimeWeaponGrip`                                                       | `runtimeWeaponGrip`                              | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | _none_    |
 
 ## QNT Owner Roles
 
@@ -968,6 +970,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt`                                         | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt`                                        | semantic-core           | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt`                               | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt`                                             | semantic-core           | `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt`                                    | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1427,6 +1431,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt`                                    | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/use-count-resource-recovery-examples.qnt`                                | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/use-count-resource-recovery.qnt`                                         | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt`                                    | qnt-owner-role | proof-only                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt`                                             | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core-examples.qnt`                                  | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt`                                           | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt`                                          | qnt-owner-role | semantic-core                                                                                                                                                                                            |
@@ -1654,6 +1660,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.HELP.ABILITY_CHECK_ASSIST`                                | generation-subset-clean | `record`, `pure-def`, `int`, `bool`, `comparison`, `boolean-connective`, `all-block`, `set`, `set-operators`, `size`, `membership`, `exists`, `filter`                                                                                                                                                             |          |           |
 | `BATTLE.ATTACK.TARGET_COVER`                                      | generation-subset-clean | `variant`, `pure-def`, `int`, `bool`, `pattern-match`, `arithmetic`, `all-block`                                                                                                                                                                                                                                   |          |           |
 | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                           | generation-subset-clean | `record`, `pure-def`, `bool`, `boolean-connective`, `set`, `if-expression`, `variant`                                                                                                                                                                                                                              |          |           |
+| `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | generation-subset-clean | `record`, `pure-def`, `bool`, `boolean-connective`                                                                                                                                                                                                                                                                 |          |           |
 
 ### Generator Readiness Backlog
 
