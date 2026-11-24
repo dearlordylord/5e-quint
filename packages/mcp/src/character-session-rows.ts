@@ -231,39 +231,58 @@ function availableCharacterSessionDetail(
     build: sheet.build,
     unitLibrary: root.unitLibrary,
   });
-  if (Result.isFailure(weaponBlockers)) {
-    return Result.fail({
-      tag: "equippedWeaponBattleBlockersUnavailable",
-      issue: weaponBlockers.failure,
-    });
-  }
-  const sheetProjection = parseCharacterSessionSheetProjection({
-    equippedWeaponBattleBlockers: weaponBlockers.success,
-    classSpellBattleSupport: characterBattleSpellSupportOutput({
-      build: sheet.build,
-      unitLibrary: root.unitLibrary,
-    }),
-    currentHp: characterSessionCurrentHp(sheet),
-    companion: characterSheetCompanionProjection(sheet),
-    hitPointMaximum: hitPointMaximum.success,
-    hitDice: hitDice.success,
-    ...(spellSlots === undefined ? {} : { spellSlots }),
-    ...(pactSlots === undefined ? {} : { pactSlots }),
-    resources: resources.success.map(characterSheetResourceDisplayRow),
-  });
-  if (Result.isFailure(sheetProjection)) {
-    return Result.fail({
-      tag: "sheetProjectionUnavailable",
-      message: sheetProjection.failure.message,
-    });
-  }
-  return Result.succeed({
-    tag: sheet.tag,
-    characterId: sheet.characterId,
-    displayName: displayName.success,
-    sheet,
-    sheetProjection: sheetProjection.success,
-  });
+  return weaponBlockers.pipe(
+    Result.mapError(
+      (
+        issue,
+      ): Extract<
+        CharacterSessionProjectionIssue,
+        { readonly tag: "equippedWeaponBattleBlockersUnavailable" }
+      > => ({
+        tag: "equippedWeaponBattleBlockersUnavailable",
+        issue,
+      }),
+    ),
+    Result.flatMap(
+      (
+        equippedWeaponBattleBlockers,
+      ): Result.Result<
+        Extract<CharacterSessionDetail, { readonly tag: "available" }>,
+        Extract<
+          CharacterSessionProjectionIssue,
+          { readonly tag: "sheetProjectionUnavailable" }
+        >
+      > => {
+        const sheetProjection = parseCharacterSessionSheetProjection({
+          equippedWeaponBattleBlockers,
+          classSpellBattleSupport: characterBattleSpellSupportOutput({
+            build: sheet.build,
+            unitLibrary: root.unitLibrary,
+          }),
+          currentHp: characterSessionCurrentHp(sheet),
+          companion: characterSheetCompanionProjection(sheet),
+          hitPointMaximum: hitPointMaximum.success,
+          hitDice: hitDice.success,
+          ...(spellSlots === undefined ? {} : { spellSlots }),
+          ...(pactSlots === undefined ? {} : { pactSlots }),
+          resources: resources.success.map(characterSheetResourceDisplayRow),
+        });
+        if (Result.isFailure(sheetProjection)) {
+          return Result.fail({
+            tag: "sheetProjectionUnavailable",
+            message: sheetProjection.failure.message,
+          });
+        }
+        return Result.succeed({
+          tag: sheet.tag,
+          characterId: sheet.characterId,
+          displayName: displayName.success,
+          sheet,
+          sheetProjection: sheetProjection.success,
+        });
+      },
+    ),
+  );
 }
 
 function characterSheetCompanionProjection(
