@@ -21,8 +21,9 @@ import {
   type BattleSpellAttackRerollDecision,
   type BattleSpellAttackRollHole,
   type BattleState,
-  type BattleTurnResources,
 } from "../battle-state-execution.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
+import { subjectContinuationPhaseFor } from "./subject-continuation-phase.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
@@ -77,6 +78,7 @@ export type AttackRollHeroicInspirationUse = Brand.Branded<
   | {
       readonly spends: true;
       readonly actorId: CombatantId;
+      readonly subject: BattleSubject;
       readonly attackRollHoleId: HoleId;
     },
   "AttackRollHeroicInspirationUse"
@@ -101,6 +103,7 @@ export type AttackRollD20TestRerolls =
 
 type AttackRollD20TestRerollInput = {
   readonly state: BattleState;
+  readonly subject: BattleSubject;
   readonly attackerId: CombatantId;
   /** The hole this attack roll fills, which names the roll within its subject. */
   readonly attackRollHoleId: HoleId;
@@ -118,19 +121,35 @@ type AttackRollD20TestRerollInput = {
 function heroicInspirationRerollAvailabilityForRoll(
   input: AttackRollD20TestRerollInput,
 ): HeroicInspirationRerollAvailability {
+  const spent = subjectContinuationPhaseFor(
+    input.state,
+    input.subject,
+  ).acceptedHeroicInspirationReroll;
+  if (
+    spent?.actorId === input.attackerId &&
+    spent.attackRollHoleId === input.attackRollHoleId
+  )
+    return "available";
   if (
     combatantHasHeroicInspiration(input.state.combatants.get(input.attackerId))
-  ) {
+  )
     return "available";
-  }
-  const spent =
-    input.state.currentTurnResources.heroicInspirationAttackRollReroll;
-  if (spent?.actorId !== input.attackerId) {
-    return "unavailable";
-  }
-  return spent.attackRollHoleId === input.attackRollHoleId
-    ? "available"
-    : "spentOnAnotherRoll";
+  return spent?.actorId === input.attackerId
+    ? "spentOnAnotherRoll"
+    : "unavailable";
+}
+
+function heroicInspirationWasAcceptedForRoll(
+  input: AttackRollD20TestRerollInput,
+): boolean {
+  const spent = subjectContinuationPhaseFor(
+    input.state,
+    input.subject,
+  ).acceptedHeroicInspirationReroll;
+  return (
+    spent?.actorId === input.attackerId &&
+    spent.attackRollHoleId === input.attackRollHoleId
+  );
 }
 
 /**
@@ -175,10 +194,12 @@ export function attackRollD20TestRerolls(
     tag: "resolved",
     effectiveAttackRoll: sequence.attackRoll,
     heroicInspirationUse: AttackRollHeroicInspirationUse(
-      sequence.rerolled.heroicInspiration
+      sequence.rerolled.heroicInspiration &&
+        !heroicInspirationWasAcceptedForRoll(input)
         ? {
             spends: true,
             actorId: input.attackerId,
+            subject: input.subject,
             attackRollHoleId: input.attackRollHoleId,
           }
         : { spends: false },
@@ -341,28 +362,14 @@ export function battleStateAfterHeroicInspirationReroll(
       ...actor,
       origin: { ...actor.origin, heroicInspiration: NO_HEROIC_INSPIRATION },
     }),
-    currentTurnResources: {
-      ...state.currentTurnResources,
-      heroicInspirationAttackRollReroll: {
+    subjectResolutionPhase: {
+      ...subjectContinuationPhaseFor(state, use.subject),
+      acceptedHeroicInspirationReroll: {
         actorId: use.actorId,
         attackRollHoleId: use.attackRollHoleId,
       },
     },
   };
-}
-
-/**
- * Turn resources once no subject is pending: the record of the roll that spent
- * Heroic Inspiration belongs to the subject that made it.
- */
-export function turnResourcesWithoutHeroicInspirationAttackRollReroll(
-  resources: BattleTurnResources,
-): BattleTurnResources {
-  const {
-    heroicInspirationAttackRollReroll: _completedSubjectReroll,
-    ...withoutReroll
-  } = resources;
-  return withoutReroll;
 }
 
 /**

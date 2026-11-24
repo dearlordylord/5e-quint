@@ -884,7 +884,10 @@ export type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly operation: "createAndAttack" | "repositionAndAttack";
 };
-export type BattleInterruptedProcedure =
+export type BattleInterruptedProcedure = {
+  /** Accepted spend owned by this suspended subject, never by its active turn. */
+  readonly acceptedHeroicInspirationReroll?: BattleAcceptedHeroicInspirationReroll;
+} & (
   | {
       readonly kind: "replay";
       readonly subject: BattleSubject;
@@ -970,7 +973,8 @@ export type BattleInterruptedProcedure =
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     }
-  | BattleAttackDamageInterruptionFrame;
+  | BattleAttackDamageInterruptionFrame
+);
 export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
@@ -4153,7 +4157,7 @@ export type PendingAttackRollMissToHitReplacementContext = {
   readonly attackRoll: BattleAttackRollResult;
 };
 /** The attack roll that spent a creature's Heroic Inspiration on its reroll. */
-export type BattleHeroicInspirationAttackRollReroll = {
+export type BattleAcceptedHeroicInspirationReroll = {
   readonly actorId: CombatantId;
   readonly attackRollHoleId: HoleId;
 };
@@ -4197,12 +4201,6 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
-  /**
-   * The attack roll whose reroll spent Heroic Inspiration in the subject still
-   * being resolved. A replay of that subject admits that roll's decision again;
-   * no other roll can use it. Absent when no pending subject spent it.
-   */
-  readonly heroicInspirationAttackRollReroll?: BattleHeroicInspirationAttackRollReroll;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: BattleObjectId;
   };
@@ -4471,6 +4469,7 @@ export type BattleSubjectResolutionPhase =
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
       readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
+      readonly acceptedHeroicInspirationReroll?: BattleAcceptedHeroicInspirationReroll;
       readonly admittedMovement?: Extract<
         BattleInterruptedProcedure,
         { readonly kind: "movement" }

@@ -1373,6 +1373,7 @@ function prepareOrdinaryObjectAttackRoll<
   const attacker = input.input.state.combatants.get(input.attackerId);
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.input.state,
+    subject: input.input.subject,
     attackerId: input.attackerId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll,
@@ -2202,6 +2203,7 @@ export function resolveSelectedAttackProcedure<
   }
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.state,
+    subject: input.subject,
     attackerId: attackerId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: fillSet.attackRoll,
@@ -4368,6 +4370,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
   /* v8 ignore stop -- @preserve */
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.state,
+    subject: input.subject,
     attackerId: input.subject.actorId,
     attackRollHoleId: input.attackRollHole.holeId,
     attackRoll: attackRoll.value,

@@ -496,6 +496,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   /* v8 ignore stop -- @preserve */
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.state,
+    subject: input.input.subject,
     attackerId: input.actorId,
     attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
       input.invocation,
@@ -1177,6 +1178,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
   /* v8 ignore stop -- @preserve */
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.state,
+    subject: input.input.subject,
     attackerId: input.actorId,
     attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
       input.invocation,

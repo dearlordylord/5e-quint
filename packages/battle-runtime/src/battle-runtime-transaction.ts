@@ -58,7 +58,7 @@ import {
   restoreInterruptCheckpointIdentity,
   type InterruptCheckpointIdentity,
 } from "./battle-reducer/interrupt-checkpoint-identity.ts";
-import { interruptedProcedureSubject } from "./battle-reducer/interrupt-execution.ts";
+import { interruptedProcedureSubject } from "./battle-reducer/subject-continuation-phase.ts";
 import { battleResubmittedFillKeepsAcceptedFill } from "./battle-reducer/battle-fill-equality.ts";
 import { handledInterruptOccurrenceForCheckpoint } from "./battle-reducer/interrupt-lifecycle.ts";
 import {

@@ -332,6 +332,7 @@ function resolveObjectTargetSpellAttackCore(
   /* v8 ignore stop -- @preserve */
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.input.state,
+    subject: input.input.subject,
     attackerId: input.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: attackRoll,

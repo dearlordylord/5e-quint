@@ -552,6 +552,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     /* v8 ignore stop -- @preserve */
     const d20TestRerolls = attackRollD20TestRerolls({
       state: replayState,
+      subject: input.input.subject,
       attackerId: input.actorId,
       attackRollHoleId: chainedSpellAttackRollHoleId(
         input.invocation,

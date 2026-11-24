@@ -375,6 +375,7 @@ function resolveBonusActionAttack(
   const attacker = input.state.combatants.get(input.subject.actorId);
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.state,
+    subject: input.subject,
     attackerId: input.subject.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: fillSet.attackRoll,

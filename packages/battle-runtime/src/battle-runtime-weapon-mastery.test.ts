@@ -1,6 +1,8 @@
+import { HEROIC_INSPIRATION_AVAILABLE } from "@dnd/shared/game-facts";
+import { HEROIC_INSPIRATION_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
-import { attackBonus, classLevel } from "@dnd/shared/types";
+import { attackBonus, classLevel, DieRollResult } from "@dnd/shared/types";
 import { Result } from "effect";
 import {
   characterBattleFeatureInitForTest,
@@ -2237,146 +2239,189 @@ describe("battle runtime: Weapon Mastery", () => {
     });
   });
 
-  test("Weapon Mastery Cleave opens attack-hit reactions for the extra attack before damage", () => {
-    const state = startBattleRight({
-      battleId: battleId("battle-weapon-mastery-cleave-attack-hit-window"),
-      combatants: [
-        characterSeed({
-          initiative: 20,
-          characterUnitRefs: masteryCleaveUnitRefs(),
-          weaponMasteries: greataxeWeaponMasterySelections(),
-          attack: testGreataxeAttack(),
-        }),
-        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
-        characterSeed({
-          combatantId: skeletonId,
-          displayName: "Uncanny Second Target",
-          initiative: 9,
-          attack: null,
-          classLevels: [{ className: "rogue", level: 5 }],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
-              { className: "rogue", level: classLevel(5) },
-            ]),
-          ],
-          characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
-        }),
-      ],
-    });
-    const subject = fighterAttackSubject(state, "Greataxe");
-    const primaryTarget = attackInitialTargetHole(state, subject);
-    const primaryRoll = attackRollHoleAfterTarget(
-      state,
-      primaryTarget,
-      subject,
-      goblinId,
-    );
-    const primaryDamage = attackDamageHoleAfterHit(
-      state,
-      primaryTarget,
-      primaryRoll,
-      { total: 15, naturalD20: 10 },
-      subject,
-      goblinId,
-    );
-    const primaryFills = [
-      attackTargetFill(
+  test.each([false, true])(
+    "Weapon Mastery Cleave resumes its attack-hit reaction with Heroic Inspiration spend=%s",
+    (spendsHeroicInspiration) => {
+      const state = startBattleRight({
+        battleId: battleId("battle-weapon-mastery-cleave-attack-hit-window"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            ...(spendsHeroicInspiration
+              ? { heroicInspiration: HEROIC_INSPIRATION_AVAILABLE }
+              : {}),
+            characterUnitRefs: masteryCleaveUnitRefs(),
+            weaponMasteries: greataxeWeaponMasterySelections(),
+            attack: testGreataxeAttack(),
+          }),
+          statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+          characterSeed({
+            combatantId: skeletonId,
+            displayName: "Uncanny Second Target",
+            initiative: 9,
+            attack: null,
+            classLevels: [{ className: "rogue", level: 5 }],
+            unitFeatures: [
+              characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+                { className: "rogue", level: classLevel(5) },
+              ]),
+            ],
+            characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+          }),
+        ],
+      });
+      const subject = fighterAttackSubject(state, "Greataxe");
+      const primaryTarget = attackInitialTargetHole(state, subject);
+      const primaryRoll = attackRollHoleAfterTarget(
+        state,
         primaryTarget,
-        fighterId,
+        subject,
         goblinId,
-        attackExecutionSelectionForSubjectForTest(subject),
-      ),
-      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
-      damageRollFill(primaryDamage, 1),
-    ];
-    const decision = requireHole(
-      resolveBattleSubject({
+      );
+      const primaryRollValue = {
+        total: 15,
+        naturalD20: 10,
+        ...(spendsHeroicInspiration
+          ? {
+              d20TestRerolls: [
+                {
+                  kind: "decline" as const,
+                  effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                },
+              ],
+            }
+          : {}),
+      } satisfies Parameters<typeof attackRollFill>[1] & {
+        readonly naturalD20: number;
+      };
+      const primaryDamage = attackDamageHoleAfterHit(
         state,
+        primaryTarget,
+        primaryRoll,
+        primaryRollValue,
         subject,
-        fills: primaryFills,
-      }),
-      "unitFeatureDecision",
-    );
-    const target = requireHole(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
-      }),
-      "targetChoice",
-    );
-    const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(
-        fighterId,
-        skeletonId,
-        attackExecutionSelectionForSubjectForTest(subject),
-      ),
-      {
-        kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
-        attackerId: fighterId,
-        firstTargetId: goblinId,
-        secondTargetId: skeletonId,
-      },
-    ]);
-    const cleaveRoll = requireHole(
-      resolveBattleSubject({
+        goblinId,
+      );
+      const primaryFills = [
+        attackTargetFill(
+          primaryTarget,
+          fighterId,
+          goblinId,
+          attackExecutionSelectionForSubjectForTest(subject),
+        ),
+        attackRollFill(primaryRoll, primaryRollValue),
+        damageRollFill(primaryDamage, 1),
+      ];
+      const decision = requireHole(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: primaryFills,
+        }),
+        "unitFeatureDecision",
+      );
+      const target = requireHole(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+        }),
+        "targetChoice",
+      );
+      const targetFillValue = targetFill(target, skeletonId, [
+        attackTargetSpatialFact(
+          fighterId,
+          skeletonId,
+          attackExecutionSelectionForSubjectForTest(subject),
+        ),
+        {
+          kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
+          attackerId: fighterId,
+          firstTargetId: goblinId,
+          secondTargetId: skeletonId,
+        },
+      ]);
+      const cleaveRoll = requireHole(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            ...primaryFills,
+            unitFeatureDecisionFill(decision, "use"),
+            targetFillValue,
+          ],
+        }),
+        "attackRoll",
+      );
+
+      const cleaveRollValue: Parameters<typeof attackRollFill>[1] =
+        spendsHeroicInspiration
+          ? {
+              total: 7,
+              naturalD20: 2,
+              d20TestRerolls: [
+                {
+                  kind: "reroll",
+                  effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                  replacement: {
+                    total: 15,
+                    d20TestRoll: {
+                      tag: "single",
+                      naturalD20: DieRollResult(10),
+                    },
+                  },
+                },
+              ],
+            }
+          : { total: 15, naturalD20: 10 };
+      const awaitingCleaveAttackHit = resolveBattleSubject({
         state,
         subject,
         fills: [
           ...primaryFills,
           unitFeatureDecisionFill(decision, "use"),
           targetFillValue,
+          attackRollFill(cleaveRoll, cleaveRollValue),
         ],
-      }),
-      "attackRoll",
-    );
+      });
 
-    const awaitingCleaveAttackHit = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        ...primaryFills,
-        unitFeatureDecisionFill(decision, "use"),
-        targetFillValue,
-        attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
-      ],
-    });
-
-    expect(awaitingCleaveAttackHit).toMatchObject({
-      tag: "needsHoles",
-      frontier: {
-        kind: "interruptDecision",
-        trigger: "attackHit",
-        decisionHole: {
+      expect(awaitingCleaveAttackHit).toMatchObject({
+        tag: "needsHoles",
+        frontier: {
           kind: "interruptDecision",
           trigger: "attackHit",
+          decisionHole: {
+            kind: "interruptDecision",
+            trigger: "attackHit",
+          },
         },
-      },
-      snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: skeletonId, hp: Hp(12) }),
-        ]),
-      },
-    });
-    if (awaitingCleaveAttackHit.tag !== "needsHoles") {
-      throw new Error(
-        `Expected Cleave attack-hit reaction, got ${awaitingCleaveAttackHit.tag}.`,
-      );
-    }
+        snapshot: {
+          combatants: expect.arrayContaining([
+            expect.objectContaining({ combatantId: skeletonId, hp: Hp(12) }),
+          ]),
+        },
+      });
+      if (awaitingCleaveAttackHit.tag !== "needsHoles") {
+        throw new Error(
+          `Expected Cleave attack-hit reaction, got ${awaitingCleaveAttackHit.tag}.`,
+        );
+      }
 
-    const afterCleaveHitDecline = resolveBattleInterrupt({
-      state: awaitingCleaveAttackHit.state,
-      fill: interruptDecisionFill(
-        battleFrontierInterruptDecisionForState(awaitingCleaveAttackHit.state)!
-          .decisionHole,
-        { kind: "decline", responderId: skeletonId },
-      ),
-    });
-    expect(afterCleaveHitDecline).toMatchObject({
-      tag: "needsHoles",
-      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
-    });
-  });
+      const afterCleaveHitDecline = resolveBattleInterrupt({
+        state: awaitingCleaveAttackHit.state,
+        fill: interruptDecisionFill(
+          battleFrontierInterruptDecisionForState(
+            awaitingCleaveAttackHit.state,
+          )!.decisionHole,
+          { kind: "decline", responderId: skeletonId },
+        ),
+      });
+      expect(afterCleaveHitDecline).toMatchObject({
+        tag: "needsHoles",
+        frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
+      });
+    },
+  );
 
   test("Weapon Mastery Cleave offers melee zero-hit-point disposition for the extra attack", () => {
     const state = startBattleRight({

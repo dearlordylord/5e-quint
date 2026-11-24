@@ -321,6 +321,7 @@ function reactionAttackRerollResult(input: {
   | Extract<AttackRollD20TestRerolls, { readonly tag: "resolved" }> {
   const d20TestRerolls = attackRollD20TestRerolls({
     state: input.context.input.state,
+    subject: input.context.input.subject,
     attackerId: input.context.input.subject.reactorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.attackRoll,
