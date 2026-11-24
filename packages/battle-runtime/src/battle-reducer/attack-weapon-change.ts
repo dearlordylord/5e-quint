@@ -14,7 +14,6 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Match } from "effect";
 import type {
   BattleActDiscoveryCandidate,
   BattleAttackHostSubject,
@@ -127,31 +126,27 @@ export function stateWithWeaponChangeAfterUnarmedStrikeOption(
   actorId: CombatantId,
   spentResource: RuntimeActionResource,
 ): BattleState {
-  return actionResourceTakesAttackActionAttack(spentResource)
+  return ACTION_RESOURCE_SOURCE_TAKES_ATTACK_ACTION_ATTACK[spentResource.source]
     ? stateWithWeaponChangeAllowanceAfter(state, actorId, "available")
     : state;
 }
 
 /**
- * Whether an attack this action resource pays for is one of the Attack
- * action's attacks: the turn's action, or another action taken as the Attack
- * action, and the extra attacks of that action. A Stat Block's Multiattack is
- * its own action, and Flurry of Blows is a Bonus Action.
+ * Whether an attack an action resource from each source pays for is one of
+ * the Attack action's attacks: the turn's action, or another action taken as
+ * the Attack action, and the extra attacks of that action. A Stat Block's
+ * Multiattack is its own action, and Flurry of Blows is a Bonus Action.
  */
-function actionResourceTakesAttackActionAttack(
-  resource: RuntimeActionResource,
-): boolean {
-  return Match.value(resource).pipe(
-    Match.discriminatorsExhaustive("source")({
-      turn: () => true,
-      unit: () => true,
-      spellEffect: () => true,
-      classFeatureExtraAttack: () => true,
-      statBlockMultiattack: () => false,
-      monkFocusFlurryOfBlows: () => false,
-    }),
-  );
-}
+const ACTION_RESOURCE_SOURCE_TAKES_ATTACK_ACTION_ATTACK = {
+  turn: true,
+  unit: true,
+  spellEffect: true,
+  classFeatureExtraAttack: true,
+  statBlockMultiattack: false,
+  monkFocusFlurryOfBlows: false,
+} as const satisfies {
+  readonly [Source in RuntimeActionResource["source"]]: boolean;
+};
 
 function stateWithWeaponChangeAllowanceAfter(
   state: BattleState,

@@ -259,6 +259,59 @@ describe("weapon change before an attack", () => {
     expect(heldWeaponId(dropped)).toBeUndefined();
   });
 
+  it("resumes an attack whose weapon change is already made, without making it again", () => {
+    // An interrupt resumes the attack from the state after its change, so
+    // the change must not be asked for or applied a second time.
+    const ready = fighterVsGoblinBattle();
+    const stowed = fighterWithStowedLongsword();
+    const cases = [
+      {
+        before: stowed,
+        change: { kind: "equip", objectId: longswordId },
+        applied: { kind: "equip", objectId: longswordId },
+      },
+      {
+        before: ready,
+        change: { kind: "stow", objectId: longswordId },
+        applied: { kind: "stow", objectId: longswordId },
+      },
+      {
+        before: ready,
+        change: { kind: "drop", objectId: longswordId },
+        applied: {
+          kind: "drop",
+          objectId: longswordId,
+          positionId: dropPositionId,
+        },
+      },
+    ] as const;
+    for (const { before, change, applied } of cases) {
+      const subject = withChange(unarmedStrike(before), change);
+      const changed = stateWithLoadoutWeaponChange(before, fighterId, applied);
+      if (changed.tag !== "applied") throw new Error(changed.message);
+      const resuming: BattleState = {
+        ...changed.state,
+        subjectResolutionPhase: { kind: "subjectContinuation", subject },
+      };
+
+      const resumed = resolveBattleSubject({
+        state: resuming,
+        subject,
+        fills: [],
+      });
+      if (resumed.tag !== "needsHoles") {
+        throw new Error(`Expected the ${change.kind} attack to resume.`);
+      }
+      expect(
+        battleResolutionHolesForTest(resumed).map((hole) => hole.kind),
+        change.kind,
+      ).not.toContain("weaponDropPosition");
+      expect(heldWeaponId(resumed.state), change.kind).toBe(
+        heldWeaponId(changed.state),
+      );
+    }
+  });
+
   it("refuses to equip a weapon already in hand", () => {
     const state = fighterVsGoblinBattle();
     expect(
