@@ -9,7 +9,7 @@ import {
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
-import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/character-effective-loadout.ts";
 import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {

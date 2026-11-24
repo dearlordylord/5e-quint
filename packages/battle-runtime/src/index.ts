@@ -712,11 +712,13 @@ export {
 export {
   battleObjectIsOnGround,
   battleStateWithGroundObjects,
-  characterEffectiveLoadout,
-  characterEffectiveLoadoutFromOrigin,
   type BattleGroundObjectPlacement,
   type BattleGroundObjectPlacementResult,
 } from "./battle-reducer/battle-object-lifecycle.ts";
+export {
+  characterEffectiveLoadout,
+  characterEffectiveLoadoutFromOrigin,
+} from "./battle-reducer/character-effective-loadout.ts";
 export {
   type AttackDamageAbilityModifierChoice,
   type AttackDamageAbilityModifierChoiceFill,

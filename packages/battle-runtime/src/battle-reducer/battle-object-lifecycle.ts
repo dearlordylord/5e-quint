@@ -1,5 +1,6 @@
+import { loadoutHandUses } from "@dnd/shared-algebras/armor-class-algebra";
+import { combatantHandUses } from "./creature-state-leaves.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
-import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import type {
   BattleDroppedObjectSource,
   BattleGroundObjectState,
@@ -43,7 +44,8 @@ export type BattleHeldWeaponPickupResult =
         | "actorNotCharacter"
         | "activeFormPickupUnsupported"
         | "objectNotOnGround"
-        | "notSelectedLoadoutWeapon";
+        | "notSelectedLoadoutWeapon"
+        | "handsOccupied";
       readonly message: string;
     };
 
@@ -72,44 +74,6 @@ export function battleStateWithGroundObjects(
     );
   }
   return { tag: "applied", state: { ...state, groundObjects } };
-}
-
-export function characterEffectiveLoadout(
-  state: BattleState,
-  actor: CharacterBattleCreatureState,
-): CharacterBattleLoadoutRef {
-  return characterEffectiveLoadoutFromOrigin(
-    state,
-    actor.combatantId,
-    actor.origin,
-  );
-}
-
-export function characterEffectiveLoadoutFromOrigin(
-  state: BattleState,
-  actorId: CombatantId,
-  origin: CharacterBattleCreatureState["origin"],
-): CharacterBattleLoadoutRef {
-  const selected = origin.selectedLoadout;
-  const groundObjects = state.groundObjects.get(actorId);
-  return {
-    ...(selected.armor === undefined ||
-    groundObjects?.has(selected.armor.itemId) === true
-      ? {}
-      : { armor: selected.armor }),
-    ...(selected.shield === undefined ||
-    groundObjects?.has(selected.shield.itemId) === true
-      ? {}
-      : { shield: selected.shield }),
-    ...(selected.weapon === undefined ||
-    groundObjects?.has(selected.weapon.itemId) === true
-      ? {}
-      : { weapon: selected.weapon }),
-    ...(selected.offHandWeapon === undefined ||
-    groundObjects?.has(selected.offHandWeapon.itemId) === true
-      ? {}
-      : { offHandWeapon: selected.offHandWeapon }),
-  };
 }
 
 export function battleObjectIsOnGround(
@@ -209,7 +173,35 @@ function heldWeaponPickupIssue(
         "Held-weapon pickup restores only a weapon of the selected loadout.",
     };
   }
+  if (!pickupRequiredHandsAreFree(state, actor, objectId)) {
+    return {
+      tag: "invalid",
+      reason: "handsOccupied",
+      message:
+        "Held-weapon pickup requires every hand of its selected loadout slot to be free.",
+    };
+  }
   return null;
+}
+
+function pickupRequiredHandsAreFree(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  objectId: BattleObjectId,
+): boolean {
+  const selected = actor.origin.selectedLoadout;
+  const role =
+    selected.weapon?.itemId === objectId ? "mainWeapon" : "offWeapon";
+  const required = loadoutHandUses({
+    holdsShield: selected.shield !== undefined,
+    holdsOffHandWeapon: selected.offHandWeapon !== undefined,
+    mainWeaponGrip: selected.weapon?.grip,
+  });
+  const actual = combatantHandUses(state, actor, state.grapples);
+  return (
+    (required.leftHandUse !== role || actual.left === "free") &&
+    (required.rightHandUse !== role || actual.right === "free")
+  );
 }
 
 /** The fallen selected-loadout weapons the actor can pick back up. */

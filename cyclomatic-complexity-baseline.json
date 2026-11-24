@@ -106,7 +106,7 @@
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
     },
-    "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts": {
+    "packages/battle-runtime/src/battle-reducer/character-effective-loadout.ts": {
       "module/binding:characterEffectiveLoadoutFromOrigin": 13
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {

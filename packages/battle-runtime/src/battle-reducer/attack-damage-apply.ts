@@ -103,10 +103,8 @@ import {
   type WildShapeLoadoutObjectRef,
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
-import {
-  battleObjectIsOnGround,
-  characterEffectiveLoadoutFromOrigin,
-} from "./battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
