@@ -3398,6 +3398,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -3682,6 +3700,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -4194,6 +4230,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -4693,6 +4747,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -5148,6 +5220,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -5562,6 +5652,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -5935,6 +6043,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -6274,6 +6400,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -10396,6 +10540,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -10680,6 +10842,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -11192,6 +11372,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -11691,6 +11889,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -12146,6 +12362,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -12560,6 +12794,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -12933,6 +13185,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -13272,6 +13542,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -16501,6 +16789,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -16785,6 +17091,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -17297,6 +17621,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -17796,6 +18138,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -18251,6 +18611,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -18665,6 +19043,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -19038,6 +19434,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -19377,6 +19791,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -22671,6 +23103,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -22955,6 +23405,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -23467,6 +23935,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -23966,6 +24452,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -24421,6 +24925,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -24835,6 +25357,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -25208,6 +25748,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -25547,6 +26105,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -28641,6 +29217,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -28925,6 +29519,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -29437,6 +30049,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -29936,6 +30566,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -30391,6 +31039,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -30805,6 +31471,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -31178,6 +31862,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -31517,6 +32219,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -34842,6 +35562,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -35126,6 +35864,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -35638,6 +36394,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -36137,6 +36911,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -36592,6 +37384,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -37006,6 +37816,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -37379,6 +38207,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -37718,6 +38564,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -41045,6 +41909,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -41329,6 +42211,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -41841,6 +42741,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -42340,6 +43258,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -42795,6 +43731,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -43209,6 +44163,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -43582,6 +44554,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -43921,6 +44911,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -47320,6 +48328,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -47604,6 +48630,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -48116,6 +49160,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -48615,6 +49677,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -49070,6 +50150,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -49484,6 +50582,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -49857,6 +50973,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -50196,6 +51330,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -53675,6 +54827,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -53959,6 +55129,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -54471,6 +55659,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -54970,6 +56176,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -55425,6 +56649,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -55839,6 +57081,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -56212,6 +57472,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -56551,6 +57829,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]
@@ -60539,6 +61835,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -60823,6 +62137,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -61335,6 +62667,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -61834,6 +63184,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -62289,6 +63657,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -62703,6 +64089,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -63076,6 +64480,24 @@
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
                     }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
+                    }
                   }
                 ]
               },
@@ -63415,6 +64837,24 @@
                     "optionId": "weapon_quarterstaff",
                     "unitRef": {
                       "unitId": "weapon_quarterstaff"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_mace",
+                    "unitRef": {
+                      "unitId": "weapon_mace"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_morningstar",
+                    "unitRef": {
+                      "unitId": "weapon_morningstar"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_whip",
+                    "unitRef": {
+                      "unitId": "weapon_whip"
                     }
                   }
                 ]

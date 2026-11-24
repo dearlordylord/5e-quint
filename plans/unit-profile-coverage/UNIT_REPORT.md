@@ -10,15 +10,15 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 450 Units |
+| Installed collection inventory count | 454 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 449/631 | 71.2% |
+| Authored Surface Unit catalog admission | 453/631 | 71.8% |
 | Authored Surface executable catalog admission | 398/543 | 73.3% |
-| Installed Unit profile classification coverage | 450/450 | 100% |
+| Installed Unit profile classification coverage | 454/454 | 100% |
 | Supported executable Unit coverage | 244/399 | 61.2% |
 | QNT profile modeling coverage | 166/171 | 97.1% |
 | QNT proof coverage | 163/171 | 95.3% |
@@ -497,7 +497,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | ---: | --- |
 | magic_item | 70 | `cloak_of_protection`, `magic_item_amulet_of_health`, `magic_item_bag_of_holding`, `magic_item_bracers_of_defense`, `magic_item_brazier_of_commanding_fire_elementals`, `magic_item_brooch_of_shielding`, `magic_item_censer_of_controlling_air_elementals`, `magic_item_chime_of_opening`, `magic_item_cloak_of_arachnida`, `magic_item_cloak_of_protection`, `magic_item_crystal_ball_of_mind_reading`, `magic_item_cube_of_force`, `magic_item_eyes_of_minute_seeing`, `magic_item_folding_boat`, `magic_item_gauntlets_of_ogre_power`, `magic_item_gem_of_seeing`, `magic_item_goggles_of_night`, `magic_item_hat_of_disguise`, `magic_item_headband_of_intellect`, `magic_item_helm_of_comprehending_languages`, `magic_item_helm_of_teleportation`, `magic_item_instant_fortress`, `magic_item_javelin_of_lightning`, `magic_item_manual_of_gainful_exercise`, `magic_item_manual_of_quickness_of_action`, `magic_item_medallion_of_thoughts`, `magic_item_necklace_of_fireballs`, `magic_item_periapt_of_proof_against_poison`, `magic_item_potion_of_animal_friendship`, `magic_item_potion_of_clairvoyance`, `magic_item_potion_of_climbing`, `magic_item_potion_of_flying`, `magic_item_potion_of_giant_strength`, `magic_item_potion_of_heroism`, `magic_item_potion_of_invisibility`, `magic_item_potion_of_invulnerability`, `magic_item_potion_of_water_breathing`, `potion_of_healing`, `magic_item_quarterstaff_of_the_acrobat`, `magic_item_ring_of_invisibility`, `magic_item_ring_of_jumping`, `magic_item_ring_of_protection`, `magic_item_ring_of_resistance`, `ring_of_swimming`, `ring_of_telekinesis`, `ring_of_three_wishes`, `magic_item_ring_of_warmth`, `magic_item_ring_of_water_walking`, `magic_item_robe_of_the_archmagi`, `magic_item_rod_of_alertness`, `magic_item_rod_of_resurrection`, `magic_item_rod_of_rulership`, `magic_item_slippers_of_spider_climbing`, `magic_item_sovereign_glue`, `magic_item_staff_of_fire`, `magic_item_staff_of_healing`, `magic_item_staff_of_power`, `magic_item_staff_of_the_woodlands`, `magic_item_stone_of_controlling_earth_elementals`, `magic_item_stone_of_good_luck_luckstone`, `magic_item_tome_of_clear_thought`, `magic_item_tome_of_leadership_and_influence`, `magic_item_tome_of_understanding`, `magic_item_wand_of_fear`, `magic_item_wand_of_fireballs`, `magic_item_wand_of_lightning_bolts`, `magic_item_wand_of_magic_detection`, `magic_item_wand_of_magic_missiles`, `magic_item_wand_of_paralysis`, `magic_item_wand_of_polymorph` |
 | spell | 57 | `alarm`, `animal_shapes`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `beacon_of_hope`, `blade_barrier`, `blight`, `call_lightning`, `charm_monster`, `circle_of_death`, `comprehend_languages`, `compulsion`, `conjure_minor_elementals`, `conjure_woodland_beings`, `death_ward`, `disintegrate`, `dominate_beast`, `dominate_monster`, `earthquake`, `fabricate`, `find_steed`, `fire_shield`, `fire_storm`, `flesh_to_stone`, `forcecage`, `freedom_of_movement`, `gentle_repose`, `greater_invisibility`, `heal`, `holy_aura`, `incendiary_cloud`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `phantom_steed`, `polymorph`, `power_word_heal`, `prismatic_wall`, `reverse_gravity`, `sequester`, `silent_image`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `sunbeam`, `sunburst`, `true_polymorph`, `tsunami`, `vampiric_touch`, `wall_of_ice`, `wall_of_thorns`, `weird`, `wind_wall` |
-| weapon | 29 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
+| weapon | 25 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_maul`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer` |
 | class_feature | 10 | `barbarian_primal_champion`, `bard_epic_boon`, `bard_words_of_creation`, `cleric_epic_boon`, `druid_epic_boon`, `fighter_epic_boon`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_feral_senses` |
 | armor | 8 | `armor_breastplate`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
@@ -510,7 +510,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | ---: | --- | --- |
 | intentional-backlog | future magic item profile intake | 78 | magic_item: 70, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | srd-candidate | QMBT14-QMBT16 | 57 | spell: 57 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
-| non-runtime-authored-data | no promoted runtime lane | 37 | weapon: 29, armor: 8 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
+| non-runtime-authored-data | no promoted runtime lane | 33 | weapon: 25, armor: 8 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | unsupported-widening-pressure | QMBT18 | 10 | class_feature: 10 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
 
 | Unit | Disposition | Planning lane | Kind | Mechanics | Source |
@@ -681,20 +681,16 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `weapon_light_crossbow` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_light_crossbow.json` |
 | `weapon_light_hammer` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_light_hammer.json` |
 | `weapon_longbow` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_longbow.json` |
-| `weapon_mace` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_mace.json` |
 | `weapon_maul` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_maul.json` |
-| `weapon_morningstar` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_morningstar.json` |
 | `weapon_musket` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_musket.json` |
 | `weapon_pike` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_pike.json` |
 | `weapon_pistol` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_pistol.json` |
 | `weapon_rapier` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_rapier.json` |
 | `weapon_scimitar` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_scimitar.json` |
 | `weapon_sickle` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_sickle.json` |
-| `weapon_sling` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_sling.json` |
 | `weapon_trident` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_trident.json` |
 | `weapon_war_pick` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_war_pick.json` |
 | `weapon_warhammer` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_warhammer.json` |
-| `weapon_whip` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_whip.json` |
 | `weird` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/weird.json` |
 | `wind_wall` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wind_wall.json` |
 
@@ -868,20 +864,16 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `weapon_light_crossbow` | weapon | no | `packages/surface/content/weapon_light_crossbow.json` |
 | `weapon_light_hammer` | weapon | no | `packages/surface/content/weapon_light_hammer.json` |
 | `weapon_longbow` | weapon | no | `packages/surface/content/weapon_longbow.json` |
-| `weapon_mace` | weapon | no | `packages/surface/content/weapon_mace.json` |
 | `weapon_maul` | weapon | no | `packages/surface/content/weapon_maul.json` |
-| `weapon_morningstar` | weapon | no | `packages/surface/content/weapon_morningstar.json` |
 | `weapon_musket` | weapon | no | `packages/surface/content/weapon_musket.json` |
 | `weapon_pike` | weapon | no | `packages/surface/content/weapon_pike.json` |
 | `weapon_pistol` | weapon | no | `packages/surface/content/weapon_pistol.json` |
 | `weapon_rapier` | weapon | no | `packages/surface/content/weapon_rapier.json` |
 | `weapon_scimitar` | weapon | no | `packages/surface/content/weapon_scimitar.json` |
 | `weapon_sickle` | weapon | no | `packages/surface/content/weapon_sickle.json` |
-| `weapon_sling` | weapon | no | `packages/surface/content/weapon_sling.json` |
 | `weapon_trident` | weapon | no | `packages/surface/content/weapon_trident.json` |
 | `weapon_war_pick` | weapon | no | `packages/surface/content/weapon_war_pick.json` |
 | `weapon_warhammer` | weapon | no | `packages/surface/content/weapon_warhammer.json` |
-| `weapon_whip` | weapon | no | `packages/surface/content/weapon_whip.json` |
 | `weird` | spell | yes | `packages/surface/content/weird.json` |
 | `wind_wall` | spell | yes | `packages/surface/content/wind_wall.json` |
 
@@ -1715,6 +1707,10 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | `weapon_shortbow` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_shortsword` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_quarterstaff` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
+| `weapon_mace` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
+| `weapon_morningstar` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
+| `weapon_whip` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
+| `weapon_sling` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `alarm` | unsupported-profile | Alarm setup, warded-area monitoring, creature-size/travel adjudication, audible or mental notification, and sleep-wake handling are runtime-detached table/exploration state outside promoted battle Unit profiles. |
 | `arcane_eye` | unsupported-profile | Arcane Eye is an SRD level-4 Spell Definition whose local SRD text creates an Invisible invulnerable remote eye, grants remote visual information and Darkvision, and moves the eye with later Bonus Actions. No promoted profile is claimed until a remote-sensor Spell Effect owner exists. |
 | `arcane_lock` | unsupported-profile | Arcane Lock is authored as an SRD Surface Spell Definition for a touched closeable object, but its operative facts are durable object/table state: the locked object identity, designated-creature bypass, optional passcode/password, one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are outside promoted battle Unit profiles. Local SRD 5.2.1 Arcane Lock does not define a forced-entry DC runtime mechanic. |
@@ -1760,7 +1756,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 156 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_halfling`, `species_human`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_barbarian_path_of_the_berserker`, `subclass_bard_college_of_lore`, `subclass_cleric_life_domain`, `subclass_druid_circle_of_the_land`, `subclass_fighter_champion`, `subclass_monk_warrior_of_the_open_hand`, `subclass_paladin_oath_of_devotion`, `subclass_ranger_hunter`, `subclass_rogue_thief`, `subclass_sorcerer_draconic_sorcery`, `subclass_warlock_fiend_patron`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `species_gnome_darkvision`, `species_tiefling_darkvision`, `animate_dead`, `chain_lightning`, `clairvoyance`, `confusion`, `control_water`, `control_weather`, `create_undead`, `dimension_door`, `disguise_self`, `druidcraft`, `elementalism`, `etherealness`, `fear`, `finger_of_death`, `harm`, `heroes_feast`, `ice_storm`, `identify`, `mage_hand`, `major_image`, `phantasmal_killer`, `plane_shift`, `power_word_kill`, `power_word_stun`, `project_image`, `resurrection`, `spirit_guardians`, `teleport`, `tongues`, `true_seeing`, `vitriolic_sphere`, `wall_of_fire`, `water_breathing`, `wind_walk`, `word_of_recall`, `animal_messenger`, `arcanists_magic_aura`, `augury`, `bestow_curse`, `blink`, `conjure_animals`, `create_food_and_water`, `darkvision`, `daylight`, `find_traps`, `knock`, `locate_animals_or_plants`, `locate_object`, `mending`, `message`, `phantasmal_force`, `plant_growth`, `prestidigitation`, `remove_curse`, `revivify`, `rope_trick`, `sending`, `speak_with_animals`, `speak_with_dead`, `speak_with_plants`, `tiny_hut`, `water_walk`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `magic_circle`, `magic_mouth`, `meld_into_stone`, `nondetection`, `silence`, `suggestion`, `zone_of_truth`, `minor_illusion`, `alarm`, `arcane_eye`, `arcane_lock`, `aura_of_life`, `banishment`, `barbarian_primal_champion`, `bard_epic_boon`, `bard_words_of_creation`, `beacon_of_hope`, `blight`, `call_lightning`, `charm_monster`, `cleric_epic_boon`, `comprehend_languages`, `compulsion`, `conjure_minor_elementals`, `conjure_woodland_beings`, `death_ward`, `dominate_beast`, `druid_epic_boon`, `fabricate`, `fighter_epic_boon`, `find_steed`, `fire_shield`, `freedom_of_movement`, `gentle_repose`, `greater_invisibility`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `polymorph`, `ranger_feral_senses`, `silent_image`, `stinking_cloud`, `stoneskin`, `vampiric_touch`, `wind_wall` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 66 | `species_gnome`, `fighter_indomitable`, `druid_wild_shape`, `druid_wild_companion`, `monk_monks_focus`, `monk_acrobatic_movement`, `ranger_favored_enemy`, `rogue_fast_hands`, `sorcerer_font_of_magic`, `sorcerer_metamagic`, `wizard_evocation_savant`, `mastery_push`, `species_gnome_gnomish_lineage`, `species_halfling_nimbleness`, `species_halfling_luck`, `species_halfling_naturally_stealthy`, `species_human_resourceful`, `animate_objects`, `antilife_shell`, `arcane_hand`, `awaken`, `calm_emotions`, `cloudkill`, `commune`, `commune_with_nature`, `contact_other_plane`, `conjure_elemental`, `contagion`, `creation`, `darkness`, `dispel_evil_and_good`, `dominate_person`, `dream`, `enlarge_reduce`, `enthrall`, `find_familiar`, `geas`, `greater_restoration`, `gust_of_wind`, `hallow`, `insect_plague`, `legend_lore`, `levitate`, `mislead`, `modify_memory`, `passwall`, `telekinesis`, `wall_of_force`, `wall_of_stone`, `pass_without_trace`, `planar_binding`, `prayer_of_healing`, `raise_dead`, `reincarnate`, `scrying`, `seeming`, `telepathic_bond`, `teleportation_circle`, `thaumaturgy`, `tree_stride`, `mind_spike`, `moonbeam`, `sleet_storm`, `spike_growth`, `summon_dragon`, `charm_person` |
-| srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 14 | `armor_chain_mail`, `armor_chain_shirt`, `armor_leather`, `armor_studded_leather_armor`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 18 | `armor_chain_mail`, `armor_chain_shirt`, `armor_leather`, `armor_studded_leather_armor`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff`, `weapon_mace`, `weapon_morningstar`, `weapon_whip`, `weapon_sling` |
 | srd-5.2.1 | broader ongoing Spell Effect occurrence model plus additional spell-specific dispel exception owners | profile-subset-supported | 1 | `dispel_magic` |
 | srd-5.2.1 | character inventory/equipment component legality plus runtime-detached object presentation owner | profile-subset-supported | 1 | `continual_flame` |
 | srd-5.2.1 | future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner | unsupported-profile | 1 | `gaseous_form` |
