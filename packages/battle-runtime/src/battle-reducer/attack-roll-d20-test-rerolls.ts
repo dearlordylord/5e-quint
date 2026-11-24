@@ -193,19 +193,28 @@ export function attackRollD20TestRerolls(
   return {
     tag: "resolved",
     effectiveAttackRoll: sequence.attackRoll,
-    heroicInspirationUse: AttackRollHeroicInspirationUse(
-      sequence.rerolled.heroicInspiration &&
-        !heroicInspirationWasAcceptedForRoll(input)
-        ? {
-            spends: true,
-            actorId: input.attackerId,
-            subject: input.subject,
-            attackRollHoleId: input.attackRollHoleId,
-          }
-        : { spends: false },
+    heroicInspirationUse: heroicInspirationUseForAttackRoll(
+      input,
+      sequence.rerolled.heroicInspiration,
     ),
     missedSpellAttackRerollTaken: sequence.rerolled.missedSpellAttack,
   };
+}
+
+function heroicInspirationUseForAttackRoll(
+  input: AttackRollD20TestRerollInput,
+  rerolledWithHeroicInspiration: boolean,
+): AttackRollHeroicInspirationUse {
+  return AttackRollHeroicInspirationUse(
+    rerolledWithHeroicInspiration && !heroicInspirationWasAcceptedForRoll(input)
+      ? {
+          spends: true,
+          actorId: input.attackerId,
+          subject: input.subject,
+          attackRollHoleId: input.attackRollHoleId,
+        }
+      : { spends: false },
+  );
 }
 
 export const ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE =
