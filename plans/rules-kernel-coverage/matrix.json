@@ -6437,6 +6437,10 @@
       "parityWitnesses": [
         {
           "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/heroic-inspiration-d20-tests.test.ts"
+        },
+        {
+          "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/heroic-inspiration-reroll.test.ts"
         }
       ],
@@ -6444,11 +6448,13 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
       ],
-      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it; an admitted reroll replaces the roll as it stands, the original or another source's reroll of it, or under Advantage or Disadvantage one chosen d20 of any face, keeps the roll's modifiers and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls applies it in turn with the natural-1 reroll and Seeking Spell on every weapon, Unarmed Strike, Opportunity, additional and spell attack roll. The executable parity witness covers the offer, decline, reroll and spend on hit and miss, the chosen die under Advantage, the kept modifiers, sources deciding in turn with the natural-1 reroll and Seeking Spell, Opportunity and spell attacks, interrupt replays, fill equality and the codec.",
+      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it, on any D20 Test; an admitted reroll replaces the roll as it stands, the original or another source's reroll of it, or under Advantage or Disadvantage one chosen d20 of any face, keeps a total's modifiers or replaces a Saving Throw's or Death Saving Throw's bare d20, and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls applies it in turn with the natural-1 reroll and Seeking Spell on every attack roll; d20-test-reroll-fills checks every ability check, saving throw and Concentration save before the subject resolves, with d20-test-outcome-rerolls owning the rolls that stand; the Glyph release and the Death Saving Throw apply it in one step. The executable parity witnesses cover the offer, decline, reroll and spend on attacks, saving throws, an area save, Concentration, ability checks, Death Saving Throws and an end-of-turn repeat save, the chosen die under Advantage, the kept modifiers, sources deciding in turn with the natural-1 reroll and Seeking Spell, Opportunity and spell attacks, interrupt replays, fill equality and the codec.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/heroic-inspiration-reroll.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6457,7 +6463,7 @@
         "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
         "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die"
       ],
-      "title": "A player character who has Heroic Inspiration can expend it to reroll an attack roll and must use the new roll, in turn with the other reroll sources"
+      "title": "A player character who has Heroic Inspiration can expend it to reroll any D20 Test and must use the new roll, in turn with the other reroll sources"
     },
     {
       "id": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
@@ -13472,7 +13478,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Executable closed examples cover reroll, forced lower roll, decline, availability, stacking and the chosen die under Advantage and Disadvantage for the Heroic Inspiration reroll core.",
+      "evidence": "Executable closed examples cover reroll, forced lower roll, decline, availability, stacking and the chosen die under Advantage and Disadvantage for the Heroic Inspiration reroll core, and the bare-d20 reroll of a Saving Throw and a Death Saving Throw.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt",
       "role": "proof-only"

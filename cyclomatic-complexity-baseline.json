@@ -142,9 +142,6 @@
       "module/binding:resolveCunningStrikeHideInvisibleEndSuppression": 10,
       "module/binding:resolveCunningStrikePostDamageMovement": 9
     },
-    "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts": {
-      "module/binding:validateD20TestNaturalOneRerollFills": 18
-    },
     "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll.ts": {
       "module/binding:d20TestNaturalOneRerollDieIssue": 9,
       "module/binding:d20TestNaturalOneRerollOutcomeIssue": 9

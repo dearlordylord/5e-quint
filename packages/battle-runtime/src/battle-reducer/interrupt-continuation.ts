@@ -40,7 +40,6 @@ import {
   resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
 import { resolveCunningStrikeAfterAttackDamage } from "./cunning-strike.ts";
-import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
   attackDamageContinuationConcentrationFrame,
   attackDamageContinuationRepeatSaveFrame,
@@ -845,23 +844,6 @@ function resolveAttackDamageContinuationConcentration(input: {
       input.state,
       "invalidFill",
       "Concentration Saving Throw fill does not match the damaged target.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
-    actor: input.state.combatants.get(concentrationSave.combatantId),
-    originalD20TestRoll: concentrationFill.value.value.d20TestRoll,
-    decision: concentrationFill.value.value.d20TestNaturalOneReroll,
-    withoutRoll: concentrationFill.value.value.withoutRoll,
-    succeeded: concentrationFill.value.value.succeeded,
-  });
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      d20TestNaturalOneRerollIssue,
     );
   }
   /* v8 ignore stop -- @preserve */

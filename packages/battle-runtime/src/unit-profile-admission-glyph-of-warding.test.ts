@@ -4644,8 +4644,15 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         }),
       }),
     ).toMatchObject({
-      tag: "invalidWitness",
-      reason: "savingThrowOutcomeMismatch",
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "savingThrowOutcome",
+          d20TestNaturalOneRerolls: [
+            { effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND },
+          ],
+        },
+      ],
     });
 
     const rerolled = releaseGlyphExplosiveRune({
@@ -4661,14 +4668,16 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             targetId: spellTargetId,
             succeeded: false,
             d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
-            d20TestNaturalOneReroll: {
-              kind: "reroll",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-              replacement: {
-                succeeded: true,
-                d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+                replacement: {
+                  succeeded: true,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+                },
               },
-            },
+            ],
           },
         ],
       }),

@@ -49,10 +49,12 @@ import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  battleStateAfterHeroicInspirationReroll,
   type AttackRollD20TestRerolls,
-  type AttackRollHeroicInspirationUse,
 } from "./attack-roll-d20-test-rerolls.ts";
+import {
+  battleStateAfterHeroicInspirationReroll,
+  type HeroicInspirationUse,
+} from "./heroic-inspiration-reroll.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
@@ -205,7 +207,7 @@ type ReactionAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly heroicInspirationUse: HeroicInspirationUse;
       readonly hiddenBeforeAttack: BattleHiddenState | null;
       readonly attackRollRelationshipFacts: Exclude<
         ReturnType<typeof parseAttackRollRelationshipFacts>,

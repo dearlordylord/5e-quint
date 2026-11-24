@@ -110,7 +110,7 @@ import {
   validateCunningStrikeDamageRollSelection,
   type CunningStrikeContext,
 } from "./cunning-strike.ts";
-import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "./d20-test-natural-one-reroll.ts";
+import { abilityCheckValueThatStands } from "./d20-test-outcome-rerolls.ts";
 
 import { attackDamageContinuationConcentrationFrame } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
@@ -1922,7 +1922,7 @@ export function abilityCheckFill(
       /* v8 ignore stop -- @preserve */
       check = {
         ...fill,
-        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(fill.value),
+        value: abilityCheckValueThatStands(fill.value),
       };
       continue;
     }

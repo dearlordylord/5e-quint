@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.resource-lifecycle
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll unit-feature.enemy-zero-hit-point-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -147,9 +147,9 @@ import { battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects } f
 import { battleStateWithReconciledCurrentActorTurnConstraint } from "./save-gated-turn-constraint-turn-resources.ts";
 import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import {
-  d20TestNaturalOneRerollOutcomeIssue,
-  effectiveD20TestNaturalOneRerollConcentrationSavingThrow,
-} from "./d20-test-natural-one-reroll.ts";
+  concentrationSavingThrowFillThatStands,
+  savingThrowOutcomesThatStand,
+} from "./d20-test-outcome-rerolls.ts";
 import {
   battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints,
   isLinkedDefenseResistanceDamageShareEffect,
@@ -191,10 +191,6 @@ export type SaveGatedConditionDamageRepeatSaveResolution =
 type SaveGatedConditionWithRepeatRepeatSaveHole = ReturnType<
   typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles
 >[number];
-type ConcentrationSavingThrowFillHolePair = {
-  readonly fill: ConcentrationSavingThrowFill;
-  readonly hole: BattleConcentrationSavingThrowHole;
-};
 
 export function breakBattleConcentration(
   state: BattleState,
@@ -501,9 +497,7 @@ export function applyBattleHitPointDamage(input: {
   const effectiveConcentrationSavingThrow =
     input.concentrationSavingThrow === undefined
       ? undefined
-      : effectiveD20TestNaturalOneRerollConcentrationSavingThrow(
-          input.concentrationSavingThrow,
-        );
+      : concentrationSavingThrowFillThatStands(input.concentrationSavingThrow);
   const afterConcentration =
     input.damageAmount > 0 &&
     (effectiveConcentrationSavingThrow?.value.succeeded === false ||
@@ -667,18 +661,11 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
   if (isReadonlyArrayNonEmpty(missingHoles)) {
     return { tag: "needsHoles", holes: missingHoles };
   }
-  const pairs: readonly ConcentrationSavingThrowFillHolePair[] =
-    input.fills.flatMap((fill) => {
-      const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
-      return hole === undefined ? [] : [{ fill, hole }];
-    });
-  const everyFillHasMatchingHole = pairs.length === input.fills.length;
+  const everyFillHasMatchingHole = input.fills.every((fill) =>
+    holes.some((candidate) => candidate.holeId === fill.holeId),
+  );
   if (everyFillHasMatchingHole) {
-    const d20TestNaturalOneRerollIssue =
-      concentrationD20TestNaturalOneRerollIssue(input.state, pairs);
-    return d20TestNaturalOneRerollIssue === null
-      ? { tag: "ok", holes }
-      : { tag: "invalid", message: d20TestNaturalOneRerollIssue };
+    return { tag: "ok", holes };
   }
   return {
     tag: "invalid",
@@ -687,26 +674,6 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
         ? "Concentration Saving Throw fill is only valid for a concentrating damaged target."
         : "Concentration Saving Throw fill does not match the damaged target or linked-protection caster.",
   };
-}
-
-function concentrationD20TestNaturalOneRerollIssue(
-  state: BattleState,
-  pairs: readonly ConcentrationSavingThrowFillHolePair[],
-): string | null {
-  for (const { fill, hole } of pairs) {
-    const actor = state.combatants.get(hole.combatantId);
-    const issue = d20TestNaturalOneRerollOutcomeIssue({
-      actor,
-      originalD20TestRoll: fill.value.d20TestRoll,
-      decision: fill.value.d20TestNaturalOneReroll,
-      withoutRoll: fill.value.withoutRoll,
-      succeeded: fill.value.succeeded,
-    });
-    if (issue !== null) {
-      return issue;
-    }
-  }
-  return null;
 }
 
 export function linkedDefenseResistanceDamageShareConcentrationSavingThrowHoles(input: {
@@ -1008,7 +975,9 @@ function applySaveGatedConditionWithRepeatDamageRepeatSaves(
     ) {
       return false;
     }
-    return fill.value.outcomes[0]?.succeeded === true;
+    return (
+      savingThrowOutcomesThatStand(fill.value).outcomes[0]?.succeeded === true
+    );
   });
   return succeededEffects.reduce(
     (nextState, effect) =>

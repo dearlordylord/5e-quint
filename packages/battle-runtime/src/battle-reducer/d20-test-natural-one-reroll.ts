@@ -3,8 +3,6 @@
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
-  BattleFill,
-  BattleAttackRollHole,
   BattleCreatureState,
   BattleD20TestNaturalOneRerollDieDecision,
   BattleD20TestNaturalOneRerollDecision,
@@ -13,14 +11,10 @@ import type {
   BattleD20TestRoll,
   BattleD20TestRolledDieOutcomeReplacement,
   BattleD20TestRolledDieRollReplacement,
-  BattleHole,
-  BattleSpellAttackRollHole,
   BattleD20TestRollReplacement,
-  BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import {
-  d20TestRollAfterRolledDieReplacement,
   d20TestRolledDieProjectionIssue,
   d20TestRolledDieRollReplacementIssue,
   d20TestRollReplacementRollIssue,
@@ -36,11 +30,11 @@ export const D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE =
   "D20 Test natural-1 replacement roll is outside the d20 protocol.";
 export const D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE =
   "D20 Test natural-1 replacement roll mode does not match the current D20 Test rule.";
-export const D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE =
-  "D20 Test natural-1 reroll requires an explicit reroll or decline decision.";
+export const D20_TEST_REROLL_DECISION_REQUIRED_MESSAGE =
+  "D20 Test reroll requires an explicit reroll or decline decision.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE =
   "D20 Test natural-1 reroll support requires the triggering natural d20 face.";
-export const D20_TEST_NATURAL_ONE_REROLL_WITHOUT_ROLL_MESSAGE =
+export const D20_TEST_REROLL_WITHOUT_ROLL_MESSAGE =
   "Saving Throw outcomes without a roll cannot include d20 roll or reroll facts.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE =
   "D20 Test natural-1 rolled-die reroll requires an explicit raw die selection.";
@@ -64,22 +58,53 @@ const D20_TEST_NATURAL_ONE_REROLL_OPTION = {
   label: "D20 Test natural-1 reroll",
 } as const satisfies BattleD20TestNaturalOneRerollOption;
 
-type D20TestNaturalOneRerollGate<Decision> =
-  | { readonly tag: "decision"; readonly decision: Decision }
+/**
+ * Whether the natural-1 reroll may decide on a roll as it stands: the roller
+ * has it and the roll shows a natural 1.
+ */
+export function d20TestNaturalOneRerollOffered(
+  actor: BattleCreatureState | undefined,
+  d20TestRoll: BattleD20TestRoll | undefined,
+): boolean {
+  return (
+    combatantHasD20TestNaturalOneReroll(actor) &&
+    d20TestNaturalOneRerollTriggered({ d20TestRoll })
+  );
+}
+
+/**
+ * The issue with a roll that a natural-1 reroll holder makes without saying
+ * what its d20 showed: the reroll needs the face to know whether it applies.
+ */
+export function d20TestNaturalOneRerollRollFactsIssue(
+  actor: BattleCreatureState | undefined,
+  d20TestRoll: BattleD20TestRoll | undefined,
+): string | null {
+  return combatantHasD20TestNaturalOneReroll(actor)
+    ? d20TestRollFactsIssue({ d20TestRoll })
+    : null;
+}
+
+/** Whether a bare d20 roll shows the natural 1 its holder may reroll. */
+export function d20TestNaturalOneRerollDieOffered(
+  actor: BattleCreatureState | undefined,
+  originalNaturalD20: number,
+): boolean {
+  return combatantHasD20TestNaturalOneReroll(actor) && originalNaturalD20 === 1;
+}
+
+type D20TestNaturalOneRerollGate =
+  | { readonly tag: "decide" }
   | { readonly tag: "finished"; readonly issue: string | null };
 
-function d20TestNaturalOneRerollGate<Decision>(input: {
+function d20TestNaturalOneRerollGate(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly facts: D20TestRollFacts;
-  readonly decision: Decision | undefined;
-}): D20TestNaturalOneRerollGate<Decision> {
+}): D20TestNaturalOneRerollGate {
   if (!combatantHasD20TestNaturalOneReroll(input.actor)) {
     return {
       tag: "finished",
-      issue:
-        input.decision === undefined
-          ? null
-          : D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
+      issue: D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
     };
   }
   const factsIssue = d20TestRollFactsIssue(input.facts);
@@ -89,98 +114,13 @@ function d20TestNaturalOneRerollGate<Decision>(input: {
   if (!d20TestNaturalOneRerollTriggered(input.facts)) {
     return {
       tag: "finished",
-      issue:
-        input.decision === undefined
-          ? null
-          : D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
+      issue: D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
     };
   }
-  return input.decision === undefined
-    ? {
-        tag: "finished",
-        issue: D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
-      }
-    : { tag: "decision", decision: input.decision };
+  return { tag: "decide" };
 }
-
-function d20TestNaturalOneRerollDecisionState<Decision>(
-  input: Parameters<typeof d20TestRollFacts>[0] & {
-    readonly actor: BattleCreatureState | undefined;
-    readonly decision: Decision | undefined;
-  },
-): {
-  readonly facts: D20TestRollFacts;
-  readonly gate: D20TestNaturalOneRerollGate<Decision>;
-} {
-  const facts = d20TestRollFacts(input);
-  return {
-    facts,
-    gate: d20TestNaturalOneRerollGate({
-      actor: input.actor,
-      facts,
-      decision: input.decision,
-    }),
-  };
-}
-
-export function d20TestNaturalOneRerollRollDecisionRequired(input: {
-  readonly actor: BattleCreatureState | undefined;
-  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
-  readonly decision: BattleD20TestNaturalOneRerollDecision | undefined;
-}): boolean {
-  const facts = d20TestRollFacts(input);
-  return (
-    combatantHasD20TestNaturalOneReroll(input.actor) &&
-    d20TestRollFactsIssue(facts) === null &&
-    d20TestNaturalOneRerollTriggered(facts) &&
-    input.decision === undefined
-  );
-}
-
-export function d20TestNaturalOneRerollOutcomeDecisionRequired(input: {
-  readonly actor: BattleCreatureState | undefined;
-  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
-  readonly decision: BattleD20TestNaturalOneRerollOutcomeDecision | undefined;
-  readonly withoutRoll?: true | undefined;
-}): boolean {
-  const facts = d20TestRollFacts(input);
-  return (
-    combatantHasD20TestNaturalOneReroll(input.actor) &&
-    input.withoutRoll !== true &&
-    d20TestRollFactsIssue(facts) === null &&
-    d20TestNaturalOneRerollTriggered(facts) &&
-    input.decision === undefined
-  );
-}
-
-export function d20TestNaturalOneRerollDieDecisionRequired(input: {
-  readonly actor: BattleCreatureState | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly decision: BattleD20TestNaturalOneRerollDieDecision | undefined;
-}): boolean {
-  return (
-    combatantHasD20TestNaturalOneReroll(input.actor) &&
-    input.originalNaturalD20 === 1 &&
-    input.decision === undefined
-  );
-}
-
-type BattleD20TestNaturalOneRerollHole = Extract<
-  BattleHole,
-  {
-    readonly kind:
-      | "abilityCheck"
-      | "attackRoll"
-      | "concentrationSavingThrow"
-      | "deathSavingThrow"
-      | "savingThrowOutcome"
-      | "spellcastingAbilityCheck";
-  }
->;
-
-export function d20TestNaturalOneRerollHoleWithOption<
-  T extends BattleD20TestNaturalOneRerollHole,
->(
+/** The D20 Test hole, asked again with the natural-1 reroll option. */
+export function d20TestHoleWithNaturalOneRerollOption<T extends object>(
   hole: T,
 ): T & {
   readonly d20TestNaturalOneRerolls: readonly [
@@ -191,18 +131,6 @@ export function d20TestNaturalOneRerollHoleWithOption<
     ...hole,
     d20TestNaturalOneRerolls: [D20_TEST_NATURAL_ONE_REROLL_OPTION],
   };
-}
-
-export function attackRollHoleWithD20TestNaturalOneRerollOption<
-  T extends BattleAttackRollHole | BattleSpellAttackRollHole,
->(
-  hole: T,
-): T & {
-  readonly d20TestNaturalOneRerolls: readonly [
-    BattleD20TestNaturalOneRerollOption,
-  ];
-} {
-  return d20TestNaturalOneRerollHoleWithOption(hole);
 }
 
 export function combatantHasD20TestNaturalOneReroll(
@@ -218,18 +146,23 @@ export function combatantHasD20TestNaturalOneReroll(
   );
 }
 
+/**
+ * The issue with a natural-1 reroll decision on a roll with a total (an
+ * attack roll or an ability check), checked against the roll as it stands.
+ */
 export function d20TestNaturalOneRerollRollIssue(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly total?: number | undefined;
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
-  readonly decision: BattleD20TestNaturalOneRerollDecision | undefined;
+  readonly decision: BattleD20TestNaturalOneRerollDecision;
   readonly requiredRollMode?: AttackRollMode | undefined;
 }): string | null {
-  const { facts, gate } = d20TestNaturalOneRerollDecisionState(input);
+  const facts = d20TestRollFacts(input);
+  const gate = d20TestNaturalOneRerollGate({ actor: input.actor, facts });
   if (gate.tag === "finished") {
     return gate.issue;
   }
-  const decision = gate.decision;
+  const decision = input.decision;
   if (decision.kind === "decline") {
     return null;
   }
@@ -247,25 +180,22 @@ export function d20TestNaturalOneRerollRollIssue(input: {
   });
 }
 
-/* v8 ignore start -- @preserve -- Malformed raw natural-1 outcome protocol: supported decisions require consistent roll presence, raw-die selection, replacement face, and projected outcome; effective outcome application remains measured. */
+/* v8 ignore start -- @preserve -- Malformed raw natural-1 outcome protocol: supported decisions require raw-die selection, a replacement face and a projected outcome that agree; the outcome that stands remains measured. */
+/**
+ * The issue with a natural-1 reroll decision on a rolled outcome whose success
+ * the table rules, checked against the roll as it stands.
+ */
 export function d20TestNaturalOneRerollOutcomeIssue(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
-  readonly decision: BattleD20TestNaturalOneRerollOutcomeDecision | undefined;
-  readonly withoutRoll?: true | undefined;
-  readonly succeeded?: boolean | undefined;
+  readonly originalD20TestRoll: BattleD20TestRoll;
+  readonly decision: BattleD20TestNaturalOneRerollOutcomeDecision;
 }): string | null {
-  if (input.withoutRoll === true) {
-    return input.originalD20TestRoll === undefined &&
-      input.decision === undefined
-      ? null
-      : D20_TEST_NATURAL_ONE_REROLL_WITHOUT_ROLL_MESSAGE;
-  }
-  const { facts, gate } = d20TestNaturalOneRerollDecisionState(input);
+  const facts = d20TestRollFacts(input);
+  const gate = d20TestNaturalOneRerollGate({ actor: input.actor, facts });
   if (gate.tag === "finished") {
     return gate.issue;
   }
-  const decision = gate.decision;
+  const decision = input.decision;
   if (decision.kind === "decline") {
     return null;
   }
@@ -275,35 +205,25 @@ export function d20TestNaturalOneRerollOutcomeIssue(input: {
       replacement: decision.replacement,
     });
   }
-  if (input.originalD20TestRoll?.tag === "multiple") {
-    return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
-  }
-  return null;
+  return input.originalD20TestRoll.tag === "multiple"
+    ? D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE
+    : null;
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- Malformed raw natural-1 die protocol: supported decisions require an eligible actor, a known natural 1, and a valid d20 replacement face; effective reroll application remains measured. */
+/* v8 ignore start -- @preserve -- Malformed raw natural-1 die protocol: supported decisions require an eligible actor, a natural 1 and a valid d20 replacement face; the die that stands remains measured. */
+/** The issue with a natural-1 reroll decision on a bare d20 roll. */
 export function d20TestNaturalOneRerollDieIssue(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly decision: BattleD20TestNaturalOneRerollDieDecision | undefined;
+  readonly originalNaturalD20: number;
+  readonly decision: BattleD20TestNaturalOneRerollDieDecision;
 }): string | null {
   const decision = input.decision;
   if (!combatantHasD20TestNaturalOneReroll(input.actor)) {
-    return decision === undefined
-      ? null
-      : D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE;
-  }
-  if (input.originalNaturalD20 === undefined) {
-    return D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE;
+    return D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE;
   }
   if (input.originalNaturalD20 !== 1) {
-    return decision === undefined
-      ? null
-      : D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE;
-  }
-  if (decision === undefined) {
-    return D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE;
+    return D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE;
   }
   if (decision.kind === "decline") {
     return null;
@@ -313,116 +233,6 @@ export function d20TestNaturalOneRerollDieIssue(input: {
     : D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
 }
 /* v8 ignore stop -- @preserve */
-
-export function effectiveD20TestNaturalOneRerollAbilityCheckValue<
-  T extends {
-    readonly total: number;
-    readonly d20TestRoll?: BattleD20TestRoll;
-    readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
-  },
->(value: T): T {
-  const decision = value.d20TestNaturalOneReroll;
-  if (decision?.kind === "rerollRolledDie") {
-    return {
-      ...value,
-      total: decision.replacement.result.total,
-      d20TestRoll: d20TestRollAfterRolledDieReplacement(
-        value.d20TestRoll,
-        decision.replacement,
-      ),
-    };
-  }
-  if (decision?.kind !== "reroll") {
-    return value;
-  }
-  return {
-    ...value,
-    total: decision.replacement.total,
-    d20TestRoll: decision.replacement.d20TestRoll,
-  };
-}
-
-export function effectiveD20TestNaturalOneRerollDeathSavingThrow(
-  fill: Extract<BattleFill, { readonly kind: "deathSavingThrow" }>,
-): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
-  const decision = fill.d20TestNaturalOneReroll;
-  if (decision?.kind !== "reroll") {
-    return fill;
-  }
-  return {
-    ...fill,
-    value: decision.replacement,
-  };
-}
-
-export function effectiveD20TestNaturalOneRerollConcentrationSavingThrow<
-  T extends Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>,
->(fill: T): T {
-  const decision = fill.value.d20TestNaturalOneReroll;
-  if (decision?.kind === "rerollRolledDie") {
-    const { withoutRoll: _withoutRoll, ...value } = fill.value;
-    return {
-      ...fill,
-      value: {
-        ...value,
-        succeeded: decision.replacement.result.succeeded,
-        d20TestRoll: d20TestRollAfterRolledDieReplacement(
-          fill.value.d20TestRoll,
-          decision.replacement,
-        ),
-      },
-    };
-  }
-  if (decision?.kind !== "reroll") {
-    return fill;
-  }
-  const { withoutRoll: _withoutRoll, ...value } = fill.value;
-  return {
-    ...fill,
-    value: {
-      ...value,
-      succeeded: decision.replacement.succeeded,
-      d20TestRoll: decision.replacement.d20TestRoll,
-    },
-  };
-}
-
-export function effectiveD20TestNaturalOneRerollSavingThrowOutcome(
-  outcome: BattleSavingThrowOutcome,
-): BattleSavingThrowOutcome {
-  const decision = outcome.d20TestNaturalOneReroll;
-  if (decision?.kind === "rerollRolledDie") {
-    const { withoutRoll: _withoutRoll, ...rolledOutcome } = outcome;
-    return {
-      ...rolledOutcome,
-      succeeded: decision.replacement.result.succeeded,
-      d20TestRoll: d20TestRollAfterRolledDieReplacement(
-        outcome.d20TestRoll,
-        decision.replacement,
-      ),
-    };
-  }
-  if (decision?.kind !== "reroll") {
-    return outcome;
-  }
-  const { withoutRoll: _withoutRoll, ...rolledOutcome } = outcome;
-  return {
-    ...rolledOutcome,
-    succeeded: decision.replacement.succeeded,
-    d20TestRoll: decision.replacement.d20TestRoll,
-  };
-}
-
-export function effectiveD20TestNaturalOneRerollSavingThrowOutcomes<
-  T extends { readonly outcomes: readonly BattleSavingThrowOutcome[] },
->(value: T): T {
-  return {
-    ...value,
-    outcomes: value.outcomes.map(
-      effectiveD20TestNaturalOneRerollSavingThrowOutcome,
-    ),
-  };
-}
 
 function d20TestRollFacts(input: {
   readonly total?: number | undefined;
@@ -434,13 +244,17 @@ function d20TestRollFacts(input: {
   };
 }
 
-function d20TestRollFactsIssue(facts: D20TestRollFacts): string | null {
+function d20TestRollFactsIssue(facts: {
+  readonly d20TestRoll: BattleD20TestRoll | undefined;
+}): string | null {
   return facts.d20TestRoll === undefined
     ? D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE
     : null;
 }
 
-function d20TestNaturalOneRerollTriggered(facts: D20TestRollFacts): boolean {
+function d20TestNaturalOneRerollTriggered(facts: {
+  readonly d20TestRoll: BattleD20TestRoll | undefined;
+}): boolean {
   const roll = facts.d20TestRoll;
   if (roll === undefined) {
     return false;

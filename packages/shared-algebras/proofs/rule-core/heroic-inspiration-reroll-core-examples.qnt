@@ -183,4 +183,66 @@ module heroicInspirationRerollCoreExamples {
       assert(result.inspirationAfter == NoHeroicInspiration),
     }
   }
+
+  pure val inspiredSave: HeroicInspirationD20RerollFacts = {
+    playerCharacter: true,
+    inspiration: HeroicInspirationAvailable,
+    originalD20: 6,
+    decision: HeroicInspirationD20RerollDeclined,
+  }
+
+  run test_saving_throw_reroll_uses_the_new_d20 = {
+    val result = resolveHeroicInspirationD20Reroll({
+      ...inspiredSave,
+      decision: HeroicInspirationD20RerollSelected({ replacementD20: 18 }),
+    })
+    all {
+      assert(result.admitted),
+      assert(not(result.invalid)),
+      assert(result.effectiveD20 == 18),
+      assert(result.inspirationAfter == NoHeroicInspiration),
+    }
+  }
+
+  run test_death_saving_throw_reroll_can_roll_a_20 = {
+    val result = resolveHeroicInspirationD20Reroll({
+      ...inspiredSave,
+      decision: HeroicInspirationD20RerollSelected({ replacementD20: 20 }),
+    })
+    all {
+      assert(result.admitted),
+      assert(result.effectiveD20 == 20),
+      assert(result.inspirationAfter == NoHeroicInspiration),
+    }
+  }
+
+  run test_saving_throw_decline_keeps_d20_and_heroic_inspiration = {
+    val result = resolveHeroicInspirationD20Reroll(inspiredSave)
+    all {
+      assert(not(result.admitted)),
+      assert(not(result.invalid)),
+      assert(result.effectiveD20 == 6),
+      assert(result.inspirationAfter == HeroicInspirationAvailable),
+    }
+  }
+
+  run test_saving_throw_reroll_needs_heroic_inspiration_and_a_d20_face = {
+    val without = resolveHeroicInspirationD20Reroll({
+      ...inspiredSave,
+      inspiration: NoHeroicInspiration,
+      decision: HeroicInspirationD20RerollSelected({ replacementD20: 18 }),
+    })
+    val offFace = resolveHeroicInspirationD20Reroll({
+      ...inspiredSave,
+      decision: HeroicInspirationD20RerollSelected({ replacementD20: 21 }),
+    })
+    all {
+      assert(without.invalid),
+      assert(without.effectiveD20 == 6),
+      assert(without.inspirationAfter == NoHeroicInspiration),
+      assert(offFace.invalid),
+      assert(offFace.effectiveD20 == 6),
+      assert(offFace.inspirationAfter == HeroicInspirationAvailable),
+    }
+  }
 }

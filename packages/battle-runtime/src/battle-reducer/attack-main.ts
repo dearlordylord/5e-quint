@@ -50,9 +50,11 @@ import {
 import {
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  battleStateAfterHeroicInspirationReroll,
-  type AttackRollHeroicInspirationUse,
 } from "./attack-roll-d20-test-rerolls.ts";
+import {
+  battleStateAfterHeroicInspirationReroll,
+  type HeroicInspirationUse,
+} from "./heroic-inspiration-reroll.ts";
 
 import {
   attackRollHole,
@@ -1344,7 +1346,7 @@ type OrdinaryObjectAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly heroicInspirationUse: HeroicInspirationUse;
     };
 
 type OrdinaryObjectAttackRollContext<
@@ -4353,7 +4355,7 @@ type AdditionalWeaponAttackRollResolution =
       readonly tag: "ok";
       readonly fill: AdditionalWeaponAttackRollFill;
       readonly attackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly heroicInspirationUse: HeroicInspirationUse;
     };
 
 function resolveAdditionalWeaponAttackRoll(input: {

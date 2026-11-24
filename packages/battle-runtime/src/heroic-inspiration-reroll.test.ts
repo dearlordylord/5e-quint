@@ -11,7 +11,7 @@ import { describe, expect, test } from "vitest";
 
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
-import { ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE } from "./battle-reducer/attack-roll-d20-test-rerolls.ts";
+import { D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE } from "./battle-reducer/d20-test-reroll-sequence.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import { HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/heroic-inspiration-reroll.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
@@ -379,7 +379,7 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       ]),
     ).toMatchObject({
       tag: "invalid",
-      message: ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE,
+      message: D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE,
     });
   });
 

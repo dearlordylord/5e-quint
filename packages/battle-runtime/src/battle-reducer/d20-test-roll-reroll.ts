@@ -1,11 +1,14 @@
 // Replacement checks shared by every D20 Test reroll source: the natural-1
 // reroll, Heroic Inspiration and Seeking Spell. Each source supplies its own messages and
-// which rolled faces it may replace.
+// which rolled faces it may replace. Also the roll after one decision, for each
+// kind of D20 Test roll.
 
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
-  BattleAttackRollResult,
+  BattleD20TestDieReplacement,
+  BattleD20TestDieRerollDecision,
+  BattleD20TestOutcomeRerollDecision,
   BattleD20TestRoll,
   BattleD20TestRollReplacement,
   BattleD20TestRollRerollDecision,
@@ -129,29 +132,70 @@ export function d20TestRolledDieProjectionIssue(input: {
 }
 /* v8 ignore stop -- @preserve */
 
-/** The attack roll after a source's reroll decision, or unchanged without one. */
-export function attackRollAfterD20TestRollReroll(
-  attackRoll: BattleAttackRollResult,
-  decision: BattleD20TestRollRerollDecision<string> | undefined,
-): BattleAttackRollResult {
-  if (decision?.kind === "rerollRolledDie") {
+/**
+ * A roll with a total (an attack roll or an ability check) after a source's
+ * reroll decision.
+ */
+export function d20TestRollAfterReroll<
+  T extends {
+    readonly total: number;
+    readonly d20TestRoll?: BattleD20TestRoll;
+  },
+>(roll: T, decision: BattleD20TestRollRerollDecision<string>): T {
+  if (decision.kind === "rerollRolledDie") {
     return {
-      ...attackRoll,
+      ...roll,
       total: decision.replacement.result.total,
       d20TestRoll: d20TestRollAfterRolledDieReplacement(
-        attackRoll.d20TestRoll,
+        roll.d20TestRoll,
         decision.replacement,
       ),
     };
   }
-  if (decision?.kind !== "reroll") {
-    return attackRoll;
+  return decision.kind === "reroll"
+    ? {
+        ...roll,
+        total: decision.replacement.total,
+        d20TestRoll: decision.replacement.d20TestRoll,
+      }
+    : roll;
+}
+
+/**
+ * A rolled outcome whose success the table rules (a saving throw) after a
+ * source's reroll decision.
+ */
+export function d20TestOutcomeAfterReroll<
+  T extends {
+    readonly succeeded: boolean;
+    readonly d20TestRoll: BattleD20TestRoll;
+  },
+>(outcome: T, decision: BattleD20TestOutcomeRerollDecision<string>): T {
+  if (decision.kind === "rerollRolledDie") {
+    return {
+      ...outcome,
+      succeeded: decision.replacement.result.succeeded,
+      d20TestRoll: d20TestRollAfterRolledDieReplacement(
+        outcome.d20TestRoll,
+        decision.replacement,
+      ),
+    };
   }
-  return {
-    ...attackRoll,
-    total: decision.replacement.total,
-    d20TestRoll: decision.replacement.d20TestRoll,
-  };
+  return decision.kind === "reroll"
+    ? {
+        ...outcome,
+        succeeded: decision.replacement.succeeded,
+        d20TestRoll: decision.replacement.d20TestRoll,
+      }
+    : outcome;
+}
+
+/** A bare d20 roll (a Death Saving Throw) after a source's reroll decision. */
+export function d20TestDieAfterReroll(
+  naturalD20: BattleD20TestDieReplacement,
+  decision: BattleD20TestDieRerollDecision<string>,
+): BattleD20TestDieReplacement {
+  return decision.kind === "reroll" ? decision.replacement : naturalD20;
 }
 
 function replaceD20TestRoll(

@@ -65,17 +65,25 @@ type SavingThrowOutcomeValue = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >["value"]["outcomes"][number];
-type SavingThrowNaturalOneReroll = NonNullable<
-  SavingThrowOutcomeValue["d20TestNaturalOneReroll"]
->;
-type SavingThrowSingleRollNaturalOneReroll = Extract<
-  SavingThrowNaturalOneReroll,
+type SavingThrowD20TestReroll = NonNullable<
+  SavingThrowOutcomeValue["d20TestRerolls"]
+>[number];
+type SavingThrowSingleRollReroll = Extract<
+  SavingThrowD20TestReroll,
   { readonly kind: "decline" | "reroll" }
 >;
-type SavingThrowRawDiceNaturalOneReroll = Extract<
-  SavingThrowNaturalOneReroll,
+type SavingThrowSingleRollRerolls = readonly [
+  SavingThrowSingleRollReroll,
+  ...SavingThrowSingleRollReroll[],
+];
+type SavingThrowRawDiceReroll = Extract<
+  SavingThrowD20TestReroll,
   { readonly kind: "decline" | "rerollRolledDie" }
 >;
+type SavingThrowRawDiceRerolls = readonly [
+  SavingThrowRawDiceReroll,
+  ...SavingThrowRawDiceReroll[],
+];
 
 type SavingThrowOutcomeInputCommon = {
   readonly targetId: CombatantId;
@@ -88,35 +96,35 @@ type SavingThrowOutcomeInput =
       readonly d20TestRoll?: never;
       readonly naturalD20?: never;
       readonly rolledD20s?: never;
-      readonly d20TestNaturalOneReroll?: never;
+      readonly d20TestRerolls?: never;
     })
   | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
       readonly d20TestRoll?: never;
       readonly naturalD20?: number;
       readonly rolledD20s?: never;
-      readonly d20TestNaturalOneReroll?: never;
+      readonly d20TestRerolls?: SavingThrowSingleRollRerolls;
     })
   | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
       readonly d20TestRoll?: never;
       readonly naturalD20: 1;
       readonly rolledD20s?: never;
-      readonly d20TestNaturalOneReroll: SavingThrowSingleRollNaturalOneReroll;
+      readonly d20TestRerolls: SavingThrowSingleRollRerolls;
     })
   | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
       readonly d20TestRoll?: never;
       readonly naturalD20?: never;
       readonly rolledD20s: TestD20RolledD20s;
-      readonly d20TestNaturalOneReroll?: SavingThrowRawDiceNaturalOneReroll;
+      readonly d20TestRerolls?: SavingThrowRawDiceRerolls;
     })
   | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
       readonly d20TestRoll: BattleD20TestRoll;
       readonly naturalD20?: never;
       readonly rolledD20s?: never;
-      readonly d20TestNaturalOneReroll?: never;
+      readonly d20TestRerolls?: never;
     })
   | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
@@ -126,7 +134,7 @@ type SavingThrowOutcomeInput =
       >;
       readonly naturalD20?: never;
       readonly rolledD20s?: never;
-      readonly d20TestNaturalOneReroll: SavingThrowSingleRollNaturalOneReroll;
+      readonly d20TestRerolls: SavingThrowSingleRollRerolls;
     })
   | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
@@ -136,7 +144,7 @@ type SavingThrowOutcomeInput =
       >;
       readonly naturalD20?: never;
       readonly rolledD20s?: never;
-      readonly d20TestNaturalOneReroll?: SavingThrowRawDiceNaturalOneReroll;
+      readonly d20TestRerolls?: SavingThrowRawDiceRerolls;
     });
 import type {
   ActionSpellAct,
@@ -1172,7 +1180,7 @@ function d20TestSavingThrowOutcomeValue(
   }
   const d20TestRoll = testD20TestRoll(outcome);
   if (d20TestRoll === undefined) {
-    if (outcome.d20TestNaturalOneReroll !== undefined) {
+    if (outcome.d20TestRerolls !== undefined) {
       throw new Error(
         "A Saving Throw without a D20 Test roll cannot include a reroll decision.",
       );
@@ -1187,9 +1195,9 @@ function d20TestSavingThrowOutcomeValue(
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
     d20TestRoll,
-    ...(outcome.d20TestNaturalOneReroll === undefined
+    ...(outcome.d20TestRerolls === undefined
       ? {}
-      : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
+      : { d20TestRerolls: outcome.d20TestRerolls }),
   };
 }
 

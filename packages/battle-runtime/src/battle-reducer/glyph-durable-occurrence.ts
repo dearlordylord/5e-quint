@@ -176,10 +176,13 @@ import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellAttackRequiresExactDistance } from "./spells-targeting.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  d20TestNaturalOneRerollOutcomeDecisionRequired,
-  d20TestNaturalOneRerollOutcomeIssue,
-  effectiveD20TestNaturalOneRerollSavingThrowOutcomes,
-} from "./d20-test-natural-one-reroll.ts";
+  d20TestHoleWithRerollOptions,
+  d20TestOutcomeRerolls,
+} from "./d20-test-outcome-rerolls.ts";
+import {
+  battleStateAfterHeroicInspirationRerolls,
+  type HeroicInspirationUse,
+} from "./heroic-inspiration-reroll.ts";
 
 const DURABLE_GLYPH_INSCRIPTION_HOURS = 1;
 const GLYPH_MAX_COVERED_DIAMETER_FEET = 10;
@@ -566,7 +569,9 @@ type GlyphExplosiveRuneDamageLifecycleCheck =
 type GlyphExplosiveRuneSavingThrowCheck =
   | {
       readonly tag: "ok";
+      /** Each target's outcome that stands after its reroll decisions. */
       readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
+      readonly heroicInspirationUses: readonly HeroicInspirationUse[];
     }
   | {
       readonly tag: "needsHoles";
@@ -971,7 +976,10 @@ export function releaseGlyphExplosiveRune(input: {
     };
   }
   const stateWithoutOccurrence = battleStateWithoutGlyphOccurrence(
-    input.state,
+    battleStateAfterHeroicInspirationRerolls(
+      input.state,
+      savingThrow.heroicInspirationUses,
+    ),
     ref.effect.effectRef,
   );
   const applied = applyGlyphExplosiveRuneDamage({
@@ -2497,7 +2505,7 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
 }): GlyphExplosiveRuneSavingThrowCheck {
   const areaMembership = input.witness.areaMembership;
   if (areaMembership.kind === "noCreaturesInArea") {
-    return { tag: "ok", outcomes: [] };
+    return { tag: "ok", outcomes: [], heroicInspirationUses: [] };
   }
   const saveHole = glyphExplosiveRuneSavingThrowOutcomeHole({
     state: input.state,
@@ -2535,49 +2543,44 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
   ) {
     return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
   }
-  if (
-    glyphExplosiveRuneSavingThrowOutcomeD20Issue({
-      state: input.state,
-      hole: saveHole,
-      outcomes: fill.value.outcomes,
-    })
-  ) {
-    return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
-  }
-  return {
-    tag: "ok",
-    outcomes: effectiveD20TestNaturalOneRerollSavingThrowOutcomes(fill.value)
-      .outcomes,
-  };
+  return glyphExplosiveRuneSavingThrowRerolls({
+    state: input.state,
+    hole: saveHole,
+    outcomes: fill.value.outcomes,
+  });
 }
 
-function glyphExplosiveRuneSavingThrowOutcomeD20Issue(input: {
+/**
+ * Each target's reroll decisions on its save. The release resolves in one
+ * step, so a Heroic Inspiration spend needs no replay record.
+ */
+function glyphExplosiveRuneSavingThrowRerolls(input: {
   readonly state: BattleState;
   readonly hole: BattleGlyphExplosiveRuneSavingThrowOutcomeHole;
   readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
-}): boolean {
-  return input.outcomes.some((outcome) => {
-    const target = input.state.combatants.get(outcome.targetId);
-    if (
-      d20TestNaturalOneRerollOutcomeDecisionRequired({
-        actor: target,
-        originalD20TestRoll: outcome.d20TestRoll,
-        decision: outcome.d20TestNaturalOneReroll,
-        withoutRoll: outcome.withoutRoll,
-      })
-    ) {
-      return true;
+}): GlyphExplosiveRuneSavingThrowCheck {
+  const outcomes: GlyphExplosiveRuneSavingThrowOutcomes[number][] = [];
+  const heroicInspirationUses: HeroicInspirationUse[] = [];
+  for (const outcome of input.outcomes) {
+    const rerolls = d20TestOutcomeRerolls({
+      state: input.state,
+      scope: { kind: "oneStep" },
+      roll: { rollerId: outcome.targetId, holeId: input.hole.holeId },
+      outcome,
+    });
+    if (rerolls.tag === "decisionsRequired") {
+      return {
+        tag: "needsHoles",
+        holes: [d20TestHoleWithRerollOptions(input.hole, rerolls.options)],
+      };
     }
-    return (
-      d20TestNaturalOneRerollOutcomeIssue({
-        actor: target,
-        originalD20TestRoll: outcome.d20TestRoll,
-        decision: outcome.d20TestNaturalOneReroll,
-        withoutRoll: outcome.withoutRoll,
-        succeeded: outcome.succeeded,
-      }) !== null
-    );
-  });
+    if (rerolls.tag === "invalid") {
+      return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
+    }
+    outcomes.push(rerolls.roll);
+    heroicInspirationUses.push(rerolls.heroicInspirationUse);
+  }
+  return { tag: "ok", outcomes, heroicInspirationUses };
 }
 
 function savingThrowOutcomesExactlyMatchTargets(

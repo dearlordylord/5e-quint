@@ -120,6 +120,15 @@ export function spellBattle(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly targetPreparedSpells?: readonly SpellRecord[];
+  readonly casterHeroicInspiration?: Parameters<
+    typeof characterCreature
+  >[0]["heroicInspiration"];
+  readonly targetHeroicInspiration?: Parameters<
+    typeof characterCreature
+  >[0]["heroicInspiration"];
+  readonly extraTargetHeroicInspiration?: Parameters<
+    typeof characterCreature
+  >[0]["heroicInspiration"];
   readonly casterClassLevels?: Extract<
     CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
@@ -194,6 +203,7 @@ export function spellBattle(input: {
         ...optionalProperty("unitFeatures", input.casterUnitFeatures),
         ...optionalProperty("resources", input.casterResources),
         ...optionalProperty("metamagic", input.casterMetamagic),
+        ...optionalProperty("heroicInspiration", input.casterHeroicInspiration),
       }),
       ...(input.targetStatBlock === undefined
         ? [
@@ -209,6 +219,10 @@ export function spellBattle(input: {
               ...optionalProperty("characterUnitRefs", input.targetUnitRefs),
               ...optionalProperty("unitFeatures", input.targetUnitFeatures),
               ...optionalProperty("classLevels", input.targetClassLevels),
+              ...optionalProperty(
+                "heroicInspiration",
+                input.targetHeroicInspiration,
+              ),
               ...(input.targetSpellcasting === undefined &&
               input.targetPreparedSpells === undefined
                 ? {}
@@ -247,6 +261,10 @@ export function spellBattle(input: {
           ...optionalProperty("currentHp", input.extraTargetHp),
           ...optionalProperty("maxHp", input.extraTargetMaxHp),
           ...optionalProperty("spellcasting", input.extraTargetSpellcasting),
+          ...optionalProperty(
+            "heroicInspiration",
+            input.extraTargetHeroicInspiration,
+          ),
         }),
       ),
       ...(input.statBlockTargets ?? []).map((target) =>

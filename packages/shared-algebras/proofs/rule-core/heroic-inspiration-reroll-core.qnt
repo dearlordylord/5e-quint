@@ -11,6 +11,10 @@ module heroicInspirationRerollCore {
   //   the roller.
   // - ASSUMPTIONS.md A55: a different source may reroll a rerolled die, so
   //   `original` is the roll as it stands, after any other source's reroll.
+  // - "any die": the reroll applies to every D20 Test, not only to Attack
+  //   Rolls. A roll with a total (an Attack Roll or an Ability Check) keeps
+  //   its modifiers below; a Saving Throw whose success the table rules, and
+  //   a Death Saving Throw, reroll the bare d20 (resolveHeroicInspirationD20Reroll).
   import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
 
   type HeroicInspiration = HeroicInspirationAvailable | NoHeroicInspiration
@@ -108,6 +112,57 @@ module heroicInspirationRerollCore {
       effective: if (admitted)
         heroicInspirationRerollEffectiveRoll(facts)
       else facts.original,
+      inspirationAfter: if (admitted)
+        NoHeroicInspiration
+      else facts.inspiration,
+    }
+  }
+
+  // A Saving Throw whose success the table rules on the roll that stands, or
+  // a Death Saving Throw: the reroll replaces the d20, and the new d20 is used.
+  type HeroicInspirationD20RerollDecision =
+    | HeroicInspirationD20RerollDeclined
+    | HeroicInspirationD20RerollSelected({ replacementD20: int })
+
+  type HeroicInspirationD20RerollFacts = {
+    playerCharacter: bool,
+    inspiration: HeroicInspiration,
+    originalD20: int,
+    decision: HeroicInspirationD20RerollDecision,
+  }
+
+  type HeroicInspirationD20RerollResult = {
+    admitted: bool,
+    invalid: bool,
+    effectiveD20: int,
+    inspirationAfter: HeroicInspiration,
+  }
+
+  pure def resolveHeroicInspirationD20Reroll(
+    facts: HeroicInspirationD20RerollFacts,
+  ): HeroicInspirationD20RerollResult = {
+    val taken = match facts.decision {
+      | HeroicInspirationD20RerollDeclined => false
+      | HeroicInspirationD20RerollSelected(_) => true
+    }
+    val admitted = all {
+      facts.playerCharacter,
+      facts.inspiration == HeroicInspirationAvailable,
+      legalD20(facts.originalD20),
+      match facts.decision {
+        | HeroicInspirationD20RerollDeclined => false
+        | HeroicInspirationD20RerollSelected(choice) =>
+            legalD20(choice.replacementD20)
+      },
+    }
+    {
+      admitted: admitted,
+      invalid: taken and not(admitted),
+      effectiveD20: match facts.decision {
+        | HeroicInspirationD20RerollDeclined => facts.originalD20
+        | HeroicInspirationD20RerollSelected(choice) =>
+            if (admitted) choice.replacementD20 else facts.originalD20
+      },
       inspirationAfter: if (admitted)
         NoHeroicInspiration
       else facts.inspiration,
