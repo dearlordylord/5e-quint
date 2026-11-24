@@ -103,6 +103,7 @@ import {
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 
 function requireMechanicalCharacterProcedureRef(
   state: BattleState,
@@ -519,12 +520,12 @@ describe("battle runtime: Weapon Mastery", () => {
         },
       ],
     });
-    const selectedNonSapWeapon = applyWeaponMasterySapOnHit(
-      selectedNonSapWeaponState,
-      fighterId,
-      goblinId,
-      testShortswordAttack(),
-    );
+    const selectedNonSapWeapon = applyWeaponMasterySapOnHit({
+      state: selectedNonSapWeaponState,
+      attacker: requireCombatant(selectedNonSapWeaponState, fighterId),
+      target: requireCombatant(selectedNonSapWeaponState, goblinId),
+      attack: testShortswordAttack(),
+    });
 
     for (const result of [
       hitWithoutSelection,

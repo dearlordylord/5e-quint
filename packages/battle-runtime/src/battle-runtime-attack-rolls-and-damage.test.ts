@@ -1,9 +1,18 @@
+import { spawnedCompanionFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
+import { initiativeScore } from "./identity.ts";
+import {
+  castSpawnedCompanion,
+  endTurn,
+  spawnedCompanionForOwner,
+} from "./index.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, PositiveInteger } from "@dnd/shared/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -29,6 +38,14 @@ import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
+  attackBonus,
+  battleAbilityModifier,
+  requireResolved,
+  spellRecord,
+  statBlockCatalog,
+  testCharacterD20Statistics,
+  wizardId,
+  wizardSpellcasting,
   characterBattleFeatureInitForTest,
   combatantId,
   concentrationSavingThrowFill,
@@ -60,6 +77,7 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
 import {
   statBlockBaseDamageComponentOrdinal,
@@ -123,6 +141,187 @@ import {
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: attack rolls and damage", () => {
+  test.each([
+    {
+      attackKind: "weapon",
+      modifier: 0,
+      abilityScore: 10,
+      rolledDamage: 1,
+      expectedHp: 1,
+    },
+    {
+      attackKind: "weapon",
+      modifier: 0,
+      abilityScore: 10,
+      rolledDamage: 2,
+      expectedHp: 0,
+    },
+    {
+      attackKind: "unarmedStrike",
+      modifier: 0,
+      abilityScore: 10,
+      expectedHp: 1,
+    },
+    {
+      attackKind: "unarmedStrike",
+      modifier: 1,
+      abilityScore: 12,
+      expectedHp: 0,
+    },
+  ] as const)(
+    "$attackKind damage completes with familiar HP $expectedHp",
+    (input) => {
+      const familiarId = combatantId("post-damage-familiar");
+      const spell = spellRecord("find_familiar");
+      const eligibility = spawnedCompanionFormEligibilityForSpell(spell);
+      if (eligibility === null)
+        throw new Error("Expected Find Familiar eligibility.");
+      const creatureTypeChoice = eligibility.creatureTypeOverrideChoices[0];
+      if (creatureTypeChoice === undefined)
+        throw new Error("Expected familiar creature type choice.");
+      const initial = startBattleSessionRight({
+        battleId: battleId(
+          `post-damage-familiar-${input.attackKind}-${input.expectedHp}`,
+        ),
+        combatants: [
+          characterSeed({
+            combatantId: wizardId,
+            initiative: 30,
+            attack: null,
+            spellcasting: wizardSpellcasting({
+              preparedSpells: [spell],
+              spellSlots: [{ spellLevel: 1, count: 1 }],
+            }),
+          }),
+          characterSeed({
+            initiative: 20,
+            weaponMasteries: [],
+            d20Statistics: testCharacterD20Statistics({
+              str: input.abilityScore,
+              dex: 10,
+            }),
+            attack: {
+              ...testDaggerAttack(),
+              attackBonus: attackBonus(2 + input.modifier),
+              abilityModifier: battleAbilityModifier(input.modifier),
+              damageAbilityModifier: battleAbilityModifier(input.modifier),
+            },
+            unarmedStrike: {
+              ...testUnarmedStrikeDamageAttack(),
+              attackBonus: attackBonus(2 + input.modifier),
+              attackAbilityModifier: battleAbilityModifier(input.modifier),
+              damageAbilityModifier: battleAbilityModifier(input.modifier),
+            },
+          }),
+        ],
+      });
+      const cast = requireResolved(
+        castSpawnedCompanion({
+          state: initial.state,
+          casterId: wizardId,
+          ammunitionStocks: [],
+          catalog: statBlockCatalog,
+          eligibility,
+          selection: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverrideChoiceId: creatureTypeChoice.optionId,
+          familiarId,
+          initiative: initiativeScore(10),
+          placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+        }),
+      );
+      const state = requireResolved(
+        endTurn({ state: cast.state, actorId: wizardId }),
+      ).state;
+      expect(Number(state.combatants.get(familiarId)?.hp)).toBe(2);
+      const options = attackActionOptionsForActor(state, fighterId);
+      const attack = Match.value(input.attackKind).pipe(
+        Match.when("weapon", () =>
+          options.find((option) => option.kind === "weapon"),
+        ),
+        Match.when("unarmedStrike", () =>
+          options.find(
+            (option) =>
+              option.kind === "unarmedStrike" &&
+              option.effect.kind === "damage",
+          ),
+        ),
+        Match.exhaustive,
+      );
+      if (attack === undefined) throw new Error("Expected character attack.");
+      const subject = {
+        tag: "action" as const,
+        actorId: fighterId,
+        action: "attack" as const,
+        ...attackExecutionSelectionForOption(attack),
+      };
+      const target = targetFill(
+        requireHole(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "targetChoice",
+        ),
+        familiarId,
+      );
+      const roll = attackRollFill(
+        requireHole(
+          resolveBattleSubject({ state, subject, fills: [target] }),
+          "attackRoll",
+        ),
+        { naturalD20: 19, total: 21 + input.modifier },
+      );
+      const hit = resolveBattleSubject({
+        state,
+        subject,
+        fills: [target, roll],
+      });
+      const fills = Match.value(input).pipe(
+        Match.when({ attackKind: "weapon" }, (rolled) => [
+          target,
+          roll,
+          damageRollFill(requireHole(hit, "rolledDice"), rolled.rolledDamage),
+        ]),
+        Match.when({ attackKind: "unarmedStrike" }, () => [target, roll]),
+        Match.exhaustive,
+      );
+      const applied = resolveBattleSubject({ state, subject, fills });
+      const result = requireResolved(
+        Match.value(applied).pipe(
+          Match.when({ tag: "needsHoles" }, (pending) => {
+            const disposition = requireHole(pending, "attackDamageDisposition");
+            const ordinary = disposition.choices.find(
+              (choice) => choice.kind === "ordinaryDamage",
+            );
+            if (ordinary === undefined)
+              throw new Error("Expected ordinary damage choice.");
+            return resolveBattleSubject({
+              state,
+              subject,
+              fills: [
+                ...fills,
+                attackDamageDispositionFill(disposition, ordinary),
+              ],
+            });
+          }),
+          Match.whenOr(
+            { tag: "resolved" },
+            { tag: "invalid" },
+            (outcome) => outcome,
+          ),
+          Match.exhaustive,
+        ),
+      );
+      expect(result.state.combatants.has(familiarId)).toBe(
+        input.expectedHp > 0,
+      );
+      expect(Number(result.state.combatants.get(familiarId)?.hp ?? 0)).toBe(
+        input.expectedHp,
+      );
+      expect(spawnedCompanionForOwner(result.state, wizardId)?.status).toBe(
+        input.expectedHp === 0 ? "disappearedAtZeroHitPoints" : "present",
+      );
+      expect(result.snapshot.turn.actionResources).toEqual([]);
+    },
+  );
+
   test("attack damage projections preserve Stat Block critical, advantage, and character branches", () => {
     const state = goblinTurnBattle();
     const goblin = state.combatants.get(goblinId);
@@ -821,15 +1020,15 @@ describe("battle runtime: attack rolls and damage", () => {
     }
     const slowedOnce = applyWeaponMasterySlowAfterDamage({
       state,
-      attackerId: fighterId,
-      targetId: goblinId,
+      attacker: requireCombatant(state, fighterId),
+      target: requireCombatant(state, goblinId),
       attack: slowedAttackResult.attack,
       damageAmount: 4,
     });
     const slowedTwice = applyWeaponMasterySlowAfterDamage({
       state: slowedOnce,
-      attackerId: fighterId,
-      targetId: goblinId,
+      attacker: requireCombatant(slowedOnce, fighterId),
+      target: requireCombatant(slowedOnce, goblinId),
       attack: slowedAttackResult.attack,
       damageAmount: 4,
     });
@@ -837,8 +1036,8 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(
       applyWeaponMasterySlowAfterDamage({
         state: slowedTwice,
-        attackerId: fighterId,
-        targetId: goblinId,
+        attacker: requireCombatant(slowedTwice, fighterId),
+        target: requireCombatant(slowedTwice, goblinId),
         attack: slowedAttackResult.attack,
         damageAmount: 0,
       }),
@@ -855,18 +1054,18 @@ describe("battle runtime: attack rolls and damage", () => {
     ) {
       throw new Error("Expected Sap weapon attack.");
     }
-    const sapOnce = applyWeaponMasterySapOnHit(
-      sapState,
-      fighterId,
-      goblinId,
-      sapFighter.origin.attack,
-    );
-    const sapTwice = applyWeaponMasterySapOnHit(
-      sapOnce,
-      fighterId,
-      goblinId,
-      sapFighter.origin.attack,
-    );
+    const sapOnce = applyWeaponMasterySapOnHit({
+      state: sapState,
+      attacker: requireCombatant(sapState, fighterId),
+      target: requireCombatant(sapState, goblinId),
+      attack: sapFighter.origin.attack,
+    });
+    const sapTwice = applyWeaponMasterySapOnHit({
+      state: sapOnce,
+      attacker: requireCombatant(sapOnce, fighterId),
+      target: requireCombatant(sapOnce, goblinId),
+      attack: sapFighter.origin.attack,
+    });
     expect(sapTwice.combatants.get(goblinId)?.activeEffects).toHaveLength(1);
   });
 
