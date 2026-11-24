@@ -55,15 +55,18 @@ export function characterFinalizationInput(input: {
     return initializationDiscoveryFailure(land.failure);
   if (Result.isFailure(wildShape))
     return initializationDiscoveryFailure(wildShape.failure);
+  const weaponBlockers = equippedWeaponBattleBlockersOutput({
+    build,
+    unitLibrary: input.root.unitLibrary,
+  });
+  if (Result.isFailure(weaponBlockers))
+    return initializationDiscoveryFailure(weaponBlockers.failure);
   return Result.succeed(
     characterSheetInitializationCall({
       draftId: input.draftId,
       land: land.success,
       knownForms: wildShape.success?.knownFormRoster,
-      equippedWeaponBattleBlockers: equippedWeaponBattleBlockersOutput({
-        build,
-        unitLibrary: input.root.unitLibrary,
-      }),
+      equippedWeaponBattleBlockers: weaponBlockers.success,
       classSpellBattleSupport: characterBattleSpellSupportOutput({
         build,
         unitLibrary: input.root.unitLibrary,
@@ -176,6 +179,7 @@ function initializationDiscoveryFailure(issue: { readonly message: string }) {
       {
         code: "CHARACTER_INITIALIZATION_DISCOVERY_FAILED",
         message: issue.message,
+        issue,
       },
     ),
   );

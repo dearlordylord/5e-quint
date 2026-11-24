@@ -5,6 +5,7 @@ import {
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Result, Match } from "effect";
+import { battleCreatureInitIssueMessage } from "@dnd/character-battle-runtime";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
@@ -241,6 +242,14 @@ export function handleCharacterToolCall(
                 },
               ),
             ),
+            Match.when(
+              { tag: "equippedWeaponBattleBlockersUnavailable" },
+              (issue) =>
+                characterSessionDetailProjectionError(
+                  matched.args.characterId,
+                  issue,
+                ),
+            ),
             Match.when({ tag: "hitPointMaximumUnavailable" }, (issue) =>
               characterSessionDetailProjectionError(
                 matched.args.characterId,
@@ -317,6 +326,10 @@ function characterSessionProjectionIssueMessage(
   issue: CharacterSessionProjectionIssue,
 ): string {
   return Match.value(issue).pipe(
+    Match.when(
+      { tag: "equippedWeaponBattleBlockersUnavailable" },
+      ({ issue }) => battleCreatureInitIssueMessage(issue),
+    ),
     Match.when(
       { tag: "hitPointMaximumUnavailable" },
       ({ issue: characterSheetIssue }) => characterSheetIssue.message,

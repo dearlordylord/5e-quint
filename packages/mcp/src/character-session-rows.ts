@@ -1,6 +1,7 @@
 import { equippedWeaponBattleBlockersOutput } from "./equipped-weapon-battle-blockers.ts";
 import { characterBattleSpellSupportOutput } from "./character-battle-spell-support-output.ts";
 import type { CharacterId } from "@dnd/battle-runtime";
+import type { BattleCreatureInitIssue } from "@dnd/character-battle-runtime";
 import type { CharacterBuildDisplayNameIssues } from "@dnd/character-creation-runtime";
 import {
   characterSheetCompanion,
@@ -77,6 +78,10 @@ export type CharacterListProjectionIssues = readonly [
 ];
 
 export type CharacterSessionProjectionIssue =
+  | {
+      readonly tag: "equippedWeaponBattleBlockersUnavailable";
+      readonly issue: BattleCreatureInitIssue;
+    }
   | {
       readonly tag: "hitPointMaximumUnavailable";
       readonly issue: CharacterSheetIssue;
@@ -222,11 +227,18 @@ function availableCharacterSessionDetail(
       issues: displayName.failure,
     });
   }
+  const weaponBlockers = equippedWeaponBattleBlockersOutput({
+    build: sheet.build,
+    unitLibrary: root.unitLibrary,
+  });
+  if (Result.isFailure(weaponBlockers)) {
+    return Result.fail({
+      tag: "equippedWeaponBattleBlockersUnavailable",
+      issue: weaponBlockers.failure,
+    });
+  }
   const sheetProjection = parseCharacterSessionSheetProjection({
-    equippedWeaponBattleBlockers: equippedWeaponBattleBlockersOutput({
-      build: sheet.build,
-      unitLibrary: root.unitLibrary,
-    }),
+    equippedWeaponBattleBlockers: weaponBlockers.success,
     classSpellBattleSupport: characterBattleSpellSupportOutput({
       build: sheet.build,
       unitLibrary: root.unitLibrary,

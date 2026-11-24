@@ -2342,14 +2342,18 @@ function weaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId: battleObjectId(`main:${weapon.id}`),
+    weaponMasteries: [],
+  });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
   return {
     kind: "weapon",
-    ...bindCharacterWeaponAttackExecutionWeapon({
-      weaponUnitId: weapon.id,
-      definition,
-      objectId: battleObjectId(`main:${weapon.id}`),
-      weaponMasteries: [],
-    }),
+    ...bound.success,
     ability,
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),
@@ -2425,14 +2429,18 @@ function syntheticGrazeWeaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId: battleObjectId(`main:${weapon.id}`),
+    weaponMasteries: [{ weaponUnitId: weapon.id }],
+  });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
   return {
     kind: "weapon",
-    ...bindCharacterWeaponAttackExecutionWeapon({
-      weaponUnitId: weapon.id,
-      definition,
-      objectId: battleObjectId(`main:${weapon.id}`),
-      weaponMasteries: [{ weaponUnitId: weapon.id }],
-    }),
+    ...bound.success,
     ability: "str",
     abilityModifier: abilityModifier(3),
     attackBonus: attackBonus(5),
@@ -2480,12 +2488,16 @@ function reconcileMcpCharacterWeaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
-  const admitted = bindCharacterWeaponAttackExecutionWeapon({
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
     weaponUnitId: weapon.id,
     definition,
     objectId: loadoutObjectId,
     weaponMasteries: [{ weaponUnitId: weapon.id }],
   });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
+  const admitted = bound.success;
   return {
     ...attack,
     weapon: admitted.weapon,

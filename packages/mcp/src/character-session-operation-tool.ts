@@ -1,4 +1,5 @@
 import { characterId } from "@dnd/battle-runtime";
+import { battleCreatureInitIssueMessage } from "@dnd/character-battle-runtime";
 import {
   advanceCharacterBuildClassLevel,
   characterBuildDruidWildShapeFacts,
@@ -294,6 +295,10 @@ function characterSessionOperationProjectionInvalid(
   issue: CharacterSessionProjectionIssue,
 ) {
   const message = Match.value(issue).pipe(
+    Match.when(
+      { tag: "equippedWeaponBattleBlockersUnavailable" },
+      ({ issue }) => battleCreatureInitIssueMessage(issue),
+    ),
     Match.when(
       { tag: "hitPointMaximumUnavailable" },
       ({ issue: characterSheetIssue }) => characterSheetIssue.message,
