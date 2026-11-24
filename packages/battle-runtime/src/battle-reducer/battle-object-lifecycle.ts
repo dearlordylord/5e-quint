@@ -186,22 +186,37 @@ export function applyBattleHeldWeaponPickup(
         "Held-weapon pickup must restore the matching selected weapon loadout slot.",
     };
   }
+  return {
+    tag: "applied",
+    state: battleStateWithoutGroundObject(
+      state,
+      interaction.actorId,
+      interaction.objectId,
+    ),
+  };
+}
+
+/** The state with one of an actor's objects no longer on the ground. */
+export function battleStateWithoutGroundObject(
+  state: BattleState,
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+): BattleState {
+  const actorGroundObjects = state.groundObjects.get(actorId);
+  if (actorGroundObjects?.has(objectId) !== true) return state;
   const groundObjects = new Map(state.groundObjects);
   const remainingActorGroundObjects = new Map(actorGroundObjects);
-  remainingActorGroundObjects.delete(interaction.objectId);
+  remainingActorGroundObjects.delete(objectId);
   const [firstRemaining, ...otherRemaining] = remainingActorGroundObjects;
   if (firstRemaining === undefined) {
-    groundObjects.delete(interaction.actorId);
+    groundObjects.delete(actorId);
   } else {
     groundObjects.set(
-      interaction.actorId,
+      actorId,
       battleActorGroundObjectsFromEntries([firstRemaining, ...otherRemaining]),
     );
   }
-  return {
-    tag: "applied",
-    state: { ...state, groundObjects },
-  };
+  return { ...state, groundObjects };
 }
 
 function battleActorGroundObjectsFromEntries(

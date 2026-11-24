@@ -1888,6 +1888,9 @@ export function attackExecutionSelectionForSubjectForTest(
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
         attackDamageType: subject.attackDamageType,
+        ...(subject.weaponDelivery === undefined
+          ? {}
+          : { weaponDelivery: subject.weaponDelivery }),
       };
 }
 
@@ -2934,6 +2937,7 @@ export function targetFill(
       : [
           ...selectedSpatialFacts,
           ...rangedAttackEnemyProximityFactsForTest(hole, selectedSpatialFacts),
+          ...thrownWeaponLandingFactsForTest(hole, selectedSpatialFacts),
         ];
   const executionBoundSpatialFacts = qualifiedSpatialFacts.map((fact) => {
     const request = hole.spellTargetSpatialFactRequest;
@@ -3143,6 +3147,7 @@ export function attackTargetFill(
     ),
     ...commonAdjacentAllySpatialFacts(actorId, targetId),
     ...rangedAttackEnemyProximityFactsForTest(hole, extraFacts ?? []),
+    ...thrownWeaponLandingFactsForTest(hole, extraFacts ?? []),
     ...(extraFacts ?? []),
   ]);
 }
@@ -3179,6 +3184,52 @@ export function rangedAttackEnemyProximityFactsForTest(
         },
       ]
     : [];
+}
+
+/** The table position where these tests' thrown weapons land by default. */
+export const THROWN_WEAPON_LANDING_POSITION_FOR_TEST = battleTablePositionId(
+  "thrown-weapon-landing",
+);
+
+/**
+ * A thrown attack target hole's default landing fact, absent for any other
+ * attack or when the test supplies its own landing fact.
+ */
+export function thrownWeaponLandingFactsForTest(
+  hole: BattleHole,
+  suppliedFacts: readonly AttackTargetSpatialFactForTest[] = [],
+  positionId = THROWN_WEAPON_LANDING_POSITION_FOR_TEST,
+): readonly Extract<
+  AttackTargetSpatialFactForTest,
+  { readonly kind: "thrownWeaponLanding" }
+>[] {
+  if (
+    hole.kind !== "targetChoice" ||
+    hole.attack?.requiresThrownWeaponLanding !== true ||
+    suppliedFacts.some((fact) => fact.kind === "thrownWeaponLanding")
+  ) {
+    return [];
+  }
+  const selection = hole.attack.selection;
+  return isCharacterAttackSelectionForTest(selection)
+    ? [
+        {
+          kind: "thrownWeaponLanding",
+          attackerId: hole.attack.actorId,
+          procedureRef: selection.procedureRef,
+          positionId,
+        },
+      ]
+    : [];
+}
+
+function isCharacterAttackSelectionForTest(
+  selection: BattleAttackExecutionSelection,
+): selection is Extract<
+  BattleAttackExecutionSelection,
+  { readonly attackAbility: unknown }
+> {
+  return selection.attackAbility !== undefined;
 }
 
 export function attackTargetSpatialFact(

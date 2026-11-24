@@ -77,7 +77,7 @@ import { parseSelectedStatBlockAttackDamage } from "./statblock-attack-damage-su
 import {
   attackActionBonus,
   attackActionOptionName,
-  attackActionVariantOptions,
+  attackAbilityAndDamageTypeOptions,
   attackDamage,
   attackDamageModifier,
   attackDamageComponents,
@@ -639,10 +639,10 @@ describe("battle runtime: attack rolls and damage", () => {
       "Unarmed Strike",
     );
     expect(attackActionOptionName(scimitar)).toBe("Stat Block Attack");
-    expect(attackActionVariantOptions(fighter.origin.unarmedStrike)).toEqual([
-      fighter.origin.unarmedStrike,
-    ]);
-    expect(attackActionVariantOptions(scimitar)).toEqual([scimitar]);
+    expect(
+      attackAbilityAndDamageTypeOptions(fighter.origin.unarmedStrike),
+    ).toEqual([fighter.origin.unarmedStrike]);
+    expect(attackAbilityAndDamageTypeOptions(scimitar)).toEqual([scimitar]);
 
     expect(attackDamage(fighter.origin.attack)).toEqual({
       kind: "dice",

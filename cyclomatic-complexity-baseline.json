@@ -48,7 +48,7 @@
       "module/binding:attackActionOptionsForActor": 9,
       "module/binding:attackDamageHole": 12,
       "module/binding:martialArtsLoadoutEligible": 10,
-      "module/binding:offHandAttackActionOptionsForActor": 15,
+      "module/binding:offHandAttackActionOptionsForActor": 13,
       "module/binding:weaponAttackWithActiveSacredWeapon": 13
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-redirect.ts": {
@@ -107,7 +107,7 @@
       "module/binding:applyBattleMovement": 11
     },
     "packages/battle-runtime/src/battle-reducer/battle-object-lifecycle.ts": {
-      "module/binding:applyBattleHeldWeaponPickup": 11,
+      "module/binding:applyBattleHeldWeaponPickup": 10,
       "module/binding:characterEffectiveLoadoutFromOrigin": 13
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
@@ -506,7 +506,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts": {
       "module/binding:attackRollMissToHitReplacementForProcedure": 9,
-      "module/binding:eligibleAttackDamageDieFloorProcedureRefsForAttacker": 10,
       "module/binding:eligibleAttackDamageRiders/call:attacker.origin.execution.procedureBindings.flatMap:argument-0": 10,
       "module/binding:passiveRangedAttackRollBonus": 12,
       "module/binding:selectedAttackDamageTypeForProfile": 9

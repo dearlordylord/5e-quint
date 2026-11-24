@@ -2,6 +2,7 @@ import { qualifiedAttackRollMode } from "./attack-roll.ts";
 // Light-property off-hand attack resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -9,6 +10,7 @@ import { qualifiedAttackRollMode } from "./attack-roll.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { optionalProperty } from "../optional-property.ts";
+import type { CharacterAttackExecutionSelection } from "../battle-action-options.ts";
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -81,6 +83,8 @@ import {
 } from "./attack-damage-events.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
+import { stateWithThrownWeaponReleasedPendingContinuation } from "./thrown-weapon-release.ts";
+import { thrownWeaponLandingIssue } from "./thrown-weapon-attack.ts";
 
 import { attackTargetHole, revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -109,10 +113,13 @@ import {
   eligibleWeaponDamageDiceRollChoiceProcedureRefs,
 } from "./statblock-attacks.ts";
 
+import type { CombatantId } from "../identity.ts";
 import type {
   BattleAttackDamageEvent,
+  BattleCreatureState,
   BattleResolutionResult,
   BattleState,
+  BattleTargetSpatialFact,
   MartialArtsBonusUnarmedStrikeBattleResolutionInput,
   OffHandAttackBattleResolutionInput,
 } from "../battle-state-execution.ts";
@@ -139,18 +146,9 @@ export function resolveOffHandAttack(
     label: "Light Property Bonus Action Attack",
     unavailableMessage:
       "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
-    attackForInput: (
-      state,
-      actorId,
-      procedureRef,
-      attackAbility,
-      attackDamageType,
-    ) =>
+    attackForInput: (state, actorId, selection) =>
       offHandAttackActionOptionsForActor(state, actorId).find((attack) =>
-        boundAttackExecutionSelectionMatchesOption(
-          { procedureRef, attackAbility, attackDamageType },
-          attack,
-        ),
+        boundAttackExecutionSelectionMatchesOption(selection, attack),
       ),
     prerequisiteMet: (state, actorId, attack) =>
       attack.kind === "weapon" &&
@@ -165,22 +163,13 @@ export function resolveMartialArtsBonusUnarmedStrike(
     label: "Martial Arts Bonus Unarmed Strike",
     unavailableMessage:
       "Martial Arts Bonus Unarmed Strike requires Martial Arts support and an unarmored, unshielded Monk loadout.",
-    attackForInput: (
-      state,
-      actorId,
-      procedureRef,
-      attackAbility,
-      attackDamageType,
-    ) => {
+    attackForInput: (state, actorId, selection) => {
       const attack = martialArtsBonusUnarmedStrikeActionOptionForActor(
         state,
         actorId,
       );
       return attack !== undefined &&
-        boundAttackExecutionSelectionMatchesOption(
-          { procedureRef, attackAbility, attackDamageType },
-          attack,
-        )
+        boundAttackExecutionSelectionMatchesOption(selection, attack)
         ? attack
         : undefined;
     },
@@ -198,9 +187,7 @@ type BonusActionAttackConfig = {
   readonly attackForInput: (
     state: BattleState,
     actorId: BonusActionAttackBattleResolutionInput["subject"]["actorId"],
-    procedureRef: BonusActionAttackBattleResolutionInput["subject"]["procedureRef"],
-    attackAbility: BonusActionAttackBattleResolutionInput["subject"]["attackAbility"],
-    attackDamageType: BonusActionAttackBattleResolutionInput["subject"]["attackDamageType"],
+    selection: CharacterAttackExecutionSelection,
   ) => BoundSupportedAttackActionOption | undefined;
   readonly prerequisiteMet: (
     state: BattleState,
@@ -209,21 +196,44 @@ type BonusActionAttackConfig = {
   ) => boolean;
 };
 
+/**
+ * A bonus action attack's roll mode once its target facts qualify it: a
+ * ranged attack's enemy proximity, and a thrown weapon's landing.
+ */
+function bonusActionAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  target: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
+): ReturnType<typeof qualifiedAttackRollMode> {
+  const rollMode = qualifiedAttackRollMode(
+    state,
+    attackerId,
+    target,
+    attack,
+    facts,
+  );
+  if (typeof rollMode === "object") return rollMode;
+  const landingIssue = thrownWeaponLandingIssue(attackerId, attack, facts);
+  return landingIssue === null
+    ? rollMode
+    : { tag: "invalid", message: landingIssue };
+}
+
 function resolveBonusActionAttack(
   input: BonusActionAttackBattleResolutionInput,
   config: BonusActionAttackConfig,
 ): BattleResolutionResult {
+  const attack = config.attackForInput(
+    input.state,
+    input.subject.actorId,
+    input.subject,
+  );
   const { label } = config;
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
   const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
-  const attack = config.attackForInput(
-    input.state,
-    input.subject.actorId,
-    input.subject.procedureRef,
-    input.subject.attackAbility,
-    input.subject.attackDamageType,
-  );
   if (
     attack == null ||
     !config.prerequisiteMet(input.state, input.subject.actorId, attack)
@@ -274,7 +284,7 @@ function resolveBonusActionAttack(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const initialRequiredRollMode = qualifiedAttackRollMode(
+  const initialRequiredRollMode = bonusActionAttackRollMode(
     input.state,
     input.subject.actorId,
     target,
@@ -438,10 +448,16 @@ function resolveBonusActionAttack(
     input.subject.actorId,
     target.combatantId,
   );
-  attackRolledState = spendAmmunitionForAcceptedAttackPendingContinuation({
-    state: attackRolledState,
-    actorId: input.subject.actorId,
+  attackRolledState = stateWithThrownWeaponReleasedPendingContinuation({
+    state: spendAmmunitionForAcceptedAttackPendingContinuation({
+      state: attackRolledState,
+      actorId: input.subject.actorId,
+      attack,
+      subject: input.subject,
+    }),
+    attackerId: input.subject.actorId,
     attack,
+    facts: fillSet.targetSpatialFacts,
     subject: input.subject,
   });
   const critical = attackRollHitIsCritical({

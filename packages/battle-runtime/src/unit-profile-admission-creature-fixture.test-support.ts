@@ -25,6 +25,7 @@ import type {
 import { expect } from "vitest";
 import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import weaponClubInput from "../../surface/content/weapon_club.json";
+import weaponDartInput from "../../surface/content/weapon_dart.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
 import {
   characterId,
@@ -68,6 +69,7 @@ import {
 
 const testUnitRecords = [
   decodeUnitRecordSync(weaponClubInput),
+  decodeUnitRecordSync(weaponDartInput),
   decodeUnitRecordSync(weaponGreatswordInput),
 ] satisfies ReadonlyArray<UnitRecord>;
 

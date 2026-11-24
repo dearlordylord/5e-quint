@@ -80,7 +80,7 @@ import {
   battleSupportProfileIssuesToBattleCreatureInitIssue,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
-  characterWeaponAttackActionOptionsFromWeaponProficiencies,
+  characterBattleWeaponAttackInitProjectionFromWeaponProficiencies,
   characterWeaponProficiencies,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
@@ -89,7 +89,7 @@ import {
   characterSpellcasting,
   getRequiredUnit,
   type BattleCreatureInitIssue,
-  type CharacterWeaponAttackActionOptions,
+  type CharacterBattleWeaponAttackInitProjection,
 } from "./battle-character-build-projection.ts";
 import {
   characterBattleSupportAdmission,
@@ -276,7 +276,7 @@ function characterWeaponAndSupportAdmission(input: {
 }): Result.Result<
   {
     readonly support: CharacterBattleSupportAdmission;
-    readonly weaponAttackOptions: CharacterWeaponAttackActionOptions;
+    readonly weaponAttackOptions: CharacterBattleWeaponAttackInitProjection;
   },
   BattleCreatureInitIssue
 > {
@@ -578,7 +578,7 @@ function characterBattleWeaponAttackOptions(input: {
         unitLibrary: input.unitLibrary,
         itemId: input.pactBladeBondedWeaponItemId,
       });
-    return yield* characterWeaponAttackActionOptionsFromWeaponProficiencies(
+    return yield* characterBattleWeaponAttackInitProjectionFromWeaponProficiencies(
       {
         build: input.build,
         unitLibrary: input.unitLibrary,

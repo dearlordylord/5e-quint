@@ -160,7 +160,7 @@ export {
   battleCreatureInitIssueMessage,
   battleCreatureInitIssues,
   characterArmorClassState,
-  characterWeaponAttackActionOptions,
+  characterBattleWeaponAttackInitProjection,
   characterBuildEquippedWeaponBattleBlockers,
   CHARACTER_WEAPON_ATTACK_SLOTS,
   characterBaseUnarmedStrikeActionOption,

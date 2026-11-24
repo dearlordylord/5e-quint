@@ -316,10 +316,17 @@ type StatBlockBonusActionOptionResolverInput =
     readonly optionBinding: StatBlockProcedureBindingFor<StatBlockBonusActionOptionProcedure>;
     readonly standardAction: SupportedStatBlockBonusActionStandardAction;
   };
+/**
+ * Pauses an accepted attack for its target's Concentration save. The attack's
+ * own accepted-attack spend runs first, so whatever that spend owns (a thrown
+ * weapon leaving the hand, a spell's resources) happens on this path too.
+ */
 export function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
-  readonly attack: BoundSupportedAttackActionOption;
+  readonly spendAcceptedAttack: (
+    state: BattleState,
+  ) => ReturnType<typeof spendAttackAction>;
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly concentrationSave: BattleConcentrationSavingThrowHole;
 }): BattleResolutionResult {
@@ -333,12 +340,7 @@ export function needsAttackDamageConcentrationResult(input: {
       ),
     ],
   };
-  const spent = spendAttackAction(
-    pendingState,
-    input.subject.actorId,
-    input.attack,
-    { kind: "acceptedAttack" },
-  );
+  const spent = input.spendAcceptedAttack(pendingState);
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher admission proves the Attack resource exists, and the pre-concentration damage path preserves it; reaction-window paths spend and return before calling this helper. */
   if (spent.tag === "invalid") {
     return spent;

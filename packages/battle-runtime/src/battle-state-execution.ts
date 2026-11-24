@@ -1785,6 +1785,16 @@ export type BattleTargetSpatialFact =
       }[];
     }
   | {
+      /**
+       * Table-supplied ground position where a thrown weapon comes to rest
+       * once its attack roll is accepted, hit or miss.
+       */
+      readonly kind: "thrownWeaponLanding";
+      readonly attackerId: CombatantId;
+      readonly procedureRef: BattleAttackProcedureExecutionRef;
+      readonly positionId: BattleTablePositionId;
+    }
+  | {
       readonly kind: "unitFeatureVisibleTargetWithinRange";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
@@ -4455,6 +4465,7 @@ export type BattleSubjectResolutionPhase =
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
       readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
+      readonly acceptedThrownWeaponRelease?: BattleAcceptedThrownWeaponRelease;
       readonly admittedMovement?: Extract<
         BattleInterruptedProcedure,
         { readonly kind: "movement" }
@@ -4464,6 +4475,16 @@ export type BattleSubjectResolutionPhase =
 export type BattleAcceptedAttackAmmunitionSpend = {
   readonly actorId: CombatantId;
   readonly attackSelection: BoundAttackExecutionSelection;
+};
+
+/**
+ * The thrown weapon that the pending subject's accepted attack roll put on the
+ * ground. Resuming the subject replays that roll, so the replay starts with the
+ * weapon back in its thrower's hand and the accepted roll throws it again.
+ */
+export type BattleAcceptedThrownWeaponRelease = {
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
 };
 
 export type BattleState = {
@@ -4947,6 +4968,8 @@ export type BattleTargetChoiceHole = Extract<
   readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
   readonly attack?: BattleAttackTargetRequest & {
     readonly acceptsObjectTarget?: true;
+    /** The attack throws its weapon: the fill needs a thrownWeaponLanding fact. */
+    readonly requiresThrownWeaponLanding?: true;
   };
 };
 export type BattleHelpAttackAllyDecisionHole = {
@@ -5302,6 +5325,11 @@ export type BattleDroppedObjectSource =
       readonly kind: "druidWildShape";
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
+    }
+  | {
+      /** SRD 5.2.1 "Thrown": the weapon left its owner's hand in an attack. */
+      readonly kind: "thrownWeaponAttack";
+      readonly procedureRef: BattleAttackProcedureExecutionRef;
     };
 export type BattleGroundObjectState = {
   readonly positionId: BattleTablePositionId;
@@ -7330,6 +7358,7 @@ export type BattleFill =
             | "spellObjectTarget"
             | "spellObjectTargetSight"
             | "rangedAttackEnemyProximity"
+            | "thrownWeaponLanding"
             | "attackObjectTarget";
         }
       >[];

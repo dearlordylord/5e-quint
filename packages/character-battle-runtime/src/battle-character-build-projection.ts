@@ -16,7 +16,6 @@ import {
   type CharacterBattleBookOfShadowsPresence,
   type CharacterBattleInvocationSpellAccessInit,
   type CharacterUnarmedStrikeActionOption,
-  type CharacterWeaponAttackActionOption,
   type CharacterWeaponAttackDamageTypeChoices,
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
@@ -26,6 +25,7 @@ import {
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   bindCharacterWeaponExecutionWeapon,
+  admitWeaponMeleeGripDamage,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
@@ -551,7 +551,7 @@ function armorDefenseBonus(
       ];
 }
 
-export type CharacterWeaponAttackActionOptions = {
+export type CharacterBattleWeaponAttackInitProjection = {
   readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
   readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
 };
@@ -600,7 +600,7 @@ function characterWeaponLoadoutRequests(
   ];
 }
 
-type CharacterWeaponAttackProjectionInput = {
+type CharacterBattleWeaponAttackInitProjectionInput = {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
@@ -608,9 +608,12 @@ type CharacterWeaponAttackProjectionInput = {
   readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
 };
 
-export function characterWeaponAttackActionOptions(
-  input: CharacterWeaponAttackProjectionInput,
-): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
+export function characterBattleWeaponAttackInitProjection(
+  input: CharacterBattleWeaponAttackInitProjectionInput,
+): Result.Result<
+  CharacterBattleWeaponAttackInitProjection,
+  BattleCreatureInitIssue
+> {
   const proficiencies = characterBuildProficiencies(
     input.build,
     input.unitLibrary,
@@ -621,7 +624,7 @@ export function characterWeaponAttackActionOptions(
       "proficiencies",
     );
   }
-  return characterWeaponAttackActionOptionsFromWeaponProficiencies(
+  return characterBattleWeaponAttackInitProjectionFromWeaponProficiencies(
     input,
     characterWeaponProficiencies(proficiencies.success),
   );
@@ -639,10 +642,13 @@ export function characterWeaponProficiencies(
   ];
 }
 
-export function characterWeaponAttackActionOptionsFromWeaponProficiencies(
-  input: CharacterWeaponAttackProjectionInput,
+export function characterBattleWeaponAttackInitProjectionFromWeaponProficiencies(
+  input: CharacterBattleWeaponAttackInitProjectionInput,
   weaponProficiencies: readonly WeaponProficiency[],
-): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
+): Result.Result<
+  CharacterBattleWeaponAttackInitProjection,
+  BattleCreatureInitIssue
+> {
   const projections = traverseValidation(
     characterWeaponLoadoutRequests(input.build),
     (request) =>
@@ -813,7 +819,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
 }
 
 function projectCharacterWeaponLoadoutRequest(
-  input: CharacterWeaponAttackProjectionInput & {
+  input: CharacterBattleWeaponAttackInitProjectionInput & {
     readonly weaponProficiencies: readonly WeaponProficiency[];
   },
   request: CharacterWeaponLoadoutRequest,
@@ -836,10 +842,13 @@ function projectCharacterWeaponLoadoutRequest(
       battleWeaponDefinitionAdmissionIssues(weapon.id, boundWeapon.failure),
     );
   }
-  const grippedWeapon = weaponWithGripDamage(boundWeapon.success, request);
-  if (Result.isFailure(grippedWeapon))
-    return Result.fail(grippedWeapon.failure);
-  const executionWeapon = grippedWeapon.success;
+  const gripDamage = admitWeaponMeleeGripDamage(
+    boundWeapon.success,
+    request.slot === "main" ? request.grip : "one_handed",
+  );
+  if (Result.isFailure(gripDamage))
+    return battleCreatureInitIssue(gripDamage.failure.message);
+  const executionWeapon = boundWeapon.success;
 
   const weaponAttackAbilitySelection = characterWeaponAttackAbilitySelection(
     executionWeapon,
@@ -1153,7 +1162,7 @@ function characterMartialArtsWeaponAttack(
 ): PhysicalAbilityWeaponAttack {
   return martialArts === null || !isMonkWeapon(weapon)
     ? baseAttack
-    : martialArtsWeaponAttack(baseAttack, build, martialArts);
+    : martialArtsWeaponAttack(baseAttack, build);
 }
 
 export function characterBaseUnarmedStrikeActionOption(
@@ -1421,7 +1430,6 @@ function martialArtsLoadoutConditionHolds(input: {
 function martialArtsWeaponAttack(
   attack: PhysicalAbilityWeaponAttack,
   build: CharacterBuild,
-  projection: MartialArtsAttackProjection,
 ): PhysicalAbilityWeaponAttack {
   const chosen = martialArtsChosenAbility(
     build,
@@ -1430,7 +1438,6 @@ function martialArtsWeaponAttack(
   );
   return {
     ...attack,
-    weapon: weaponWithMartialArtsDamage(attack.weapon, projection),
     ability: chosen.ability,
     abilityModifier: chosen.modifier,
     ...(attack.attackBonus === undefined
@@ -1498,64 +1505,6 @@ function martialArtsChosenAbility<FallbackAbility extends Ability>(
   return dexModifier >= fallbackModifier
     ? { ability: "dex", modifier: dexModifier }
     : { ability: fallbackAbility, modifier: fallbackModifier };
-}
-
-/**
- * "A Versatile weapon can be used with one or two hands. ... The weapon deals
- * that damage when used with two hands to make a melee attack." (SRD 5.2.1,
- * Weapon properties). Battle takes the grip from the loadout, so the main-hand
- * melee attack of a weapon held with the `two_handed` grip deals the damage
- * the Versatile property names. Martial Arts then compares its die against
- * that damage.
- */
-function weaponWithGripDamage(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-  request: CharacterWeaponLoadoutRequest,
-): Result.Result<
-  CharacterWeaponAttackActionOption["weapon"],
-  BattleCreatureInitIssue
-> {
-  if (
-    request.slot !== "main" ||
-    request.grip !== "two_handed" ||
-    weapon.usage !== "melee"
-  ) {
-    return Result.succeed(weapon);
-  }
-  const versatile = weapon.properties.find(
-    (property) => property.kind === "versatile",
-  );
-  if (versatile === undefined) return Result.succeed(weapon);
-  /* v8 ignore start -- @preserve -- Unsupported authored data: every Versatile weapon in the catalog names dice damage for two hands. */
-  if (versatile.damage.kind !== "dice") {
-    return battleCreatureInitIssue(
-      "Versatile weapon two-handed damage must be dice damage.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  return Result.succeed({ ...weapon, damage: versatile.damage });
-}
-
-function weaponWithMartialArtsDamage(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-  projection: MartialArtsAttackProjection,
-): CharacterWeaponAttackActionOption["weapon"] {
-  const damageReplacement = projection.martialArts.damageReplacement;
-  if (
-    weapon.damage.kind !== "dice" ||
-    weapon.damage.dice !== 1 ||
-    weapon.damage.dieSize >= damageReplacement.dieSize
-  ) {
-    return weapon;
-  }
-  return {
-    ...weapon,
-    damage: {
-      ...weapon.damage,
-      dice: damageReplacement.dice,
-      dieSize: damageReplacement.dieSize,
-    },
-  };
 }
 
 function spellcastingAllowedByArmorTraining(

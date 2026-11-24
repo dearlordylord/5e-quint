@@ -1,4 +1,12 @@
 import {
+  AdmittedThrownWeaponDeliverySchema,
+  weaponDeliveryBelongsToWeapon,
+} from "../procedure-admission/weapon-delivery.ts";
+import {
+  AdmittedVersatileMeleeDamageSchema,
+  meleeGripDamageBelongsToWeapon,
+} from "../procedure-admission/weapon-melee-grip-damage.ts";
+import {
   StatBlockLeveledSpellAccessSchema,
   StatBlockLeveledSpellInvocationResourceSchema,
 } from "../procedure-execution/spell-invocation-codecs.ts";
@@ -239,10 +247,25 @@ const MechanicalAttackDamageAbilityModifierChoiceSchema = Schema.Struct(
   AttackDamageAbilityModifierChoiceFields,
 );
 
+const WeaponAttackAdmissionFields = {
+  weaponDelivery: Schema.optionalKey(AdmittedThrownWeaponDeliverySchema),
+  meleeGripDamage: Schema.optionalKey(AdmittedVersatileMeleeDamageSchema),
+};
+const WeaponAttackAdmissionFilter = Schema.makeFilter(
+  (
+    attack: Parameters<typeof meleeGripDamageBelongsToWeapon>[0] &
+      Parameters<typeof weaponDeliveryBelongsToWeapon>[0],
+  ) =>
+    meleeGripDamageBelongsToWeapon(attack) &&
+    weaponDeliveryBelongsToWeapon(attack),
+  { message: "Weapon grip and delivery evidence must belong to this weapon." },
+);
+
 export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: CharacterWeaponAttackExecutionWeaponSchema,
   weaponObjectId: BattleObjectId,
+  ...WeaponAttackAdmissionFields,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalKey(AttackBonus),
@@ -269,7 +292,7 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
       }),
     ),
   ),
-});
+}).pipe(Schema.check(WeaponAttackAdmissionFilter));
 
 export const BoundCharacterWeaponAttackActionOptionSchema =
   CharacterWeaponAttackActionOptionSchema.pipe(
@@ -425,6 +448,7 @@ const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: WeaponExecutionFactsSchema,
   weaponObjectId: BattleObjectId,
+  ...WeaponAttackAdmissionFields,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalKey(AttackBonus),
@@ -451,7 +475,7 @@ const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({
       }),
     ),
   ),
-});
+}).pipe(Schema.check(WeaponAttackAdmissionFilter));
 
 export const MechanicalSupportedAttackActionOptionSchema = Schema.Union([
   MechanicalCharacterWeaponAttackActionOptionSchema,

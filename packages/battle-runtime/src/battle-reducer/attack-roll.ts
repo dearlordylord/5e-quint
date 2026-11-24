@@ -1,3 +1,4 @@
+import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
 import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
@@ -1780,6 +1781,9 @@ export function huntersPreyHordeBreakerSelection(
 ): HuntersPreyHordeBreakerSelection | null {
   if (
     attack.kind !== "weapon" ||
+    // Horde Breaker's second attack uses the same weapon, which a throw has
+    // already sent out of the attacker's hand.
+    weaponAttackIsThrown(attack) ||
     currentActorId(state) !== attackerId ||
     !state.combatants.has(targetId)
   ) {

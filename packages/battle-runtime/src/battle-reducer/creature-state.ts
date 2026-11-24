@@ -1,3 +1,4 @@
+import { admitWeaponMeleeGripDamage } from "../procedure-admission/weapon-melee-grip-damage.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.potent-cantrip unit-feature.remarkable-athlete unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
@@ -35,7 +36,6 @@ import {
   resetDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
-import type { UnitId } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
@@ -166,14 +166,17 @@ function isNonEmptyReadonlyArray<T>(
 function characterInitWeaponAttackExecutionRefs(
   slot: "main-hand" | "off-hand",
   attack: CharacterBattleCreatureInitWeaponAttack,
-  loadoutWeapon:
-    | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
-    | undefined,
+  loadoutWeapon: CharacterBattleCreatureInit["selectedLoadout"][
+    | "weapon"
+    | "offHandWeapon"],
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Result.Result<
   {
     readonly weaponObjectId: BattleObjectId;
     readonly weapon: CharacterWeaponAttackExecutionWeapon;
+    readonly loadoutWeapon: NonNullable<
+      CharacterBattleCreatureInit["selectedLoadout"]["weapon" | "offHandWeapon"]
+    >;
   },
   BattleStateInitLeafIssue
 > {
@@ -196,6 +199,7 @@ function characterInitWeaponAttackExecutionRefs(
     return Result.succeed({
       weaponObjectId: loadoutWeapon.itemId,
       weapon: attack.weapon,
+      loadoutWeapon,
     });
   }
   const weapon =
@@ -204,17 +208,25 @@ function characterInitWeaponAttackExecutionRefs(
           attack.weapon,
         )
       : attack.weapon;
-  return Result.succeed({ weaponObjectId: loadoutWeapon.itemId, weapon });
+  return Result.succeed({
+    weaponObjectId: loadoutWeapon.itemId,
+    weapon,
+    loadoutWeapon,
+  });
 }
 
 function characterInitWeaponAttackWithExecutionRefs(
   slot: "main-hand" | "off-hand",
   attack: CharacterBattleCreatureInitWeaponAttack,
-  loadoutWeapon:
-    | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
-    | undefined,
+  loadoutWeapon: CharacterBattleCreatureInit["selectedLoadout"][
+    | "weapon"
+    | "offHandWeapon"],
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Result.Result<CharacterWeaponAttackActionOption, BattleStateInitLeafIssue> {
+  if ("meleeGripDamage" in attack || "weaponDelivery" in attack)
+    return battleStateInitIssue(
+      "Character battle init weapon attacks must not supply derived grip or delivery evidence.",
+    );
   const refs = characterInitWeaponAttackExecutionRefs(
     slot,
     attack,
@@ -224,8 +236,17 @@ function characterInitWeaponAttackWithExecutionRefs(
   if (Result.isFailure(refs)) {
     return Result.fail(refs.failure);
   }
+  const meleeGripDamage = admitWeaponMeleeGripDamage(
+    refs.success.weapon,
+    "grip" in refs.success.loadoutWeapon
+      ? refs.success.loadoutWeapon.grip
+      : "one_handed",
+  );
+  if (Result.isFailure(meleeGripDamage))
+    return battleStateInitIssue(meleeGripDamage.failure.message);
   return Result.succeed({
     ...attack,
+    ...optionalProperty("meleeGripDamage", meleeGripDamage.success),
     weapon: refs.success.weapon,
     weaponObjectId: refs.success.weaponObjectId,
   });

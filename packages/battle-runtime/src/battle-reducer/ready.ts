@@ -22,6 +22,7 @@ import type {
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantCanMoveInState } from "./movement-speed.ts";
 import type { CombatantId } from "../identity.ts";
+import { optionalProperty } from "../optional-property.ts";
 import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 import { attackTargetChoices } from "./hole-helpers.ts";
 
@@ -55,6 +56,7 @@ export function readyResponseChoices(
                   procedureRef: subject.procedureRef,
                   attackAbility: subject.attackAbility,
                   attackDamageType: subject.attackDamageType,
+                  ...optionalProperty("weaponDelivery", subject.weaponDelivery),
                 },
         },
       ];
