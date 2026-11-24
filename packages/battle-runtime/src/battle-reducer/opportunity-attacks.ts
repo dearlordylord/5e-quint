@@ -43,7 +43,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
 } from "./attack-roll.ts";
-import { weaponAttackArmorClass } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -102,7 +102,7 @@ import {
 } from "./movement-speed.ts";
 import {
   qualifyAttackEnemyProximity,
-  attackTargetIsLegal,
+  attackTargetAdmission,
   attackTargetStatedCover,
 } from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -183,6 +183,7 @@ type ReactionAttackDamagePath =
     };
 
 type ReactionAttackCommandContext = {
+  readonly targetCover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
   readonly input: OpportunityAttackResolutionInput;
   readonly commandLabel: string;
   readonly reactor: BattleCreatureState;
@@ -489,6 +490,7 @@ function resolveReactionAttackCommand(
     attack,
     fillSet,
     targetSpatialFacts: targetSpatialFacts.facts,
+    targetCover: targetSpatialFacts.cover,
     enemyProximity: targetSpatialFacts.enemyProximity,
   };
   const rollPreparation = prepareReactionAttackRoll(context);
@@ -606,6 +608,7 @@ function reactionAttackTargetSpatialFacts(input: {
   | {
       readonly tag: "ok";
       readonly facts: readonly BattleTargetSpatialFact[];
+      readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
       readonly enemyProximity:
         | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
         | null;
@@ -632,8 +635,18 @@ function reactionAttackTargetSpatialFacts(input: {
         "Fixed-target reaction attacks require an exact attack target distance fact.",
     };
   }
-  const targetIssue = reactionAttackTargetIssue(input, facts);
-  if (targetIssue !== null) return targetIssue;
+  const admission = attackTargetAdmission(
+    input.state,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+    facts,
+  );
+  if (admission === null)
+    return {
+      tag: "invalid",
+      message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
+    };
   const enemyProximity = qualifyAttackEnemyProximity(
     input.state,
     input.subject.reactorId,
@@ -641,25 +654,7 @@ function reactionAttackTargetSpatialFacts(input: {
     facts,
   );
   if (isSpatialQualificationIssue(enemyProximity)) return enemyProximity;
-  return { tag: "ok", facts, enemyProximity };
-}
-
-function reactionAttackTargetIssue(
-  input: Parameters<typeof reactionAttackTargetSpatialFacts>[0],
-  facts: readonly BattleTargetSpatialFact[],
-): { readonly tag: "invalid"; readonly message: string } | null {
-  return attackTargetIsLegal(
-    input.state,
-    input.subject.reactorId,
-    input.subject.targetId,
-    input.attack,
-    facts,
-  )
-    ? null
-    : {
-        tag: "invalid",
-        message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
-      };
+  return { tag: "ok", facts, enemyProximity, cover: admission.cover };
 }
 
 function reactionAttackDistanceFact(input: {
@@ -709,12 +704,10 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     input.state.combatants.get(subject.reactorId),
     attack,
   );
-  const targetArmorClass = weaponAttackArmorClass(
+  const targetArmorClass = armorClassAgainstAttack(
     input.state,
-    subject.reactorId,
     target,
-    attack,
-    afterRollInput.context.targetSpatialFacts,
+    afterRollInput.context.targetCover,
   );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,

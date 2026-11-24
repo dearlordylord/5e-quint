@@ -1,3 +1,4 @@
+import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // Shared object-target spell attack resolution for direct casts and readied releases.
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
@@ -41,7 +42,7 @@ import {
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { admittedArmorClassBehindCover } from "./attack-target-cover.ts";
+
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
@@ -379,7 +380,7 @@ function resolveObjectTargetSpellAttackCore(
     effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
   const hit = attackRollHits(
     effectiveAttackRoll,
-    admittedArmorClassBehindCover(objectFact.armorClass, objectFact.cover),
+    armorClassBehindCover(objectFact.armorClass, objectFact.cover),
   );
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = consumeSelfAttackRollEffects(

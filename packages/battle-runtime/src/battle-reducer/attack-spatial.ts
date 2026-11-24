@@ -1,5 +1,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE BATTLE.ATTACK.TARGET_COVER
-import { directTargetCover } from "@dnd/shared-algebras/cover-algebra";
+import {
+  directTargetCover,
+  type DirectTargetCover,
+} from "@dnd/shared-algebras/cover-algebra";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleAttackExecutionSelection,
@@ -29,26 +32,31 @@ export function attackExecutionSelectionMatchesOption(
   return boundAttackExecutionSelectionMatchesOption(selection, attack);
 }
 
-export function attackTargetIsLegal(
+export function attackTargetAdmission(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
   facts: readonly BattleTargetSpatialFact[],
-): boolean {
+): { readonly cover: DirectTargetCover } | null {
   const target = state.combatants.get(targetId);
-  return (
-    target !== undefined &&
-    creatureAttackTargetIsLegal(actorId, target, attack, facts)
-  );
+  return target === undefined
+    ? null
+    : creatureAttackTargetAdmission(actorId, target, attack, facts);
 }
 
-export function creatureAttackTargetIsLegal(
+export function attackTargetIsLegal(
+  ...args: Parameters<typeof attackTargetAdmission>
+): boolean {
+  return attackTargetAdmission(...args) !== null;
+}
+
+export function creatureAttackTargetAdmission(
   actorId: CombatantId,
   target: BattleCreatureState,
   attack: SupportedAttackActionOption,
   facts: readonly BattleTargetSpatialFact[],
-): boolean {
+): { readonly cover: DirectTargetCover } | null {
   const targetId = target.combatantId;
   const constraint = attackTargetConstraint(attack);
   const distanceFeet = attackTargetDistanceFeet(
@@ -57,16 +65,23 @@ export function creatureAttackTargetIsLegal(
     targetId,
     attack,
   );
-  return (
-    actorId !== targetId &&
+  const cover = directTargetCover(
+    attackTargetStatedCover(facts, actorId, targetId, attack),
+  );
+  return actorId !== targetId &&
     distanceFeet !== null &&
-    directTargetCover(
-      attackTargetStatedCover(facts, actorId, targetId, attack),
-    ) !== null &&
+    cover !== null &&
     (constraint.kind === "meleeReach"
       ? Number(distanceFeet) <= Number(constraint.reachFeet)
       : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
-  );
+    ? { cover }
+    : null;
+}
+
+export function creatureAttackTargetIsLegal(
+  ...args: Parameters<typeof creatureAttackTargetAdmission>
+): boolean {
+  return creatureAttackTargetAdmission(...args) !== null;
 }
 
 /** A ranged attack's proximity scope; a melee or unbound attack has none. */

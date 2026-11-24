@@ -1,3 +1,4 @@
+import { attackTargetAdmission } from "./attack-spatial.ts";
 import { qualifiedAttackRollMode } from "./attack-roll.ts";
 // Light-property off-hand attack resolution extracted from attack-resolution.ts.
 
@@ -37,7 +38,7 @@ import {
 
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
-import { weaponAttackArmorClass } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -94,7 +95,6 @@ import {
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
-  attackTargetIsLegal,
 } from "./movement-speed.ts";
 
 import { attackFillSet } from "./attack-fill-set.ts";
@@ -254,17 +254,15 @@ function resolveBonusActionAttack(
     ]);
   }
   const target = input.state.combatants.get(fillSet.targetId);
+  const targetAdmission = attackTargetAdmission(
+    input.state,
+    input.subject.actorId,
+    fillSet.targetId,
+    attack,
+    fillSet.targetSpatialFacts,
+  );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    target == null ||
-    !attackTargetIsLegal(
-      input.state,
-      input.subject.actorId,
-      target.combatantId,
-      attack,
-      fillSet.targetSpatialFacts,
-    )
-  ) {
+  if (target == null || targetAdmission === null) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -419,12 +417,10 @@ function resolveBonusActionAttack(
     input.state.combatants.get(input.subject.actorId),
     attack,
   );
-  const targetArmorClass = weaponAttackArmorClass(
+  const targetArmorClass = armorClassAgainstAttack(
     input.state,
-    input.subject.actorId,
     target,
-    attack,
-    fillSet.targetSpatialFacts,
+    targetAdmission.cover,
   );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,

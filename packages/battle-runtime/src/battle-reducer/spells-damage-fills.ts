@@ -21,7 +21,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
-import { directTargetCover } from "@dnd/shared-algebras/cover-algebra";
+import {
+  directTargetCover,
+  type DirectTargetCover,
+} from "@dnd/shared-algebras/cover-algebra";
 import {
   nonEmptyArrayProperty,
   optionalProperty,
@@ -35,11 +38,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  type Condition,
-  type CoverType,
-  type DieRollResult,
-} from "@dnd/shared/types";
+import { type Condition, type DieRollResult } from "@dnd/shared/types";
 import type { Ability, DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { passiveSavingThrowRollModeDisposition } from "../unit-feature-execution-constants.ts";
@@ -705,7 +704,7 @@ export function chainedSpellDamageExpression(
   return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(invocation.damage.expr.flat ?? 0)}-${damageType}`;
 }
 
-export function chainedSpellLeapTargetIsLegal(
+export function chainedSpellLeapTargetAdmission(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       RuntimeSpellProcedure,
@@ -715,14 +714,22 @@ export function chainedSpellLeapTargetIsLegal(
   previousTargetId: CombatantId | undefined,
   targetId: CombatantId,
   facts: readonly BattleTargetSpatialFact[],
-): boolean {
+): { readonly cover: DirectTargetCover } | null {
   const leap = chainedSpellLeapFact(
     invocation,
     previousTargetId,
     targetId,
     facts,
   );
-  return leap !== undefined && directTargetCover(leap.cover) !== null;
+  if (leap === undefined) return null;
+  const cover = directTargetCover(leap.cover);
+  return cover === null ? null : { cover };
+}
+
+export function chainedSpellLeapTargetIsLegal(
+  ...args: Parameters<typeof chainedSpellLeapTargetAdmission>
+): boolean {
+  return chainedSpellLeapTargetAdmission(...args) !== null;
 }
 
 /** The invocation of a chained Spell Attack whose orb leaps between targets. */
@@ -760,21 +767,6 @@ function chainedSpellLeapFact(
       fact.sourceProcedureRef === invocation.sourceProcedureRef &&
       fact.rangeFeet === invocation.leapRangeFeet,
   );
-}
-
-/**
- * The degree of cover a leap's attack roll meets: the leap originates at the
- * previous target, so its geometry fact states the degree (ASSUMPTIONS A59).
- * Undefined when the table stated none.
- */
-export function chainedSpellLeapTargetStatedCover(
-  invocation: ChainedSpellLeapInvocation,
-  previousTargetId: CombatantId | undefined,
-  targetId: CombatantId,
-  facts: readonly BattleTargetSpatialFact[],
-): CoverType | undefined {
-  return chainedSpellLeapFact(invocation, previousTargetId, targetId, facts)
-    ?.cover;
 }
 
 export function spellDamageTypes(

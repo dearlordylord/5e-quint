@@ -1,3 +1,4 @@
+import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import type { BattleCreatureState } from "../battle-state-execution.ts";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -52,10 +53,7 @@ import {
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import {
-  admittedArmorClassBehindCover,
-  spellAttackArmorClass,
-} from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -113,6 +111,7 @@ import {
   spellObjectTargetFact,
   spellObjectTargetSightFact,
   spellTargetIsLegal,
+  spellTargetAdmission,
   spellTargetInterdictionRequests,
   validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
@@ -350,9 +349,10 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     { readonly kind: "combatant" }
   >;
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
-  const target = admittedSequenceCreatureTarget(input);
-  if ("tag" in target)
-    return invalidResult(input.input.state, "invalidFill", target.message);
+  const admission = admittedSequenceCreatureTarget(input);
+  if ("tag" in admission)
+    return invalidResult(input.input.state, "invalidFill", admission.message);
+  const { target, cover } = admission;
   const requiredRollMode = requiredSpellAttackRollMode(
     input.state,
     input.actorId,
@@ -534,13 +534,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     input.partFill.attackRoll,
   );
-  const targetArmorClass = spellAttackArmorClass(
-    input.state,
-    input.actorId,
-    target,
-    input.invocation,
-    input.target.spatialFacts,
-  );
+  const targetArmorClass = armorClassAgainstAttack(input.state, target, cover);
   const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
@@ -1233,7 +1227,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
   const hit = attackRollHits(
     effectiveAttackRoll,
-    admittedArmorClassBehindCover(objectFact.armorClass, objectFact.cover),
+    armorClassBehindCover(objectFact.armorClass, objectFact.cover),
   );
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = consumeSelfAttackRollEffects(
@@ -1478,22 +1472,23 @@ function spellAttackSequencePartDamageDispositionHoleKey(
 function admittedSequenceCreatureTarget(
   input: Parameters<typeof resolveSpellAttackSequenceCreaturePart>[0],
 ):
-  | BattleCreatureState
+  | {
+      readonly target: BattleCreatureState;
+      readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
+    }
   | import("./ranged-attack-close-combat.ts").SpatialQualificationIssue {
   const target = input.state.combatants.get(input.target.targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      input.state,
-      input.actorId,
-      input.target.targetId,
-      input.invocation,
-      input.target.spatialFacts,
-    )
-  )
+  const admission = spellTargetAdmission(
+    input.state,
+    input.actorId,
+    input.target.targetId,
+    input.invocation,
+    input.target.spatialFacts,
+  );
+  if (target === undefined || admission === null)
     return {
       tag: "invalid",
       message: `Spell ${spellAttackSequencePartName()} target must be a combatant within the selected spell's supported range.`,
     };
-  return target;
+  return { target, cover: admission.cover };
 }

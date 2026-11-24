@@ -15,11 +15,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import {
-  damageAmount as toDamageAmount,
-  Index,
-  type CoverType,
-} from "@dnd/shared/types";
+import { damageAmount as toDamageAmount, Index } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
@@ -68,7 +64,6 @@ import {
   damageRelationshipDecisionFillCheck,
 } from "./damage-relationship-decisions.ts";
 import { armorClassAgainstAttack } from "./attack-target-cover.ts";
-import { spellAttackTargetStatedCover } from "./spells-targeting.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,
@@ -117,14 +112,12 @@ import {
   chainedSpellAttackRollHoleId,
   chainedSpellDamageRollHole,
   chainedSpellDamageRollHoleId,
-  chainedSpellLeapTargetStatedCover,
-  type ChainedSpellLeapInvocation,
-  chainedSpellLeapTargetIsLegal,
+  chainedSpellLeapTargetAdmission,
   chainedSpellTargetHole,
   chainedSpellTargetHoleId,
   spellDamageTypeChoiceHole,
   spellTargetInterdictionRequests,
-  spellTargetIsLegal,
+  spellTargetAdmission,
 } from "./spells-holes-fills.ts";
 import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-kind.ts";
 import {
@@ -204,7 +197,7 @@ function matchingHoleIdFills<F extends { readonly holeId: unknown }>(
   return fills.filter((fill) => holeIds.has(String(fill.holeId)));
 }
 
-function chainedSpellStepTargetIsLegal(input: {
+function chainedSpellStepTargetAdmission(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
@@ -215,23 +208,25 @@ function chainedSpellStepTargetIsLegal(input: {
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
   readonly stepIndex: number;
   readonly previousTargetId: CombatantId;
-}): boolean {
-  return (
-    spellTargetIsLegal(
-      input.state,
-      input.actorId,
-      input.targetId,
-      input.invocation,
-      input.spatialFacts,
-      { coverOrigin: input.stepIndex === 0 ? "caster" : "previousTarget" },
-    ) &&
-    (input.stepIndex === 0 ||
-      chainedSpellLeapTargetIsLegal(
-        input.invocation,
-        input.previousTargetId,
-        input.targetId,
-        input.spatialFacts,
-      ))
+}): {
+  readonly cover: import("@dnd/shared-algebras/cover-algebra").DirectTargetCover;
+} | null {
+  const targetAdmission = spellTargetAdmission(
+    input.state,
+    input.actorId,
+    input.targetId,
+    input.invocation,
+    input.spatialFacts,
+    {
+      coverOrigin: input.stepIndex === 0 ? "caster" : "previousTarget",
+    },
+  );
+  if (targetAdmission === null || input.stepIndex === 0) return targetAdmission;
+  return chainedSpellLeapTargetAdmission(
+    input.invocation,
+    input.previousTargetId,
+    input.targetId,
+    input.spatialFacts,
   );
 }
 
@@ -324,17 +319,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      !chainedSpellStepTargetIsLegal({
-        state: replayState,
-        actorId: input.actorId,
-        targetId: target.combatantId,
-        invocation: input.invocation,
-        spatialFacts: step.target.spatialFacts,
-        stepIndex,
-        previousTargetId: targeted[stepIndex - 1],
-      })
-    ) {
+    const targetAdmission = chainedSpellStepTargetAdmission({
+      state: replayState,
+      actorId: input.actorId,
+      targetId: target.combatantId,
+      invocation: input.invocation,
+      spatialFacts: step.target.spatialFacts,
+      stepIndex,
+      previousTargetId: targeted[stepIndex - 1],
+    });
+    if (targetAdmission === null) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
@@ -406,7 +400,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
       const replacementIsLegal =
         replacementTarget !== undefined &&
-        chainedSpellStepTargetIsLegal({
+        chainedSpellStepTargetAdmission({
           state: replayState,
           actorId: input.actorId,
           targetId: replacementTarget.combatantId,
@@ -414,7 +408,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           spatialFacts: interdictionCheck.spatialFacts,
           stepIndex,
           previousTargetId: targeted[stepIndex - 1],
-        });
+        }) !== null;
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementTarget === undefined || !replacementIsLegal) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -598,17 +592,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
       attackRoll.value,
     );
 
-    const stepCover = chainedSpellAttackStepStatedCover({
-      invocation: input.invocation,
-      actorId: input.actorId,
-      stepIndex,
-      previousTargetId: targeted[stepIndex - 1],
-      targetId: target.combatantId,
-      facts: step.target.spatialFacts,
-    });
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
-      armorClassAgainstAttack(replayState, target, stepCover),
+      armorClassAgainstAttack(replayState, target, targetAdmission.cover),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: replayState,
@@ -1666,31 +1652,4 @@ export function applyChainedSpellDamage(
     saveGatedConditionDamageRepeatSave:
       context.saveGatedConditionDamageRepeatSave,
   });
-}
-
-/**
- * The degree of cover a chained Spell Attack step meets: the first step is
- * measured from the caster, and each leap from the previous target (A59).
- */
-function chainedSpellAttackStepStatedCover(input: {
-  readonly invocation: ChainedSpellLeapInvocation;
-  readonly actorId: CombatantId;
-  readonly stepIndex: number;
-  readonly previousTargetId: CombatantId | undefined;
-  readonly targetId: CombatantId;
-  readonly facts: readonly BattleTargetSpatialFact[];
-}): CoverType | undefined {
-  return input.stepIndex === 0
-    ? spellAttackTargetStatedCover(
-        input.facts,
-        input.actorId,
-        input.targetId,
-        input.invocation,
-      )
-    : chainedSpellLeapTargetStatedCover(
-        input.invocation,
-        input.previousTargetId,
-        input.targetId,
-        input.facts,
-      );
 }

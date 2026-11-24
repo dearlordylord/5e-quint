@@ -251,61 +251,64 @@ describe("battle runtime: Cover on creature targets", () => {
     });
   });
 
-  test("a Spell Attack meets the target's AC plus its cover", () => {
-    const session = startBattleSessionRight({
-      battleId: battleId("battle-chill-touch-cover"),
-      combatants: [
-        characterSeed({
-          combatantId: wizardId,
-          displayName: "Wizard",
-          initiative: 20,
-          attack: null,
-          classLevel: 5,
-          spellcasting: wizardSpellcasting({
-            cantrips: [spellRecord("chill_touch")],
-            preparedSpells: [],
+  test.each(["chill_touch", "fire_bolt"] as const)(
+    "%s meets the target's AC plus its cover",
+    (spellId) => {
+      const session = startBattleSessionRight({
+        battleId: battleId(`battle-${spellId}-cover`),
+        combatants: [
+          characterSeed({
+            combatantId: wizardId,
+            displayName: "Wizard",
+            initiative: 20,
+            attack: null,
+            classLevel: 5,
+            spellcasting: wizardSpellcasting({
+              cantrips: [spellRecord(spellId)],
+              preparedSpells: [],
+            }),
           }),
-        }),
-        skeletonCreatureInit({ initiative: 10 }),
-      ],
-    });
-    const state = session.state;
-    const subject = findAct(session, magicSubject("chill_touch")).subject;
-    const targetHole = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
-      "targetChoice",
-    );
-    const ac = armorClassOf(state, skeletonId);
-    const spellTarget = (cover: RuledCoverType | undefined) => {
-      const fill = targetFill(targetHole, skeletonId);
-      return {
-        ...fill,
-        spatialFacts: (fill.spatialFacts ?? []).map((fact) =>
-          fact.kind === "spellTarget" ? withCover(fact, cover) : fact,
-        ),
-      };
-    };
-    const rollWith = (cover: RuledCoverType | undefined, total: number) => {
-      const rollHole = requireHole(
-        resolveBattleSubject({ state, subject, fills: [spellTarget(cover)] }),
-        "attackRoll",
-      );
-      return resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          spellTarget(cover),
-          attackRollFill(rollHole, { total, naturalD20: 10 }),
+          skeletonCreatureInit({ initiative: 10 }),
         ],
       });
-    };
-    expect(hits(rollWith(undefined, ac))).toBe(true);
-    expect(hits(rollWith("half", ac + 1))).toBe(false);
-    expect(hits(rollWith("threeQuarters", ac + 5))).toBe(true);
-    expect(
-      resolveBattleSubject({ state, subject, fills: [spellTarget("total")] }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-  });
+      const state = session.state;
+      const subject = findAct(session, magicSubject(spellId)).subject;
+      const targetHole = requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      );
+      const ac = armorClassOf(state, skeletonId);
+      const spellTarget = (cover: RuledCoverType | undefined) => {
+        const fill = targetFill(targetHole, skeletonId);
+        return {
+          ...fill,
+          spatialFacts: (fill.spatialFacts ?? []).map((fact) =>
+            fact.kind === "spellTarget" ? withCover(fact, cover) : fact,
+          ),
+        };
+      };
+      const rollWith = (cover: RuledCoverType | undefined, total: number) => {
+        const rollHole = requireHole(
+          resolveBattleSubject({ state, subject, fills: [spellTarget(cover)] }),
+          "attackRoll",
+        );
+        return resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            spellTarget(cover),
+            attackRollFill(rollHole, { total, naturalD20: 10 }),
+          ],
+        });
+      };
+      expect(hits(rollWith(undefined, ac))).toBe(true);
+      expect(hits(rollWith("half", ac + 1))).toBe(false);
+      expect(hits(rollWith("threeQuarters", ac + 5))).toBe(true);
+      expect(
+        resolveBattleSubject({ state, subject, fills: [spellTarget("total")] }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    },
+  );
 
   test("an attack total of 19 misses AC 19 behind Half Cover", () => {
     // Regression witness from the Half Cover defect report: Chain Mail 16,

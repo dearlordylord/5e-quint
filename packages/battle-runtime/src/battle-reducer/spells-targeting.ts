@@ -13,8 +13,11 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
-import { directTargetCover } from "@dnd/shared-algebras/cover-algebra";
-import { SIZES, type CoverType, type MovementFeet } from "@dnd/shared/types";
+import {
+  directTargetCover,
+  type DirectTargetCover,
+} from "@dnd/shared-algebras/cover-algebra";
+import { SIZES, type MovementFeet } from "@dnd/shared/types";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
   type BattleObjectContactTargetsHole,
@@ -899,48 +902,65 @@ function spellTeleportDestinationHoleKey(
   return `battle:spell:teleport-destination:${actorId}:${invocation.procedure}`;
 }
 
-export function spellTargetIsLegal(
+export function spellTargetAdmission(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
   facts: readonly BattleTargetSpatialFact[],
   options: SpellTargetLegalityOptions = {},
-): boolean {
-  return (
-    spellTargetSatisfiesNonDispositionRequirements(
-      state,
-      actorId,
-      targetId,
-      invocation,
-      facts,
-      options,
-    ) &&
-    (!spellInvocationRequiresKnownWillingTarget(invocation) ||
-      spellTargetIsKnownWilling(actorId, targetId, invocation, facts))
+): { readonly cover: DirectTargetCover } | null {
+  const admission = spellTargetNonDispositionAdmission(
+    state,
+    actorId,
+    targetId,
+    invocation,
+    facts,
+    options,
   );
+  if (
+    admission === null ||
+    (spellInvocationRequiresKnownWillingTarget(invocation) &&
+      !spellTargetIsKnownWilling(actorId, targetId, invocation, facts))
+  )
+    return null;
+  return admission;
 }
 
-function spellTargetSatisfiesNonDispositionRequirements(
+export function spellTargetIsLegal(
+  ...args: Parameters<typeof spellTargetAdmission>
+): boolean {
+  return spellTargetAdmission(...args) !== null;
+}
+
+function spellTargetNonDispositionAdmission(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
   facts: readonly BattleTargetSpatialFact[],
   options: SpellTargetLegalityOptions = {},
-): boolean {
+): { readonly cover: DirectTargetCover } | null {
   if (
     !spellTargetHasNonSpatialPrerequisites(state, actorId, targetId, invocation)
   ) {
-    return false;
+    return null;
   }
-  const hasSpellTargetFact = facts.some((fact) =>
+  const fact = facts.find((fact) =>
     spellTargetSpatialFactMatches(fact, actorId, targetId, invocation, options),
   );
-  if (!hasSpellTargetFact) {
-    return false;
-  }
-  return true;
+  if (fact === undefined) return null;
+  const cover =
+    options.coverOrigin === "previousTarget"
+      ? "none"
+      : directTargetCover("cover" in fact ? fact.cover : undefined);
+  return cover === null ? null : { cover };
+}
+
+function spellTargetSatisfiesNonDispositionRequirements(
+  ...args: Parameters<typeof spellTargetNonDispositionAdmission>
+): boolean {
+  return spellTargetNonDispositionAdmission(...args) !== null;
 }
 
 /**
@@ -1066,54 +1086,26 @@ export function spellObjectTargetFact(
   actorId: CombatantId,
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<SingleCreatureOrObjectSpellAttackDamageInvocation>,
-): Extract<
-  BattleTargetSpatialFact,
-  { readonly kind: "spellObjectTarget" }
-> | null {
-  return (
-    facts.find(
-      (fact) =>
-        fact.casterId === actorId &&
-        fact.objectId === objectId &&
-        fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.rangeFeet === invocation.rangeFeet &&
-        directTargetCover(fact.cover) !== null &&
-        (!spellAttackRequiresExactDistance(invocation) ||
-          fact.distanceFeet <= invocation.rangeFeet),
-    ) ?? null
-  );
-}
-
-/**
- * The degree of cover the table stated between a spell's attacker and a
- * creature target, read from the same geometry fact that made the target
- * legal: the caster's spellTarget, or the force's proxy fact for a spell that
- * attacks from a force's position. Undefined when the table stated none, as
- * for the creature that triggers a stored spell, which has no such fact.
- */
-export function spellAttackTargetStatedCover(
-  facts: readonly BattleTargetSpatialFact[],
-  actorId: CombatantId,
-  targetId: CombatantId,
-  invocation: BattleExecutableSpellInvocation,
-  options: SpellTargetLegalityOptions = {},
-): CoverType | undefined {
+):
+  | (Omit<
+      Extract<BattleTargetSpatialFact, { readonly kind: "spellObjectTarget" }>,
+      "cover"
+    > & { readonly cover: DirectTargetCover })
+  | null {
   for (const fact of facts) {
     if (
-      (fact.kind === "spellTarget" ||
-        fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach") &&
-      spellTargetSpatialFactMatches(
-        fact,
-        actorId,
-        targetId,
-        invocation,
-        options,
-      )
-    ) {
-      return fact.cover;
-    }
+      fact.casterId !== actorId ||
+      fact.objectId !== objectId ||
+      fact.sourceProcedureRef !== invocation.sourceProcedureRef ||
+      fact.rangeFeet !== invocation.rangeFeet ||
+      (spellAttackRequiresExactDistance(invocation) &&
+        fact.distanceFeet > invocation.rangeFeet)
+    )
+      continue;
+    const cover = directTargetCover(fact.cover);
+    if (cover !== null) return { ...fact, cover };
   }
-  return undefined;
+  return null;
 }
 
 export function spellObjectTargetSightFact(
@@ -1557,4 +1549,26 @@ export function spellTargetIsKnownWilling(
           fact.sourceProcedureRef === sourceProcedureRef,
       ))
   );
+}
+
+/**
+ * Cover for an authorized stored release, whose retargeting contract can omit
+ * ordinary caster-to-target facts. This does not admit the target itself.
+ */
+export function storedSpellTargetCover(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): DirectTargetCover | null {
+  for (const fact of facts) {
+    if (
+      (fact.kind === "spellTarget" ||
+        fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach") &&
+      spellTargetSpatialFactMatches(fact, actorId, targetId, invocation, {})
+    ) {
+      return directTargetCover(fact.cover);
+    }
+  }
+  return "none";
 }
