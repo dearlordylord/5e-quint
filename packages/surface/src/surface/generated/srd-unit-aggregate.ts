@@ -431,22 +431,26 @@ import unitPeer429 from "../../../content/weapon_dagger.json";
 import unitPeer430 from "../../../content/weapon_flail.json";
 import unitPeer431 from "../../../content/weapon_greataxe.json";
 import unitPeer432 from "../../../content/weapon_longsword.json";
-import unitPeer433 from "../../../content/weapon_quarterstaff.json";
-import unitPeer434 from "../../../content/weapon_shortbow.json";
-import unitPeer435 from "../../../content/weapon_shortsword.json";
-import unitPeer436 from "../../../content/weapon_spear.json";
-import unitPeer437 from "../../../content/web.json";
-import unitPeer438 from "../../../content/wind_walk.json";
-import unitPeer439 from "../../../content/wizard_ability_score_improvement_l4.json";
-import unitPeer440 from "../../../content/wizard_arcane_recovery.json";
-import unitPeer441 from "../../../content/wizard_empowered_evocation.json";
-import unitPeer442 from "../../../content/wizard_evocation_savant.json";
-import unitPeer443 from "../../../content/wizard_memorize_spell.json";
-import unitPeer444 from "../../../content/wizard_potent_cantrip.json";
-import unitPeer445 from "../../../content/wizard_ritual_adept.json";
-import unitPeer446 from "../../../content/wizard_scholar.json";
-import unitPeer447 from "../../../content/word_of_recall.json";
-import unitPeer448 from "../../../content/zone_of_truth.json";
+import unitPeer433 from "../../../content/weapon_mace.json";
+import unitPeer434 from "../../../content/weapon_morningstar.json";
+import unitPeer435 from "../../../content/weapon_quarterstaff.json";
+import unitPeer436 from "../../../content/weapon_shortbow.json";
+import unitPeer437 from "../../../content/weapon_shortsword.json";
+import unitPeer438 from "../../../content/weapon_sling.json";
+import unitPeer439 from "../../../content/weapon_spear.json";
+import unitPeer440 from "../../../content/weapon_whip.json";
+import unitPeer441 from "../../../content/web.json";
+import unitPeer442 from "../../../content/wind_walk.json";
+import unitPeer443 from "../../../content/wizard_ability_score_improvement_l4.json";
+import unitPeer444 from "../../../content/wizard_arcane_recovery.json";
+import unitPeer445 from "../../../content/wizard_empowered_evocation.json";
+import unitPeer446 from "../../../content/wizard_evocation_savant.json";
+import unitPeer447 from "../../../content/wizard_memorize_spell.json";
+import unitPeer448 from "../../../content/wizard_potent_cantrip.json";
+import unitPeer449 from "../../../content/wizard_ritual_adept.json";
+import unitPeer450 from "../../../content/wizard_scholar.json";
+import unitPeer451 from "../../../content/word_of_recall.json";
+import unitPeer452 from "../../../content/zone_of_truth.json";
 
 // Generated from the ordered SRD Unit publication membership and canonical strict JSON peers.
 // Regenerate with pnpm generate:surface-unit-aggregate.
@@ -588,13 +592,13 @@ export const srdUnitAggregateInputs = [
   unitPeer418,
   unitPeer422,
   unitPeer419,
-  unitPeer445,
-  unitPeer440,
-  unitPeer446,
-  unitPeer439,
-  unitPeer441,
-  unitPeer442,
+  unitPeer449,
   unitPeer444,
+  unitPeer450,
+  unitPeer443,
+  unitPeer445,
+  unitPeer446,
+  unitPeer448,
   unitPeer139,
   unitPeer140,
   unitPeer141,
@@ -689,8 +693,8 @@ export const srdUnitAggregateInputs = [
   unitPeer413,
   unitPeer414,
   unitPeer426,
-  unitPeer438,
-  unitPeer447,
+  unitPeer442,
+  unitPeer451,
   unitPeer1,
   unitPeer0,
   unitPeer2,
@@ -870,7 +874,7 @@ export const srdUnitAggregateInputs = [
   unitPeer385,
   unitPeer399,
   unitPeer400,
-  unitPeer448,
+  unitPeer452,
   unitPeer406,
   unitPeer411,
   unitPeer126,
@@ -880,7 +884,7 @@ export const srdUnitAggregateInputs = [
   unitPeer193,
   unitPeer197,
   unitPeer417,
-  unitPeer437,
+  unitPeer441,
   unitPeer194,
   unitPeer195,
   unitPeer13,
@@ -892,12 +896,16 @@ export const srdUnitAggregateInputs = [
   unitPeer429,
   unitPeer431,
   unitPeer432,
-  unitPeer436,
+  unitPeer439,
   unitPeer430,
-  unitPeer434,
+  unitPeer436,
+  unitPeer437,
   unitPeer435,
   unitPeer433,
-  unitPeer443,
+  unitPeer434,
+  unitPeer440,
+  unitPeer438,
+  unitPeer447,
   unitPeer29,
   unitPeer31,
 ] as const;

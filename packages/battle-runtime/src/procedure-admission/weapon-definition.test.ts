@@ -60,6 +60,26 @@ const canonicalWeaponMasteries = [
     masteryUnitId: "mastery_topple",
     masteryProperty: "topple",
   },
+  {
+    weaponUnitId: "weapon_mace",
+    masteryUnitId: "mastery_sap",
+    masteryProperty: "sap",
+  },
+  {
+    weaponUnitId: "weapon_morningstar",
+    masteryUnitId: "mastery_sap",
+    masteryProperty: "sap",
+  },
+  {
+    weaponUnitId: "weapon_whip",
+    masteryUnitId: "mastery_slow",
+    masteryProperty: "slow",
+  },
+  {
+    weaponUnitId: "weapon_sling",
+    masteryUnitId: "mastery_slow",
+    masteryProperty: "slow",
+  },
 ] as const;
 
 const weaponMasteryReferencePath = {

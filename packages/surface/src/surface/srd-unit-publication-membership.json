@@ -447,6 +447,10 @@
     "weapon_shortbow",
     "weapon_shortsword",
     "weapon_quarterstaff",
+    "weapon_mace",
+    "weapon_morningstar",
+    "weapon_whip",
+    "weapon_sling",
     "wizard_memorize_spell",
     "barbarian_feral_instinct",
     "barbarian_instinctive_pounce"

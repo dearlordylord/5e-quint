@@ -149,7 +149,6 @@ import starryWispInput from "../../surface/content/starry_wisp.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
 import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
-import weaponSlingInput from "../../surface/content/weapon_sling.json";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
 import {
   battleActDruidWildShapePresentation,
@@ -4554,9 +4553,9 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
   };
 }
 
-/** The SRD Sling, a one-handed Ammunition weapon that isn't published yet. */
+/** The SRD Sling, a one-handed Ammunition weapon. */
 export function testSlingUnitRef(): BattleUnitRef {
-  const weapon = decodeUnitRecordSync(weaponSlingInput);
+  const weapon = unitLibrary.requireUnit("weapon_sling");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Sling weapon Unit.");
   }
