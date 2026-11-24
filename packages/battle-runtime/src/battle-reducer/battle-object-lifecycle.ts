@@ -201,10 +201,11 @@ function pickupRequiredHandsAreFree(
   const selected = actor.origin.selectedLoadout;
   const role =
     selected.weapon?.itemId === objectId ? "mainWeapon" : "offWeapon";
+  // The hands this weapon alone takes, whatever else the loadout holds.
   const required = loadoutHandUses({
-    holdsShield: selected.shield !== undefined,
-    holdsOffHandWeapon: selected.offHandWeapon !== undefined,
-    mainWeaponGrip: selected.weapon?.grip,
+    holdsShield: false,
+    holdsOffHandWeapon: role === "offWeapon",
+    mainWeaponGrip: role === "mainWeapon" ? selected.weapon?.grip : undefined,
   });
   const actual = combatantHandUses(state, actor, state.grapples);
   return (

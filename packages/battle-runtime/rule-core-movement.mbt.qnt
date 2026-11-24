@@ -7,6 +7,7 @@ module ruleCoreMovementMbt {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
   import attackRollDamageDiceCore as WeaponDice from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
+  import weaponGripChangeCore as GripChange from "../shared-algebras/proofs/rule-core/weapon-grip-change-core"
 
   var qCurrentActor: str
   var qMovementSpentFeet: int
@@ -17,6 +18,7 @@ module ruleCoreMovementMbt {
   var qGrappleActive: bool
   var qGrappleEscapeDc: int
   var qMainWeaponGrip: str
+  var qMainWeaponDamageDieSize: int
   var qProtocol: WitnessProtocol[str]
   var qPendingOpportunityAttack: bool
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
@@ -35,9 +37,10 @@ module ruleCoreMovementMbt {
   pure def movementOverspendCostFeet: int = 35
   pure def runtimeGrappleEscapeDc: int = 10
 
-  // The Fighter holds a Versatile main weapon with either grip. A two-handed
-  // grip holds both hands; a one-handed grip leaves one, which a Grapple then
-  // holds. A Grapple needs a free hand.
+  // The Fighter holds a Versatile main weapon with either grip, and can change
+  // it on its turn at no cost. A two-handed grip holds both hands; a
+  // one-handed grip leaves one, which a Grapple then holds. A Grapple and a
+  // two-handed grip each need a free hand.
   pure val mainWeaponGrips: Set[str] = Set("one_handed", "two_handed")
 
   pure def mainWeaponGrip(grip: str): WeaponDice::WeaponGrip =
@@ -50,6 +53,24 @@ module ruleCoreMovementMbt {
     2 - mainWeaponHandsHeld(qMainWeaponGrip) - (if (qGrappleActive) 1 else 0)
 
   pure def qFighterHasFreeHand: bool = qFighterFreeHands > 0
+
+  // The Versatile main weapon: a Longsword, 1d8 in one hand and 1d10 in two.
+  pure def mainWeaponDamageDieSize(grip: str): int =
+    WeaponDice::weaponAttackDamageDieSize({
+      damageDieSize: 8,
+      versatile: WeaponDice::VersatileDamageDie(10),
+      grip: mainWeaponGrip(grip),
+      meleeAttack: true,
+    })
+
+  pure def qGripChangeFacts: GripChange::WeaponGripChangeFacts = {
+    ownTurn: qCurrentActor == fighterActor,
+    canAct: true,
+    holdsWeapon: true,
+    twoHandedWeapon: false,
+    heldWithTwoHands: qMainWeaponGrip == "two_handed",
+    otherHandFree: qFighterHasFreeHand,
+  }
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
@@ -101,6 +122,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     clearSuccessfulHoles(WResolved),
   }
 
@@ -114,6 +136,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     clearSuccessfulHoles(WResolved),
   }
 
@@ -127,6 +150,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = active,
     qGrappleEscapeDc' = escapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     clearSuccessfulHoles(WResolved),
   }
 
@@ -140,6 +164,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(openHoles, WInvalid(reason)),
     qPendingOpportunityAttack' = qPendingOpportunityAttack,
     qComponentRoute' = componentRouteEvidence,
@@ -157,6 +182,7 @@ module ruleCoreMovementMbt {
       qGrappleActive' = false,
       qGrappleEscapeDc' = 0,
       qMainWeaponGrip' = mainWeaponGrip,
+      qMainWeaponDamageDieSize' = mainWeaponDamageDieSize(mainWeaponGrip),
       qProtocol' = witnessProtocolForProjection(Set(), WInit),
       qPendingOpportunityAttack' = false,
       qComponentRoute' = componentRouteEvidence,
@@ -176,6 +202,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(Set("Movement"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -238,6 +265,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(Set("ReactionDecision"), WNeedsHoles),
     qPendingOpportunityAttack' = true,
     qComponentRoute' = componentRouteEvidence,
@@ -329,6 +357,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(Set("TargetChoice"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -346,6 +375,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(Set("GrappleOutcome"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -382,6 +412,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(Set(), WResolved),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -401,6 +432,7 @@ module ruleCoreMovementMbt {
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
     qMainWeaponGrip' = qMainWeaponGrip,
+    qMainWeaponDamageDieSize' = qMainWeaponDamageDieSize,
     qProtocol' = witnessProtocolForProjection(Set("GrappleOutcome"), WNeedsHoles),
     qPendingOpportunityAttack' = false,
     qComponentRoute' = componentRouteEvidence,
@@ -422,6 +454,42 @@ module ruleCoreMovementMbt {
     qActionAvailable,
     val escaped = escapeGrapple(qTurnState, qGrappledTargetState.grapple, qGrappleEscapeDc - 1)
     recordGrappleState(activeGrapple(escaped.grapple), grappleEscapeDc(escaped.grapple), qActionStateAfter(escaped.turn)),
+  }
+
+  action recordMainWeaponGrip(grip: str): bool = all {
+    qMovementSpentFeet' = qMovementSpentFeet,
+    qDashBonusFeet' = qDashBonusFeet,
+    qProne' = qProne,
+    qDisengaged' = qDisengaged,
+    qActionAvailable' = qActionAvailable,
+    qCurrentActor' = qCurrentActor,
+    qGrappleActive' = qGrappleActive,
+    qGrappleEscapeDc' = qGrappleEscapeDc,
+    qMainWeaponGrip' = grip,
+    qMainWeaponDamageDieSize' = mainWeaponDamageDieSize(grip),
+    clearSuccessfulHoles(WResolved),
+  }
+
+  // Changing grip costs nothing: the turn's action and movement stay.
+  action doChangeMainWeaponGripToTwoHanded = all {
+    openHoles == Set(),
+    GripChange::twoHandedGripChangeAllowed(qGripChangeFacts),
+    recordMainWeaponGrip("two_handed"),
+  }
+
+  action doChangeMainWeaponGripToOneHanded = all {
+    openHoles == Set(),
+    GripChange::oneHandedGripChangeAllowed(qGripChangeFacts),
+    recordMainWeaponGrip("one_handed"),
+  }
+
+  // A Grapple holds the hand a two-handed grip needs.
+  action doRejectTwoHandedGripWithoutFreeHand = all {
+    openHoles == Set(),
+    qCurrentActor == fighterActor,
+    qMainWeaponGrip == "one_handed",
+    not(GripChange::twoHandedGripChangeAllowed(qGripChangeFacts)),
+    recordInvalid(WStaleSubject),
   }
 
   action doReleaseGrapple = all {
@@ -454,5 +522,8 @@ module ruleCoreMovementMbt {
     doResolveEscapeSuccess,
     doResolveEscapeFailure,
     doReleaseGrapple,
+    doChangeMainWeaponGripToTwoHanded,
+    doChangeMainWeaponGripToOneHanded,
+    doRejectTwoHandedGripWithoutFreeHand,
   }
 }
