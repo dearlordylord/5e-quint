@@ -602,7 +602,15 @@ describe("manual MCP battle surface coverage", () => {
         holeId: movement.holeId,
         value: {
           speedKind: walking.kind,
-          movementCostFeet: 5,
+          path: [
+            {
+              distanceFeet: 5,
+              activity: "ordinary",
+              difficultTerrain: "none",
+              movesCloserThroughDirectionalArea: false,
+              draggedGrappledTargetIds: [],
+            },
+          ],
           provokedOpportunityAttacks: [
             { reactorId: "fighter", distanceFeet: 5, ...selection },
           ],

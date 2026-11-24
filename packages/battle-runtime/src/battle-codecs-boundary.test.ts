@@ -2376,7 +2376,15 @@ describe("battle codec execution-reference boundaries", () => {
       holeId: holeId("exact-movement-occurrences"),
       value: {
         speedKind: "walk",
-        movementCostFeet: 20,
+        path: [
+          {
+            distanceFeet: 20,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
         areaDifficultTerrain: {
           kind: "areaDifficultTerrain",
@@ -2390,8 +2398,6 @@ describe("battle codec execution-reference boundaries", () => {
               damageDistanceFeet: 5,
             },
           ],
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
         },
         directionalPersistentAreaMovement: {
           kind: "directionalPersistentAreaMovement",
@@ -2400,8 +2406,6 @@ describe("battle codec execution-reference boundaries", () => {
           sourceProcedureRef: fixture.sourceProcedureRef,
           areaId: battleAreaId("area:codec-gust"),
           directionId: battleLineDirectionId("direction:codec-gust"),
-          totalDistanceFeet: 10,
-          closerDistanceFeet: 5,
         },
         controlledVerticalSuspensionMovement: {
           kind: "controlledVerticalSuspensionMovement",
@@ -2446,7 +2450,15 @@ describe("battle codec execution-reference boundaries", () => {
       holeId: holeId("missing-terrain-occurrence"),
       value: {
         speedKind: "walk",
-        movementCostFeet: 10,
+        path: [
+          {
+            distanceFeet: 10,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
         areaDifficultTerrain: {
           kind: "areaDifficultTerrain",
@@ -2459,8 +2471,6 @@ describe("battle codec execution-reference boundaries", () => {
               damageDistanceFeet: 5,
             },
           ],
-          totalDistanceFeet: 5,
-          difficultTerrainDistanceFeet: 5,
         },
       },
     },
@@ -2469,7 +2479,15 @@ describe("battle codec execution-reference boundaries", () => {
       holeId: holeId("missing-gust-occurrence"),
       value: {
         speedKind: "walk",
-        movementCostFeet: 10,
+        path: [
+          {
+            distanceFeet: 10,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
         directionalPersistentAreaMovement: {
           kind: "directionalPersistentAreaMovement",
@@ -2477,8 +2495,6 @@ describe("battle codec execution-reference boundaries", () => {
           sourceProcedureRef: fixture.sourceProcedureRef,
           areaId: battleAreaId("area:codec-gust"),
           directionId: battleLineDirectionId("direction:codec-gust"),
-          totalDistanceFeet: 5,
-          closerDistanceFeet: 5,
         },
       },
     },
@@ -2487,7 +2503,15 @@ describe("battle codec execution-reference boundaries", () => {
       holeId: holeId("missing-levitate-movement-occurrence"),
       value: {
         speedKind: "walk",
-        movementCostFeet: 10,
+        path: [
+          {
+            distanceFeet: 10,
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
         provokedOpportunityAttacks: [],
         controlledVerticalSuspensionMovement: {
           kind: "controlledVerticalSuspensionMovement",
@@ -3497,7 +3521,7 @@ describe("battle codec act ownership boundaries", () => {
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: fighterId,

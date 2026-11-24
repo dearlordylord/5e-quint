@@ -84,11 +84,86 @@ module movementSpatialGrapple {
   pure def movementCostFeet(facts: MovementSpendFacts): int =
     facts.distanceFeet + facts.extraCostFeet
 
-  /// SRD 5.2.1 "Crawling": each foot of movement costs 1 extra foot (2 extra
-  /// feet in Difficult Terrain, whose own extra foot is counted separately).
-  /// A Prone creature's only movement is to crawl.
-  pure def crawlingExtraCostFeet(crawling: bool, distanceFeet: int): int =
-    if (crawling) distanceFeet else 0
+  /// SRD 5.2.1 "Movement and Position": a move can combine climbing, crawling
+  /// and swimming with regular movement, and each part of the move is deducted
+  /// from the Speed. Rules Glossary "Climbing", "Crawling", "Swimming": each
+  /// foot costs 1 extra foot (2 extra feet in Difficult Terrain); climbing and
+  /// swimming ignore that cost with the matching Speed. A Prone creature's
+  /// only movement option is to crawl ("Prone").
+  type MovementPathActivity =
+    | OrdinaryMovement
+    | ClimbingMovement
+    | SwimmingMovement
+    | CrawlingMovement
+
+  /// One part of a move's path, as the table adjudicates it. Rules Glossary
+  /// "Difficult Terrain": every foot costs 1 extra foot, and Difficult Terrain
+  /// isn't cumulative. `effectExtraCostPerFoot` holds the per-foot surcharges
+  /// the battle adds on top: dragging a Grappled creature ("Grappled",
+  /// _Movable_) and moving closer through a directional persistent area.
+  type MovementPathSegment = {
+    distanceFeet: int,
+    activity: MovementPathActivity,
+    usesActivitySpeed: bool,
+    difficultTerrain: bool,
+    effectExtraCostPerFoot: int,
+  }
+
+  pure def movementPathActivityExtraCostPerFoot(
+    activity: MovementPathActivity,
+    usesActivitySpeed: bool,
+  ): int =
+    match activity {
+      | OrdinaryMovement => 0
+      | ClimbingMovement => if (usesActivitySpeed) 0 else 1
+      | SwimmingMovement => if (usesActivitySpeed) 0 else 1
+      | CrawlingMovement => 1
+    }
+
+  pure def movementPathSegmentExtraCostFeet(segment: MovementPathSegment): int =
+    segment.distanceFeet * (
+      (if (segment.difficultTerrain) 1 else 0) +
+      movementPathActivityExtraCostPerFoot(segment.activity, segment.usesActivitySpeed) +
+      segment.effectExtraCostPerFoot
+    )
+
+  pure def movementPathSpendFacts(path: List[MovementPathSegment]): MovementSpendFacts = {
+    distanceFeet: path.foldl(0, (total, segment) => total + segment.distanceFeet),
+    extraCostFeet: path.foldl(0, (total, segment) => total + movementPathSegmentExtraCostFeet(segment)),
+  }
+
+  pure def movementPathCostFeet(path: List[MovementPathSegment]): int =
+    movementCostFeet(movementPathSpendFacts(path))
+
+  /// A walked (or, when Prone, crawled) path of `totalDistanceFeet` whose
+  /// first `markedDistanceFeet` feet carry the given Difficult Terrain and
+  /// effect surcharges. The rest of the path carries neither.
+  pure def markedMovementPath(
+    prone: bool,
+    totalDistanceFeet: int,
+    markedDistanceFeet: int,
+    markedDifficultTerrain: bool,
+    markedEffectExtraCostPerFoot: int,
+  ): List[MovementPathSegment] = {
+    val marked = {
+      distanceFeet: markedDistanceFeet,
+      activity: if (prone) CrawlingMovement else OrdinaryMovement,
+      usesActivitySpeed: false,
+      difficultTerrain: markedDifficultTerrain,
+      effectExtraCostPerFoot: markedEffectExtraCostPerFoot,
+    }
+    val rest = {
+      ...marked,
+      distanceFeet: totalDistanceFeet - markedDistanceFeet,
+      difficultTerrain: false,
+      effectExtraCostPerFoot: 0,
+    }
+    [marked, rest].select(segment => segment.distanceFeet > 0)
+  }
+
+  /// A Prone creature's path is legal only when every segment is crawling.
+  pure def movementPathLegalForProne(prone: bool, path: List[MovementPathSegment]): bool =
+    not(prone) or path.foldl(true, (legal, segment) => legal and segment.activity == CrawlingMovement)
 
   pure def creatureSpaceTraversalLegal(
     moverSize: RuleSize,

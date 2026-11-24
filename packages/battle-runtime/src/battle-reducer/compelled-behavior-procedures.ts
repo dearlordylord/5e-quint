@@ -255,18 +255,6 @@ function admitCompelledFleeMovement(
     input.subject.actorId,
     movementFill.value.speedKind,
   ).remainingFeet;
-  /* v8 ignore start -- @preserve -- Malformed fill: compelled flee behavior requires the route to consume the selected remaining Movement budget exactly. */
-  if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
-    return {
-      tag: "invalid",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "compelled flee behavior must spend the selected remaining Movement budget.",
-      ),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
@@ -278,6 +266,18 @@ function admitCompelledFleeMovement(
     return {
       tag: "invalid",
       result: invalidResult(input.state, "invalidFill", movement.message),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed fill: compelled flee behavior requires the route to consume the selected remaining Movement budget exactly. */
+  if (movement.movement.movementCostFeet !== movementBudgetFeet) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "compelled flee behavior must spend the selected remaining Movement budget.",
+      ),
     };
   }
   /* v8 ignore stop -- @preserve */

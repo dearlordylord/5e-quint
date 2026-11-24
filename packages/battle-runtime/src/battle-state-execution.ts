@@ -339,11 +339,17 @@ import type {
   BattleCompelledBehaviorOption,
   BattleOngoingSpellEffectRef,
   BattleOngoingSpellOccurrenceRef,
+  BattleMovementPathActivity,
+  BattleMovementPathDifficultTerrain,
   WeaponAttackDamageEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "./active-effect/execution-vocabulary.ts";
 export {
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
+  type BattleMovementPathActivity,
+  type BattleMovementPathDifficultTerrain,
   WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES,
   type BattleMagicSuppressionEmanationMembership,
   type BattleMagicSuppressionOngoingSpellEffectRef,
@@ -1509,14 +1515,29 @@ export type BattleHidePrerequisite =
       readonly kind: "obscuredOnlyByCreatureOutOfEnemyLineOfSight";
       readonly obscuringCreatureId: CombatantId;
     };
+/**
+ * One part of a move's path, as the table adjudicates it. The runtime prices
+ * every foot of the move from these parts: the distance, the activity
+ * (climbing, crawling and swimming cost extra), Difficult Terrain, moving
+ * closer through a directional persistent area, and dragging Grappled
+ * creatures. A move's total distance is the sum of its parts.
+ */
+export type BattleMovementPathSegment = {
+  readonly distanceFeet: MovementFeet;
+  readonly activity: BattleMovementPathActivity;
+  readonly difficultTerrain: BattleMovementPathDifficultTerrain;
+  readonly movesCloserThroughDirectionalArea: boolean;
+  readonly draggedGrappledTargetIds: readonly CombatantId[];
+};
+export type BattleMovementPath =
+  ReadonlyNonEmptyArray<BattleMovementPathSegment>;
 export type BattleMovementFillValueCommon = {
   readonly speedKind: BattleMovementSpeedKind;
-  readonly movementCostFeet: MovementFeet;
+  readonly path: BattleMovementPath;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly acrobaticMovement?: BattleAcrobaticMovementFact;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly directionalPersistentAreaMovement?: BattleDirectionalPersistentAreaMovementFact;
-  readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
 };
 export type BattleOrdinaryMovementFillValue = BattleMovementFillValueCommon & {
@@ -1593,8 +1614,6 @@ export type BattleAreaDifficultTerrainSource =
 export type BattleAreaDifficultTerrainMovementFact = {
   readonly kind: "areaDifficultTerrain";
   readonly sources: readonly BattleAreaDifficultTerrainSource[];
-  readonly totalDistanceFeet: MovementFeet;
-  readonly difficultTerrainDistanceFeet: MovementFeet;
 };
 export type BattleDirectionalPersistentAreaMovementFact = {
   readonly kind: "directionalPersistentAreaMovement";
@@ -1603,16 +1622,6 @@ export type BattleDirectionalPersistentAreaMovementFact = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly areaId: BattleAreaId;
   readonly directionId: BattleLineDirectionId;
-  readonly totalDistanceFeet: MovementFeet;
-  readonly closerDistanceFeet: MovementFeet;
-};
-export type BattleGrappleDragMovementFact = {
-  readonly kind: "grappleDrag";
-  readonly totalDistanceFeet: MovementFeet;
-  readonly targets: ReadonlyNonEmptyArray<{
-    readonly targetId: CombatantId;
-    readonly distanceFeet: MovementFeet;
-  }>;
 };
 export type BattleCreatureSpaceTraversalMovementFact = {
   readonly kind: "occupiedCreatureSpaceTraversal";
@@ -1644,7 +1653,6 @@ export type BattleBrutalStrikeForcefulBlowMovementFact = {
 };
 export type BattleFixedCostMovementReplacementFact = {
   readonly kind: "fixedCostMovementReplacement";
-  readonly distanceFeet: MovementFeet;
   readonly landing: BattleJumpLandingFact;
 };
 export type BattleVerticalSuspensionAltitudeDirection = "up" | "down";
@@ -2316,7 +2324,6 @@ export type BattleResolvedMovement = {
   readonly spendsTurnMovement: boolean;
   readonly acrobaticMovement?: BattleAcrobaticMovementFact;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
-  readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
   readonly fixedCostMovementReplacement?: BattleFixedCostMovementReplacementFact;
   readonly controlledVerticalSuspensionMovement?: BattleControlledVerticalSuspensionMovementFact;

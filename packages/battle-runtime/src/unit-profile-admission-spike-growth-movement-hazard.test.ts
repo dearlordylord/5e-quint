@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME spike_growth
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spike-growth-movement-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
@@ -162,11 +163,7 @@ function spikeGrowthTargetTurnState(
 
 function areaMovementDistanceDamageAreaDifficultTerrain(
   hazard: SpikeGrowthHazardEffect,
-  input: {
-    readonly totalDistanceFeet: number;
-    readonly difficultTerrainDistanceFeet: number;
-    readonly damageDistanceFeet: number;
-  },
+  input: { readonly damageDistanceFeet: number },
 ): NonNullable<
   Extract<
     BattleFill,
@@ -185,11 +182,28 @@ function areaMovementDistanceDamageAreaDifficultTerrain(
         damageDistanceFeet: movementFeet(input.damageDistanceFeet),
       },
     ],
-    totalDistanceFeet: movementFeet(input.totalDistanceFeet),
-    difficultTerrainDistanceFeet: movementFeet(
-      input.difficultTerrainDistanceFeet,
-    ),
   };
+}
+
+/**
+ * A path through the Spike Growth: `difficultTerrainDistanceFeet` in the
+ * hazard's Difficult Terrain, then the rest of `totalDistanceFeet` outside it.
+ */
+function spikeGrowthMovementPath(input: {
+  readonly totalDistanceFeet: number;
+  readonly difficultTerrainDistanceFeet: number;
+  readonly activity?: "ordinary" | "crawling";
+}): ReturnType<typeof testMovementPath> {
+  const activity = input.activity ?? "ordinary";
+  const outside = input.totalDistanceFeet - input.difficultTerrainDistanceFeet;
+  const inside = {
+    distanceFeet: input.difficultTerrainDistanceFeet,
+    activity,
+    difficultTerrain: "areaDifficultTerrain",
+  } as const;
+  return outside > 0
+    ? testMovementPath(inside, { distanceFeet: outside, activity })
+    : testMovementPath(inside);
 }
 
 function withSpikeGrowthAreaDifficultTerrain(
@@ -205,6 +219,7 @@ function withSpikeGrowthAreaDifficultTerrain(
     ...fill,
     value: {
       ...fill.value,
+      path: spikeGrowthMovementPath(input),
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
         input,
@@ -482,7 +497,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -496,8 +514,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 damageDistanceFeet: movementFeet(5),
               },
             ],
-            totalDistanceFeet: movementFeet(10),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
         }),
       ],
@@ -516,7 +532,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         subject: moveSubject,
         fills: [
           movementFill(movement, {
-            movementCostFeet: 15,
+            path: testMovementPath(
+              { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+              { distanceFeet: 5 },
+            ),
             provokedOpportunityAttacks: [],
             areaDifficultTerrain: {
               kind: "areaDifficultTerrain",
@@ -530,8 +549,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                   damageDistanceFeet: movementFeet(5),
                 },
               ],
-              totalDistanceFeet: movementFeet(10),
-              difficultTerrainDistanceFeet: movementFeet(5),
             },
           }),
           damageRollFillWithGroups(damageHole, [[1, 1]]),
@@ -544,7 +561,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         "Move received a fill that does not match a pending area movement-distance damage movement damage hole.",
     });
     const movementThroughHazardFill = movementFill(movement, {
-      movementCostFeet: 15,
+      path: testMovementPath(
+        { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+        { distanceFeet: 5 },
+      ),
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: {
         kind: "areaDifficultTerrain",
@@ -558,8 +578,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
             damageDistanceFeet: movementFeet(5),
           },
         ],
-        totalDistanceFeet: movementFeet(10),
-        difficultTerrainDistanceFeet: movementFeet(5),
       },
     });
     const spikeGrowthDamageFill = damageRollFillWithGroups(damageHole, [
@@ -595,7 +613,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -609,8 +630,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 damageDistanceFeet: movementFeet(5),
               },
             ],
-            totalDistanceFeet: movementFeet(10),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
         }),
         damageRollFillWithGroups(damageHole, [[1, 1]]),
@@ -708,13 +727,14 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     );
     const hazard = requireSpikeGrowthHazard(state);
     const movement = movementFill(movementHole, {
-      movementCostFeet: 15,
+      path: spikeGrowthMovementPath({
+        totalDistanceFeet: 10,
+        difficultTerrainDistanceFeet: 5,
+      }),
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
         {
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
           damageDistanceFeet: 5,
         },
       ),
@@ -872,13 +892,14 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     );
     const hazard = requireSpikeGrowthHazard(movementTurn.state);
     const movementThroughHazard = movementFill(movement, {
-      movementCostFeet: 15,
+      path: spikeGrowthMovementPath({
+        totalDistanceFeet: 10,
+        difficultTerrainDistanceFeet: 5,
+      }),
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
         {
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
           damageDistanceFeet: 5,
         },
       ),
@@ -1038,15 +1059,14 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       "movement",
     );
     const movement = movementFill(movementHole, {
-      movementCostFeet: 15,
+      path: spikeGrowthMovementPath({
+        totalDistanceFeet: 10,
+        difficultTerrainDistanceFeet: 5,
+      }),
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         requireSpikeGrowthHazard(state),
-        {
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
-          damageDistanceFeet: 5,
-        },
+        { damageDistanceFeet: 5 },
       ),
     });
     const fills = [healingRoll, use, healFirst, movement];
@@ -1244,13 +1264,15 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       requireCombatant(movementTurn.state, spellTargetId).conditions.prone,
     ).toBe(true);
     const movementThroughHazard = movementFill(movement, {
-      movementCostFeet: 25,
+      path: spikeGrowthMovementPath({
+        totalDistanceFeet: 10,
+        difficultTerrainDistanceFeet: 5,
+        activity: "crawling",
+      }),
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
         {
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
           damageDistanceFeet: 5,
         },
       ),
@@ -1349,13 +1371,14 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       "movement",
     );
     const movementThroughHazard = movementFill(movement, {
-      movementCostFeet: 15,
+      path: spikeGrowthMovementPath({
+        totalDistanceFeet: 10,
+        difficultTerrainDistanceFeet: 5,
+      }),
       provokedOpportunityAttacks: [],
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
         {
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
           damageDistanceFeet: 5,
         },
       ),
@@ -1468,7 +1491,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         subject: moveSubject,
         fills: [
           movementFill(movement, {
-            movementCostFeet: 25,
+            path: testMovementPath(
+              { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+              { distanceFeet: 15 },
+            ),
             provokedOpportunityAttacks: [],
             areaDifficultTerrain: {
               kind: "areaDifficultTerrain",
@@ -1482,8 +1508,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                   damageDistanceFeet: movementFeet(20),
                 },
               ],
-              totalDistanceFeet: movementFeet(20),
-              difficultTerrainDistanceFeet: movementFeet(5),
             },
           }),
         ],
@@ -1491,7 +1515,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "area movement-distance damage movement damage distance cannot exceed Difficult Terrain distance.",
+        "area movement-distance damage movement damage distance cannot exceed the path's area Difficult Terrain distance.",
     });
   });
 
@@ -1579,7 +1603,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: {
             kind: "areaDifficultTerrain",
@@ -1600,8 +1627,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 areaId: webAreaId,
               },
             ],
-            totalDistanceFeet: movementFeet(10),
-            difficultTerrainDistanceFeet: movementFeet(5),
           },
         }),
       ],
@@ -1640,7 +1665,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       fills: [
         withSpikeGrowthAreaDifficultTerrain(
           executeCompelledApproachMovementFill(movement, {
-            movementCostFeet: 15,
+            distanceFeet: 15,
             movedWithinFiveFeetOfCaster: false,
             provokedOpportunityAttacks: [],
           }),
@@ -1691,7 +1716,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       fills: [
         withSpikeGrowthAreaDifficultTerrain(
           executeCompelledFleeMovementFill(movement, {
-            movementCostFeet: 30,
+            distanceFeet: 30,
             provokedOpportunityAttacks: [],
           }),
           hazard,
@@ -1808,11 +1833,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       subject: jumpAct.subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 15,
+          path: spikeGrowthMovementPath({
+            totalDistanceFeet: 10,
+            difficultTerrainDistanceFeet: 5,
+          }),
           provokedOpportunityAttacks: [],
           fixedCostMovementReplacement: {
             kind: "fixedCostMovementReplacement",
-            distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
               difficultTerrainAcrobatics: "notRequired",
@@ -1821,8 +1848,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
             hazard,
             {
-              totalDistanceFeet: 10,
-              difficultTerrainDistanceFeet: 5,
               damageDistanceFeet: 5,
             },
           ),
@@ -1896,13 +1921,14 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       subject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 15,
+          path: spikeGrowthMovementPath({
+            totalDistanceFeet: 10,
+            difficultTerrainDistanceFeet: 5,
+          }),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
             hazard,
             {
-              totalDistanceFeet: 10,
-              difficultTerrainDistanceFeet: 5,
               damageDistanceFeet: 5,
             },
           ),
@@ -1931,7 +1957,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       "movement",
     );
     const movement = movementFill(movementHole, {
-      movementCostFeet: 15,
+      path: spikeGrowthMovementPath({
+        totalDistanceFeet: 10,
+        difficultTerrainDistanceFeet: 5,
+      }),
       provokedOpportunityAttacks: [
         {
           reactorId: spellCasterId,
@@ -1948,8 +1977,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
         hazard,
         {
-          totalDistanceFeet: 10,
-          difficultTerrainDistanceFeet: 5,
           damageDistanceFeet: 5,
         },
       ),

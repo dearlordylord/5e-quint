@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-shield
 
@@ -371,7 +372,7 @@ describe("Shield Reaction spell", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: attackerThreeId,
@@ -1221,7 +1222,7 @@ function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["speedKind"];
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -1233,7 +1234,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };

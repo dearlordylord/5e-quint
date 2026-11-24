@@ -63,7 +63,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: skeletonId,
@@ -224,7 +224,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
       subject: firstMoveSubject,
       fills: [
         movementFill(firstMovement, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: goblinId,
@@ -348,7 +348,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
       subject: secondMoveSubject,
       fills: [
         movementFill(secondMovement, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: goblinId,

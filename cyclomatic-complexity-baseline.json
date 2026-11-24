@@ -239,13 +239,10 @@
       "module/binding:resolveMonkFocusOption": 11
     },
     "packages/battle-runtime/src/battle-reducer/movement-procedures.ts": {
-      "module/binding:parseBattleMovement": 26,
+      "module/binding:parseBattleMovement": 25,
       "module/binding:resolveFixedCostMovementReplacementCommand": 12,
       "module/binding:resolveMoveCommand": 9,
-      "module/binding:resolveMovementEffectsAfterMovement": 16,
-      "module/binding:validateAreaDifficultTerrainMovementFact": 18,
-      "module/binding:validateGrappleDragMovementFact": 13,
-      "module/binding:validateMovementCostFacts": 21
+      "module/binding:resolveMovementEffectsAfterMovement": 16
     },
     "packages/battle-runtime/src/battle-reducer/movement-routes.ts": {
       "module/binding:creatureSpaceMovementPermissionRouteForResolution": 12,

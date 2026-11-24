@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE monk_heightened_focus
@@ -1368,11 +1369,10 @@ function fixedCostMovementReplacementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(10),
+      path: ordinaryMovementPath(movementFeet(distanceFeet)),
       provokedOpportunityAttacks: [],
       fixedCostMovementReplacement: {
         kind: "fixedCostMovementReplacement",
-        distanceFeet: movementFeet(distanceFeet),
         landing: {
           kind: "legalLanding",
           difficultTerrainAcrobatics: "notRequired",

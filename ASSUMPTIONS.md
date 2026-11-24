@@ -352,3 +352,36 @@ where that attack originates. `.references/srd-5.2.1/playing-the-game.md`,
 "Cover," says a target benefits from cover only "when an attack or other effect
 originates on the opposite side of the cover." The model reads the leap as
 travelling from the previous target, so the attack originates there.
+
+## A61: A Prone Levitated creature can't move along a path
+
+**Assumption:** A creature that is both Prone and the target of Levitate has no
+movement along a path. It can still spend movement to right itself.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Prone,"
+says: "Your only movement options are to crawl or to spend an amount of
+movement equal to half your Speed (round down) to right yourself."
+`.references/srd-5.2.1/spells.md`, "Levitate," says the target "can move only
+by pushing or pulling against a fixed object or surface within reach ..., which
+allows it to move as if it were climbing." Each rule names the only movement
+the creature has, and the SRD doesn't say how they combine. The model applies
+both limits, and no movement is both crawling and climbing, so every path is
+refused while righting itself stays available. The QNT owner is
+`moveLevitatedTargetWithWitness` in `battle-runtime-levitate-creature.qnt`.
+
+## A62: A Jump spends its fixed movement whatever its path crosses
+
+**Assumption:** A creature that jumps with the Jump spell spends exactly 10
+feet of movement, even when its path crosses Difficult Terrain, a spell's
+Difficult Terrain, or a Gust of Wind Line it moves closer through. The areas'
+other effects, such as damage for each distance moved, still apply.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Jump," says the
+creature "can jump up to 30 feet by spending 10 feet of movement," a fixed
+spend rather than a cost per foot. `.references/srd-5.2.1/rules-glossary.md`,
+"Long Jump," says only that landing in Difficult Terrain needs a DC 10
+Dexterity (Acrobatics) check, so a jump doesn't pay Difficult Terrain's extra
+foot for each foot it passes over. The SRD doesn't say whether a surcharge for
+each foot moved, such as Gust of Wind's, changes the fixed spend. The model
+treats every such surcharge alike and leaves the spend at 10 feet. The QNT
+owner is `battle-runtime-jump-movement.qnt`, which admits only that spend.

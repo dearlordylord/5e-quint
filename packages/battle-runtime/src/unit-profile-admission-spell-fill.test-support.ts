@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { Match } from "effect";
 import { movementFeet, type DamageType } from "@dnd/shared/types";
@@ -1523,7 +1524,7 @@ export function singleTargetSavingThrowOutcomeFill(
 export function executeCompelledApproachMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly movedWithinFiveFeetOfCaster: boolean;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
@@ -1536,7 +1537,7 @@ export function executeCompelledApproachMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       compelledApproach: {
         kind: "compelledApproachShortestDirectRouteTowardSource",
@@ -1549,7 +1550,7 @@ export function executeCompelledApproachMovementFill(
 export function executeCompelledFleeMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -1561,7 +1562,7 @@ export function executeCompelledFleeMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       compelledFlee: {
         kind: "compelledFleeFastestAvailableRouteAwayFromSource",

@@ -15,6 +15,7 @@ import {
   grappleOutcomeFill,
   grapplerUnitRefs,
   movementFill,
+  testMovementPath,
   movementFeet,
   requireHole,
   requireResolved,
@@ -149,18 +150,11 @@ function projectFastWrestlerExemptsSameSizeDragCost(): GrapplerProjection {
     subject: moveSubject,
     fills: [
       movementFill(moveHole, {
-        movementCostFeet: 10,
+        path: testMovementPath({
+          distanceFeet: 10,
+          draggedGrappledTargetIds: [goblinId],
+        }),
         provokedOpportunityAttacks: [],
-        grappleDrag: {
-          kind: "grappleDrag",
-          totalDistanceFeet: movementFeet(10),
-          targets: [
-            {
-              targetId: goblinId,
-              distanceFeet: movementFeet(10),
-            },
-          ],
-        },
       }),
     ],
   });

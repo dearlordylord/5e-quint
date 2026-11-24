@@ -82,8 +82,11 @@ module battleRuntimeJumpMovement {
     jumpDistance: int,
     landing: JumpMovementLandingFact
   ): BattleState =
+    // Rules Glossary "Prone": a Prone creature's only movement options are to
+    // crawl or to right itself, so it can't jump.
     if (
       currentActor(state) == Fighter and
+      not(state.fighter.prone) and
       fixedCostMovementReplacementUseAdmitted(
         movementCost,
         10,

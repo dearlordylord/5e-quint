@@ -507,6 +507,8 @@ export {
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
+  type BattleMovementPathActivity,
+  type BattleMovementPathDifficultTerrain,
   type BattleObjectDamageComponent,
   type BattleObjectIgnitionDisposition,
   type BattleObjectIgnitionOutcome,

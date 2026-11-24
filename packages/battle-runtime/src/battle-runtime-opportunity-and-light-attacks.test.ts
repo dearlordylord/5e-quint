@@ -173,7 +173,7 @@ function resolveGoblinOpportunityAttackDamage(input: {
     subject: moveSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [input.threat],
       }),
     ],
@@ -244,7 +244,7 @@ function startFighterUnarmedOpportunityAttack(state: BattleState) {
     subject: moveSubject,
     fills: [
       movementFill(moveHole, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           fighterUnarmedOpportunityAttackThreat(state),
         ],
@@ -1347,7 +1347,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject,
       fills: [
         movementFill(hole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -1603,7 +1603,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         subject,
         fills: [
           movementFill(hole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
@@ -1631,7 +1631,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       "movement",
     );
     const staleMovementValue = {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
       provokesOpportunityAttacks: false,
     };
@@ -1675,7 +1675,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject,
       fills: [
         movementFill(hole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -1729,7 +1729,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -2091,7 +2091,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       "movement",
     );
     const movementWithProcedureRefs = movementFill(moveHole, {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [
         {
           reactorId,
@@ -2106,7 +2106,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       ],
     });
     const movementWithReorderedProcedureRefs = movementFill(moveHole, {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [
         {
           reactorId,
@@ -2121,7 +2121,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       ],
     });
     const movementWithChangedMultiplicity = movementFill(moveHole, {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [
         {
           reactorId,
@@ -2229,7 +2229,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -2356,7 +2356,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -2528,7 +2528,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -2661,7 +2661,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -2779,7 +2779,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],
@@ -2888,7 +2888,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [goblinOpportunityAttackThreat(state)],
         }),
       ],

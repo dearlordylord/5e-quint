@@ -433,7 +433,7 @@ test("roundtrips a runtime-produced Wild Shape Opportunity Attack frontier", () 
     subject: moveSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           {
             reactorId: druidId,

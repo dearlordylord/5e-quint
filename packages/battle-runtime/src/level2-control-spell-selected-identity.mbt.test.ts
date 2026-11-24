@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -466,7 +467,10 @@ function spikeGrowthMovementFill(
   >,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
-    movementCostFeet: 15,
+    path: testMovementPath(
+      { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+      { distanceFeet: 5 },
+    ),
     provokedOpportunityAttacks: [],
     areaDifficultTerrain: {
       kind: "areaDifficultTerrain",
@@ -480,8 +484,6 @@ function spikeGrowthMovementFill(
           damageDistanceFeet: movementFeet(5),
         },
       ],
-      totalDistanceFeet: movementFeet(10),
-      difficultTerrainDistanceFeet: movementFeet(5),
     },
   });
 }

@@ -31,6 +31,35 @@ export const BATTLE_MOVEMENT_SPEED_KINDS = [
 ] as const;
 export type BattleMovementSpeedKind =
   (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
+/**
+ * How a creature moves along one part of its path. SRD 5.2.1 "Movement and
+ * Position": a move can combine climbing, crawling and swimming with regular
+ * movement; each of those costs 1 extra foot per foot ("Climbing",
+ * "Crawling", "Swimming" in the Rules Glossary), and climbing or swimming
+ * ignores that cost when the creature uses its Climb or Swim Speed.
+ */
+export const BATTLE_MOVEMENT_PATH_ACTIVITIES = [
+  "ordinary",
+  "climbing",
+  "swimming",
+  "crawling",
+] as const;
+export type BattleMovementPathActivity =
+  (typeof BATTLE_MOVEMENT_PATH_ACTIVITIES)[number];
+/**
+ * Whether a part of the path is Difficult Terrain, as the table adjudicates
+ * it. Difficult Terrain isn't cumulative (SRD 5.2.1 Rules Glossary), so a
+ * space is either Difficult Terrain or not; `areaDifficultTerrain` marks the
+ * feet inside the spell areas the movement's `areaDifficultTerrain` fact
+ * cites, and `tableTerrain` marks any other Difficult Terrain.
+ */
+export const BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN = [
+  "none",
+  "tableTerrain",
+  "areaDifficultTerrain",
+] as const;
+export type BattleMovementPathDifficultTerrain =
+  (typeof BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN)[number];
 export const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",

@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import * as Result from "effect/Result";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -234,7 +235,7 @@ function malformedMovementFill(
   holeId: Extract<BattleFill, { readonly kind: "movement" }>["holeId"],
   value: BattleMovementFillValue = {
     speedKind: "walk",
-    movementCostFeet: movementFeet(0),
+    path: ordinaryMovementPath(movementFeet(0)),
     provokedOpportunityAttacks: [],
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
@@ -360,7 +361,7 @@ function forcefulBlowMovementFill(
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   const value: Extract<BattleFill, { readonly kind: "movement" }>["value"] = {
     speedKind: "walk",
-    movementCostFeet: movementFeet(0),
+    path: ordinaryMovementPath(movementFeet(0)),
     provokedOpportunityAttacks: [],
     additionalSpeedSegments: [],
     brutalStrikeForcefulBlow: {

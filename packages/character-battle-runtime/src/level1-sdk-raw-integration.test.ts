@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "@dnd/battle-runtime";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
@@ -81,6 +82,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   resourceCount,
+  type MovementFeet,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Option } from "effect";
@@ -2671,7 +2673,7 @@ function assertLevelOneDissonantWhispers(input: {
         failedSaveFill,
         damageRollFillWithGroups(failedDamage, [[3, 4, 5]]),
         walkMovementFill(movement, {
-          movementCostFeet: walkMovementBudget,
+          distanceFeet: walkMovementBudget,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -9419,10 +9421,7 @@ function requireMovementSpeedBudget(
 function walkMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["movementCostFeet"];
+    readonly distanceFeet: MovementFeet;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -9434,7 +9433,7 @@ function walkMovementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: value.movementCostFeet,
+      path: ordinaryMovementPath(value.distanceFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };

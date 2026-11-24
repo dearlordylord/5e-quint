@@ -98,7 +98,8 @@
         "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
         "scripts/raw-swarm/sdk-player/scenario-session.ts",
         "packages/battle-runtime/src/battle-reducer/drop-prone-policy.ts",
-        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-path.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1167,7 +1168,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-path.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

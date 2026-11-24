@@ -406,7 +406,7 @@ describe("Admin Mirror publisher", () => {
       handleToolCall(root, "fill_battle_hole", {
         subject: movement.subject,
         fill: movementFill(movementHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: goblinId,

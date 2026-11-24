@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
@@ -262,8 +263,6 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           areaId: webAreaId,
         },
       ],
-      totalDistanceFeet: movementFeet(10),
-      difficultTerrainDistanceFeet: movementFeet(5),
     };
 
     expect(
@@ -272,7 +271,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         subject: moveSubject,
         fills: [
           movementFill(moveHole, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
             areaDifficultTerrain: webDifficultTerrain,
           }),
@@ -281,7 +280,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain.",
+        "Area Difficult Terrain movement fact requires a movement path segment in that area's Difficult Terrain.",
     });
 
     const moved = resolveBattleSubject({
@@ -289,7 +288,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain: webDifficultTerrain,
         }),
