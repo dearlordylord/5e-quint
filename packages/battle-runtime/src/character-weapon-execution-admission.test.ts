@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -8,8 +9,8 @@ import { battleObjectId } from "./identity.ts";
 import { admitWeaponDefinition } from "./procedure-admission/weapon-definition.ts";
 import { unitLibrary } from "./battle-runtime.test-support.ts";
 
-function longswordDefinition() {
-  const weapon = unitLibrary.requireUnit("weapon_longsword");
+function weaponDefinition(weaponUnitId: string) {
+  const weapon = unitLibrary.requireUnit(weaponUnitId);
   if (weapon.kind !== "weapon") throw new Error("Expected weapon fixture.");
   const admission = admitWeaponDefinition({
     weapon,
@@ -19,6 +20,10 @@ function longswordDefinition() {
     throw new Error(admission.issues.map(({ message }) => message).join(" "));
   }
   return { weapon, admission };
+}
+
+function longswordDefinition() {
+  return weaponDefinition("weapon_longsword");
 }
 
 describe("character weapon execution binding", () => {
@@ -31,8 +36,10 @@ describe("character weapon execution binding", () => {
       weaponMasteries: [],
     });
 
-    expect(execution).not.toHaveProperty("masteryProperty");
-    expect(execution.weaponUnitId).toBe(weapon.id);
+    expect(execution).toMatchObject({ success: { weaponUnitId: weapon.id } });
+    expect(Result.isSuccess(execution) && execution.success).not.toHaveProperty(
+      "masteryProperty",
+    );
   });
 
   test("retains the admitted mastery property when the weapon is selected", () => {
@@ -45,8 +52,7 @@ describe("character weapon execution binding", () => {
     });
 
     expect(execution).toMatchObject({
-      weaponUnitId: weapon.id,
-      masteryProperty: "sap",
+      success: { weaponUnitId: weapon.id, masteryProperty: "sap" },
     });
   });
 
@@ -62,8 +68,37 @@ describe("character weapon execution binding", () => {
         weaponMasteries: [],
       }),
     ).toMatchObject({
-      weaponObjectId: objectId,
-      weapon: { weaponUnitId: weapon.id },
+      success: {
+        weaponObjectId: objectId,
+        weapon: { weaponUnitId: weapon.id },
+      },
     });
+  });
+
+  test("binds a weapon whose mastery Battle lacks for ordinary use, and refuses that mastery when selected", () => {
+    const { weapon, admission } = weaponDefinition("weapon_dagger");
+    expect(admission).toMatchObject({ masterySupport: "unsupported" });
+
+    const ordinary = bindCharacterWeaponExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition: admission,
+      weaponMasteries: [],
+    });
+    expect(ordinary).toMatchObject({ success: { weaponUnitId: weapon.id } });
+    expect(Result.isSuccess(ordinary) && ordinary.success).not.toHaveProperty(
+      "masteryProperty",
+    );
+
+    const selected = bindCharacterWeaponExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition: admission,
+      weaponMasteries: [{ weaponUnitId: weapon.id }],
+    });
+    expect(Result.isFailure(selected)).toBe(true);
+    expect(Result.isFailure(selected) && selected.failure).toEqual(
+      admission.masterySupport === "unsupported"
+        ? admission.resolvedMastery.issues
+        : [],
+    );
   });
 });

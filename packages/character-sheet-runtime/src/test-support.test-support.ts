@@ -34,6 +34,7 @@ import {
   resourceCount,
   spellSlotLevel,
   type ReadonlyNonEmptyArray,
+  type WeaponGrip,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -1152,6 +1153,7 @@ export function armorClassBuild(input: {
   readonly armor?: string;
   readonly shield?: boolean;
   readonly weapon?: string;
+  readonly weaponGrip?: WeaponGrip;
   readonly offHandWeapon?: string;
   readonly features?: CharacterBuild["features"];
 }): CharacterBuild {
@@ -1256,7 +1258,12 @@ export function armorClassBuild(input: {
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
         ...(weaponItemId === undefined
           ? {}
-          : { weapon: { itemId: weaponItemId, grip: "one_handed" } }),
+          : {
+              weapon: {
+                itemId: weaponItemId,
+                grip: input.weaponGrip ?? "one_handed",
+              },
+            }),
         ...(offHandWeaponItemId === undefined
           ? {}
           : { offHandWeapon: { itemId: offHandWeaponItemId } }),

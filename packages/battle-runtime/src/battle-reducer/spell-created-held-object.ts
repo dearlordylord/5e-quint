@@ -7,7 +7,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { combatantHandUses } from "./creature-state-leaves.ts";
+import { firstFreeHand } from "./creature-state-leaves.ts";
 
 import {
   SPELL_CREATED_HELD_OBJECT_HAND_USE,
@@ -30,10 +30,7 @@ export function spellCreatedHeldObjectFreeHand(
   if (actor === undefined) {
     return undefined;
   }
-  const hands = combatantHandUses(state, actor, state.grapples);
-  if (hands.left === "free") return "left";
-  if (hands.right === "free") return "right";
-  return undefined;
+  return firstFreeHand(state, actor, state.grapples);
 }
 
 export function battleCreatureWithSpellCreatedHeldObjectHand(

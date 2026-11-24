@@ -81,6 +81,7 @@ import {
   resourceCount,
   spellSlotLevel,
   type ReadonlyNonEmptyArray,
+  type WeaponGrip,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -101,6 +102,7 @@ import {
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import {
   battleWeaponDefinitionAdmissionIssues,
+  characterBattleWeaponMasterySelections,
   type BattleSupportProfileIssue,
   type BattleWeaponDefinitionAdmissionIssue,
 } from "./battle-support-profiles.ts";
@@ -556,10 +558,16 @@ export type CharacterWeaponAttackActionOptions = {
 
 export const CHARACTER_WEAPON_ATTACK_SLOTS = ["main", "offHand"] as const;
 
-type CharacterWeaponLoadoutRequest = {
-  readonly slot: (typeof CHARACTER_WEAPON_ATTACK_SLOTS)[number];
-  readonly itemId: CharacterEquipmentItemId;
-};
+type CharacterWeaponLoadoutRequest =
+  | {
+      readonly slot: "main";
+      readonly itemId: CharacterEquipmentItemId;
+      readonly grip: WeaponGrip;
+    }
+  | {
+      readonly slot: "offHand";
+      readonly itemId: CharacterEquipmentItemId;
+    };
 
 type CharacterWeaponLoadoutProjection =
   | {
@@ -579,7 +587,13 @@ function characterWeaponLoadoutRequests(
   return [
     ...(loadoutWeapon === undefined
       ? []
-      : [{ slot: "main" as const, itemId: loadoutWeapon.itemId }]),
+      : [
+          {
+            slot: "main" as const,
+            itemId: loadoutWeapon.itemId,
+            grip: loadoutWeapon.grip,
+          },
+        ]),
     ...(offHandLoadoutWeapon === undefined
       ? []
       : [{ slot: "offHand" as const, itemId: offHandLoadoutWeapon.itemId }]),
@@ -812,11 +826,20 @@ function projectCharacterWeaponLoadoutRequest(
   if (admitted.success.definition === null)
     return Result.succeed({ slot: "main", attack: null });
   const { weapon, definition } = admitted.success.definition;
-  const executionWeapon = bindCharacterWeaponExecutionWeapon({
+  const boundWeapon = bindCharacterWeaponExecutionWeapon({
     weaponUnitId: weapon.id,
     definition,
     weaponMasteries: input.weaponMasteries,
   });
+  if (Result.isFailure(boundWeapon)) {
+    return battleCreatureInitIssueFromLeaves(
+      battleWeaponDefinitionAdmissionIssues(weapon.id, boundWeapon.failure),
+    );
+  }
+  const grippedWeapon = weaponWithGripDamage(boundWeapon.success, request);
+  if (Result.isFailure(grippedWeapon))
+    return Result.fail(grippedWeapon.failure);
+  const executionWeapon = grippedWeapon.success;
 
   const weaponAttackAbilitySelection = characterWeaponAttackAbilitySelection(
     executionWeapon,
@@ -1035,15 +1058,60 @@ type CharacterEquippedWeaponBattleBlocker = {
   readonly weaponDefinitionAdmittedOwnedAlternatives: readonly CharacterEquipmentItemId[];
 };
 
+/**
+ * Whether Battle can use the weapon a loadout request names, for the
+ * character's selected Weapon Masteries: its definition is admitted, and any
+ * mastery selected for it is supported.
+ */
+function characterWeaponBattleUse(input: {
+  readonly request: CharacterWeaponLoadoutRequest;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+}): Result.Result<
+  CharacterWeaponDefinitionProjection,
+  BattleCreatureInitIssue
+> {
+  const admitted = characterWeaponDefinitionForBattle(input);
+  if (Result.isFailure(admitted) || admitted.success.definition === null) {
+    return admitted;
+  }
+  const { weapon, definition } = admitted.success.definition;
+  const bound = bindCharacterWeaponExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    weaponMasteries: input.weaponMasteries,
+  });
+  return Result.isFailure(bound)
+    ? battleCreatureInitIssueFromLeaves(
+        battleWeaponDefinitionAdmissionIssues(weapon.id, bound.failure),
+      )
+    : admitted;
+}
+
 export function characterBuildEquippedWeaponBattleBlockers(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): readonly CharacterEquippedWeaponBattleBlocker[] {
-  return characterWeaponLoadoutRequests(input.build).flatMap((request) => {
+}): Result.Result<
+  readonly CharacterEquippedWeaponBattleBlocker[],
+  BattleCreatureInitIssue
+> {
+  const weaponMasteries = characterBattleWeaponMasterySelections(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Result.isFailure(weaponMasteries)) {
+    return battleSupportProfileIssuesToBattleCreatureInitIssue(
+      weaponMasteries.failure,
+    );
+  }
+  const blockers = characterWeaponLoadoutRequests(
+    input.build,
+  ).flatMap<CharacterEquippedWeaponBattleBlocker>((request) => {
     const source = characterEquipmentItemSourceFromId(request.itemId);
-    const admission = characterWeaponDefinitionForBattle({
+    const admission = characterWeaponBattleUse({
       request,
       unitLibrary: input.unitLibrary,
+      weaponMasteries: weaponMasteries.success,
     });
     if (Result.isSuccess(admission)) return [];
     return [
@@ -1061,9 +1129,10 @@ export function characterBuildEquippedWeaponBattleBlockers(input: {
               return [];
             const candidate = characterEquipmentItemSourceFromId(item.itemId);
             if (candidate.slot !== source.slot) return [];
-            const alternative = characterWeaponDefinitionForBattle({
+            const alternative = characterWeaponBattleUse({
               request: { ...request, itemId: item.itemId },
               unitLibrary: input.unitLibrary,
+              weaponMasteries: weaponMasteries.success,
             });
             return Result.isSuccess(alternative) &&
               alternative.success.definition !== null
@@ -1073,6 +1142,7 @@ export function characterBuildEquippedWeaponBattleBlockers(input: {
       },
     ];
   });
+  return Result.succeed(blockers);
 }
 
 function characterMartialArtsWeaponAttack(
@@ -1428,6 +1498,42 @@ function martialArtsChosenAbility<FallbackAbility extends Ability>(
   return dexModifier >= fallbackModifier
     ? { ability: "dex", modifier: dexModifier }
     : { ability: fallbackAbility, modifier: fallbackModifier };
+}
+
+/**
+ * "A Versatile weapon can be used with one or two hands. ... The weapon deals
+ * that damage when used with two hands to make a melee attack." (SRD 5.2.1,
+ * Weapon properties). Battle takes the grip from the loadout, so the main-hand
+ * melee attack of a weapon held with the `two_handed` grip deals the damage
+ * the Versatile property names. Martial Arts then compares its die against
+ * that damage.
+ */
+function weaponWithGripDamage(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+  request: CharacterWeaponLoadoutRequest,
+): Result.Result<
+  CharacterWeaponAttackActionOption["weapon"],
+  BattleCreatureInitIssue
+> {
+  if (
+    request.slot !== "main" ||
+    request.grip !== "two_handed" ||
+    weapon.usage !== "melee"
+  ) {
+    return Result.succeed(weapon);
+  }
+  const versatile = weapon.properties.find(
+    (property) => property.kind === "versatile",
+  );
+  if (versatile === undefined) return Result.succeed(weapon);
+  /* v8 ignore start -- @preserve -- Unsupported authored data: every Versatile weapon in the catalog names dice damage for two hands. */
+  if (versatile.damage.kind !== "dice") {
+    return battleCreatureInitIssue(
+      "Versatile weapon two-handed damage must be dice damage.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return Result.succeed({ ...weapon, damage: versatile.damage });
 }
 
 function weaponWithMartialArtsDamage(

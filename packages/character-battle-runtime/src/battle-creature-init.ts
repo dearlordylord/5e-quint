@@ -68,7 +68,7 @@ import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
-import { Match, Option, Result } from "effect";
+import { Equal, Match, Option, Result } from "effect";
 import {
   battleCreatureInitIssue,
   battleCreatureInitIssueFromLeaves,
@@ -288,12 +288,19 @@ function characterWeaponAndSupportAdmission(input: {
   );
   const weaponAttackOptions = characterBattleWeaponAttackOptions(input);
   if (Result.isFailure(support) && Result.isFailure(weaponAttackOptions)) {
-    const [firstSupportIssue, ...remainingSupportIssues] =
-      battleSupportProfileIssueLeaves(support.failure);
+    const supportIssues = battleSupportProfileIssueLeaves(support.failure);
+    const [firstSupportIssue, ...remainingSupportIssues] = supportIssues;
+    // A held weapon whose selected Weapon Mastery Battle refuses fails both
+    // routes with the same issue; report it once.
     return battleCreatureInitIssueFromLeaves([
       firstSupportIssue,
       ...remainingSupportIssues,
-      ...battleCreatureInitIssueLeaves(weaponAttackOptions.failure),
+      ...battleCreatureInitIssueLeaves(weaponAttackOptions.failure).filter(
+        (issue) =>
+          !supportIssues.some((supportIssue) =>
+            Equal.equals(supportIssue, issue),
+          ),
+      ),
     ]);
   }
   if (Result.isFailure(support)) {

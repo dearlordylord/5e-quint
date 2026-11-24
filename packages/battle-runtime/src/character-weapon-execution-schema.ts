@@ -55,3 +55,7 @@ export type WeaponExecutionFactsWithMasteryProperty = Extract<
   WeaponExecutionFacts,
   { readonly masteryProperty: WeaponMasteryName }
 >;
+export type WeaponExecutionFactsWithoutMasteryProperty = Exclude<
+  WeaponExecutionFacts,
+  { readonly masteryProperty: WeaponMasteryName }
+>;

@@ -488,6 +488,14 @@ function battleMasteryUnitAdmissionsForSelectedWeapons(
         ),
       );
     }
+    if (definition.masterySupport === "unsupported") {
+      return Result.fail(
+        battleWeaponDefinitionAdmissionIssues(
+          weapon.value.id,
+          definition.resolvedMastery.issues,
+        ),
+      );
+    }
     return Result.succeed({
       battleUnitRef: {
         unit: definition.resolvedMastery.unit,

@@ -311,3 +311,42 @@ creature that can't act may still interact during its move, or whether a
 Reaction, including readied movement, comes with a free interaction. The model
 ties the free interaction to a turn the creature can act on, and lets a
 readied interaction take only the action Ready held.
+
+## A58: Any weapon may be held with both hands
+
+**Assumption:** A loadout's main weapon has a grip. Any weapon may take the
+`two_handed` grip, and a Two-Handed weapon needs it. A `two_handed` grip
+occupies both hands, so the same loadout can't also hold a shield or an
+off-hand weapon, and neither hand is free for a grapple or a held object. A
+Versatile weapon deals its Versatile damage on a melee attack while it is held
+with the `two_handed` grip.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Two-Handed"
+says such a weapon "requires two hands when you attack with it", and
+"Versatile" says the weapon "can be used with one or two hands" and deals its
+Versatile damage "when used with two hands to make a melee attack". The SRD
+says when two hands are required, not that any other weapon can't be held in
+both.
+
+**Temporary implementation restriction (not a rules assumption):** Battle
+Runtime keeps the loadout's grip for the whole battle; a creature can't yet
+change grip during a battle. Changing grip in battle, and offering the starting
+grip in equipment setup, is tracked in
+[#669](https://github.com/dearlordylord/5e-quint/issues/669), which retires
+this restriction.
+
+## A64: A stat block's ammunition attack needs no free hand
+
+**Assumption:** Battle checks the free hand for loading only for a character's
+Ammunition weapon. A stat block attack that spends ammunition is offered
+whatever else the creature holds, as long as it carries the ammunition.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Ammunition,"
+says drawing the ammunition is part of the attack and that "you need a free
+hand to load a one-handed weapon." `.references/srd-5.2.1/monsters.md`,
+"Ammunition and Ranged Attacks," says only that a monster carries the
+ammunition it needs. A stat block lists its attacks, and sometimes its Gear,
+such as the Spy's Hand Crossbow and Shortsword in
+`.references/srd-5.2.1/monsters-A-Z.md`, but it never says what the creature
+holds in each hand when it attacks. The SRD gives no fact to test the free
+hand against, so Battle takes each stat block attack as usable as written.

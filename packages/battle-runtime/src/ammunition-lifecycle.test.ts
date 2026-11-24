@@ -1,5 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
-import { movementFeet, resourceCount } from "@dnd/shared/types";
+import { unitId as parseUnitId } from "@dnd/shared/game-facts";
+import {
+  difficultyClass,
+  movementFeet,
+  resourceCount,
+} from "@dnd/shared/types";
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { Result } from "effect";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -9,6 +15,7 @@ import {
   missingRequiredAmmunitionKinds,
   requiredAmmunitionKinds,
   battleAmmunitionStock,
+  ammunitionForAttackIsReady,
   spendAmmunitionForAcceptedAttack,
   spendAmmunitionForAcceptedAttackPendingContinuation,
 } from "./battle-ammunition.ts";
@@ -25,15 +32,26 @@ import {
   attackTargetFill,
   characterSeed,
   damageRollFill,
+  fighterId,
+  goblinId,
   readyTriggerDescriptionForTest,
   requireHole,
   skeletonId,
   skeletonCreatureInit,
   startBattleSessionRight,
   statBlockCreatureInit,
+  longbowWeaponMasterySelections,
+  testRangedCleaveLongbowAttack,
+  testRangedCleaveLongbowUnitRef,
+  testSlingAttack,
+  testSlingUnitRef,
   wizardId,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
+import { battleObjectId, battleTablePositionId } from "./identity.ts";
+import { battleCreatureWithSpellCreatedHeldObjectHand } from "./battle-reducer/spell-created-held-object.ts";
+import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
+import type { BattleState } from "./battle-state-execution.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   battleId,
@@ -511,5 +529,326 @@ describe("ammunition lifecycle", () => {
     expect(
       resolved.state.combatants.get(skeletonId)?.ammunitionStocks[0]?.remaining,
     ).toBe(resourceCount(19));
+  });
+
+  describe("loading a one-handed Ammunition weapon", () => {
+    // SRD "Ammunition": "Drawing the ammunition is part of the attack (you
+    // need a free hand to load a one-handed weapon)."
+    const sling = {
+      itemId: battleObjectId("main:weapon_sling"),
+      unitId: parseUnitId("weapon_sling"),
+      grip: "one_handed" as const,
+    };
+    const slingWielder = (withShield: boolean) =>
+      startBattleSessionRight({
+        battleId: battleId("battle-ammunition-free-hand"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: [testSlingUnitRef()],
+            attack: testSlingAttack(),
+            ammunitionStocks: [battleAmmunitionStock("sling_bullet", 20)],
+            selectedLoadout: withShield
+              ? {
+                  weapon: sling,
+                  shield: {
+                    itemId: battleObjectId("shield:equipment_shield"),
+                    unitId: parseUnitId("equipment_shield"),
+                  },
+                }
+              : { weapon: sling },
+            armorClass: {
+              ...defaultArmorClassState(),
+              leftHandUse: withShield ? "shield" : "free",
+              rightHandUse: "mainWeapon",
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }).state;
+    const weaponNames = (state: ReturnType<typeof slingWielder>) =>
+      attackActionOptionsForActor(state, fighterId).flatMap((attack) =>
+        attack.kind === "weapon" ? [attack.weapon.weaponUnitId] : [],
+      );
+
+    it("offers the attack while the other hand is free", () => {
+      expect(weaponNames(slingWielder(false))).toEqual(["weapon_sling"]);
+    });
+
+    it("withholds the attack while the other hand holds a shield", () => {
+      const state = slingWielder(true);
+      expect(weaponNames(state)).toEqual([]);
+      expect(
+        attackActionOptionsForActor(state, fighterId).map(
+          (attack) => attack.kind,
+        ),
+      ).toEqual(["unarmedStrike"]);
+    });
+
+    it("withholds the attack while the other hand grapples", () => {
+      const free = slingWielder(false);
+      const grappling = {
+        ...free,
+        grapples: [
+          {
+            grapplerId: fighterId,
+            targetId: goblinId,
+            escapeDc: difficultyClass(13),
+            reachFeet: movementFeet(5),
+            hand: "left" as const,
+          },
+        ],
+      };
+      expect(weaponNames(grappling)).toEqual([]);
+    });
+
+    // SRD "Two-Handed": "A Two-Handed weapon requires two hands when you
+    // attack with it." Its second hand also loads it.
+    const longbowWielder = (grappling: boolean) => {
+      const state = startBattleSessionRight({
+        battleId: battleId("battle-ammunition-two-handed-loading"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: [testRangedCleaveLongbowUnitRef()],
+            attack: testRangedCleaveLongbowAttack(),
+            weaponMasteries: longbowWeaponMasterySelections(),
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            selectedLoadout: {
+              weapon: {
+                itemId: battleObjectId("main:weapon_longbow"),
+                unitId: parseUnitId("weapon_longbow"),
+                grip: "two_handed",
+              },
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }).state;
+      return grappling
+        ? {
+            ...state,
+            grapples: [
+              {
+                grapplerId: fighterId,
+                targetId: goblinId,
+                escapeDc: difficultyClass(13),
+                reachFeet: movementFeet(5),
+                hand: "left" as const,
+              },
+            ],
+          }
+        : state;
+    };
+
+    it("offers a Two-Handed Ammunition weapon held in both hands", () => {
+      expect(weaponNames(longbowWielder(false))).toEqual(["weapon_longbow"]);
+    });
+
+    it("withholds a Two-Handed Ammunition weapon while its second hand grapples", () => {
+      expect(weaponNames(longbowWielder(true))).toEqual([]);
+    });
+
+    it("fires with both hands on the same bow and spends its ammunition", () => {
+      const state = longbowWielder(false);
+      const attack = attackActionOptionsForActor(state, fighterId).find(
+        (option) => option.kind === "weapon",
+      );
+      if (attack?.kind !== "weapon")
+        throw new Error("Expected Longbow attack.");
+      const subject = {
+        tag: "action" as const,
+        actorId: fighterId,
+        action: "attack" as const,
+        ...attackExecutionSelectionForOption(attack),
+      };
+      const target = requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      );
+      const targetChoice = attackTargetFill(
+        target,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForOption(attack),
+        [],
+        movementFeet(30),
+      );
+      const roll = requireHole(
+        resolveBattleSubject({ state, subject, fills: [targetChoice] }),
+        "attackRoll",
+      );
+      const fired = resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackRollFill(roll, { total: 1, naturalD20: 1 }),
+        ],
+      });
+      expect(fired.tag).toBe("resolved");
+      if (fired.tag !== "resolved")
+        throw new Error("Expected bow attack to resolve");
+      expect(fired.state.combatants.get(fighterId)?.ammunitionStocks).toEqual([
+        battleAmmunitionStock("arrow", 19),
+      ]);
+    });
+
+    it("cannot fire a one-handed weapon with a grapple in the attacking hand", () => {
+      const state = slingWielder(false);
+      const occupied = {
+        ...state,
+        grapples: [
+          {
+            grapplerId: fighterId,
+            targetId: goblinId,
+            escapeDc: difficultyClass(13),
+            reachFeet: movementFeet(5),
+            hand: "right" as const,
+          },
+        ],
+      };
+      expect(weaponNames(occupied)).toEqual([]);
+    });
+
+    it("does not treat a spell-created held object as a loading hand", () => {
+      const state = slingWielder(false);
+      const actor = state.combatants.get(fighterId);
+      if (actor === undefined) throw new Error("Expected Sling wielder.");
+      const occupied = {
+        ...state,
+        combatants: new Map(state.combatants).set(
+          fighterId,
+          battleCreatureWithSpellCreatedHeldObjectHand(actor, "left"),
+        ),
+      };
+      expect(weaponNames(occupied)).toEqual([]);
+    });
+
+    it.each(["left", "right"] as const)(
+      "refuses a Two-Handed Ammunition attack with a grapple in its %s hand",
+      (hand) => {
+        const state = longbowWielder(false);
+        const occupied = {
+          ...state,
+          grapples: [
+            {
+              grapplerId: fighterId,
+              targetId: goblinId,
+              escapeDc: difficultyClass(13),
+              reachFeet: movementFeet(5),
+              hand,
+            },
+          ],
+        };
+        expect(weaponNames(occupied)).toEqual([]);
+      },
+    );
+
+    it.each(["shield", "offWeapon", "spellCreatedHeldObject"] as const)(
+      "never counts foreign %s occupancy as operating the same Two-Handed weapon",
+      (foreignUse) => {
+        const state = longbowWielder(false);
+        const actor = state.combatants.get(fighterId);
+        if (actor === undefined) throw new Error("Expected Longbow wielder.");
+        // Adversarial readiness input: an unrelated occupancy must not become
+        // permission to operate the bow, even if a caller retains its grip.
+        const occupied: BattleState = {
+          ...state,
+          combatants: new Map(state.combatants).set(fighterId, {
+            ...actor,
+            armorClass: { ...actor.armorClass, leftHandUse: foreignUse },
+          }),
+        };
+        expect(weaponNames(occupied)).toEqual([]);
+      },
+    );
+
+    it("uses the actual off-hand weapon identity and still requires a free loading hand", () => {
+      const offHandWeaponId = battleObjectId("off:weapon_sling");
+      const state = startBattleSessionRight({
+        battleId: battleId("battle-ammunition-off-hand-readiness"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: [testSlingUnitRef()],
+            attack: null,
+            offHandAttack: {
+              ...testSlingAttack(),
+              weaponObjectId: offHandWeaponId,
+            },
+            ammunitionStocks: [battleAmmunitionStock("sling_bullet", 20)],
+            selectedLoadout: {
+              offHandWeapon: { itemId: offHandWeaponId, unitId: sling.unitId },
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }).state;
+      const actor = state.combatants.get(fighterId);
+      if (
+        actor?.origin.kind !== "character" ||
+        actor.origin.offHandAttack === undefined
+      ) {
+        throw new Error("Expected held off-hand weapon.");
+      }
+      expect(
+        ammunitionForAttackIsReady(state, actor, actor.origin.offHandAttack),
+      ).toBe(true);
+      for (const hand of ["left", "right"] as const) {
+        const occupied = battleCreatureWithSpellCreatedHeldObjectHand(
+          actor,
+          hand,
+        );
+        const occupiedState = {
+          ...state,
+          combatants: new Map(state.combatants).set(fighterId, occupied),
+        };
+        expect(
+          ammunitionForAttackIsReady(
+            occupiedState,
+            occupied,
+            actor.origin.offHandAttack,
+          ),
+        ).toBe(false);
+      }
+    });
+
+    it("requires custody of the same attacking weapon, not another selected weapon", () => {
+      const state = longbowWielder(false);
+      const actor = state.combatants.get(fighterId);
+      if (
+        actor?.origin.kind !== "character" ||
+        actor.origin.attack?.kind !== "weapon"
+      ) {
+        throw new Error("Expected character Longbow attack.");
+      }
+      expect(
+        ammunitionForAttackIsReady(state, actor, actor.origin.attack),
+      ).toBe(true);
+      expect(
+        ammunitionForAttackIsReady(state, actor, {
+          ...actor.origin.attack,
+          weaponObjectId: battleObjectId("synthetic:another-bow"),
+        }),
+      ).toBe(false);
+      const grounded = battleStateWithGroundObjects(state, [
+        {
+          actorId: fighterId,
+          objectId: actor.origin.attack.weaponObjectId,
+          positionId: battleTablePositionId("synthetic:bow-ground"),
+          source: {
+            kind: "spell",
+            sourceCombatantId: goblinId,
+            sourceProcedureRef: actor.origin.attack.procedureRef,
+          },
+        },
+      ]);
+      expect(grounded.tag).toBe("applied");
+      if (grounded.tag !== "applied") return;
+      expect(
+        ammunitionForAttackIsReady(grounded.state, actor, actor.origin.attack),
+      ).toBe(false);
+    });
   });
 });
