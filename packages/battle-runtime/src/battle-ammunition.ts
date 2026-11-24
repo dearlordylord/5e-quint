@@ -196,21 +196,20 @@ export function spendAmmunitionForAcceptedAttack(input: {
   readonly attack: BoundSupportedAttackActionOption;
 }): BattleState {
   const phase = input.state.subjectResolutionPhase;
-  const alreadySpent =
-    phase.kind === "subjectContinuation"
-      ? phase.acceptedAttackAmmunitionSpend
-      : undefined;
-  if (
-    phase.kind === "subjectContinuation" &&
-    alreadySpent?.actorId === input.actorId &&
-    boundAttackExecutionSelectionMatchesOption(
-      alreadySpent.attackSelection,
-      input.attack,
-    )
-  ) {
-    const { acceptedAttackAmmunitionSpend: _consumed, ...remainingPhase } =
-      phase;
-    return { ...input.state, subjectResolutionPhase: remainingPhase };
+  if (phase.kind === "subjectContinuation") {
+    const alreadySpent = phase.acceptedAttackAmmunitionSpend;
+    if (
+      alreadySpent !== undefined &&
+      alreadySpent.actorId === input.actorId &&
+      boundAttackExecutionSelectionMatchesOption(
+        alreadySpent.attackSelection,
+        input.attack,
+      )
+    ) {
+      const { acceptedAttackAmmunitionSpend: _consumed, ...remainingPhase } =
+        phase;
+      return { ...input.state, subjectResolutionPhase: remainingPhase };
+    }
   }
   const ammunition = ammunitionRequirementForAttack(input.attack);
   if (ammunition === null) return input.state;

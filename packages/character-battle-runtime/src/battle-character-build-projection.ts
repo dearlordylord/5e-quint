@@ -824,97 +824,103 @@ function projectCharacterWeaponLoadoutRequest(
   },
   request: CharacterWeaponLoadoutRequest,
 ): Result.Result<CharacterWeaponLoadoutProjection, BattleCreatureInitIssue> {
-  const admitted = characterWeaponDefinitionForBattle({
-    request,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
-  if (admitted.success.definition === null)
-    return Result.succeed({ slot: "main", attack: null });
-  const { weapon, definition } = admitted.success.definition;
-  const boundWeapon = bindCharacterWeaponExecutionWeapon({
-    weaponUnitId: weapon.id,
-    definition,
-    weaponMasteries: input.weaponMasteries,
-  });
-  if (Result.isFailure(boundWeapon)) {
-    return battleCreatureInitIssueFromLeaves(
-      battleWeaponDefinitionAdmissionIssues(weapon.id, boundWeapon.failure),
-    );
-  }
-  const gripDamage = admitWeaponMeleeGripDamage(
-    boundWeapon.success,
-    request.slot === "main" ? request.grip : "one_handed",
-  );
-  if (Result.isFailure(gripDamage))
-    return battleCreatureInitIssue(gripDamage.failure.message);
-  const executionWeapon = boundWeapon.success;
-
-  const weaponAttackAbilitySelection = characterWeaponAttackAbilitySelection(
-    executionWeapon,
-    input.build,
-  );
-  const weaponAttackAbility = weaponAttackAbilitySelection.selected;
-  const isProficient = input.weaponProficiencies.some((proficiency) =>
-    weaponMatchesProficiency(executionWeapon, proficiency),
-  );
-  const baseAttack = {
-    ...characterBattleCreatureInitWeaponAttack({
-      kind: "weapon",
-      weapon: executionWeapon,
-      ability: weaponAttackAbility.ability,
-      abilityModifier: weaponAttackAbility.modifier,
-      ...(isProficient
-        ? {
-            attackBonus: battleAttackBonus(
-              Number(weaponAttackAbility.modifier) +
-                Number(
-                  proficiencyBonusForCharacterLevel(
-                    characterBuildLevel(input.build),
-                  ),
-                ),
-            ),
-          }
-        : {}),
-      ...(weaponAttackAbilitySelection.tiedAlternate === undefined
-        ? {}
-        : {
-            alternateAbilityChoices: [
-              characterWeaponAttackAbilityChoice(
-                weaponAttackAbilitySelection.tiedAlternate,
-                input.build,
-                isProficient,
-              ),
-            ],
-          }),
+  return Result.flatMap(
+    characterWeaponDefinitionForBattle({
+      request,
+      unitLibrary: input.unitLibrary,
     }),
-    ability: weaponAttackAbility.ability,
-  } as const satisfies PhysicalAbilityWeaponAttack;
-  const martialArts = martialArtsAttackProjectionForBuild({
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-    classLevels: input.classLevels,
-  });
-  if (Result.isFailure(martialArts)) {
-    return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(martialArts.failure),
-    );
-  }
-  const projectedAttack = characterMartialArtsWeaponAttack(
-    baseAttack,
-    weapon,
-    input.build,
-    martialArts.success,
+    (
+      admitted,
+    ): Result.Result<
+      CharacterWeaponLoadoutProjection,
+      BattleCreatureInitIssue
+    > => {
+      if (admitted.definition === null)
+        return Result.succeed({ slot: "main", attack: null });
+      const { weapon, definition } = admitted.definition;
+      const boundWeapon = bindCharacterWeaponExecutionWeapon({
+        weaponUnitId: weapon.id,
+        definition,
+        weaponMasteries: input.weaponMasteries,
+      });
+      if (Result.isFailure(boundWeapon)) {
+        return battleCreatureInitIssueFromLeaves(
+          battleWeaponDefinitionAdmissionIssues(weapon.id, boundWeapon.failure),
+        );
+      }
+      const gripDamage = admitWeaponMeleeGripDamage(
+        boundWeapon.success,
+        request.slot === "main" ? request.grip : "one_handed",
+      );
+      if (Result.isFailure(gripDamage))
+        return battleCreatureInitIssue(gripDamage.failure.message);
+      const executionWeapon = boundWeapon.success;
+
+      const weaponAttackAbilitySelection =
+        characterWeaponAttackAbilitySelection(executionWeapon, input.build);
+      const weaponAttackAbility = weaponAttackAbilitySelection.selected;
+      const isProficient = input.weaponProficiencies.some((proficiency) =>
+        weaponMatchesProficiency(executionWeapon, proficiency),
+      );
+      const baseAttack = {
+        ...characterBattleCreatureInitWeaponAttack({
+          kind: "weapon",
+          weapon: executionWeapon,
+          ability: weaponAttackAbility.ability,
+          abilityModifier: weaponAttackAbility.modifier,
+          ...(isProficient
+            ? {
+                attackBonus: battleAttackBonus(
+                  Number(weaponAttackAbility.modifier) +
+                    Number(
+                      proficiencyBonusForCharacterLevel(
+                        characterBuildLevel(input.build),
+                      ),
+                    ),
+                ),
+              }
+            : {}),
+          ...(weaponAttackAbilitySelection.tiedAlternate === undefined
+            ? {}
+            : {
+                alternateAbilityChoices: [
+                  characterWeaponAttackAbilityChoice(
+                    weaponAttackAbilitySelection.tiedAlternate,
+                    input.build,
+                    isProficient,
+                  ),
+                ],
+              }),
+        }),
+        ability: weaponAttackAbility.ability,
+      } as const satisfies PhysicalAbilityWeaponAttack;
+      const martialArts = martialArtsAttackProjectionForBuild({
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        classLevels: input.classLevels,
+      });
+      if (Result.isFailure(martialArts)) {
+        return battleCreatureInitIssue(
+          battleCreatureInitIssueMessage(martialArts.failure),
+        );
+      }
+      const projectedAttack = characterMartialArtsWeaponAttack(
+        baseAttack,
+        weapon,
+        input.build,
+        martialArts.success,
+      );
+      return Result.succeed({
+        slot: admitted.slot,
+        attack: pactBladeWeaponAttack(
+          projectedAttack,
+          input.build,
+          request.itemId,
+          input.pactBladeBondedWeaponItemId,
+        ),
+      });
+    },
   );
-  return Result.succeed({
-    slot: admitted.success.slot,
-    attack: pactBladeWeaponAttack(
-      projectedAttack,
-      input.build,
-      request.itemId,
-      input.pactBladeBondedWeaponItemId,
-    ),
-  });
 }
 
 type PhysicalWeaponAttackAbility = {
