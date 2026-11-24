@@ -149,7 +149,7 @@ describe("battle runtime: Cover on creature targets", () => {
         subject,
         fills: [
           movementFill(moveHole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               withCover(
                 {
@@ -196,7 +196,7 @@ describe("battle runtime: Cover on creature targets", () => {
       subject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: goblinId,

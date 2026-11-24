@@ -1233,7 +1233,7 @@ describe("battle runtime: thrown weapon attacks", () => {
         subject: move,
         fills: [
           movementFill(moveHole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               {
                 reactorId: fighterId,

@@ -326,14 +326,16 @@ describe("Chromatic Orb chained spell attack", () => {
       value: {
         total: 6,
         d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
-        d20TestNaturalOneReroll: {
-          kind: "reroll" as const,
-          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: {
-            total: 18,
-            d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+        d20TestRerolls: [
+          {
+            kind: "reroll" as const,
+            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+            replacement: {
+              total: 18,
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+            },
           },
-        },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
     const awaitingDamage = resolveNeedsHoles(state, attack.subject, [
@@ -349,10 +351,12 @@ describe("Chromatic Orb chained spell attack", () => {
       ...rerolledAttack,
       value: {
         ...rerolledAttack.value,
-        d20TestNaturalOneReroll: {
-          kind: "decline" as const,
-          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-        },
+        d20TestRerolls: [
+          {
+            kind: "decline" as const,
+            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
     const declined = resolveResolved(state, attack.subject, [

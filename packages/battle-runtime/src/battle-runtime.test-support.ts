@@ -3375,14 +3375,10 @@ export function attackRollFill(
     readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
     readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
-    readonly spellAttackReroll?: Extract<
+    readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
-    >["value"]["spellAttackReroll"];
-    readonly d20TestNaturalOneReroll?: Extract<
-      BattleFill,
-      { readonly kind: "attackRoll" }
-    >["value"]["d20TestNaturalOneReroll"];
+    >["value"]["d20TestRerolls"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
@@ -3420,12 +3416,9 @@ export function attackRollFill(
             activatedOngoingFeatureProcedureRef:
               value.activatedOngoingFeatureProcedureRef,
           }),
-      ...(value.spellAttackReroll === undefined
+      ...(value.d20TestRerolls === undefined
         ? {}
-        : { spellAttackReroll: value.spellAttackReroll }),
-      ...(value.d20TestNaturalOneReroll === undefined
-        ? {}
-        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: value.d20TestRerolls }),
     },
   };
 }
@@ -4169,6 +4162,10 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly size?: Size;
+  readonly heroicInspiration?: Extract<
+    CharacterBattleCombatantInit["creatureInit"],
+    { readonly kind: "character" }
+  >["heroicInspiration"];
 }): CharacterBattleCombatantInit {
   const selectedLoadout =
     input.selectedLoadout ??
@@ -4315,6 +4312,9 @@ export function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
+      ...(input.heroicInspiration === undefined
+        ? {}
+        : { heroicInspiration: input.heroicInspiration }),
       characterUnitRefs,
       classLevels,
       knownLanguages: input.knownLanguages ?? ["Common"],

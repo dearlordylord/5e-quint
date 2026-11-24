@@ -1,3 +1,4 @@
+import { interruptedProcedureSubject } from "../subject-continuation-phase.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { spendStatBlockSpellcastingPool } from "../../stat-block-execution-state.ts";
 import { leveledSpellInvocationOptions } from "./profile.ts";
@@ -55,10 +56,7 @@ import type {
   SpellMechanics,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import {
-  snapshotBattle,
-  interruptedProcedureSubject,
-} from "../interrupt-execution.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { copyInterruptCheckpointIdentity } from "../interrupt-checkpoint-identity.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { spellCastInterruptionReactionReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";

@@ -218,7 +218,7 @@
       "module/binding:metamagicCastingOptionRouteForResolution": 33,
       "module/binding:metamagicDamageDiceRerollRouteForResolution": 11,
       "module/binding:metamagicDamageTypeSubstitutionRouteForResolution": 10,
-      "module/binding:metamagicMissedSpellAttackRerollRouteForResolution": 10,
+      "module/binding:metamagicMissedSpellAttackRerollRouteForResolution": 9,
       "module/binding:metamagicSavingThrowProtectionRouteForResolution": 10,
       "module/binding:metamagicSavingThrowRollModeRouteForResolution": 11
     },
@@ -489,8 +489,7 @@
       "module/binding:resolveBonusActionDashSpellAct": 11,
       "module/binding:resolveBonusActionSpellAct": 27,
       "module/binding:resolveSpellActInternal": 192,
-      "module/binding:resolveSpellActInternal/call:iife:argument--1": 54,
-      "module/binding:spellAttackRerollValidationIssue": 9
+      "module/binding:resolveSpellActInternal/call:iife:argument--1": 50
     },
     "packages/battle-runtime/src/battle-reducer/spells-targeting.ts": {
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,

@@ -498,6 +498,7 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     hitPoints: hitPoints.success,
     conditions: characterSheetConditionsFromBattle(input.combatant),
     resourceExpenditures: resourceExpenditures.success,
+    heroicInspiration: input.combatant.origin.heroicInspiration,
   };
   const settled =
     sheet.spellSlotExpenditures === undefined

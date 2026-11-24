@@ -48,11 +48,11 @@ import {
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+  type AttackRollHeroicInspirationUse,
+} from "./attack-roll-d20-test-rerolls.ts";
 
 import {
   attackRollHole,
@@ -1324,6 +1324,7 @@ type OrdinaryObjectAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
+      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
     };
 
 type OrdinaryObjectAttackRollContext<
@@ -1385,15 +1386,40 @@ function prepareOrdinaryObjectAttackRoll<
       result: invalidResult(input.input.state, "invalidFill", rollIssue),
     };
   }
-  const rerollResult = ordinaryObjectAttackRerollResult({
-    context: input,
+  const attacker = input.input.state.combatants.get(input.attackerId);
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.input.state,
+    subject: input.input.subject,
+    attackerId: input.attackerId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll,
     requiredRollMode,
   });
-  if (rerollResult !== null) return rerollResult;
+  if (d20TestRerolls.tag === "decisionsRequired") {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.input.state, input.input.subject, [
+        attackRollHoleWithD20TestRerollOptions(
+          attackRollHole(attacker, input.attack, requiredRollMode),
+          d20TestRerolls.options,
+        ),
+      ]),
+    };
+  }
+  if (d20TestRerolls.tag === "invalid") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        d20TestRerolls.issue,
+      ),
+    };
+  }
   return {
     tag: "ready",
-    effectiveAttackRoll: effectiveD20TestNaturalOneRerollAttackRoll(attackRoll),
+    effectiveAttackRoll: d20TestRerolls.effectiveAttackRoll,
+    heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
   };
 }
 
@@ -1410,7 +1436,7 @@ function ordinaryObjectAttackRollIssue<
     !attackRollResultIsValid(input.attackRoll) ||
     input.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
     input.attackRoll.missToHitReplacementProcedureRef !== undefined ||
-    input.attackRoll.spellAttackReroll !== undefined
+    spellAttackRerollUnsupportedIssue(input.attackRoll) !== null
   ) {
     return "Object attack roll does not match the ordinary attack-roll protocol.";
   }
@@ -1421,62 +1447,6 @@ function ordinaryObjectAttackRollIssue<
     return "Attack roll mode does not match the current object attack rule.";
   }
   return null;
-}
-
-function ordinaryObjectAttackRerollResult<
-  Attack extends BoundSupportedAttackActionOption,
->(input: {
-  readonly context: OrdinaryObjectAttackRollContext<Attack>;
-  readonly attackRoll: BattleAttackRollResult;
-  readonly requiredRollMode: ReturnType<
-    typeof requiredOrdinaryObjectAttackRollMode
-  >;
-}): { readonly tag: "result"; readonly result: BattleResolutionResult } | null {
-  const attacker = input.context.input.state.combatants.get(
-    input.context.attackerId,
-  );
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: attacker,
-      originalD20TestRoll: input.attackRoll.d20TestRoll,
-      decision: input.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
-    return {
-      tag: "result",
-      result: needsHolesResult(
-        input.context.input.state,
-        input.context.input.subject,
-        [
-          attackRollHoleWithD20TestNaturalOneRerollOption(
-            attackRollHole(
-              attacker,
-              input.context.attack,
-              input.requiredRollMode,
-            ),
-          ),
-        ],
-      ),
-    };
-  }
-  const rerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: attacker,
-    total: input.attackRoll.total,
-    originalD20TestRoll: input.attackRoll.d20TestRoll,
-    decision: input.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode: input.requiredRollMode,
-    otherD20RerollPresent: false,
-  });
-  return rerollIssue === null
-    ? null
-    : {
-        tag: "result",
-        result: invalidResult(
-          input.context.input.state,
-          "invalidFill",
-          rerollIssue,
-        ),
-      };
 }
 
 type OrdinaryObjectAttackRollOutcome =
@@ -1513,9 +1483,12 @@ function resolveOrdinaryObjectAttackRoll<
       input.attack,
     ),
   );
-  const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
-    input.input.state,
-    input.attackerId,
+  const attackRollState = battleStateAfterHeroicInspirationReroll(
+    battleStateAfterTargetActionEarlyEndForActor(
+      input.input.state,
+      input.attackerId,
+    ),
+    input.rollPreparation.heroicInspirationUse,
   );
   const attackRollObservedState = {
     ...revealHidden(attackRollState, input.attackerId),
@@ -2234,45 +2207,31 @@ export function resolveSelectedAttackProcedure<
       "Attack actor is no longer in the battle.",
     );
   }
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: attacker,
-      originalD20TestRoll: fillSet.attackRoll.d20TestRoll,
-      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.state,
+    subject: input.subject,
+    attackerId: attackerId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: fillSet.attackRoll,
+    requiredRollMode: resolvedRequiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         attackRollHole(
           attacker,
           attack,
           resolvedRequiredRollMode,
           attackRollOngoingFeatureActivations(input.state, attackerId, attack),
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: attacker,
-    total: fillSet.attackRoll.total,
-    originalD20TestRoll: fillSet.attackRoll.d20TestRoll,
-    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode: resolvedRequiredRollMode,
-    otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
-  });
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      d20TestNaturalOneRerollIssue,
-    );
+  if (d20TestRerolls.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", d20TestRerolls.issue);
   }
-  /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    fillSet.attackRoll,
-  );
+  const effectiveAttackRoll = d20TestRerolls.effectiveAttackRoll;
 
   const criticalThreshold = criticalThresholdForAttack(attacker, attack);
   const targetArmorClass = armorClassAgainstAttack(
@@ -2319,9 +2278,9 @@ export function resolveSelectedAttackProcedure<
     );
   }
   /* v8 ignore stop -- @preserve */
-  const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
-    input.state,
-    attackerId,
+  const attackRollState = battleStateAfterHeroicInspirationReroll(
+    battleStateAfterTargetActionEarlyEndForActor(input.state, attackerId),
+    d20TestRerolls.heroicInspirationUse,
   );
   const hiddenBeforeAttack =
     attackRollState.combatants.get(attackerId)?.hidden ?? null;
@@ -4374,6 +4333,7 @@ type AdditionalWeaponAttackRollResolution =
       readonly tag: "ok";
       readonly fill: AdditionalWeaponAttackRollFill;
       readonly attackRoll: BattleAttackRollResult;
+      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
     };
 
 function resolveAdditionalWeaponAttackRoll(input: {
@@ -4437,40 +4397,38 @@ function resolveAdditionalWeaponAttackRoll(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const attacker = input.state.combatants.get(input.subject.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: attacker,
-      originalD20TestRoll: attackRoll.value.d20TestRoll,
-      decision: attackRoll.value.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.state,
+    subject: input.subject,
+    attackerId: input.subject.actorId,
+    attackRollHoleId: input.attackRollHole.holeId,
+    attackRoll: attackRoll.value,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.state, input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(input.attackRollHole),
+        attackRollHoleWithD20TestRerollOptions(
+          input.attackRollHole,
+          d20TestRerolls.options,
+        ),
       ]),
     };
   }
-  const naturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: attacker,
-    total: attackRoll.value.total,
-    originalD20TestRoll: attackRoll.value.d20TestRoll,
-    decision: attackRoll.value.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
-  /* v8 ignore start -- @preserve -- Malformed fill: a natural-one reroll decision must match the option attached to this exact additional-attack roll. */
-  if (naturalOneRerollIssue !== null) {
+  /* v8 ignore start -- @preserve -- Malformed fill: a reroll decision must match the options attached to this exact additional-attack roll. */
+  if (d20TestRerolls.tag === "invalid") {
     return {
       tag: "result",
-      result: invalidResult(input.state, "invalidFill", naturalOneRerollIssue),
+      result: invalidResult(input.state, "invalidFill", d20TestRerolls.issue),
     };
   }
   /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     fill: attackRoll,
-    attackRoll: effectiveD20TestNaturalOneRerollAttackRoll(attackRoll.value),
+    attackRoll: d20TestRerolls.effectiveAttackRoll,
+    heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
   };
 }
 
@@ -4752,7 +4710,13 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   let cleaveAttackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        revealHidden(input.state, input.subject.actorId),
+        revealHidden(
+          battleStateAfterHeroicInspirationReroll(
+            input.state,
+            cleaveAttackRoll.heroicInspirationUse,
+          ),
+          input.subject.actorId,
+        ),
         input.subject.actorId,
         secondTargetId,
         null,
@@ -5500,7 +5464,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   );
   const rolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
-      revealHidden(input.state, input.subject.actorId),
+      revealHidden(
+        battleStateAfterHeroicInspirationReroll(
+          input.state,
+          hordeBreakerAttackRoll.heroicInspirationUse,
+        ),
+        input.subject.actorId,
+      ),
       input.subject.actorId,
       secondTargetId,
       null,

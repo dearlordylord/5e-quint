@@ -28,6 +28,7 @@ It points to the applicable SRD passages without duplicating their text here.
 | **Passive Perception** | A score used to determine whether a creature notices something without consciously making a Wisdom (Perception) check; `10 + Wisdom (Perception) check bonus`, with Advantage or Disadvantage changing the score by 5 | Passive check (not a general SRD 5.2.1 glossary term)                                      |
 | **Critical Hit**       | Natural 20 on an attack roll; automatic hit regardless of AC; all damage dice are doubled                                                                                                                             | Crit, natural 20 (natural 20 is the trigger, critical hit is the result)                   |
 | **Initiative**         | A Dexterity check made at the start of combat to determine turn order; order remains constant throughout the encounter                                                                                                | Init                                                                                       |
+| **Heroic Inspiration** | A player character has it or not (never more than one); they can expend it to reroll any die immediately after rolling it and use the new roll; with Advantage or Disadvantage it rerolls one chosen d20                                | Inspiration (the 2014 name)                                                                |
 
 ## Advantage and Disadvantage
 

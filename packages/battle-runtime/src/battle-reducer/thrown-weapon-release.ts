@@ -21,7 +21,7 @@ import {
   battleStateWithoutGroundObject,
 } from "./battle-object-lifecycle.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { interruptedProcedureSubject } from "./interrupt-execution.ts";
+import { interruptedProcedureSubject } from "./subject-continuation-phase.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
 import {
   isThrownWeaponAttack,

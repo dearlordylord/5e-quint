@@ -1,3 +1,4 @@
+export { interruptedProcedureSubject } from "./subject-continuation-phase.ts";
 import { resolveLongCastingCommand } from "./long-casting-lifecycle.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -42,7 +43,6 @@ export {
   interruptCheckpointFrame,
   interruptChoices,
   interruptWindowProgress,
-  interruptedProcedureSubject,
   interruptedProcedureSupportsAttackDamageChanges,
   maybeOpenInterruptWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,

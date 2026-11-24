@@ -120,6 +120,7 @@ export type CharacterBuildCreatureInput = {
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+  readonly heroicInspiration?: CharacterBattleCreatureInit["heroicInspiration"];
   readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
   readonly ammunitionStocks: CharacterBattleCreatureInit["ammunitionStocks"];
   readonly armorClassBaseChoices?:
@@ -158,6 +159,7 @@ export type CharacterSheetBattleInitInput = Omit<
   | "spellSlots"
   | "bookOfShadowsPresence"
   | "resourceExpenditures"
+  | "heroicInspiration"
   | "druidWildShapeAvailableForms"
 > & {
   readonly sheet: CharacterSheet;
@@ -553,6 +555,7 @@ export function battleCreatureInitFromCharacterBuild(
           : { offHandAttack: weaponAttackOptions.offHandAttack }),
         unitFeatures,
         resources,
+        ...heroicInspirationInit(input.heroicInspiration),
         ...(metamagic === undefined ? {} : { metamagic }),
         ...(spellcasting === undefined ? {} : { spellcasting }),
         ...(druidWildShapeAvailableForms === undefined
@@ -1226,4 +1229,10 @@ function characterBattleFeatures(
     }
   }
   return Result.succeed(features);
+}
+
+function heroicInspirationInit(
+  heroicInspiration: CharacterBattleCreatureInit["heroicInspiration"],
+): Pick<CharacterBattleCreatureInit, "heroicInspiration"> {
+  return heroicInspiration === undefined ? {} : { heroicInspiration };
 }

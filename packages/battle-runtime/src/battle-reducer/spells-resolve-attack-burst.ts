@@ -71,11 +71,11 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollHoleWithD20TestNaturalOneRerollOption,
-  d20TestNaturalOneRerollRollDecisionRequired,
-  d20TestNaturalOneRerollRollIssue,
-  effectiveD20TestNaturalOneRerollAttackRoll,
-} from "./d20-test-natural-one-reroll.ts";
+  attackRollAfterD20TestRerolls,
+  attackRollD20TestRerolls,
+  attackRollHoleWithD20TestRerollOptions,
+  battleStateAfterHeroicInspirationReroll,
+} from "./attack-roll-d20-test-rerolls.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
@@ -480,46 +480,38 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const actorBeforeSpellAttack = input.input.state.combatants.get(
-    input.actorId,
-  );
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: actorBeforeSpellAttack,
-      originalD20TestRoll: attackRoll.d20TestRoll,
-      decision: attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
+  const d20TestRerolls = attackRollD20TestRerolls({
+    state: input.input.state,
+    subject: input.input.subject,
+    attackerId: input.actorId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: attackRoll,
+    requiredRollMode,
+  });
+  if (d20TestRerolls.tag === "decisionsRequired") {
     return needsHolesResult(input.input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
+      attackRollHoleWithD20TestRerollOptions(
         spellAttackRollHole(
           input.input.state,
           input.actorId,
           input.invocation,
           requiredRollMode,
         ),
+        d20TestRerolls.options,
       ),
     ]);
   }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: actorBeforeSpellAttack,
-    total: attackRoll.total,
-    originalD20TestRoll: attackRoll.d20TestRoll,
-    decision: attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
-  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
+  if (d20TestRerolls.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      d20TestNaturalOneRerollIssue,
+      d20TestRerolls.issue,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
+  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
 
   const targetArmorClass = armorClassAgainstAttack(
     input.input.state,
@@ -555,7 +547,10 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        input.input.state,
+        battleStateAfterHeroicInspirationReroll(
+          input.input.state,
+          d20TestRerolls.heroicInspirationUse,
+        ),
         input.actorId,
         target.combatantId,
         null,

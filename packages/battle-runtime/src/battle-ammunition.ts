@@ -1,3 +1,4 @@
+import { subjectContinuationPhaseFor } from "./battle-reducer/subject-continuation-phase.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
 import { type HandUse, resourceCount } from "@dnd/shared/types";
 import { Match } from "effect";
@@ -194,21 +195,22 @@ export function spendAmmunitionForAcceptedAttack(input: {
   readonly actorId: CombatantId;
   readonly attack: BoundSupportedAttackActionOption;
 }): BattleState {
+  const phase = input.state.subjectResolutionPhase;
   const alreadySpent =
-    input.state.subjectResolutionPhase.kind === "subjectContinuation"
-      ? input.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend
+    phase.kind === "subjectContinuation"
+      ? phase.acceptedAttackAmmunitionSpend
       : undefined;
   if (
+    phase.kind === "subjectContinuation" &&
     alreadySpent?.actorId === input.actorId &&
     boundAttackExecutionSelectionMatchesOption(
       alreadySpent.attackSelection,
       input.attack,
     )
   ) {
-    return {
-      ...input.state,
-      subjectResolutionPhase: { kind: "subjectSelection" },
-    };
+    const { acceptedAttackAmmunitionSpend: _consumed, ...remainingPhase } =
+      phase;
+    return { ...input.state, subjectResolutionPhase: remainingPhase };
   }
   const ammunition = ammunitionRequirementForAttack(input.attack);
   if (ammunition === null) return input.state;
@@ -245,8 +247,7 @@ export function spendAmmunitionForAcceptedAttackPendingContinuation(input: {
   return {
     ...spent,
     subjectResolutionPhase: {
-      kind: "subjectContinuation",
-      subject: input.subject,
+      ...subjectContinuationPhaseFor(spent, input.subject),
       acceptedAttackAmmunitionSpend: {
         actorId: input.actorId,
         attackSelection: attackExecutionSelectionForOption(input.attack),
