@@ -338,10 +338,11 @@ change can come before the attack, carried on the attack itself, or after it.
 A change after the attack must come before the character's next attack as part
 of the Attack action. If that next attack carries its own change before its
 roll, any change still left from the attack before it is gone. A Grapple or
-Shove takes the place of one of these attacks, so it too leaves a change after
-it and ends the window of the attack before it. Other attacks,
-such as an off-hand attack with a Bonus Action, leave a change still left as it
-was. Any change still left at the end of the turn is also gone.
+Shove that takes the place of one of these attacks also leaves a change after
+it and ends the window of the attack before it. Other attacks, such as an
+off-hand attack with a Bonus Action, or a Grapple or Shove with a Flurry of
+Blows Unarmed Strike, leave a change still left as it was. Any change still
+left at the end of the turn is also gone.
 
 Equipping draws a stowed weapon, or picks up one lying on the ground, and puts
 it back in hand with its loadout grip. The hands the grip uses must be empty.

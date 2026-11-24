@@ -1448,8 +1448,9 @@ export function resolveGrapple(
   /* v8 ignore stop -- @preserve */
   const nextState = applyGrappleSavingThrowOutcome({
     state: stateWithWeaponChangeAfterUnarmedStrikeOption(
-      { ...input.state, currentTurnResources: spent.success },
+      { ...input.state, currentTurnResources: spent.success.state },
       input.subject.actorId,
+      spent.success.spentResource,
     ),
     link: link.link,
     relationshipFacts,
@@ -1597,8 +1598,12 @@ export function resolveShove(
   );
   const afterEffect = applyShoveOutcome({
     state: stateWithWeaponChangeAfterUnarmedStrikeOption(
-      { ...savingThrowExtendedState, currentTurnResources: spent.success },
+      {
+        ...savingThrowExtendedState,
+        currentTurnResources: spent.success.state,
+      },
       input.subject.actorId,
+      spent.success.spentResource,
     ),
     targetId: fillSet.targetId,
     outcome: fillSet.outcome.value,

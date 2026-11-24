@@ -9,10 +9,12 @@
 // before it looks up the attack. After: an attack made without one leaves the
 // `weaponChangeAfterAttack` allowance, which the `changeWeaponAfterAttack`
 // command spends before the Attack action's next attack (ASSUMPTIONS.md A63).
+import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { Match } from "effect";
 import type {
   BattleActDiscoveryCandidate,
   BattleAttackHostSubject,
@@ -115,15 +117,40 @@ export function stateWithWeaponChangeAfterAttackAllowance(
 }
 
 /**
- * The weapon change a Grapple or Shove leaves after it. Each replaces an
- * attack of the Attack action with its Unarmed Strike, so it opens the same
- * window as any other attack of the action; it carries no change before it.
+ * The weapon change a Grapple or Shove leaves after it. One that replaces an
+ * attack of the Attack action opens the same window as any other attack of
+ * the action; it carries no change before it. One another feature pays for,
+ * such as a Flurry of Blows Unarmed Strike, leaves the window as it was.
  */
 export function stateWithWeaponChangeAfterUnarmedStrikeOption(
   state: BattleState,
   actorId: CombatantId,
+  spentResource: RuntimeActionResource,
 ): BattleState {
-  return stateWithWeaponChangeAllowanceAfter(state, actorId, "available");
+  return actionResourceTakesAttackActionAttack(spentResource)
+    ? stateWithWeaponChangeAllowanceAfter(state, actorId, "available")
+    : state;
+}
+
+/**
+ * Whether an attack this action resource pays for is one of the Attack
+ * action's attacks: the turn's action, or another action taken as the Attack
+ * action, and the extra attacks of that action. A Stat Block's Multiattack is
+ * its own action, and Flurry of Blows is a Bonus Action.
+ */
+function actionResourceTakesAttackActionAttack(
+  resource: RuntimeActionResource,
+): boolean {
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: () => true,
+      spellEffect: () => true,
+      classFeatureExtraAttack: () => true,
+      statBlockMultiattack: () => false,
+      monkFocusFlurryOfBlows: () => false,
+    }),
+  );
 }
 
 function stateWithWeaponChangeAllowanceAfter(
