@@ -150,6 +150,7 @@ export const BATTLE_REDUCER_ROUTE_HOLE_KINDS = [
   "targetAbilityChoices",
   "targetChoice",
   "temporaryHitPointChoice",
+  "turnStartHeroicInspirationChoice",
   "unitFeatureDecision",
   "wildShapeEquipmentDisposition",
 ] as const;
@@ -190,6 +191,7 @@ export const BATTLE_REDUCER_ROUTE_FILL_KINDS = [
   "statBlockRechargeRoll",
   "targetChoice",
   "temporaryHitPointChoice",
+  "turnStartHeroicInspirationChoice",
   "unitFeatureDecision",
   "wildShapeEquipmentDisposition",
 ] as const;

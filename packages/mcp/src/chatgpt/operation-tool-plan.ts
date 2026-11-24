@@ -172,6 +172,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     temporaryAbilityCheckRollModeActiveEffectCount:
       CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     temporaryHitPointChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
+    turnStartHeroicInspirationChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     toolPossessionFacts: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     turnConstraintSomaticSpellFailureOutcome:
       CHATGPT_ORDINARY_BATTLE_CONTINUATION,

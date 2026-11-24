@@ -46,6 +46,7 @@ module battleRuntimeHoleKinds {
     | TargetAbilityChoicesHoleKind
     | TargetChoiceHoleKind
     | TemporaryHitPointChoiceHoleKind
+    | TurnStartHeroicInspirationChoiceHoleKind
     | UnitFeatureDecisionHoleKind
     | WildShapeEquipmentDispositionHoleKind
 }

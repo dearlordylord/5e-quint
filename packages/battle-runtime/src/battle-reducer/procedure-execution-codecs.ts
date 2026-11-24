@@ -33,6 +33,7 @@ import {
 
 export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literals([
   "markedCreatureDefensesDisclosure",
+  "combatTurnStartHeroicInspiration",
   "weaponOrUnarmedCriticalRange19",
   "attackDamageRider",
   "saveDamageReplacement",
