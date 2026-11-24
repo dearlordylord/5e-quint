@@ -21435,6 +21435,12 @@
                     "command": "interactWithObject"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:character",
+                    "command": "changeWeaponGrip",
+                    "grip": "two_handed"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:character",
                     "action": "ready"
