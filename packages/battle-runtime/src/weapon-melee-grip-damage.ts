@@ -1,4 +1,4 @@
-import { sameDomainValue } from "../domain-value-equality.ts";
+import { sameDomainValue } from "./domain-value-equality.ts";
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 // SRD 5.2.1 equipment.md "Versatile": its damage applies only to a melee
 // attack made with two hands. Keep the admitted property beside the base weapon.
@@ -8,7 +8,7 @@ import {
   VersatileWeaponPropertyDetailSchema,
 } from "@dnd/surface/surface/schema";
 import type { WeaponGrip } from "@dnd/shared/types";
-import type { CharacterWeaponAttackExecutionWeapon } from "../character-weapon-execution-schema.ts";
+import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 
 type WeaponProperty =
   CharacterWeaponAttackExecutionWeapon["properties"][number];

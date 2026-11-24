@@ -29,6 +29,7 @@ import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
+  characterBattleFeatureInitForTest,
   combatantId,
   concentrationSavingThrowFill,
   concentrationSavingThrowDc,
@@ -1555,6 +1556,12 @@ describe("battle runtime: attack rolls and damage", () => {
           attack: null,
           unarmedStrike: testUnarmedStrikeDieAttack(),
           selectedLoadout: {},
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             supportedBattleUnitRef(
               unitLibrary.requireUnit("monk_martial_arts"),
@@ -1625,6 +1632,12 @@ describe("battle runtime: attack rolls and damage", () => {
           attack: null,
           unarmedStrike: testUnarmedStrikeDieAttack(),
           selectedLoadout: {},
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             supportedBattleUnitRef(
               unitLibrary.requireUnit("monk_martial_arts"),
@@ -1719,6 +1732,12 @@ describe("battle runtime: attack rolls and damage", () => {
             ...(loadout.armorClass === undefined
               ? {}
               : { armorClass: loadout.armorClass }),
+            unitFeatures: [
+              characterBattleFeatureInitForTest(
+                unitLibrary.requireUnit("monk_martial_arts"),
+                [{ className: "monk", level: classLevel(1) }],
+              ),
+            ],
             characterUnitRefs: [
               supportedBattleUnitRef(
                 unitLibrary.requireUnit("monk_martial_arts"),

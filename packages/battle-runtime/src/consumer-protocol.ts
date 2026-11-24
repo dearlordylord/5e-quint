@@ -176,4 +176,4 @@ export {
   type SpellBattleSupport,
 } from "./spell-battle-support.ts";
 
-export { admitWeaponMeleeGripDamage } from "./procedure-admission/weapon-melee-grip-damage.ts";
+export { admitWeaponMeleeGripDamage } from "./weapon-melee-grip-damage.ts";

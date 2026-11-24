@@ -1,4 +1,8 @@
 import { battleObjectId } from "@dnd/battle-runtime";
+import {
+  attackExecutionSelectionForOption,
+  attackExecutionWeaponDelivery,
+} from "../../../battle-runtime/src/battle-action-options.ts";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import longbowInput from "../../../surface/content/weapon_longbow.json";
@@ -271,19 +275,14 @@ function daggerTargetContract(delivery: "thrown" | "melee") {
   const option = attackActionOptionsForActor(session.state, fighterId).find(
     (attack) =>
       attack.kind === "weapon" &&
-      (attack.weaponDelivery ?? "melee") === delivery,
+      (attackExecutionWeaponDelivery(attack) ?? "melee") === delivery,
   );
   if (option?.kind !== "weapon") throw new Error(`Expected ${delivery} Dagger`);
   const subject = {
     tag: "action" as const,
     actorId: fighterId,
     action: "attack" as const,
-    procedureRef: option.procedureRef,
-    attackAbility: option.ability,
-    attackDamageType: option.weapon.damage.damageType,
-    ...(option.weaponDelivery === undefined
-      ? {}
-      : { weaponDelivery: option.weaponDelivery }),
+    ...attackExecutionSelectionForOption(option),
   };
   const selected = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
     jsonContentPayload(

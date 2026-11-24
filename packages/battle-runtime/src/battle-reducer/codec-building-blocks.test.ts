@@ -7,7 +7,7 @@ import {
   attackTargetConstraint,
   weaponAttackTargetConstraint,
 } from "./statblock-attacks.ts";
-import { admitWeaponMeleeGripDamage } from "../procedure-admission/weapon-melee-grip-damage.ts";
+import { admitWeaponMeleeGripDamage } from "../weapon-melee-grip-damage.ts";
 import { Schema } from "effect";
 import { Result } from "effect";
 import { unitId } from "@dnd/shared/game-facts";

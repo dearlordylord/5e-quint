@@ -1,7 +1,9 @@
+import { classLevel } from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.weapon-mastery-graze
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
+import { characterBattleFeatureInitForTest } from "../../battle-runtime/src/battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -263,6 +265,12 @@ describe("manual MCP battle surface coverage", () => {
               grip: "one_handed",
             },
           },
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              root.unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             {
               unit: root.unitLibrary.requireUnit("monk_martial_arts"),
@@ -2211,6 +2219,7 @@ function character(
     readonly initiative: number;
     readonly classLevels?: CharacterBattleClassLevelInits;
     readonly characterUnitRefs?: readonly BattleUnitRef[];
+    readonly unitFeatures?: CharacterCreatureInit["unitFeatures"];
     readonly weaponMasteries?: CharacterCreatureInit["weaponMasteries"];
     readonly selectedLoadout?: CharacterCreatureInit["selectedLoadout"];
     readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
@@ -2277,6 +2286,7 @@ function character(
       ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs,
+      unitFeatures: input.unitFeatures ?? [],
       invocationFeatures: input.invocationFeatures ?? [],
       classLevels: input.classLevels ?? [
         {

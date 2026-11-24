@@ -1,8 +1,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import { Schema } from "effect";
 import { WeaponRangeSchema } from "@dnd/surface/surface/schema";
-import type { CharacterWeaponAttackExecutionWeapon } from "../character-weapon-execution-schema.ts";
-import { sameDomainValue } from "../domain-value-equality.ts";
+import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
+import { sameDomainValue } from "./domain-value-equality.ts";
 
 export const AdmittedThrownWeaponDeliverySchema = Schema.Struct({
   kind: Schema.Literal("thrown"),

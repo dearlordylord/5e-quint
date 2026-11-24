@@ -4301,15 +4301,6 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitFact,
     ),
-    martialArtsAttackProjection: account(
-      "internal",
-      "martialArtsAttackProjection",
-      at(
-        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "unarmedStrikeAttackDamage",
-      ),
-      REASONS.unitFact,
-    ),
     monkFocusBattleOptions: account(
       "operation",
       "monkFocusBattleOptions",

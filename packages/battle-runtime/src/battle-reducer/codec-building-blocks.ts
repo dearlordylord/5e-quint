@@ -1,11 +1,11 @@
 import {
   AdmittedThrownWeaponDeliverySchema,
   weaponDeliveryBelongsToWeapon,
-} from "../procedure-admission/weapon-delivery.ts";
+} from "../weapon-attack-delivery.ts";
 import {
   AdmittedVersatileMeleeDamageSchema,
   meleeGripDamageBelongsToWeapon,
-} from "../procedure-admission/weapon-melee-grip-damage.ts";
+} from "../weapon-melee-grip-damage.ts";
 import {
   StatBlockLeveledSpellAccessSchema,
   StatBlockLeveledSpellInvocationResourceSchema,
