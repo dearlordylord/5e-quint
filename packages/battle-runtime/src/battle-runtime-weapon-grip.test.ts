@@ -32,6 +32,7 @@ import {
 import { characterEffectiveLoadout } from "./battle-reducer/character-effective-loadout.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
+import { battleCreatureWithSpellCreatedHeldObjectHand } from "./battle-reducer/spell-created-held-object.ts";
 import { weaponGripChangeAdmission } from "./battle-reducer/weapon-grip.ts";
 import { resolveBattleSubject, snapshotBattle } from "./index.ts";
 
@@ -195,6 +196,35 @@ describe("changing a weapon grip during a battle", () => {
     ).state;
     expect(hands(grappling)).toEqual({ left: "grapple", right: "mainWeapon" });
     expectRefused(grappling, "two_handed", "handOccupied");
+    const start = battle({ weapon: longsword("one_handed") });
+    const holdingSpellObject: BattleState = {
+      ...start,
+      combatants: new Map(start.combatants).set(
+        fighterId,
+        battleCreatureWithSpellCreatedHeldObjectHand(actor(start), "left"),
+      ),
+    };
+    expect(hands(holdingSpellObject)).toEqual({
+      left: "spellCreatedHeldObject",
+      right: "mainWeapon",
+    });
+    expectRefused(holdingSpellObject, "two_handed", "handOccupied");
+  });
+
+  it("offers and makes a grip change under Command's Halt, since it is neither a move nor an action", () => {
+    const start = battle({ weapon: longsword("one_handed") });
+    const halted: BattleState = {
+      ...start,
+      currentTurnResources: {
+        ...start.currentTurnResources,
+        compelledHalt: { kind: "compelledHalt" },
+      },
+    };
+    expect(offeredGrips(halted)).toEqual(["two_handed"]);
+    const changed = requireResolved(changeGrip(halted, "two_handed")).state;
+    expect(
+      characterEffectiveLoadout(changed, actor(changed)).weapon?.grip,
+    ).toBe("two_handed");
   });
 
   it("frees the off hand of a dropped off-hand weapon, which then can't be picked up until the grip is one-handed again", () => {

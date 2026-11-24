@@ -79,6 +79,7 @@ import {
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import { sacredWeaponHeldMeleeWeapons } from "./battle-reducer/unit-feature-discovery.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { weaponGripChangeAdmission } from "./battle-reducer/weapon-grip.ts";
 import {
   attackInitialTargetHole,
   attackExecutionSelectionForSubjectForTest,
@@ -1197,6 +1198,12 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
   expect(activeDruidWildShapeEffect(activeDruid)?.equipmentDisposition).toEqual(
     [{ item: mainWeapon, disposition: "worn" }],
   );
+  expect(
+    weaponGripChangeAdmission(resolved.state, activeDruid, "two_handed"),
+  ).toMatchObject({
+    _tag: "Failure",
+    failure: { reason: "activeFormGripUnsupported" },
+  });
 
   const activeActs = discoverBattleActCandidates(resolved.state);
   expect(
