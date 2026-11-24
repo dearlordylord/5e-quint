@@ -28,10 +28,7 @@ import {
 export type CharacterSheetEquipmentLoadoutPatch = {
   readonly armor?: CharacterEquipmentItemId<"armor"> | null;
   readonly shield?: CharacterEquipmentItemId<"shield"> | null;
-  readonly weapon?: {
-    readonly itemId: CharacterEquipmentItemId<"main">;
-    readonly grip: "one_handed";
-  } | null;
+  readonly weapon?: NonNullable<CharacterBuildLoadout["weapon"]> | null;
   readonly offHandWeapon?: {
     readonly itemId: CharacterEquipmentItemId<"off">;
   } | null;
@@ -70,6 +67,10 @@ export type CharacterSheetEquipmentLoadoutIssue =
   | {
       readonly tag: "weaponCannotBeHeldOneHanded";
       readonly itemId: CharacterEquipmentItemId;
+    }
+  | {
+      readonly tag: "twoHandedGripHandConflict";
+      readonly itemId: CharacterEquipmentItemId<"main">;
     }
   | {
       readonly tag: "shieldAndOffHandWeaponConflict";
@@ -192,6 +193,10 @@ export function characterSheetEquipmentLoadoutIssueMessage(
     ),
     Match.when(
       { tag: "weaponCannotBeHeldOneHanded" },
+      equipmentLoadoutStructureIssueMessage,
+    ),
+    Match.when(
+      { tag: "twoHandedGripHandConflict" },
       equipmentLoadoutStructureIssueMessage,
     ),
     Match.when(

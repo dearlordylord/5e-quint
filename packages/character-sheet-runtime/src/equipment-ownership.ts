@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 import {
   characterEquipmentItemSourceFromId,
   type CharacterBuildEquipment,
@@ -72,6 +73,10 @@ export type EquipmentLoadoutStructureIssue =
       readonly itemId: CharacterEquipmentItemId;
     }
   | {
+      readonly tag: "twoHandedGripHandConflict";
+      readonly itemId: CharacterEquipmentItemId<"main">;
+    }
+  | {
       readonly tag: "shieldAndOffHandWeaponConflict";
     };
 
@@ -79,6 +84,11 @@ export type EquipmentLoadoutStructureIssue =
  * Validate loadout relationships that are independent of ownership. This is
  * shared by the mutable operation and the persisted-build parser so stored
  * state cannot bypass the same shield, hand-use, or grip invariants.
+ *
+ * A Two-Handed weapon needs the main hand's `two_handed` grip, so it is
+ * refused in the off hand or with a `one_handed` grip. A `two_handed` grip
+ * uses both hands, so it leaves none for a shield or an off-hand weapon. Any
+ * weapon may take the `two_handed` grip (ASSUMPTIONS.md A58).
  */
 export function equipmentLoadoutStructureIssues(
   loadout: CharacterBuildLoadout,
@@ -89,20 +99,50 @@ export function equipmentLoadoutStructureIssues(
     issues.push({ tag: "shieldAndOffHandWeaponConflict" });
   }
 
-  for (const itemId of [
-    loadout.weapon?.itemId,
-    loadout.offHandWeapon?.itemId,
-  ]) {
-    if (itemId === undefined) continue;
-    if (weaponCannotBeHeldOneHanded(itemId, unitLibrary)) {
-      issues.push({ tag: "weaponCannotBeHeldOneHanded", itemId });
-    }
+  const weapon = loadout.weapon;
+  if (weapon !== undefined) {
+    issues.push(
+      ...Match.value(weapon.grip).pipe(
+        Match.when("one_handed", () =>
+          weaponRequiresTwoHands(weapon.itemId, unitLibrary)
+            ? [
+                {
+                  tag: "weaponCannotBeHeldOneHanded" as const,
+                  itemId: weapon.itemId,
+                },
+              ]
+            : [],
+        ),
+        Match.when("two_handed", () =>
+          loadout.shield !== undefined || loadout.offHandWeapon !== undefined
+            ? [
+                {
+                  tag: "twoHandedGripHandConflict" as const,
+                  itemId: weapon.itemId,
+                },
+              ]
+            : [],
+        ),
+        Match.exhaustive,
+      ),
+    );
+  }
+
+  const offHandWeapon = loadout.offHandWeapon;
+  if (
+    offHandWeapon !== undefined &&
+    weaponRequiresTwoHands(offHandWeapon.itemId, unitLibrary)
+  ) {
+    issues.push({
+      tag: "weaponCannotBeHeldOneHanded",
+      itemId: offHandWeapon.itemId,
+    });
   }
 
   return issues;
 }
 
-function weaponCannotBeHeldOneHanded(
+function weaponRequiresTwoHands(
   itemId: CharacterEquipmentItemId,
   unitLibrary: UnitCatalog,
 ): boolean {
@@ -122,6 +162,11 @@ export function equipmentLoadoutStructureIssueMessage(
     Match.when(
       { tag: "weaponCannotBeHeldOneHanded" },
       ({ itemId }) => `Weapon ${itemId} cannot be held one-handed.`,
+    ),
+    Match.when(
+      { tag: "twoHandedGripHandConflict" },
+      ({ itemId }) =>
+        `Weapon ${itemId} is held two-handed, which leaves no hand for a shield or an off-hand weapon.`,
     ),
     Match.when(
       { tag: "shieldAndOffHandWeaponConflict" },

@@ -35,7 +35,6 @@ import {
   type BattleAttackKindForRedirect,
   type BattleCreatureState,
   type BattleGrappleLink,
-  type BattleHand,
   type BattleMovementHole,
   type BattleOpportunityAttackThreat,
   type BattleOpportunityAttackSelection,
@@ -50,8 +49,8 @@ import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.t
 import {
   combatantCanTakeReactions,
   combatantCanSee,
-  combatantHandUses,
   currentActorId,
+  firstFreeHand,
   grappledBy,
 } from "./creature-state-leaves.ts";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
@@ -564,17 +563,6 @@ export function shoveForTarget(
   }
   /* v8 ignore stop -- @preserve */
   return { tag: "ok", dc: unarmedStrikeSaveDc(shover) };
-}
-
-export function firstFreeHand(
-  state: BattleState,
-  combatant: BattleCreatureState,
-  grapples: readonly BattleGrappleLink[],
-): BattleHand | undefined {
-  const hands = combatantHandUses(state, combatant, grapples);
-  if (hands.left === "free") return "left";
-  if (hands.right === "free") return "right";
-  return undefined;
 }
 
 export function grappleEscapeDc(

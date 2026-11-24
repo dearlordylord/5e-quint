@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
-import { resourceCount } from "@dnd/shared/types";
+import { type HandUse, resourceCount } from "@dnd/shared/types";
+import { Match } from "effect";
 
 import {
   attackExecutionSelectionForOption,
@@ -7,6 +8,9 @@ import {
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
+import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/battle-object-lifecycle.ts";
+import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -14,7 +18,7 @@ import type {
   BattleCreatureState,
   BattleState,
 } from "./battle-state-execution.ts";
-import type { CombatantId } from "./identity.ts";
+import type { BattleObjectId, CombatantId } from "./identity.ts";
 
 export function battleAmmunitionStock(
   ammunition: BattleAmmunitionKind,
@@ -47,13 +51,90 @@ export function ammunitionStockIsAvailable(
   );
 }
 
-export function ammunitionForAttackIsAvailable(
+/**
+ * Whether the attacker can fire the attack's ammunition: it carries matching
+ * stock, and it can draw a piece. Drawing is part of the attack, and a
+ * one-handed weapon needs a free hand to load (SRD "Ammunition").
+ */
+export function ammunitionForAttackIsReady(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
 ): boolean {
   const ammunition = ammunitionRequirementForAttack(attack);
   return (
-    ammunition === null || ammunitionStockIsAvailable(combatant, ammunition)
+    ammunition === null ||
+    (combatant !== undefined &&
+      ammunitionStockIsAvailable(combatant, ammunition) &&
+      ammunitionCanBeDrawn(state, combatant, attack))
+  );
+}
+
+/**
+ * A one-handed weapon needs a free loading hand; a Two-Handed weapon uses
+ * the hands operating that same weapon. Stat Block hand occupancy is not
+ * represented (ASSUMPTIONS.md A64).
+ */
+function ammunitionCanBeDrawn(
+  state: BattleState,
+  combatant: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+): boolean {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (weaponAttack) =>
+      ammunitionWeaponHandsAreAvailable(state, combatant, weaponAttack),
+    ),
+    Match.whenOr(
+      { kind: "unarmedStrike" },
+      { kind: "statBlockAttack" },
+      () => true,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function ammunitionWeaponHandsAreAvailable(
+  state: BattleState,
+  combatant: BattleCreatureState,
+  attack: Extract<SupportedAttackActionOption, { readonly kind: "weapon" }>,
+): boolean {
+  if (combatant.origin.kind !== "character") return false;
+  const loadout = characterEffectiveLoadoutFromOrigin(
+    state,
+    combatant.combatantId,
+    combatant.origin,
+  );
+  const hands = combatantHandUses(state, combatant, state.grapples);
+  const handUses: readonly [HandUse, HandUse] = [hands.left, hands.right];
+  if (
+    attack.weapon.properties.some((property) => property.kind === "two_handed")
+  ) {
+    return twoHandedAmmunitionWeaponIsHeld({
+      weapon: loadout.weapon,
+      weaponObjectId: attack.weaponObjectId,
+      handUses,
+    });
+  }
+  if (!handUses.includes("free")) return false;
+  if (loadout.weapon?.itemId === attack.weaponObjectId) {
+    return handUses.includes("mainWeapon");
+  }
+  return (
+    loadout.offHandWeapon?.itemId === attack.weaponObjectId &&
+    handUses.includes("offWeapon")
+  );
+}
+
+function twoHandedAmmunitionWeaponIsHeld(input: {
+  readonly weapon: CharacterBattleLoadoutRef["weapon"];
+  readonly weaponObjectId: BattleObjectId;
+  readonly handUses: readonly [HandUse, HandUse];
+}): boolean {
+  return (
+    input.weapon?.itemId === input.weaponObjectId &&
+    input.weapon.grip === "two_handed" &&
+    input.handUses.includes("mainWeapon") &&
+    input.handUses.every((hand) => ["mainWeapon", "free"].includes(hand))
   );
 }
 

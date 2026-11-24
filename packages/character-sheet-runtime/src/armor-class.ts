@@ -16,6 +16,7 @@ import {
   currentArmorClass,
   defaultArmorClassState,
   defaultUnarmoredArmorClassBase,
+  loadoutHandUses,
   zeroAbilityModifiers,
   type ArmorClassBaseSource,
   type ArmorClassState,
@@ -96,11 +97,11 @@ export function characterSheetArmorClassState(
     base: base.success,
     bonuses: selectedShieldBonuses(shield),
     armorTraining: new Set(armorTraining.success),
-    leftHandUse: selectedLeftHandUse(
-      shieldFacts !== undefined,
-      loadout.offHandWeapon != null,
-    ),
-    rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
+    ...loadoutHandUses({
+      holdsShield: shieldFacts !== undefined,
+      holdsOffHandWeapon: loadout.offHandWeapon != null,
+      mainWeaponGrip: loadout.weapon?.grip,
+    }),
   });
 }
 
@@ -170,14 +171,6 @@ function selectedArmorClassBase(
     wearingArmor: false,
     wieldingShield: shieldFacts !== undefined,
   });
-}
-
-function selectedLeftHandUse(
-  wieldingShield: boolean,
-  wieldingOffHandWeapon: boolean,
-): ArmorClassState["leftHandUse"] {
-  if (wieldingShield) return "shield";
-  return wieldingOffHandWeapon ? "offWeapon" : "free";
 }
 
 function selectedShieldBonuses(

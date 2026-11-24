@@ -48,7 +48,7 @@ import {
   combatantHasPactOfTheChainSpawnedCompanion,
   spawnedCompanionLifecycleExecutionFactsForOwner,
 } from "../companion-reaction-feature-facts.ts";
-import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
+import { ammunitionForAttackIsReady } from "../battle-ammunition.ts";
 import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
@@ -1139,7 +1139,7 @@ function companionAttackActs(
     familiarCombatant.origin.execution,
   ).flatMap((attack) => {
     if (
-      !ammunitionForAttackIsAvailable(familiarCombatant, attack) ||
+      !ammunitionForAttackIsReady(state, familiarCombatant, attack) ||
       statBlockAttackProcedureSection(
         state,
         familiarId,

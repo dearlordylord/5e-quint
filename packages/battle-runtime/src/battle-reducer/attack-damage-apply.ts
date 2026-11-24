@@ -92,7 +92,7 @@ import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-ef
 import { scoreModifier } from "./domain-helpers.ts";
 import { statBlockAttackActionOptions } from "./statblock.ts";
 import { statBlockProcedureResourcesAvailable } from "../stat-block-execution-state.ts";
-import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
+import { ammunitionForAttackIsReady } from "../battle-ammunition.ts";
 import {
   activeDruidWildShape,
   activeDruidWildShapeEffect,
@@ -433,7 +433,7 @@ export function attackActionOptionsForActor(
             ),
         ),
         ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
-      ].filter((attack) => ammunitionForAttackIsAvailable(actor, attack));
+      ].filter((attack) => ammunitionForAttackIsReady(state, actor, attack));
     }
     const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
       actor,
@@ -466,7 +466,7 @@ export function attackActionOptionsForActor(
             unarmedStrike,
           ];
     return options.filter((attack) =>
-      ammunitionForAttackIsAvailable(actor, attack),
+      ammunitionForAttackIsReady(state, actor, attack),
     );
   }
 
@@ -495,7 +495,7 @@ export function attackActionOptionsForActor(
                 option.procedureRef,
               ),
             ))) &&
-        ammunitionForAttackIsAvailable(actor, option),
+        ammunitionForAttackIsReady(state, actor, option),
     );
   }
 
@@ -595,7 +595,8 @@ export function offHandAttackActionOptionsForActor(
   };
   return attackActionVariantOptions(lightPropertyOffHand).filter(
     (attack): attack is BoundCharacterWeaponAttackActionOption =>
-      attack.kind === "weapon" && ammunitionForAttackIsAvailable(actor, attack),
+      attack.kind === "weapon" &&
+      ammunitionForAttackIsReady(state, actor, attack),
   );
 }
 

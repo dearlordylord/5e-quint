@@ -22,8 +22,10 @@ import {
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
   type BattleGrappleLink,
+  type BattleHand,
   type BattleState,
 } from "../battle-state-execution.ts";
+import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import type { CombatantId } from "../identity.ts";
 import type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
 
@@ -196,28 +198,20 @@ export function combatantHandUses(
     combatant,
     combatant.armorClass.rightHandUse,
   );
-  const effectiveLoadout =
+  const grounded =
     combatant.origin.kind === "character"
-      ? characterEffectiveLoadoutFromOrigin(
-          state,
-          combatant.combatantId,
-          combatant.origin,
+      ? groundedLoadoutObjects(
+          combatant.origin.selectedLoadout,
+          characterEffectiveLoadoutFromOrigin(
+            state,
+            combatant.combatantId,
+            combatant.origin,
+          ),
         )
-      : null;
-  const selectedLoadout =
-    combatant.origin.kind === "character"
-      ? combatant.origin.selectedLoadout
-      : null;
+      : NO_GROUNDED_LOADOUT_OBJECTS;
   return {
     left: handUseForOccupancy(
-      (leftHandUse === "shield" &&
-        selectedLoadout?.shield !== undefined &&
-        effectiveLoadout?.shield === undefined) ||
-        (leftHandUse === "offWeapon" &&
-          selectedLoadout?.offHandWeapon !== undefined &&
-          effectiveLoadout?.offHandWeapon === undefined)
-        ? "free"
-        : leftHandUse,
+      handUseWithGroundedLoadout(leftHandUse, grounded),
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -225,11 +219,7 @@ export function combatantHandUses(
       ),
     ),
     right: handUseForOccupancy(
-      rightHandUse === "mainWeapon" &&
-        selectedLoadout?.weapon !== undefined &&
-        effectiveLoadout?.weapon === undefined
-        ? "free"
-        : rightHandUse,
+      handUseWithGroundedLoadout(rightHandUse, grounded),
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -237,6 +227,62 @@ export function combatantHandUses(
       ),
     ),
   };
+}
+
+/** The first hand, left before right, that holds nothing and grapples nothing. */
+export function firstFreeHand(
+  state: BattleState,
+  combatant: BattleCreatureState,
+  grapples: readonly BattleGrappleLink[],
+): BattleHand | undefined {
+  const hands = combatantHandUses(state, combatant, grapples);
+  if (hands.left === "free") return "left";
+  if (hands.right === "free") return "right";
+  return undefined;
+}
+
+/** Which of a character's selected loadout hand objects are on the ground. */
+export type GroundedLoadoutObjects = {
+  readonly shield: boolean;
+  readonly offHandWeapon: boolean;
+  readonly mainWeapon: boolean;
+};
+
+const NO_GROUNDED_LOADOUT_OBJECTS: GroundedLoadoutObjects = {
+  shield: false,
+  offHandWeapon: false,
+  mainWeapon: false,
+};
+
+/** The selected loadout hand objects that the effective loadout no longer holds. */
+export function groundedLoadoutObjects(
+  selected: CharacterBattleLoadoutRef,
+  effective: CharacterBattleLoadoutRef,
+): GroundedLoadoutObjects {
+  return {
+    shield: selected.shield !== undefined && effective.shield === undefined,
+    offHandWeapon:
+      selected.offHandWeapon !== undefined &&
+      effective.offHandWeapon === undefined,
+    mainWeapon: selected.weapon !== undefined && effective.weapon === undefined,
+  };
+}
+
+/**
+ * A loadout object on the ground no longer occupies its hand. A main weapon
+ * held with the `two_handed` grip occupies both, so it frees both.
+ */
+export function handUseWithGroundedLoadout(
+  handUse: HandUse,
+  grounded: GroundedLoadoutObjects,
+): HandUse {
+  return Match.value(handUse).pipe(
+    Match.when("shield", () => (grounded.shield ? "free" : handUse)),
+    Match.when("offWeapon", () => (grounded.offHandWeapon ? "free" : handUse)),
+    Match.when("mainWeapon", () => (grounded.mainWeapon ? "free" : handUse)),
+    Match.whenOr("free", "grapple", "spellCreatedHeldObject", () => handUse),
+    Match.exhaustive,
+  );
 }
 
 function combatantWildShapeEffectiveHandUse(

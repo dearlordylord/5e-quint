@@ -8,7 +8,7 @@ import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 import { CharacterBuildClassLevelGainSchema } from "@dnd/character-creation-runtime";
 import { TIME_SPAN_UNITS } from "@dnd/shared/elapsed-time";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
-import { DAMAGE_TYPES } from "@dnd/shared/types";
+import { DAMAGE_TYPES, WeaponGripSchema } from "@dnd/shared/types";
 import { DRUID_CIRCLE_LAND_CHOICES } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
@@ -165,7 +165,7 @@ const EquipmentLoadoutPatchSchema = Schema.Struct({
     Schema.NullOr(
       Schema.Struct({
         itemId: EquipmentItemReferenceSchema,
-        grip: Schema.Literal("one_handed"),
+        grip: WeaponGripSchema,
       }),
     ),
   ),

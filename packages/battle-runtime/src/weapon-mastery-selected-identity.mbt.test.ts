@@ -38,7 +38,10 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { Result } from "effect";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
-import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  defaultArmorClassState,
+  loadoutHandUses,
+} from "@dnd/shared-algebras/armor-class-algebra";
 
 import {
   abilityModifier,
@@ -806,7 +809,11 @@ function weaponMasteryAttackerInit(
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
-        rightHandUse: "mainWeapon",
+        ...loadoutHandUses({
+          holdsShield: false,
+          holdsOffHandWeapon: false,
+          mainWeaponGrip: scenario.grip,
+        }),
       },
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
