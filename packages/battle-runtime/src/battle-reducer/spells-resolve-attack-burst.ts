@@ -1,3 +1,4 @@
+import { spellFillSetTargetFacts } from "./spells-resolve-fill-set.ts";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import * as Result from "effect/Result";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
@@ -913,6 +914,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     damagedByAttack,
     input.actorId,
     input.invocation,
+    { targetSpatialFacts: spellFillSetTargetFacts(input.fillSet) },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(damagedByAttack, input.input.subject, [

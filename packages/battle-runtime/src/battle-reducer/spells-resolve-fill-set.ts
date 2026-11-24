@@ -2536,3 +2536,20 @@ function spellAttackSequencePartIndexForHole(
   }
   return null;
 }
+
+/**
+ * The target facts a spell's fills carry: those of its target choice, its
+ * target list and its target allocation.
+ */
+export function spellFillSetTargetFacts(
+  fillSet: Pick<
+    Extract<SpellFillSet, { readonly tag: "ok" }>,
+    "targetSpatialFacts" | "targetList" | "targetAllocation"
+  >,
+): readonly { readonly kind: string }[] {
+  return [
+    ...fillSet.targetSpatialFacts,
+    ...(fillSet.targetList?.spatialFacts ?? []),
+    ...(fillSet.targetAllocation?.spatialFacts ?? []),
+  ];
+}

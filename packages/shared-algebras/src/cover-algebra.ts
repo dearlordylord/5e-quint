@@ -1,10 +1,16 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.TARGET_COVER
+// KERNEL-COVERAGE: runtime-owner BATTLE.SAVE.DEXTERITY_COVER
 // RAW: .references/srd-5.2.1/rules-glossary.md "Cover" and
 // .references/srd-5.2.1/playing-the-game.md "Cover". The table adjudicates the
 // degree of cover between an attacker and a target, and supplies it only when it
-// rules some; this algebra owns what that degree does to an attack roll or to
-// direct targeting.
-import type { CoverType, RuledCoverType } from "@dnd/shared/types";
+// rules some; this algebra owns what that degree does to an attack roll, to a
+// Dexterity saving throw or to direct targeting.
+import type { Ability } from "@dnd/shared/game-facts";
+import type {
+  BonusCoverType,
+  CoverType,
+  RuledCoverType,
+} from "@dnd/shared/types";
 import { Match } from "effect";
 
 /** A degree of cover that still lets an attack or a spell target directly. */
@@ -47,16 +53,49 @@ export function directTargetCover(
   return targeting.tag === "targetable" ? targeting.cover : null;
 }
 
+/**
+ * The bonus Half Cover and Three-Quarters Cover each give, to AC and to
+ * Dexterity saving throws alike.
+ */
+export const COVER_BONUSES = [
+  2, 5,
+] as const satisfies readonly CoverArmorClassBonus[];
+export type CoverBonus = (typeof COVER_BONUSES)[number];
+
+export function coverBonus(cover: BonusCoverType): CoverBonus {
+  return Match.value(cover).pipe(
+    Match.when("half", (): CoverBonus => 2),
+    Match.when("threeQuarters", (): CoverBonus => 5),
+    Match.exhaustive,
+  );
+}
+
 export function coverArmorClassBonus(
   cover: DirectTargetCover,
 ): CoverArmorClassBonus {
   return Match.value(cover).pipe(
     Match.when("none", (): CoverArmorClassBonus => 0),
-    Match.when("half", (): CoverArmorClassBonus => 2),
-    Match.when("threeQuarters", (): CoverArmorClassBonus => 5),
+    Match.whenOr("half", "threeQuarters", coverBonus),
     Match.exhaustive,
   );
 }
+
+/**
+ * Whether cover can add to a saving throw of this ability. Cover's bonus is to
+ * AC and Dexterity saving throws, so only a Dexterity save benefits.
+ */
+export function savingThrowBenefitsFromCover(ability: Ability): boolean {
+  return ability === "dex";
+}
+
+/**
+ * Whether an effect lets its saving throw take the target's cover.
+ * - available: a Dexterity save adds the bonus of the target's cover.
+ * - denied: the target gains no benefit from Half Cover or Three-Quarters
+ *   Cover for the save, as Sacred Flame says.
+ */
+export const SAVE_COVER_BENEFITS = ["available", "denied"] as const;
+export type SaveCoverBenefit = (typeof SAVE_COVER_BENEFITS)[number];
 
 /** The AC an attack roll must meet against a target behind the given cover. */
 export function armorClassBehindCover(

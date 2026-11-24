@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 181,
-    "covered": 170,
+    "total": 182,
+    "covered": 171,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 141,
+      "battle": 142,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 170,
+      "covered": 171,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6557,6 +6557,34 @@
         "UBIQUITOUS_LANGUAGE.md#Combat"
       ],
       "title": "An attack roll on a creature or object, with a weapon, a Stat Block attack, an Opportunity Attack or a spell, meets the target's AC plus the bonus of the table-supplied degree of cover, and Total Cover refuses direct targeting by attacks and spells"
+    },
+    {
+      "id": "BATTLE.SAVE.DEXTERITY_COVER",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-saving-throw-cover.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
+      ],
+      "reason": "The QNT owner models which saves cover adds to (Dexterity only), the bonus of each degree, and an effect's denial of the benefit. The table rules each target's degree for the specific effect: a spell target keeps the degree on its spellTarget fact, which the spell's save hole projects as a cover flat bonus, and any other rolled Dexterity save outcome carries an optional cover degree. The runtime derives the bonus and never takes one from the table. saving-throw-cover replays the prefix fills to find the save hole each covered outcome answers, and refuses cover on a save cover adds nothing to, on a save whose effect denies the benefit, and on a spell target already ruled by its fact. A save gate's saveCoverBenefit denial reaches the saveGatedDamage save hole; spell admission leaves a spell without a Battle owner when an admitted procedure doesn't carry the denial. The parity witness covers an area Dexterity save with each degree, a Constitution save refusing cover, a targeted Dexterity save projecting each degree from its spellTarget fact and refusing outcome cover, and Sacred Flame denying the benefit.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/shared-algebras/src/cover-algebra.ts",
+        "packages/battle-runtime/src/battle-reducer/saving-throw-cover.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/playing-the-game.md#Cover",
+        ".references/srd-5.2.1/spells.md#Sacred Flame",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "A Dexterity saving throw adds the bonus of the target's table-ruled degree of cover against the effect, unless the effect denies the benefit of cover for the save"
     },
     {
       "id": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
@@ -13509,7 +13537,10 @@
     },
     {
       "evidence": "Identity-independent Cover semantics: a table-supplied degree of cover either refuses direct targeting (Total Cover) or adds 0, 2 or 5 to the Armor Class an attack roll must meet. Object and creature attack owners import it instead of keeping their own cover arithmetic.",
-      "obligationIds": ["BATTLE.ATTACK.TARGET_COVER"],
+      "obligationIds": [
+        "BATTLE.ATTACK.TARGET_COVER",
+        "BATTLE.SAVE.DEXTERITY_COVER"
+      ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt",
       "role": "semantic-core"
     },
@@ -20999,6 +21030,26 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.TARGET_COVER",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "pure-def",
+        "int",
+        "bool",
+        "pattern-match",
+        "arithmetic",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.SAVE.DEXTERITY_COVER",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt"
       ],

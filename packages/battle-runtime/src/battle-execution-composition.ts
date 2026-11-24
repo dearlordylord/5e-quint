@@ -1,5 +1,6 @@
 import { acceptedAttackReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
 import { optionalProperty } from "./optional-property.ts";
+import { savingThrowFillsCoverIssue } from "./battle-reducer/saving-throw-cover.ts";
 import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
@@ -111,6 +112,24 @@ export function resolveAdmittedCompanionReappearanceSubject(
 }
 
 export function endTurn(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly fills?: readonly BattleFill[];
+}): BattleResolutionResult {
+  const coverIssue = savingThrowFillsCoverIssue(input.fills ?? [], (fills) =>
+    endTurnWithFills({ ...input, fills }),
+  );
+  return coverIssue === null
+    ? endTurnWithFills(input)
+    : {
+        tag: "invalid",
+        reason: "invalidFill",
+        message: coverIssue,
+        snapshot: snapshotBattle(input.state),
+      };
+}
+
+function endTurnWithFills(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly fills?: readonly BattleFill[];

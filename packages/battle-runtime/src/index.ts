@@ -168,6 +168,15 @@ export {
 
 export { interruptChoiceResponderId } from "./battle-state-execution.ts";
 export { ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY } from "./battle-reducer/spells-damage-fills.ts";
+export {
+  SAVING_THROW_COVER_RULINGS,
+  savingThrowCoverRuling,
+  type SavingThrowCoverRuling,
+} from "./battle-reducer/saving-throw-cover.ts";
+export {
+  UNOWNED_SPELL_MECHANICS_FACETS,
+  type UnownedSpellMechanicsFacet,
+} from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 
 export {
   spellActiveEffectExecutionRef,

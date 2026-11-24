@@ -1188,6 +1188,20 @@ export type SpellProcedureMechanicsInspectionView<
       readonly tag: "unsupported";
       readonly issues: ReadonlyNonEmptyArray<Issue>;
     };
+/**
+ * Authored mechanics facets that leave a spell without a Battle owner unless
+ * a procedure applies them.
+ * - deathAftermath: no Battle procedure owns what follows a death.
+ * - saveCoverBenefit: a save gate denies its target the benefit of cover, and
+ *   an admitted procedure doesn't carry that denial to its saving throw.
+ */
+export const UNOWNED_SPELL_MECHANICS_FACETS = [
+  "deathAftermath",
+  "saveCoverBenefit",
+] as const;
+export type UnownedSpellMechanicsFacet =
+  (typeof UNOWNED_SPELL_MECHANICS_FACETS)[number];
+
 export type BattleSpellMechanicsAdmission<
   Admitted extends AdmittedSpellMechanicsView = AdmittedSpellMechanicsView,
   Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
@@ -1198,7 +1212,7 @@ export type BattleSpellMechanicsAdmission<
         | { readonly kind: "noMatchingBattleProcedure" }
         | {
             readonly kind: "unownedMechanicsFacet";
-            readonly facet: "deathAftermath";
+            readonly facet: UnownedSpellMechanicsFacet;
           };
     }
   | {
@@ -1360,6 +1374,33 @@ type AdmissionIssueFor<Inspection> = Inspection extends {
   ? Issue
   : never;
 
+/**
+ * Whether any save gate in the mechanics graph, nested ones included, denies
+ * its target the benefit of cover for the save.
+ */
+function mechanicsDenySaveCoverBenefit(node: unknown): boolean {
+  if (Array.isArray(node)) return node.some(mechanicsDenySaveCoverBenefit);
+  if (typeof node !== "object" || node === null) return false;
+  if (
+    "kind" in node &&
+    node.kind === "save_gate" &&
+    "saveCoverBenefit" in node &&
+    node.saveCoverBenefit !== undefined
+  )
+    return true;
+  return Object.values(node).some(mechanicsDenySaveCoverBenefit);
+}
+
+/** Whether an admitted procedure carries a save gate's cover denial. */
+function admittedAppliesSaveCoverDenial(admitted: {
+  readonly facts: object;
+}): boolean {
+  return (
+    "saveCoverBenefit" in admitted.facts &&
+    admitted.facts.saveCoverBenefit === "denied"
+  );
+}
+
 export function admitBattleSpellMechanicsFrom<
   const Admissions extends readonly AnySpellProcedureMechanicsAdmission[],
 >(
@@ -1395,6 +1436,15 @@ export function admitBattleSpellMechanicsFrom(
   if (unsupportedIssues !== undefined) {
     return { tag: "rejected", issues: unsupportedIssues };
   }
+
+  if (
+    mechanicsDenySaveCoverBenefit(source.mechanics) &&
+    !supported.every(admittedAppliesSaveCoverDenial)
+  )
+    return {
+      tag: "notBattleOwned",
+      reason: { kind: "unownedMechanicsFacet", facet: "saveCoverBenefit" },
+    };
 
   const admittedProcedures = spellProcedureNonEmpty(supported);
   return admittedProcedures === undefined

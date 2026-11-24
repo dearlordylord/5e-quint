@@ -177,7 +177,8 @@ export function admitSelectedStatBlockSpellInvocation(input: {
     Match.discriminatorsExhaustive("tag")({
       notBattleOwned: (admission) =>
         unsupportedSpellInvocationAdmission(
-          admission.reason.kind === "unownedMechanicsFacet"
+          admission.reason.kind === "unownedMechanicsFacet" &&
+            admission.reason.facet === "deathAftermath"
             ? "unsupportedDeathAftermath"
             : "unsupportedProfile",
         ),

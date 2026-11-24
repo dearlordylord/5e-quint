@@ -402,7 +402,7 @@
       "module/binding:saveDamageReplacementForInvocation": 11,
       "module/binding:savingThrowRollModeProjections": 17,
       "module/binding:spellDamageByTypeForTarget": 9,
-      "module/binding:spellSavingThrowOutcomeHole": 19,
+      "module/binding:spellSavingThrowOutcomeHole": 16,
       "module/binding:validateSpellAttackSequencePartDamageFill": 14,
       "module/binding:validateSpellDamageFill": 31
     },
@@ -595,7 +595,7 @@
       "module/binding:statBlockAttackMechanicsSupport": 12
     },
     "packages/battle-runtime/src/unit-feature-support.ts": {
-      "module/binding:attackActionAreaSaveDamageReplacementProfileForUnit": 23,
+      "module/binding:attackActionAreaSaveDamageReplacementProfileForUnit": 22,
       "module/binding:attackActionAttackCountScalingProfileForUnit": 10,
       "module/binding:attackDamageDieFloorProfileForUnit": 10,
       "module/binding:attackDamageRiderMechanicsProjection": 19,

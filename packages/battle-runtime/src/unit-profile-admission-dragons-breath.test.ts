@@ -449,6 +449,7 @@ describe("Dragon's Breath initial cast admission", () => {
       rollMode: "advantage",
     });
     expect(saveHole.targetFlatBonuses).toContainEqual({
+      kind: "effect",
       targetId: spellCasterId,
       sourceCombatantId: spellTargetId,
       sourceProcedureRef: expect.any(String),

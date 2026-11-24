@@ -27003,7 +27003,8 @@
                   },
                   "onSuccess": {
                     "kind": "none"
-                  }
+                  },
+                  "saveCoverBenefit": "denied"
                 }
               ]
             },

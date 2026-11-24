@@ -1,3 +1,4 @@
+import { spellFillSetTargetFacts } from "./spells-resolve-fill-set.ts";
 import {
   admitSpellAreaOrigin,
   spellAreaOriginMatchesCombatant,
@@ -460,7 +461,7 @@ export function resolveAreaSaveMetamagicFills(input: {
         input.state,
         input.actorId,
         input.invocation,
-        selection.heightenedSpellTargetId,
+        { heightenedSpellTargetId: selection.heightenedSpellTargetId },
       ),
     ]);
   }
@@ -647,7 +648,10 @@ export function resolvePersistentAreaSaveConditionSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -803,6 +807,7 @@ export function resolveStagedSaveConditionSpellAct(
     input.input.state,
     input.actorId,
     input.invocation,
+    { targetSpatialFacts: spellFillSetTargetFacts(input.fillSet) },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   const fillIssue = stagedSaveConditionFillIssue(input.fillSet);
@@ -919,7 +924,10 @@ export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -1043,6 +1051,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
+    { targetSpatialFacts: spellFillSetTargetFacts(input.fillSet) },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -1395,8 +1404,11 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
-    input.fillSet.targetList?.relationshipFacts ?? [],
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      relationshipFacts: input.fillSet.targetList?.relationshipFacts ?? [],
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.attackRoll !== undefined) {
@@ -2694,8 +2706,11 @@ export function resolveSaveGateConditionSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
-    input.fillSet.targetList?.relationshipFacts ?? [],
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      relationshipFacts: input.fillSet.targetList?.relationshipFacts ?? [],
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -2849,7 +2864,10 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -3058,7 +3076,10 @@ export function resolveCompelledNextTurnBehaviorSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -3199,7 +3220,10 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
+    {
+      heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+      targetSpatialFacts: spellFillSetTargetFacts(input.fillSet),
+    },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
