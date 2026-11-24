@@ -16,8 +16,11 @@ import {
   startBattleSessionRight,
   statBlockCreatureInit,
   admitCharacterWeaponAttackExecutionWeapon,
+  testDaggerAttack,
   testLongswordAttack,
 } from "../../../battle-runtime/src/battle-runtime.test-support.ts";
+import { attackActionOptionsForActor } from "../../../battle-runtime/src/battle-reducer/attack-damage-apply.ts";
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { createMcpPlaySessionRoot } from "../composition-root.ts";
 import { BattleResolutionOutputSchema } from "../battle-tool-output.ts";
 import { jsonContentPayload } from "../tool-content.ts";
@@ -123,7 +126,9 @@ for (const actor of ["character", "statBlock"] as const) {
       expect(Array.isArray(input.fillSchema.oneOf)).toBe(true);
       expect(input.fillSchema.oneOf).toHaveLength(hole.choices.length);
       if (range === "melee") {
-        expect(JSON.stringify(input.fillSchema)).not.toContain('"contains"');
+        // A melee target counts no supplemental fact: it needs no proximity
+        // fact and refuses any thrown weapon landing.
+        expect(JSON.stringify(input.fillSchema)).not.toContain('"maxContains"');
       } else {
         expect(JSON.stringify(input.fillSchema)).toContain('"maxContains":1');
         expect(validate({ ...fill, spatialFacts: [fact] }).valid).toBe(false);
@@ -238,3 +243,141 @@ for (const actor of ["character", "statBlock"] as const) {
     });
   }
 }
+
+/** A fighter's Dagger target fill and its advertised fill schema validator. */
+function daggerTargetContract(delivery: "thrown" | "melee") {
+  const root = createMcpPlaySessionRoot();
+  const dagger = testDaggerAttack();
+  const session = startBattleSessionRight({
+    battleId: battleId(`synthetic-${delivery}-target-contract`),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: dagger,
+        selectedLoadout: {
+          weapon: {
+            itemId: dagger.weaponObjectId,
+            unitId: parseSharedUnitId("weapon_dagger"),
+            grip: "one_handed",
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  expect(Result.isSuccess(root.sessionStore.storeActiveBattle(session))).toBe(
+    true,
+  );
+  const option = attackActionOptionsForActor(session.state, fighterId).find(
+    (attack) =>
+      attack.kind === "weapon" &&
+      (attack.weaponDelivery ?? "melee") === delivery,
+  );
+  if (option?.kind !== "weapon") throw new Error(`Expected ${delivery} Dagger`);
+  const subject = {
+    tag: "action" as const,
+    actorId: fighterId,
+    action: "attack" as const,
+    procedureRef: option.procedureRef,
+    attackAbility: option.ability,
+    attackDamageType: option.weapon.damage.damageType,
+    ...(option.weaponDelivery === undefined
+      ? {}
+      : { weaponDelivery: option.weaponDelivery }),
+  };
+  const selected = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
+    jsonContentPayload(
+      CHATGPT_EXECUTION_TOOLS.attack.handle(root, { subject }),
+    ),
+  );
+  if (selected.envelope.frontier.kind !== "holes")
+    throw new Error("Expected selected target request");
+  const hole = selected.envelope.frontier.holes.find(
+    (h) => h.kind === "targetChoice",
+  );
+  if (hole?.kind !== "targetChoice" || hole.attack === undefined)
+    throw new Error("Expected canonical attack target");
+  const guidance = chatGptBattleGuidance(root);
+  if (guidance.kind !== "ordinaryContinuation")
+    throw new Error("Expected current continuation");
+  const input = guidance.inputs.find((i) => i.holeId === hole.holeId);
+  if (input === undefined) throw new Error("Expected target fill contract");
+  const validate = createDraft2020JsonSchemaValidator().getValidator(
+    requireJsonSchema(input.fillSchema, `${delivery} attack target`),
+  );
+  const fill = attackTargetFill(
+    hole,
+    hole.attack.actorId,
+    goblinId,
+    hole.attack.selection,
+    [],
+    movementFeet(delivery === "thrown" ? 20 : 5),
+  );
+  return { hole, attack: hole.attack, fill, validate };
+}
+
+test("a thrown weapon target requires one landing fact scoped to its attack", () => {
+  const { attack, fill, validate } = daggerTargetContract("thrown");
+  expect(attack.requiresThrownWeaponLanding).toBe(true);
+  const facts = fill.spatialFacts ?? [];
+  const landing = facts.filter((f) => f.kind === "thrownWeaponLanding");
+  const others = facts.filter((f) => f.kind !== "thrownWeaponLanding");
+  expect(landing).toHaveLength(1);
+
+  expect(validate(fill).valid).toBe(true);
+  expect(validate({ ...fill, spatialFacts: others }).valid).toBe(false);
+  expect(
+    validate({ ...fill, spatialFacts: [...others, ...landing, ...landing] })
+      .valid,
+  ).toBe(false);
+  expect(
+    validate({
+      ...fill,
+      spatialFacts: [
+        ...others,
+        ...landing.map((f) => ({
+          ...f,
+          procedureRef: `${f.procedureRef}:stale`,
+        })),
+      ],
+    }).valid,
+  ).toBe(false);
+  expect(
+    validate({
+      ...fill,
+      spatialFacts: [
+        ...others,
+        ...landing.map((f) => ({ ...f, attackerId: goblinId })),
+      ],
+    }).valid,
+  ).toBe(false);
+  // The runtime takes exactly one landing fact in all, so a second one for
+  // another attacker is refused beside the scoped one.
+  expect(
+    validate({
+      ...fill,
+      spatialFacts: [
+        ...others,
+        ...landing,
+        ...landing.map((f) => ({ ...f, attackerId: goblinId })),
+      ],
+    }).valid,
+  ).toBe(false);
+});
+
+test("a melee weapon target refuses a thrown weapon landing fact", () => {
+  const { attack, fill, validate } = daggerTargetContract("melee");
+  expect(attack.requiresThrownWeaponLanding).toBeUndefined();
+  const facts = fill.spatialFacts ?? [];
+  expect(facts.some((f) => f.kind === "thrownWeaponLanding")).toBe(false);
+  const thrown = daggerTargetContract("thrown").fill.spatialFacts ?? [];
+  const landing = thrown
+    .filter((f) => f.kind === "thrownWeaponLanding")
+    .map((f) => ({ ...f, procedureRef: attack.selection.procedureRef }));
+  expect(landing).toHaveLength(1);
+
+  expect(validate(fill).valid).toBe(true);
+  expect(
+    validate({ ...fill, spatialFacts: [...facts, ...landing] }).valid,
+  ).toBe(false);
+});

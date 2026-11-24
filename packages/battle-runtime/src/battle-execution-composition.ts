@@ -10,6 +10,7 @@ import type {
   BattleSnapshot,
   BattleState,
   BattleAcceptedAttackAmmunitionSpend,
+  BattleAcceptedThrownWeaponRelease,
   BattleInterruptRouteOptions,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -53,6 +54,7 @@ import type { SpawnedCompanionWithinCommunicationRangeFact } from "./companion-c
 import { spawnedCompanionLifecycleExecutionFactsForOwner } from "./companion-reaction-feature-facts.ts";
 import type { CombatantId } from "./identity.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
+import { withThrownWeaponDropsReported } from "./battle-reducer/thrown-weapon-release.ts";
 import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
 import { resolvePactOfTheChainFamiliarReactionAttack } from "./companion-reaction-attack.ts";
 import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolvers.ts";
@@ -325,9 +327,13 @@ export function snapshotBattle(
 
 function battleResolutionWithExecutionSnapshot(
   inputState: BattleState,
-  result: BattleResolutionResult,
+  mechanicalResult: BattleResolutionResult,
   handledInterruptTrigger?: BattleInterruptTrigger,
 ): BattleResolutionResult {
+  const result = withThrownWeaponDropsReported({
+    stateBefore: inputState,
+    result: mechanicalResult,
+  });
   const resolvedSubjectPhase =
     result.tag === "resolved"
       ? completedReportedReadyResumePhase(inputState, result.state)
@@ -355,6 +361,10 @@ function battleResolutionWithExecutionSnapshot(
                       ...optionalProperty(
                         "acceptedAttackAmmunitionSpend",
                         continuation.acceptedAttackAmmunitionSpend,
+                      ),
+                      ...optionalProperty(
+                        "acceptedThrownWeaponRelease",
+                        continuation.acceptedThrownWeaponRelease,
                       ),
                       ...(continuation.handledInterruptTrigger !== undefined
                         ? {
@@ -398,6 +408,9 @@ function continuationMetadata(
   readonly acceptedAttackAmmunitionSpend:
     | BattleAcceptedAttackAmmunitionSpend
     | undefined;
+  readonly acceptedThrownWeaponRelease:
+    | BattleAcceptedThrownWeaponRelease
+    | undefined;
   readonly admittedMovement: Extract<
     BattleState["subjectResolutionPhase"],
     { readonly kind: "subjectContinuation" }
@@ -410,6 +423,7 @@ function continuationMetadata(
     return {
       handledInterruptTrigger,
       acceptedAttackAmmunitionSpend: undefined,
+      acceptedThrownWeaponRelease: undefined,
       admittedMovement: undefined,
     };
   }
@@ -419,6 +433,8 @@ function continuationMetadata(
       handledInterruptTrigger,
     acceptedAttackAmmunitionSpend:
       result.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend,
+    acceptedThrownWeaponRelease:
+      result.state.subjectResolutionPhase.acceptedThrownWeaponRelease,
     admittedMovement: result.state.subjectResolutionPhase.admittedMovement,
   };
 }

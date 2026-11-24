@@ -9,6 +9,7 @@ import * as Result from "effect/Result";
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.stunning-strike unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
@@ -138,6 +139,11 @@ import {
 } from "./attack-resolvers.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
+import {
+  stateWithThrownWeaponReleasedPendingContinuation,
+  withThrownWeaponReleased,
+} from "./thrown-weapon-release.ts";
+import { qualifyAttackTargetFacts } from "./attack-spatial.ts";
 
 import {
   attackTargetHole,
@@ -159,7 +165,6 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
-import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 
 import { attackFillSet, selectedAttackFillSet } from "./attack-fill-set.ts";
@@ -1699,37 +1704,12 @@ function ordinaryObjectAttackDamage<
     ),
   };
 }
-// The table's target facts must qualify the ranged attack's enemy proximity
-// and place the target inside the attack's target constraint.
-function qualifySelectedAttackTarget(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: Parameters<typeof attackTargetIsLegal>[3],
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): ReturnType<typeof qualifyAttackEnemyProximity> {
-  return attackTargetIsLegal(
-    state,
-    attackerId,
-    targetId,
-    attack,
-    targetSpatialFacts,
-  )
-    ? qualifyAttackEnemyProximity(state, attackerId, attack, targetSpatialFacts)
-    : /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      {
-        tag: "invalid",
-        message:
-          "Attack target is outside the selected attack's supported target constraint.",
-      };
-}
-
 export function resolveSelectedAttackProcedure<
   Attack extends BoundSupportedAttackActionOption,
 >(
   input: AttackProcedureResolutionInput,
   selectedAttack: Attack,
-  spendAttackProcedure: SpendAttackProcedure<Attack>,
+  spendSelectedAttackProcedure: SpendAttackProcedure<Attack>,
 ): BattleResolutionResult {
   let attack = selectedAttack;
   const pendingAttackDamageReductions =
@@ -1754,7 +1734,7 @@ export function resolveSelectedAttackProcedure<
         attack,
         attackerId,
         fillSet,
-        spendAttackProcedure,
+        spendAttackProcedure: spendSelectedAttackProcedure,
       }),
     })),
     Match.when({ tag: "ok" }, (fillSet) => ({
@@ -1800,7 +1780,7 @@ export function resolveSelectedAttackProcedure<
     );
   }
   /* v8 ignore stop -- @preserve */
-  const targetEnemyProximity = qualifySelectedAttackTarget(
+  const targetEnemyProximity = qualifyAttackTargetFacts(
     input.state,
     attackerId,
     target.combatantId,
@@ -1814,6 +1794,27 @@ export function resolveSelectedAttackProcedure<
       targetEnemyProximity.message,
     );
   }
+  const spendAttackProcedure: SpendAttackProcedure<Attack> = (
+    state,
+    actorId,
+    spentAttack,
+    timing,
+  ) => {
+    const spent = spendSelectedAttackProcedure(
+      state,
+      actorId,
+      spentAttack,
+      timing,
+    );
+    return timing.kind === "acceptedAttack"
+      ? withThrownWeaponReleased({
+          result: spent,
+          attackerId: actorId,
+          attack: spentAttack,
+          facts: fillSet.targetSpatialFacts,
+        })
+      : spent;
+  };
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.damageDisposition.kind === "knockOut" &&
@@ -1910,7 +1911,7 @@ export function resolveSelectedAttackProcedure<
         ],
       },
       attack,
-      spendAttackProcedure,
+      spendSelectedAttackProcedure,
     );
   }
 
@@ -2531,7 +2532,13 @@ export function resolveSelectedAttackProcedure<
         );
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
-      attackRolledState,
+      stateWithThrownWeaponReleasedPendingContinuation({
+        state: attackRolledState,
+        attackerId,
+        attack,
+        facts: fillSet.targetSpatialFacts,
+        subject: input.subject,
+      }),
       {
         trigger: "attackHit",
         attackerId: attackerId,
@@ -2973,7 +2980,10 @@ export function resolveSelectedAttackProcedure<
         return needsAttackDamageConcentrationResult({
           state: grapplerPunchAndGrab.state,
           subject: input.subject,
-          attack,
+          spendAcceptedAttack: (state) =>
+            spendAttackProcedure(state, attackerId, attack, {
+              kind: "acceptedAttack",
+            }),
           continuation: attackDamageInterruptionFrame({
             participant: input.subject,
             targetId: target.combatantId,
@@ -3130,10 +3140,16 @@ export function resolveSelectedAttackProcedure<
     }
     /* v8 ignore stop -- @preserve */
     return needsHolesResult(
-      spendAmmunitionForAcceptedAttackPendingContinuation({
-        state: hitAppliedState,
-        actorId: attackerId,
+      stateWithThrownWeaponReleasedPendingContinuation({
+        state: spendAmmunitionForAcceptedAttackPendingContinuation({
+          state: hitAppliedState,
+          actorId: attackerId,
+          attack,
+          subject: input.subject,
+        }),
+        attackerId,
         attack,
+        facts: fillSet.targetSpatialFacts,
         subject: input.subject,
       }),
       input.subject,
@@ -3520,7 +3536,10 @@ export function resolveSelectedAttackProcedure<
         return needsAttackDamageConcentrationResult({
           state: grapplerPunchAndGrab.state,
           subject: input.subject,
-          attack,
+          spendAcceptedAttack: (state) =>
+            spendAttackProcedure(state, attackerId, attack, {
+              kind: "acceptedAttack",
+            }),
           continuation: attackDamageInterruptionFrame({
             participant: input.subject,
             targetId: target.combatantId,

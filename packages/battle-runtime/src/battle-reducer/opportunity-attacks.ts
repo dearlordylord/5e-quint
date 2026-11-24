@@ -6,6 +6,8 @@ import {
   type BoundSupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
+import { stateWithThrownWeaponReleasedPendingContinuation } from "./thrown-weapon-release.ts";
+import { thrownWeaponLandingIssue } from "./thrown-weapon-attack.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
@@ -85,7 +87,8 @@ import {
 } from "./attack-damage-events.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { revealHidden } from "./hole-helpers.ts";
+import { attackTargetHole, revealHidden } from "./hole-helpers.ts";
+import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   cunningStrikeDamageContinuation,
@@ -463,7 +466,11 @@ function resolveReactionAttackCommand(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   /* v8 ignore stop -- @preserve */
-  const reactionFillIssue = reactionAttackFillIssue(fillSet, commandLabel);
+  const reactionFillIssue = reactionAttackFillIssue(
+    fillSet,
+    commandLabel,
+    subject.targetId,
+  );
   if (reactionFillIssue !== null) {
     return invalidResult(input.state, "invalidFill", reactionFillIssue);
   }
@@ -474,6 +481,11 @@ function resolveReactionAttackCommand(
     attack,
     fillSet,
   });
+  if (targetSpatialFacts.tag === "needsTargetFacts") {
+    return needsHolesResult(input.state, subject, [
+      fixedReactionAttackTargetHole(input.state, subject, attack),
+    ]);
+  }
   if (targetSpatialFacts.tag === "invalid") {
     return invalidResult(
       input.state,
@@ -582,6 +594,7 @@ function reactionAttackTargetSpatialFacts(input: {
         | import("./ranged-attack-close-combat.ts").RangedAttackEnemyProximityEvidence
         | null;
     }
+  | { readonly tag: "needsTargetFacts" }
   | { readonly tag: "invalid"; readonly message: string } {
   const suppliedDistanceFeet = attackTargetDistanceFeet(
     input.fillSet.targetSpatialFacts,
@@ -601,13 +614,7 @@ function reactionAttackTargetSpatialFacts(input: {
     };
   }
   const facts = reactionAttackDistanceFacts(input, suppliedDistanceFeet);
-  if (facts === undefined) {
-    return {
-      tag: "invalid",
-      message:
-        "Fixed-target reaction attacks require an exact attack target distance fact.",
-    };
-  }
+  if (facts === undefined) return missingReactionAttackDistance(input.fillSet);
   const targetIssue = reactionAttackTargetIssue(input, facts);
   if (targetIssue !== null) return targetIssue;
   const enemyProximity = qualifyAttackEnemyProximity(
@@ -617,7 +624,49 @@ function reactionAttackTargetSpatialFacts(input: {
     facts,
   );
   if (isSpatialQualificationIssue(enemyProximity)) return enemyProximity;
+  const landingIssue = thrownWeaponLandingIssue(
+    input.subject.reactorId,
+    input.attack,
+    facts,
+  );
+  if (landingIssue !== null) return { tag: "invalid", message: landingIssue };
   return { tag: "ok", facts, enemyProximity };
+}
+
+/**
+ * A fixed-target reaction attack with no distance: with no input yet it asks
+ * for its target's facts, and any other input lacks the distance fact.
+ */
+function missingReactionAttackDistance(
+  fillSet: ResolvedAttackFillSet,
+):
+  | { readonly tag: "needsTargetFacts" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  return fillSet.targetId === undefined &&
+    fillSet.targetSpatialFacts.length === 0
+    ? { tag: "needsTargetFacts" }
+    : {
+        tag: "invalid",
+        message:
+          "Fixed-target reaction attacks require an exact attack target distance fact.",
+      };
+}
+
+/**
+ * The attack target hole for a reaction attack whose target the trigger fixed
+ * but whose distance it didn't measure, such as a released readied attack.
+ * Its only choice is that target, and it asks for the same facts as an
+ * ordinary attack target: distance, enemy proximity and a thrown landing.
+ */
+function fixedReactionAttackTargetHole(
+  state: BattleState,
+  subject: OpportunityAttackResolutionInput["subject"],
+  attack: BoundSupportedAttackActionOption,
+): ReturnType<typeof attackTargetHole> {
+  return {
+    ...attackTargetHole(state, subject.reactorId, attack),
+    choices: [subject.targetId],
+  };
 }
 
 function reactionAttackTargetIssue(
@@ -701,10 +750,16 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     subject.reactorId,
     subject.targetId,
   );
-  attackRolledState = spendAmmunitionForAcceptedAttackPendingContinuation({
-    state: attackRolledState,
-    actorId: subject.reactorId,
+  attackRolledState = stateWithThrownWeaponReleasedPendingContinuation({
+    state: spendAmmunitionForAcceptedAttackPendingContinuation({
+      state: attackRolledState,
+      actorId: subject.reactorId,
+      attack,
+      subject: input.subject,
+    }),
+    attackerId: subject.reactorId,
     attack,
+    facts: afterRollInput.context.targetSpatialFacts,
     subject: input.subject,
   });
   const critical = attackRollHitIsCritical({
@@ -1071,6 +1126,7 @@ function resolveReactionAttackMiss(
       relationshipIssue,
     );
   }
+  // The accepted roll already threw a thrown weapon, hit or miss.
   return {
     tag: "resolved",
     state: attackRolledState,
@@ -1457,6 +1513,9 @@ function resolveReactionAttackDamageTransaction(input: {
     Match.exhaustive,
   );
 
+  // The attack-damage window resumes from its own frame and finishes the
+  // attack there, never returning here. The accepted roll already threw a
+  // thrown weapon; the public result reports it once the attack is over.
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
     spellReducedState,
     {
@@ -1659,14 +1718,16 @@ function reactionAttackDistanceFacts(
 }
 
 /**
- * A reaction attack's target is fixed by its trigger.
+ * A reaction attack's target is fixed by its trigger. Its target hole, when it
+ * asks for target facts, offers only that target.
  */
 function reactionAttackFillIssue(
   fillSet: ResolvedAttackFillSet,
   attackLabel: string,
+  fixedTargetId: CombatantId,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.targetId !== undefined) {
+  if (fillSet.targetId !== undefined && fillSet.targetId !== fixedTargetId) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return `${attackLabel} target is fixed by the reaction trigger.`;
   }

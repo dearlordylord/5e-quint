@@ -13,12 +13,14 @@ import {
 } from "../battle-action-options.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import {
+  isSpatialQualificationIssue,
   qualifyRangedAttackEnemyProximity,
   type RangedAttackEnemyProximityScope,
   type SpatialQualificationIssue,
   type RangedAttackEnemyProximityEvidence,
 } from "./ranged-attack-close-combat.ts";
 import type { MovementFeet } from "@dnd/shared/types";
+import { thrownWeaponLandingIssue } from "./thrown-weapon-attack.ts";
 
 export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
@@ -128,4 +130,49 @@ export function attackTargetDistanceFeet(
     }
   }
   return null;
+}
+
+/**
+ * The table's target facts must qualify a ranged attack's enemy proximity,
+ * give a thrown weapon its landing, and place the target inside the attack's
+ * target constraint. Returns the proximity evidence the attack roll reads.
+ */
+export function qualifyAttackTargetFacts(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+): ReturnType<typeof qualifyAttackEnemyProximity> {
+  if (
+    !attackTargetIsLegal(
+      state,
+      attackerId,
+      targetId,
+      attack,
+      targetSpatialFacts,
+    )
+  ) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return {
+      tag: "invalid",
+      message:
+        "Attack target is outside the selected attack's supported target constraint.",
+    };
+  }
+  const proximity = qualifyAttackEnemyProximity(
+    state,
+    attackerId,
+    attack,
+    targetSpatialFacts,
+  );
+  if (isSpatialQualificationIssue(proximity)) return proximity;
+  const landingIssue = thrownWeaponLandingIssue(
+    attackerId,
+    attack,
+    targetSpatialFacts,
+  );
+  return landingIssue === null
+    ? proximity
+    : { tag: "invalid", message: landingIssue };
 }

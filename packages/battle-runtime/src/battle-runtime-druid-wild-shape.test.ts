@@ -1286,6 +1286,72 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
   expect(damage.label).toBe("weapon_longsword damage (1d8+3-slashing)");
 });
 
+test("drops a worn Wild Shape Dagger's attacks once the Dagger is thrown to the ground", () => {
+  const daggerId = battleObjectId("main:weapon_dagger");
+  const initial = druidWildShapeBattle({
+    attack: weakTrueFormDaggerAttack(),
+    selectedLoadout: {
+      weapon: {
+        itemId: daggerId,
+        unitId: parseSharedUnitId("weapon_dagger"),
+        grip: "one_handed",
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
+  const mainWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "mainWeapon",
+  );
+  if (mainWeapon === undefined) {
+    throw new Error("Expected main weapon disposition candidate.");
+  }
+  const shaped = requireResolved(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: mainWeapon,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+      ]),
+    ]),
+  ).state;
+  const daggerDeliveries = (state: BattleState) =>
+    attackActionOptionsForActor(state, druidId).flatMap((attack) =>
+      attack.kind === "weapon" ? [attack.weaponDelivery] : [],
+    );
+  expect(daggerDeliveries(shaped)).toEqual([undefined, "thrown"]);
+
+  const thrown = attackActionOptionsForActor(shaped, druidId).find(
+    (attack) => attack.kind === "weapon" && attack.weaponDelivery === "thrown",
+  );
+  if (thrown?.kind !== "weapon") {
+    throw new Error("Expected the worn Dagger's thrown attack.");
+  }
+  const landed = battleStateWithGroundObjects(shaped, [
+    {
+      actorId: druidId,
+      objectId: daggerId,
+      positionId: battleTablePositionId("thrown-dagger-landing"),
+      source: { kind: "thrownWeaponAttack", procedureRef: thrown.procedureRef },
+    },
+  ]);
+  if (landed.tag !== "applied") {
+    throw new Error("Expected the Dagger to land.");
+  }
+  expect(daggerDeliveries(landed.state)).toEqual([]);
+});
+
 test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action lane with form statistics", () => {
   const initial = druidWildShapeBattle({
     includeUnrelatedResource: true,

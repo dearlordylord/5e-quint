@@ -122,6 +122,7 @@ import {
   battleSubjectProcedureRefs,
   BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
+  WeaponAttackDeliverySchema,
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
@@ -818,6 +819,13 @@ const UnitFeatureAreaInputRequestSchema = Schema.Struct({
     AttackActionAreaSaveDamageReplacementProcedureExecutionSchema.fields.breath
       .fields.area.fields.shapeChoice,
 });
+const ThrownWeaponLandingFactSchema = Schema.Struct({
+  kind: Schema.Literal("thrownWeaponLanding"),
+  attackerId: CombatantId,
+  procedureRef: BattleAttackProcedureExecutionRef,
+  positionId: BattleTablePositionId,
+});
+
 const BattleTargetSpatialFactSchema = Schema.Union([
   BattleAttackObjectTargetSpatialFactSchema,
   Schema.Struct({
@@ -838,6 +846,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     procedureRef: BattleAttackProcedureExecutionRef,
     attackAbility: BattleAttackExecutionAbilitySchema,
     attackDamageType: DamageTypeSchema,
+    weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
     attackName: Schema.optionalKey(Schema.Never),
     statBlockDamageSelection: Schema.optionalKey(Schema.Never),
     disposition: BattleImmediateAreaPushDispositionSchema,
@@ -850,6 +859,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
+      weaponDelivery: Schema.optionalKey(WeaponAttackDeliverySchema),
       attackName: Schema.optionalKey(Schema.Never),
       statBlockDamageSelection: Schema.optionalKey(Schema.Never),
       distanceFeet: MovementFeet,
@@ -909,6 +919,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       }),
     ),
   }),
+  ThrownWeaponLandingFactSchema,
   Schema.Struct({
     ...UnitFeatureVisibleTargetFactRequestFields,
     targetId: CombatantId,
@@ -1399,6 +1410,10 @@ export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
       kind: Schema.Literal("druidWildShape"),
       procedureRef: BattleProcedureExecutionRef,
       formExecutionRef: BattleStatBlockExecutionScopeRef,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("thrownWeaponAttack"),
+      procedureRef: BattleAttackProcedureExecutionRef,
     }),
   ]),
 });
@@ -2344,6 +2359,7 @@ const BattleHolePayloadMembers = [
       Schema.Struct({
         ...BattleAttackTargetRequestFields,
         acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
+        requiresThrownWeaponLanding: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
   }),
@@ -4042,6 +4058,12 @@ type BattleFillEncoded =
             }[];
           }
         | {
+            readonly kind: "thrownWeaponLanding";
+            readonly attackerId: string;
+            readonly procedureRef: string;
+            readonly positionId: string;
+          }
+        | {
             readonly kind: "spellObjectLightTarget";
             readonly casterId: string;
             readonly objectId: string;
@@ -5277,6 +5299,7 @@ export const BattleFillSchema: Schema.Codec<
               }),
             ),
           }),
+          ThrownWeaponLandingFactSchema,
           Schema.Struct({
             kind: Schema.Literal("spellObjectLightTarget"),
             casterId: CombatantId,

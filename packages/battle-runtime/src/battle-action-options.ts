@@ -61,10 +61,20 @@ export type CharacterWeaponAttackDamageTypeChoices = readonly [
 
 export type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 
+/**
+ * How a weapon attack reaches its target when the weapon offers more than its
+ * category's own delivery. SRD 5.2.1 "Thrown": a Melee weapon with the Thrown
+ * property can be thrown to make a ranged attack. A weapon attack without a
+ * delivery uses its category: melee for a Melee weapon, ranged for a Ranged one.
+ */
+export const WEAPON_ATTACK_DELIVERIES = ["thrown"] as const;
+export type WeaponAttackDelivery = (typeof WEAPON_ATTACK_DELIVERIES)[number];
+
 export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: CharacterWeaponAttackExecutionWeapon;
   readonly weaponObjectId: BattleObjectId;
+  readonly weaponDelivery?: WeaponAttackDelivery;
   readonly ability: Ability;
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;
@@ -302,11 +312,13 @@ export type CharacterAttackExecutionSelection = {
   readonly procedureRef: BattleAttackProcedureExecutionRef;
   readonly attackAbility: BattleAttackExecutionAbility;
   readonly attackDamageType: DamageType;
+  readonly weaponDelivery?: WeaponAttackDelivery;
 };
 type StatBlockAttackExecutionSelectionBase = {
   readonly procedureRef: BattleStatBlockProcedureExecutionRef;
   readonly attackAbility?: never;
   readonly attackDamageType?: never;
+  readonly weaponDelivery?: never;
 };
 export type StatBlockAttackExecutionSelection =
   StatBlockAttackExecutionSelectionBase & {
@@ -324,6 +336,12 @@ export function attackExecutionAbility(
   if (attack.kind === "weapon") return attack.ability;
   if (attack.kind === "unarmedStrike") return attack.attackAbility;
   return attack.attack.attackAbility;
+}
+
+export function attackExecutionWeaponDelivery(
+  attack: SupportedAttackActionOption,
+): WeaponAttackDelivery | undefined {
+  return attack.kind === "weapon" ? attack.weaponDelivery : undefined;
 }
 
 export function attackExecutionDamageType(
@@ -362,6 +380,9 @@ export function attackExecutionSelectionForOption(
       attack.kind === "weapon"
         ? attack.weapon.damage.damageType
         : attack.effect.damage.damageType,
+    ...(attack.kind === "weapon" && attack.weaponDelivery !== undefined
+      ? { weaponDelivery: attack.weaponDelivery }
+      : {}),
   };
 }
 
@@ -379,7 +400,8 @@ export function boundAttackExecutionSelectionMatchesOption(
           statBlockAttackDamageSelectionForDamage(attack.attack.onHit.damage),
         )
     : selection.attackAbility === attackExecutionAbility(attack) &&
-        selection.attackDamageType === attackExecutionDamageType(attack);
+        selection.attackDamageType === attackExecutionDamageType(attack) &&
+        selection.weaponDelivery === attackExecutionWeaponDelivery(attack);
 }
 
 export function boundAttackExecutionSelectionKey(
@@ -396,6 +418,9 @@ export function attackExecutionSelectionKey(
     selection.procedureRef,
     selection.attackAbility ?? null,
     selection.attackDamageType ?? null,
+    ...(selection.weaponDelivery === undefined
+      ? []
+      : [selection.weaponDelivery]),
   ];
   return JSON.stringify(
     "statBlockDamageSelection" in selection

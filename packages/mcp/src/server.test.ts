@@ -12016,6 +12016,7 @@ function battleAttackSubjectForName(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
+      !("weaponDelivery" in candidate.subject) &&
       (candidate.subject.statBlockDamageSelection === undefined ||
         candidate.subject.statBlockDamageSelection.every(
           ({ notation }) => notation === "rolled",
