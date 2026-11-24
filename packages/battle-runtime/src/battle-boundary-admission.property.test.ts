@@ -3286,6 +3286,11 @@ describe("battle boundary admission owners", () => {
       kind: "meleeReach",
       reachFeet: 10,
     });
+    expect(
+      weaponTargetConstraint(
+        testCharacterWeaponAttackForUnit(unitId("weapon_whip")).weapon,
+      ),
+    ).toEqual({ kind: "meleeReach", reachFeet: 10 });
 
     const statBlockAttack = statBlockAttackActionOptions(
       goblin.origin.execution,
