@@ -687,6 +687,8 @@ describe("ammunition lifecycle", () => {
         ],
       });
       expect(fired.tag).toBe("resolved");
+      if (fired.tag !== "resolved")
+        throw new Error("Expected bow attack to resolve");
       expect(fired.state.combatants.get(fighterId)?.ammunitionStocks).toEqual([
         battleAmmunitionStock("arrow", 19),
       ]);
