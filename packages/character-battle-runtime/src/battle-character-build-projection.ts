@@ -101,6 +101,7 @@ import {
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import {
   battleWeaponDefinitionAdmissionIssues,
+  characterBattleWeaponMasterySelections,
   type BattleSupportProfileIssue,
   type BattleWeaponDefinitionAdmissionIssue,
 } from "./battle-support-profiles.ts";
@@ -812,11 +813,17 @@ function projectCharacterWeaponLoadoutRequest(
   if (admitted.success.definition === null)
     return Result.succeed({ slot: "main", attack: null });
   const { weapon, definition } = admitted.success.definition;
-  const executionWeapon = bindCharacterWeaponExecutionWeapon({
+  const boundWeapon = bindCharacterWeaponExecutionWeapon({
     weaponUnitId: weapon.id,
     definition,
     weaponMasteries: input.weaponMasteries,
   });
+  if (Result.isFailure(boundWeapon)) {
+    return battleCreatureInitIssueFromLeaves(
+      battleWeaponDefinitionAdmissionIssues(weapon.id, boundWeapon.failure),
+    );
+  }
+  const executionWeapon = boundWeapon.success;
 
   const weaponAttackAbilitySelection = characterWeaponAttackAbilitySelection(
     executionWeapon,
@@ -1035,15 +1042,52 @@ type CharacterEquippedWeaponBattleBlocker = {
   readonly weaponDefinitionAdmittedOwnedAlternatives: readonly CharacterEquipmentItemId[];
 };
 
+/**
+ * Whether Battle can use the weapon a loadout request names, for the
+ * character's selected Weapon Masteries: its definition is admitted, and any
+ * mastery selected for it is supported.
+ */
+function characterWeaponBattleUse(input: {
+  readonly request: CharacterWeaponLoadoutRequest;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+}): Result.Result<
+  CharacterWeaponDefinitionProjection,
+  BattleCreatureInitIssue
+> {
+  const admitted = characterWeaponDefinitionForBattle(input);
+  if (Result.isFailure(admitted) || admitted.success.definition === null) {
+    return admitted;
+  }
+  const { weapon, definition } = admitted.success.definition;
+  const bound = bindCharacterWeaponExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    weaponMasteries: input.weaponMasteries,
+  });
+  return Result.isFailure(bound)
+    ? battleCreatureInitIssueFromLeaves(
+        battleWeaponDefinitionAdmissionIssues(weapon.id, bound.failure),
+      )
+    : admitted;
+}
+
 export function characterBuildEquippedWeaponBattleBlockers(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
 }): readonly CharacterEquippedWeaponBattleBlocker[] {
+  // A mastery selection the catalog can't resolve is reported by Battle
+  // support; here it selects nothing.
+  const weaponMasteries = Result.getOrElse(
+    characterBattleWeaponMasterySelections(input.build, input.unitLibrary),
+    () => [],
+  );
   return characterWeaponLoadoutRequests(input.build).flatMap((request) => {
     const source = characterEquipmentItemSourceFromId(request.itemId);
-    const admission = characterWeaponDefinitionForBattle({
+    const admission = characterWeaponBattleUse({
       request,
       unitLibrary: input.unitLibrary,
+      weaponMasteries,
     });
     if (Result.isSuccess(admission)) return [];
     return [
@@ -1061,9 +1105,10 @@ export function characterBuildEquippedWeaponBattleBlockers(input: {
               return [];
             const candidate = characterEquipmentItemSourceFromId(item.itemId);
             if (candidate.slot !== source.slot) return [];
-            const alternative = characterWeaponDefinitionForBattle({
+            const alternative = characterWeaponBattleUse({
               request: { ...request, itemId: item.itemId },
               unitLibrary: input.unitLibrary,
+              weaponMasteries,
             });
             return Result.isSuccess(alternative) &&
               alternative.success.definition !== null
