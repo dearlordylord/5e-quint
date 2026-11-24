@@ -1,5 +1,5 @@
 import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";

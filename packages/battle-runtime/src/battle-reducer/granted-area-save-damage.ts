@@ -22,7 +22,7 @@ import {
   fillsMatchingHoleIds,
   resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import {
   applyAvailableSpellDamageReduction,
   damageAmountByTypeAfterTargetAdjustments,

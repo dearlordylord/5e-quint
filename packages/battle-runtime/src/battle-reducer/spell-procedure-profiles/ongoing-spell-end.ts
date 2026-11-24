@@ -85,7 +85,7 @@ import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spe
 import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import { abilityCheckValueThatStands } from "../d20-test-outcome-rerolls.ts";
+import { abilityCheckValueThatStands } from "../d20-test-rolls-that-stand.ts";
 import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
 import { spellInvocationEffectiveSpellLevel } from "../spells-effective-level.ts";
 import type {

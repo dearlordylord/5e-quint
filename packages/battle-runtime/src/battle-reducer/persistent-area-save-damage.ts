@@ -1,5 +1,5 @@
 import { optionalProperty } from "../optional-property.ts";
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {

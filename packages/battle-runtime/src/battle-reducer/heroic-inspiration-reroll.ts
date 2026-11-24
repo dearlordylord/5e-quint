@@ -50,6 +50,9 @@ const HEROIC_INSPIRATION_REROLL_MESSAGES = {
     "Heroic Inspiration replacement roll must keep the original roll's modifiers; only the d20 changes.",
 } as const satisfies D20TestRollRerollMessages;
 
+export const HEROIC_INSPIRATION_REROLL_ROLL_REQUIRED_MESSAGE =
+  "A Heroic Inspiration reroll needs the d20 roll it replaces, so that only the d20 changes.";
+
 // A function, not a module constant: this module sits on an import cycle
 // through battle-state-execution.ts, which owns the effect kind.
 function heroicInspirationRerollOption(): BattleHeroicInspirationRerollOption {
@@ -256,11 +259,11 @@ export function heroicInspirationRerollRollIssue(input: {
   readonly requiredRollMode?: AttackRollMode | undefined;
 }): string | null {
   const decision = input.decision;
-  const availabilityIssue = heroicInspirationAvailabilityIssue(
-    input.availability,
-    decision,
-  );
-  if (availabilityIssue !== "available") return availabilityIssue;
+  const gate = heroicInspirationAvailabilityGate(input.availability, decision);
+  if (gate.tag === "finished") return gate.issue;
+  if (decision.kind !== "decline" && input.originalD20TestRoll === undefined) {
+    return HEROIC_INSPIRATION_REROLL_ROLL_REQUIRED_MESSAGE;
+  }
   const facts = {
     total: input.total,
     d20TestRoll: input.originalD20TestRoll,
@@ -299,11 +302,8 @@ export function heroicInspirationRerollOutcomeIssue(input: {
   readonly decision: BattleHeroicInspirationOutcomeRerollDecision;
 }): string | null {
   const decision = input.decision;
-  const availabilityIssue = heroicInspirationAvailabilityIssue(
-    input.availability,
-    decision,
-  );
-  if (availabilityIssue !== "available") return availabilityIssue;
+  const gate = heroicInspirationAvailabilityGate(input.availability, decision);
+  if (gate.tag === "finished") return gate.issue;
   return Match.value(decision).pipe(
     Match.discriminatorsExhaustive("kind")({
       decline: () => null,
@@ -333,11 +333,8 @@ export function heroicInspirationRerollDieIssue(input: {
   readonly decision: BattleHeroicInspirationDieRerollDecision;
 }): string | null {
   const decision = input.decision;
-  const availabilityIssue = heroicInspirationAvailabilityIssue(
-    input.availability,
-    decision,
-  );
-  if (availabilityIssue !== "available") return availabilityIssue;
+  const gate = heroicInspirationAvailabilityGate(input.availability, decision);
+  if (gate.tag === "finished") return gate.issue;
   return Match.value(decision).pipe(
     Match.discriminatorsExhaustive("kind")({
       decline: () => null,
@@ -355,24 +352,43 @@ export function heroicInspirationRerollDieIssue(input: {
  * Whether the roller's Heroic Inspiration lets it make this decision: a
  * decline needs only that it once had the choice; a reroll needs it now.
  */
-function heroicInspirationAvailabilityIssue(
+function heroicInspirationAvailabilityGate(
   availability: HeroicInspirationRerollAvailability,
   decision: { readonly kind: "decline" | "reroll" | "rerollRolledDie" },
-): string | null | "available" {
+): HeroicInspirationAvailabilityGate {
   return Match.value(availability).pipe(
     Match.when(
       "unavailable",
-      () => HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+      (): HeroicInspirationAvailabilityGate => ({
+        tag: "finished",
+        issue: HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+      }),
     ),
-    Match.when("spentOnAnotherRoll", () =>
-      decision.kind === "decline"
-        ? null
-        : HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+    Match.when(
+      "spentOnAnotherRoll",
+      (): HeroicInspirationAvailabilityGate => ({
+        tag: "finished",
+        issue:
+          decision.kind === "decline"
+            ? null
+            : HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
+      }),
     ),
-    Match.when("available", () => "available" as const),
+    Match.when(
+      "available",
+      (): HeroicInspirationAvailabilityGate => ({ tag: "decide" }),
+    ),
     Match.exhaustive,
   );
 }
+
+/**
+ * Whether the decision's own facts decide it (`decide`), or its roller's
+ * Heroic Inspiration already settles it with this issue, or none.
+ */
+type HeroicInspirationAvailabilityGate =
+  | { readonly tag: "decide" }
+  | { readonly tag: "finished"; readonly issue: string | null };
 
 /** The D20 Test hole, asked again with the Heroic Inspiration reroll option. */
 export function d20TestHoleWithHeroicInspirationRerollOption<T extends object>(

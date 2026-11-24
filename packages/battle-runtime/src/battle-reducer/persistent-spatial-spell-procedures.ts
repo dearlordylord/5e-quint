@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard spell.invocation-gust-of-wind-line spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { Result, Match } from "effect";
 import {
   canSpendBonusAction,

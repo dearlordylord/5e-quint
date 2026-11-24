@@ -1,7 +1,7 @@
 import { combatantAnchoredAreaOriginIs } from "./spell-area-origin.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.ongoing-feature-activation-movement-rider
 import { resolveOngoingFeatureActivationMovement } from "./ongoing-feature-activation-movement.ts";
-import { savingThrowOutcomeFillThatStands } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction

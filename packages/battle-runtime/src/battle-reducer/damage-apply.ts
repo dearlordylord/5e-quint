@@ -149,7 +149,7 @@ import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-poin
 import {
   concentrationSavingThrowFillThatStands,
   savingThrowOutcomesThatStand,
-} from "./d20-test-outcome-rerolls.ts";
+} from "./d20-test-rolls-that-stand.ts";
 import {
   battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints,
   isLinkedDefenseResistanceDamageShareEffect,

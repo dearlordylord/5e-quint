@@ -46,11 +46,25 @@ type D20TestRerollPrefixResolver = (
   input: AdmittedBattleResolutionInput,
 ) => BattleResolutionResult;
 
+const D20_TEST_REROLL_DECISION_HOLE_KINDS = [
+  "abilityCheck",
+  "concentrationSavingThrow",
+  "savingThrowOutcome",
+  "spellcastingAbilityCheck",
+] as const satisfies readonly BattleOrdinaryHole["kind"][];
 type D20TestRerollDecisionHoleKind =
-  | "abilityCheck"
-  | "concentrationSavingThrow"
-  | "savingThrowOutcome"
-  | "spellcastingAbilityCheck";
+  (typeof D20_TEST_REROLL_DECISION_HOLE_KINDS)[number];
+
+type D20TestRerollDecisionHole = Extract<
+  BattleOrdinaryHole,
+  { readonly kind: D20TestRerollDecisionHoleKind }
+>;
+
+function isD20TestRerollDecisionHole(
+  hole: BattleOrdinaryHole,
+): hole is D20TestRerollDecisionHole {
+  return D20_TEST_REROLL_DECISION_HOLE_KINDS.some((kind) => kind === hole.kind);
+}
 
 type D20TestRerollFillValidation =
   | {
@@ -186,92 +200,126 @@ function d20TestRollCheck<Roll>(
 function d20TestRollChecksForFill(
   input: D20TestRerollFillContext & { readonly fill: BattleFill },
 ): readonly D20TestRollCheck[] {
+  const fill = input.fill;
+  if (fill.kind === "abilityCheck") {
+    return abilityCheckRollChecks({ ...input, fill });
+  }
+  if (fill.kind === "savingThrowOutcome") {
+    return savingThrowOutcomeRollChecks({ ...input, fill });
+  }
+  if (fill.kind === "concentrationSavingThrow") {
+    return concentrationSavingThrowRollChecks({ ...input, fill });
+  }
+  return [];
+}
+
+function abilityCheckRollChecks(
+  input: D20TestRerollFillContext & {
+    readonly fill: Extract<BattleFill, { readonly kind: "abilityCheck" }>;
+  },
+): readonly D20TestRollCheck[] {
   const { state, subject } = input.resolutionInput;
   const scope = { kind: "subject", subject } as const;
   const fill = input.fill;
-  if (fill.kind === "abilityCheck") {
-    const hole = abilityCheckHoleForFill({ ...input, fill });
-    return [
-      d20TestRollCheck(
-        d20TestAbilityCheckRerolls({
-          state,
-          scope,
-          roll: {
-            rollerId: battleSubjectActorId(subject),
-            holeId: fill.holeId,
-          },
-          value: fill.value,
-          requiredRollMode:
-            hole?.kind === "abilityCheck" ? hole.rollMode : undefined,
-        }),
-        {
-          fillIndex: input.fillIndex,
+  const hole = abilityCheckHoleForFill({ ...input, fill });
+  return [
+    d20TestRollCheck(
+      d20TestAbilityCheckRerolls({
+        state,
+        scope,
+        roll: {
+          rollerId: battleSubjectActorId(subject),
           holeId: fill.holeId,
-          holeKind: hole?.kind ?? "abilityCheck",
         },
+        value: fill.value,
+        requiredRollMode:
+          hole?.kind === "abilityCheck" ? hole.rollMode : undefined,
+      }),
+      {
+        fillIndex: input.fillIndex,
+        holeId: fill.holeId,
+        holeKind: hole?.kind ?? "abilityCheck",
+      },
+    ),
+  ];
+}
+
+function savingThrowOutcomeRollChecks(
+  input: D20TestRerollFillContext & {
+    readonly fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
+  },
+): readonly D20TestRollCheck[] {
+  const { state, subject } = input.resolutionInput;
+  const scope = { kind: "subject", subject } as const;
+  const fill = input.fill;
+  const hole = savingThrowOutcomeHoleForFill({ ...input, fill });
+  return fill.value.outcomes.map((outcome) => {
+    const rollModeIssue = savingThrowOutcomeRollModeIssue({
+      d20TestRoll: outcome.d20TestRoll,
+      requiredRollMode: savingThrowOutcomeRollModeForTarget(
+        hole,
+        outcome.targetId,
       ),
-    ];
-  }
-  if (fill.kind === "savingThrowOutcome") {
-    const hole = savingThrowOutcomeHoleForFill({ ...input, fill });
-    return fill.value.outcomes.map((outcome) => {
-      const rollModeIssue = savingThrowOutcomeRollModeIssue({
-        d20TestRoll: outcome.d20TestRoll,
-        requiredRollMode: savingThrowOutcomeRollModeForTarget(
-          hole,
-          outcome.targetId,
-        ),
-      });
-      /* v8 ignore start -- @preserve -- Malformed resolution input: a saving-throw roll whose mode contradicts the discovered target's D20 Test mode. */
-      if (rollModeIssue !== null)
-        return { tag: "invalid", message: rollModeIssue };
-      /* v8 ignore stop -- @preserve */
-      return d20TestRollCheck(
-        d20TestOutcomeRerolls({
-          state,
-          scope,
-          roll: { rollerId: outcome.targetId, holeId: fill.holeId },
-          outcome,
-        }),
-        {
-          fillIndex: input.fillIndex,
-          holeId: fill.holeId,
-          holeKind: "savingThrowOutcome",
-        },
-      );
     });
+    /* v8 ignore start -- @preserve -- Malformed resolution input: a saving-throw roll whose mode contradicts the discovered target's D20 Test mode. */
+    if (rollModeIssue !== null)
+      return { tag: "invalid", message: rollModeIssue };
+    /* v8 ignore stop -- @preserve */
+    return d20TestRollCheck(
+      d20TestOutcomeRerolls({
+        state,
+        scope,
+        roll: { rollerId: outcome.targetId, holeId: fill.holeId },
+        outcome,
+      }),
+      {
+        fillIndex: input.fillIndex,
+        holeId: fill.holeId,
+        holeKind: "savingThrowOutcome",
+      },
+    );
+  });
+}
+
+function concentrationSavingThrowRollChecks(
+  input: D20TestRerollFillContext & {
+    readonly fill: Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    >;
+  },
+): readonly D20TestRollCheck[] {
+  const { state, subject } = input.resolutionInput;
+  const scope = { kind: "subject", subject } as const;
+  const fill = input.fill;
+  const hole = concentrationSavingThrowHoleForFill({ ...input, fill });
+  if (hole === undefined) {
+    /* v8 ignore start -- @preserve -- Malformed resolution input: reroll decisions on a Concentration save that the subject never asked for. */
+    return fill.value.d20TestRerolls === undefined
+      ? []
+      : [
+          {
+            tag: "invalid",
+            message: D20_TEST_REROLL_ROLLER_REQUIRED_MESSAGE,
+          },
+        ];
+    /* v8 ignore stop -- @preserve */
   }
-  if (fill.kind === "concentrationSavingThrow") {
-    const hole = concentrationSavingThrowHoleForFill({ ...input, fill });
-    if (hole === undefined) {
-      /* v8 ignore start -- @preserve -- Malformed resolution input: reroll decisions on a Concentration save that the subject never asked for. */
-      return fill.value.d20TestRerolls === undefined
-        ? []
-        : [
-            {
-              tag: "invalid",
-              message: D20_TEST_REROLL_ROLLER_REQUIRED_MESSAGE,
-            },
-          ];
-      /* v8 ignore stop -- @preserve */
-    }
-    return [
-      d20TestRollCheck(
-        d20TestOutcomeRerolls({
-          state,
-          scope,
-          roll: { rollerId: hole.combatantId, holeId: fill.holeId },
-          outcome: fill.value,
-        }),
-        {
-          fillIndex: input.fillIndex,
-          holeId: fill.holeId,
-          holeKind: "concentrationSavingThrow",
-        },
-      ),
-    ];
-  }
-  return [];
+  return [
+    d20TestRollCheck(
+      d20TestOutcomeRerolls({
+        state,
+        scope,
+        roll: { rollerId: hole.combatantId, holeId: fill.holeId },
+        outcome: fill.value,
+      }),
+      {
+        fillIndex: input.fillIndex,
+        holeId: fill.holeId,
+        holeKind: "concentrationSavingThrow",
+      },
+    ),
+  ];
 }
 
 function validateD20TestRerollFills(input: {
@@ -331,6 +379,7 @@ function resolveD20TestRerollDecisionHole(input: {
   let matched = false;
   const holes = pending.frontier.holes.map((hole): BattleOrdinaryHole => {
     if (
+      isD20TestRerollDecisionHole(hole) &&
       hole.kind === input.decision.holeKind &&
       hole.holeId === input.decision.holeId
     ) {

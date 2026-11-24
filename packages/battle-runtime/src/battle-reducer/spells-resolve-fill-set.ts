@@ -108,7 +108,7 @@ import {
   type SpatialQualificationIssue,
 } from "./ranged-attack-close-combat.ts";
 import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,

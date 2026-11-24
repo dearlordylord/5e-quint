@@ -15,13 +15,11 @@ import {
   type BattleAbilityCheckD20TestRerollDecision,
   type BattleD20TestDieReplacement,
   type BattleD20TestOutcome,
-  type BattleD20TestRoll,
   type BattleD20TestRollKey,
   type BattleDeathSavingThrowD20TestRerollDecision,
   type BattleFill,
-  type BattleHole,
+  type BattleD20TestRerollHoleOptions,
   type BattleRolledOutcomeD20TestRerollDecision,
-  type BattleSavingThrowOutcome,
   type BattleState,
 } from "../battle-state-execution.ts";
 import {
@@ -36,7 +34,6 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 import {
   d20TestRerolls,
-  d20TestRollAfterRerolls,
   type D20TestRerollRules,
   type D20TestRerollSourceFlags,
 } from "./d20-test-reroll-sequence.ts";
@@ -45,6 +42,10 @@ import {
   d20TestOutcomeAfterReroll,
   d20TestRollAfterReroll,
 } from "./d20-test-roll-reroll.ts";
+import type {
+  D20TestAbilityCheckValue,
+  D20TestRolledOutcome,
+} from "./d20-test-rolls-that-stand.ts";
 import {
   d20TestHoleWithHeroicInspirationRerollOption,
   d20TestRerollDecisionTakesReroll,
@@ -134,11 +135,6 @@ function resolvedD20TestOutcomeRerolls<Roll, Decision>(
   };
 }
 
-type D20TestRolledOutcome = {
-  readonly succeeded: boolean;
-  readonly d20TestRoll: BattleD20TestRoll;
-};
-
 /**
  * A saving throw's outcome after its reroll decisions: whether it succeeds,
  * by the table's ruling on the roll that stands.
@@ -217,12 +213,6 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
       }
     : rerolls;
 }
-
-/** An ability check's value: its total and, when reported, its d20. */
-type D20TestAbilityCheckValue = Extract<
-  BattleFill,
-  { readonly kind: "abilityCheck" }
->["value"];
 
 /** An ability check's value after its reroll decisions: the total that stands. */
 export function d20TestAbilityCheckRerolls(
@@ -341,83 +331,13 @@ export function d20TestDeathSavingThrowRerolls(
  * The D20 Test hole asked again with the reroll options its roller has not
  * decided on yet.
  */
-export function d20TestHoleWithRerollOptions<T extends BattleHole>(
-  hole: T,
-  options: D20TestOutcomeRerollOptions,
-): T {
+export function d20TestHoleWithRerollOptions<
+  T extends BattleD20TestRerollHoleOptions,
+>(hole: T, options: D20TestOutcomeRerollOptions): T {
   const withNaturalOne: T = options.naturalOne
     ? d20TestHoleWithNaturalOneRerollOption(hole)
     : hole;
   return options.heroicInspiration
     ? d20TestHoleWithHeroicInspirationRerollOption(withNaturalOne)
     : withNaturalOne;
-}
-
-// The rolls that stand. Each owner that reads a D20 Test outcome reads it
-// through one of these, after the decisions were checked.
-
-/** A rolled saving throw's outcome after its reroll decisions. */
-export function d20TestOutcomeThatStands<T extends BattleD20TestOutcome>(
-  outcome: T,
-): T {
-  if (outcome.withoutRoll === true) return outcome;
-  const stands = d20TestRollAfterRerolls<
-    D20TestRolledOutcome,
-    BattleRolledOutcomeD20TestRerollDecision
-  >(
-    { succeeded: outcome.succeeded, d20TestRoll: outcome.d20TestRoll },
-    outcome.d20TestRerolls ?? [],
-    d20TestOutcomeAfterReroll,
-  );
-  return {
-    ...outcome,
-    succeeded: stands.succeeded,
-    d20TestRoll: stands.d20TestRoll,
-  };
-}
-
-/** Every target's saving throw outcome after its reroll decisions. */
-export function savingThrowOutcomesThatStand<
-  T extends { readonly outcomes: readonly BattleSavingThrowOutcome[] },
->(value: T): T {
-  return {
-    ...value,
-    outcomes: value.outcomes.map(d20TestOutcomeThatStands),
-  };
-}
-
-/** A saving throw fill whose every outcome is the one that stands. */
-export function savingThrowOutcomeFillThatStands<
-  T extends Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
->(fill: T): T {
-  return { ...fill, value: savingThrowOutcomesThatStand(fill.value) };
-}
-
-/** A Concentration saving throw fill whose outcome is the one that stands. */
-export function concentrationSavingThrowFillThatStands<
-  T extends Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>,
->(fill: T): T {
-  return { ...fill, value: d20TestOutcomeThatStands(fill.value) };
-}
-
-/** An ability check's value after its reroll decisions: the total that stands. */
-export function abilityCheckValueThatStands<T extends D20TestAbilityCheckValue>(
-  value: T,
-): T {
-  return d20TestRollAfterRerolls(
-    value,
-    value.d20TestRerolls ?? [],
-    d20TestRollAfterReroll,
-  );
-}
-
-/** A Death Saving Throw's d20 after its reroll decisions. */
-export function deathSavingThrowThatStands(
-  fill: Extract<BattleFill, { readonly kind: "deathSavingThrow" }>,
-): BattleD20TestDieReplacement {
-  return d20TestRollAfterRerolls(
-    fill.value,
-    fill.d20TestRerolls ?? [],
-    d20TestDieAfterReroll,
-  );
 }

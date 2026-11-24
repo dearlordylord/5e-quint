@@ -188,6 +188,7 @@ module heroicInspirationRerollCoreExamples {
     playerCharacter: true,
     inspiration: HeroicInspirationAvailable,
     originalD20: 6,
+    rolledD20s: OneD20,
     decision: HeroicInspirationD20RerollDeclined,
   }
 
@@ -243,6 +244,53 @@ module heroicInspirationRerollCoreExamples {
       assert(offFace.invalid),
       assert(offFace.effectiveD20 == 6),
       assert(offFace.inspirationAfter == HeroicInspirationAvailable),
+    }
+  }
+
+  // Disadvantage on the save: 6 and 15 stand as a 6. Rerolling the 6 into a
+  // 17 leaves 15 and 17, so the 15 stands.
+  pure val disadvantagedSave: HeroicInspirationD20RerollFacts = {
+    ...inspiredSave,
+    rolledD20s: TwoD20s({
+      first: 6,
+      second: 15,
+      rollMode: DisadvantageD20TestRoll,
+    }),
+  }
+
+  run test_saving_throw_reroll_with_disadvantage_replaces_one_d20 = {
+    val result = resolveHeroicInspirationD20Reroll({
+      ...disadvantagedSave,
+      decision: HeroicInspirationD20RolledDieRerollSelected({
+        die: FirstD20,
+        replacementD20: 17,
+      }),
+    })
+    all {
+      assert(result.admitted),
+      assert(result.effectiveD20 == 15),
+      assert(result.inspirationAfter == NoHeroicInspiration),
+    }
+  }
+
+  run test_saving_throw_reroll_with_disadvantage_must_name_its_d20 = {
+    val whole = resolveHeroicInspirationD20Reroll({
+      ...disadvantagedSave,
+      decision: HeroicInspirationD20RerollSelected({ replacementD20: 17 }),
+    })
+    val single = resolveHeroicInspirationD20Reroll({
+      ...inspiredSave,
+      decision: HeroicInspirationD20RolledDieRerollSelected({
+        die: FirstD20,
+        replacementD20: 17,
+      }),
+    })
+    all {
+      assert(whole.invalid),
+      assert(whole.effectiveD20 == 6),
+      assert(whole.inspirationAfter == HeroicInspirationAvailable),
+      assert(single.invalid),
+      assert(single.effectiveD20 == 6),
     }
   }
 }

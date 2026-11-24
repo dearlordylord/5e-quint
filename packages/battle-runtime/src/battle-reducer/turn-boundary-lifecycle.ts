@@ -127,8 +127,8 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import {
   d20TestDeathSavingThrowRerolls,
   d20TestHoleWithRerollOptions,
-  savingThrowOutcomeFillThatStands,
 } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
 import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
   applyHitPointMaximumIncreaseExpiration,

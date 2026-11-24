@@ -1,6 +1,6 @@
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import type {
   BattleFill,
   BattleResolutionInputForSubject,

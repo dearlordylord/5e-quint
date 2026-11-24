@@ -2,7 +2,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.open-hand-technique
 
-import { savingThrowOutcomesThatStand } from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";

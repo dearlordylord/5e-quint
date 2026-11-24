@@ -110,7 +110,7 @@ import {
   validateCunningStrikeDamageRollSelection,
   type CunningStrikeContext,
 } from "./cunning-strike.ts";
-import { abilityCheckValueThatStands } from "./d20-test-outcome-rerolls.ts";
+import { abilityCheckValueThatStands } from "./d20-test-rolls-that-stand.ts";
 
 import { attackDamageContinuationConcentrationFrame } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";

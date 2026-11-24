@@ -42,7 +42,7 @@ import {
 import {
   abilityCheckValueThatStands,
   d20TestOutcomeThatStands,
-} from "./battle-reducer/d20-test-outcome-rerolls.ts";
+} from "./battle-reducer/d20-test-rolls-that-stand.ts";
 import { SEEKING_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic-support.ts";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
