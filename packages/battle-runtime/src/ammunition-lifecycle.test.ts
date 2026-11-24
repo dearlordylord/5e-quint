@@ -192,20 +192,15 @@ describe("ammunition lifecycle", () => {
     const shortbow = attackActionOptionsForActor(initial, skeletonId).find(
       (attack) =>
         attack.kind === "statBlockAttack" &&
-        attack.attack.ammunition === "arrow",
+        attack.attack.ammunition === "arrow" &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          attackExecutionSelectionForOption(attack).statBlockDamageSelection,
+          "rolled",
+        ),
     );
     expect(shortbow).toBeDefined();
-    if (shortbow?.kind !== "statBlockAttack") {
-      return;
-    }
+    if (shortbow?.kind !== "statBlockAttack") return;
     const attackSelection = attackExecutionSelectionForOption(shortbow);
-    if (
-      !statBlockAttackDamageSelectionUsesOnlyComponentNotation(
-        attackSelection.statBlockDamageSelection,
-        "rolled",
-      )
-    )
-      return;
 
     const subject = {
       tag: "action" as const,
