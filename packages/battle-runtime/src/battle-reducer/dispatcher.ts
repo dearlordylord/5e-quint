@@ -198,6 +198,10 @@ import {
   isObjectInteractionSubject,
   resolveObjectInteraction,
 } from "./object-interaction.ts";
+import {
+  isWeaponGripChangeSubject,
+  resolveWeaponGripChange,
+} from "./weapon-grip.ts";
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
@@ -1016,6 +1020,9 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     }
     if (isObjectInteractionSubject(subject)) {
       return resolveObjectInteraction({ ...input, subject });
+    }
+    if (isWeaponGripChangeSubject(subject)) {
+      return resolveWeaponGripChange({ ...input, subject });
     }
     if (isPersistentSpatialSpellProcedureSubject(subject)) {
       return resolvePersistentSpatialSpellProcedureCommand({

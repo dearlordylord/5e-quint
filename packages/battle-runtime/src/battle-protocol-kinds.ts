@@ -505,6 +505,7 @@ function runtimeCommandSubjectKind(
         "changeWeaponAfterAttack",
         () => "runtimeObjectInteraction" as const,
       ),
+      byCommand("changeWeaponGrip", () => "runtimeWeaponGrip" as const),
       Match.exhaustive,
     );
 }

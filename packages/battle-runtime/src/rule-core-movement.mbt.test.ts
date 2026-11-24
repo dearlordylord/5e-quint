@@ -2,6 +2,7 @@ import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -66,7 +67,10 @@ import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
+  testLongswordAttack,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 
 const ruleCoreMovementMbtHoles = [
   "Movement",
@@ -101,6 +105,7 @@ type RuleCoreMovementProjection = RuleCoreComponentRoutedProjection & {
   readonly grappleActive: boolean;
   readonly grappleEscapeDc: number;
   readonly mainWeaponGrip: WeaponGrip;
+  readonly mainWeaponDamageDieSize: number;
   readonly leftHandUse: HandUse;
   readonly rightHandUse: HandUse;
   readonly holes: readonly RuleCoreMovementMbtHole[];
@@ -145,6 +150,9 @@ const driverSchema = {
   doResolveEscapeSuccess: {},
   doResolveEscapeFailure: {},
   doReleaseGrapple: {},
+  doChangeMainWeaponGripToTwoHanded: {},
+  doChangeMainWeaponGripToOneHanded: {},
+  doRejectTwoHandedGripWithoutFreeHand: {},
   step: {},
 } as const;
 
@@ -227,6 +235,15 @@ function createRuleCoreMovementDriver() {
           ],
         }),
       );
+    }
+
+    function changeGrip(grip: WeaponGrip): void {
+      resolveSubject({
+        tag: "runtimeCommand",
+        actorId,
+        command: "changeWeaponGrip",
+        grip,
+      });
     }
 
     function selectGrappleTarget(): void {
@@ -349,6 +366,9 @@ function createRuleCoreMovementDriver() {
           command: "releaseGrapple",
           targetId: observerId,
         }),
+      doChangeMainWeaponGripToTwoHanded: () => changeGrip("two_handed"),
+      doChangeMainWeaponGripToOneHanded: () => changeGrip("one_handed"),
+      doRejectTwoHandedGripWithoutFreeHand: () => changeGrip("two_handed"),
       step: () => {},
       getState: () =>
         projectRuleCoreMovementState({
@@ -455,7 +475,8 @@ function movementCreature(input: {
       kind: "character",
       ammunitionStocks: [],
       characterId: characterId(input.characterId),
-      characterUnitRefs: [],
+      characterUnitRefs:
+        input.mainWeaponGrip === undefined ? [] : [longswordPresentationRef()],
       classLevels: [{ className: "fighter", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -484,7 +505,7 @@ function movementCreature(input: {
                 grip: input.mainWeaponGrip,
               },
             },
-      attack: null,
+      attack: input.mainWeaponGrip === undefined ? null : testLongswordAttack(),
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {
@@ -498,6 +519,13 @@ function movementCreature(input: {
       },
     },
   };
+}
+
+/** The Longsword's Unit, which presents the mover's weapon attack. */
+function longswordPresentationRef() {
+  const unit = unitLibrary.requireUnit("weapon_longsword");
+  if (unit.kind !== "weapon") throw new Error("Expected the Longsword Unit.");
+  return { unit, supportProfiles: [] };
 }
 
 function projectRuleCoreMovementState(input: {
@@ -527,6 +555,12 @@ function projectRuleCoreMovementState(input: {
     actorState,
     input.state.grapples,
   );
+  const mainWeaponDamage = attackActionOptionsForActor(
+    input.state,
+    actorId,
+  ).find(
+    (option) => option.kind === "weapon" && option.weaponDelivery === undefined,
+  );
   const grapple = input.state.grapples.find(
     (candidate) =>
       candidate.grapplerId === actorId && candidate.targetId === observerId,
@@ -542,6 +576,11 @@ function projectRuleCoreMovementState(input: {
     grappleActive: grapple !== undefined,
     grappleEscapeDc: grapple === undefined ? 0 : Number(grapple.escapeDc),
     mainWeaponGrip,
+    mainWeaponDamageDieSize:
+      mainWeaponDamage?.kind === "weapon" &&
+      mainWeaponDamage.weapon.damage.kind === "dice"
+        ? mainWeaponDamage.weapon.damage.dieSize
+        : 0,
     leftHandUse: hands.left,
     rightHandUse: hands.right,
     holes: input.holes.map(projectMovementHole),
@@ -705,6 +744,10 @@ function normalizeRuleCoreMovementQuintState(
       "qGrappleEscapeDc",
     ),
     mainWeaponGrip,
+    mainWeaponDamageDieSize: numberFromQuintInt(
+      state["qMainWeaponDamageDieSize"],
+      "qMainWeaponDamageDieSize",
+    ),
     // The hands the Quint grip and Grapple hold: the main weapon takes the
     // right hand, a two-handed grip the left too, and a Grapple the free one.
     leftHandUse: grappleActive

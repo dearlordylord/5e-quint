@@ -242,17 +242,18 @@ export function loadoutWeaponSlot(
 /**
  * The hands a loadout weapon occupies are those its selected loadout's grip
  * gives it, whatever the hand state says now: a spell-created object can
- * take a hand the weapon left and then leave it simply free.
+ * take a hand the weapon left and then leave it simply free. Anything else
+ * the other hand might hold is left out, and under a two-handed grip the main
+ * weapon holds the off hand, so an off-hand weapon has no hand to go back to.
  */
 export function loadoutWeaponHands(
   actor: CharacterBattleCreatureState,
   slot: LoadoutWeaponSlot,
 ): readonly ("left" | "right")[] {
-  const { shield, offHandWeapon, weapon } = actor.origin.selectedLoadout;
   const loadout = loadoutHandUses({
-    holdsShield: shield !== undefined,
-    holdsOffHandWeapon: offHandWeapon !== undefined,
-    mainWeaponGrip: weapon?.grip,
+    holdsShield: false,
+    holdsOffHandWeapon: slot === "offWeapon",
+    mainWeaponGrip: actor.origin.selectedLoadout.weapon?.grip,
   });
   return (
     [

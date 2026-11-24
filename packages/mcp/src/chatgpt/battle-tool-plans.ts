@@ -19,6 +19,11 @@ export const CHATGPT_BATTLE_TOOLS = {
     description:
       "Use when the active combatant chooses its available Flurry of Blows option. Start the extra unarmed-strike sequence; make each offered strike separately with attack.",
   },
+  change_weapon_grip: {
+    family: "battleActions",
+    description:
+      "Use when the active combatant changes how it holds its main weapon, in one hand or with both. It costs no action or movement; a two-handed grip needs the other hand free, and the grip sets the weapon's Versatile damage.",
+  },
   compelled_drop: {
     family: "battleActions",
     description:

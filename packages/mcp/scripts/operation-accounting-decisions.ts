@@ -1052,6 +1052,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.changeWeaponGrip": account(
+      "operation",
+      "runtimeCommand.changeWeaponGrip",
+      at(
+        "packages/battle-runtime/src/battle-reducer/weapon-grip.ts",
+        "resolveWeaponGripChange",
+      ),
+      REASONS.admittedSubject,
+    ),
     spawnedCompanionSharedSenses: account(
       "operation",
       "spawnedCompanionSharedSenses",

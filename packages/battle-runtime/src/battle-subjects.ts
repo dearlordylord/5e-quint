@@ -22,6 +22,7 @@
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
+import { WeaponGripSchema } from "@dnd/shared/types";
 import {
   RULED_COVER_TYPES,
   MovementFeet,
@@ -125,6 +126,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "interactWithObject",
   "pickUpHeldWeapon",
   "changeWeaponAfterAttack",
+  "changeWeaponGrip",
   "releaseReadiedSpell",
   "releaseReadiedMovement",
   "reportReadyTrigger",
@@ -751,6 +753,16 @@ const BattleChangeWeaponAfterAttackSubjectSchema = Schema.Struct({
   weaponChange: AttackWeaponChangeSchema,
 });
 
+// SRD 5.2.1 equipment.md "Versatile": the weapon "can be used with one or two
+// hands". Changing how the main weapon is held costs nothing (ASSUMPTIONS.md
+// A65).
+const BattleChangeWeaponGripSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("changeWeaponGrip"),
+  grip: WeaponGripSchema,
+});
+
 export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -1083,6 +1095,7 @@ export const BattleSubjectSchema = Schema.Union([
   BattleInteractWithObjectSubjectSchema,
   BattlePickUpHeldWeaponSubjectSchema,
   BattleChangeWeaponAfterAttackSubjectSchema,
+  BattleChangeWeaponGripSubjectSchema,
   BattleInterruptReleaseReadiedSpellSubjectSchema,
   BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
@@ -1437,6 +1450,7 @@ function battleRuntimeCommandProcedureRefs(
       interactWithObject: noProcedureExecutionReferences,
       pickUpHeldWeapon: noProcedureExecutionReferences,
       changeWeaponAfterAttack: noProcedureExecutionReferences,
+      changeWeaponGrip: noProcedureExecutionReferences,
       releaseReadiedSpell: (value) => [value.procedureRef],
       releaseReadiedMovement: noProcedureExecutionReferences,
       reportReadyTrigger: noProcedureExecutionReferences,
@@ -1529,6 +1543,7 @@ export function battleSubjectProcedureRefsBelongToOwners(
         interactWithObject: (v) => v.actorId,
         pickUpHeldWeapon: (v) => v.actorId,
         changeWeaponAfterAttack: (v) => v.actorId,
+        changeWeaponGrip: (v) => v.actorId,
         releaseReadiedSpell: (v) => v.readiedSpellCasterId,
         releaseReadiedMovement: (v) => v.actorId,
         reportReadyTrigger: (v) => v.actorId,
@@ -1728,6 +1743,7 @@ function battleRuntimeCommandBoundExecutionReferences(
       interactWithObject: noBoundExecutionReferences,
       pickUpHeldWeapon: noBoundExecutionReferences,
       changeWeaponAfterAttack: noBoundExecutionReferences,
+      changeWeaponGrip: noBoundExecutionReferences,
       releaseReadiedSpell: noBoundExecutionReferences,
       releaseReadiedMovement: noBoundExecutionReferences,
       reportReadyTrigger: noBoundExecutionReferences,

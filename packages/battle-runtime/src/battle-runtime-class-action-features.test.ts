@@ -253,6 +253,12 @@ describe("battle runtime: class action features", () => {
         actorId: fighterId,
         command: "interactWithObject",
       },
+      {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "changeWeaponGrip",
+        grip: "two_handed",
+      },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
 
@@ -474,6 +480,12 @@ describe("battle runtime: class action features", () => {
         tag: "runtimeCommand",
         actorId: fighterId,
         command: "interactWithObject",
+      },
+      {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "changeWeaponGrip",
+        grip: "two_handed",
       },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);

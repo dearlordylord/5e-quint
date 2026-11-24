@@ -3,6 +3,7 @@ import { defineChatGptBattleTool } from "./battle-execution-tools.ts";
 export const CHATGPT_BATTLE_EXECUTION_TOOLS = {
   attack: defineChatGptBattleTool("attack"),
   begin_flurry: defineChatGptBattleTool("begin_flurry"),
+  change_weapon_grip: defineChatGptBattleTool("change_weapon_grip"),
   compelled_drop: defineChatGptBattleTool("compelled_drop"),
   compelled_grovel: defineChatGptBattleTool("compelled_grovel"),
   dash: defineChatGptBattleTool("dash"),

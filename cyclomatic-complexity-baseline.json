@@ -161,7 +161,7 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 68
+      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 69
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,

@@ -80,6 +80,13 @@ describe("armor class algebra", () => {
       mainWeaponGrip: "one_handed",
       hands: { leftHandUse: "offWeapon", rightHandUse: "mainWeapon" },
     },
+    {
+      loadout: "a two-handed main weapon and a dropped shield",
+      holdsShield: true,
+      holdsOffHandWeapon: false,
+      mainWeaponGrip: "two_handed",
+      hands: { leftHandUse: "mainWeapon", rightHandUse: "mainWeapon" },
+    },
   ] as const)(
     "a loadout of $loadout holds the hands it uses",
     ({ holdsShield, holdsOffHandWeapon, mainWeaponGrip, hands }) => {

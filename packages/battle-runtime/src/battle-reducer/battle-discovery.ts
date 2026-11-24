@@ -159,6 +159,7 @@ import {
   type CompelledNextTurnBehaviorEffect,
 } from "./compelled-behavior-discovery.ts";
 import { dropProneAvailable } from "./drop-prone-policy.ts";
+import { weaponGripChangeActs } from "./weapon-grip.ts";
 import {
   OBJECT_INTERACTION_COMMANDS,
   objectInteractionActs,
@@ -380,6 +381,11 @@ function compelledHaltActs(input: {
       input.actorId,
     ),
   );
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor !== undefined) {
+    // Halt rules out a move and an action; a grip change is neither.
+    input.acts.push(...weaponGripChangeActs(input.state, actor));
+  }
   input.acts.push(endTurnAct(input.actorId));
   input.acts.push(...readiedSpellReleaseActs(input.state, input.actorId));
   input.acts.push(...discoverLegendaryActionActs(input.state));
@@ -779,6 +785,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...proneTransitionActs(state, actor));
   acts.push(...objectInteractionActs(state, actor));
   acts.push(...changeWeaponAfterAttackActs(state, actor));
+  acts.push(...weaponGripChangeActs(state, actor));
   acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
   acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
   acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
