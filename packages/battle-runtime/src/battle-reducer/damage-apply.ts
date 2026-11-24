@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.resource-lifecycle
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage

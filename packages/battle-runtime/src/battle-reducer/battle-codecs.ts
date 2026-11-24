@@ -1928,6 +1928,22 @@ const BattleInterruptDecisionHolePayloadMember = pairedBattleHoleMember({
   eligibleResponders: Schema.Array(CombatantId),
 });
 
+/** The direction a directional persistent area moves in: not a D20 Test. */
+const DirectionalPersistentAreaDirectionChoiceHolePayloadMember = Schema.Struct(
+  {
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
+    label: Schema.String,
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
+    areaId: BattleAreaId,
+    directionId: BattleLineDirectionId,
+    requiresTableSpatialFact: Schema.Literal(true),
+  },
+);
+
+/** Saving Throw holes: each a D20 Test that declares its reroll options. */
 const GenericSavingThrowHoleBaseMembers = [
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2126,17 +2142,6 @@ const GenericSavingThrowHoleBaseMembers = [
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
-    label: Schema.String,
-    sourceCombatantId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    effectRef: BattleEffectExecutionRef,
-    areaId: BattleAreaId,
-    directionId: BattleLineDirectionId,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     spellConditionEndTurnSave: Schema.Struct({
@@ -2228,13 +2233,14 @@ const GenericSavingThrowHolePayloadMembers = [
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[6]),
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[7]),
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[8]),
-  GenericSavingThrowHoleBaseMembers[9],
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[9]),
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[10]),
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[11]),
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[12]),
   withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[13]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[14]),
-] as const;
+] as const satisfies {
+  readonly length: (typeof GenericSavingThrowHoleBaseMembers)["length"];
+};
 
 const GenericSavingThrowMechanicalHolePayloadMembers = [
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[0]),
@@ -2246,13 +2252,14 @@ const GenericSavingThrowMechanicalHolePayloadMembers = [
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[6]),
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[7]),
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[8]),
-  mechanicalBattleHoleSchemaFromLabeled(GenericSavingThrowHoleBaseMembers[9]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[9]),
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[10]),
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[11]),
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[12]),
   withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[13]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[14]),
-] as const;
+] as const satisfies {
+  readonly length: (typeof GenericSavingThrowHoleBaseMembers)["length"];
+};
 
 const AdditionalStructuralHolePayloadMembers = [
   Schema.Struct({
@@ -3682,6 +3689,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   FirstBattleHolePayloadMember.labeled,
   ...RemainingBattleHolePayloadMembers.map(({ labeled }) => labeled),
   ...GenericSavingThrowHolePayloadMembers,
+  DirectionalPersistentAreaDirectionChoiceHolePayloadMember,
   ...AdditionalStructuralHolePayloadMembers,
 ]);
 
@@ -3703,6 +3711,7 @@ const BattleOrdinaryHolePayloadUnionSchema = Schema.Union([
   FirstBattleHolePayloadMember.labeled,
   ...RemainingBattleHolePayloadMembers.map(({ labeled }) => labeled),
   ...GenericSavingThrowHolePayloadMembers,
+  DirectionalPersistentAreaDirectionChoiceHolePayloadMember,
   ...AdditionalStructuralHolePayloadMembers,
 ]);
 export const BattleOrdinaryHoleSchema: Schema.Codec<
@@ -3729,6 +3738,9 @@ const BattleMechanicalOrdinaryHoleCodecSchema = Schema.Union([
     ({ mechanical }) => mechanical,
   ),
   ...GenericSavingThrowMechanicalHolePayloadMembers,
+  mechanicalBattleHoleSchemaFromLabeled(
+    DirectionalPersistentAreaDirectionChoiceHolePayloadMember,
+  ),
   ...AdditionalStructuralMechanicalHolePayloadMembers,
 ]);
 export const BattleMechanicalOrdinaryHoleSchema: typeof BattleMechanicalOrdinaryHoleCodecSchema =
