@@ -4111,7 +4111,11 @@ export function characterSeed(input: {
               input.attack === undefined
                 ? parseUnitId("weapon_longsword")
                 : input.attack.weapon.weaponUnitId,
-            grip: "one_handed" as const,
+            grip: input.attack?.weapon.properties.some(
+              (property) => property.kind === "two_handed",
+            )
+              ? ("two_handed" as const)
+              : ("one_handed" as const),
           },
         });
   const attack =

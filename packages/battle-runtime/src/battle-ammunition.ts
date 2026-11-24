@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
-import { resourceCount } from "@dnd/shared/types";
+import { type HandUse, resourceCount } from "@dnd/shared/types";
 import { Match } from "effect";
 
 import {
@@ -10,6 +10,7 @@ import {
 } from "./battle-action-options.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/battle-object-lifecycle.ts";
+import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -17,7 +18,7 @@ import type {
   BattleCreatureState,
   BattleState,
 } from "./battle-state-execution.ts";
-import type { CombatantId } from "./identity.ts";
+import type { BattleObjectId, CombatantId } from "./identity.ts";
 
 export function battleAmmunitionStock(
   ammunition: BattleAmmunitionKind,
@@ -103,30 +104,37 @@ function ammunitionWeaponHandsAreAvailable(
     combatant.combatantId,
     combatant.origin,
   );
-  const holdsMainWeapon = loadout.weapon?.itemId === attack.weaponObjectId;
-  const holdsOffHandWeapon =
-    loadout.offHandWeapon?.itemId === attack.weaponObjectId;
   const hands = combatantHandUses(state, combatant, state.grapples);
-  const handUses = [hands.left, hands.right];
+  const handUses: readonly [HandUse, HandUse] = [hands.left, hands.right];
   if (
     attack.weapon.properties.some((property) => property.kind === "two_handed")
   ) {
-    return (
-      holdsMainWeapon &&
-      loadout.weapon?.grip === "two_handed" &&
-      handUses.some((hand) => hand === "mainWeapon") &&
-      handUses.every((hand) => hand === "mainWeapon" || hand === "free")
-    );
+    return twoHandedAmmunitionWeaponIsHeld({
+      weapon: loadout.weapon,
+      weaponObjectId: attack.weaponObjectId,
+      handUses,
+    });
   }
-  const weaponHandUse = holdsMainWeapon
-    ? "mainWeapon"
-    : holdsOffHandWeapon
-      ? "offWeapon"
-      : undefined;
+  if (!handUses.includes("free")) return false;
+  if (loadout.weapon?.itemId === attack.weaponObjectId) {
+    return handUses.includes("mainWeapon");
+  }
   return (
-    weaponHandUse !== undefined &&
-    handUses.includes(weaponHandUse) &&
-    handUses.includes("free")
+    loadout.offHandWeapon?.itemId === attack.weaponObjectId &&
+    handUses.includes("offWeapon")
+  );
+}
+
+function twoHandedAmmunitionWeaponIsHeld(input: {
+  readonly weapon: CharacterBattleLoadoutRef["weapon"];
+  readonly weaponObjectId: BattleObjectId;
+  readonly handUses: readonly [HandUse, HandUse];
+}): boolean {
+  return (
+    input.weapon?.itemId === input.weaponObjectId &&
+    input.weapon.grip === "two_handed" &&
+    input.handUses.includes("mainWeapon") &&
+    input.handUses.every((hand) => ["mainWeapon", "free"].includes(hand))
   );
 }
 

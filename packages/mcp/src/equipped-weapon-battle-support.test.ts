@@ -446,7 +446,7 @@ test("synthetic off-hand flat-damage weapons disclose the same slot-specific rej
 });
 
 test("a Versatile weapon can be equipped with the two-handed grip, which leaves no hand for an off-hand weapon", () => {
-  const { root, characterId, quarterstaff, offDagger, equip } = fixture();
+  const { root, characterId, quarterstaff, offUnresolved, equip } = fixture();
   const twoHanded = equip({
     weapon: { itemId: quarterstaff, grip: "two_handed" },
   });
@@ -461,7 +461,7 @@ test("a Versatile weapon can be equipped with the two-handed grip, which leaves 
     grip: "two_handed",
   });
 
-  const conflict = equip({ offHandWeapon: { itemId: offDagger } });
+  const conflict = equip({ offHandWeapon: { itemId: offUnresolved } });
   expect(conflict).toHaveProperty("isError", true);
   expect(JSON.stringify(jsonContentPayload(conflict))).toContain(
     `Weapon ${quarterstaff} is held two-handed, which leaves no hand for a shield or an off-hand weapon.`,
