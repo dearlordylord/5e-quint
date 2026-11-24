@@ -158,7 +158,9 @@ const spearId = battleObjectId("main:weapon_spear");
  * A Spear goes through Battle's own weapon admission, with no synthetic
  * mastery: of the published Thrown weapons, it is the one Battle admits today.
  */
-function battleWithSpear(): BattleState {
+function battleWithSpear(
+  grip: "one_handed" | "two_handed" = "one_handed",
+): BattleState {
   const spear = unitLibrary.requireUnit("weapon_spear");
   if (spear.kind !== "weapon") {
     throw new Error("Expected Spear weapon Unit.");
@@ -178,7 +180,7 @@ function battleWithSpear(): BattleState {
           weapon: {
             itemId: spearId,
             unitId: parseSharedUnitId("weapon_spear"),
-            grip: "one_handed",
+            grip,
           },
         },
       }),
@@ -645,7 +647,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
   });
 
-  test("a stowed Dagger has no throw while the hand its loadout gives it grapples", () => {
+  test("a stowed Dagger has no throw while no hand is free", () => {
     const stowed = stateWithLoadoutWeaponChange(
       battleWithDaggers({ mainHand: "dagger" }),
       fighterId,
@@ -673,6 +675,89 @@ describe("battle runtime: thrown weapon attacks", () => {
         (attack) => attack.kind,
       ),
     ).toEqual(["unarmedStrike"]);
+  });
+
+  test("a stowed two-handed Spear is drawn for its throw into the one free hand", () => {
+    // SRD 5.2.1 equipment.md "Versatile" asks for two hands only on a melee
+    // attack; a throw draws the weapon into one hand.
+    const spearBattle = battleWithSpear("two_handed");
+    const stowed = stateWithLoadoutWeaponChange(spearBattle, fighterId, {
+      kind: "stow",
+      objectId: spearId,
+    });
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const grappling: BattleState = {
+      ...stowed.state,
+      grapples: [
+        {
+          grapplerId: fighterId,
+          targetId: goblinId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand: "left",
+        },
+      ],
+    };
+
+    expect(
+      attackActionOptionsForActor(grappling, fighterId).map((attack) =>
+        attack.kind === "weapon" ? attack.weaponDelivery?.kind : attack.kind,
+      ),
+    ).toEqual(["thrown", "unarmedStrike"]);
+  });
+
+  test("a stowed off-hand Dagger is drawn for its Light extra throw after a Shortsword attack", () => {
+    const stowed = stateWithLoadoutWeaponChange(
+      battleWithDaggers({ mainHand: "shortsword" }),
+      fighterId,
+      { kind: "stow", objectId: offHandDaggerId },
+    );
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const state = stowed.state;
+    const shortsword = attackSubjectFor(state, undefined);
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: shortsword, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: shortsword,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterShortsword = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: shortsword,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 2, naturalD20: 2 }),
+        ],
+      }),
+    ).state;
+
+    expect(
+      offHandAttackActionOptionsForActor(afterShortsword, fighterId).map(
+        (attack) => attack.weaponDelivery?.kind,
+      ),
+    ).toEqual(["thrown"]);
+    const subject = thrownOffHandSubject(afterShortsword);
+    const completed = requireResolved(
+      throwToCompletion({
+        state: afterShortsword,
+        subject,
+        facts: [noEnemyNear(subject), landingFact(subject)],
+        attackTotal: 2,
+      }),
+    );
+    expect(
+      battleObjectIsOnGround(completed.state, fighterId, offHandDaggerId),
+    ).toBe(true);
+    expect(
+      loadoutWeaponIsStowed(completed.state, fighterId, offHandDaggerId),
+    ).toBe(false);
   });
 
   test("a thrown Dagger leaves the hand once its hit is accepted, before its damage", () => {
