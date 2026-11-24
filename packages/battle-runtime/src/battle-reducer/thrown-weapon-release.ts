@@ -19,8 +19,10 @@ import type { BattleObjectId, CombatantId } from "../identity.ts";
 import {
   battleGroundObjectPlacements,
   battleStateWithGroundObjects,
+  battleStateWithObjectCustody,
   battleStateWithoutGroundObject,
 } from "./battle-object-lifecycle.ts";
+import { loadoutWeaponIsStowed } from "./character-effective-loadout.ts";
 import {
   battleGroundObjectState,
   battleObjectIsOnGround,
@@ -75,7 +77,20 @@ export function stateWithThrownWeaponReleased(input: {
     return input.state;
   }
   /* v8 ignore stop -- @preserve */
-  const placed = battleStateWithGroundObjects(input.state, [
+  // A Thrown weapon drawn as part of its attack leaves the sheath as it flies.
+  const drawn = loadoutWeaponIsStowed(
+    input.state,
+    input.attackerId,
+    attack.weaponObjectId,
+  )
+    ? battleStateWithObjectCustody(
+        input.state,
+        input.attackerId,
+        attack.weaponObjectId,
+        null,
+      )
+    : input.state;
+  const placed = battleStateWithGroundObjects(drawn, [
     {
       actorId: input.attackerId,
       objectId: attack.weaponObjectId,

@@ -31,6 +31,8 @@ import {
   loadoutWeaponSlot,
 } from "./battle-object-lifecycle.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
+import { combatantActiveDruidWildShape } from "./creature-state-leaves.ts";
 import {
   loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
@@ -87,15 +89,13 @@ export function loadoutWeaponChangeIssue(
       "A weapon change requires an actor in this battle.",
     );
   }
-  if (!isCharacter(actor)) {
+  if (!isCharacterBattleCreatureState(actor)) {
     return issue(
       "actorNotCharacter",
       "A weapon change applies to a character's selected-loadout weapons.",
     );
   }
-  if (
-    actor.activeEffects.some((effect) => effect.kind === "druidWildShapeForm")
-  ) {
+  if (combatantActiveDruidWildShape(actor) !== null) {
     return issue(
       "activeFormWeaponChangeUnsupported",
       "A creature in Wild Shape can't equip or unequip its loadout weapons.",
@@ -135,7 +135,7 @@ export function loadoutWeaponChanges(
   state: BattleState,
   actor: BattleCreatureState,
 ): readonly AttackWeaponChange[] {
-  if (!isCharacter(actor)) return [];
+  if (!isCharacterBattleCreatureState(actor)) return [];
   return selectedLoadoutWeaponIds(actor).flatMap((objectId) =>
     ATTACK_WEAPON_CHANGE_KINDS.map(
       (kind): AttackWeaponChange => ({ kind, objectId }),
@@ -247,7 +247,8 @@ function withLoadoutWeaponInHand(
 ): BattleState {
   const actor = state.combatants.get(actorId);
   /* v8 ignore next -- @preserve -- loadoutWeaponChangeIssue has just admitted this character's loadout weapon. */
-  if (actor === undefined || !isCharacter(actor)) return state;
+  if (actor === undefined || !isCharacterBattleCreatureState(actor))
+    return state;
   const slot = loadoutWeaponSlot(actor, objectId);
   /* v8 ignore next -- @preserve -- the same admission proved the slot. */
   if (slot === null) return state;
@@ -271,12 +272,6 @@ function selectedLoadoutWeaponIds(
   return [weapon?.itemId, offHandWeapon?.itemId].filter(
     (itemId): itemId is BattleObjectId => itemId !== undefined,
   );
-}
-
-function isCharacter(
-  actor: BattleCreatureState,
-): actor is CharacterBattleCreatureState {
-  return actor.origin.kind === "character";
 }
 
 function applied(state: BattleState): LoadoutWeaponChangeResult {

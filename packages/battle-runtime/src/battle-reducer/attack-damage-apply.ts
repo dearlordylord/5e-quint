@@ -110,7 +110,10 @@ import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
   loadoutWeaponIsHeld,
+  loadoutWeaponIsStowed,
 } from "./character-effective-loadout.ts";
+import { loadoutWeaponHandsAreFree } from "./battle-object-lifecycle.ts";
+import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -443,30 +446,7 @@ export function attackActionOptionsForActor(
       actor,
       actor.origin.unarmedStrike,
     );
-    const options =
-      actor.origin.attack == null ||
-      (actor.origin.attack.kind === "weapon" &&
-        !loadoutWeaponIsHeld(
-          state,
-          actor.combatantId,
-          actor.origin.attack.weaponObjectId,
-        ))
-        ? [unarmedStrike]
-        : [
-            ...uniqueAttackExecutionSelectionOptions(
-              weaponAttackOptionsForActor(
-                state,
-                actor,
-                actor.origin.attack,
-                mainHandWeaponItemIdForAttack(
-                  state,
-                  actor,
-                  actor.origin.attack,
-                ),
-              ),
-            ),
-            unarmedStrike,
-          ];
+    const options = [...mainWeaponAttackOptions(state, actor), unarmedStrike];
     return options.filter((attack) =>
       ammunitionForAttackIsReady(state, actor, attack),
     );
@@ -502,6 +482,51 @@ export function attackActionOptionsForActor(
   }
 
   return [];
+}
+
+/** The attacks a character's main weapon can make now. */
+function mainWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly BoundSupportedAttackActionOption[] {
+  const main = actor.origin.attack;
+  if (main == null) return [];
+  if (!loadoutWeaponIsHeld(state, actor.combatantId, main.weaponObjectId)) {
+    return drawnThrownWeaponAttackOptions(state, actor, main);
+  }
+  return uniqueAttackExecutionSelectionOptions(
+    weaponAttackOptionsForActor(
+      state,
+      actor,
+      main,
+      mainHandWeaponItemIdForAttack(state, actor, main),
+    ),
+  );
+}
+
+/**
+ * The throws of a main weapon that is sheathed or stowed. SRD 5.2.1
+ * equipment.md "Thrown": "you can draw that weapon as part of the attack", so
+ * the draw belongs to the throw, not to the Attack action's one weapon change,
+ * once the hands its loadout gives it are free. A weapon on the ground is
+ * picked up, not drawn, so it has no such throw.
+ */
+function drawnThrownWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  main: BoundCharacterWeaponAttackActionOption,
+): readonly BoundSupportedAttackActionOption[] {
+  if (
+    !loadoutWeaponIsStowed(state, actor.combatantId, main.weaponObjectId) ||
+    !loadoutWeaponHandsAreFree(state, actor, "mainWeapon")
+  ) {
+    return [];
+  }
+  return uniqueAttackExecutionSelectionOptions(
+    weaponAttackOptionsForActor(state, actor, main, main.weaponObjectId).filter(
+      weaponAttackIsThrown,
+    ),
+  );
 }
 
 function uniqueAttackExecutionSelectionOptions(

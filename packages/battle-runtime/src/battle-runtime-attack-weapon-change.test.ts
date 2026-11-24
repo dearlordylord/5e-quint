@@ -476,6 +476,28 @@ describe("weapon change after an attack", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
+  it("refuses fills a weapon change doesn't ask for", () => {
+    const state = fighterVsGoblinBattle();
+    const attacked = missedAttack(state, fighterAttackSubject(state));
+    const stow = { kind: "stow", objectId: longswordId } as const;
+    const drop = { kind: "drop", objectId: longswordId } as const;
+    const otherDropFill: BattleFill = {
+      ...dropFill(),
+      holeId: weaponDropPositionHole(goblinId, longswordId).holeId,
+    };
+
+    expect(changeAfterAttack(attacked, stow, [dropFill()])).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(
+      changeAfterAttack(attacked, drop, [dropFill(), otherDropFill]),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(changeAfterAttack(attacked, drop, [dropFill()]).tag).toBe(
+      "resolved",
+    );
+  });
+
   it("gives up the change at the end of the turn", () => {
     const state = fighterVsGoblinBattle();
     const attacked = missedAttack(state, fighterAttackSubject(state));

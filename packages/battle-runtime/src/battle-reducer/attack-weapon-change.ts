@@ -201,6 +201,19 @@ export function resolveChangeWeaponAfterAttack(
       "No weapon change is left from an attack this turn.",
     );
   }
+  if (
+    !weaponChangeTakesFills(
+      input.subject.actorId,
+      input.subject.weaponChange,
+      input.fills,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "A weapon change takes only a dropped weapon's landing position.",
+    );
+  }
   const applied = appliedWeaponChange(
     input.state,
     input.subject,
@@ -218,6 +231,22 @@ export function resolveChangeWeaponAfterAttack(
     }),
     input.subject.actorId,
     input.subject.weaponChange,
+  );
+}
+
+/**
+ * Whether every fill is the change's own: only a drop asks where the weapon
+ * lands, and nothing else answers a weapon change.
+ */
+function weaponChangeTakesFills(
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+  fills: readonly BattleFill[],
+): boolean {
+  if (change.kind !== "drop") return fills.length === 0;
+  const hole = weaponDropPositionHole(actorId, change.objectId);
+  return fills.every(
+    (fill) => fill.kind === "weaponDropPosition" && fill.holeId === hole.holeId,
   );
 }
 

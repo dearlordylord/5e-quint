@@ -3,6 +3,8 @@ import {
   battleObjectIsOnGround,
 } from "./battle-reducer/object-custody-queries.ts";
 import { objectInteractionRulingHole } from "./battle-reducer/object-interaction.ts";
+import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-custody.ts";
+import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // SRD 5.2.1 "Thrown": a Melee weapon with the Thrown property can be thrown to
 // make a ranged attack with the ability modifier of its melee attack, and the
@@ -59,6 +61,7 @@ import {
   characterSeed,
   concentrationSavingThrowFill,
   damageRollFill,
+  difficultyClass,
   fighterId,
   goblinId,
   requireHole,
@@ -603,6 +606,73 @@ describe("battle runtime: thrown weapon attacks", () => {
     expect(
       battleObjectIsOnGround(completed.state, fighterId, mainDaggerId),
     ).toBe(true);
+  });
+
+  test("a stowed Dagger is drawn as part of its throw, keeping the weapon change, and lands", () => {
+    // SRD 5.2.1 equipment.md "Thrown": "you can draw that weapon as part of
+    // the attack", so the draw isn't the Attack action's weapon change.
+    const stowed = stateWithLoadoutWeaponChange(
+      battleWithDaggers({ mainHand: "dagger" }),
+      fighterId,
+      { kind: "stow", objectId: mainDaggerId },
+    );
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const state = stowed.state;
+    expect(
+      attackActionOptionsForActor(state, fighterId).map((attack) =>
+        attack.kind === "weapon" ? attack.weaponDelivery?.kind : attack.kind,
+      ),
+    ).toEqual(["thrown", "unarmedStrike"]);
+
+    const subject = attackSubjectFor(state, "thrown");
+    const completed = requireResolved(
+      throwToCompletion({
+        state,
+        subject,
+        facts: [noEnemyNear(subject), landingFact(subject)],
+        attackTotal: 2,
+      }),
+    );
+
+    expect(
+      battleObjectIsOnGround(completed.state, fighterId, mainDaggerId),
+    ).toBe(true);
+    expect(
+      loadoutWeaponIsStowed(completed.state, fighterId, mainDaggerId),
+    ).toBe(false);
+    expect(completed.state.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+  });
+
+  test("a stowed Dagger has no throw while the hand its loadout gives it grapples", () => {
+    const stowed = stateWithLoadoutWeaponChange(
+      battleWithDaggers({ mainHand: "dagger" }),
+      fighterId,
+      { kind: "stow", objectId: mainDaggerId },
+    );
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const fighter = stowed.state.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const grappling: BattleState = {
+      ...stowed.state,
+      grapples: [
+        {
+          grapplerId: fighterId,
+          targetId: goblinId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand:
+            fighter.armorClass.rightHandUse === "mainWeapon" ? "right" : "left",
+        },
+      ],
+    };
+
+    expect(
+      attackActionOptionsForActor(grappling, fighterId).map(
+        (attack) => attack.kind,
+      ),
+    ).toEqual(["unarmedStrike"]);
   });
 
   test("a thrown Dagger leaves the hand once its hit is accepted, before its damage", () => {
