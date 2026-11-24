@@ -88,7 +88,7 @@ describe("Saving throw cover guidance", () => {
   it("tells the table to omit cover where it adds nothing to the save", () => {
     for (const hole of [
       { ...saveHole, ability: "con" },
-      { ...saveHole, deniesCoverBenefit: true },
+      { ...saveHole, saveCover: { kind: "denied" } },
     ] as const satisfies readonly BattleSpellSavingThrowOutcomeHole[]) {
       expect(guidanceFor(hole).instructions).toContain(
         "Cover adds nothing to this saving throw. Omit cover on the outcomes.",

@@ -19,6 +19,7 @@ import type {
   BattleHole,
   BattleResolutionResult,
   BattleSavingThrowFlatBonusProjection,
+  BattleSpellSaveCover,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
@@ -62,13 +63,23 @@ export function isSpellTargetFact(
 /** Whether this saving throw hole lets cover add to the save. */
 export function savingThrowCoverRuling(
   hole: Pick<SavingThrowOutcomeHole, "ability"> & {
-    readonly deniesCoverBenefit?: true;
+    readonly saveCover?: BattleSpellSaveCover;
   },
 ): SavingThrowCoverRuling {
   return savingThrowBenefitsFromCover(hole.ability) &&
-    hole.deniesCoverBenefit !== true
+    hole.saveCover?.kind !== "denied"
     ? "coverBenefit"
     : "noCoverBenefit";
+}
+
+/** The targets whose cover a saving throw hole already took from its spell. */
+function coverRuledTargetIds(
+  hole: SavingThrowOutcomeHole,
+): ReadonlySet<CombatantId> {
+  const saveCover = "saveCover" in hole ? hole.saveCover : undefined;
+  return new Set(
+    saveCover?.kind === "ruledOnSpellTargets" ? saveCover.targetIds : [],
+  );
 }
 
 /** The flat bonus a target adds to a Dexterity save for its degree of cover. */
@@ -80,18 +91,24 @@ export function coverSavingThrowFlatBonus(
 }
 
 /**
- * The cover flat bonuses of a spell's saving throw, when cover adds to it:
- * one per target, from the first spellTarget fact this caster's spell has for
- * that target. Total Cover gives none, since a spell can't target a creature
+ * The cover a spell's saving throw takes from its targeting, when cover adds
+ * to it: each target the caster's spell has a spellTarget fact for keeps the
+ * cover ruled there, from its first such fact, and its degree's bonus shows as
+ * a flat bonus. Total Cover gives none, since a spell can't target a creature
  * behind it.
  */
-export function spellTargetCoverFlatBonuses(input: {
+export function spellTargetSaveCover(input: {
   readonly ruling: SavingThrowCoverRuling;
   readonly casterId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly spellTargetFacts: readonly SpellTargetFact[];
-}): readonly BattleSavingThrowFlatBonusProjection[] {
-  if (input.ruling === "noCoverBenefit") return [];
+}): {
+  readonly ruledTargetIds: readonly CombatantId[];
+  readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+} {
+  if (input.ruling === "noCoverBenefit") {
+    return { ruledTargetIds: [], flatBonuses: [] };
+  }
   const factByTargetId = new Map<CombatantId, SpellTargetFact>();
   for (const fact of input.spellTargetFacts) {
     if (
@@ -101,13 +118,17 @@ export function spellTargetCoverFlatBonuses(input: {
     )
       factByTargetId.set(fact.targetId, fact);
   }
-  return [...factByTargetId.values()].flatMap((fact) => {
-    const degree = directTargetCover(fact.cover);
-    const cover = degree === null ? null : bonusCover(degree);
-    return cover === null
-      ? []
-      : [coverSavingThrowFlatBonus(fact.targetId, cover)];
-  });
+  const facts = [...factByTargetId.values()];
+  return {
+    ruledTargetIds: facts.map((fact) => fact.targetId),
+    flatBonuses: facts.flatMap((fact) => {
+      const degree = directTargetCover(fact.cover);
+      const cover = degree === null ? null : bonusCover(degree);
+      return cover === null
+        ? []
+        : [coverSavingThrowFlatBonus(fact.targetId, cover)];
+    }),
+  };
 }
 
 function coveredOutcomeTargetIds(
@@ -121,7 +142,7 @@ function coveredOutcomeTargetIds(
 /**
  * Why a saving throw fill's outcome cover doesn't answer its hole, or null. A
  * covered outcome needs a hole that lets cover add to the save, and a target
- * whose cover the hole doesn't already count in its flat bonuses.
+ * whose cover the hole didn't already take from its spell's targeting.
  */
 export function savingThrowOutcomeCoverIssue(input: {
   readonly fill: SavingThrowOutcomeFill;
@@ -132,13 +153,9 @@ export function savingThrowOutcomeCoverIssue(input: {
   if (savingThrowCoverRuling(input.hole) === "noCoverBenefit") {
     return "Cover adds nothing to this saving throw; omit cover on its outcomes.";
   }
-  const countedTargetIds = new Set(
-    input.hole.targetFlatBonuses.flatMap((bonus) =>
-      bonus.kind === "cover" ? [bonus.targetId] : [],
-    ),
-  );
-  return coveredTargetIds.some((targetId) => countedTargetIds.has(targetId))
-    ? "This target's cover already counts in the save's targetFlatBonuses; omit cover on its outcome."
+  const ruledTargetIds = coverRuledTargetIds(input.hole);
+  return coveredTargetIds.some((targetId) => ruledTargetIds.has(targetId))
+    ? "This target's cover against the effect is ruled on its spellTarget fact; omit cover on its outcome."
     : null;
 }
 

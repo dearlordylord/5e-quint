@@ -390,7 +390,7 @@ function savingThrowCoverInstructions(hole: BattleHole): readonly string[] {
   if (hole.kind !== "savingThrowOutcome") return [];
   return Match.value(savingThrowCoverRuling(hole)).pipe(
     Match.when("coverBenefit", () => [
-      `Cover adds to this Dexterity saving throw. A target whose cover already shows in targetFlatBonuses keeps it; omit cover on its outcome. For any other target the table rules has Half Cover or Three-Quarters Cover against this effect, from where the effect originates, set cover to half or threeQuarters on its rolled outcome. Count the +${coverBonus("half")} or +${coverBonus("threeQuarters")} bonus in succeeded. Omit cover for no cover.`,
+      `Cover adds to this Dexterity saving throw. A target listed in saveCover.targetIds keeps the cover ruled on its spellTarget fact, and a ruled degree shows with its bonus in targetFlatBonuses; omit cover on its outcome. For any other target the table rules has Half Cover or Three-Quarters Cover against this effect, from where the effect originates, set cover to half or threeQuarters on its rolled outcome. Count the +${coverBonus("half")} or +${coverBonus("threeQuarters")} bonus in succeeded. Omit cover for no cover.`,
     ]),
     Match.when("noCoverBenefit", () => [
       "Cover adds nothing to this saving throw. Omit cover on the outcomes.",

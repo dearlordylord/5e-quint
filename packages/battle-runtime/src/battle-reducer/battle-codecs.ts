@@ -2308,6 +2308,14 @@ const AdditionalStructuralMechanicalHolePayloadMembers = [
   ),
 ] as const;
 
+const BattleSpellSaveCoverSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("denied") }),
+  Schema.Struct({
+    kind: Schema.Literal("ruledOnSpellTargets"),
+    targetIds: Schema.NonEmptyArray(CombatantId),
+  }),
+]);
+
 const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ...BattleHoleBaseFieldsSchema,
   kind: Schema.Literal("savingThrowOutcome"),
@@ -2317,7 +2325,7 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
   targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
   targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  deniesCoverBenefit: Schema.optionalKey(Schema.Literal(true)),
+  saveCover: Schema.optionalKey(BattleSpellSaveCoverSchema),
   relationshipFactRequest: Schema.optionalKey(
     BattleSavingThrowRelationshipFactRequestSchema,
   ),

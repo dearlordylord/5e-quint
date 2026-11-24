@@ -10,7 +10,7 @@ import { describe, expect, test } from "vitest";
 import {
   savingThrowCoverRuling,
   savingThrowFillsCoverIssue,
-  spellTargetCoverFlatBonuses,
+  spellTargetSaveCover,
 } from "./battle-reducer/saving-throw-cover.ts";
 import { admitRegisteredSpellProcedureMechanics } from "./battle-reducer/spell-procedure-profiles/admission-registry.ts";
 import type { BattleHole, BattleSubject } from "./index.ts";
@@ -268,6 +268,7 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     if (hole.kind !== "savingThrowOutcome") throw new Error("Expected a save.");
     expect(savingThrowCoverRuling(hole)).toBe("coverBenefit");
     expect(coverBonuses(hole)).toEqual([]);
+    expect("saveCover" in hole).toBe(false);
     for (const cover of ["half", "threeQuarters"] as const) {
       expect(
         requireHole(save(new Map([[skeletonId, cover]])), "rolledDice"),
@@ -337,16 +338,21 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     expect(coverBonuses(saveHole("threeQuarters"))).toEqual([
       { kind: "cover", targetId: skeletonId, cover: "threeQuarters", bonus: 5 },
     ]);
-    expect(save("half", "half")).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "This target's cover already counts in the save's targetFlatBonuses; omit cover on its outcome.",
+    expect(saveHole(undefined)).toMatchObject({
+      saveCover: { kind: "ruledOnSpellTargets", targetIds: [skeletonId] },
     });
+    for (const cover of [undefined, "half"] as const) {
+      expect(save(cover, "half")).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          "This target's cover against the effect is ruled on its spellTarget fact; omit cover on its outcome.",
+      });
+    }
     expect(save("half", undefined).tag).not.toBe("invalid");
   });
 
-  test("a spell's save counts one cover bonus per target, from that caster's spellTarget fact", () => {
+  test("a spell's save takes each target's cover once, from that caster's spellTarget fact", () => {
     const { saveHole } = targetedSave(syntheticTargetedDexCantrip());
     const hole = saveHole(undefined);
     if (!("sourceProcedureRef" in hole)) {
@@ -361,7 +367,7 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
       cover: "half",
     } as const;
     expect(
-      spellTargetCoverFlatBonuses({
+      spellTargetSaveCover({
         ruling: "coverBenefit",
         casterId: wizardId,
         sourceProcedureRef,
@@ -372,9 +378,12 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
           { ...fact, targetId: secondSkeletonId, cover: "total" },
         ],
       }),
-    ).toEqual([
-      { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
-    ]);
+    ).toEqual({
+      ruledTargetIds: [skeletonId, secondSkeletonId],
+      flatBonuses: [
+        { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
+      ],
+    });
   });
 
   test("a covered save fill that answers no open hole is left to the resolution to refuse", () => {
@@ -398,7 +407,7 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     for (const cover of [undefined, "half", "threeQuarters"] as const) {
       const hole = saveHole(cover);
       expect(hole.ability).toBe("dex");
-      expect(hole).toMatchObject({ deniesCoverBenefit: true });
+      expect(hole).toMatchObject({ saveCover: { kind: "denied" } });
       expect(savingThrowCoverRuling(hole)).toBe("noCoverBenefit");
       expect(coverBonuses(hole)).toEqual([]);
     }

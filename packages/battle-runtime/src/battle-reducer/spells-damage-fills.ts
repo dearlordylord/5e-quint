@@ -75,7 +75,7 @@ import { battleCreatureType } from "./domain-helpers.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import {
   savingThrowCoverRuling,
-  spellTargetCoverFlatBonuses,
+  spellTargetSaveCover,
   type SpellTargetFact,
 } from "./saving-throw-cover.ts";
 import {
@@ -92,6 +92,7 @@ import {
   type BattleHoleId,
   type BattleSpellTargetListRelationshipFact,
   type BattleSavingThrowFlatBonusProjection,
+  type BattleSpellSaveCover,
   type BattleSavingThrowRollModeProjection,
   type BattleSpellAttackRollHole,
   type BattleSpellAbilityChoiceHole,
@@ -1258,13 +1259,14 @@ export function spellSavingThrowOutcomeHole(
       ...savingThrowFlatBonusProjections(state, ability),
       ...cover.flatBonuses,
     ],
-    ...cover.benefit,
+    ...cover.fact,
   };
 }
 
 /**
  * The cover facts of a spell's saving throw hole: whether the spell denies the
- * benefit of cover, and the bonus each spell target's ruled cover gives.
+ * benefit of cover, or which targets keep the cover ruled on their spellTarget
+ * fact, with the bonus each ruled degree gives.
  */
 function spellSaveCover(input: {
   readonly invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2];
@@ -1272,20 +1274,30 @@ function spellSaveCover(input: {
   readonly ability: Ability;
   readonly spellTargetFacts: readonly SpellTargetFact[] | undefined;
 }): {
-  readonly benefit: { readonly deniesCoverBenefit?: true };
+  readonly fact: { readonly saveCover?: BattleSpellSaveCover };
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 } {
-  const benefit = spellSaveDeniesCoverBenefit(input.invocation)
-    ? { deniesCoverBenefit: true as const }
-    : {};
+  if (spellSaveDeniesCoverBenefit(input.invocation)) {
+    return { fact: { saveCover: { kind: "denied" } }, flatBonuses: [] };
+  }
+  const cover = spellTargetSaveCover({
+    ruling: savingThrowCoverRuling({ ability: input.ability }),
+    casterId: input.casterId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellTargetFacts: input.spellTargetFacts ?? [],
+  });
+  const [firstTargetId, ...otherTargetIds] = cover.ruledTargetIds;
   return {
-    benefit,
-    flatBonuses: spellTargetCoverFlatBonuses({
-      ruling: savingThrowCoverRuling({ ability: input.ability, ...benefit }),
-      casterId: input.casterId,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
-      spellTargetFacts: input.spellTargetFacts ?? [],
-    }),
+    fact:
+      firstTargetId === undefined
+        ? {}
+        : {
+            saveCover: {
+              kind: "ruledOnSpellTargets",
+              targetIds: [firstTargetId, ...otherTargetIds],
+            },
+          },
+    flatBonuses: cover.flatBonuses,
   };
 }
 
