@@ -899,7 +899,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       subject: moveSubject,
       fills: [
         movementFill(findHole(move.envelope.frontier.holes, "movement"), {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: fighterId,

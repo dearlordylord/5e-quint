@@ -22,6 +22,7 @@ import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+  type BattleD20TestNaturalOneRerollDecision,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -31,9 +32,9 @@ import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
+  D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
-  D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -212,12 +213,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     const rerolledHit = resolveAttack(state, subject, [
       targetSelection,
       attackRollFill(roll, {
-        total: 2,
+        total: 4,
         naturalD20: 1,
-        d20TestNaturalOneReroll: rerollRoll({
-          total: 15,
-          naturalD20: 12,
-        }),
+        d20TestRerolls: [
+          rerollRoll({
+            total: 15,
+            naturalD20: 12,
+          }),
+        ],
       }),
     ]);
 
@@ -233,12 +236,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       resolveAttack(state, subject, [
         targetSelection,
         attackRollFill(roll, {
-          total: 2,
+          total: 30,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 30,
-            naturalD20: 1,
-          }),
+          d20TestRerolls: [
+            rerollRoll({
+              total: 30,
+              naturalD20: 1,
+            }),
+          ],
         }),
       ]),
     );
@@ -246,13 +251,27 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       Number(replacementNaturalOne.state.combatants.get(goblinId)?.hp),
     ).toBe(Number(state.combatants.get(goblinId)?.hp));
 
+    expect(
+      resolveAttack(state, subject, [
+        targetSelection,
+        attackRollFill(roll, {
+          total: 4,
+          naturalD20: 1,
+          d20TestRerolls: [rerollRoll({ total: 20, naturalD20: 12 })],
+        }),
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
+    });
+
     const declined = requireResolved(
       resolveAttack(state, subject, [
         targetSelection,
         attackRollFill(roll, {
           total: 2,
           naturalD20: 1,
-          d20TestNaturalOneReroll: declineRoll(),
+          d20TestRerolls: [declineRoll()],
         }),
       ]),
     );
@@ -315,11 +334,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         naturalD20: 10,
         rollMode: "advantage",
         rolledD20s: advantageRawFirstDieOne,
-        d20TestNaturalOneReroll: rerollRolledDieRoll({
-          die: "first",
-          naturalD20: 20,
-          result: { total: 25, naturalD20: 20, rollMode: "advantage" },
-        }),
+        d20TestRerolls: [
+          rerollRolledDieRoll({
+            die: "first",
+            naturalD20: 20,
+            result: { total: 25, naturalD20: 20, rollMode: "advantage" },
+          }),
+        ],
       }),
     ]);
     expect(advantageFirstDieReplacement).toMatchObject({
@@ -337,10 +358,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         naturalD20: 10,
         rollMode: "advantage",
         rolledD20s: advantageRawFirstDieOne,
-        d20TestNaturalOneReroll: rerollRoll({
-          total: 25,
-          naturalD20: 20,
-        }),
+        d20TestRerolls: [
+          rerollRoll({
+            total: 25,
+            naturalD20: 20,
+          }),
+        ],
       }),
     ]);
     expect(genericReplacementWithRawDice).toMatchObject({
@@ -355,11 +378,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         naturalD20: 1,
         rollMode: "advantage",
         rolledD20s: { first: 1, second: 1 },
-        d20TestNaturalOneReroll: rerollRolledDieRoll({
-          die: "first",
-          naturalD20: 12,
-          result: { total: 17, naturalD20: 12, rollMode: "advantage" },
-        }),
+        d20TestRerolls: [
+          rerollRolledDieRoll({
+            die: "first",
+            naturalD20: 12,
+            result: { total: 17, naturalD20: 12, rollMode: "advantage" },
+          }),
+        ],
       }),
     ]);
     expect(advantageBothOnes).toMatchObject({
@@ -403,11 +428,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         naturalD20: 1,
         rollMode: "disadvantage",
         rolledD20s: { first: 1, second: 10 },
-        d20TestNaturalOneReroll: rerollRolledDieRoll({
-          die: "first",
-          naturalD20: 12,
-          result: { total: 15, naturalD20: 10, rollMode: "disadvantage" },
-        }),
+        d20TestRerolls: [
+          rerollRolledDieRoll({
+            die: "first",
+            naturalD20: 12,
+            result: { total: 15, naturalD20: 10, rollMode: "disadvantage" },
+          }),
+        ],
       }),
     ]);
     expect(disadvantageFirstDieNaturalOne).toMatchObject({
@@ -443,11 +470,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           naturalD20: 1,
           rollMode: "disadvantage",
           rolledD20s: { first: 1, second: 1 },
-          d20TestNaturalOneReroll: rerollRolledDieRoll({
-            die: "second",
-            naturalD20: 12,
-            result: { total: 6, naturalD20: 1, rollMode: "disadvantage" },
-          }),
+          d20TestRerolls: [
+            rerollRolledDieRoll({
+              die: "second",
+              naturalD20: 12,
+              result: { total: 6, naturalD20: 1, rollMode: "disadvantage" },
+            }),
+          ],
         }),
       ]),
     );
@@ -633,12 +662,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       fills: [
         targetFill(target, goblinId),
         attackRollFill(rerollHole, {
-          total: 2,
+          total: 4,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 15,
-            naturalD20: 12,
-          }),
+          d20TestRerolls: [
+            rerollRoll({
+              total: 15,
+              naturalD20: 12,
+            }),
+          ],
         }),
       ],
     });
@@ -681,12 +712,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       subject: reactorOpportunity.subject,
       fills: [
         attackRollFill(reactorOpportunity.attackRoll, {
-          total: 2,
+          total: 4,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 15,
-            naturalD20: 12,
-          }),
+          d20TestRerolls: [
+            rerollRoll({
+              total: 15,
+              naturalD20: 12,
+            }),
+          ],
         }),
       ],
     });
@@ -708,7 +741,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           attackRollFill(reactorOpportunity.attackRoll, {
             total: 2,
             naturalD20: 1,
-            d20TestNaturalOneReroll: declineRoll(),
+            d20TestRerolls: [declineRoll()],
           }),
         ],
       }),
@@ -722,12 +755,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       subject: reactorOpportunity.subject,
       fills: [
         attackRollFill(reactorOpportunity.attackRoll, {
-          total: 8,
+          total: 5,
           naturalD20: 2,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 15,
-            naturalD20: 12,
-          }),
+          d20TestRerolls: [
+            rerollRoll({
+              total: 15,
+              naturalD20: 12,
+            }),
+          ],
         }),
       ],
     });
@@ -762,12 +797,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       subject: nonLuckReactorOpportunity.subject,
       fills: [
         attackRollFill(nonLuckReactorOpportunity.attackRoll, {
-          total: 2,
+          total: 4,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 15,
-            naturalD20: 12,
-          }),
+          d20TestRerolls: [
+            rerollRoll({
+              total: 15,
+              naturalD20: 12,
+            }),
+          ],
         }),
       ],
     });
@@ -872,7 +909,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         subject,
         fills: [
           abilityCheckFill(check, {
-            total: 2,
+            total: 5,
             naturalD20: 1,
             d20TestNaturalOneReroll: rerollRoll({
               total: 18,
@@ -885,6 +922,25 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     expect(hidden.combatants.get(fighterId)?.hidden).toEqual({
       discoveryDc: difficultyClass(18),
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          abilityCheckFill(check, {
+            total: 5,
+            naturalD20: 1,
+            d20TestNaturalOneReroll: rerollRoll({
+              total: 25,
+              naturalD20: 14,
+            }),
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_NATURAL_ONE_REROLL_MODIFIER_MESSAGE,
     });
   });
 
@@ -962,7 +1018,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         fills: [
           targetSelection,
           abilityCheckFill(check, {
-            total: 2,
+            total: 1,
             naturalD20: 1,
             d20TestNaturalOneReroll: rerollRoll({
               total: 14,
@@ -1266,9 +1322,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     const notNaturalOne = resolveAttack(state, subject, [
       targetSelection,
       attackRollFill(roll, {
-        total: 12,
+        total: 5,
         naturalD20: 2,
-        d20TestNaturalOneReroll: rerollRoll({ total: 15, naturalD20: 12 }),
+        d20TestRerolls: [rerollRoll({ total: 15, naturalD20: 12 })],
       }),
     ]);
     expect(notNaturalOne).toMatchObject({
@@ -1322,9 +1378,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     const unselected = resolveAttack(unselectedState, unselectedSubject, [
       unselectedTargetSelection,
       attackRollFill(unselectedRoll, {
-        total: 2,
+        total: 4,
         naturalD20: 1,
-        d20TestNaturalOneReroll: rerollRoll({ total: 15, naturalD20: 12 }),
+        d20TestRerolls: [rerollRoll({ total: 15, naturalD20: 12 })],
       }),
     ]);
     expect(unselected).toMatchObject({
@@ -1406,15 +1462,23 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         }),
       ],
     });
-    expect(luckHole).not.toHaveProperty("spellAttackRerolls");
+    // A55: on a natural 1 that misses, the roller may take Luck or Seeking
+    // Spell first.
+    expect(luckHole).toMatchObject({
+      spellAttackRerolls: [
+        expect.objectContaining({ effectKind: SEEKING_METAMAGIC_EFFECT_KIND }),
+      ],
+    });
 
     const luckReplacementHit = attackRollFill(luckHole, {
-      total: 18,
+      total: 6,
       naturalD20: 1,
-      d20TestNaturalOneReroll: rerollRoll({
-        total: 18,
-        naturalD20: 13,
-      }),
+      d20TestRerolls: [
+        rerollRoll({
+          total: 18,
+          naturalD20: 13,
+        }),
+      ],
     });
     const afterLuck = resolveBattleSubject({
       state: state.state,
@@ -1440,26 +1504,76 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       fills: [
         targetSelection,
         attackRollFill(luckHole, {
-          total: 4,
+          total: 6,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 18,
-            naturalD20: 13,
-          }),
-          spellAttackReroll: {
-            kind: "reroll",
-            effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-            replacement: {
+          d20TestRerolls: [
+            rerollRoll({
               total: 18,
-              d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+              naturalD20: 13,
+            }),
+            {
+              kind: "reroll",
+              effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+              replacement: {
+                total: 18,
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+              },
             },
-          },
+          ],
         }),
       ],
     });
+    // A55 lets Seeking Spell reroll after Luck, but only a roll that missed.
     expect(stackedSeeking).toMatchObject({
       tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
+      message: "Seeking Spell can reroll only a missed spell attack roll.",
+    });
+
+    // A natural 1 that Seeking Spell rolls can still take Luck (A55).
+    const seekingNaturalOne = {
+      kind: "reroll",
+      effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+      replacement: {
+        total: 6,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
+      },
+    } as const;
+    const afterSeeking = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        attackRollFill(attack, {
+          total: 8,
+          naturalD20: 3,
+          d20TestRerolls: [seekingNaturalOne],
+        }),
+      ],
+    });
+    expect(requireTypedHole(afterSeeking, "attackRoll")).toMatchObject({
+      d20TestNaturalOneRerolls: [
+        expect.objectContaining({
+          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+        }),
+      ],
+    });
+    const luckAfterSeeking = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        attackRollFill(attack, {
+          total: 8,
+          naturalD20: 3,
+          d20TestRerolls: [
+            seekingNaturalOne,
+            rerollRoll({ total: 18, naturalD20: 13 }),
+          ],
+        }),
+      ],
+    });
+    expect(requireTypedHole(luckAfterSeeking, "rolledDice")).toMatchObject({
+      kind: "rolledDice",
     });
   });
 
@@ -1623,12 +1737,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       fills: [
         targetSelection,
         attackRollFill(attack, {
-          total: 2,
+          total: 7,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({
-            total: 18,
-            naturalD20: 12,
-          }),
+          d20TestRerolls: [
+            rerollRoll({
+              total: 18,
+              naturalD20: 12,
+            }),
+          ],
         }),
       ],
     });
@@ -2038,7 +2154,7 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
     subject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           {
             reactorId: goblinId,
@@ -2089,12 +2205,7 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
 function rerollRoll(input: {
   readonly total: number;
   readonly naturalD20: number;
-}): NonNullable<
-  Extract<
-    BattleFill,
-    { readonly kind: "attackRoll" }
-  >["value"]["d20TestNaturalOneReroll"]
-> {
+}): BattleD20TestNaturalOneRerollDecision {
   return {
     kind: "reroll",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
@@ -2116,12 +2227,7 @@ function rerollRolledDieRoll(input: {
     readonly naturalD20: number;
     readonly rollMode: "advantage" | "disadvantage";
   };
-}): NonNullable<
-  Extract<
-    BattleFill,
-    { readonly kind: "attackRoll" }
-  >["value"]["d20TestNaturalOneReroll"]
-> {
+}): BattleD20TestNaturalOneRerollDecision {
   return {
     kind: "rerollRolledDie",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
@@ -2140,12 +2246,7 @@ function rerollRolledDieRoll(input: {
   };
 }
 
-function declineRoll(): NonNullable<
-  Extract<
-    BattleFill,
-    { readonly kind: "attackRoll" }
-  >["value"]["d20TestNaturalOneReroll"]
-> {
+function declineRoll(): BattleD20TestNaturalOneRerollDecision {
   return {
     kind: "decline",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
@@ -2296,12 +2397,14 @@ function replayHalflingLuckNaturalOneReroll(): {
   const result = resolveAttack(state, subject, [
     targetSelection,
     attackRollFill(roll, {
-      total: 2,
+      total: 4,
       naturalD20: 1,
-      d20TestNaturalOneReroll: rerollRoll({
-        total: 15,
-        naturalD20: 12,
-      }),
+      d20TestRerolls: [
+        rerollRoll({
+          total: 15,
+          naturalD20: 12,
+        }),
+      ],
     }),
   ]);
   if (
@@ -2342,15 +2445,17 @@ function replayHalflingLuckRawD20RerollChoice(): {
       naturalD20: 10,
       rollMode: "advantage",
       rolledD20s: rolledD20s({ first: 1, second: 10 }),
-      d20TestNaturalOneReroll: rerollRolledDieRoll({
-        die: "first",
-        naturalD20: 20,
-        result: {
-          total: 25,
+      d20TestRerolls: [
+        rerollRolledDieRoll({
+          die: "first",
           naturalD20: 20,
-          rollMode: "advantage",
-        },
-      }),
+          result: {
+            total: 25,
+            naturalD20: 20,
+            rollMode: "advantage",
+          },
+        }),
+      ],
     }),
   ]);
   if (

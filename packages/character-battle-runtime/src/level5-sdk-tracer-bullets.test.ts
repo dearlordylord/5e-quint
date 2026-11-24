@@ -1423,7 +1423,22 @@ describe("level 5 SDK tracer bullets", () => {
           subject: moveSubject,
           fills: [
             movementFill(moveHole, {
-              movementCostFeet: 15,
+              path: [
+                {
+                  distanceFeet: movementFeet(5),
+                  activity: "ordinary",
+                  difficultTerrain: "areaDifficultTerrain",
+                  movesCloserThroughDirectionalArea: false,
+                  draggedGrappledTargetIds: [],
+                },
+                {
+                  distanceFeet: movementFeet(5),
+                  activity: "ordinary",
+                  difficultTerrain: "none",
+                  movesCloserThroughDirectionalArea: false,
+                  draggedGrappledTargetIds: [],
+                },
+              ],
               provokedOpportunityAttacks: [],
               areaDifficultTerrain: {
                 kind: "areaDifficultTerrain",
@@ -1436,8 +1451,6 @@ describe("level 5 SDK tracer bullets", () => {
                     areaId: sleetStormAreaId,
                   },
                 ],
-                totalDistanceFeet: movementFeet(10),
-                difficultTerrainDistanceFeet: movementFeet(5),
               },
             }),
           ],
@@ -4224,7 +4237,10 @@ function sleetStormAreaChoiceFill(
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly path: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["path"];
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -4240,7 +4256,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: value.path,
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       ...(value.areaDifficultTerrain === undefined
         ? {}

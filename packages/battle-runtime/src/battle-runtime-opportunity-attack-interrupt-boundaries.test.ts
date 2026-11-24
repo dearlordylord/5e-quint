@@ -1,3 +1,4 @@
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -30,6 +31,7 @@ import {
   goblinId,
   interruptDecisionFill,
   movementFill,
+  testMovementPath,
   opportunityAttackProcedureSelectionForTest,
   rageResource,
   reactionChoiceWithSubject,
@@ -123,7 +125,7 @@ test("movement rejects an Opportunity Attack threat outside the selected reach b
       subject: moveSubject,
       fills: [
         movementFill(movement, {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [
             {
               reactorId: fighterId,
@@ -300,7 +302,7 @@ function startRetaliationAfterSkeletonOpportunityAttack(
     subject: moveSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        distanceFeet: 5,
         provokedOpportunityAttacks: [
           {
             reactorId: skeletonAttack.actorId,
@@ -477,12 +479,18 @@ function startFighterOpportunityAttackAfterMovement(
     "movement",
   );
   const fighterAttack = fighterAttackSubject(state, "Longsword");
+  // SRD 5.2.1 "Prone": a Prone mover's only movement is crawling.
+  const mover = state.combatants.get(moverId);
+  const prone = mover !== undefined && hasCondition(mover.conditions, "prone");
   const awaitingOpportunity = resolveBattleSubject({
     state,
     subject: moveSubject,
     fills: [
       movementFill(movement, {
-        movementCostFeet: 5,
+        path: testMovementPath({
+          distanceFeet: 5,
+          activity: prone ? "crawling" : "ordinary",
+        }),
         provokedOpportunityAttacks: [
           {
             reactorId: fighterAttack.actorId,

@@ -1,7 +1,9 @@
+import { classLevel } from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.weapon-mastery-graze
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WEAPON_MASTERY_GRAZE
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
+import { characterBattleFeatureInitForTest } from "../../battle-runtime/src/battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -263,6 +265,12 @@ describe("manual MCP battle surface coverage", () => {
               grip: "one_handed",
             },
           },
+          unitFeatures: [
+            characterBattleFeatureInitForTest(
+              root.unitLibrary.requireUnit("monk_martial_arts"),
+              [{ className: "monk", level: classLevel(1) }],
+            ),
+          ],
           characterUnitRefs: [
             {
               unit: root.unitLibrary.requireUnit("monk_martial_arts"),
@@ -602,7 +610,15 @@ describe("manual MCP battle surface coverage", () => {
         holeId: movement.holeId,
         value: {
           speedKind: walking.kind,
-          movementCostFeet: 5,
+          path: [
+            {
+              distanceFeet: 5,
+              activity: "ordinary",
+              difficultTerrain: "none",
+              movesCloserThroughDirectionalArea: false,
+              draggedGrappledTargetIds: [],
+            },
+          ],
           provokedOpportunityAttacks: [
             { reactorId: "fighter", distanceFeet: 5, ...selection },
           ],
@@ -2203,6 +2219,7 @@ function character(
     readonly initiative: number;
     readonly classLevels?: CharacterBattleClassLevelInits;
     readonly characterUnitRefs?: readonly BattleUnitRef[];
+    readonly unitFeatures?: CharacterCreatureInit["unitFeatures"];
     readonly weaponMasteries?: CharacterCreatureInit["weaponMasteries"];
     readonly selectedLoadout?: CharacterCreatureInit["selectedLoadout"];
     readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
@@ -2269,6 +2286,7 @@ function character(
       ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs,
+      unitFeatures: input.unitFeatures ?? [],
       invocationFeatures: input.invocationFeatures ?? [],
       classLevels: input.classLevels ?? [
         {
@@ -2342,14 +2360,18 @@ function weaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId: battleObjectId(`main:${weapon.id}`),
+    weaponMasteries: [],
+  });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
   return {
     kind: "weapon",
-    ...bindCharacterWeaponAttackExecutionWeapon({
-      weaponUnitId: weapon.id,
-      definition,
-      objectId: battleObjectId(`main:${weapon.id}`),
-      weaponMasteries: [],
-    }),
+    ...bound.success,
     ability,
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),
@@ -2425,14 +2447,18 @@ function syntheticGrazeWeaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId: battleObjectId(`main:${weapon.id}`),
+    weaponMasteries: [{ weaponUnitId: weapon.id }],
+  });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
   return {
     kind: "weapon",
-    ...bindCharacterWeaponAttackExecutionWeapon({
-      weaponUnitId: weapon.id,
-      definition,
-      objectId: battleObjectId(`main:${weapon.id}`),
-      weaponMasteries: [{ weaponUnitId: weapon.id }],
-    }),
+    ...bound.success,
     ability: "str",
     abilityModifier: abilityModifier(3),
     attackBonus: attackBonus(5),
@@ -2480,12 +2506,16 @@ function reconcileMcpCharacterWeaponAttack(
   if (definition.tag === "rejected") {
     throw new Error(definition.issues.map(({ message }) => message).join(" "));
   }
-  const admitted = bindCharacterWeaponAttackExecutionWeapon({
+  const bound = bindCharacterWeaponAttackExecutionWeapon({
     weaponUnitId: weapon.id,
     definition,
     objectId: loadoutObjectId,
     weaponMasteries: [{ weaponUnitId: weapon.id }],
   });
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
+  const admitted = bound.success;
   return {
     ...attack,
     weapon: admitted.weapon,

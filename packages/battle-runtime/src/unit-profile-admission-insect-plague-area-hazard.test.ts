@@ -1,3 +1,4 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleActiveEffect, BattleRuntimeSession } from "./index.ts";
@@ -106,8 +107,6 @@ function persistentAreaSaveDamageDifficultTerrainFact(
         areaId: insectPlagueAreaId,
       },
     ],
-    totalDistanceFeet: movementFeet(10),
-    difficultTerrainDistanceFeet: movementFeet(5),
   };
 }
 
@@ -360,7 +359,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: 15,
+          path: testMovementPath(
+            { distanceFeet: 5, difficultTerrain: "areaDifficultTerrain" },
+            { distanceFeet: 5 },
+          ),
           provokedOpportunityAttacks: [],
           areaDifficultTerrain:
             persistentAreaSaveDamageDifficultTerrainFact(hazard),

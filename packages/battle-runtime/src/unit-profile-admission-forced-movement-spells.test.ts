@@ -540,7 +540,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
         saveFill,
         damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
         movementFill(movement, {
-          movementCostFeet: 30,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -651,7 +651,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "movement",
     );
     const staleMovement = movementFill(movement, {
-      movementCostFeet: 30,
+      distanceFeet: 30,
       provokedOpportunityAttacks: [],
     });
 
@@ -881,7 +881,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
         saveFill,
         damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
         movementFill(movement, {
-          movementCostFeet: 30,
+          distanceFeet: 30,
           provokedOpportunityAttacks: [
             {
               reactorId: spellCasterId,

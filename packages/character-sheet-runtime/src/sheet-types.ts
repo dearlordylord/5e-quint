@@ -16,7 +16,10 @@ import {
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   CONDITIONS,
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
   type Ability,
+  type HeroicInspiration,
   type SurfaceSkill,
 } from "@dnd/shared/game-facts";
 import {
@@ -176,15 +179,10 @@ export const CHARACTER_SHEET_LONG_REST_BASE_TICKS = elapsedTimeTicks(
 export const CHARACTER_SHEET_LONG_REST_WAIT_TICKS = elapsedTimeTicks(
   ELAPSED_TIME_TICKS_PER_HOUR * 16,
 );
-export type CharacterSheetHeroicInspiration =
-  | { readonly tag: "none" }
-  | { readonly tag: "available" };
-export const CHARACTER_SHEET_NO_HEROIC_INSPIRATION = {
-  tag: "none",
-} as const satisfies CharacterSheetHeroicInspiration;
-export const CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE = {
-  tag: "available",
-} as const satisfies CharacterSheetHeroicInspiration;
+export type CharacterSheetHeroicInspiration = HeroicInspiration;
+export const CHARACTER_SHEET_NO_HEROIC_INSPIRATION = NO_HEROIC_INSPIRATION;
+export const CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE =
+  HEROIC_INSPIRATION_AVAILABLE;
 export type StoredClassFeatureLanguageFact =
   CharacterBuild["classFeatureLanguages"][number];
 export type StoredClassFeatureLanguage =

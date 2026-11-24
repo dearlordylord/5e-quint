@@ -57,7 +57,11 @@ import {
   attackExecutionSelectionForSubjectForTest,
   skeletonCreatureInit,
   rangedAttackEnemyProximityFactsForTest,
+  characterSeed,
+  testDaggerAttack,
 } from "./battle-runtime.test-support.ts";
+import { battleObjectId, battleTablePositionId } from "./identity.ts";
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -469,6 +473,115 @@ describe("Sanctuary targeting interdiction", () => {
       }
     },
   );
+
+  test("a thrown Dagger whose attack Sanctuary prevents before its roll stays in hand", () => {
+    const { warded, attack, targetFill } = wardedThrownDaggerAttack();
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const lost = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [
+        targetFill,
+        sanctuaryOutcomeFill(
+          requireHole(
+            battleResolutionHolesForTest(needsSanctuary),
+            "targetingSaveInterdictionOutcome",
+          ),
+          { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
+        ),
+      ],
+    });
+    if (lost.tag !== "resolved") {
+      throw new Error(`Expected the lost throw to resolve, got ${lost.tag}.`);
+    }
+    expect(lost.droppedObjects).toBeUndefined();
+    expect(lost.state.groundObjects.has(attackerId)).toBe(false);
+  });
+
+  test("a thrown Dagger moved to a new target keeps its landing position", () => {
+    const { warded, attack, targetFill, landing } = wardedThrownDaggerAttack();
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryFill = sanctuaryOutcomeFill(
+      requireHole(
+        battleResolutionHolesForTest(needsSanctuary),
+        "targetingSaveInterdictionOutcome",
+      ),
+      {
+        saveSucceeded: false,
+        outcome: {
+          kind: "newTarget",
+          targetId: replacementId,
+          spatialFacts: [
+            {
+              ...attackTargetFact(replacementId, attack.subject),
+              distanceFeet: movementFeet(15),
+            },
+            ...rangedAttackEnemyProximityFactsForTest(
+              requireHole(attack.initialHoles, "targetChoice"),
+              [],
+              [],
+            ),
+          ],
+          replacementTargetKind: "attackRoll",
+        },
+      },
+    );
+    const retargeted = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill, sanctuaryFill],
+    });
+    if (retargeted.tag !== "needsHoles") {
+      throw new Error("Expected the retargeted throw's roll hole.");
+    }
+    const roll = requireHole(
+      battleResolutionHolesForTest(retargeted),
+      "attackRoll",
+    );
+    const missed = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [
+        targetFill,
+        sanctuaryFill,
+        attackRollFill(roll, { total: 2, naturalD20: 2 }),
+      ],
+    });
+    if (missed.tag !== "resolved") {
+      throw new Error(
+        `Expected the missed throw to resolve, got ${missed.tag}.`,
+      );
+    }
+    const daggerId = battleObjectId("main:weapon_dagger");
+    expect(
+      missed.state.groundObjects.get(attackerId)?.get(daggerId)?.positionId,
+    ).toBe(landing.positionId);
+    expect(missed.droppedObjects).toEqual([
+      {
+        kind: "objectDropped",
+        actorId: attackerId,
+        objectId: daggerId,
+        source: {
+          kind: "thrownWeaponAttack",
+          procedureRef: attack.subject.procedureRef,
+        },
+      },
+    ]);
+  });
 
   test("successful save proceeds to the attack roll", () => {
     const warded = advanceToAttacker(
@@ -1931,6 +2044,7 @@ function battleWithSanctuary(
   input: {
     readonly casterLevel?: number;
     readonly ammunitionAttacker?: boolean;
+    readonly thrownDaggerAttacker?: boolean;
     readonly areaSaveDamageSpell?: "flameStrike";
   } = {},
 ): BattleRuntimeSession {
@@ -1989,7 +2103,9 @@ function battleWithSanctuary(
             ...skeletonCreatureInit({ initiative: 10 }),
             combatantId: attackerId,
           }
-        : characterCreature(attackerId, "Attacker", 10),
+        : input.thrownDaggerAttacker === true
+          ? thrownDaggerAttacker()
+          : characterCreature(attackerId, "Attacker", 10),
       characterCreature(replacementId, "Replacement", 9),
     ],
   });
@@ -2285,6 +2401,72 @@ function spellDamageTypeChoiceFill(
   value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
 ): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
+function thrownDaggerAttacker(): BattleCreatureInit {
+  const dagger = testDaggerAttack();
+  return characterSeed({
+    combatantId: attackerId,
+    displayName: "Attacker",
+    initiative: 10,
+    attack: dagger,
+    selectedLoadout: {
+      weapon: {
+        itemId: dagger.weaponObjectId,
+        unitId: parseSharedUnitId("weapon_dagger"),
+        grip: "one_handed",
+      },
+    },
+  });
+}
+
+function wardedThrownDaggerAttack() {
+  const warded = advanceToAttacker(
+    castSanctuary(
+      battleWithSanctuary({ thrownDaggerAttacker: true }),
+      wardedId,
+    ),
+  );
+  const attack = discoverBattleActCandidates(warded.state).find(
+    (candidate): boolean =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.actorId === attackerId &&
+      "weaponDelivery" in candidate.subject &&
+      candidate.subject.weaponDelivery === "thrown",
+  );
+  if (
+    attack === undefined ||
+    attack.subject.tag !== "action" ||
+    attack.subject.action !== "attack" ||
+    !("weaponDelivery" in attack.subject)
+  ) {
+    throw new Error("Expected the attacker's thrown Dagger act.");
+  }
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const landing = {
+    kind: "thrownWeaponLanding" as const,
+    attackerId,
+    procedureRef: attack.subject.procedureRef,
+    positionId: battleTablePositionId("thrown-dagger-landing"),
+  };
+  const targetFill = {
+    ...attackTargetFill(targetHole, wardedId, attack.subject),
+    spatialFacts: [
+      {
+        ...attackTargetFact(wardedId, attack.subject),
+        distanceFeet: movementFeet(15),
+      },
+      ...rangedAttackEnemyProximityFactsForTest(targetHole, [], []),
+      landing,
+    ],
+  };
+  return {
+    warded,
+    attack: { ...attack, subject: attack.subject },
+    targetFill,
+    landing,
+  };
 }
 
 function wardedShortbowAttack(

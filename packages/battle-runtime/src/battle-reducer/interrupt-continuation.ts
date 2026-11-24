@@ -1,3 +1,4 @@
+import { stateForSubjectContinuation } from "./subject-continuation-phase.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 import { Match } from "effect";
 import type { DamageAmount } from "@dnd/shared/types";
@@ -59,7 +60,7 @@ import { mergeObjectOutcomeResult } from "./object-outcome-accumulation.ts";
 import { saveGatedConditionDamageOccurrenceKeyForAttackResume } from "./staged-condition-repeat-save.ts";
 
 export function resumeInterruptedProcedure(
-  state: BattleState,
+  stateBeforeResume: BattleState,
   continuation: Exclude<
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
@@ -67,6 +68,7 @@ export function resumeInterruptedProcedure(
   handledInterruptTrigger: BattleInterruptTrigger,
   attackResolvers: BattleAttackResolvers,
 ): BattleResolutionResult {
+  const state = stateForSubjectContinuation(stateBeforeResume, continuation);
   if (continuation.kind === "resolved") {
     return mergeObjectOutcomeResult(
       {

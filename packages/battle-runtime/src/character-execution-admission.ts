@@ -1,3 +1,4 @@
+import { MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE } from "./unit-feature-execution-constants.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-initiative-roll-mode unit-feature.ongoing-feature-activation-movement-rider
 import { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
 export { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
@@ -389,6 +390,14 @@ function unitSupportProcedureIsOwnedByUnitFeature(
       (feature) =>
         feature.unitId === candidate.unitId &&
         feature.execution.kind === supportProfileKind,
+    );
+  }
+  if (candidate.profile === MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE) {
+    return unitFeatureProcedures.some(
+      (feature) =>
+        feature.unitId === candidate.unitId &&
+        feature.execution.kind ===
+          MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
     );
   }
   const supportExecution = unitSupportProcedureExecution(
@@ -1555,7 +1564,11 @@ export function unitSupportProcedureExecution(
   profile: BattleUnitSupportProfile,
   context: UnitSupportProcedureExecutionContext,
 ) {
-  if (typeof profile === "string") return profile;
+  if (typeof profile === "string") {
+    return profile === MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE
+      ? undefined
+      : profile;
+  }
   return Match.value(profile).pipe(
     Match.discriminatorsExhaustive("kind")({
       alternateActionCost: (value) => ({

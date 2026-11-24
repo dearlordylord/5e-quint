@@ -387,7 +387,9 @@ module battleRuntimeMovementBridge {
 
   pure def battleRuntimeDifficultTerrainMovementCost(active: bool, moverProne: bool, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
     if (active and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
-      totalDistanceFeet + difficultTerrainDistanceFeet + MovementRule::crawlingExtraCostFeet(moverProne, totalDistanceFeet)
+      MovementRule::movementPathCostFeet(
+        MovementRule::markedMovementPath(moverProne, totalDistanceFeet, difficultTerrainDistanceFeet, true, 0)
+      )
     else
       0
 

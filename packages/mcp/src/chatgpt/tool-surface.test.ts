@@ -245,6 +245,87 @@ describe("ChatGPT tool surface", () => {
     }
   });
 
+  it("runs the offered readied attack call and returns its fixed target's hole", () => {
+    const root = createMcpPlaySessionRoot();
+    const initial = startBattleSessionRight({
+      battleId: battleId("synthetic-chatgpt-readied-attack"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Result.isSuccess(root.sessionStore.storeActiveBattle(initial))).toBe(
+      true,
+    );
+    const readySubject = {
+      tag: "action",
+      action: "ready",
+      actorId: fighterId,
+    } as const;
+    const declaration = findAct(initial, readySubject).initialHoles.find(
+      (hole) => hole.kind === "readyDeclaration",
+    );
+    if (declaration?.kind !== "readyDeclaration")
+      throw new Error("Expected a Ready declaration.");
+    const response = declaration.responseChoices.find(
+      (choice) => choice.kind === "attack",
+    );
+    if (response === undefined)
+      throw new Error("Expected a readied attack choice.");
+    CHATGPT_EXECUTION_TOOLS.ready_action.handle(root, {
+      subject: readySubject,
+    });
+    expect(
+      jsonContentPayload(
+        CHATGPT_EXECUTION_TOOLS.provide_battle_input.handle(root, {
+          fill: readyDeclarationFillForTest(
+            declaration,
+            "the goblin moves",
+            response,
+          ),
+        }),
+      ),
+    ).toMatchObject({ result: { tag: "resolved" } });
+    CHATGPT_EXECUTION_TOOLS.end_turn.handle(root, {
+      subject: {
+        tag: "runtimeCommand",
+        command: "endTurn",
+        actorId: fighterId,
+      },
+    });
+    CHATGPT_EXECUTION_TOOLS.report_ready_trigger.handle(root, {
+      subject: {
+        tag: "runtimeCommand",
+        command: "reportReadyTrigger",
+        actorId: goblinId,
+        readiedActorId: fighterId,
+      },
+    });
+    const guidance = chatGptBattleGuidance(root);
+    if (guidance.kind !== "reactionDecision")
+      throw new Error("Expected the readied attack offer.");
+    const call = guidance.readyCalls.find((entry) => entry.tool === "attack");
+    if (call === undefined)
+      throw new Error("Expected the readied attack call.");
+
+    const released = Schema.decodeUnknownSync(BattleResolutionOutputSchema)(
+      jsonContentPayload(
+        CHATGPT_EXECUTION_TOOLS.attack.handle(root, call.arguments),
+      ),
+    );
+    expect(released.result.tag).toBe("needsHoles");
+    if (released.envelope.frontier.kind !== "holes")
+      throw new Error("Expected the readied attack's target hole.");
+    expect(released.envelope.frontier.holes).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [goblinId],
+        requiresTableSpatialFact: true,
+        attack: expect.objectContaining({ actorId: fighterId }),
+      }),
+    ]);
+  });
+
   it("selects a readied movement Reaction, then settles its separately returned hole", () => {
     const root = createMcpPlaySessionRoot();
     const initial = startBattleSessionRight({

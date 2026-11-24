@@ -1,10 +1,10 @@
+import { testMovementPath } from "./battle-runtime.test-support.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-gust-of-wind-line
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 import type { BattleEffectExecutionRef } from "./identity.ts";
 
@@ -62,7 +62,6 @@ import {
 } from "./index.ts";
 import type { DirectionalPersistentAreaEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
-const gustMovementTotalFeet = 5;
 const gustMovementCloserFeet = 5;
 const gustMovementCostFeet = 10;
 
@@ -457,15 +456,16 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
-          movementCostFeet: gustMovementCostFeet,
+          path: testMovementPath({
+            distanceFeet: gustMovementCloserFeet,
+            movesCloserThroughDirectionalArea: true,
+          }),
           provokedOpportunityAttacks: [],
           directionalPersistentAreaMovement:
             directionalPersistentAreaMovementFact({
               effectRef: effect.effectRef,
               sourceProcedureRef: effect.sourceProcedureRef,
               directionId,
-              totalDistanceFeet: gustMovementTotalFeet,
-              closerDistanceFeet: gustMovementCloserFeet,
             }),
         }),
       ],
@@ -610,8 +610,6 @@ function directionalPersistentAreaMovementFact(input: {
   readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly directionId: BattleLineDirectionId;
-  readonly totalDistanceFeet: number;
-  readonly closerDistanceFeet: number;
 }): Extract<
   BattleFill,
   { readonly kind: "movement" }
@@ -623,8 +621,6 @@ function directionalPersistentAreaMovementFact(input: {
     sourceProcedureRef: input.sourceProcedureRef,
     areaId: gustOfWindAreaId,
     directionId: input.directionId,
-    totalDistanceFeet: movementFeet(input.totalDistanceFeet),
-    closerDistanceFeet: movementFeet(input.closerDistanceFeet),
   };
 }
 

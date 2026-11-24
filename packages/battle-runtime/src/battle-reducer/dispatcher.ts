@@ -1,3 +1,4 @@
+export { interruptedProcedureSubject } from "./subject-continuation-phase.ts";
 import { resolveLongCastingCommand } from "./long-casting-lifecycle.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -42,7 +43,6 @@ export {
   interruptCheckpointFrame,
   interruptChoices,
   interruptWindowProgress,
-  interruptedProcedureSubject,
   interruptedProcedureSupportsAttackDamageChanges,
   maybeOpenInterruptWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
@@ -222,6 +222,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { bonusActionDashTemporaryHitPointsProfilesForActor } from "./hole-helpers.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
+import { stateWithAcceptedThrowInHand } from "./thrown-weapon-release.ts";
 import { battleSubjectActionEligibilityIssue } from "./action-eligibility.ts";
 
 type ResolveBattleSubjectInternalOptions = {
@@ -393,6 +394,23 @@ function resolveBattleSubjectInternal(
     }
     /* v8 ignore stop -- @preserve */
     return resolveBattleSubjectInternal(normalizedAdmission.input, options);
+  }
+  const replayState = stateWithAcceptedThrowInHand(input.state, input.subject);
+  if (replayState !== input.state) {
+    const replayAdmission = admitBattleResolutionInput({
+      ...input,
+      state: replayState,
+    });
+    /* v8 ignore start -- @preserve -- Putting a thrown weapon back in hand changes only ground objects and preserves every admitted procedure binding. */
+    if (replayAdmission.tag === "staleCharacterProcedure") {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "The selected character procedure reference is no longer bound to this actor.",
+      );
+    }
+    /* v8 ignore stop -- @preserve */
+    return resolveBattleSubjectInternal(replayAdmission.input, options);
   }
   const d20TestNaturalOneRerollResult = resolveD20TestNaturalOneRerollFills({
     resolutionInput: input,

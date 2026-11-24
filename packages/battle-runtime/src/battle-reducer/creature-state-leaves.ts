@@ -11,7 +11,7 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
-import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
 import {
   type WildShapeArmorClassWornKind,
   wildShapeEquipmentDispositionWearsKind,
@@ -22,6 +22,7 @@ import {
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
   type BattleGrappleLink,
+  type BattleHand,
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
@@ -226,6 +227,18 @@ export function combatantHandUses(
       ),
     ),
   };
+}
+
+/** The first hand, left before right, that holds nothing and grapples nothing. */
+export function firstFreeHand(
+  state: BattleState,
+  combatant: BattleCreatureState,
+  grapples: readonly BattleGrappleLink[],
+): BattleHand | undefined {
+  const hands = combatantHandUses(state, combatant, grapples);
+  if (hands.left === "free") return "left";
+  if (hands.right === "free") return "right";
+  return undefined;
 }
 
 /** Which of a character's selected loadout hand objects it no longer holds. */

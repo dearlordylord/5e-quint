@@ -3,6 +3,7 @@ import {
   d20Roll,
   DieRollResult,
   movementFeet,
+  NonNegativeInteger,
   type D20Roll,
 } from "@dnd/shared/types";
 import fc from "fast-check";
@@ -10,16 +11,26 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleContinuationFillEquals,
+  battleResubmittedFillKeepsAcceptedFill,
   type BattleContinuationComparableFill,
 } from "./battle-reducer/battle-fill-equality.ts";
 import { combatantId } from "./battle-runtime.test-support.ts";
 import {
+  battleCharacterExecutionScopeRef,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleProcedureExecutionRef,
+} from "./identity.ts";
+import {
+  BATTLE_MOVEMENT_PATH_ACTIVITIES,
+  BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
   type BattleAttackRollResult,
   type BattleD20TestRoll,
   type BattleD20TestNaturalOneRerollDecision,
   type BattleD20TestNaturalOneRerollOutcomeDecision,
   type BattleSpellAttackRerollDecision,
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+  HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleFill,
 } from "./battle-state-execution.ts";
 
@@ -153,20 +164,22 @@ const attackRollArbitrary: fc.Arbitrary<AttackRollFill> = fc
   .tuple(
     battleHoleIdArbitrary,
     baseAttackRollArbitrary,
-    fc.option(spellAttackRerollDecisionArbitrary, { nil: undefined }),
     fc.option(naturalOneRerollRollDecisionArbitrary, { nil: undefined }),
+    fc.option(spellAttackRerollDecisionArbitrary, { nil: undefined }),
   )
-  .map(([holeId, base, spellAttackReroll, d20TestNaturalOneReroll]) => ({
-    kind: "attackRoll",
-    holeId,
-    value: {
-      ...base,
-      ...(spellAttackReroll === undefined ? {} : { spellAttackReroll }),
-      ...(d20TestNaturalOneReroll === undefined
-        ? {}
-        : { d20TestNaturalOneReroll }),
-    },
-  }));
+  .map(([holeId, base, naturalOneReroll, spellAttackReroll]) => {
+    const [first, ...rest] = [naturalOneReroll, spellAttackReroll].filter(
+      (decision) => decision !== undefined,
+    );
+    return {
+      kind: "attackRoll",
+      holeId,
+      value: {
+        ...base,
+        ...(first === undefined ? {} : { d20TestRerolls: [first, ...rest] }),
+      },
+    };
+  });
 const concentrationSavingThrowArbitrary: fc.Arbitrary<ConcentrationSavingThrowFill> =
   fc
     .tuple(
@@ -240,19 +253,34 @@ const acrobaticMovementArbitrary: fc.Arbitrary<
     paths: [path],
     withoutFallingDuringMovement: true,
   }));
+const movementPathSegmentArbitrary: fc.Arbitrary<
+  MovementFill["value"]["path"][number]
+> = fc.record({
+  distanceFeet: fc.integer({ min: 1, max: 120 }).map(movementFeet),
+  activity: fc.constantFrom(...BATTLE_MOVEMENT_PATH_ACTIVITIES),
+  difficultTerrain: fc.constantFrom(...BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN),
+  movesCloserThroughDirectionalArea: fc.boolean(),
+  draggedGrappledTargetIds: fc.array(combatantIdArbitrary, { maxLength: 2 }),
+});
+const movementPathArbitrary: fc.Arbitrary<MovementFill["value"]["path"]> = fc
+  .tuple(
+    movementPathSegmentArbitrary,
+    fc.array(movementPathSegmentArbitrary, { maxLength: 2 }),
+  )
+  .map(([first, rest]) => [first, ...rest]);
 const movementFillArbitrary: fc.Arbitrary<MovementFill> = fc
   .tuple(
     battleHoleIdArbitrary,
     fc.constantFrom("walk" as const, "fly" as const, "swim" as const),
-    fc.integer({ min: 0, max: 120 }).map(movementFeet),
+    movementPathArbitrary,
     fc.option(acrobaticMovementArbitrary, { nil: undefined }),
   )
-  .map(([holeId, speedKind, movementCostFeet, acrobaticMovement]) => ({
+  .map(([holeId, speedKind, path, acrobaticMovement]) => ({
     kind: "movement",
     holeId,
     value: {
       speedKind,
-      movementCostFeet,
+      path,
       provokedOpportunityAttacks: [],
       ...(acrobaticMovement === undefined ? {} : { acrobaticMovement }),
     },
@@ -343,22 +371,16 @@ describe("battle fill equality", () => {
 
   test("distinguishes reroll decision variants and their replacements", () => {
     const attackRoll = (
-      input: Pick<
-        BattleAttackRollResult,
-        "spellAttackReroll" | "d20TestNaturalOneReroll"
-      >,
+      input: Partial<Pick<BattleAttackRollResult, "d20TestRerolls">>,
     ): AttackRollFill => ({
       kind: "attackRoll",
       holeId: holeId("equality-hole:reroll-attack"),
       value: {
         total: 10,
         d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
-        ...(input.spellAttackReroll === undefined
+        ...(input.d20TestRerolls === undefined
           ? {}
-          : { spellAttackReroll: input.spellAttackReroll }),
-        ...(input.d20TestNaturalOneReroll === undefined
-          ? {}
-          : { d20TestNaturalOneReroll: input.d20TestNaturalOneReroll }),
+          : { d20TestRerolls: input.d20TestRerolls }),
       },
     });
     const spellDecline = {
@@ -399,26 +421,48 @@ describe("battle fill equality", () => {
 
     expect(
       battleContinuationFillEquals(
-        attackRoll({ spellAttackReroll: spellDecline }),
-        attackRoll({ spellAttackReroll: spellReroll }),
+        attackRoll({ d20TestRerolls: [spellDecline] }),
+        attackRoll({ d20TestRerolls: [spellReroll] }),
       ),
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        attackRoll({ d20TestNaturalOneReroll: naturalDecline }),
-        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
+        attackRoll({ d20TestRerolls: [naturalDecline] }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
       ),
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
-        attackRoll({ d20TestNaturalOneReroll: naturalRolledDie }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
+        attackRoll({ d20TestRerolls: [naturalRolledDie] }),
       ),
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        attackRoll({ d20TestNaturalOneReroll: naturalRolledDie }),
-        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
+        attackRoll({ d20TestRerolls: [naturalRolledDie] }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
+      ),
+    ).toBe(false);
+    const inspirationDecline = {
+      kind: "decline",
+      effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+    } as const;
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+      ),
+    ).toBe(true);
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+        attackRoll({ d20TestRerolls: [inspirationDecline, naturalReroll] }),
+      ),
+    ).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestRerolls: [naturalReroll, inspirationDecline] }),
+        attackRoll({ d20TestRerolls: [naturalReroll] }),
       ),
     ).toBe(false);
 
@@ -560,6 +604,239 @@ describe("battle fill equality", () => {
           replacement: d20Roll(17),
         }),
       ),
+    ).toBe(false);
+  });
+});
+
+describe("resubmitted fill continuity", () => {
+  const naturalOneRoll = {
+    tag: "single",
+    naturalD20: DieRollResult(1),
+  } as const;
+  const naturalOneReroll = {
+    kind: "reroll",
+    effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+    replacement: {
+      total: 18,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(14) },
+    },
+  } as const;
+  const inspirationReroll = {
+    kind: "reroll",
+    effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+    replacement: {
+      total: 21,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(17) },
+    },
+  } as const;
+  const attackRoll = (
+    value: Partial<AttackRollFill["value"]> = {},
+  ): AttackRollFill => ({
+    kind: "attackRoll",
+    holeId: holeId("continuity-hole:attack"),
+    value: { total: 5, d20TestRoll: naturalOneRoll, ...value },
+  });
+
+  test("an attack roll may add reroll decisions after the accepted ones", () => {
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        attackRoll(),
+        attackRoll({ d20TestRerolls: [naturalOneReroll] }),
+      ),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        attackRoll({ d20TestRerolls: [naturalOneReroll] }),
+        attackRoll({ d20TestRerolls: [naturalOneReroll, inspirationReroll] }),
+      ),
+    ).toBe(true);
+  });
+
+  test("an attack roll may not change the accepted roll or decisions", () => {
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        attackRoll(),
+        attackRoll({ total: 6 }),
+      ),
+    ).toBe(false);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        attackRoll({ d20TestRerolls: [naturalOneReroll] }),
+        attackRoll({ d20TestRerolls: [inspirationReroll, naturalOneReroll] }),
+      ),
+    ).toBe(false);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        attackRoll({ d20TestRerolls: [naturalOneReroll] }),
+        attackRoll(),
+      ),
+    ).toBe(false);
+  });
+
+  test("a saving throw may add a natural-1 decision the accepted fill lacked", () => {
+    const outcomeReroll = {
+      kind: "reroll",
+      effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+      replacement: {
+        succeeded: true,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+      },
+    } as const;
+    const savingThrows = (
+      first: Partial<{
+        readonly succeeded: boolean;
+        readonly d20TestNaturalOneReroll: typeof outcomeReroll;
+      }>,
+    ): SavingThrowOutcomeFill => ({
+      kind: "savingThrowOutcome",
+      holeId: holeId("continuity-hole:saves"),
+      value: {
+        outcomes: [
+          {
+            targetId: combatantId("combatant:continuity:0"),
+            succeeded: false,
+            d20TestRoll: naturalOneRoll,
+            ...first,
+          },
+          {
+            targetId: combatantId("combatant:continuity:1"),
+            succeeded: true,
+            withoutRoll: true,
+          },
+        ],
+      },
+    });
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        savingThrows({}),
+        savingThrows({ d20TestNaturalOneReroll: outcomeReroll }),
+      ),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        savingThrows({}),
+        savingThrows({ succeeded: true }),
+      ),
+    ).toBe(false);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        savingThrows({ d20TestNaturalOneReroll: outcomeReroll }),
+        savingThrows({}),
+      ),
+    ).toBe(false);
+
+    const concentration = (
+      d20TestNaturalOneReroll?: typeof outcomeReroll,
+    ): ConcentrationSavingThrowFill => ({
+      kind: "concentrationSavingThrow",
+      holeId: holeId("continuity-hole:concentration"),
+      value: {
+        succeeded: false,
+        d20TestRoll: naturalOneRoll,
+        ...(d20TestNaturalOneReroll === undefined
+          ? {}
+          : { d20TestNaturalOneReroll }),
+      },
+    });
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        concentration(),
+        concentration(outcomeReroll),
+      ),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        concentration(outcomeReroll),
+        concentration(),
+      ),
+    ).toBe(false);
+  });
+
+  test("a death saving throw may add a natural-1 decision", () => {
+    const deathSavingThrow = (
+      value: number,
+      d20TestNaturalOneReroll?: NonNullable<
+        DeathSavingThrowFill["d20TestNaturalOneReroll"]
+      >,
+    ): DeathSavingThrowFill => ({
+      kind: "deathSavingThrow",
+      holeId: holeId("continuity-hole:death-save"),
+      value: d20Roll(value),
+      ...(d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll }),
+    });
+    const reroll = {
+      kind: "reroll",
+      effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+      replacement: d20Roll(12),
+    } as const;
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        deathSavingThrow(1),
+        deathSavingThrow(1, reroll),
+      ),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        deathSavingThrow(1),
+        deathSavingThrow(2, reroll),
+      ),
+    ).toBe(false);
+  });
+
+  test("a damage roll may not change a choice the accepted fill made", () => {
+    const procedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("continuity-battle"),
+        combatantId("combatant:continuity:0"),
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const damageRoll = (selection: "apply" | "decline"): RolledDiceFill => ({
+      kind: "rolledDice",
+      holeId: holeId("continuity-hole:damage"),
+      value: [{ results: [DieRollResult(4)] }],
+      attackDamageAbilityModifierChoice: { procedureRef, selection },
+    });
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        damageRoll("apply"),
+        damageRoll("apply"),
+      ),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        damageRoll("apply"),
+        damageRoll("decline"),
+      ),
+    ).toBe(false);
+  });
+
+  test("a fill without reroll decisions must equal the accepted fill", () => {
+    const movement = (feet: number): MovementFill => ({
+      kind: "movement",
+      holeId: holeId("continuity-hole:movement"),
+      value: {
+        speedKind: "walk",
+        path: [
+          {
+            distanceFeet: movementFeet(feet),
+            activity: "ordinary",
+            difficultTerrain: "none",
+            movesCloserThroughDirectionalArea: false,
+            draggedGrappledTargetIds: [],
+          },
+        ],
+        provokedOpportunityAttacks: [],
+      },
+    });
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(movement(10), movement(10)),
+    ).toBe(true);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(movement(10), movement(15)),
     ).toBe(false);
   });
 });

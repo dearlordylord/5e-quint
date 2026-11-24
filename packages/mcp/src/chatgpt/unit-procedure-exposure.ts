@@ -127,8 +127,6 @@ const SHARED_UNIT_PROCEDURE_EXPOSURE = {
   magicActionHealingPool: UNIT_PROCEDURE_EXPOSURE["magicActionHealingPool"],
   magicActionSaveGatedCondition:
     UNIT_PROCEDURE_EXPOSURE["magicActionSaveGatedCondition"],
-  martialArtsAttackProjection:
-    UNIT_PROCEDURE_EXPOSURE["martialArtsAttackProjection"],
   monkFocusBattleOptions: UNIT_PROCEDURE_EXPOSURE["monkFocusBattleOptions"],
   openHandTechnique: UNIT_PROCEDURE_EXPOSURE["openHandTechnique"],
   paladinSacredWeapon: UNIT_PROCEDURE_EXPOSURE["paladinSacredWeapon"],
@@ -165,6 +163,8 @@ const SHARED_UNIT_PROCEDURE_EXPOSURE = {
 >;
 
 export const UNIT_FEATURE_EXPOSURE = {
+  martialArtsAttackProjection:
+    UNIT_PROCEDURE_EXPOSURE["martialArtsAttackProjection"],
   ...SHARED_UNIT_PROCEDURE_EXPOSURE,
   extraActionGrant: UNIT_PROCEDURE_EXPOSURE["extraActionGrant"],
   ongoingFeature: UNIT_PROCEDURE_EXPOSURE["ongoingFeature"],

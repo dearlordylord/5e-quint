@@ -1,9 +1,11 @@
+import { explicitThrownWeaponDelivery } from "../weapon-attack-delivery.ts";
 // The mutual import cycle with statblock.ts is tolerated
 // because all imported bindings are function values used only at call time.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 
 import { Match } from "effect";
 import {
@@ -31,6 +33,7 @@ import {
   attackExecutionAbility,
   type BoundSupportedAttackActionOption,
   type BattleWeaponDamage,
+  type AdmittedThrownWeaponDelivery,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type SelectedStatBlockAttackDamage,
@@ -119,7 +122,7 @@ export function attackTargetConstraint(
       statBlockAttackTargetConstraint(option),
     ),
     Match.when({ kind: "weapon" }, (option) =>
-      weaponTargetConstraint(option.weapon),
+      weaponAttackTargetConstraint(option),
     ),
     Match.when({ kind: "unarmedStrike" }, () => ({
       kind: "meleeReach" as const,
@@ -135,8 +138,24 @@ export function attackCanCarryKnockOutChoice(
   return attackTargetConstraint(attack).kind === "meleeReach";
 }
 
+export function weaponAttackTargetConstraint(
+  attack: Pick<CharacterWeaponAttackActionOption, "weaponDelivery"> & {
+    readonly weapon: Pick<
+      CharacterWeaponAttackActionOption["weapon"],
+      "usage" | "properties"
+    >;
+  },
+): AttackTargetConstraint {
+  return attack.weaponDelivery === undefined
+    ? weaponTargetConstraint(attack.weapon)
+    : thrownWeaponTargetConstraint(attack.weaponDelivery);
+}
+
 export function weaponTargetConstraint(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
+  weapon: Pick<
+    CharacterWeaponAttackActionOption["weapon"],
+    "usage" | "properties"
+  >,
 ): AttackTargetConstraint {
   const properties = weapon.properties;
   if (weapon.usage === "ranged") {
@@ -160,6 +179,20 @@ export function weaponTargetConstraint(
     reachFeet: properties.some((property) => property.kind === "reach")
       ? movementFeet(10)
       : STANDARD_CREATURE_MELEE_REACH_FEET,
+  };
+}
+
+/**
+ * SRD 5.2.1 "Thrown" and "Range": a thrown weapon makes a ranged attack with
+ * the normal and long range in its Thrown property.
+ */
+function thrownWeaponTargetConstraint(
+  delivery: AdmittedThrownWeaponDelivery,
+): Extract<AttackTargetConstraint, { readonly kind: "rangedRange" }> {
+  return {
+    kind: "rangedRange",
+    normalFeet: movementFeet(delivery.range.normal),
+    longFeet: movementFeet(delivery.range.long),
   };
 }
 
@@ -187,21 +220,59 @@ export function attackActionOptionName(
   );
 }
 
-export function attackActionVariantOptions(
+export function attackAbilityAndDamageTypeOptions(
+  attack: Extract<
+    BoundSupportedAttackActionOption,
+    { readonly kind: "weapon" }
+  >,
+): readonly Extract<
+  BoundSupportedAttackActionOption,
+  { readonly kind: "weapon" }
+>[];
+export function attackAbilityAndDamageTypeOptions(
   attack: BoundSupportedAttackActionOption,
 ): readonly BoundSupportedAttackActionOption[];
-export function attackActionVariantOptions(
+export function attackAbilityAndDamageTypeOptions(
   attack: SupportedAttackActionOption,
 ): readonly SupportedAttackActionOption[];
-export function attackActionVariantOptions(
+export function attackAbilityAndDamageTypeOptions(
   attack: SupportedAttackActionOption,
 ): readonly SupportedAttackActionOption[] {
   if (attack.kind !== "weapon") {
     return [attack];
   }
-  return characterWeaponAttackAbilityOptions(attack).flatMap((abilityOption) =>
-    characterWeaponAttackDamageTypeOptions(abilityOption),
+  return characterWeaponAttackAbilityOptions(attack).flatMap(
+    characterWeaponAttackDamageTypeOptions,
   );
+}
+
+/**
+ * SRD 5.2.1 "Thrown": a held Melee weapon with the Thrown property can also be
+ * thrown to make a ranged attack, with the same ability modifier as its melee
+ * attack. Both deliveries retain base weapon facts; the actor-owned option
+ * factory derives damage after choosing delivery, before ability and damage-type
+ * choices. A Ranged weapon's attack is already ranged.
+ */
+export function characterWeaponAttackDeliveryOptions(
+  attack: Extract<
+    BoundSupportedAttackActionOption,
+    { readonly kind: "weapon" }
+  >,
+): readonly Extract<
+  BoundSupportedAttackActionOption,
+  { readonly kind: "weapon" }
+>[];
+export function characterWeaponAttackDeliveryOptions(
+  attack: CharacterWeaponAttackActionOption,
+): readonly CharacterWeaponAttackActionOption[];
+export function characterWeaponAttackDeliveryOptions(
+  attack: CharacterWeaponAttackActionOption,
+): readonly CharacterWeaponAttackActionOption[] {
+  if (attack.weaponDelivery !== undefined) return [attack];
+  const delivery = explicitThrownWeaponDelivery(attack.weapon);
+  return delivery === undefined
+    ? [attack]
+    : [attack, { ...attack, weaponDelivery: delivery }];
 }
 
 function characterWeaponAttackAbilityOptions(
@@ -1147,9 +1218,7 @@ export function eligibleAttackDamageDieFloorProcedureRefsForAttacker(
 ): readonly BattleProcedureExecutionRef[] {
   if (
     attacker?.origin.kind !== "character" ||
-    attack.kind !== "weapon" ||
-    attack.weapon.usage !== "melee" ||
-    !weaponHasTwoHandedOrVersatileProperty(attack.weapon)
+    !isTwoHandedOrVersatileMeleeWeaponHeldAttack(attack)
   ) {
     return [];
   }
@@ -1166,6 +1235,22 @@ export function eligibleAttackDamageDieFloorProcedureRefsForAttacker(
     binding.procedure.execution === ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE
       ? [binding.procedureRef]
       : [],
+  );
+}
+
+/**
+ * A melee attack with a Two-Handed or Versatile Melee weapon, which stays in
+ * hand. ASSUMPTIONS A57: a thrown weapon isn't held with two hands when its
+ * damage is rolled.
+ */
+function isTwoHandedOrVersatileMeleeWeaponHeldAttack(
+  attack: SupportedAttackActionOption,
+): attack is CharacterWeaponAttackActionOption {
+  return (
+    attack.kind === "weapon" &&
+    attack.weapon.usage === "melee" &&
+    attack.weaponDelivery === undefined &&
+    weaponHasTwoHandedOrVersatileProperty(attack.weapon)
   );
 }
 

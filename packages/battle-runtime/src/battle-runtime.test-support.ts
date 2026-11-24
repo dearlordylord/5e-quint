@@ -149,6 +149,7 @@ import starryWispInput from "../../surface/content/starry_wisp.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
 import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
+import weaponSlingInput from "../../surface/content/weapon_sling.json";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
 import {
   battleActDruidWildShapePresentation,
@@ -322,6 +323,7 @@ import {
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+  ordinaryMovementPath,
   type ActiveOngoingFeatureOccurrence,
   type BattleAreaId,
   type BattleAttackExecutionSelection,
@@ -987,22 +989,34 @@ function requireWeaponDefinition(
   return admission;
 }
 
+function requireBoundWeapon<T>(
+  bound: Result.Result<T, readonly { readonly message: string }[]>,
+): T {
+  if (Result.isFailure(bound)) {
+    throw new Error(bound.failure.map(({ message }) => message).join(" "));
+  }
+  return bound.success;
+}
+
 /** Test-only convenience around the production definition admission + bind. */
 export function admitCharacterWeaponAttackExecutionWeapon(
   weapon: WeaponRecord,
   objectId: ReturnType<typeof battleObjectId>,
 ) {
-  return bindCharacterWeaponAttackExecutionWeapon({
-    weaponUnitId: weapon.id,
-    definition: requireWeaponDefinition(weapon),
-    objectId,
-    weaponMasteries: [],
-  });
+  return requireBoundWeapon(
+    bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition: requireWeaponDefinition(weapon),
+      objectId,
+      weaponMasteries: [],
+    }),
+  );
 }
 
 /**
  * Bind canonical selected identity to weapon facts admitted from an honestly
- * synthetic definition when the canonical weapon's mastery is unsupported.
+ * synthetic definition with a supported mastery, for tests that need a
+ * mastery the canonical weapon's own mastery can't provide in Battle.
  */
 export function admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
   weapon: WeaponRecord,
@@ -1044,14 +1058,21 @@ export function admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       mastery: syntheticMastery,
     }),
   );
-  return bindCharacterWeaponAttackExecutionWeapon({
-    weaponUnitId: weapon.id,
-    definition,
-    objectId,
-    weaponMasteries: [],
-  });
+  return requireBoundWeapon(
+    bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition,
+      objectId,
+      weaponMasteries: [],
+    }),
+  );
 }
 
+/**
+ * The resolved weapon's execution facts with its mastery property, as for a
+ * character who selected that mastery: an unsupported mastery fails, as
+ * selecting it does in production.
+ */
 export function admitResolvedCharacterWeaponExecutionWeapon(
   resolution: WeaponMasteryReferenceResolution,
 ) {
@@ -1059,15 +1080,24 @@ export function admitResolvedCharacterWeaponExecutionWeapon(
     weapon: resolution.weapon,
     unitCatalog: catalogForResolvedWeaponDefinition(resolution),
   });
-  return definition.tag === "rejected"
-    ? Result.fail({
-        tag: "battleUnitSupportProfileIssue" as const,
-        message: definition.issues.map(({ message }) => message).join(" "),
-      })
-    : Result.succeed({
-        weaponUnitId: resolution.weapon.id,
-        ...definition.facts,
-      });
+  if (definition.tag === "rejected") {
+    return Result.fail({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: definition.issues.map(({ message }) => message).join(" "),
+    });
+  }
+  if (definition.masterySupport === "unsupported") {
+    return Result.fail({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: definition.resolvedMastery.issues
+        .map(({ message }) => message)
+        .join(" "),
+    });
+  }
+  return Result.succeed({
+    weaponUnitId: resolution.weapon.id,
+    ...definition.facts,
+  });
 }
 
 export function admitResolvedCharacterWeaponAttackExecutionWeapon(
@@ -1079,12 +1109,16 @@ export function admitResolvedCharacterWeaponAttackExecutionWeapon(
     resolution.weapon,
     catalogForResolvedWeaponDefinition(resolution),
   );
-  return Result.succeed(
+  return Result.mapError(
     bindCharacterWeaponAttackExecutionWeapon({
       weaponUnitId: resolution.weapon.id,
       definition,
       objectId,
       weaponMasteries,
+    }),
+    (issues) => ({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: issues.map(({ message }) => message).join(" "),
     }),
   );
 }
@@ -1855,6 +1889,9 @@ export function attackExecutionSelectionForSubjectForTest(
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
         attackDamageType: subject.attackDamageType,
+        ...(subject.weaponDelivery === undefined
+          ? {}
+          : { weaponDelivery: subject.weaponDelivery }),
       };
 }
 
@@ -2901,6 +2938,7 @@ export function targetFill(
       : [
           ...selectedSpatialFacts,
           ...rangedAttackEnemyProximityFactsForTest(hole, selectedSpatialFacts),
+          ...thrownWeaponLandingFactsForTest(hole, selectedSpatialFacts),
         ];
   const executionBoundSpatialFacts = qualifiedSpatialFacts.map((fact) => {
     const request = hole.spellTargetSpatialFactRequest;
@@ -3110,6 +3148,7 @@ export function attackTargetFill(
     ),
     ...commonAdjacentAllySpatialFacts(actorId, targetId),
     ...rangedAttackEnemyProximityFactsForTest(hole, extraFacts ?? []),
+    ...thrownWeaponLandingFactsForTest(hole, extraFacts ?? []),
     ...(extraFacts ?? []),
   ]);
 }
@@ -3146,6 +3185,52 @@ export function rangedAttackEnemyProximityFactsForTest(
         },
       ]
     : [];
+}
+
+/** The table position where these tests' thrown weapons land by default. */
+export const THROWN_WEAPON_LANDING_POSITION_FOR_TEST = battleTablePositionId(
+  "thrown-weapon-landing",
+);
+
+/**
+ * A thrown attack target hole's default landing fact, absent for any other
+ * attack or when the test supplies its own landing fact.
+ */
+export function thrownWeaponLandingFactsForTest(
+  hole: BattleHole,
+  suppliedFacts: readonly AttackTargetSpatialFactForTest[] = [],
+  positionId = THROWN_WEAPON_LANDING_POSITION_FOR_TEST,
+): readonly Extract<
+  AttackTargetSpatialFactForTest,
+  { readonly kind: "thrownWeaponLanding" }
+>[] {
+  if (
+    hole.kind !== "targetChoice" ||
+    hole.attack?.requiresThrownWeaponLanding !== true ||
+    suppliedFacts.some((fact) => fact.kind === "thrownWeaponLanding")
+  ) {
+    return [];
+  }
+  const selection = hole.attack.selection;
+  return isCharacterAttackSelectionForTest(selection)
+    ? [
+        {
+          kind: "thrownWeaponLanding",
+          attackerId: hole.attack.actorId,
+          procedureRef: selection.procedureRef,
+          positionId,
+        },
+      ]
+    : [];
+}
+
+function isCharacterAttackSelectionForTest(
+  selection: BattleAttackExecutionSelection,
+): selection is Extract<
+  BattleAttackExecutionSelection,
+  { readonly attackAbility: unknown }
+> {
+  return selection.attackAbility !== undefined;
 }
 
 export function attackTargetSpatialFact(
@@ -3290,14 +3375,10 @@ export function attackRollFill(
     readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
     readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
-    readonly spellAttackReroll?: Extract<
+    readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
-    >["value"]["spellAttackReroll"];
-    readonly d20TestNaturalOneReroll?: Extract<
-      BattleFill,
-      { readonly kind: "attackRoll" }
-    >["value"]["d20TestNaturalOneReroll"];
+    >["value"]["d20TestRerolls"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
@@ -3335,12 +3416,9 @@ export function attackRollFill(
             activatedOngoingFeatureProcedureRef:
               value.activatedOngoingFeatureProcedureRef,
           }),
-      ...(value.spellAttackReroll === undefined
+      ...(value.d20TestRerolls === undefined
         ? {}
-        : { spellAttackReroll: value.spellAttackReroll }),
-      ...(value.d20TestNaturalOneReroll === undefined
-        ? {}
-        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: value.d20TestRerolls }),
     },
   };
 }
@@ -3469,34 +3547,25 @@ export function interruptDecisionFill(
   };
 }
 
+type MovementFillTestValue = Extract<
+  BattleFill,
+  { readonly kind: "movement" }
+>["value"];
+
 export function movementFill(
   hole: BattleHole,
-  value: {
-    readonly speedKind?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["speedKind"];
-    readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["provokedOpportunityAttacks"];
-    readonly areaDifficultTerrain?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["areaDifficultTerrain"];
-    readonly acrobaticMovement?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["acrobaticMovement"];
-    readonly grappleDrag?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["grappleDrag"];
-    readonly creatureSpaceTraversal?: Extract<
-      BattleFill,
-      { readonly kind: "movement" }
-    >["value"]["creatureSpaceTraversal"];
+  value: (
+    | { readonly distanceFeet: number; readonly path?: never }
+    | {
+        readonly path: MovementFillTestValue["path"];
+        readonly distanceFeet?: never;
+      }
+  ) & {
+    readonly speedKind?: MovementFillTestValue["speedKind"];
+    readonly provokedOpportunityAttacks: MovementFillTestValue["provokedOpportunityAttacks"];
+    readonly areaDifficultTerrain?: MovementFillTestValue["areaDifficultTerrain"];
+    readonly acrobaticMovement?: MovementFillTestValue["acrobaticMovement"];
+    readonly creatureSpaceTraversal?: MovementFillTestValue["creatureSpaceTraversal"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -3507,7 +3576,8 @@ export function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: value.speedKind ?? "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path:
+        value.path ?? ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       ...(value.areaDifficultTerrain === undefined
         ? {}
@@ -3515,13 +3585,45 @@ export function movementFill(
       ...(value.acrobaticMovement === undefined
         ? {}
         : { acrobaticMovement: value.acrobaticMovement }),
-      ...(value.grappleDrag === undefined
-        ? {}
-        : { grappleDrag: value.grappleDrag }),
       ...(value.creatureSpaceTraversal === undefined
         ? {}
         : { creatureSpaceTraversal: value.creatureSpaceTraversal }),
     },
+  };
+}
+
+/**
+ * A test path of `segments`, each ordinary, outside Difficult Terrain and
+ * dragging nothing unless the segment says otherwise.
+ */
+export function testMovementPath(
+  ...segments: readonly [TestMovementPathSegment, ...TestMovementPathSegment[]]
+): MovementFillTestValue["path"] {
+  const [first, ...rest] = segments.map(testMovementPathSegment);
+  if (first === undefined) {
+    throw new Error("Expected a movement path segment.");
+  }
+  return [first, ...rest];
+}
+
+type TestMovementPathSegment = {
+  readonly distanceFeet: number;
+  readonly activity?: MovementFillTestValue["path"][number]["activity"];
+  readonly difficultTerrain?: MovementFillTestValue["path"][number]["difficultTerrain"];
+  readonly movesCloserThroughDirectionalArea?: boolean;
+  readonly draggedGrappledTargetIds?: readonly CombatantId[];
+};
+
+function testMovementPathSegment(
+  segment: TestMovementPathSegment,
+): MovementFillTestValue["path"][number] {
+  return {
+    distanceFeet: movementFeet(segment.distanceFeet),
+    activity: segment.activity ?? "ordinary",
+    difficultTerrain: segment.difficultTerrain ?? "none",
+    movesCloserThroughDirectionalArea:
+      segment.movesCloserThroughDirectionalArea ?? false,
+    draggedGrappledTargetIds: segment.draggedGrappledTargetIds ?? [],
   };
 }
 
@@ -4060,6 +4162,10 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly size?: Size;
+  readonly heroicInspiration?: Extract<
+    CharacterBattleCombatantInit["creatureInit"],
+    { readonly kind: "character" }
+  >["heroicInspiration"];
 }): CharacterBattleCombatantInit {
   const selectedLoadout =
     input.selectedLoadout ??
@@ -4078,7 +4184,11 @@ export function characterSeed(input: {
               input.attack === undefined
                 ? parseUnitId("weapon_longsword")
                 : input.attack.weapon.weaponUnitId,
-            grip: "one_handed" as const,
+            grip: input.attack?.weapon.properties.some(
+              (property) => property.kind === "two_handed",
+            )
+              ? ("two_handed" as const)
+              : ("one_handed" as const),
           },
         });
   const attack =
@@ -4202,6 +4312,9 @@ export function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
+      ...(input.heroicInspiration === undefined
+        ? {}
+        : { heroicInspiration: input.heroicInspiration }),
       characterUnitRefs,
       classLevels,
       knownLanguages: input.knownLanguages ?? ["Common"],
@@ -4435,6 +4548,32 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
         battleObjectId(`main:${unit.id}`),
         [{ weaponUnitId: unit.id }],
       ),
+    ),
+    ability: "dex",
+    abilityModifier: battleAbilityModifier(3),
+  };
+}
+
+/** The SRD Sling, a one-handed Ammunition weapon that isn't published yet. */
+export function testSlingUnitRef(): BattleUnitRef {
+  const weapon = decodeUnitRecordSync(weaponSlingInput);
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Sling weapon Unit.");
+  }
+  return { unit: weapon, supportProfiles: [] };
+}
+
+/** An attack with the Sling of {@link testSlingUnitRef}. */
+export function testSlingAttack(): TestCharacterWeaponAttack {
+  const weapon = testSlingUnitRef().unit;
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Sling weapon Unit.");
+  }
+  return {
+    kind: "weapon",
+    ...admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      battleObjectId(`main:${weapon.id}`),
     ),
     ability: "dex",
     abilityModifier: battleAbilityModifier(3),

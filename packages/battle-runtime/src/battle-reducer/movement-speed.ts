@@ -35,7 +35,6 @@ import {
   type BattleAttackKindForRedirect,
   type BattleCreatureState,
   type BattleGrappleLink,
-  type BattleHand,
   type BattleMovementHole,
   type BattleOpportunityAttackThreat,
   type BattleOpportunityAttackSelection,
@@ -50,8 +49,8 @@ import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.t
 import {
   combatantCanTakeReactions,
   combatantCanSee,
-  combatantHandUses,
   currentActorId,
+  firstFreeHand,
   grappledBy,
 } from "./creature-state-leaves.ts";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
@@ -424,13 +423,16 @@ export function attackKindForDeflectRedirect(
     : "ranged";
 }
 
+/**
+ * The kind of attack a hit came from, for triggers that name a weapon
+ * category ("a Melee weapon"). A weapon's category comes from the weapon, so a
+ * thrown Melee weapon still hits as a Melee weapon (SRD 5.2.1 "Thrown").
+ */
 export function attackHitTriggerKind(
   attack: SupportedAttackActionOption,
 ): BattleAttackHitTriggerKind {
   if (attack.kind === "weapon") {
-    return attackTargetConstraint(attack).kind === "meleeReach"
-      ? "meleeWeapon"
-      : "rangedWeapon";
+    return attack.weapon.usage === "melee" ? "meleeWeapon" : "rangedWeapon";
   }
   return attack.kind === "unarmedStrike" &&
     attackTargetConstraint(attack).kind === "meleeReach"
@@ -564,17 +566,6 @@ export function shoveForTarget(
   }
   /* v8 ignore stop -- @preserve */
   return { tag: "ok", dc: unarmedStrikeSaveDc(shover) };
-}
-
-export function firstFreeHand(
-  state: BattleState,
-  combatant: BattleCreatureState,
-  grapples: readonly BattleGrappleLink[],
-): BattleHand | undefined {
-  const hands = combatantHandUses(state, combatant, grapples);
-  if (hands.left === "free") return "left";
-  if (hands.right === "free") return "right";
-  return undefined;
 }
 
 export function grappleEscapeDc(

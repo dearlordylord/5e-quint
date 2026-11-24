@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
@@ -221,7 +222,7 @@ function createRuleCoreReactionDriver() {
             },
             fills: [
               movementFill(requireMovementHole(holes), {
-                movementCostFeet: movementResumeCostFeet,
+                distanceFeet: movementResumeCostFeet,
                 provokedOpportunityAttacks: [
                   {
                     reactorId,
@@ -376,7 +377,7 @@ function createRuleCoreReactionDriver() {
         }),
     };
 
-    function resolveReadiedMovementReaction(movementCostFeet: number): void {
+    function resolveReadiedMovementReaction(distanceFeet: number): void {
       const choice = battleFrontierInterruptDecisionForState(
         state,
       )?.choices.find(
@@ -408,7 +409,7 @@ function createRuleCoreReactionDriver() {
               kind: "releaseReadiedMovement",
               fills: [
                 movementFill(movementHole, {
-                  movementCostFeet,
+                  distanceFeet,
                   provokedOpportunityAttacks: [],
                 }),
               ],
@@ -605,7 +606,7 @@ function projectRuleCoreReactionState(input: {
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
-    readonly movementCostFeet: number;
+    readonly distanceFeet: number;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -617,7 +618,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(value.movementCostFeet),
+      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };

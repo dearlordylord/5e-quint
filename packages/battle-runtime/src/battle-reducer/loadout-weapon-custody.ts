@@ -7,7 +7,6 @@
 // sheathing, stowing, or dropping it." Whether the creature can reach a fallen
 // weapon, and where a dropped one lands, are the table's rulings (ASSUMPTIONS.md
 // A60 and A63).
-import type { HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import {
   ATTACK_WEAPON_CHANGE_KINDS,
@@ -28,11 +27,14 @@ import {
   battleObjectIsOnGround,
   battleStateWithGroundObjects,
   heldWeaponPickupTransition,
+  loadoutWeaponHands,
+  loadoutWeaponHandsAreFree,
+  loadoutWeaponSlot,
+} from "./battle-object-lifecycle.ts";
+import {
   loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
-} from "./battle-object-lifecycle.ts";
-import { combatantHandUses } from "./creature-state-leaves.ts";
-import { loadoutHandUses } from "@dnd/shared-algebras/armor-class-algebra";
+} from "./character-effective-loadout.ts";
 
 /** A weapon change with the table's facts it needs: where a dropped one lands. */
 export type AppliedAttackWeaponChange =
@@ -67,8 +69,6 @@ export type LoadoutWeaponChangeIssue = {
 export type LoadoutWeaponChangeResult =
   | { readonly tag: "applied"; readonly state: BattleState }
   | LoadoutWeaponChangeIssue;
-
-type LoadoutWeaponSlot = Extract<HandUse, "mainWeapon" | "offWeapon">;
 
 /**
  * Why this character can't make this weapon change now, or null when it can.
@@ -245,40 +245,6 @@ export function loadoutWeaponChangeIsApplied(
   );
 }
 
-/**
- * The hands a loadout weapon occupies are those its selected loadout's grip
- * gives it, whatever the hand state says now: a spell-created object can
- * take a hand the weapon left and then leave it simply free.
- */
-function loadoutWeaponHands(
-  actor: CharacterBattleCreatureState,
-  slot: LoadoutWeaponSlot,
-): readonly ("left" | "right")[] {
-  const { shield, offHandWeapon, weapon } = actor.origin.selectedLoadout;
-  const loadout = loadoutHandUses({
-    holdsShield: shield !== undefined,
-    holdsOffHandWeapon: offHandWeapon !== undefined,
-    mainWeaponGrip: weapon?.grip,
-  });
-  return (
-    [
-      ["left", loadout.leftHandUse],
-      ["right", loadout.rightHandUse],
-    ] as const
-  ).flatMap(([hand, use]) => (use === slot ? [hand] : []));
-}
-
-/** Each hand the weapon goes back into must be empty. */
-function loadoutWeaponHandsAreFree(
-  state: BattleState,
-  actor: CharacterBattleCreatureState,
-  slot: LoadoutWeaponSlot,
-): boolean {
-  const current = combatantHandUses(state, actor, state.grapples);
-  const hands = loadoutWeaponHands(actor, slot);
-  return hands.length > 0 && hands.every((hand) => current[hand] === "free");
-}
-
 /** A weapon back in hand holds the hands its loadout grip gives it. */
 function withLoadoutWeaponInHand(
   state: BattleState,
@@ -302,16 +268,6 @@ function withLoadoutWeaponInHand(
     },
   });
   return { ...state, combatants };
-}
-
-function loadoutWeaponSlot(
-  actor: CharacterBattleCreatureState,
-  objectId: BattleObjectId,
-): LoadoutWeaponSlot | null {
-  const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
-  if (weapon?.itemId === objectId) return "mainWeapon";
-  if (offHandWeapon?.itemId === objectId) return "offWeapon";
-  return null;
 }
 
 function selectedLoadoutWeaponIds(

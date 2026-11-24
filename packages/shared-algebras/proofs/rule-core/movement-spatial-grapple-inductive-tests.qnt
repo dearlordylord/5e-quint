@@ -77,4 +77,26 @@ module movementSpatialGrappleInductiveTests {
     }
   }
 
+  /// SRD 5.2.1 Rules Glossary "Climbing", "Crawling", "Swimming", "Difficult
+  /// Terrain" and "Grappled": the battle prices a move from its path.
+  run movement_path_cost_follows_the_srd_examples = {
+    val walk = { distanceFeet: 10, activity: OrdinaryMovement, usesActivitySpeed: false, difficultTerrain: false, effectExtraCostPerFoot: 0 }
+    val climb = { ...walk, activity: ClimbingMovement }
+    val swim = { ...walk, activity: SwimmingMovement }
+    all {
+      assert(movementPathCostFeet([walk]) == 10),
+      assert(movementPathCostFeet([climb]) == 20),
+      assert(movementPathCostFeet([{ ...climb, usesActivitySpeed: true }]) == 10),
+      assert(movementPathCostFeet([{ ...swim, difficultTerrain: true }]) == 30),
+      assert(movementPathCostFeet([{ ...swim, usesActivitySpeed: true, difficultTerrain: true }]) == 20),
+      assert(movementPathCostFeet([{ ...walk, effectExtraCostPerFoot: 1 }]) == 20),
+      assert(movementPathCostFeet(markedMovementPath(true, 10, 5, true, 0)) == 25),
+      assert(movementPathCostFeet(markedMovementPath(false, 10, 5, true, 0)) == 15),
+      assert(movementPathCostFeet(markedMovementPath(false, 10, 10, false, 1)) == 20),
+      assert(movementPathLegalForProne(true, markedMovementPath(true, 10, 5, true, 0))),
+      assert(not(movementPathLegalForProne(true, [walk]))),
+      assert(movementPathLegalForProne(false, [walk])),
+    }
+  }
+
 }

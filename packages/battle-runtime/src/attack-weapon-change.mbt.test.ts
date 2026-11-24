@@ -31,10 +31,8 @@ import {
 import type { BattleFill, BattleState } from "./battle-state-execution.ts";
 import type { AttackWeaponChange, BattleSubject } from "./battle-subjects.ts";
 import { weaponDropPositionHole } from "./battle-reducer/attack-weapon-change.ts";
-import {
-  battleObjectIsOnGround,
-  loadoutWeaponIsStowed,
-} from "./battle-reducer/battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./battle-reducer/battle-object-lifecycle.ts";
+import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import type { CombatantId } from "./identity.ts";
 import { resolveBattleSubject } from "./index.ts";

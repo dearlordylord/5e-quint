@@ -387,3 +387,18 @@ export function featureSaveDC(
 ): DifficultyClass {
   return difficultyClass(SAVE_DC_BASE + abilityMod + profBonus);
 }
+
+/**
+ * Whether a player character has Heroic Inspiration (Rules Glossary, "Heroic
+ * Inspiration"). A character never has more than one instance, so the state is
+ * binary.
+ */
+export type HeroicInspiration =
+  | { readonly tag: "none" }
+  | { readonly tag: "available" };
+export const NO_HEROIC_INSPIRATION = {
+  tag: "none",
+} as const satisfies HeroicInspiration;
+export const HEROIC_INSPIRATION_AVAILABLE = {
+  tag: "available",
+} as const satisfies HeroicInspiration;

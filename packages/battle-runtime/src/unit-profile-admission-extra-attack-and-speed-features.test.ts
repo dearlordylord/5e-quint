@@ -310,7 +310,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       subject: moveAct.subject,
       fills: [
         movementFill(requireHole(moveAct.initialHoles, "movement"), {
-          movementCostFeet: 5,
+          distanceFeet: 5,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -860,7 +860,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
       },
       fills: [
         movementFill(acrobaticMovementHole(state), {
-          movementCostFeet: 20,
+          distanceFeet: 20,
           provokedOpportunityAttacks: [],
           acrobaticMovement: {
             kind: "acrobaticMovement",
@@ -900,7 +900,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
         },
         fills: [
           movementFill(acrobaticMovementHole(armored), {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
             acrobaticMovement: {
               kind: "acrobaticMovement",
@@ -929,7 +929,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
         },
         fills: [
           movementFill(acrobaticMovementHole(shielded), {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
             acrobaticMovement: {
               kind: "acrobaticMovement",
@@ -957,7 +957,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
         },
         fills: [
           movementFill(acrobaticMovementHole(unselected), {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
             acrobaticMovement: {
               kind: "acrobaticMovement",
@@ -985,7 +985,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
         },
         fills: [
           movementFill(acrobaticMovementHole(selected), {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
             acrobaticMovement: {
               kind: "acrobaticMovement",
@@ -1106,7 +1106,7 @@ describe("CRPI-READY-028 deterministic Second-Story Work admission", () => {
       fills: [
         movementFill(secondStoryWorkMovementHole(state), {
           speedKind: "climb",
-          movementCostFeet: 15,
+          distanceFeet: 15,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -1208,7 +1208,7 @@ describe("QMBT44 deterministic Roving admission", () => {
       fills: [
         movementFill(rovingMovementHole(state), {
           speedKind: "climb",
-          movementCostFeet: 15,
+          distanceFeet: 15,
           provokedOpportunityAttacks: [],
         }),
       ],
@@ -1241,7 +1241,7 @@ describe("QMBT44 deterministic Roving admission", () => {
       fills: [
         movementFill(rovingMovementHole(firstMove.state), {
           speedKind: "swim",
-          movementCostFeet: 25,
+          distanceFeet: 25,
           provokedOpportunityAttacks: [],
         }),
       ],

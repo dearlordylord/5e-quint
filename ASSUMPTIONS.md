@@ -59,6 +59,10 @@ extra attack with a different Light weapon, but does not say that the weapons
 must be melee weapons. The melee-only restriction is therefore a deliberate
 interpretation of that omission, not a quoted SRD requirement.
 
+"Melee weapon" here is the weapon's category, not how the attack is made. A
+Light Melee weapon thrown with the Thrown property (a Dagger) is still a Melee
+weapon, so its thrown ranged attack can make or follow the extra attack.
+
 ## A17: Standing from Prone requires a nonzero movement expenditure
 
 **Assumption:** Standing from Prone is unavailable when half the creature's
@@ -281,28 +285,19 @@ sequence rather than imposing a shared one-reroll limit across sources.
 still limits each reroll with Advantage or Disadvantage to one chosen die,
 not both.
 
-## A58: Any weapon may be held with both hands
+## A57: A thrown weapon is not held with two hands for its damage
 
-**Assumption:** A loadout's main weapon has a grip. Any weapon may take the
-`two_handed` grip, and a Two-Handed weapon needs it. A `two_handed` grip
-occupies both hands, so the same loadout can't also hold a shield or an
-off-hand weapon, and neither hand is free for a grapple or a held object. A
-Versatile weapon deals its Versatile damage on a melee attack while it is held
-with the `two_handed` grip.
+**Assumption:** A thrown attack with a Two-Handed or Versatile Melee weapon
+doesn't use the attack damage die floor that a Melee weapon held with two
+hands grants, whatever grip the loadout records.
 
-**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Two-Handed"
-says such a weapon "requires two hands when you attack with it", and
-"Versatile" says the weapon "can be used with one or two hands" and deals its
-Versatile damage "when used with two hands to make a melee attack". The SRD
-says when two hands are required, not that any other weapon can't be held in
-both.
-
-**Temporary implementation restriction (not a rules assumption):** Battle
-Runtime keeps the loadout's grip for the whole battle; a creature can't yet
-change grip during a battle. Changing grip in battle, and offering the starting
-grip in equipment setup, is tracked in
-[#669](https://github.com/dearlordylord/5e-quint/issues/669), which retires
-this restriction.
+**Rules basis / gap:** `.references/srd-5.2.1/feats.md`, "Great Weapon
+Fighting" applies "when you roll damage for an attack you make with a Melee
+weapon that you are holding with two hands". `.references/srd-5.2.1/equipment.md`,
+"Thrown" makes the throw a ranged attack, and "Versatile" grants its two-handed
+damage only "to make a melee attack". The SRD doesn't say whether a thrown
+weapon counts as held with two hands when its damage is rolled. The model reads
+the throw as releasing the weapon, so it is no longer held then.
 
 ## A60: The free object interaction belongs to the creature's own turn
 
@@ -368,3 +363,90 @@ lands.
 change only the selected loadout's main-hand and off-hand weapons. Other owned
 weapons don't enter the battle yet (#230), and a weapon goes back to the hands
 and grip its loadout gives it (#669).
+
+## A58: Any weapon may be held with both hands
+
+**Assumption:** A loadout's main weapon has a grip. Any weapon may take the
+`two_handed` grip, and a Two-Handed weapon needs it. A `two_handed` grip
+occupies both hands, so the same loadout can't also hold a shield or an
+off-hand weapon, and neither hand is free for a grapple or a held object. A
+Versatile weapon deals its Versatile damage on a melee attack while it is held
+with the `two_handed` grip.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Two-Handed"
+says such a weapon "requires two hands when you attack with it", and
+"Versatile" says the weapon "can be used with one or two hands" and deals its
+Versatile damage "when used with two hands to make a melee attack". The SRD
+says when two hands are required, not that any other weapon can't be held in
+both.
+
+**Temporary implementation restriction (not a rules assumption):** Battle
+Runtime keeps the loadout's grip for the whole battle; a creature can't yet
+change grip during a battle. Changing grip in battle, and offering the starting
+grip in equipment setup, is tracked in
+[#669](https://github.com/dearlordylord/5e-quint/issues/669), which retires
+this restriction.
+
+## A64: A stat block's ammunition attack needs no free hand
+
+**Assumption:** Battle checks the free hand for loading only for a character's
+Ammunition weapon. A stat block attack that spends ammunition is offered
+whatever else the creature holds, as long as it carries the ammunition.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Ammunition,"
+says drawing the ammunition is part of the attack and that "you need a free
+hand to load a one-handed weapon." `.references/srd-5.2.1/monsters.md`,
+"Ammunition and Ranged Attacks," says only that a monster carries the
+ammunition it needs. A stat block lists its attacks, and sometimes its Gear,
+such as the Spy's Hand Crossbow and Shortsword in
+`.references/srd-5.2.1/monsters-A-Z.md`, but it never says what the creature
+holds in each hand when it attacks. The SRD gives no fact to test the free
+hand against, so Battle takes each stat block attack as usable as written.
+
+## A59: A Chromatic Orb leap measures cover from the previous target
+
+**Assumption:** When the orb leaps, the new target's cover against the new
+attack roll is measured from the creature the orb leaps from, not from the
+caster. The table supplies that degree on the leap's geometry fact; a new target
+with Total Cover from the previous target can't be leapt to.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Chromatic Orb," says
+the orb "leaps to a different target of your choice within 30 feet of the
+target" and that you "make an attack roll against the new target," but not
+where that attack originates. `.references/srd-5.2.1/playing-the-game.md`,
+"Cover," says a target benefits from cover only "when an attack or other effect
+originates on the opposite side of the cover." The model reads the leap as
+travelling from the previous target, so the attack originates there.
+
+## A61: A Prone Levitated creature can't move along a path
+
+**Assumption:** A creature that is both Prone and the target of Levitate has no
+movement along a path. It can still spend movement to right itself.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Prone,"
+says: "Your only movement options are to crawl or to spend an amount of
+movement equal to half your Speed (round down) to right yourself."
+`.references/srd-5.2.1/spells.md`, "Levitate," says the target "can move only
+by pushing or pulling against a fixed object or surface within reach ..., which
+allows it to move as if it were climbing." Each rule names the only movement
+the creature has, and the SRD doesn't say how they combine. The model applies
+both limits, and no movement is both crawling and climbing, so every path is
+refused while righting itself stays available. The QNT owner is
+`moveLevitatedTargetWithWitness` in `battle-runtime-levitate-creature.qnt`.
+
+## A62: A Jump spends its fixed movement whatever its path crosses
+
+**Assumption:** A creature that jumps with the Jump spell spends exactly 10
+feet of movement, even when its path crosses Difficult Terrain, a spell's
+Difficult Terrain, or a Gust of Wind Line it moves closer through. The areas'
+other effects, such as damage for each distance moved, still apply.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Jump," says the
+creature "can jump up to 30 feet by spending 10 feet of movement," a fixed
+spend rather than a cost per foot. `.references/srd-5.2.1/rules-glossary.md`,
+"Long Jump," says only that landing in Difficult Terrain needs a DC 10
+Dexterity (Acrobatics) check, so a jump doesn't pay Difficult Terrain's extra
+foot for each foot it passes over. The SRD doesn't say whether a surcharge for
+each foot moved, such as Gust of Wind's, changes the fixed spend. The model
+treats every such surcharge alike and leaves the spend at 10 feet. The QNT
+owner is `battle-runtime-jump-movement.qnt`, which admits only that spend.

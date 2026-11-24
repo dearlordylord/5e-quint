@@ -114,9 +114,9 @@ import {
 } from "./wild-shape-equipment.ts";
 import {
   battleStateWithGroundObjects,
-  characterEffectiveLoadout,
   wildShapeGroundObjectPlacement,
 } from "./battle-object-lifecycle.ts";
+import { characterEffectiveLoadout } from "./character-effective-loadout.ts";
 import type {
   BardicInspirationFailedD20TestResolutionInput,
   BardicInspirationFailedD20TestResolutionResult,

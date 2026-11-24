@@ -35,7 +35,7 @@ import {
 } from "../../weapon-attack-override-admission.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { loadoutHeldWeaponSlotIsUsable } from "../wild-shape-equipment.ts";
-import { loadoutWeaponIsHeld } from "../battle-object-lifecycle.ts";
+import { loadoutWeaponIsHeld } from "../character-effective-loadout.ts";
 import {
   discoverWeaponAttackOverrideCastAct,
   weaponAttackOverrideExecutor,

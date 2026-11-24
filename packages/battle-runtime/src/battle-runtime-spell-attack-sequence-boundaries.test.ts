@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import { DieRollResult } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import type { BattleFill } from "./battle-state-execution.ts";
+import type { BattleD20TestNaturalOneRerollDecision } from "./battle-state-execution.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import {
   battleUnitRefWithSupportProfiles,
@@ -75,12 +75,7 @@ function rerollRoll(input: {
         naturalD20: DieRollResult(input.naturalD20),
       },
     },
-  } satisfies NonNullable<
-    Extract<
-      BattleFill,
-      { readonly kind: "attackRoll" }
-    >["value"]["d20TestNaturalOneReroll"]
-  >;
+  } satisfies BattleD20TestNaturalOneRerollDecision;
 }
 
 function preparedFriendshipSession() {
@@ -299,9 +294,9 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
       fills: [
         target,
         attackRollFill(rerollHole, {
-          total: 18,
+          total: 6,
           naturalD20: 1,
-          d20TestNaturalOneReroll: rerollRoll({ total: 18, naturalD20: 13 }),
+          d20TestRerolls: [rerollRoll({ total: 18, naturalD20: 13 })],
         }),
       ],
     });

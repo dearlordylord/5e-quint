@@ -3,6 +3,7 @@ module ammunitionLifecycleTests {
   import ammunitionLifecycle.* from "./ammunition-lifecycle"
 
   pure val arrowStock = { ammunitionKind: ArrowAmmunition, remaining: 2 }
+  pure val slingBulletStock = { ammunitionKind: SlingBulletAmmunition, remaining: 1 }
   pure val boltStock = { ammunitionKind: BoltAmmunition, remaining: 1 }
 
   run ammunitionAvailabilityAndExactSpend = all {
@@ -40,4 +41,34 @@ module ammunitionLifecycleTests {
     assert(ammunitionAfterAcceptedAttack({ ammunitionKind: NeedleAmmunition, remaining: 1 }, NeedleAmmunition).remaining == 0),
     assert(ammunitionAfterAcceptedAttack({ ammunitionKind: SlingBulletAmmunition, remaining: 1 }, SlingBulletAmmunition).remaining == 0),
   }
+
+  run ammunitionAttackNeedsAFreeHandToLoad = all {
+    assert(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition, OneHandedLoadingHand(AmmunitionHandFree))),
+    assert(not(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition, OneHandedLoadingHand(AmmunitionHandOccupied)))),
+    assert(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition, StatBlockHandsNotStated)),
+    assert(
+      not(ammunitionAttackReady(
+        { ammunitionKind: SlingBulletAmmunition, remaining: 0 },
+        SlingBulletAmmunition,
+        OneHandedLoadingHand(AmmunitionHandFree),
+      ))
+    ),
+  }
+
+  run twoHandedAmmunitionUsesTheHandsHoldingThatWeapon = all {
+    assert(ammunitionAttackReady(arrowStock, ArrowAmmunition,
+      TwoHandedOperatingHands({ left: AmmunitionHandHoldsAttackingWeapon, right: AmmunitionHandHoldsAttackingWeapon }))),
+    assert(ammunitionAttackReady(arrowStock, ArrowAmmunition,
+      TwoHandedOperatingHands({ left: AmmunitionHandFree, right: AmmunitionHandHoldsAttackingWeapon }))),
+    assert(not(ammunitionAttackReady(arrowStock, ArrowAmmunition,
+      TwoHandedOperatingHands({ left: AmmunitionHandOccupied, right: AmmunitionHandHoldsAttackingWeapon })))),
+    assert(not(ammunitionAttackReady(arrowStock, ArrowAmmunition,
+      TwoHandedOperatingHands({ left: AmmunitionHandHoldsAttackingWeapon, right: AmmunitionHandOccupied })))),
+    assert(not(ammunitionAttackReady(arrowStock, ArrowAmmunition,
+      TwoHandedOperatingHands({ left: AmmunitionHandFree, right: AmmunitionHandFree })))),
+    assert(not(ammunitionAttackReady(arrowStock, ArrowAmmunition, AttackingWeaponGripUnavailable))),
+    assert(not(ammunitionAttackReady(slingBulletStock, SlingBulletAmmunition,
+      OneHandedLoadingHand(AmmunitionHandHoldsAttackingWeapon)))),
+  }
+
 }

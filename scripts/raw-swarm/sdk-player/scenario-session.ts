@@ -23,6 +23,7 @@ import type {
   BattleStatBlockProcedureExecutionRef,
   BattleSubject,
   BattleTargetSpatialFact,
+  BattleMovementPath,
   BattleTablePositionId,
   CombatantId,
   StatBlockAttackDamageSelection,
@@ -58,8 +59,14 @@ import {
   sameBattleSubject,
   zeroHpLifecycleIsTerminal,
 } from "@dnd/battle-runtime/consumer-protocol";
+import {
+  battleMovementPathCostFeet,
+  plainStepMovementActivity,
+  priceBattleMovementPath,
+} from "../../../packages/battle-runtime/src/battle-reducer/movement-path.ts";
 import { statBlockAttackDamageComponentRefKey } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { ruledCoverField } from "../../../packages/shared-algebras/src/cover-algebra.ts";
 import { isIncapacitated } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
 import {
   movementFeet,
@@ -230,6 +237,7 @@ type ScenarioMovementResolution =
         { readonly tag: "runtimeCommand"; readonly command: "move" }
       >;
       readonly fill: Extract<BattleFill, { readonly kind: "movement" }>;
+      readonly pricedMovementCostFeet: MovementFeet;
       readonly originFingerprint: StateFingerprint;
       readonly plannedSpace: SpatialSnapshot;
     }>
@@ -240,6 +248,7 @@ type ScenarioMovementResolution =
         { readonly tag: "runtimeCommand"; readonly command: "move" }
       >;
       readonly fill: Extract<BattleFill, { readonly kind: "movement" }>;
+      readonly pricedMovementCostFeet: MovementFeet;
       readonly decision: ScenarioTableSpatialDecision;
       readonly postMoveSpatial: ScenarioSpatialBoundary;
     }>;
@@ -1953,7 +1962,7 @@ export function planScenarioMovement(input: {
         holeId: movementHole.holeId,
         value: Object.freeze({
           speedKind: input.speedKind,
-          movementCostFeet: answer.movementCostFeet,
+          path: answer.path,
           provokedOpportunityAttacks: Object.freeze(
             answer.provokedOpportunityAttacks.map((threat) =>
               Object.freeze({ ...threat }),
@@ -1964,6 +1973,14 @@ export function planScenarioMovement(input: {
             : { creatureSpaceTraversal }),
         }),
       });
+    const pricedMovementCostFeet = scenarioMovementCostFeet(
+      input.session.battle.state,
+      input.subject.actorId,
+      fill.value,
+    );
+    if (Result.isFailure(pricedMovementCostFeet)) {
+      return Result.fail(pricedMovementCostFeet.failure);
+    }
     const postMoveSpatial = scenarioTablePostMoveSpatialBoundary(
       input.session,
       answer.postMoveSpatialState,
@@ -1972,6 +1989,7 @@ export function planScenarioMovement(input: {
       kind: "tableAuthoredPending" as const,
       subject: Object.freeze({ ...input.subject }),
       fill,
+      pricedMovementCostFeet: pricedMovementCostFeet.success,
       decision,
       postMoveSpatial,
     });
@@ -2007,7 +2025,6 @@ export function planScenarioMovement(input: {
 
   let routeState = restoredSpatialState;
   const originFingerprint = geometry.space.fingerprint;
-  let movementCost = 0;
   const objectByToken = new Map(
     input.session.battlefield.objects.map((object) => [
       String(object.objectId),
@@ -2142,7 +2159,6 @@ export function planScenarioMovement(input: {
           `Scenario route step is invalid: ${preview.error.tag}.`,
       });
     }
-    movementCost += Number(preview.value.step.weight);
     const routePosition = scenarioPositionId(preview.value.step.to);
     routeSteps.push({
       positionId: routePosition,
@@ -2240,11 +2256,33 @@ export function planScenarioMovement(input: {
       message: routeFacts.message,
     });
   }
-  movementCost += routeFacts.difficultTerrainSteps
-    .filter(
-      ({ positionId }) => !tacticalDifficultTerrainPositions.has(positionId),
-    )
-    .reduce((total, { distanceFeet }) => total + Number(distanceFeet), 0);
+  // SRD 5.2.1 "Difficult Terrain" is not cumulative: a step is Difficult
+  // Terrain when the tactical space marks it or a creature's space makes it so.
+  const creatureSpaceDifficultTerrainPositions = new Set(
+    routeFacts.difficultTerrainSteps.map(({ positionId }) => positionId),
+  );
+  const stepActivity = plainStepMovementActivity(moverState);
+  const [firstStep, ...laterSteps] = routeSteps.map((step) =>
+    Object.freeze({
+      distanceFeet: step.distanceFeet,
+      activity: stepActivity,
+      difficultTerrain:
+        tacticalDifficultTerrainPositions.has(step.positionId) ||
+        creatureSpaceDifficultTerrainPositions.has(step.positionId)
+          ? ("tableTerrain" as const)
+          : ("none" as const),
+      movesCloserThroughDirectionalArea: false,
+      draggedGrappledTargetIds: Object.freeze([]),
+    }),
+  );
+  if (firstStep === undefined) {
+    return Result.fail({
+      tag: "scenario-movement-rejected",
+      message: "Scenario movement requires a nonempty route.",
+    });
+  }
+  const path: BattleMovementPath = [firstStep, ...laterSteps];
+  Object.freeze(path);
   const creatureSpaceTraversal = routeFacts.creatureSpaceTraversal;
   const fill: Extract<BattleFill, { readonly kind: "movement" }> =
     Object.freeze({
@@ -2252,7 +2290,7 @@ export function planScenarioMovement(input: {
       holeId: movementHole.holeId,
       value: Object.freeze({
         speedKind: input.speedKind,
-        movementCostFeet: movementFeet(movementCost),
+        path,
         provokedOpportunityAttacks: Object.freeze(
           provokedOpportunityAttacks.map((threat) =>
             Object.freeze({ ...threat }),
@@ -2263,10 +2301,19 @@ export function planScenarioMovement(input: {
           : { creatureSpaceTraversal }),
       }),
     });
+  const pricedMovementCostFeet = scenarioMovementCostFeet(
+    input.session.battle.state,
+    input.subject.actorId,
+    fill.value,
+  );
+  if (Result.isFailure(pricedMovementCostFeet)) {
+    return Result.fail(pricedMovementCostFeet.failure);
+  }
   const movementResolution = Object.freeze({
     kind: "geometryDerivedPending" as const,
     subject: Object.freeze({ ...input.subject }),
     fill,
+    pricedMovementCostFeet: pricedMovementCostFeet.success,
     originFingerprint,
     plannedSpace: snapshot(routeState),
   });
@@ -2423,6 +2470,7 @@ export function scenarioCreatureSpellTargetFills(input: {
       }
       canonicalFacts.push({
         kind: "spellTarget" as const,
+        ...ruledCoverField(relation.relation.cover),
         casterId: request.casterId,
         targetId,
         sourceProcedureRef: request.sourceProcedureRef,
@@ -3014,6 +3062,7 @@ export function scenarioAttackTargetFills(input: {
       targetId: fill.value,
       ...attack.selection,
       distanceFeet: movementFeet(Number(relation.distanceFeet)),
+      ...ruledCoverField(relation.cover),
     };
     const canonicalSightFact = relation.attackerCanSeeTarget
       ? undefined
@@ -3403,6 +3452,34 @@ function restoreSpatialState(
   return restored.tag === "error" ? undefined : restored.value;
 }
 
+/**
+ * The Movement a scenario route's fill spends, priced from its path by the
+ * same algorithm Battle uses, so a resolved movement can be matched to it.
+ */
+function scenarioMovementCostFeet(
+  state: BattleRuntimeSession["state"],
+  moverId: CombatantId,
+  value: Extract<BattleFill, { readonly kind: "movement" }>["value"],
+): Result.Result<
+  MovementFeet,
+  { readonly tag: "scenario-movement-rejected"; readonly message: string }
+> {
+  const mover = state.combatants.get(moverId);
+  const priced =
+    mover === undefined
+      ? ({
+          tag: "invalid",
+          message: "The scenario mover is not in the battle.",
+        } as const)
+      : priceBattleMovementPath(state, mover, value);
+  return priced.tag === "invalid"
+    ? Result.fail({
+        tag: "scenario-movement-rejected",
+        message: priced.message,
+      })
+    : Result.succeed(battleMovementPathCostFeet(priced));
+}
+
 function sameScenarioMovement(
   movement: BattleResolvedMovement,
   pending: Extract<
@@ -3414,7 +3491,7 @@ function sameScenarioMovement(
   return (
     movement.moverId === pending.subject.actorId &&
     movement.speedKind === value.speedKind &&
-    movement.movementCostFeet === value.movementCostFeet &&
+    movement.movementCostFeet === pending.pricedMovementCostFeet &&
     sameOpportunityAttackThreats(
       movement.provokedOpportunityAttacks,
       value.provokedOpportunityAttacks,
@@ -3422,7 +3499,6 @@ function sameScenarioMovement(
     movement.spendsTurnMovement === true &&
     movement.acrobaticMovement === undefined &&
     movement.areaDifficultTerrain === undefined &&
-    movement.grappleDrag === undefined &&
     sameCreatureSpaceTraversal(
       movement.creatureSpaceTraversal,
       value.creatureSpaceTraversal,

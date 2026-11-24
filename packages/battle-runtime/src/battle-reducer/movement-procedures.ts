@@ -11,14 +11,9 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   applyCondition,
-  hasCondition,
   isIncapacitated,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  movementCost as activityMovementCost,
-  ordinaryMovementCost,
-} from "@dnd/shared-algebras/movement-cost-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
@@ -35,17 +30,13 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAcrobaticMovementFact,
-  BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
-  BattleActiveEffect,
   BattleBrutalStrikeForcefulBlowMovementFact,
   BattleCompelledApproachMovementFact,
   BattleCompelledFleeMovementFact,
   BattleCreatureSpaceTraversalMovementFact,
   BattleCreatureState,
   BattleFill,
-  BattleGrappleDragMovementFact,
-  BattleDirectionalPersistentAreaMovementFact,
   BattleFixedCostMovementReplacementFact,
   BattleMovementFillValue,
   BattleOpportunityAttackThreat,
@@ -93,9 +84,7 @@ import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { validateControlledVerticalSuspensionMovementFact } from "./controlled-vertical-suspension.ts";
 import {
   boundAreaMovementDistanceDamageEffect,
-  boundDirectionalPersistentAreaEffect,
   type BoundAreaMovementDistanceDamageEffect,
-  type BoundDirectionalPersistentAreaEffect,
 } from "./persistent-spell-area-binding.ts";
 import { maxFixedCostMovementReplacementDistanceFeet } from "./fixed-cost-movement-replacement.ts";
 import {
@@ -104,10 +93,16 @@ import {
 } from "./spell-modifier-binding.ts";
 import { movementHole } from "./movement-holes.ts";
 import {
+  battleMovementPathCostFeet,
+  battleMovementPathDragsGrappledCreature,
+  plainStepMovementActivity,
+  priceBattleMovementPath,
+  type BattleMovementPathCost,
+} from "./movement-path.ts";
+import {
   battleMovementBudgetForActor,
   combatantCanMoveWithBudget,
   creatureSizeIsLargerThanSelf,
-  grappleTargetExemptFromDragCost,
   interruptAttackExecutionSelectionMatchesOption,
   opportunityAttackThreatsForMovement,
   representedMovementSpeedKinds,
@@ -603,28 +598,14 @@ export function parseBattleMovement(
     return { tag: "invalid", message: "Current combatant cannot move." };
   }
   /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    fill.value.movementCostFeet <= 0 ||
-    !Number.isInteger(fill.value.movementCostFeet)
-  ) {
-    return {
-      tag: "invalid",
-      message: "Movement cost must be a positive integer.",
-    };
+  const pathCost = priceBattleMovementPath(state, mover, fill.value);
+  if (pathCost.tag === "invalid") {
+    return { tag: "invalid", message: pathCost.message };
   }
-  /* v8 ignore stop -- @preserve */
-  const movementCostFactValidation = validateMovementCostFacts(
-    state,
-    mover,
-    fill.value,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (movementCostFactValidation !== null) {
-    return {
-      tag: "invalid",
-      message: movementCostFactValidation,
-    };
+  const dragIssue = grappleDragMovementCombinationIssue(fill.value);
+  /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a spell-owned Jump replacement or a ControlledVerticalSuspension altitude change. */
+  if (dragIssue !== null) {
+    return { tag: "invalid", message: dragIssue };
   }
   /* v8 ignore stop -- @preserve */
   const acrobaticMovementValidation = validateAcrobaticMovementFact(
@@ -654,20 +635,18 @@ export function parseBattleMovement(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
-  const jumpMovementValidation = validateFixedCostMovementReplacementFact(
+  const fixedCostMovementReplacement = validateFixedCostMovementReplacementFact(
     state,
     moverId,
     fill.value.fixedCostMovementReplacement,
     mode,
-    fill.value.movementCostFeet,
-    areaExtraCostFeet,
+    pathCost,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (jumpMovementValidation !== null) {
+  if (fixedCostMovementReplacement.tag === "invalid") {
     return {
       tag: "invalid",
-      message: jumpMovementValidation,
+      message: fixedCostMovementReplacement.message,
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -676,9 +655,8 @@ export function parseBattleMovement(
       state,
       combatant: mover,
       fact: fill.value.controlledVerticalSuspensionMovement,
-      speedKind: fill.value.speedKind,
-      movementCostFeet: fill.value.movementCostFeet,
-      areaExtraCostFeet,
+      path: fill.value.path,
+      pathCost,
     });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (controlledVerticalSuspensionMovementValidation !== null) {
@@ -725,12 +703,9 @@ export function parseBattleMovement(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const movementCost = ordinaryMovementCost(
-    movementFeet(fill.value.movementCostFeet),
-    fill.value.speedKind,
-  );
+  const movementCostFeet = fixedCostMovementReplacement.costFeet;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (Number(movementCost.costFeet) > Number(movementBudgetFeet)) {
+  if (Number(movementCostFeet) > Number(movementBudgetFeet)) {
     return {
       tag: "invalid",
       message: "Movement cost exceeds the combatant's remaining Movement.",
@@ -804,7 +779,7 @@ export function parseBattleMovement(
     movement: {
       moverId,
       speedKind: fill.value.speedKind,
-      movementCostFeet: movementCost.costFeet,
+      movementCostFeet,
       provokedOpportunityAttacks,
       spendsTurnMovement:
         mode.kind === "budgetedMovement"
@@ -817,7 +792,6 @@ export function parseBattleMovement(
         "areaDifficultTerrain",
         fill.value.areaDifficultTerrain,
       ),
-      ...optionalProperty("grappleDrag", fill.value.grappleDrag),
       ...optionalProperty(
         "creatureSpaceTraversal",
         fill.value.creatureSpaceTraversal,
@@ -853,10 +827,11 @@ function opportunityAttackThreatAttackIssue(
     targetId: moverId,
     ...attackExecutionSelectionForOption(attack),
     distanceFeet: threat.distanceFeet,
+    ...optionalProperty("cover", threat.cover),
   };
   return attackTargetIsLegal(state, reactorId, moverId, attack, [distanceFact])
     ? null
-    : "Movement Opportunity Attack threat distance is outside the selected attack's reach.";
+    : "Movement Opportunity Attack threat distance is outside the selected attack's reach, or the mover has Total Cover from the reactor.";
 }
 
 function opportunityAttackThreatIdentityKey(
@@ -1295,308 +1270,6 @@ export function resolveMoveAfterMovement(input: {
   };
 }
 
-const byAreaDifficultTerrainSourceKind = Match.discriminator("kind");
-
-function activeAreaDifficultTerrainSourceMatches(
-  state: BattleState,
-  source: BattleAreaDifficultTerrainSource,
-): boolean {
-  const sourceCombatant = state.combatants.get(source.sourceCombatantId);
-  const effect = sourceCombatant?.activeEffects.find(
-    (candidate) => candidate.effectRef === source.effectRef,
-  );
-  return Match.value(source).pipe(
-    byAreaDifficultTerrainSourceKind(
-      "persistentAreaSaveCondition",
-      (terrainSource) =>
-        effect?.kind === "persistentAreaSaveCondition" &&
-        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-        effect.areaId === terrainSource.areaId,
-    ),
-    byAreaDifficultTerrainSourceKind(
-      "persistentAreaSaveConditionEscape",
-      (terrainSource) =>
-        effect?.kind === "persistentAreaSaveConditionEscape" &&
-        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-        effect.areaId === terrainSource.areaId,
-    ),
-    byAreaDifficultTerrainSourceKind(
-      "persistentAreaSaveComposite",
-      (terrainSource) =>
-        effect?.kind === "persistentAreaSaveComposite" &&
-        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-        effect.areaId === terrainSource.areaId,
-    ),
-    byAreaDifficultTerrainSourceKind(
-      "persistentAreaSaveDamage",
-      (terrainSource) =>
-        effect?.kind === "persistentAreaSaveDamage" &&
-        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-        effect.areaId === terrainSource.areaId,
-    ),
-    byAreaDifficultTerrainSourceKind(
-      "areaMovementDistanceDamage",
-      (terrainSource) =>
-        effect?.kind === "areaMovementDistanceDamage" &&
-        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-        effect.areaId === terrainSource.areaId,
-    ),
-    Match.exhaustive,
-  );
-}
-
-function areaDifficultTerrainSourceKey(
-  source: BattleAreaDifficultTerrainSource,
-): string {
-  return `${source.kind}\u0000${source.effectRef}`;
-}
-
-function validateAreaDifficultTerrainMovementFact(
-  state: BattleState,
-  fact: BattleAreaDifficultTerrainMovementFact | undefined,
-): AreaMovementCostFactResult {
-  if (fact === undefined) {
-    return { tag: "notApplicable" };
-  }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fact.kind !== "areaDifficultTerrain") {
-    return {
-      tag: "invalid",
-      message: "Area Difficult Terrain movement fact has the wrong kind.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fact.sources.length === 0) {
-    return {
-      tag: "invalid",
-      message: "Area Difficult Terrain movement fact requires a source.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(fact.totalDistanceFeet) ||
-    fact.totalDistanceFeet <= 0
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "Area Difficult Terrain total distance must be a positive integer.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(fact.difficultTerrainDistanceFeet) ||
-    fact.difficultTerrainDistanceFeet <= 0
-  ) {
-    return {
-      tag: "invalid",
-      message: "Area Difficult Terrain distance must be a positive integer.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    Number(fact.difficultTerrainDistanceFeet) > Number(fact.totalDistanceFeet)
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "Area Difficult Terrain distance cannot exceed total Movement distance.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const sourceKeys = new Set<string>();
-  let areaMovementDistanceDamageDamageDistanceFeet = 0;
-  for (const source of fact.sources) {
-    const key = areaDifficultTerrainSourceKey(source);
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sourceKeys.has(key)) {
-      return {
-        tag: "invalid",
-        message: "Area Difficult Terrain movement fact repeats a source.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    sourceKeys.add(key);
-    if (source.kind === "areaMovementDistanceDamage") {
-      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (
-        !Number.isInteger(source.damageDistanceFeet) ||
-        source.damageDistanceFeet <= 0
-      ) {
-        return {
-          tag: "invalid",
-          message:
-            "area movement-distance damage movement damage distance must be a positive integer.",
-        };
-      }
-      /* v8 ignore stop -- @preserve */
-      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (Number(source.damageDistanceFeet) > Number(fact.totalDistanceFeet)) {
-        return {
-          tag: "invalid",
-          message:
-            "area movement-distance damage movement damage distance cannot exceed total Movement distance.",
-        };
-      }
-      /* v8 ignore stop -- @preserve */
-      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (
-        Number(source.damageDistanceFeet) >
-        Number(fact.difficultTerrainDistanceFeet)
-      ) {
-        return {
-          tag: "invalid",
-          message:
-            "area movement-distance damage movement damage distance cannot exceed Difficult Terrain distance.",
-        };
-      }
-      /* v8 ignore stop -- @preserve */
-      areaMovementDistanceDamageDamageDistanceFeet += Number(
-        source.damageDistanceFeet,
-      );
-    }
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
-      return {
-        tag: "invalid",
-        message:
-          "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-  }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    areaMovementDistanceDamageDamageDistanceFeet >
-    Number(fact.difficultTerrainDistanceFeet)
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "area movement-distance damage movement damage distances cannot exceed Difficult Terrain distance.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  return {
-    tag: "ok",
-    totalDistanceFeet: fact.totalDistanceFeet,
-    extraCostFeet: fact.difficultTerrainDistanceFeet,
-  };
-}
-
-function validateDirectionalPersistentAreaMovementFact(
-  state: BattleState,
-  fact: BattleDirectionalPersistentAreaMovementFact | undefined,
-): AreaMovementCostFactResult {
-  if (fact === undefined) {
-    return { tag: "notApplicable" };
-  }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fact.kind !== "directionalPersistentAreaMovement") {
-    return {
-      tag: "invalid",
-      message:
-        "directional persistent area Line movement fact has the wrong kind.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!isPositiveIntegerMovementDistance(fact.totalDistanceFeet)) {
-    return {
-      tag: "invalid",
-      message:
-        "directional persistent area Line total distance must be a positive integer.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!isPositiveIntegerMovementDistance(fact.closerDistanceFeet)) {
-    return {
-      tag: "invalid",
-      message:
-        "directional persistent area Line closer distance must be a positive integer.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (Number(fact.closerDistanceFeet) > Number(fact.totalDistanceFeet)) {
-    return {
-      tag: "invalid",
-      message:
-        "directional persistent area Line closer distance cannot exceed total Movement distance.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const effect = activeDirectionalPersistentAreaForMovementFact(state, fact);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (effect === null) {
-    return {
-      tag: "invalid",
-      message:
-        "directional persistent area Line movement fact does not match an active directional persistent area Line.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  return {
-    tag: "ok",
-    totalDistanceFeet: fact.totalDistanceFeet,
-    extraCostFeet: movementFeet(
-      Number(fact.closerDistanceFeet) * (effect.movementCost.multiplier - 1),
-    ),
-  };
-}
-
-function isPositiveIntegerMovementDistance(distance: MovementFeet): boolean {
-  return Number.isInteger(distance) && distance > 0;
-}
-
-function activeDirectionalPersistentAreaForMovementFact(
-  state: BattleState,
-  fact: BattleDirectionalPersistentAreaMovementFact,
-): BoundDirectionalPersistentAreaEffect | null {
-  const source = state.combatants.get(fact.sourceCombatantId);
-  const effect = source?.activeEffects.find(
-    (candidate) => candidate.effectRef === fact.effectRef,
-  );
-  if (effect?.kind !== "directionalPersistentArea") return null;
-  if (!directionalPersistentAreaEffectMatchesMovementFact(effect, fact))
-    return null;
-  return boundDirectionalPersistentAreaEffect(state, effect) ?? null;
-}
-
-function directionalPersistentAreaEffectMatchesMovementFact(
-  effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "directionalPersistentArea" }
-  >,
-  fact: BattleDirectionalPersistentAreaMovementFact,
-): boolean {
-  return (
-    effect.sourceCombatantId === fact.sourceCombatantId &&
-    effect.sourceProcedureRef === fact.sourceProcedureRef &&
-    effect.areaId === fact.areaId &&
-    effect.directionId === fact.directionId
-  );
-}
-
-type AreaMovementCostFactResult =
-  | { readonly tag: "notApplicable" }
-  | { readonly tag: "invalid"; readonly message: string }
-  | {
-      readonly tag: "ok";
-      readonly totalDistanceFeet: MovementFeet;
-      readonly extraCostFeet: MovementFeet;
-    };
-
 const ACROBATIC_MOVEMENT_REPEATED_PATH_MESSAGE =
   "Acrobatic Movement path witness repeats a traversal path.";
 
@@ -1834,339 +1507,93 @@ function creatureSpaceMovementPermissionProfileForCombatant(
   return null;
 }
 
-function validateMovementCostFacts(
-  state: BattleState,
-  mover: BattleCreatureState,
-  value: BattleMovementFillValue,
-): string | null {
-  const difficultTerrain = validateAreaDifficultTerrainMovementFact(
-    state,
-    value.areaDifficultTerrain,
-  );
-  /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the area table adapter constructs the typed Difficult Terrain fact, so this only propagates a caller-mutated contradiction. */
-  if (difficultTerrain.tag === "invalid") {
-    return difficultTerrain.message;
-  }
-  /* v8 ignore stop -- @preserve */
-  const gust = validateDirectionalPersistentAreaMovementFact(
-    state,
-    value.directionalPersistentAreaMovement,
-  );
-  /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the directional persistent area table adapter constructs the typed Line fact, so this only propagates a caller-mutated contradiction. */
-  if (gust.tag === "invalid") {
-    return gust.message;
-  }
-  /* v8 ignore stop -- @preserve */
-  const grappleDrag = validateGrappleDragMovementFact(
-    state,
-    mover.combatantId,
-    value.grappleDrag,
-  );
-  /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the Grapple table adapter constructs the typed drag fact, so this only propagates a caller-mutated contradiction. */
-  if (grappleDrag.tag === "invalid") {
-    return grappleDrag.message;
-  }
-  /* v8 ignore stop -- @preserve */
-  const areaCosts = [difficultTerrain, gust].filter(
-    (
-      result,
-    ): result is Extract<AreaMovementCostFactResult, { readonly tag: "ok" }> =>
-      result.tag === "ok",
-  );
-  if (areaCosts.length === 0) {
-    if (grappleDrag.tag !== "ok") {
-      return null;
-    }
-  }
-  /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a spell-owned Jump replacement. */
-  if (
-    grappleDrag.tag === "ok" &&
-    value.fixedCostMovementReplacement !== undefined
-  ) {
-    return "Grapple drag movement facts cannot be combined with distance-multiplier effect movement replacement.";
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a ControlledVerticalSuspension altitude change. */
-  if (
-    grappleDrag.tag === "ok" &&
-    value.controlledVerticalSuspensionMovement?.altitudeChange !== undefined
-  ) {
-    return "Grapple drag movement facts cannot be combined with ControlledVerticalSuspension altitude-change movement.";
-  }
-  /* v8 ignore stop -- @preserve */
-  const firstAreaCost = areaCosts[0];
-  const allCosts =
-    grappleDrag.tag === "ok" ? [...areaCosts, grappleDrag] : areaCosts;
-  const firstCost = allCosts[0];
-  /* v8 ignore start -- @preserve -- The preceding area/Grapple admission guards prove that a non-empty cost list reaches this point. */
-  if (firstCost === undefined) {
-    return null;
-  }
-  /* v8 ignore stop -- @preserve */
-  const remainingAreaCosts = areaCosts.slice(1);
-  /* v8 ignore start -- @preserve -- Contradictory area witnesses: table-derived Difficult Terrain and Gust facts share one movement path and therefore one total distance. */
-  if (
-    firstAreaCost !== undefined &&
-    remainingAreaCosts.some(
-      (areaCost) =>
-        Number(areaCost.totalDistanceFeet) !==
-        Number(firstAreaCost.totalDistanceFeet),
-    )
-  ) {
-    return "Area movement-cost facts must agree on total Movement distance.";
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Contradictory movement witnesses: all table-derived area and Grapple facts share one movement path and therefore one total distance. */
-  if (
-    allCosts
-      .slice(1)
-      .some(
-        (cost) =>
-          Number(cost.totalDistanceFeet) !==
-          Number(firstCost.totalDistanceFeet),
-      )
-  ) {
-    return "Movement-cost facts must agree on total Movement distance.";
-  }
-  /* v8 ignore stop -- @preserve */
-  if (
-    value.fixedCostMovementReplacement !== undefined ||
-    value.controlledVerticalSuspensionMovement?.altitudeChange !== undefined
-  ) {
-    return null;
-  }
-  const crawlingExtraCostFeet = crawlingMovementExtraCostFeet(
-    mover.conditions,
-    firstCost.totalDistanceFeet,
-  );
-  const expectedCostFeet = movementFeet(
-    Number(firstCost.totalDistanceFeet) +
-      Number(crawlingExtraCostFeet) +
-      allCosts.reduce((total, cost) => total + Number(cost.extraCostFeet), 0),
-  );
-  if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
-    return null;
-  }
-  const mismatch = movementCostMismatchMessage({
-    grappleDrag: grappleDrag.tag === "ok",
-    areaDifficultTerrain: difficultTerrain.tag === "ok",
-    directionalPersistentArea: gust.tag === "ok",
-  });
-  return Number(crawlingExtraCostFeet) > 0
-    ? `${mismatch} ${PRONE_CRAWLING_MOVEMENT_COST_MESSAGE}`
-    : mismatch;
-}
+const PRONE_FIXED_COST_MOVEMENT_REPLACEMENT_MESSAGE =
+  "A Prone creature can only crawl or right itself, so it can't use a distance-multiplier effect movement replacement.";
 
-const PRONE_CRAWLING_MOVEMENT_COST_MESSAGE =
-  "A Prone mover is crawling and also spends 1 extra foot for every foot moved.";
+type FixedCostMovementReplacementCostResult =
+  | { readonly tag: "ok"; readonly costFeet: MovementFeet }
+  | { readonly tag: "invalid"; readonly message: string };
 
 /**
- * SRD 5.2.1 "Crawling": "each foot of movement costs 1 extra foot (2 extra
- * feet in Difficult Terrain)". A Prone creature's only movement is to crawl
- * ("Prone", Restricted Movement), so every foot of its move costs 1 extra
- * foot, and each foot of Difficult Terrain adds its own extra foot on top.
+ * The move's cost. An ordinary move spends its priced path. A
+ * distance-multiplier effect's jump spends the spell's fixed Movement cost
+ * instead: SRD 5.2.1 Jump lets the target "jump up to 30 feet by spending 10
+ * feet of movement", so the path's crawling, climbing, swimming and table
+ * Difficult Terrain extras don't apply. Under ASSUMPTIONS.md A62, cited spell
+ * areas also leave this fixed cost unchanged; their other effects still apply.
+ * Landing in Difficult Terrain requires the landing's Acrobatics check.
+ * A Prone creature can't jump: its only movement options are to crawl or to
+ * right itself (Rules Glossary "Prone").
  */
-function crawlingMovementExtraCostFeet(
-  conditions: BattleCreatureState["conditions"],
-  totalDistanceFeet: MovementFeet,
-): MovementFeet {
-  if (!hasCondition(conditions, "prone")) {
-    return movementFeet(0);
-  }
-  const crawl = activityMovementCost({
-    distanceFeet: totalDistanceFeet,
-    activity: { kind: "crawling", speedType: "walk" },
-    difficultTerrain: false,
-    squeezing: false,
-    grappleDragExtraCost: false,
-  });
-  return movementFeet(Number(crawl.costFeet) - Number(crawl.distanceFeet));
-}
-
-function movementCostMismatchMessage(costs: {
-  readonly grappleDrag: boolean;
-  readonly areaDifficultTerrain: boolean;
-  readonly directionalPersistentArea: boolean;
-}): string {
-  /* v8 ignore start -- @preserve -- Malformed combined-cost projection: the table adapter computes total distance plus every non-exempt area and Grapple increment before submitting the movement fill. */
-  if (
-    costs.grappleDrag &&
-    (costs.areaDifficultTerrain || costs.directionalPersistentArea)
-  ) {
-    return "Combined movement-cost facts must spend total distance plus all area and non-exempt grapple drag extra movement costs.";
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed Grapple-cost projection: the table adapter computes one extra foot per non-exempt dragged foot. */
-  if (costs.grappleDrag) {
-    return "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.";
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed combined-area projection: the table adapter sums Difficult Terrain and directional persistent area increments over their shared path. */
-  if (costs.areaDifficultTerrain && costs.directionalPersistentArea) {
-    return "Combined area Difficult Terrain and directional persistent area movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore next -- @preserve -- Malformed single-area projection: after the typed area facts above, this tail only reports which caller-supplied movement-cost total was inconsistent. */
-  return costs.areaDifficultTerrain
-    ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
-    : "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
-}
-
-type GrappleDragMovementCostFactResult =
-  | { readonly tag: "notApplicable" }
-  | { readonly tag: "invalid"; readonly message: string }
-  | {
-      readonly tag: "ok";
-      readonly totalDistanceFeet: MovementFeet;
-      readonly extraCostFeet: MovementFeet;
-    };
-
-function validateGrappleDragMovementFact(
-  state: BattleState,
-  moverId: CombatantId,
-  fact: BattleGrappleDragMovementFact | undefined,
-): GrappleDragMovementCostFactResult {
-  if (fact === undefined) {
-    return { tag: "notApplicable" };
-  }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(fact.totalDistanceFeet) ||
-    fact.totalDistanceFeet <= 0
-  ) {
-    return {
-      tag: "invalid",
-      message: "Grapple drag total distance must be a positive integer.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const seenTargets = new Set<CombatantId>();
-  let extraCostFeet = 0;
-  for (const target of fact.targets) {
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!Number.isInteger(target.distanceFeet) || target.distanceFeet <= 0) {
-      return {
-        tag: "invalid",
-        message: "Grapple drag target distance must be a positive integer.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (Number(target.distanceFeet) > Number(fact.totalDistanceFeet)) {
-      return {
-        tag: "invalid",
-        message:
-          "Grapple drag target distance cannot exceed total Movement distance.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (seenTargets.has(target.targetId)) {
-      return {
-        tag: "invalid",
-        message: "Grapple drag movement fact repeats a target.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    seenTargets.add(target.targetId);
-    const link = state.grapples.find(
-      (candidate) =>
-        candidate.grapplerId === moverId &&
-        candidate.targetId === target.targetId,
-    );
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (link === undefined) {
-      return {
-        tag: "invalid",
-        message:
-          "Grapple drag movement fact must reference a creature Grappled by the mover.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    const grappler = state.combatants.get(link.grapplerId);
-    const draggedTarget = state.combatants.get(link.targetId);
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (grappler === undefined || draggedTarget === undefined) {
-      return {
-        tag: "invalid",
-        message: "Grapple drag movement fact references a stale Grapple link.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {
-      extraCostFeet += Number(target.distanceFeet);
-    }
-  }
-  return {
-    tag: "ok",
-    totalDistanceFeet: fact.totalDistanceFeet,
-    extraCostFeet: movementFeet(extraCostFeet),
-  };
-}
-
-function areaMovementExtraCostFeet(
-  state: BattleState,
-  value: BattleMovementFillValue,
-): MovementFeet {
-  const difficultTerrain = validateAreaDifficultTerrainMovementFact(
-    state,
-    value.areaDifficultTerrain,
-  );
-  const gust = validateDirectionalPersistentAreaMovementFact(
-    state,
-    value.directionalPersistentAreaMovement,
-  );
-  return movementFeet(
-    [difficultTerrain, gust].reduce(
-      (total, result) =>
-        result.tag === "ok" ? total + Number(result.extraCostFeet) : total,
-      0,
-    ),
-  );
-}
-
 function validateFixedCostMovementReplacementFact(
   state: BattleState,
   moverId: CombatantId,
   fact: BattleFixedCostMovementReplacementFact | undefined,
   mode: BattleMovementParseMode,
-  movementCostFeet: MovementFeet,
-  areaExtraCostFeet: MovementFeet,
-): string | null {
+  pathCost: BattleMovementPathCost,
+): FixedCostMovementReplacementCostResult {
   if (mode.kind !== "fixedCostMovementReplacement") {
     /* v8 ignore start -- @preserve -- Malformed movement fill: discovery does not request Jump facts for ordinary movement, so this rejects only caller-supplied cross-procedure data. */
     return fact === undefined
-      ? null
-      : "distance-multiplier effect movement replacement facts cannot be supplied for ordinary Movement.";
+      ? { tag: "ok", costFeet: battleMovementPathCostFeet(pathCost) }
+      : {
+          tag: "invalid",
+          message:
+            "distance-multiplier effect movement replacement facts cannot be supplied for ordinary Movement.",
+        };
     /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- @preserve -- Malformed Jump fill: discovery requests distance and landing facts whenever the active spell replacement is selected. */
+  /* v8 ignore start -- @preserve -- Malformed Jump fill: discovery requests landing facts whenever the active spell replacement is selected. */
   if (fact === undefined) {
-    return "distance-multiplier effect movement replacement requires caller-supplied jump distance and landing facts.";
+    return {
+      tag: "invalid",
+      message:
+        "distance-multiplier effect movement replacement requires caller-supplied landing facts.",
+    };
   }
   /* v8 ignore stop -- @preserve */
+  const mover = state.combatants.get(moverId);
+  if (mover !== undefined && plainStepMovementActivity(mover) === "crawling") {
+    return {
+      tag: "invalid",
+      message: PRONE_FIXED_COST_MOVEMENT_REPLACEMENT_MESSAGE,
+    };
+  }
   const effect = mode.effect;
-  const expectedMovementCostFeet = movementFeet(
-    Number(effect.movementCostFeet) + Number(areaExtraCostFeet),
-  );
-  /* v8 ignore start -- @preserve -- Malformed Jump cost projection: the table adapter sums the spell-owned movement cost and any area surcharge. */
-  if (movementCostFeet !== expectedMovementCostFeet) {
-    return "distance-multiplier effect movement replacement must spend the spell's Movement cost plus any area movement costs.";
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter supplies a positive whole-foot landing distance. */
-  if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
-    return "distance-multiplier effect movement replacement distance must be a positive integer.";
-  }
-  /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
   if (
-    Number(fact.distanceFeet) >
+    Number(pathCost.distanceFeet) >
     Number(maxFixedCostMovementReplacementDistanceFeet(state, moverId, effect))
   ) {
-    return "distance-multiplier effect movement replacement distance exceeds the active maximum.";
+    return {
+      tag: "invalid",
+      message:
+        "distance-multiplier effect movement replacement distance exceeds the active maximum.",
+    };
   }
   /* v8 ignore stop -- @preserve */
+  return {
+    tag: "ok",
+    // A Jump spends its fixed movement whatever the path crosses
+    // (ASSUMPTIONS.md A62).
+    costFeet: effect.movementCostFeet,
+  };
+}
+
+function grappleDragMovementCombinationIssue(
+  value: BattleMovementFillValue,
+): string | null {
+  if (!battleMovementPathDragsGrappledCreature(value)) {
+    return null;
+  }
+  if (value.fixedCostMovementReplacement !== undefined) {
+    return "Grapple drag movement cannot be combined with distance-multiplier effect movement replacement.";
+  }
+  if (
+    value.controlledVerticalSuspensionMovement?.altitudeChange !== undefined
+  ) {
+    return "Grapple drag movement cannot be combined with ControlledVerticalSuspension altitude-change movement.";
+  }
   return null;
 }
 

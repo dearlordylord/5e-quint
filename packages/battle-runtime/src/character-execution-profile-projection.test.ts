@@ -131,6 +131,10 @@ const UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
 ] as const satisfies ReadonlyArray<UnitFeatureProjectionFailure>;
 const UNIT_SUPPORT_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
   {
+    unitId: unitId("monk_martial_arts"),
+    kind: "martialArtsAttackProjection",
+  },
+  {
     unitId: unitId("barbarian_instinctive_pounce"),
     kind: "ongoingFeatureActivationMovementRider",
   },
@@ -209,7 +213,10 @@ describe("character execution profile projection", () => {
         });
         const profileKind =
           typeof profile === "string" ? profile : profile.kind;
-        if (profileKind === "failedSavingThrowReroll") {
+        if (
+          profileKind === "failedSavingThrowReroll" ||
+          profileKind === "martialArtsAttackProjection"
+        ) {
           expect(execution).toBeUndefined();
           continue;
         }

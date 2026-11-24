@@ -1,3 +1,4 @@
+import { ordinaryMovementPath } from "@dnd/battle-runtime";
 import { spellBattle } from "../../battle-runtime/src/unit-profile-admission-spell-battle.test-support.ts";
 import {
   spellAct,
@@ -148,10 +149,11 @@ function rageMovement() {
 }
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  cost: number,
+  distanceFeet: number,
   extra: Partial<
     Pick<
       Extract<BattleFill, { readonly kind: "movement" }>["value"],
+      | "path"
       | "speedKind"
       | "provokedOpportunityAttacks"
       | "creatureSpaceTraversal"
@@ -164,7 +166,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      movementCostFeet: movementFeet(cost),
+      path: ordinaryMovementPath(movementFeet(distanceFeet)),
       provokedOpportunityAttacks: [],
       ...extra,
     },
@@ -443,10 +445,12 @@ describe("Barbarian level 7 real-catalog SDK handoff", () => {
     (withHazard) => {
       const fixture = rageMovement();
       let state = fixture.state;
-      let areaDifficultTerrain: Extract<
-        BattleFill,
-        { kind: "movement" }
-      >["value"]["areaDifficultTerrain"];
+      let hazardMovement:
+        | Pick<
+            Extract<BattleFill, { kind: "movement" }>["value"],
+            "path" | "areaDifficultTerrain"
+          >
+        | undefined;
       if (withHazard) {
         const casterSession = spellBattle({
           preparedSpells: [spellRecord(spikeGrowthUnitId)],
@@ -481,20 +485,30 @@ describe("Barbarian level 7 real-catalog SDK handoff", () => {
           ...state,
           combatants: new Map(state.combatants).set(spellCasterId, caster),
         };
-        areaDifficultTerrain = {
-          kind: "areaDifficultTerrain",
-          totalDistanceFeet: movementFeet(10),
-          difficultTerrainDistanceFeet: movementFeet(10),
-          sources: [
+        // SRD 5.2.1 "Difficult Terrain": 10 feet through the hazard cost 20.
+        hazardMovement = {
+          path: [
             {
-              kind: "areaMovementDistanceDamage",
-              effectRef: hazard.effectRef,
-              sourceCombatantId: spellCasterId,
-              sourceProcedureRef: hazard.sourceProcedureRef,
-              areaId: hazard.areaId,
-              damageDistanceFeet: movementFeet(10),
+              distanceFeet: movementFeet(10),
+              activity: "ordinary",
+              difficultTerrain: "areaDifficultTerrain",
+              movesCloserThroughDirectionalArea: false,
+              draggedGrappledTargetIds: [],
             },
           ],
+          areaDifficultTerrain: {
+            kind: "areaDifficultTerrain",
+            sources: [
+              {
+                kind: "areaMovementDistanceDamage",
+                effectRef: hazard.effectRef,
+                sourceCombatantId: spellCasterId,
+                sourceProcedureRef: hazard.sourceProcedureRef,
+                areaId: hazard.areaId,
+                damageDistanceFeet: movementFeet(10),
+              },
+            ],
+          },
         };
       }
       const reactorId = combatantId("opponent");
@@ -510,10 +524,8 @@ describe("Barbarian level 7 real-catalog SDK handoff", () => {
         subject: fixture.subject,
         fills: [
           fixture.decision,
-          movementFill(fixture.hole, withHazard ? 20 : 10, {
-            ...(areaDifficultTerrain === undefined
-              ? {}
-              : { areaDifficultTerrain }),
+          movementFill(fixture.hole, 10, {
+            ...hazardMovement,
             provokedOpportunityAttacks: [
               {
                 reactorId,

@@ -41,9 +41,13 @@ module battleRuntimeGustOfWind {
   pure val gustOfWindLifecycle: PersistentAreaLifecycle =
     CasterBonusActionDirectionReplacementPersistentArea
 
+  /// The path priced through the Line: each foot moved closer to the caster
+  /// costs 1 extra foot, and a Prone mover crawls the whole path.
   pure def gustOfWindLineMovementCost(moverProne: bool, totalDistanceFeet: int, closerDistanceFeet: int): int =
-    directionalPersistentAreaMovementCost(totalDistanceFeet, closerDistanceFeet) +
-      MovementRule::crawlingExtraCostFeet(moverProne, totalDistanceFeet)
+    if (directionalPersistentAreaMovementCost(totalDistanceFeet, closerDistanceFeet) == 0) 0
+    else MovementRule::movementPathCostFeet(
+      MovementRule::markedMovementPath(moverProne, totalDistanceFeet, closerDistanceFeet, false, 1)
+    )
 
   pure def gustOfWindLineMovementFactValid(
     effect: GustOfWindLineEffect,

@@ -41,7 +41,6 @@ export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literals([
   "passiveArmorClassBonus",
   "weaponDamageDiceRollChoice",
   "attackDamageDieFloor",
-  "martialArtsAttackProjection",
   "bardicInspirationGrant",
   "druidWildCompanionSpellCast",
   "weaponMasterySap",

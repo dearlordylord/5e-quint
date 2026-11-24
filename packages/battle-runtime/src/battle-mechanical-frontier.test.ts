@@ -172,7 +172,13 @@ const projectionAttackRollWithD20 = {
     ],
   }),
   d20TestNaturalOneRerolls: [projectionNestedReroll],
-};
+  heroicInspirationRerolls: [
+    {
+      effectKind: "heroic_inspiration_reroll",
+      label: "heroic inspiration presentation label",
+    },
+  ],
+} as const;
 
 const projectionSpellDamageRerolls = [
   {
@@ -1109,7 +1115,13 @@ describe("battle mechanical frontier", () => {
     expect(attackRollWithD20).toMatchObject({
       kind: "attackRoll",
       d20TestNaturalOneRerolls: [{ effectKind: "d20_test_natural_one_reroll" }],
+      heroicInspirationRerolls: [{ effectKind: "heroic_inspiration_reroll" }],
     });
+    expect(
+      attackRollWithD20?.kind === "attackRoll"
+        ? attackRollWithD20.heroicInspirationRerolls?.[0]
+        : undefined,
+    ).not.toHaveProperty("label");
     const rolledDice = projectedHoles.find(
       (hole) =>
         hole.kind === "rolledDice" &&

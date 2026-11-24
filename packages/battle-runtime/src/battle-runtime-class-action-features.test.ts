@@ -82,6 +82,7 @@ import {
   discoverBattleActs,
   endTurn,
   movementFill,
+  testMovementPath,
   movementFeet,
   movementDeltaFeet,
   readyTriggerDescriptionForTest,
@@ -662,7 +663,7 @@ describe("battle runtime: class action features", () => {
     );
     expect(movement).toMatchObject({ movementBudgetFeet: movementFeet(15) });
     const shortMove = movementFill(movement, {
-      movementCostFeet: 5,
+      distanceFeet: 5,
       provokedOpportunityAttacks: [],
     });
     for (const { fills, message } of [
@@ -693,7 +694,7 @@ describe("battle runtime: class action features", () => {
           order,
           movementFill(movement, {
             speedKind: "fly",
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -717,7 +718,7 @@ describe("battle runtime: class action features", () => {
           use,
           order,
           movementFill(movement, {
-            movementCostFeet: 20,
+            distanceFeet: 20,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -732,7 +733,7 @@ describe("battle runtime: class action features", () => {
           use,
           order,
           movementFill(movement, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
@@ -755,7 +756,7 @@ describe("battle runtime: class action features", () => {
           use,
           order,
           movementFill(movement, {
-            movementCostFeet: 10,
+            distanceFeet: 10,
             provokedOpportunityAttacks: [],
           }),
         ],
@@ -786,7 +787,7 @@ describe("battle runtime: class action features", () => {
         subject: ordinaryMoveSubject,
         fills: [
           movementFill(ordinaryMoveHole, {
-            movementCostFeet: 5,
+            distanceFeet: 5,
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
@@ -4289,15 +4290,15 @@ describe("battle runtime: class action features", () => {
     }
     const forcefulTargetId = movement.brutalStrikeForcefulBlow.targetId;
     const forcefulMovementFill = (
-      movementCostFeet: number,
+      distanceFeet: number,
       additionalSpeedSegments: readonly {
         readonly speedKind: "walk" | "fly";
-        readonly movementCostFeet: ReturnType<typeof movementFeet>;
+        readonly path: ReturnType<typeof testMovementPath>;
         readonly provokedOpportunityAttacks: readonly [];
       }[] = [],
     ) => {
       const fill = movementFill(movement, {
-        movementCostFeet,
+        distanceFeet,
         provokedOpportunityAttacks: [],
       });
       const {
@@ -4367,7 +4368,7 @@ describe("battle runtime: class action features", () => {
           forcefulMovementFill(10, [
             {
               speedKind: "fly",
-              movementCostFeet: movementFeet(10),
+              path: testMovementPath({ distanceFeet: 10 }),
               provokedOpportunityAttacks: [],
             },
           ]),

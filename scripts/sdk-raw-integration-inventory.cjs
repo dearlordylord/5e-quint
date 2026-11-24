@@ -362,7 +362,7 @@ const seededSdkScenarioRows = [
           'const walkMovementBudget = requireMovementSpeedBudget(movement, "walk");',
           "movementBudgetFeet: movementFeet(30)",
           "walkMovementFill(movement,",
-          "movementCostFeet: walkMovementBudget",
+          "distanceFeet: walkMovementBudget",
           "provokedOpportunityAttacks: []",
           "hp: Hp(1)",
           "reactionAvailable: false",
@@ -379,7 +379,7 @@ const seededSdkScenarioRows = [
         anchor: "function walkMovementFill",
         needles: [
           'kind: "movement"',
-          "movementCostFeet: value.movementCostFeet",
+          "path: ordinaryMovementPath(value.distanceFeet)",
           "provokedOpportunityAttacks: value.provokedOpportunityAttacks",
         ],
       },

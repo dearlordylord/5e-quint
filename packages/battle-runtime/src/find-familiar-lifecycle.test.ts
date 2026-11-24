@@ -3178,6 +3178,30 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingHealingRoll.tag).toBe("needsHoles");
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     if (awaitingHealingRoll.tag !== "needsHoles") return;
+    // The familiar's cover from the target is relayed onto the caster's
+    // spell target fact, so Total Cover refuses the delivery.
+    const cureWoundsSubject = cureWoundsAct.subject;
+    const deliverWithCover = (cover: "half" | "total") =>
+      deliverTouchSpellThroughSpawnedCompanion({
+        state: cast.state,
+        subject: cureWoundsSubject,
+        fills: [
+          {
+            ...targetFill,
+            spatialFacts: targetFill.spatialFacts.map((fact) => ({
+              ...fact,
+              cover,
+            })),
+          },
+        ],
+        fact: {
+          kind: "companionWithinCommunicationRangeOfOwner",
+          ownerId: casterId,
+          familiarId,
+        },
+      }).tag;
+    expect(deliverWithCover("half")).toBe("needsHoles");
+    expect(deliverWithCover("total")).toBe("invalid");
     expect(
       awaitingHealingRoll.state.combatants.get(familiarId)?.reactionAvailable,
     ).toBe(false);
@@ -4515,14 +4539,16 @@ describe("Find Familiar lifecycle", () => {
           value: {
             total: 5,
             d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
-            d20TestNaturalOneReroll: {
-              kind: "reroll",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-              replacement: {
-                total: 18,
-                d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+                replacement: {
+                  total: 18,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+                },
               },
-            },
+            ],
           },
         },
       ],

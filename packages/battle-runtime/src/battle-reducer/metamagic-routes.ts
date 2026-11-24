@@ -35,6 +35,7 @@ import type {
   BattleReducerRouteOwnerGroup,
 } from "./reducer-route-protocol.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
+import { attackRollSeekingSpellDecisions } from "./spell-reroll-issues.ts";
 import {
   combatantConcentrationChanged,
   combatantsActiveEffectsChanged,
@@ -592,7 +593,7 @@ function metamagicMissedSpellAttackRerollRouteForResolution(
   }
   if (
     fill.kind !== "attackRoll" ||
-    fill.value.spellAttackReroll?.effectKind !== SEEKING_METAMAGIC_EFFECT_KIND
+    attackRollSeekingSpellDecisions(fill.value).length === 0
   ) {
     return undefined;
   }
@@ -617,8 +618,7 @@ function metamagicMissedSpellAttackRerollCompletionRoute(
     !input.fills.some(
       (candidate) =>
         candidate.kind === "attackRoll" &&
-        candidate.value.spellAttackReroll?.effectKind ===
-          SEEKING_METAMAGIC_EFFECT_KIND,
+        attackRollSeekingSpellDecisions(candidate.value).length > 0,
     )
   ) {
     return undefined;

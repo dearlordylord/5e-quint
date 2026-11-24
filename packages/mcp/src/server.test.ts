@@ -3253,7 +3253,15 @@ describe("MCP server route", () => {
           holeId: "battle:movement",
           value: {
             speedKind: "walk",
-            movementCostFeet: 10,
+            path: [
+              {
+                distanceFeet: 10,
+                activity: "ordinary",
+                difficultTerrain: "none",
+                movesCloserThroughDirectionalArea: false,
+                draggedGrappledTargetIds: [],
+              },
+            ],
             provokedOpportunityAttacks: [],
           },
         },
@@ -12030,6 +12038,7 @@ function battleAttackSubjectForName(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
+      !("weaponDelivery" in candidate.subject) &&
       (candidate.subject.statBlockDamageSelection === undefined ||
         candidate.subject.statBlockDamageSelection.every(
           ({ notation }) => notation === "rolled",
