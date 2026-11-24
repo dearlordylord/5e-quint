@@ -7,7 +7,11 @@
 import type { BonusCoverType, RuledCoverType } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
-import { savingThrowCoverRuling } from "./battle-reducer/saving-throw-cover.ts";
+import {
+  savingThrowCoverRuling,
+  savingThrowFillsCoverIssue,
+  spellTargetCoverFlatBonuses,
+} from "./battle-reducer/saving-throw-cover.ts";
 import { admitRegisteredSpellProcedureMechanics } from "./battle-reducer/spell-procedure-profiles/admission-registry.ts";
 import type { BattleHole, BattleSubject } from "./index.ts";
 import {
@@ -215,7 +219,7 @@ function targetedSave(spell: SpellRecord) {
         ),
       ],
     });
-  return { saveHole, save };
+  return { state, subject, saveHole, save };
 }
 
 /** Grease with its initial save gate denying the benefit of cover. */
@@ -337,13 +341,56 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "A spell target keeps the cover ruled on its spellTarget fact; omit cover on its outcome.",
-    });
-    expect(save(undefined, "half")).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
+        "This target's cover already counts in the save's targetFlatBonuses; omit cover on its outcome.",
     });
     expect(save("half", undefined).tag).not.toBe("invalid");
+  });
+
+  test("a spell's save counts one cover bonus per target, from that caster's spellTarget fact", () => {
+    const { saveHole } = targetedSave(syntheticTargetedDexCantrip());
+    const hole = saveHole(undefined);
+    if (!("sourceProcedureRef" in hole)) {
+      throw new Error("Expected a spell's save hole.");
+    }
+    const { sourceProcedureRef } = hole;
+    const fact = {
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId: skeletonId,
+      sourceProcedureRef,
+      cover: "half",
+    } as const;
+    expect(
+      spellTargetCoverFlatBonuses({
+        ruling: "coverBenefit",
+        casterId: wizardId,
+        sourceProcedureRef,
+        spellTargetFacts: [
+          fact,
+          { ...fact, cover: "threeQuarters" },
+          { ...fact, casterId: secondSkeletonId, targetId: secondSkeletonId },
+          { ...fact, targetId: secondSkeletonId, cover: "total" },
+        ],
+      }),
+    ).toEqual([
+      { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
+    ]);
+  });
+
+  test("a covered save fill that answers no open hole is left to the resolution to refuse", () => {
+    const { state, subject, saveHole } = targetedSave(
+      syntheticTargetedDexCantrip(),
+    );
+    const fill = withOutcomeCover(
+      savingThrowOutcomeFill(saveHole(undefined), [rolled(skeletonId, true)]),
+      new Map([[skeletonId, "half"]]),
+    );
+    // Without its target fill first, the save hole isn't open yet.
+    expect(
+      savingThrowFillsCoverIssue([fill], (fills) =>
+        resolveBattleSubject({ state, subject, fills }),
+      ),
+    ).toBeNull();
   });
 
   test("Sacred Flame's target gains no benefit from its cover for the save", () => {

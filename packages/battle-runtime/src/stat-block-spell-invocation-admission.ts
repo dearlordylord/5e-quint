@@ -29,7 +29,10 @@ import {
   spellAdmissionBattleProjection,
   type SpellAdmissionContext,
 } from "./battle-reducer/spell-procedure-profiles/profile.ts";
-import { spellProcedureNonEmpty } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import {
+  spellProcedureNonEmpty,
+  type BattleSpellMechanicsAdmission,
+} from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
 import { spellProcedureExecution } from "./spell-procedure-execution-admission.ts";
 import {
@@ -55,6 +58,31 @@ type StatBlockSpellInvocationAdmission =
       >;
       readonly spellPresentationSources: ReadonlyNonEmptyArray<SpellPresentationSource>;
     };
+
+type NotBattleOwnedSpellReason = Extract<
+  BattleSpellMechanicsAdmission,
+  { readonly tag: "notBattleOwned" }
+>["reason"];
+
+/** Why a stat block can't cast a spell that no Battle procedure owns. */
+function notBattleOwnedUnsupportedReason(
+  reason: NotBattleOwnedSpellReason,
+): "unsupportedDeathAftermath" | "unsupportedProfile" {
+  return Match.value(reason).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      noMatchingBattleProcedure: () => "unsupportedProfile" as const,
+      unownedMechanicsFacet: ({ facet }) =>
+        Match.value(facet).pipe(
+          Match.when(
+            "deathAftermath",
+            () => "unsupportedDeathAftermath" as const,
+          ),
+          Match.when("saveCoverBenefit", () => "unsupportedProfile" as const),
+          Match.exhaustive,
+        ),
+    }),
+  );
+}
 
 function unsupportedSpellInvocationAdmission(
   reason: import("./stat-block-spell-invocation-dispatch.ts").StatBlockSpellInvocationUnsupportedReason,
@@ -177,10 +205,7 @@ export function admitSelectedStatBlockSpellInvocation(input: {
     Match.discriminatorsExhaustive("tag")({
       notBattleOwned: (admission) =>
         unsupportedSpellInvocationAdmission(
-          admission.reason.kind === "unownedMechanicsFacet" &&
-            admission.reason.facet === "deathAftermath"
-            ? "unsupportedDeathAftermath"
-            : "unsupportedProfile",
+          notBattleOwnedUnsupportedReason(admission.reason),
         ),
       rejected: () => unsupportedSpellInvocationAdmission("unsupportedProfile"),
       admitted: ({ procedures }): StatBlockSpellInvocationAdmission => {

@@ -76,6 +76,7 @@ import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-p
 import {
   savingThrowCoverRuling,
   spellTargetCoverFlatBonuses,
+  type SpellTargetFact,
 } from "./saving-throw-cover.ts";
 import {
   attackDamageAbilityModifierChoiceUnsupportedIssue,
@@ -1171,8 +1172,11 @@ export function spellSavingThrowOutcomeHole(
   context: {
     readonly heightenedSpellTargetId?: CombatantId | undefined;
     readonly relationshipFacts?: readonly BattleSpellTargetListRelationshipFact[];
-    /** The spell's target facts, whose spellTarget cover the save projects. */
-    readonly targetSpatialFacts?: readonly { readonly kind: string }[];
+    /**
+     * The spell's target facts, whose cover the save projects. Leave them out
+     * where the save's effect doesn't originate at the caster.
+     */
+    readonly spellTargetFacts?: readonly SpellTargetFact[];
   } = {},
 ): BattleSpellSavingThrowOutcomeHole {
   const { heightenedSpellTargetId, relationshipFacts = [] } = context;
@@ -1182,7 +1186,12 @@ export function spellSavingThrowOutcomeHole(
     invocation.procedure === "rollModifier"
       ? invocation.targeting
       : spellSavingThrowTargeting(invocation);
-  const cover = spellSaveCover(invocation, ability, context.targetSpatialFacts);
+  const cover = spellSaveCover({
+    invocation,
+    casterId: actorId,
+    ability,
+    spellTargetFacts: context.spellTargetFacts,
+  });
   return {
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
@@ -1257,23 +1266,25 @@ export function spellSavingThrowOutcomeHole(
  * The cover facts of a spell's saving throw hole: whether the spell denies the
  * benefit of cover, and the bonus each spell target's ruled cover gives.
  */
-function spellSaveCover(
-  invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2],
-  ability: Ability,
-  targetSpatialFacts: readonly { readonly kind: string }[] = [],
-): {
+function spellSaveCover(input: {
+  readonly invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2];
+  readonly casterId: CombatantId;
+  readonly ability: Ability;
+  readonly spellTargetFacts: readonly SpellTargetFact[] | undefined;
+}): {
   readonly benefit: { readonly deniesCoverBenefit?: true };
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 } {
-  const benefit = spellSaveDeniesCoverBenefit(invocation)
+  const benefit = spellSaveDeniesCoverBenefit(input.invocation)
     ? { deniesCoverBenefit: true as const }
     : {};
   return {
     benefit,
     flatBonuses: spellTargetCoverFlatBonuses({
-      ruling: savingThrowCoverRuling({ ability, ...benefit }),
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      targetSpatialFacts,
+      ruling: savingThrowCoverRuling({ ability: input.ability, ...benefit }),
+      casterId: input.casterId,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      spellTargetFacts: input.spellTargetFacts ?? [],
     }),
   };
 }

@@ -1375,11 +1375,24 @@ type AdmissionIssueFor<Inspection> = Inspection extends {
   : never;
 
 /**
- * Whether any save gate in the mechanics graph, nested ones included, denies
+ * Whether any save gate in a spell's mechanics, nested ones included, denies
  * its target the benefit of cover for the save.
  */
-function mechanicsDenySaveCoverBenefit(node: unknown): boolean {
-  if (Array.isArray(node)) return node.some(mechanicsDenySaveCoverBenefit);
+function mechanicsDenySaveCoverBenefit(
+  mechanics: SpellMechanicsAdmissionSource["mechanics"],
+): boolean {
+  return mechanicsNodeDeniesSaveCoverBenefit(mechanics);
+}
+
+/**
+ * The structural search behind mechanicsDenySaveCoverBenefit. It looks through
+ * every nested field of the parsed mechanics rather than listing where phases
+ * nest, so a save gate nested in a place added to Surface later is still
+ * found, and the spell is refused rather than given cover it shouldn't get.
+ */
+function mechanicsNodeDeniesSaveCoverBenefit(node: unknown): boolean {
+  if (Array.isArray(node))
+    return node.some(mechanicsNodeDeniesSaveCoverBenefit);
   if (typeof node !== "object" || node === null) return false;
   if (
     "kind" in node &&
@@ -1388,13 +1401,17 @@ function mechanicsDenySaveCoverBenefit(node: unknown): boolean {
     node.saveCoverBenefit !== undefined
   )
     return true;
-  return Object.values(node).some(mechanicsDenySaveCoverBenefit);
+  return Object.values(node).some(mechanicsNodeDeniesSaveCoverBenefit);
 }
 
-/** Whether an admitted procedure carries a save gate's cover denial. */
-function admittedAppliesSaveCoverDenial(admitted: {
-  readonly facts: object;
-}): boolean {
+/**
+ * Whether an admitted procedure carries a save gate's cover denial: its facts
+ * project the denial, which its executable invocation then carries to the
+ * saving throw hole.
+ */
+function admittedAppliesSaveCoverDenial(
+  admitted: AdmittedSpellMechanicsView,
+): boolean {
   return (
     "saveCoverBenefit" in admitted.facts &&
     admitted.facts.saveCoverBenefit === "denied"

@@ -1,6 +1,6 @@
 import { acceptedAttackReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
 import { optionalProperty } from "./optional-property.ts";
-import { savingThrowFillsCoverIssue } from "./battle-reducer/saving-throw-cover.ts";
+import { resolveWithSavingThrowCoverCheck } from "./battle-reducer/saving-throw-cover.ts";
 import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
@@ -116,17 +116,23 @@ export function endTurn(input: {
   readonly actorId: CombatantId;
   readonly fills?: readonly BattleFill[];
 }): BattleResolutionResult {
-  const coverIssue = savingThrowFillsCoverIssue(input.fills ?? [], (fills) =>
-    endTurnWithFills({ ...input, fills }),
-  );
-  return coverIssue === null
-    ? endTurnWithFills(input)
-    : {
-        tag: "invalid",
-        reason: "invalidFill",
-        message: coverIssue,
-        snapshot: snapshotBattle(input.state),
-      };
+  return resolveWithSavingThrowCoverCheck({
+    fills: input.fills ?? [],
+    resolveFills: (fills) => endTurnWithFills({ ...input, fills }),
+    invalid: (message) => invalidCoverFill(input.state, message),
+  });
+}
+
+function invalidCoverFill(
+  state: BattleState,
+  message: string,
+): BattleResolutionResult {
+  return {
+    tag: "invalid",
+    reason: "invalidFill",
+    message,
+    snapshot: snapshotBattle(state),
+  };
 }
 
 function endTurnWithFills(input: {
@@ -171,6 +177,23 @@ function endTurnWithFills(input: {
 }
 
 export function deliverTouchSpellThroughSpawnedCompanion(input: {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >;
+  readonly fills: BattleResolutionInput["fills"];
+  readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
+}): BattleResolutionResult {
+  return resolveWithSavingThrowCoverCheck({
+    fills: input.fills,
+    resolveFills: (fills) =>
+      deliverTouchSpellThroughSpawnedCompanionWithFills({ ...input, fills }),
+    invalid: (message) => invalidCoverFill(input.state, message),
+  });
+}
+
+function deliverTouchSpellThroughSpawnedCompanionWithFills(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,

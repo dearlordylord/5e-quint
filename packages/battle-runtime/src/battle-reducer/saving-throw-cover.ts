@@ -4,14 +4,16 @@
 // .references/srd-5.2.1/playing-the-game.md "Cover" (a target benefits only
 // when the effect originates on the opposite side of the cover). The table
 // rules each target's degree for the specific effect; the runtime derives the
-// bonus from it and never takes a bonus from the table. A spell that targets a
-// creature takes the degree the table already ruled on its spellTarget fact.
+// bonus from it and never takes a bonus from the table. A spell whose effect
+// originates at the caster takes the degree the table already ruled on each
+// target's spellTarget fact.
 import {
+  bonusCover,
   coverBonus,
+  directTargetCover,
   savingThrowBenefitsFromCover,
 } from "@dnd/shared-algebras/cover-algebra";
-import type { BonusCoverType, RuledCoverType } from "@dnd/shared/types";
-import { Match } from "effect";
+import type { BonusCoverType } from "@dnd/shared/types";
 import type {
   BattleFill,
   BattleHole,
@@ -44,10 +46,18 @@ type SavingThrowOutcomeFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
-type SpellTargetFact = Extract<
+/** A spell's target fact, which carries the cover ruled for its target. */
+export type SpellTargetFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellTarget" }
 >;
+
+/** Whether a target fact is a spellTarget fact. */
+export function isSpellTargetFact(
+  fact: BattleTargetSpatialFact,
+): fact is SpellTargetFact {
+  return fact.kind === "spellTarget";
+}
 
 /** Whether this saving throw hole lets cover add to the save. */
 export function savingThrowCoverRuling(
@@ -61,16 +71,6 @@ export function savingThrowCoverRuling(
     : "noCoverBenefit";
 }
 
-function bonusCover(cover: RuledCoverType): BonusCoverType | undefined {
-  return Match.value(cover).pipe(
-    Match.whenOr("half", "threeQuarters", (degree): BonusCoverType => degree),
-    // A spell can't target a creature behind Total Cover, so spell targeting
-    // refuses it before any save.
-    Match.when("total", () => undefined),
-    Match.exhaustive,
-  );
-}
-
 /** The flat bonus a target adds to a Dexterity save for its degree of cover. */
 export function coverSavingThrowFlatBonus(
   targetId: CombatantId,
@@ -79,34 +79,32 @@ export function coverSavingThrowFlatBonus(
   return { kind: "cover", targetId, cover, bonus: coverBonus(cover) };
 }
 
-function spellTargetFactsForProcedure(
-  facts: readonly { readonly kind: string }[],
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): readonly SpellTargetFact[] {
-  return facts.filter(
-    (fact): fact is SpellTargetFact =>
-      fact.kind === "spellTarget" &&
-      "sourceProcedureRef" in fact &&
-      fact.sourceProcedureRef === sourceProcedureRef,
-  );
-}
-
 /**
- * The cover flat bonuses of a spell's saving throw: each target's degree from
- * its spellTarget fact for the same spell, when cover adds to the save.
+ * The cover flat bonuses of a spell's saving throw, when cover adds to it:
+ * one per target, from the first spellTarget fact this caster's spell has for
+ * that target. Total Cover gives none, since a spell can't target a creature
+ * behind it.
  */
 export function spellTargetCoverFlatBonuses(input: {
   readonly ruling: SavingThrowCoverRuling;
+  readonly casterId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly targetSpatialFacts: readonly { readonly kind: string }[];
+  readonly spellTargetFacts: readonly SpellTargetFact[];
 }): readonly BattleSavingThrowFlatBonusProjection[] {
   if (input.ruling === "noCoverBenefit") return [];
-  return spellTargetFactsForProcedure(
-    input.targetSpatialFacts,
-    input.sourceProcedureRef,
-  ).flatMap((fact) => {
-    const cover = fact.cover === undefined ? undefined : bonusCover(fact.cover);
-    return cover === undefined
+  const factByTargetId = new Map<CombatantId, SpellTargetFact>();
+  for (const fact of input.spellTargetFacts) {
+    if (
+      fact.casterId === input.casterId &&
+      fact.sourceProcedureRef === input.sourceProcedureRef &&
+      !factByTargetId.has(fact.targetId)
+    )
+      factByTargetId.set(fact.targetId, fact);
+  }
+  return [...factByTargetId.values()].flatMap((fact) => {
+    const degree = directTargetCover(fact.cover);
+    const cover = degree === null ? null : bonusCover(degree);
+    return cover === null
       ? []
       : [coverSavingThrowFlatBonus(fact.targetId, cover)];
   });
@@ -120,58 +118,49 @@ function coveredOutcomeTargetIds(
   );
 }
 
-function fillSpatialFacts(
-  fills: readonly BattleFill[],
-): readonly { readonly kind: string }[] {
-  return fills.flatMap((fill): readonly { readonly kind: string }[] =>
-    "spatialFacts" in fill ? (fill.spatialFacts ?? []) : [],
-  );
-}
-
 /**
  * Why a saving throw fill's outcome cover doesn't answer its hole, or null. A
  * covered outcome needs a hole that lets cover add to the save, and a target
- * that has no spellTarget fact for the hole's spell, which already rules it.
+ * whose cover the hole doesn't already count in its flat bonuses.
  */
 export function savingThrowOutcomeCoverIssue(input: {
   readonly fill: SavingThrowOutcomeFill;
-  readonly hole: BattleHole | undefined;
-  readonly priorFills: readonly BattleFill[];
+  readonly hole: SavingThrowOutcomeHole;
 }): string | null {
   const coveredTargetIds = coveredOutcomeTargetIds(input.fill);
   if (coveredTargetIds.length === 0) return null;
-  const hole = input.hole;
-  if (hole?.kind !== "savingThrowOutcome") {
-    return "A saving throw outcome's cover must answer an open saving throw hole.";
-  }
-  if (savingThrowCoverRuling(hole) === "noCoverBenefit") {
+  if (savingThrowCoverRuling(input.hole) === "noCoverBenefit") {
     return "Cover adds nothing to this saving throw; omit cover on its outcomes.";
   }
-  if (!("sourceProcedureRef" in hole)) return null;
-  const spellTargetIds = new Set(
-    spellTargetFactsForProcedure(
-      fillSpatialFacts(input.priorFills),
-      hole.sourceProcedureRef,
-    ).map((fact) => fact.targetId),
+  const countedTargetIds = new Set(
+    input.hole.targetFlatBonuses.flatMap((bonus) =>
+      bonus.kind === "cover" ? [bonus.targetId] : [],
+    ),
   );
-  return coveredTargetIds.some((targetId) => spellTargetIds.has(targetId))
-    ? "A spell target keeps the cover ruled on its spellTarget fact; omit cover on its outcome."
+  return coveredTargetIds.some((targetId) => countedTargetIds.has(targetId))
+    ? "This target's cover already counts in the save's targetFlatBonuses; omit cover on its outcome."
     : null;
 }
 
-function frontierHole(
+/** The open saving throw hole a fill answers, when the frontier has it. */
+function frontierSavingThrowHole(
   result: BattleResolutionResult,
   fill: SavingThrowOutcomeFill,
-): BattleHole | undefined {
-  return result.tag === "needsHoles" && result.frontier.kind === "holes"
-    ? result.frontier.holes.find((hole) => hole.holeId === fill.holeId)
-    : undefined;
+): SavingThrowOutcomeHole | undefined {
+  if (result.tag !== "needsHoles" || result.frontier.kind !== "holes") {
+    return undefined;
+  }
+  return result.frontier.holes.find(
+    (hole): hole is SavingThrowOutcomeHole =>
+      hole.kind === "savingThrowOutcome" && hole.holeId === fill.holeId,
+  );
 }
 
 /**
  * Why a fill's outcome cover doesn't answer the saving throw hole it fills, or
  * null. Each saving throw fill with cover is checked against the hole that the
- * fills before it leave open.
+ * fills before it leave open. When those fills don't leave it open, the
+ * resolution itself reports why, so this check has nothing to add.
  */
 export function savingThrowFillsCoverIssue(
   fills: readonly BattleFill[],
@@ -180,13 +169,31 @@ export function savingThrowFillsCoverIssue(
   for (const [index, fill] of fills.entries()) {
     if (fill.kind !== "savingThrowOutcome") continue;
     if (coveredOutcomeTargetIds(fill).length === 0) continue;
-    const priorFills = fills.slice(0, index);
-    const issue = savingThrowOutcomeCoverIssue({
+    const hole = frontierSavingThrowHole(
+      resolveFills(fills.slice(0, index)),
       fill,
-      hole: frontierHole(resolveFills(priorFills), fill),
-      priorFills,
-    });
+    );
+    if (hole === undefined) continue;
+    const issue = savingThrowOutcomeCoverIssue({ fill, hole });
     if (issue !== null) return issue;
   }
   return null;
+}
+
+/**
+ * Resolves fills after checking each saving throw fill's outcome cover against
+ * its hole. The check replays only the unchecked resolution, so it never
+ * nests.
+ */
+export function resolveWithSavingThrowCoverCheck(input: {
+  readonly fills: readonly BattleFill[];
+  readonly resolveFills: (
+    fills: readonly BattleFill[],
+  ) => BattleResolutionResult;
+  readonly invalid: (message: string) => BattleResolutionResult;
+}): BattleResolutionResult {
+  const issue = savingThrowFillsCoverIssue(input.fills, input.resolveFills);
+  return issue === null
+    ? input.resolveFills(input.fills)
+    : input.invalid(issue);
 }

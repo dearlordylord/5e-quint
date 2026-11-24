@@ -6471,8 +6471,10 @@ export type BattleRolledSavingThrowOutcome = BattleD20TestRolledOutcome & {
   /**
    * The degree of cover the table rules the target has against the effect,
    * on a saving throw that cover adds to (see `savingThrowCoverRuling`), for a
-   * target that has no spellTarget fact for the effect's spell. Without it,
-   * the target has no cover.
+   * target whose cover the hole's targetFlatBonuses don't already count.
+   * Without it, the target has no cover. It declares the degree the table
+   * ruled: like every saving throw bonus, its bonus counts in `succeeded`,
+   * and the runtime checks the degree against the hole.
    */
   readonly cover?: BonusCoverType;
 };

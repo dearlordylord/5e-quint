@@ -70,6 +70,18 @@ export function coverBonus(cover: BonusCoverType): CoverBonus {
   );
 }
 
+/**
+ * The degree of a target's cover that adds a bonus, or null when the target
+ * has no cover.
+ */
+export function bonusCover(cover: DirectTargetCover): BonusCoverType | null {
+  return Match.value(cover).pipe(
+    Match.when("none", () => null),
+    Match.whenOr("half", "threeQuarters", (degree): BonusCoverType => degree),
+    Match.exhaustive,
+  );
+}
+
 export function coverArmorClassBonus(
   cover: DirectTargetCover,
 ): CoverArmorClassBonus {

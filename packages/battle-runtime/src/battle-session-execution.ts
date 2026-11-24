@@ -47,7 +47,7 @@ import type {
 import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
-import { savingThrowFillsCoverIssue } from "./battle-reducer/saving-throw-cover.ts";
+import { resolveWithSavingThrowCoverCheck } from "./battle-reducer/saving-throw-cover.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
   battleD20TestCircumstanceRequests,
@@ -826,23 +826,20 @@ function resolveBattleSubjectWithInterruptRoute(
   input: BattleResolutionInput,
   handledInterruptOccurrence?: BattleHandledInterruptOccurrence,
 ): BattleResolutionResult {
-  const coverIssue = savingThrowFillsCoverIssue(input.fills, (fills) =>
-    resolveBattleSubjectFillsWithInterruptRoute(
-      { ...input, fills },
-      handledInterruptOccurrence,
-    ),
-  );
-  return coverIssue === null
-    ? resolveBattleSubjectFillsWithInterruptRoute(
-        input,
+  return resolveWithSavingThrowCoverCheck({
+    fills: input.fills,
+    resolveFills: (fills) =>
+      resolveBattleSubjectFillsWithInterruptRoute(
+        { ...input, fills },
         handledInterruptOccurrence,
-      )
-    : {
-        tag: "invalid",
-        reason: "invalidFill",
-        message: coverIssue,
-        snapshot: snapshotBattle(input.state),
-      };
+      ),
+    invalid: (message) => ({
+      tag: "invalid",
+      reason: "invalidFill",
+      message,
+      snapshot: snapshotBattle(input.state),
+    }),
+  });
 }
 
 function resolveBattleSubjectFillsWithInterruptRoute(
