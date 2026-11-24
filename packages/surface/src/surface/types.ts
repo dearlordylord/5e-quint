@@ -905,13 +905,17 @@ export type CombatTurnStartHeroicInspirationMechanics = Schema.Schema.Type<
 
 /**
  * Whether feature mechanics give Heroic Inspiration at the start of a combat
- * turn begun without it. The family's trigger and grant fields are all
- * literals, so the family alone names the whole shape; the Character Sheet and
- * the battle admit the feature through this one guard.
+ * turn begun without it. A parsed mechanics value's family names its whole
+ * shape, so the guard narrows a union of parsed mechanics to its combat
+ * turn-start member; a value whose type holds no such member narrows to
+ * `never`. The Character Sheet and the battle admit the feature through this
+ * one guard.
  */
-export function isCombatTurnStartHeroicInspirationMechanics(mechanics: {
-  readonly family: string;
-}): mechanics is CombatTurnStartHeroicInspirationMechanics {
+export function isCombatTurnStartHeroicInspirationMechanics<
+  Mechanics extends { readonly family: string },
+>(
+  mechanics: Mechanics,
+): mechanics is Extract<Mechanics, CombatTurnStartHeroicInspirationMechanics> {
   return mechanics.family === "combat_turn_start_heroic_inspiration";
 }
 export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<

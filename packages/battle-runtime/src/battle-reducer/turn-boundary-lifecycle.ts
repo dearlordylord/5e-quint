@@ -4378,7 +4378,6 @@ function resolveOrderedTurnStartHeroicInspirationOccurrence(input: {
   return ordinaryStartTurnOccurrenceAdvance(
     battleStateAfterTurnStartHeroicInspirationChoice({
       state: input.state,
-      actorId,
       offer,
       choice: fill.value,
     }),

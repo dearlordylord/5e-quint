@@ -16,7 +16,7 @@ import type {
   BattleTurnStartHeroicInspirationChoiceHole,
 } from "../battle-state-execution.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 // SRD 5.2.1 classes.md, Champion, Level 10: Heroic Warrior: "During combat, you
 // can give yourself Heroic Inspiration whenever you start your turn without it."
@@ -87,20 +87,22 @@ export function turnStartHeroicInspirationChoiceHole(input: {
  */
 export function battleStateAfterTurnStartHeroicInspirationChoice(input: {
   readonly state: BattleState;
-  readonly actorId: CombatantId;
   readonly offer: TurnStartHeroicInspirationOffer;
   readonly choice: BattleTurnStartHeroicInspirationChoice;
 }): BattleState {
   return Match.value(input.choice).pipe(
     Match.when("giveHeroicInspiration", () => ({
       ...input.state,
-      combatants: new Map(input.state.combatants).set(input.actorId, {
-        ...input.offer.actor,
-        origin: {
-          ...input.offer.actor.origin,
-          heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+      combatants: new Map(input.state.combatants).set(
+        input.offer.actor.combatantId,
+        {
+          ...input.offer.actor,
+          origin: {
+            ...input.offer.actor.origin,
+            heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+          },
         },
-      }),
+      ),
     })),
     Match.when("decline", () => input.state),
     Match.exhaustive,
