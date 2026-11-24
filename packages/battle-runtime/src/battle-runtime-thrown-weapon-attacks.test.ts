@@ -189,7 +189,8 @@ function attackSubjectFor(
 > {
   const option = attackActionOptionsForActor(state, fighterId).find(
     (attack) =>
-      attack.kind === "weapon" && attack.weaponDelivery === weaponDelivery,
+      attack.kind === "weapon" &&
+      attack.weaponDelivery?.kind === weaponDelivery,
   );
   if (option === undefined || option.kind !== "weapon") {
     throw new Error("Expected the fighter's weapon attack option.");
@@ -209,7 +210,7 @@ function thrownOffHandSubject(
   state: BattleState,
 ): Extract<BattleSubject, { readonly action: "offHandAttack" }> {
   const option = offHandAttackActionOptionsForActor(state, fighterId).find(
-    (attack) => attack.weaponDelivery === "thrown",
+    (attack) => attack.weaponDelivery?.kind === "thrown",
   );
   if (option === undefined) {
     throw new Error("Expected a thrown off-hand Dagger option.");
@@ -428,7 +429,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       (attack) => attack.kind === "weapon",
     );
 
-    expect(daggerOptions.map((attack) => attack.weaponDelivery)).toEqual([
+    expect(daggerOptions.map((attack) => attack.weaponDelivery?.kind)).toEqual([
       undefined,
       "thrown",
     ]);
@@ -535,7 +536,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     expect(
       attackActionOptionsForActor(pickedUp.state, fighterId)
         .filter((attack) => attack.kind === "weapon")
-        .map((attack) => attack.weaponDelivery),
+        .map((attack) => attack.weaponDelivery?.kind),
     ).toEqual([undefined, "thrown"]);
   });
 
@@ -874,7 +875,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(
       offHandAttackActionOptionsForActor(afterThrow, fighterId).map(
-        (attack) => [attack.weaponObjectId, attack.weaponDelivery],
+        (attack) => [attack.weaponObjectId, attack.weaponDelivery?.kind],
       ),
     ).toEqual([
       [offHandDaggerId, undefined],
@@ -886,7 +887,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     const state = battleWithDaggers({ mainHand: "dagger" });
     const thrown = attackActionOptionsForActor(state, fighterId).find(
       (attack) =>
-        attack.kind === "weapon" && attack.weaponDelivery === "thrown",
+        attack.kind === "weapon" && attack.weaponDelivery?.kind === "thrown",
     );
     if (thrown === undefined) {
       throw new Error("Expected the thrown Dagger option.");

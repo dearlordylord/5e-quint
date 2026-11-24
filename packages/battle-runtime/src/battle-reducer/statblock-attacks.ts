@@ -1,3 +1,4 @@
+import { explicitThrownWeaponDelivery } from "../procedure-admission/weapon-delivery.ts";
 // The mutual import cycle with statblock.ts is tolerated
 // because all imported bindings are function values used only at call time.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
@@ -32,6 +33,7 @@ import {
   attackExecutionAbility,
   type BoundSupportedAttackActionOption,
   type BattleWeaponDamage,
+  type AdmittedThrownWeaponDelivery,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type SelectedStatBlockAttackDamage,
@@ -120,9 +122,7 @@ export function attackTargetConstraint(
       statBlockAttackTargetConstraint(option),
     ),
     Match.when({ kind: "weapon" }, (option) =>
-      option.weaponDelivery === "thrown"
-        ? thrownWeaponTargetConstraint(option.weapon)
-        : weaponTargetConstraint(option.weapon),
+      weaponAttackTargetConstraint(option),
     ),
     Match.when({ kind: "unarmedStrike" }, () => ({
       kind: "meleeReach" as const,
@@ -138,8 +138,24 @@ export function attackCanCarryKnockOutChoice(
   return attackTargetConstraint(attack).kind === "meleeReach";
 }
 
+export function weaponAttackTargetConstraint(
+  attack: Pick<CharacterWeaponAttackActionOption, "weaponDelivery"> & {
+    readonly weapon: Pick<
+      CharacterWeaponAttackActionOption["weapon"],
+      "usage" | "properties"
+    >;
+  },
+): AttackTargetConstraint {
+  return attack.weaponDelivery === undefined
+    ? weaponTargetConstraint(attack.weapon)
+    : thrownWeaponTargetConstraint(attack.weaponDelivery);
+}
+
 export function weaponTargetConstraint(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
+  weapon: Pick<
+    CharacterWeaponAttackActionOption["weapon"],
+    "usage" | "properties"
+  >,
 ): AttackTargetConstraint {
   const properties = weapon.properties;
   if (weapon.usage === "ranged") {
@@ -171,24 +187,13 @@ export function weaponTargetConstraint(
  * the normal and long range in its Thrown property.
  */
 function thrownWeaponTargetConstraint(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-): AttackTargetConstraint {
-  const range = weaponThrownRange(weapon);
-  if (range === undefined) {
-    throw new Error("Thrown Battle Attack requires a Thrown weapon range.");
-  }
+  delivery: AdmittedThrownWeaponDelivery,
+): Extract<AttackTargetConstraint, { readonly kind: "rangedRange" }> {
   return {
     kind: "rangedRange",
-    normalFeet: movementFeet(range.normal),
-    longFeet: movementFeet(range.long),
+    normalFeet: movementFeet(delivery.range.normal),
+    longFeet: movementFeet(delivery.range.long),
   };
-}
-
-function weaponThrownRange(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-): { readonly normal: number; readonly long: number } | undefined {
-  return weapon.properties.find((property) => property.kind === "thrown")
-    ?.range;
 }
 
 export function selectedWeaponDamage(
@@ -215,41 +220,59 @@ export function attackActionOptionName(
   );
 }
 
-export function attackActionVariantOptions(
+export function attackAbilityAndDamageTypeOptions(
+  attack: Extract<
+    BoundSupportedAttackActionOption,
+    { readonly kind: "weapon" }
+  >,
+): readonly Extract<
+  BoundSupportedAttackActionOption,
+  { readonly kind: "weapon" }
+>[];
+export function attackAbilityAndDamageTypeOptions(
   attack: BoundSupportedAttackActionOption,
 ): readonly BoundSupportedAttackActionOption[];
-export function attackActionVariantOptions(
+export function attackAbilityAndDamageTypeOptions(
   attack: SupportedAttackActionOption,
 ): readonly SupportedAttackActionOption[];
-export function attackActionVariantOptions(
+export function attackAbilityAndDamageTypeOptions(
   attack: SupportedAttackActionOption,
 ): readonly SupportedAttackActionOption[] {
   if (attack.kind !== "weapon") {
     return [attack];
   }
-  return characterWeaponAttackDeliveryOptions(attack).flatMap(
-    (deliveryOption) =>
-      characterWeaponAttackAbilityOptions(deliveryOption).flatMap(
-        (abilityOption) =>
-          characterWeaponAttackDamageTypeOptions(abilityOption),
-      ),
+  return characterWeaponAttackAbilityOptions(attack).flatMap(
+    characterWeaponAttackDamageTypeOptions,
   );
 }
 
 /**
  * SRD 5.2.1 "Thrown": a held Melee weapon with the Thrown property can also be
  * thrown to make a ranged attack, with the same ability modifier as its melee
- * attack. The thrown option copies the melee option, so its ability choices
- * are the melee ones. A Ranged weapon's attack is already ranged.
+ * attack. Both deliveries retain base weapon facts; the actor-owned option
+ * factory derives damage after choosing delivery, before ability and damage-type
+ * choices. A Ranged weapon's attack is already ranged.
  */
-function characterWeaponAttackDeliveryOptions(
+export function characterWeaponAttackDeliveryOptions(
+  attack: Extract<
+    BoundSupportedAttackActionOption,
+    { readonly kind: "weapon" }
+  >,
+): readonly Extract<
+  BoundSupportedAttackActionOption,
+  { readonly kind: "weapon" }
+>[];
+export function characterWeaponAttackDeliveryOptions(
+  attack: CharacterWeaponAttackActionOption,
+): readonly CharacterWeaponAttackActionOption[];
+export function characterWeaponAttackDeliveryOptions(
   attack: CharacterWeaponAttackActionOption,
 ): readonly CharacterWeaponAttackActionOption[] {
-  return attack.weaponDelivery === undefined &&
-    attack.weapon.usage === "melee" &&
-    weaponThrownRange(attack.weapon) !== undefined
-    ? [attack, { ...attack, weaponDelivery: "thrown" }]
-    : [attack];
+  if (attack.weaponDelivery !== undefined) return [attack];
+  const delivery = explicitThrownWeaponDelivery(attack.weapon);
+  return delivery === undefined
+    ? [attack]
+    : [attack, { ...attack, weaponDelivery: delivery }];
 }
 
 function characterWeaponAttackAbilityOptions(

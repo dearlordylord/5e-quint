@@ -52,6 +52,8 @@ function projectMechanicalWeaponAttackActionOption(
     kind: "weapon",
     weapon: projectMechanicalWeapon(attack.weapon),
     weaponObjectId: attack.weaponObjectId,
+    ...optionalProperty("weaponDelivery", attack.weaponDelivery),
+    ...optionalProperty("meleeGripDamage", attack.meleeGripDamage),
     ability: attack.ability,
     abilityModifier: attack.abilityModifier,
     ...optionalProperty("attackBonus", attack.attackBonus),

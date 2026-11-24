@@ -32,7 +32,7 @@ export function weaponAttackIsThrown(
   attack: SupportedAttackActionOption,
 ): boolean {
   if (attack.kind !== "weapon") return false;
-  if (attack.weaponDelivery === "thrown") return true;
+  if (attack.weaponDelivery !== undefined) return true;
   const properties = attack.weapon.properties;
   return (
     attack.weapon.usage === "ranged" &&

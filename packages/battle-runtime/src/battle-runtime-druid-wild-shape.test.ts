@@ -1328,12 +1328,13 @@ test("drops a worn Wild Shape Dagger's attacks once the Dagger is thrown to the 
   ).state;
   const daggerDeliveries = (state: BattleState) =>
     attackActionOptionsForActor(state, druidId).flatMap((attack) =>
-      attack.kind === "weapon" ? [attack.weaponDelivery] : [],
+      attack.kind === "weapon" ? [attack.weaponDelivery?.kind] : [],
     );
   expect(daggerDeliveries(shaped)).toEqual([undefined, "thrown"]);
 
   const thrown = attackActionOptionsForActor(shaped, druidId).find(
-    (attack) => attack.kind === "weapon" && attack.weaponDelivery === "thrown",
+    (attack) =>
+      attack.kind === "weapon" && attack.weaponDelivery?.kind === "thrown",
   );
   if (thrown?.kind !== "weapon") {
     throw new Error("Expected the worn Dagger's thrown attack.");

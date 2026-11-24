@@ -1,3 +1,6 @@
+import type { AdmittedThrownWeaponDelivery } from "./procedure-admission/weapon-delivery.ts";
+export type { AdmittedThrownWeaponDelivery } from "./procedure-admission/weapon-delivery.ts";
+import type { AdmittedVersatileMeleeDamage } from "./procedure-admission/weapon-melee-grip-damage.ts";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
@@ -74,7 +77,8 @@ export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: CharacterWeaponAttackExecutionWeapon;
   readonly weaponObjectId: BattleObjectId;
-  readonly weaponDelivery?: WeaponAttackDelivery;
+  readonly weaponDelivery?: AdmittedThrownWeaponDelivery;
+  readonly meleeGripDamage?: AdmittedVersatileMeleeDamage;
   readonly ability: Ability;
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;
@@ -341,7 +345,7 @@ export function attackExecutionAbility(
 export function attackExecutionWeaponDelivery(
   attack: SupportedAttackActionOption,
 ): WeaponAttackDelivery | undefined {
-  return attack.kind === "weapon" ? attack.weaponDelivery : undefined;
+  return attack.kind === "weapon" ? attack.weaponDelivery?.kind : undefined;
 }
 
 export function attackExecutionDamageType(
@@ -381,7 +385,7 @@ export function attackExecutionSelectionForOption(
         ? attack.weapon.damage.damageType
         : attack.effect.damage.damageType,
     ...(attack.kind === "weapon" && attack.weaponDelivery !== undefined
-      ? { weaponDelivery: attack.weaponDelivery }
+      ? { weaponDelivery: attack.weaponDelivery.kind }
       : {}),
   };
 }

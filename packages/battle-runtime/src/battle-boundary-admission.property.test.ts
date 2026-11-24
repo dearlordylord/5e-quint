@@ -32,7 +32,7 @@ import {
   wardedTargetInterdictionRouteForResolution,
 } from "./battle-reducer/spell-defense-routes.ts";
 import {
-  attackActionVariantOptions,
+  attackAbilityAndDamageTypeOptions,
   frenzyDamageTypeDecision,
   weaponTargetConstraint,
 } from "./battle-reducer/statblock-attacks.ts";
@@ -3291,7 +3291,7 @@ describe("battle boundary admission owners", () => {
     if (statBlockAttack === undefined) {
       throw new Error("Expected a Stat Block attack option.");
     }
-    expect(attackActionVariantOptions(statBlockAttack)).toEqual([
+    expect(attackAbilityAndDamageTypeOptions(statBlockAttack)).toEqual([
       statBlockAttack,
     ]);
 
