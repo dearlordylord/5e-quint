@@ -393,6 +393,15 @@ function appendOrdinaryAttackActs(
 ): void {
   const hasOpenStatBlockMultiattackDispatch =
     actorHasStatBlockMultiattackActionResource(state, actorId);
+  if (
+    !combatantCanTakeActions(state.combatants.get(actorId)) ||
+    !(
+      hasOpenStatBlockMultiattackDispatch ||
+      canSpendAction(state.currentTurnResources, "attack")
+    )
+  ) {
+    return;
+  }
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -400,9 +409,6 @@ function appendOrdinaryAttackActs(
     attackActionOptionIsOrdinaryAttackAction(state, actorId, attack),
   );
   if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    (hasOpenStatBlockMultiattackDispatch ||
-      canSpendAction(state.currentTurnResources, "attack")) &&
     attackActionOptions.some(
       (attack) =>
         attackTargetChoices(state, actorId, attack).length > 0 ||
@@ -413,9 +419,11 @@ function appendOrdinaryAttackActs(
       ...attackActionOptions.flatMap((attack) =>
         ordinaryAttackActs(state, actorId, attack, undefined),
       ),
-      ...weaponChangeAttackActs(state, actorId),
     );
   }
+  // A weapon change can bring an attack into reach that none had before it,
+  // so its acts are checked against the state after each change.
+  acts.push(...weaponChangeAttackActs(state, actorId));
 }
 
 function ordinaryAttackActs(

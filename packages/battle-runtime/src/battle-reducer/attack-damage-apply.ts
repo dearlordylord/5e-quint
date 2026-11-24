@@ -106,7 +106,7 @@ import {
   type WildShapeLoadoutObjectRef,
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
-import { battleObjectIsOnGround } from "./battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
   loadoutWeaponIsHeld,

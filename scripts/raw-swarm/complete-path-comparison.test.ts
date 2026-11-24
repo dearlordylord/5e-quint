@@ -350,7 +350,7 @@ function findingsProjection(
             ],
           ],
         },
-        groundObjects: { $map: [] },
+        objectCustody: { $map: [] },
       },
     },
     battlefield: {

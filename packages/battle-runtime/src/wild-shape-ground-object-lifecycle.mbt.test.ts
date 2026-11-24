@@ -1,3 +1,4 @@
+import { battleGroundObjectState } from "./battle-reducer/object-custody-queries.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
@@ -449,9 +450,11 @@ function projectRuntimeState(
   if (selectedObjectId === undefined) {
     throw new Error("Expected selected lifecycle weapon.");
   }
-  const groundObject = state.battle.state.groundObjects
-    .get(druidId)
-    ?.get(selectedObjectId);
+  const groundObject = battleGroundObjectState(
+    state.battle.state,
+    druidId,
+    selectedObjectId,
+  );
   const disposition = activeDruidWildShapeEffect(druid)?.equipmentDisposition;
   const custody =
     groundObject !== undefined

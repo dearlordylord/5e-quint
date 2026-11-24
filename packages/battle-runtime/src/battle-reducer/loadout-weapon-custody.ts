@@ -13,7 +13,6 @@ import {
   type AttackWeaponChange,
 } from "../battle-subjects.ts";
 import type {
-  BattleActorStowedLoadoutWeapons,
   BattleCreatureState,
   BattleState,
   CharacterBattleCreatureState,
@@ -24,13 +23,14 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
-  battleObjectIsOnGround,
   battleStateWithGroundObjects,
+  battleStateWithObjectCustody,
   heldWeaponPickupTransition,
   loadoutWeaponHands,
   loadoutWeaponHandsAreFree,
   loadoutWeaponSlot,
 } from "./battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 import {
   loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
@@ -150,11 +150,12 @@ export function loadoutWeaponChanges(
 export function groundedLoadoutWeaponPickups(
   state: BattleState,
   actor: BattleCreatureState,
-): readonly AttackWeaponChange[] {
-  return loadoutWeaponChanges(state, actor).filter(
-    (change) =>
-      change.kind === "equip" &&
-      battleObjectIsOnGround(state, actor.combatantId, change.objectId),
+): readonly BattleObjectId[] {
+  return loadoutWeaponChanges(state, actor).flatMap((change) =>
+    change.kind === "equip" &&
+    battleObjectIsOnGround(state, actor.combatantId, change.objectId)
+      ? [change.objectId]
+      : [],
   );
 }
 
@@ -175,13 +176,7 @@ export function stateWithLoadoutWeaponChange(
       if (loadoutWeaponIsStowed(state, actorId, objectId)) {
         return applied(
           withLoadoutWeaponInHand(
-            withStowedWeapons(
-              state,
-              actorId,
-              [...(state.stowedLoadoutWeapons.get(actorId) ?? [])].filter(
-                (stowed) => stowed !== objectId,
-              ),
-            ),
+            battleStateWithObjectCustody(state, actorId, objectId, null),
             actorId,
             objectId,
           ),
@@ -199,10 +194,9 @@ export function stateWithLoadoutWeaponChange(
     }),
     Match.when({ kind: "stow" }, ({ objectId }) =>
       applied(
-        withStowedWeapons(state, actorId, [
-          ...(state.stowedLoadoutWeapons.get(actorId) ?? []),
-          objectId,
-        ]),
+        battleStateWithObjectCustody(state, actorId, objectId, {
+          kind: "stowed",
+        }),
       ),
     ),
     Match.when({ kind: "drop" }, ({ objectId, positionId }) => {
@@ -277,26 +271,6 @@ function selectedLoadoutWeaponIds(
   return [weapon?.itemId, offHandWeapon?.itemId].filter(
     (itemId): itemId is BattleObjectId => itemId !== undefined,
   );
-}
-
-function withStowedWeapons(
-  state: BattleState,
-  actorId: CombatantId,
-  stowed: readonly BattleObjectId[],
-): BattleState {
-  const stowedLoadoutWeapons = new Map(state.stowedLoadoutWeapons);
-  if (stowed.length === 0) {
-    stowedLoadoutWeapons.delete(actorId);
-  } else {
-    // Brands are erased at runtime; the length check proves this Set cannot
-    // encode the redundant actor-with-no-stowed-weapons state.
-    // eslint-disable-next-line no-restricted-syntax -- the length check is the runtime proof required by this erased non-empty-set brand
-    const actorStowed = new Set(
-      stowed,
-    ) as unknown as BattleActorStowedLoadoutWeapons;
-    stowedLoadoutWeapons.set(actorId, actorStowed);
-  }
-  return { ...state, stowedLoadoutWeapons };
 }
 
 function isCharacter(

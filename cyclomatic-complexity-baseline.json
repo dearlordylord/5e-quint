@@ -107,7 +107,7 @@
       "module/binding:applyBattleMovement": 11
     },
     "packages/battle-runtime/src/battle-reducer/character-effective-loadout.ts": {
-      "module/binding:characterEffectiveLoadoutFromOrigin": 11
+      "module/binding:characterEffectiveLoadoutFromOrigin": 9
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
       "module/binding:concentrationRouteForResolution": 22,

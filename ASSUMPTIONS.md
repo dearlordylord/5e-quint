@@ -337,7 +337,9 @@ its own turn can equip or unequip one of its selected loadout's weapons. The
 change can come before the attack, carried on the attack itself, or after it.
 A change after the attack must come before the character's next attack as part
 of the Attack action. If that next attack carries its own change before its
-roll, any change still left from the attack before it is gone. Other attacks,
+roll, any change still left from the attack before it is gone. A Grapple or
+Shove takes the place of one of these attacks, so it too leaves a change after
+it and ends the window of the attack before it. Other attacks,
 such as an off-hand attack with a Bonus Action, leave a change still left as it
 was. Any change still left at the end of the turn is also gone.
 
@@ -362,7 +364,9 @@ lands.
 **Temporary implementation restriction (not a rules assumption):** Battle can
 change only the selected loadout's main-hand and off-hand weapons. Other owned
 weapons don't enter the battle yet (#230), and a weapon goes back to the hands
-and grip its loadout gives it (#669).
+and grip its loadout gives it (#669). A Grapple or Shove can't carry a change
+before it yet: a character makes that change after the attack before it, or
+with another attack.
 
 ## A58: Any weapon may be held with both hands
 

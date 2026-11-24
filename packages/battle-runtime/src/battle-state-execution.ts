@@ -4574,15 +4574,13 @@ export type BattleState = {
     BattleExecutionScopeAllocation
   >;
   readonly companions: BattleCompanions;
-  readonly groundObjects: ReadonlyMap<CombatantId, BattleActorGroundObjects>;
   /**
-   * The selected-loadout weapons each character has sheathed or stowed. A
-   * loadout weapon is held unless it is here or on the ground.
+   * Each creature's objects that aren't where its loadout puts them: on the
+   * ground, or, for a selected-loadout weapon, sheathed or stowed. One entry
+   * per object, so no object is in two places at once. A loadout weapon with
+   * no entry is in hand.
    */
-  readonly stowedLoadoutWeapons: ReadonlyMap<
-    CombatantId,
-    BattleActorStowedLoadoutWeapons
-  >;
+  readonly objectCustody: ReadonlyMap<CombatantId, BattleActorObjectCustody>;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -5447,16 +5445,19 @@ export type BattleGroundObjectState = {
   readonly positionId: BattleTablePositionId;
   readonly source: BattleDroppedObjectSource;
 };
-declare const battleActorGroundObjectsNonEmpty: unique symbol;
-export type BattleActorGroundObjects = ReadonlyMap<
+/**
+ * Where one of a creature's objects is instead of where its loadout puts it:
+ * lying on the ground, or sheathed or stowed.
+ */
+export type BattleObjectCustody =
+  | ({ readonly kind: "onGround" } & BattleGroundObjectState)
+  | { readonly kind: "stowed" };
+declare const battleActorObjectCustodyNonEmpty: unique symbol;
+export type BattleActorObjectCustody = ReadonlyMap<
   BattleObjectId,
-  BattleGroundObjectState
+  BattleObjectCustody
 > & {
-  readonly [battleActorGroundObjectsNonEmpty]: true;
-};
-declare const battleActorStowedLoadoutWeaponsNonEmpty: unique symbol;
-export type BattleActorStowedLoadoutWeapons = ReadonlySet<BattleObjectId> & {
-  readonly [battleActorStowedLoadoutWeaponsNonEmpty]: true;
+  readonly [battleActorObjectCustodyNonEmpty]: true;
 };
 export type BattleDroppedObjectOutcome = {
   readonly kind: "objectDropped";

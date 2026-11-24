@@ -1,3 +1,7 @@
+import {
+  battleGroundObjectState,
+  battleObjectIsOnGround,
+} from "./battle-reducer/object-custody-queries.ts";
 import { objectInteractionRulingHole } from "./battle-reducer/object-interaction.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // SRD 5.2.1 "Thrown": a Melee weapon with the Thrown property can be thrown to
@@ -508,7 +512,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       },
     ]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId),
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId),
     ).toEqual({
       positionId: landingPosition,
       source: {
@@ -575,7 +579,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       }),
     );
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(spearId)?.positionId,
+      battleGroundObjectState(completed.state, fighterId, spearId)?.positionId,
     ).toBe(landingPosition);
     expect(
       attackActionOptionsForActor(completed.state, fighterId).map(
@@ -597,7 +601,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
 
     expect(
-      completed.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(completed.state, fighterId, mainDaggerId),
     ).toBe(true);
   });
 
@@ -624,7 +628,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       throw new Error("Expected the thrown Dagger's damage hole.");
     }
     expect(
-      awaitingDamage.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(awaitingDamage.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(landingFact(subject).positionId);
 
@@ -641,7 +645,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(completed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(landingFact(subject).positionId);
   });
@@ -672,7 +676,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       }),
     );
 
-    expect(completed.state.groundObjects.has(fighterId)).toBe(false);
+    expect(completed.state.objectCustody.has(fighterId)).toBe(false);
     expect(completed.droppedObjects).toBeUndefined();
   });
 
@@ -850,7 +854,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       }),
     );
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(offHandDaggerId)
+      battleGroundObjectState(completed.state, fighterId, offHandDaggerId)
         ?.source,
     ).toEqual({
       kind: "thrownWeaponAttack",
@@ -943,7 +947,8 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(resumed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      resumed.state.groundObjects.get(fighterId)?.get(mainDaggerId)?.positionId,
+      battleGroundObjectState(resumed.state, fighterId, mainDaggerId)
+        ?.positionId,
     ).toBe(battleTablePositionId("goblin-space"));
 
     const replayed = requireResolved(
@@ -1025,7 +1030,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       throw new Error("Expected the readied attack's damage hole.");
     }
     expect(
-      awaitingDamage.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(awaitingDamage.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(landingFact(attack).positionId);
     expect(
@@ -1043,7 +1048,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(resolved.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
     expect(
-      resolved.state.groundObjects.get(fighterId)?.get(mainDaggerId)?.source,
+      battleGroundObjectState(resolved.state, fighterId, mainDaggerId)?.source,
     ).toEqual({
       kind: "thrownWeaponAttack",
       procedureRef: attack.procedureRef,
@@ -1140,7 +1145,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     // The hit is accepted, so the Dagger has left the hand while the window
     // is open; the result that ends the attack reports it.
     expect(
-      awaitingReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(awaitingReaction.state, fighterId, mainDaggerId),
     ).toBe(true);
     const pending = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
@@ -1176,7 +1181,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       throw new Error("Expected the damage roll after Uncanny Dodge.");
     }
     expect(
-      afterReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(afterReaction.state, fighterId, mainDaggerId),
     ).toBe(true);
     const completed = requireResolved(
       resolveBattleSubject({
@@ -1192,7 +1197,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(completed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
@@ -1286,7 +1291,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       trigger: "attackDamage",
     });
     expect(
-      awaitingReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(awaitingReaction.state, fighterId, mainDaggerId),
     ).toBe(true);
     const pending = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
@@ -1333,7 +1338,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(completed.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(battleTablePositionId("goblin-space"));
   });
@@ -1405,7 +1410,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(declined.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      declined.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(declined.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
@@ -1418,7 +1423,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
 
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
@@ -1581,7 +1586,7 @@ function dartHoles(result: BattleResolutionResult): readonly BattleHole[] {
 /** The Dart on the ground, and the result's one report of it. */
 function expectDartLandedAndReported(result: BattleResolutionResult) {
   const resolved = requireResolved(result);
-  const landed = resolved.state.groundObjects.get(spellCasterId)?.get(dartId);
+  const landed = battleGroundObjectState(resolved.state, spellCasterId, dartId);
   expect(landed?.positionId).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   expect(resolved.droppedObjects).toEqual([
     {

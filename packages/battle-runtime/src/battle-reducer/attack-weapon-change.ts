@@ -23,6 +23,7 @@ import type {
   BattleResolutionResult,
   BattleState,
   BattleWeaponDropPositionHole,
+  WeaponChangeAfterAttackState,
 } from "../battle-state-execution.ts";
 import type { AttackWeaponChange, BattleSubject } from "../battle-subjects.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
@@ -103,11 +104,36 @@ export function stateWithWeaponChangeAfterAttackAllowance(
   state: BattleState,
   subject: BattleAttackHostSubject,
 ): BattleState {
+  if (subject.tag !== "action" || subject.action !== "attack") return state;
+  return stateWithWeaponChangeAllowanceAfter(
+    state,
+    subject.actorId,
+    attackSubjectWeaponChange(subject) === undefined
+      ? "available"
+      : "unavailable",
+  );
+}
+
+/**
+ * The weapon change a Grapple or Shove leaves after it. Each replaces an
+ * attack of the Attack action with its Unarmed Strike, so it opens the same
+ * window as any other attack of the action; it carries no change before it.
+ */
+export function stateWithWeaponChangeAfterUnarmedStrikeOption(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleState {
+  return stateWithWeaponChangeAllowanceAfter(state, actorId, "available");
+}
+
+function stateWithWeaponChangeAllowanceAfter(
+  state: BattleState,
+  actorId: CombatantId,
+  weaponChangeAfterAttack: WeaponChangeAfterAttackState,
+): BattleState {
   if (
-    subject.tag !== "action" ||
-    subject.action !== "attack" ||
-    subject.actorId !== currentActorId(state) ||
-    state.combatants.get(subject.actorId)?.origin.kind !== "character"
+    actorId !== currentActorId(state) ||
+    state.combatants.get(actorId)?.origin.kind !== "character"
   ) {
     return state;
   }
@@ -115,10 +141,7 @@ export function stateWithWeaponChangeAfterAttackAllowance(
     ...state,
     currentTurnResources: {
       ...state.currentTurnResources,
-      weaponChangeAfterAttack:
-        attackSubjectWeaponChange(subject) === undefined
-          ? "available"
-          : "unavailable",
+      weaponChangeAfterAttack,
     },
   };
 }

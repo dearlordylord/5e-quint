@@ -1,12 +1,14 @@
 import { loadoutHandUses } from "@dnd/shared-algebras/armor-class-algebra";
 import type { HandUse } from "@dnd/shared/types";
 import { combatantHandUses } from "./creature-state-leaves.ts";
+import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
 import type {
   BattleDroppedObjectSource,
   BattleGroundObjectState,
   BattleCreatureState,
-  BattleActorGroundObjects,
+  BattleActorObjectCustody,
+  BattleObjectCustody,
   BattleState,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -54,35 +56,75 @@ export function battleStateWithGroundObjects(
   state: BattleState,
   placements: readonly BattleGroundObjectPlacement[],
 ): BattleGroundObjectPlacementResult {
-  if (placements.length === 0) return { tag: "applied", state };
-  const groundObjects = new Map(state.groundObjects);
+  let placed = state;
   for (const { actorId, objectId, ...groundObject } of placements) {
-    const actorGroundObjects = new Map(groundObjects.get(actorId) ?? []);
-    if (actorGroundObjects.has(objectId)) {
+    if (placed.objectCustody.get(actorId)?.has(objectId) === true) {
       return {
         tag: "conflict",
         actorId,
         objectId,
-        message: "Battle object is already on the ground.",
+        message: "Battle object is already on the ground or stowed.",
       };
     }
-    groundObjects.set(
-      actorId,
-      battleActorGroundObjectsFromEntries([
-        [objectId, groundObject],
-        ...actorGroundObjects,
-      ]),
-    );
+    placed = battleStateWithObjectCustody(placed, actorId, objectId, {
+      kind: "onGround",
+      ...groundObject,
+    });
   }
-  return { tag: "applied", state: { ...state, groundObjects } };
+  return { tag: "applied", state: placed };
 }
 
-export function battleObjectIsOnGround(
+/** Every object on the ground, with its owner. */
+export function battleGroundObjectPlacements(
+  state: BattleState,
+): readonly BattleGroundObjectPlacement[] {
+  return [...state.objectCustody].flatMap(([actorId, objects]) =>
+    [...objects].flatMap(([objectId, custody]) =>
+      custody.kind === "onGround"
+        ? [
+            {
+              actorId,
+              objectId,
+              positionId: custody.positionId,
+              source: custody.source,
+            },
+          ]
+        : [],
+    ),
+  );
+}
+
+/**
+ * The state with one of an actor's objects in this custody, or, for null,
+ * back where its loadout puts it. A new entry comes first.
+ */
+export function battleStateWithObjectCustody(
   state: BattleState,
   actorId: CombatantId,
   objectId: BattleObjectId,
-): boolean {
-  return state.groundObjects.get(actorId)?.has(objectId) === true;
+  custody: BattleObjectCustody | null,
+): BattleState {
+  const others = [...(state.objectCustody.get(actorId) ?? [])];
+  const index = others.findIndex(([id]) => id === objectId);
+  const entries =
+    custody === null
+      ? others.filter(([id]) => id !== objectId)
+      : index === -1
+        ? [[objectId, custody] as const, ...others]
+        : others.map((entry, at) =>
+            at === index ? ([objectId, custody] as const) : entry,
+          );
+  const objectCustody = new Map(state.objectCustody);
+  const [first, ...rest] = entries;
+  if (first === undefined) {
+    objectCustody.delete(actorId);
+  } else {
+    objectCustody.set(
+      actorId,
+      battleActorObjectCustodyFromEntries([first, ...rest]),
+    );
+  }
+  return { ...state, objectCustody };
 }
 
 /**
@@ -121,21 +163,9 @@ export function battleStateWithoutGroundObject(
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): BattleState {
-  const actorGroundObjects = state.groundObjects.get(actorId);
-  if (actorGroundObjects?.has(objectId) !== true) return state;
-  const groundObjects = new Map(state.groundObjects);
-  const remainingActorGroundObjects = new Map(actorGroundObjects);
-  remainingActorGroundObjects.delete(objectId);
-  const [firstRemaining, ...otherRemaining] = remainingActorGroundObjects;
-  if (firstRemaining === undefined) {
-    groundObjects.delete(actorId);
-  } else {
-    groundObjects.set(
-      actorId,
-      battleActorGroundObjectsFromEntries([firstRemaining, ...otherRemaining]),
-    );
-  }
-  return { ...state, groundObjects };
+  return battleObjectIsOnGround(state, actorId, objectId)
+    ? battleStateWithObjectCustody(state, actorId, objectId, null)
+    : state;
 }
 
 const OBJECT_NOT_ON_GROUND = {
@@ -246,16 +276,16 @@ export function loadoutWeaponHandsAreFree(
   return hands.length > 0 && hands.every((hand) => current[hand] === "free");
 }
 
-function battleActorGroundObjectsFromEntries(
+function battleActorObjectCustodyFromEntries(
   entries: readonly [
-    readonly [BattleObjectId, BattleGroundObjectState],
-    ...ReadonlyArray<readonly [BattleObjectId, BattleGroundObjectState]>,
+    readonly [BattleObjectId, BattleObjectCustody],
+    ...ReadonlyArray<readonly [BattleObjectId, BattleObjectCustody]>,
   ],
-): BattleActorGroundObjects {
+): BattleActorObjectCustody {
   // Brands are erased at runtime; the non-empty tuple proves this Map cannot
-  // encode the redundant actor-with-no-ground-objects state.
+  // encode the redundant actor-with-no-object-custody state.
   // eslint-disable-next-line no-restricted-syntax -- the tuple is the runtime proof required by this erased non-empty-map brand
-  return new Map(entries) as unknown as BattleActorGroundObjects;
+  return new Map(entries) as unknown as BattleActorObjectCustody;
 }
 
 function battleObjectLifecycleActorIsCharacter(

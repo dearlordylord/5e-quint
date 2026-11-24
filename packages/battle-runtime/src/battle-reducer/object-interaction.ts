@@ -115,12 +115,12 @@ export function objectInteractionActs(
       initialHoles: [objectInteractionRulingHole(state, actorId)],
     },
     ...groundedLoadoutWeaponPickups(state, actor).map(
-      (pickup): BattleActDiscoveryCandidate => ({
+      (objectId): BattleActDiscoveryCandidate => ({
         subject: {
           tag: "runtimeCommand",
           actorId,
           command: "pickUpHeldWeapon",
-          objectId: pickup.objectId,
+          objectId,
         },
         initialHoles: [objectInteractionRulingHole(state, actorId)],
       }),
@@ -186,9 +186,10 @@ export function resolveObjectInteraction(
       resolvedResult(chargedState),
     ),
     Match.when({ command: "pickUpHeldWeapon" }, (subject) => {
-      const pickedUp = groundedLoadoutWeaponPickups(input.state, actor).some(
-        (pickup) => pickup.objectId === subject.objectId,
-      )
+      const pickedUp = groundedLoadoutWeaponPickups(
+        input.state,
+        actor,
+      ).includes(subject.objectId)
         ? stateWithLoadoutWeaponChange(chargedState, subject.actorId, {
             kind: "equip",
             objectId: subject.objectId,

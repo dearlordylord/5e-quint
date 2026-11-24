@@ -17,7 +17,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
-import { stateWithWeaponChangeAfterAttackAllowance } from "./attack-weapon-change.ts";
+import {
+  stateWithWeaponChangeAfterAttackAllowance,
+  stateWithWeaponChangeAfterUnarmedStrikeOption,
+} from "./attack-weapon-change.ts";
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import type {
   ActionEconomyState,
@@ -1444,10 +1447,10 @@ export function resolveGrapple(
   }
   /* v8 ignore stop -- @preserve */
   const nextState = applyGrappleSavingThrowOutcome({
-    state: {
-      ...input.state,
-      currentTurnResources: spent.success,
-    },
+    state: stateWithWeaponChangeAfterUnarmedStrikeOption(
+      { ...input.state, currentTurnResources: spent.success },
+      input.subject.actorId,
+    ),
     link: link.link,
     relationshipFacts,
     outcome: fillSet.outcome.value,
@@ -1593,10 +1596,10 @@ export function resolveShove(
     relationshipFacts,
   );
   const afterEffect = applyShoveOutcome({
-    state: {
-      ...savingThrowExtendedState,
-      currentTurnResources: spent.success,
-    },
+    state: stateWithWeaponChangeAfterUnarmedStrikeOption(
+      { ...savingThrowExtendedState, currentTurnResources: spent.success },
+      input.subject.actorId,
+    ),
     targetId: fillSet.targetId,
     outcome: fillSet.outcome.value,
   });

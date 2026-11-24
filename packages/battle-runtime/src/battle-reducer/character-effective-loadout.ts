@@ -5,6 +5,7 @@ import type {
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
+import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 
 export function characterEffectiveLoadout(
   state: BattleState,
@@ -23,14 +24,13 @@ export function characterEffectiveLoadoutFromOrigin(
   origin: CharacterBattleCreatureState["origin"],
 ): CharacterBattleLoadoutRef {
   const selected = origin.selectedLoadout;
-  const groundObjects = state.groundObjects.get(actorId);
   return {
     ...(selected.armor === undefined ||
-    groundObjects?.has(selected.armor.itemId) === true
+    battleObjectIsOnGround(state, actorId, selected.armor.itemId)
       ? {}
       : { armor: selected.armor }),
     ...(selected.shield === undefined ||
-    groundObjects?.has(selected.shield.itemId) === true
+    battleObjectIsOnGround(state, actorId, selected.shield.itemId)
       ? {}
       : { shield: selected.shield }),
     ...(selected.weapon === undefined ||
@@ -50,7 +50,7 @@ export function loadoutWeaponIsStowed(
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): boolean {
-  return state.stowedLoadoutWeapons.get(actorId)?.has(objectId) === true;
+  return state.objectCustody.get(actorId)?.get(objectId)?.kind === "stowed";
 }
 
 /**
@@ -62,8 +62,5 @@ export function loadoutWeaponIsHeld(
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): boolean {
-  return (
-    state.groundObjects.get(actorId)?.has(objectId) !== true &&
-    !loadoutWeaponIsStowed(state, actorId, objectId)
-  );
+  return state.objectCustody.get(actorId)?.has(objectId) !== true;
 }

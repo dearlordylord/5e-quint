@@ -861,8 +861,8 @@ function objects(
 ): ReadonlyMap<string, JsonValue> | undefined {
   const state = objectAt(session, ["battle", "state"]);
   const battlefield = objectAt(session, ["battlefield"]);
-  const groundObjects = mapEntries(state?.groundObjects);
-  if (groundObjects === undefined || !Array.isArray(battlefield?.objects))
+  const objectCustody = mapEntries(state?.objectCustody);
+  if (objectCustody === undefined || !Array.isArray(battlefield?.objects))
     return undefined;
   const scenarioObjects: [string, JsonValue][] = [];
   for (const value of battlefield.objects) {
@@ -870,7 +870,7 @@ function objects(
       return undefined;
     scenarioObjects.push([value.objectId, value]);
   }
-  return new Map([...groundObjects, ...scenarioObjects]);
+  return new Map([...objectCustody, ...scenarioObjects]);
 }
 
 function scalarString(value: JsonValue | undefined): string | null | undefined {

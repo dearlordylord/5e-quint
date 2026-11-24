@@ -39,7 +39,8 @@ module attackWeaponChangeCore {
     }
 
   // The allowance an Attack action attack on the creature's own turn leaves:
-  // a change after it, unless it carried its change before the roll.
+  // a change after it, unless it carried its change before the roll. A
+  // Grapple or Shove takes an attack's place and carries no change before it.
   pure def afterAttack(
     turn: AttackWeaponChangeTurn,
     changedBeforeAttack: bool,

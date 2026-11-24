@@ -1,26 +1,52 @@
 import { describe, expect, it } from "vitest";
+import { unitId as parseUnitId } from "@dnd/shared/game-facts";
 import {
+  attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   attackTargetFill,
+  battleFrontierInterruptDecisionForState,
+  battleId,
   battleObjectId,
+  battleResolutionHolesForTest,
   battleTablePositionId,
+  characterSeed,
   difficultyClass,
   discoverBattleActCandidates,
+  endTurn,
   fighterAttackSubject,
+  fighterGrapplesGoblin,
   fighterId,
   fighterVsGoblinBattle,
+  findHole,
   goblinId,
+  interruptDecisionFill,
   movementFeet,
+  movementFill,
+  opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
   requireHole,
   requireResolved,
+  resolveBattleInterrupt,
+  shoveOutcomeFill,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  testDaggerAttack,
+  testShortswordAttack,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import { ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import type { BattleFill, BattleState } from "./battle-state-execution.ts";
 import type { AttackWeaponChange, BattleSubject } from "./battle-subjects.ts";
 import { characterEffectiveLoadout, resolveBattleSubject } from "./index.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
 import { weaponDropPositionHole } from "./battle-reducer/attack-weapon-change.ts";
-import { battleObjectIsOnGround } from "./battle-reducer/battle-object-lifecycle.ts";
+import {
+  battleGroundObjectState,
+  battleObjectIsOnGround,
+} from "./battle-reducer/object-custody-queries.ts";
 import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-custody.ts";
+import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 
 // RAW trace: .references/srd-5.2.1/rules-glossary.md#Attack [Action],
 // Equipping and Unequipping Weapons: one weapon equipped or unequipped with
@@ -44,10 +70,7 @@ function withChange(
 /** Resolves the Fighter's attack on the Goblin to a miss. */
 function missedAttack(
   state: BattleState,
-  subject: BattleSubject & {
-    readonly tag: "action";
-    readonly action: "attack";
-  },
+  subject: BattleSubject,
   changeFills: readonly BattleFill[] = [],
 ): BattleState {
   const targetHole = requireHole(
@@ -153,9 +176,7 @@ describe("weapon change before an attack", () => {
   it("stows the weapon before an attack with another weapon and leaves no change after it", () => {
     const stowed = stowedBeforeUnarmedStrike();
 
-    expect(stowed.stowedLoadoutWeapons.get(fighterId)?.has(longswordId)).toBe(
-      true,
-    );
+    expect(loadoutWeaponIsStowed(stowed, fighterId, longswordId)).toBe(true);
     expect(heldWeaponId(stowed)).toBeUndefined();
     expect(stowed.currentTurnResources.weaponChangeAfterAttack).toBe(
       "unavailable",
@@ -179,7 +200,21 @@ describe("weapon change before an attack", () => {
 
     const drawn = missedAttack(stowed, drawAndAttack);
     expect(heldWeaponId(drawn)).toBe(longswordId);
-    expect(drawn.stowedLoadoutWeapons.has(fighterId)).toBe(false);
+    expect(drawn.objectCustody.has(fighterId)).toBe(false);
+  });
+
+  it("offers an attack that draws a stowed weapon when no attack has a target before the draw", () => {
+    // Alone, the Fighter's Unarmed Strike has no target: no creature, and no
+    // ordinary object attack. The drawn Longsword can attack an object.
+    const stowed = fighterWithStowedLongsword();
+    const fighter = stowed.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const alone = { ...stowed, combatants: new Map([[fighterId, fighter]]) };
+    const draw = { kind: "equip", objectId: longswordId } as const;
+
+    expect(attackActs(alone)).toEqual([
+      withChange(fighterAttackSubject(fighterVsGoblinBattle()), draw),
+    ]);
   });
 
   it("offers attacks that stow or drop the held weapon first, asking where a dropped one lands", () => {
@@ -217,7 +252,7 @@ describe("weapon change before an attack", () => {
     ).toEqual(weaponDropPositionHole(fighterId, longswordId));
 
     const dropped = missedAttack(state, subject, [dropFill()]);
-    expect(dropped.groundObjects.get(fighterId)?.get(longswordId)).toEqual({
+    expect(battleGroundObjectState(dropped, fighterId, longswordId)).toEqual({
       positionId: dropPositionId,
       source: { kind: "attackWeaponChange" },
     });
@@ -405,5 +440,269 @@ describe("weapon change after an attack", () => {
     expect(ended.currentTurnResources.weaponChangeAfterAttack).toBe(
       "unavailable",
     );
+  });
+});
+
+/** A level 5 Fighter with Extra Attack, two attacks with each Attack action. */
+function extraAttackFighterBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-weapon-change-extra-attack"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        classLevels: [{ className: "fighter", level: 5 }],
+        characterUnitRefs: [
+          {
+            unit: unitLibrary.requireUnit("fighter_extra_attack"),
+            supportProfiles: [
+              {
+                kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+                additionalAttacks: 1,
+              },
+            ],
+          },
+        ],
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function shovedGoblin(state: BattleState): BattleState {
+  const subject: BattleSubject = {
+    tag: "action",
+    actorId: fighterId,
+    action: "shove",
+  };
+  const reach = [
+    {
+      kind: "shoveTargetWithinReach" as const,
+      shoverId: fighterId,
+      targetId: goblinId,
+    },
+  ];
+  const target = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const outcome = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, goblinId, reach)],
+    }),
+    "shoveOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, goblinId, reach),
+        shoveOutcomeFill(outcome, {
+          succeeded: false,
+          failedEffect: { kind: "prone" },
+        }),
+      ],
+    }),
+  ).state;
+}
+
+describe("the window each attack of the Attack action opens", () => {
+  const stow = { kind: "stow", objectId: longswordId } as const;
+
+  it("opens a window after a Grapple, which takes the place of an attack", () => {
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+
+    expect(grappled.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+    expect(afterAttackChanges(grappled)).toContainEqual(stow);
+  });
+
+  it("opens a window after a Shove, which takes the place of an attack", () => {
+    const shoved = shovedGoblin(fighterVsGoblinBattle());
+
+    expect(afterAttackChanges(shoved)).toContainEqual(stow);
+  });
+
+  it("with Extra Attack, gives up the change left from the first attack when the second carries its own", () => {
+    const state = extraAttackFighterBattle();
+    const afterFirst = missedAttack(state, fighterAttackSubject(state));
+    expect(afterFirst.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+
+    const afterSecond = missedAttack(
+      afterFirst,
+      withChange(unarmedStrike(afterFirst), stow),
+    );
+    expect(afterSecond.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+    expect(afterAttackChanges(afterSecond)).toEqual([]);
+  });
+
+  it("with Extra Attack, opens a fresh window after a second attack with no change", () => {
+    const state = extraAttackFighterBattle();
+    const afterFirst = missedAttack(state, fighterAttackSubject(state));
+    const changed = requireResolved(changeAfterAttack(afterFirst, stow)).state;
+    expect(changed.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+
+    const afterSecond = missedAttack(changed, unarmedStrike(changed));
+    expect(afterSecond.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+  });
+
+  it("leaves the window as it was after an off-hand attack with a Bonus Action", () => {
+    const mainAttack = testShortswordAttack();
+    const offHandAttack = {
+      ...testDaggerAttack(),
+      weaponObjectId: battleObjectId("off:weapon_dagger"),
+    };
+    const state = startBattleRight({
+      battleId: battleId("battle-weapon-change-off-hand"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: mainAttack,
+          offHandAttack,
+          selectedLoadout: {
+            weapon: {
+              itemId: mainAttack.weaponObjectId,
+              unitId: parseUnitId("weapon_shortsword"),
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: offHandAttack.weaponObjectId,
+              unitId: parseUnitId("weapon_dagger"),
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const offHandSubject = (current: BattleState) => {
+      const subject = discoverBattleActCandidates(current).find(
+        (act) =>
+          act.subject.tag === "bonusAction" &&
+          act.subject.action === "offHandAttack",
+      )?.subject;
+      if (subject === undefined)
+        throw new Error("Expected the off-hand attack.");
+      return subject;
+    };
+    const afterMain = missedAttack(
+      state,
+      fighterAttackSubject(state, "Shortsword"),
+    );
+    expect(afterMain.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+
+    const afterOffHand = missedAttack(afterMain, offHandSubject(afterMain));
+    expect(afterOffHand.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+
+    const spent = requireResolved(
+      changeAfterAttack(afterMain, {
+        kind: "stow",
+        objectId: mainAttack.weaponObjectId,
+      }),
+    ).state;
+    const afterSpentOffHand = missedAttack(spent, offHandSubject(spent));
+    expect(afterSpentOffHand.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+  });
+
+  it("opens no window on another character's turn for an Opportunity Attack", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-weapon-change-opportunity-attack"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Synthetic Mover",
+          initiative: 10,
+        }),
+      ],
+    });
+    const moverTurn = requireResolved(
+      endTurn({ state, actorId: fighterId }),
+    ).state;
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "move",
+    };
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: moverTurn,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: moverTurn,
+      subject: moveSubject,
+      fills: [
+        movementFill(movement, {
+          distanceFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: fighterId,
+              distanceFeet: movementFeet(5),
+              ...attackExecutionSelectionForSubjectForTest(
+                fighterAttackSubject(moverTurn),
+              ),
+            },
+          ],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the move to offer an Opportunity Attack.");
+    }
+    const pending = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    if (pending === null) throw new Error("Expected the reaction window.");
+    const choice = reactionChoiceWithSubject(pending.choices);
+    const started = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: opportunityAttackProcedureSelectionForTest(choice),
+      }),
+    });
+    if (started.tag !== "needsHoles") {
+      throw new Error("Expected the Opportunity Attack roll.");
+    }
+    const roll = findHole(battleResolutionHolesForTest(started), "attackRoll");
+    const attacked = requireResolved(
+      resolveBattleSubject({
+        state: started.state,
+        subject: choice.subject,
+        fills: [attackRollFill(roll, { total: 2, naturalD20: 2 })],
+      }),
+    );
+
+    expect(attacked.state.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+    expect(
+      discoverBattleActCandidates(attacked.state).filter(
+        (act) =>
+          act.subject.tag === "runtimeCommand" &&
+          act.subject.command === "changeWeaponAfterAttack",
+      ),
+    ).toEqual([]);
   });
 });
