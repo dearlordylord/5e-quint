@@ -6,14 +6,14 @@
       "module/binding:presentationTimelineDetail": 9,
       "module/binding:presentationTimelineTitle": 11
     },
-    "packages/app/src/battle-scene/battle-scene-layout.ts": {
-      "module/binding:computeCreatureLayout": 24
-    },
     "packages/app/src/battle-scene/CreatureToken.tsx": {
       "module/binding:CreatureToken": 25
     },
     "packages/app/src/battle-scene/InitiativeTracker.tsx": {
       "module/binding:InitiativeTracker/call:creatures.map:argument-0": 29
+    },
+    "packages/app/src/battle-scene/battle-scene-layout.ts": {
+      "module/binding:computeCreatureLayout": 24
     },
     "packages/battle-runtime/src/active-effect/lifecycle.ts": {
       "module/binding:activeEffectCondition": 9,
@@ -390,6 +390,9 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/temporary-ability-check-roll-mode.ts": {
       "module/binding:resolveTemporaryAbilityCheckRollMode": 9
     },
+    "packages/battle-runtime/src/battle-reducer/spell-target-prerequisites.ts": {
+      "module/binding:spellTargetHasNonSpatialPrerequisites": 17
+    },
     "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts": {
       "module/binding:saveDamageReplacementForInvocation": 11,
       "module/binding:spellDamageByTypeForTarget": 9,
@@ -484,7 +487,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-targeting.ts": {
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
-      "module/binding:spellTargetHasNonSpatialPrerequisites": 17,
       "module/binding:spellTargetRequiresAttackRollRelationshipFact": 9,
       "module/binding:spellTargetSpatialFactMatches": 9,
       "module/binding:validateSpellTargetAllocation": 10,

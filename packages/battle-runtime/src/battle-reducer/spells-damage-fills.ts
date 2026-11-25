@@ -70,7 +70,7 @@ import {
   signedModifier,
 } from "./statblock-attacks.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
-import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
+import { spellTargetHasNonSpatialPrerequisites } from "./spell-target-prerequisites.ts";
 import {
   savingThrowCoverRuling,
   spellTargetSaveCover,

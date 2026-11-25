@@ -40,7 +40,7 @@ import {
 } from "./creature-size-change-effects.ts";
 import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
-import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
+import { spellTargetHasNonSpatialPrerequisites } from "./spell-target-prerequisites.ts";
 import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
