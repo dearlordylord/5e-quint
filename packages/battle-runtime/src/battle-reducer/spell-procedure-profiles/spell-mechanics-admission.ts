@@ -419,7 +419,6 @@ type SpellAreaAttachmentField = Exclude<
   SpellAreaAttachmentRequiredField
 >;
 type SpellAreaHoleAttachment = Extract<
-  ActivationPhase,
   Attachment,
   { readonly kind: "hole" }
 > & {
@@ -475,7 +474,6 @@ type SpellTargetAttachment = Omit<SpellTargetHoleAttachment, "value"> & {
   readonly value: SpellTargetAttachmentValue;
 };
 type SpellDirectTargetAttachment = Extract<
-  ActivationPhase,
   Attachment,
   { readonly kind: "target" }
 >;
