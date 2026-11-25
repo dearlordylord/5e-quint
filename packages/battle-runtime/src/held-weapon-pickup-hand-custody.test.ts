@@ -224,7 +224,7 @@ describe("selected weapon pickup hand custody", () => {
     expectOccupiedPickupRefused(occupied, daggerId);
   });
 
-  it("refuses two-handed restoration after a freed hand starts an actual Grapple", () => {
+  it("restores the selected weapon in one hand while preserving an actual Grapple", () => {
     const fallen = groundedWeapon(
       {
         weapon: {
@@ -240,11 +240,19 @@ describe("selected weapon pickup hand custody", () => {
       left: "grapple",
       right: "free",
     });
-    expectOccupiedPickupRefused(state, swordId);
+    const after = requireResolved(pickup(state, swordId)).state;
+    expect(after.grapples).toEqual(state.grapples);
+    expect(combatantHandUses(after, actor(after), after.grapples)).toEqual({
+      left: "grapple",
+      right: "mainWeapon",
+    });
+    expect(actor(after).origin.selectedLoadout.weapon?.grip).toBe("one_handed");
+    expect(after.currentTurnResources.objectInteraction).toBe("spent");
+    expect(battleObjectIsOnGround(after, fighterId, swordId)).toBe(false);
   });
 
   it.each(["left", "right"] as const)(
-    "requires the %s hand as well as the other hand for a two-handed grip",
+    "preserves the occupied %s hand when restoring a two-handed selection",
     (hand) => {
       const free = groundedWeapon(
         {
@@ -260,7 +268,24 @@ describe("selected weapon pickup hand custody", () => {
       expect(
         combatantHandUses(restored, actor(restored), restored.grapples),
       ).toEqual({ left: "mainWeapon", right: "mainWeapon" });
-      expectOccupiedPickupRefused(withSpellHeldObject(free, hand), swordId);
+      const occupied = withSpellHeldObject(free, hand);
+      if (hand === "right") {
+        expectOccupiedPickupRefused(occupied, swordId);
+        return;
+      }
+      const after = requireResolved(pickup(occupied, swordId)).state;
+      expect(combatantHandUses(after, actor(after), after.grapples)).toEqual({
+        left: "spellCreatedHeldObject",
+        right: "mainWeapon",
+      });
+      expect(actor(after).origin.selectedLoadout.weapon?.grip).toBe(
+        "one_handed",
+      );
+      expect(actor(after).armorClass.leftHandUse).toBe(
+        actor(occupied).armorClass.leftHandUse,
+      );
+      expect(after.currentTurnResources.objectInteraction).toBe("spent");
+      expect(battleObjectIsOnGround(after, fighterId, swordId)).toBe(false);
     },
   );
 });
