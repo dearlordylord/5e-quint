@@ -30,7 +30,7 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { Ability, DamageType } from "@dnd/surface/surface/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
 import {
   BattleAreaId,
@@ -101,26 +101,11 @@ export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 export const ESCAPE_GRAPPLE_SKILLS = ["athletics", "acrobatics"] as const;
 export type EscapeGrappleSkill = (typeof ESCAPE_GRAPPLE_SKILLS)[number];
 
-/** The ability each escape skill is checked with, and how the check is named. */
-export const ESCAPE_GRAPPLE_CHECKS = {
-  athletics: {
-    ability: "str",
-    skillName: "Athletics",
-    checkName: "Strength (Athletics)",
-  },
-  acrobatics: {
-    ability: "dex",
-    skillName: "Acrobatics",
-    checkName: "Dexterity (Acrobatics)",
-  },
-} as const satisfies Record<
-  EscapeGrappleSkill,
-  {
-    readonly ability: Ability;
-    readonly skillName: string;
-    readonly checkName: string;
-  }
->;
+/** How each escape skill is named in labels. */
+export const ESCAPE_GRAPPLE_SKILL_NAMES = {
+  athletics: "Athletics",
+  acrobatics: "Acrobatics",
+} as const satisfies Record<EscapeGrappleSkill, string>;
 
 export const BATTLE_SUBJECT_BONUS_ACTIONS = [
   "offHandAttack",

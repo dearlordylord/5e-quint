@@ -2,7 +2,6 @@
 
 module helpAbilityCheckCoreExamples {
   import helpAbilityCheckCore.* from "./help-ability-check-core"
-  import movementSpatialGrapple as grapple from "./movement-spatial-grapple"
 
   pure val fighter = 1
   pure val goblin = 2
@@ -37,21 +36,6 @@ module helpAbilityCheckCoreExamples {
     assert(not(helpAbilityCheckAdmitted(fighter, Set(fighter, rogue), Set("stealth"), fighter, "stealth", true))),
     assert(not(helpAbilityCheckAdmitted(fighter, Set(fighter), Set("stealth"), rogue, "stealth", true))),
     assert(wildShapeSkillProficiencies(Set("nature"), Set("perception")) == Set("nature", "perception")),
-  }
-
-  // The escaper's chosen escape skill decides which Help applies and which
-  // benefits the check uses up.
-  run helpAbilityCheckEscapeGrappleSkill = {
-    val fighterHelpsRogueAthletics = { helperId: fighter, allyId: rogue, skill: "athletics" }
-    val wizardHelpsRogueAthletics = { helperId: wizard, allyId: rogue, skill: "athletics" }
-    val helped = Set(fighterHelpsRogueAthletics, wizardHelpsRogueAthletics)
-    all {
-      assert(grapple::escapeGrappleCheckSkills == Set("athletics", "acrobatics")),
-      assert(helpAbilityCheckAdvantage(helped, rogue, "athletics")),
-      assert(not(helpAbilityCheckAdvantage(helped, rogue, "acrobatics"))),
-      assert(benefitsAfterAbilityCheck(helped, rogue, "athletics") == Set()),
-      assert(benefitsAfterAbilityCheck(helped, rogue, "acrobatics") == helped),
-    }
   }
 
   run helpAbilityCheckBenefitLifecycle = {

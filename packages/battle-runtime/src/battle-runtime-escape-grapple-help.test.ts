@@ -7,10 +7,13 @@
 // next ability check they make with the chosen skill or tool. This benefit
 // expires if the ally doesn't use it before the start of your next turn."
 // D20 Test, "Advantage/Disadvantage": a roll with both has neither.
+import { classLevel } from "@dnd/shared/types";
 import type { Skill } from "@dnd/surface/surface/types";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   battleId,
+  characterBattleFeatureInitForTest,
   characterSeed,
   combatantId,
   discoverBattleActCandidates,
@@ -33,6 +36,11 @@ import {
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { EscapeGrappleSkill } from "./battle-subjects.ts";
 import type { CombatantId } from "./identity.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  fighterRemarkableAthleteUnitId,
+  unitLibrary,
+} from "./unit-profile-admission.test-support.ts";
 
 const rogueId = combatantId("rogue");
 const clericId = combatantId("cleric");
@@ -47,6 +55,7 @@ function proficientIn(...skills: readonly Skill[]) {
  */
 function rogueGrappledBattle(input?: {
   readonly rogueConditions?: readonly "poisoned"[];
+  readonly rogue?: Partial<Parameters<typeof characterSeed>[0]>;
 }) {
   const session = startBattleSessionRight({
     battleId: battleId("battle-escape-grapple-help"),
@@ -74,6 +83,7 @@ function rogueGrappledBattle(input?: {
         ...(input?.rogueConditions === undefined
           ? {}
           : { conditions: input.rogueConditions }),
+        ...input?.rogue,
       }),
     ],
   });
@@ -272,22 +282,53 @@ describe("Escape Grapple: Help with the chosen skill", () => {
     ).toEqual([]);
   });
 
-  test("Disadvantage on the escape cancels Help's Advantage, and the check still uses it up", () => {
-    const { state } = rogueGrappledBattle({ rogueConditions: ["poisoned"] });
-    const rogueTurn = endTurns(state, [wizardId, clericId]);
-    expect(escapeHole(rogueTurn, "athletics")).toMatchObject({
-      rollMode: "disadvantage",
-    });
+  test.each(["athletics", "acrobatics"] as const)(
+    "Poisoned's Disadvantage on a %s escape cancels Help's Advantage, and the check still uses it up",
+    (skill) => {
+      const { state } = rogueGrappledBattle({ rogueConditions: ["poisoned"] });
+      const rogueTurn = endTurns(state, [wizardId, clericId]);
+      expect(escapeHole(rogueTurn, skill)).toMatchObject({
+        rollMode: "disadvantage",
+      });
 
-    const helped = endTurns(help(state, wizardId, "athletics"), [
-      wizardId,
-      clericId,
-    ]);
-    expect(escapeHole(helped, "athletics")).toMatchObject({
-      rollMode: "normal",
+      const helped = endTurns(help(state, wizardId, skill), [
+        wizardId,
+        clericId,
+      ]);
+      expect(escapeHole(helped, skill)).toMatchObject({ rollMode: "normal" });
+      expect(escape(helped, skill, false).state.helpAbilityChecks).toEqual([]);
+    },
+  );
+
+  // RAW: .references/srd-5.2.1/classes.md, Fighter, "Level 3: Remarkable
+  // Athlete": "you have Advantage on Initiative rolls and Strength (Athletics)
+  // checks." An Athletics escape is one; an Acrobatics escape is not.
+  test("Remarkable Athlete gives an Athletics escape Advantage, and not an Acrobatics one", () => {
+    const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
+    const unitRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: unit.id },
+      unit,
     });
-    expect(escape(helped, "athletics", false).state.helpAbilityChecks).toEqual(
-      [],
+    if (Result.isFailure(unitRef)) throw new Error(unitRef.failure.message);
+    const { state } = rogueGrappledBattle({
+      rogue: {
+        displayName: "Champion",
+        classLevels: [{ className: "fighter", level: 3 }],
+        characterUnitRefs: [unitRef.success],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "fighter", level: classLevel(3) },
+          ]),
+        ],
+      },
+    });
+    const championTurn = endTurns(state, [wizardId, clericId]);
+
+    expect(escapeHole(championTurn, "athletics")).toMatchObject({
+      rollMode: "advantage",
+    });
+    expect(escapeHole(championTurn, "acrobatics")).not.toHaveProperty(
+      "rollMode",
     );
   });
 

@@ -6520,13 +6520,17 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-help-ability-check.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-escape-grapple-help.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
       ],
-      "reason": "The QNT owner models Help's ability-check admission (another live creature, one of the helper's skill proficiencies, and the table's decision that the helper can assist that ally), Advantage on the ally's next check with the chosen skill, every matching benefit used by that check, and expiry at the start of the helper's next turn. Wild Shape joins the character's skill proficiencies with the form's, and a Stat Block's Skills entry lists its proficiencies. help-ability-check owns the decision hole, admission and benefit state; hole-helpers adds the Advantage source to every skill-named ability check hole; attack-resolution uses the benefit when Hide, Search or escaping a spell's Restraint resolves its check; turn-boundary-lifecycle expires it. Battle Runtime has no tool proficiency facts or tool checks, so the choice is among skills. The parity witness covers discovery, admission and its rejections, the Hide and Search routes, a check with another skill, two helpers, expiry and a Stat Block's skills.",
+      "reason": "The QNT owner models Help's ability-check admission (another live creature, one of the helper's skill proficiencies, and the table's decision that the helper can assist that ally), Advantage on the ally's next check with the chosen skill, every matching benefit used by that check, and expiry at the start of the helper's next turn. Wild Shape joins the character's skill proficiencies with the form's, and a Stat Block's Skills entry lists its proficiencies. help-ability-check owns the decision hole, admission and benefit state; hole-helpers' one skill-check operation adds the Advantage source to every check with a skill, including the Escape Grapple check with the skill the escaper chose; attack-resolution uses the benefit when Hide, Search, Escape Grapple or escaping a spell's Restraint resolves its check; turn-boundary-lifecycle expires it. Battle Runtime has no tool proficiency facts or tool checks, so the choice is among skills. The parity witnesses cover discovery, admission and its rejections, the Hide, Search and Escape Grapple routes (both escape skills, success and failure), a check with another skill, two helpers, Disadvantage cancelling the Advantage, expiry and a Stat Block's skills.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/help-ability-check.ts",

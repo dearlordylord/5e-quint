@@ -46,7 +46,11 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
-  ESCAPE_GRAPPLE_CHECKS,
+  abilityPresentationName,
+  SKILL_ABILITIES,
+} from "../skill-abilities.ts";
+import {
+  ESCAPE_GRAPPLE_SKILL_NAMES,
   type BattleMovementSpeedKind,
   type BattleSubject,
   type EscapeGrappleSkill,
@@ -389,7 +393,7 @@ export function requiredAbilityCheckRollMode(
 /**
  * Whether an ability check has a source of Advantage and of Disadvantage,
  * leaving out a Help benefit: a check uses that benefit up, so only
- * `skillCheck`, which also returns the state after the check, counts it.
+ * `skillCheckRoll`, which also returns the state after the check, counts it.
  */
 function abilityCheckRollModeSources(
   state: BattleState,
@@ -465,7 +469,9 @@ function skillAbilityCheckAdvantageMatches(
 /**
  * Roll mode sources of a check made to end `condition` beyond those of its
  * ability and skill: a feature's Advantage on checks to end that condition,
- * and Poisoned's Disadvantage on ability checks.
+ * and Poisoned's Disadvantage. Poisoned gives Disadvantage on every ability
+ * check, but `abilityCheckRollModeSources` doesn't count it yet, so for now
+ * only checks to end a condition do.
  */
 function conditionEndAbilityCheckRollModeSources(
   state: BattleState,
@@ -919,9 +925,9 @@ export function escapeGrappleCheck(
   readonly hole: BattleGrappleOutcomeHole;
   readonly stateAfterCheck: BattleState;
 } {
-  const check = ESCAPE_GRAPPLE_CHECKS[skill];
+  const ability = SKILL_ABILITIES[skill];
   const { rollMode, stateAfterCheck } = skillCheckRoll(state, actorId, {
-    ability: check.ability,
+    ability,
     skill,
     endingCondition: "grappled",
   });
@@ -930,7 +936,7 @@ export function escapeGrappleCheck(
       kind: "grappleOutcome",
       holeId: ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
       holeInstanceKey: ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
-      label: `Escape Grapple ${check.checkName} check (DC ${link.escapeDc})`,
+      label: `Escape Grapple ${abilityPresentationName(ability)} (${ESCAPE_GRAPPLE_SKILL_NAMES[skill]}) check (DC ${link.escapeDc})`,
       actorId,
       targetId: link.grapplerId,
       dc: link.escapeDc,

@@ -321,13 +321,6 @@ module movementSpatialGrapple {
     else if (facts.targetSaveTotal >= facts.escapeDc) grapple
     else Grappled({ escapeDc: facts.escapeDc })
 
-  // .references/srd-5.2.1/rules-glossary.md "Grappling", "Ending a Grapple.":
-  // "A Grappled creature can use its action to make a Strength (Athletics) or
-  // Dexterity (Acrobatics) check against the grapple's escape DC". The escaper
-  // chooses the skill, and the check is an ability check with that skill, so
-  // Help for it applies (help-ability-check-core).
-  pure val escapeGrappleCheckSkills: Set[str] = Set("athletics", "acrobatics")
-
   pure def escapeGrapple(
     turn: TurnProcedureState,
     grapple: GrappleState,

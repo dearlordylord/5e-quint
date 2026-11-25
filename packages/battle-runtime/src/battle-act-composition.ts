@@ -16,7 +16,7 @@ import type { BattleUnitRef } from "./battle-init.ts";
 import { Match, Result } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
-  ESCAPE_GRAPPLE_CHECKS,
+  ESCAPE_GRAPPLE_SKILL_NAMES,
   isCharacterProcedureBattleSubject,
 } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
@@ -840,7 +840,7 @@ function intrinsicActPresentationLabel(
   return Match.value(subject).pipe(
     byTag("action", (value) =>
       value.action === "escapeGrapple"
-        ? `${INTRINSIC_ACTION_LABELS.escapeGrapple} (${ESCAPE_GRAPPLE_CHECKS[value.skill].skillName})`
+        ? `${INTRINSIC_ACTION_LABELS.escapeGrapple} (${ESCAPE_GRAPPLE_SKILL_NAMES[value.skill]})`
         : INTRINSIC_ACTION_LABELS[value.action],
     ),
     byTag(
