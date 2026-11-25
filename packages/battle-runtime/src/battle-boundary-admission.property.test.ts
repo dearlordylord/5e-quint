@@ -2755,7 +2755,7 @@ describe("battle boundary admission owners", () => {
       naturalD20: 10,
       rolledD20s: undefined,
       withoutRoll: false,
-      d20TestNaturalOneReroll: undefined,
+      d20TestRerolls: undefined,
     };
     expect(
       battleContinuationFillEquals(

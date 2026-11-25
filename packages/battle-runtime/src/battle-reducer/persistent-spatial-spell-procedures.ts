@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard spell.invocation-gust-of-wind-line spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { Result, Match } from "effect";
 import {
   canSpendBonusAction,
@@ -537,7 +538,8 @@ function resolvePersistentAreaSaveConditionEntrySaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const outcome = savingThrowFill.value.outcomes[0]!;
+  const outcome = savingThrowOutcomesThatStand(savingThrowFill.value)
+    .outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
       state: input.state,
@@ -766,7 +768,7 @@ function resolvePersistentAreaSaveConditionEscapeSaveCommand(
   return resolvePersistentAreaSaveConditionEscapeOutcome({
     resolution: input,
     effect,
-    outcome: savingThrowFill.value.outcomes[0]!,
+    outcome: savingThrowOutcomesThatStand(savingThrowFill.value).outcomes[0]!,
   });
 }
 
@@ -1007,7 +1009,7 @@ function resolvePersistentAreaSaveCompositeSaveCommand(
   return resolvePersistentAreaSaveCompositeOutcome({
     resolution: input,
     effect,
-    outcome: savingThrowFill.value.outcomes[0]!,
+    outcome: savingThrowOutcomesThatStand(savingThrowFill.value).outcomes[0]!,
   });
 }
 
@@ -1247,7 +1249,10 @@ function validateDirectionalPersistentAreaSavingThrowOutcome(
   }
   return validateDirectionalPersistentAreaAreaPushFacts({
     area,
-    failedTargetIds: value.outcomes[0]?.succeeded === true ? [] : [targetId],
+    failedTargetIds:
+      savingThrowOutcomesThatStand(value).outcomes[0]?.succeeded === true
+        ? []
+        : [targetId],
     pushDistanceFeet: effect.pushDistanceFeet,
   });
 }
@@ -1327,7 +1332,8 @@ function resolveDirectionalPersistentAreaSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const outcome = matchingGustFill.value.outcomes[0]!;
+  const outcome = savingThrowOutcomesThatStand(matchingGustFill.value)
+    .outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
       state: input.state,
@@ -1914,7 +1920,7 @@ function resolveRamMovablePersistentAreaSaveCommand(
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
   /* v8 ignore stop -- @preserve */
-  const saveOutcome = saveFill.value.outcomes[0]!;
+  const saveOutcome = savingThrowOutcomesThatStand(saveFill.value).outcomes[0]!;
   return resolveRamMovablePersistentAreaSaveAfterSavingThrow({
     resolution: input,
     target,
@@ -2417,7 +2423,7 @@ function resolveRamMovablePersistentAreaMovementAndSave(input: {
   if (saveValidation !== null) {
     return invalidResult(input.resolution.state, "invalidFill", saveValidation);
   }
-  const saveOutcome = saveFill.value.outcomes[0]!;
+  const saveOutcome = savingThrowOutcomesThatStand(saveFill.value).outcomes[0]!;
   return resolveRamMovablePersistentAreaRamAfterSavingThrow({
     resolution: input.resolution,
     target: input.target,
@@ -3069,7 +3075,7 @@ function resolveMovablePersistentAreaSaveCommand(
     damageHole,
     damageFills,
     saveHoleId: saveHole.holeId,
-    saveOutcome: saveFill.value.outcomes[0]!,
+    saveOutcome: savingThrowOutcomesThatStand(saveFill.value).outcomes[0]!,
     isEndTurn,
     candidateEndTurnFills,
   });
@@ -3302,7 +3308,9 @@ function resolvePersistentAreaSaveConditionEndTurnSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const outcome = matchingPersistentAreaSaveConditionFill.value.outcomes[0]!;
+  const outcome = savingThrowOutcomesThatStand(
+    matchingPersistentAreaSaveConditionFill.value,
+  ).outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
       state: input.state,

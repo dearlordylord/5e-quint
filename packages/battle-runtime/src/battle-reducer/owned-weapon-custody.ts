@@ -26,6 +26,7 @@ import type { BoundCharacterWeaponAttackActionOption } from "../battle-action-op
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import type {
   BattleCreatureState,
+  BattleObjectCustody,
   BattleState,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -35,13 +36,17 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
-  battleStateWithGroundObjects,
   battleStateWithObjectCustody,
   loadoutWeaponSlot,
   weaponHandsAreFree,
   weaponSlotHands,
 } from "./battle-object-lifecycle.ts";
-import { battleObjectIsOnGround } from "./object-custody-queries.ts";
+import {
+  battleObjectIsOnGround,
+  type BattleActorObjectCustodyQuery,
+  type BattleEquipmentQuery,
+  type BattleObjectCustodyQuery,
+} from "./object-custody-queries.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
 import { combatantActiveDruidWildShape } from "./creature-state-leaves.ts";
 import {
@@ -57,6 +62,16 @@ export type AppliedAttackWeaponChange =
       readonly objectId: BattleObjectId;
       readonly positionId: BattleTablePositionId;
     };
+
+/** The custody a weapon change leaves the weapon in; an equipped one is in hand. */
+const WEAPON_CHANGE_CUSTODY = {
+  equip: null,
+  stow: { kind: "stowed" },
+  drop: { kind: "onGround" },
+} as const satisfies Record<
+  AttackWeaponChange["kind"],
+  Pick<BattleObjectCustody, "kind"> | null
+>;
 
 export const OWNED_WEAPON_CHANGE_ISSUE_REASONS = [
   "missingCombatant",
@@ -386,28 +401,85 @@ export function stateWithOwnedWeaponChange(
     ),
     Match.when({ kind: "stow" }, ({ objectId }) =>
       applied(
+        battleStateWithObjectCustody(
+          state,
+          actorId,
+          objectId,
+          WEAPON_CHANGE_CUSTODY.stow,
+        ),
+      ),
+    ),
+    Match.when({ kind: "drop" }, ({ objectId, positionId }) =>
+      applied(
         battleStateWithObjectCustody(state, actorId, objectId, {
-          kind: "stowed",
+          ...WEAPON_CHANGE_CUSTODY.drop,
+          positionId,
+          source: { kind: "attackWeaponChange" },
         }),
       ),
     ),
-    Match.when({ kind: "drop" }, ({ objectId, positionId }) => {
-      const placed = battleStateWithGroundObjects(state, [
-        {
-          actorId,
-          objectId,
-          positionId,
-          source: { kind: "attackWeaponChange" },
-        },
-      ]);
-      /* v8 ignore start -- @preserve -- ownedWeaponChangeIssue has just admitted a held weapon, which is not on the ground. */
-      if (placed.tag === "conflict") {
-        return issue("weaponNotHeld", placed.message);
-      }
-      /* v8 ignore stop -- @preserve */
-      return applied(placed.state);
-    }),
     Match.exhaustive,
+  );
+}
+
+/**
+ * The character and its equipment as they would be after a weapon change, for
+ * the attacks it could make then. A dropped weapon frees its hands as a stowed
+ * one does, but it lies on the ground, where it can't be drawn for a throw;
+ * where it lands is the table's answer, which a prospective change doesn't
+ * need.
+ */
+export function ownedWeaponChangeAttackQuery(
+  state: BattleState,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+):
+  | OwnedWeaponChangeIssue
+  | {
+      readonly tag: "projected";
+      readonly actor: CharacterBattleCreatureState;
+      readonly equipment: BattleEquipmentQuery;
+    } {
+  const changed = stateWithOwnedWeaponChange(
+    state,
+    actorId,
+    change.kind === "drop" ? { kind: "stow", objectId: change.objectId } : change,
+  );
+  if (changed.tag === "invalid") return changed;
+  const actor = changed.state.combatants.get(actorId);
+  /* v8 ignore next -- @preserve -- the change has just been admitted for this character. */
+  if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
+    return issue("missingCombatant", "The weapon change has no character.");
+  }
+  return {
+    tag: "projected",
+    actor,
+    equipment: {
+      objectCustody:
+        change.kind === "drop"
+          ? custodyWithObjectOnGround(
+              changed.state.objectCustody,
+              actorId,
+              change.objectId,
+            )
+          : changed.state.objectCustody,
+      grapples: changed.state.grapples,
+    },
+  };
+}
+
+function custodyWithObjectOnGround(
+  custody: BattleObjectCustodyQuery["objectCustody"],
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+): BattleObjectCustodyQuery["objectCustody"] {
+  const objects = new Map<BattleObjectId, Pick<BattleObjectCustody, "kind">>(
+    custody.get(actorId),
+  );
+  objects.set(objectId, WEAPON_CHANGE_CUSTODY.drop);
+  return new Map<CombatantId, BattleActorObjectCustodyQuery>(custody).set(
+    actorId,
+    objects,
   );
 }
 

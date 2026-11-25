@@ -3,16 +3,32 @@
 // transitions that change it.
 import type {
   BattleGroundObjectState,
+  BattleObjectCustody,
   BattleState,
 } from "../battle-state-execution.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 
+/** Custody queries need location kinds, not table-supplied ground geometry. */
+export type BattleActorObjectCustodyQuery = ReadonlyMap<
+  BattleObjectId,
+  Pick<BattleObjectCustody, "kind">
+>;
+export type BattleObjectCustodyQuery = {
+  readonly objectCustody: ReadonlyMap<
+    CombatantId,
+    BattleActorObjectCustodyQuery
+  >;
+};
+
+export type BattleEquipmentQuery = BattleObjectCustodyQuery &
+  Pick<BattleState, "grapples">;
+
 export function battleObjectIsOnGround(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): boolean {
-  return battleGroundObjectState(state, actorId, objectId) !== undefined;
+  return state.objectCustody.get(actorId)?.get(objectId)?.kind === "onGround";
 }
 
 /** Where one of an actor's objects lies, if it is on the ground. */

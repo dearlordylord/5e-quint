@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.ATTACK_WEAPON_CHANGE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import { Match } from "effect";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack unit-feature.druid-wild-shape-known-form unit-feature.light-extra-attack-damage-ability-modifier unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
@@ -27,7 +28,12 @@ import {
   type BattleProcedureExecutionRef,
   type CombatantId,
 } from "../identity.ts";
-import type { BattleSubject } from "../battle-subjects.ts";
+import type { AttackWeaponChange, BattleSubject } from "../battle-subjects.ts";
+import { ownedWeaponChangeAttackQuery } from "./owned-weapon-custody.ts";
+import type {
+  BattleEquipmentQuery,
+  BattleObjectCustodyQuery,
+} from "./object-custody-queries.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -110,7 +116,6 @@ import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 import { combatantHandUses } from "./creature-state-leaves.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
-  loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
 } from "./character-effective-loadout.ts";
 import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
@@ -442,18 +447,7 @@ export function attackActionOptionsForActor(
         ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
       ].filter((attack) => ammunitionForAttackIsReady(state, actor, attack));
     }
-    const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
-      actor,
-      actor.origin.unarmedStrike,
-    );
-    const options = [
-      ...mainWeaponAttackOptions(state, actor),
-      ...carriedThrownWeaponAttackOptions(state, actor),
-      unarmedStrike,
-    ];
-    return options.filter((attack) =>
-      ammunitionForAttackIsReady(state, actor, attack),
-    );
+    return characterAttackActionOptions(state, actor, state);
   }
 
   if (actor?.origin.kind === "statBlock") {
@@ -488,21 +482,56 @@ export function attackActionOptionsForActor(
   return [];
 }
 
+/** A prospective change needs custody and hands, not an invented landing fact. */
+export function attackActionOptionsAfterWeaponChange(
+  state: BattleState,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+): readonly BoundSupportedAttackActionOption[] {
+  const query = ownedWeaponChangeAttackQuery(state, actorId, change);
+  return query.tag === "invalid"
+    ? []
+    : characterAttackActionOptions(state, query.actor, query.equipment);
+}
+
+function characterAttackActionOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  equipment: BattleEquipmentQuery,
+): readonly BoundSupportedAttackActionOption[] {
+  const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
+    actor,
+    actor.origin.unarmedStrike,
+  );
+  return [
+    ...mainWeaponAttackOptions(state, actor, equipment),
+    ...carriedThrownWeaponAttackOptions(state, actor, equipment),
+    unarmedStrike,
+  ].filter((attack) => ammunitionForAttackIsReady(equipment, actor, attack));
+}
+
 /** The attacks a character's main weapon can make now. */
 function mainWeaponAttackOptions(
   state: BattleState,
   actor: CharacterBattleCreatureState,
+  equipment: BattleEquipmentQuery,
 ): readonly BoundSupportedAttackActionOption[] {
   const main = actor.origin.attack;
   if (main == null) return [];
-  const deliveries = loadoutWeaponDeliveries(state, actor, main.weaponObjectId);
+  const deliveries = loadoutWeaponDeliveries(
+    equipment,
+    actor,
+    main.weaponObjectId,
+  );
   if (deliveries === null) return [];
   return uniqueAttackExecutionSelectionOptions(
     weaponAttackOptionsForActor(
       state,
       actor,
       main,
-      mainHandWeaponItemIdForAttack(state, actor, main),
+      mainHandWeaponItemIdForAttack(equipment, actor, main),
+      { kind: "ordinary" },
+      equipment,
     ).filter(deliveries),
   );
 }
@@ -516,21 +545,25 @@ function mainWeaponAttackOptions(
  * weapon on the ground is picked up, not drawn, so it makes no attack.
  */
 function loadoutWeaponDeliveries(
-  state: BattleState,
+  equipment: BattleEquipmentQuery,
   actor: CharacterBattleCreatureState,
   weaponObjectId: BattleObjectId,
 ): ((attack: BoundCharacterWeaponAttackActionOption) => boolean) | null {
-  if (loadoutWeaponIsHeld(state, actor.combatantId, weaponObjectId)) {
-    return () => true;
-  }
-  return loadoutWeaponIsStowed(state, actor.combatantId, weaponObjectId) &&
-    creatureHasFreeHand(state, actor)
-    ? weaponAttackIsThrown
-    : null;
+  const custody = equipment.objectCustody
+    .get(actor.combatantId)
+    ?.get(weaponObjectId);
+  if (custody === undefined) return () => true;
+  return Match.value(custody.kind).pipe(
+    Match.when("stowed", () =>
+      creatureHasFreeHand(equipment, actor) ? weaponAttackIsThrown : null,
+    ),
+    Match.when("onGround", () => null),
+    Match.exhaustive,
+  );
 }
 
 function creatureHasFreeHand(
-  state: BattleState,
+  state: BattleEquipmentQuery,
   actor: CharacterBattleCreatureState,
 ): boolean {
   const hands = combatantHandUses(state, actor, state.grapples);
@@ -547,10 +580,11 @@ function creatureHasFreeHand(
 function carriedThrownWeaponAttackOptions(
   state: BattleState,
   actor: CharacterBattleCreatureState,
+  equipment: BattleEquipmentQuery,
 ): readonly BoundSupportedAttackActionOption[] {
-  if (!creatureHasFreeHand(state, actor)) return [];
+  if (!creatureHasFreeHand(equipment, actor)) return [];
   return actor.origin.otherOwnedWeaponAttacks.flatMap((carried) =>
-    battleObjectIsOnGround(state, actor.combatantId, carried.weaponObjectId)
+    battleObjectIsOnGround(equipment, actor.combatantId, carried.weaponObjectId)
       ? []
       : uniqueAttackExecutionSelectionOptions(
           weaponAttackOptionsForActor(
@@ -558,6 +592,8 @@ function carriedThrownWeaponAttackOptions(
             actor,
             carried,
             carried.weaponObjectId,
+            { kind: "ordinary" },
+            equipment,
           ).filter(weaponAttackIsThrown),
         ),
   );
@@ -821,12 +857,13 @@ function weaponAttackOptionsForActor(
   attack: BoundCharacterWeaponAttackActionOption,
   attachedWeaponItemId: BattleObjectId | undefined,
   abilityMode: WeaponAttackAbilityMode = { kind: "ordinary" },
+  equipment: BattleObjectCustodyQuery = state,
 ): readonly BoundCharacterWeaponAttackActionOption[] {
   return characterWeaponAttackDeliveryOptions(attack).flatMap((delivery) => {
     const projected = weaponAttackWithActiveSpellEffects(
       state,
       actor,
-      weaponAttackWithMeleeGripAndMartialArtsDamage(state, actor, delivery),
+      weaponAttackWithMeleeGripAndMartialArtsDamage(equipment, actor, delivery),
       attachedWeaponItemId,
     );
     const withAbilityMode = Match.value(abilityMode).pipe(
@@ -865,7 +902,7 @@ function lightExtraAttackWithAbilityChoices(
 }
 
 function weaponAttackWithMeleeGripAndMartialArtsDamage(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actor: CharacterBattleCreatureState,
   attack: BoundCharacterWeaponAttackActionOption,
 ): BoundCharacterWeaponAttackActionOption {
@@ -881,7 +918,7 @@ function weaponAttackWithMeleeGripAndMartialArtsDamage(
 }
 
 function meleeGripDamageForAttack(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actor: CharacterBattleCreatureState,
   attack: BoundCharacterWeaponAttackActionOption,
 ): CharacterWeaponAttackActionOption["weapon"]["damage"] {
@@ -903,7 +940,7 @@ function meleeGripDamageForAttack(
 }
 
 function martialArtsWeaponDamageReplacement(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actor: CharacterBattleCreatureState,
   attack: BoundCharacterWeaponAttackActionOption,
 ):
@@ -1337,7 +1374,7 @@ function weaponAttackDamageEnhancementEffectExcluded(
 }
 
 function mainHandWeaponItemIdForAttack(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
 ): BattleObjectId | undefined {
@@ -1659,7 +1696,7 @@ function martialArtsAttackProjectionForActor(
 }
 
 function martialArtsLoadoutEligible(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actorId: CombatantId,
   origin: CharacterBattleCreatureState["origin"],
 ): boolean {

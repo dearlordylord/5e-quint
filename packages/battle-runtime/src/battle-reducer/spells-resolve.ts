@@ -126,10 +126,12 @@ import {
 import {
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  battleStateAfterHeroicInspirationReroll,
-  type AttackRollHeroicInspirationUse,
   type MissedSpellAttackRerollSource,
 } from "./attack-roll-d20-test-rerolls.ts";
+import {
+  battleStateAfterHeroicInspirationReroll,
+  type HeroicInspirationUse,
+} from "./heroic-inspiration-reroll.ts";
 import { d20TestRollReplacementKeepsModifier } from "./d20-test-roll-reroll.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -415,7 +417,7 @@ type InitialSpellAttackRollResolution =
       readonly attackRoll: BattleAttackRollResult;
       /** The roll after its reroll decisions, the one that hits or misses. */
       readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly heroicInspirationUse: HeroicInspirationUse;
       readonly missedSpellAttackRerollTaken: boolean;
       readonly requiredRollMode: Exclude<
         ReturnType<typeof requiredSpellAttackRollMode>,

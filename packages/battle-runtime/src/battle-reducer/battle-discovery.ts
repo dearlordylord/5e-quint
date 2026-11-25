@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.ATTACK_WEAPON_CHANGE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-spike-growth-movement-hazard spell.invocation-cloudkill-area-hazard
@@ -26,10 +27,7 @@ import {
   changeWeaponAfterAttackActs,
   weaponChangeInitialHoles,
 } from "./attack-weapon-change.ts";
-import {
-  ownedWeaponChanges,
-  stateWithOwnedWeaponChange,
-} from "./owned-weapon-custody.ts";
+import { ownedWeaponChanges } from "./owned-weapon-custody.ts";
 import type { AttackWeaponChange } from "../battle-subjects.ts";
 import { optionalProperty } from "../optional-property.ts";
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
@@ -67,6 +65,7 @@ import {
 } from "../companion-subjects.ts";
 import {
   attackActionOptionsForActor,
+  attackActionOptionsAfterWeaponChange,
   martialArtsBonusUnarmedStrikeActionOptionForActor,
   offHandAttackActionOptionsForActor,
   offHandAttackPrerequisiteMet,
@@ -466,10 +465,9 @@ function ordinaryAttackActs(
  * The attacks that carry a weapon change before the roll (SRD 5.2.1 Rules
  * Glossary, "Attack [Action]", Equipping and Unequipping Weapons): for each
  * change the character can make, every ordinary attack it could make once the
- * change is done. A weapon equipped first needn't be the one used. A dropped
- * weapon frees its hands as a stowed one does, but it lies on the ground, so
- * it makes none of its own attacks, not even a throw drawn as part of it; the
- * act asks first where it lands.
+ * change is done. A weapon equipped first needn't be the one used. A drop
+ * frees the same hands as a stow, but has different custody: it cannot be drawn
+ * for a throw. Its landing position is asked before resolution.
  */
 function weaponChangeAttackActs(
   state: BattleState,
@@ -478,29 +476,13 @@ function weaponChangeAttackActs(
   const actor = state.combatants.get(actorId);
   if (actor === undefined) return [];
   return ownedWeaponChanges(state, actor).flatMap((change) => {
-    const changed = stateWithOwnedWeaponChange(
-      state,
-      actorId,
-      change.kind === "drop"
-        ? { kind: "stow", objectId: change.objectId }
-        : change,
-    );
-    /* v8 ignore next -- @preserve -- ownedWeaponChanges admits only changes that apply. */
-    if (changed.tag !== "applied") return [];
     const dropHoles = weaponChangeInitialHoles(actorId, change);
     return (
-      attackActionOptionsForActor(changed.state, actorId)
-        .filter(
-          (attack) =>
-            attackActionOptionIsOrdinaryAttackAction(
-              changed.state,
-              actorId,
-              attack,
-            ) && !attackUsesDroppedWeapon(change, attack),
+      attackActionOptionsAfterWeaponChange(state, actorId, change)
+        .filter((attack) =>
+          attackActionOptionIsOrdinaryAttackAction(state, actorId, attack),
         )
-        .flatMap((attack) =>
-          ordinaryAttackActs(changed.state, actorId, attack, change),
-        )
+        .flatMap((attack) => ordinaryAttackActs(state, actorId, attack, change))
         // Only the character Attack action subject carries a weapon change.
         .filter((act) => "weaponChange" in act.subject)
         .map((act) =>
@@ -510,23 +492,6 @@ function weaponChangeAttackActs(
         )
     );
   });
-}
-
-/**
- * Whether an attack is made with the weapon a change drops. Discovery stows the
- * weapon in its place, since the landing position is the table's answer, and a
- * stowed Thrown weapon is drawn as part of its throw (SRD 5.2.1 equipment.md
- * "Thrown"); a dropped one is picked up, not drawn.
- */
-function attackUsesDroppedWeapon(
-  change: AttackWeaponChange,
-  attack: ReturnType<typeof attackActionOptionsForActor>[number],
-): boolean {
-  return (
-    change.kind === "drop" &&
-    attack.kind === "weapon" &&
-    attack.weaponObjectId === change.objectId
-  );
 }
 
 function discoverBattleActsWithoutRouteEvents(

@@ -1,5 +1,6 @@
 import type { SpellInvocationCastingFacts } from "./spell-invocation-casting-facts.ts";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { SaveCoverBenefit } from "@dnd/shared-algebras/cover-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type {
   AbilityModifier,
@@ -1144,6 +1145,7 @@ export type SaveGatedDamageClassCantripSpellProcedureExecution =
     readonly rangeFeet: MovementFeet;
     readonly resource: CantripSpellInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
+    readonly saveCoverBenefit: SaveCoverBenefit;
     readonly successDamage: "none" | "half";
     readonly targeting: SaveGatedDamageSpellTargeting;
   };
@@ -1172,6 +1174,7 @@ export type SaveGatedDamagePreparedSpellProcedureExecution =
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
+    readonly saveCoverBenefit: SaveCoverBenefit;
     readonly successDamage: "none" | "half";
     readonly targeting: SaveGatedDamageSpellTargeting;
   };

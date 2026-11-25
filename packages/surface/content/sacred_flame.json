@@ -70,7 +70,8 @@
         },
         "onSuccess": {
           "kind": "none"
-        }
+        },
+        "saveCoverBenefit": "denied"
       }
     ],
     "range": {

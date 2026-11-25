@@ -26,6 +26,7 @@ import type {
 } from "./reducer-route-protocol.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import {
   combatantConcentrationChanged,
   combatantsActiveEffectsChanged,
@@ -337,7 +338,9 @@ function saveGatedConditionFailedTargetIds(
   );
   return saveFill === undefined
     ? []
-    : failedSavingThrowTargetIds(saveFill.value.outcomes);
+    : failedSavingThrowTargetIds(
+        savingThrowOutcomesThatStand(saveFill.value).outcomes,
+      );
 }
 
 function protectionCharmDiscover(

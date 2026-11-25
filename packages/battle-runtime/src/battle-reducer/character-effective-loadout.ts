@@ -1,14 +1,14 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
-import type {
-  BattleState,
-  CharacterBattleCreatureState,
-} from "../battle-state-execution.ts";
+import type { CharacterBattleCreatureState } from "../battle-state-execution.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
-import { battleObjectIsOnGround } from "./object-custody-queries.ts";
+import {
+  battleObjectIsOnGround,
+  type BattleObjectCustodyQuery,
+} from "./object-custody-queries.ts";
 
 export function characterEffectiveLoadout(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actor: CharacterBattleCreatureState,
 ): CharacterBattleLoadoutRef {
   return characterEffectiveLoadoutFromOrigin(
@@ -19,7 +19,7 @@ export function characterEffectiveLoadout(
 }
 
 export function characterEffectiveLoadoutFromOrigin(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actorId: CombatantId,
   origin: CharacterBattleCreatureState["origin"],
 ): CharacterBattleLoadoutRef {
@@ -46,7 +46,7 @@ export function characterEffectiveLoadoutFromOrigin(
 
 /** Whether the character has sheathed or stowed this loadout weapon. */
 export function loadoutWeaponIsStowed(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): boolean {
@@ -58,7 +58,7 @@ export function loadoutWeaponIsStowed(
  * on the ground.
  */
 export function loadoutWeaponIsHeld(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): boolean {

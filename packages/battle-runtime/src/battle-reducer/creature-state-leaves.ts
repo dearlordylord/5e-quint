@@ -12,6 +12,7 @@ import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
+import type { BattleObjectCustodyQuery } from "./object-custody-queries.ts";
 import {
   type WildShapeArmorClassWornKind,
   wildShapeEquipmentDispositionWearsKind,
@@ -186,7 +187,7 @@ export function grappledBy(
 }
 
 export function combatantHandUses(
-  state: BattleState,
+  state: BattleObjectCustodyQuery,
   combatant: BattleCreatureState,
   grapples: readonly BattleGrappleLink[],
 ): { readonly left: HandUse; readonly right: HandUse } {
