@@ -31,22 +31,35 @@ import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-bindi
  * The base AC calculations a creature can have, each named for what it is
  * (SRD Playing the Game, "Armor Class": "Only One Base AC").
  */
+export const ARMOR_CLASS_BASE_CALCULATION_SOURCES = [
+  "wornArmor",
+  "statBlock",
+  "defaultUnarmored",
+  "classFeatureCalculation",
+  "spellBaseCalculation",
+] as const;
 export type ArmorClassBaseCalculationSource =
-  | "wornArmor"
-  | "statBlock"
-  | "defaultUnarmored"
-  | "classFeatureCalculation"
-  | "spellBaseCalculation";
+  (typeof ARMOR_CLASS_BASE_CALCULATION_SOURCES)[number];
 
 /** Every source of a bonus or penalty to a creature's AC. */
+export const ARMOR_CLASS_MODIFIER_SOURCES = [
+  "wieldedShield",
+  "wornArmorFeature",
+  "unarmoredFeature",
+  "featureBonus",
+  "spellBonus",
+  "linkedDefense",
+  "turnConstraintPenalty",
+] as const;
 export type ArmorClassModifierSource =
-  | "wieldedShield"
-  | "wornArmorFeature"
-  | "unarmoredFeature"
-  | "featureBonus"
-  | "spellBonus"
-  | "linkedDefense"
-  | "turnConstraintPenalty";
+  (typeof ARMOR_CLASS_MODIFIER_SOURCES)[number];
+
+/** Every source of a floor under a creature's AC. */
+export const ARMOR_CLASS_FLOOR_SOURCES = [
+  "featureFloor",
+  "spellFloor",
+] as const;
+export type ArmorClassFloorSource = (typeof ARMOR_CLASS_FLOOR_SOURCES)[number];
 
 /** One named part of the AC an attack roll must meet. */
 export type ArmorClassContribution =
@@ -62,7 +75,7 @@ export type ArmorClassContribution =
     }
   | {
       readonly role: "floor";
-      readonly source: "featureFloor" | "spellFloor";
+      readonly source: ArmorClassFloorSource;
       readonly armorClass: ArmorClass;
     }
   | {

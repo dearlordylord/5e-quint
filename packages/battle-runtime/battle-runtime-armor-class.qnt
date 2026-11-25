@@ -44,6 +44,8 @@ module battleRuntimeArmorClass {
   pure def combatantArmorClass(combatant: Combatant): int =
     activeEffectArmorClass(combatant.ac, combatant.dexMod, combatant.activeEffects)
 
+  // Mage Armor gives another base AC calculation; only the highest is in
+  // effect (rules-glossary.md#Armor Class, ASSUMPTIONS.md A67).
   pure def activeEffectArmorClass(baseAc: int, dexMod: int, effects: Set[ActiveEffect]): int =
     {
       val base = if (effects.exists(effect => match effect {
@@ -135,7 +137,7 @@ module battleRuntimeArmorClass {
         | CommandPending(_) => false
         | SpiritualWeapon(_) => false
         | SelfTransformationModeEffect(_) => false
-      })) 13 + dexMod else baseAc
+      })) (if (13 + dexMod > baseAc) 13 + dexMod else baseAc) else baseAc
       val shieldBonus =
         if (effects.contains(ShieldArmorClassBonus))
           triggeredArmorDefenseArmorClassBonus

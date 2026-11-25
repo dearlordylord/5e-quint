@@ -7,10 +7,15 @@
 // rules-glossary.md, "Cover": Half Cover gives "+2 bonus to AC".
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { RuledCoverType } from "@dnd/shared/types";
+import { Match } from "effect";
 import { describe, expect, test } from "vitest";
 import {
+  ARMOR_CLASS_BASE_CALCULATION_SOURCES,
+  ARMOR_CLASS_FLOOR_SOURCES,
+  ARMOR_CLASS_MODIFIER_SOURCES,
   armorClassContributions,
   collectedArmorClass,
+  type ArmorClassContribution,
 } from "./battle-reducer/armor-class-collector.ts";
 import type { BattleState } from "./battle-state-execution.ts";
 import {
@@ -159,11 +164,31 @@ function longswordHits(
   return true;
 }
 
+// Each contribution names a source listed for its role.
+function sourceIsListedForRole(contribution: ArmorClassContribution): boolean {
+  return Match.value(contribution).pipe(
+    Match.when({ role: "baseCalculation" }, ({ source }) =>
+      ARMOR_CLASS_BASE_CALCULATION_SOURCES.includes(source),
+    ),
+    Match.when({ role: "modifier" }, ({ source }) =>
+      ARMOR_CLASS_MODIFIER_SOURCES.includes(source),
+    ),
+    Match.when({ role: "floor" }, ({ source }) =>
+      ARMOR_CLASS_FLOOR_SOURCES.includes(source),
+    ),
+    Match.when({ role: "cover" }, ({ source }) => source === "cover"),
+    Match.exhaustive,
+  );
+}
+
 // The snapshot and a weapon attack agree with the collector, at the AC and
 // one below it.
 function expectEveryRouteAgrees(state: BattleState, expected: number) {
   const goblin = requireCombatant(state, goblinId);
   expect(Number(collectedArmorClass(state, goblin))).toBe(expected);
+  expect(
+    armorClassContributions(state, goblin, "half").every(sourceIsListedForRole),
+  ).toBe(true);
   expect(snapshotArmorClass(state)).toBe(expected);
   expect(longswordHits(state, expected)).toBe(true);
   expect(longswordHits(state, expected - 1)).toBe(false);
