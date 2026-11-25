@@ -3,7 +3,10 @@
 
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
-import { sameBattleSubject } from "../battle-subjects.ts";
+import {
+  readiedAttackWeaponChangesEqual,
+  sameBattleSubject,
+} from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
   AdmittedBattleResolutionInput,
@@ -438,6 +441,15 @@ export function resolveActiveInterruptProcedure(input: {
     .filter((fill) =>
       fill.spatialFacts.some((fact) => fact.kind === "attackTargetDistance"),
     );
+  // A readied attack's weapon change after it is made once the attack is
+  // over, at the landing position the selection gave a dropped weapon.
+  const continuationWeaponDropFills = activeInterrupt.fills.filter(
+    (fill) =>
+      fill.kind === "weaponDropPosition" &&
+      !input.resolution.fills.some(
+        (submitted) => submitted.holeId === fill.holeId,
+      ),
+  );
   const continuationResolution = {
     ...input.resolution,
     // The transaction owner may already carry the initial spatial fill in its
@@ -452,6 +464,7 @@ export function resolveActiveInterruptProcedure(input: {
               battleContinuationFillEquals(retained, submitted),
           ),
       ),
+      ...continuationWeaponDropFills,
       ...input.resolution.fills,
     ],
   };
@@ -1128,7 +1141,11 @@ function sameInterruptProcedureChoice(
         choice.subject.command === "releaseReadiedAttack" &&
         choice.subject.reactorId === responderId &&
         choice.subject.targetId === decision.targetId &&
-        choice.subject.procedureRef === decision.procedureRef,
+        choice.subject.procedureRef === decision.procedureRef &&
+        readiedAttackWeaponChangesEqual(
+          choice.subject.weaponChange,
+          decision.weaponChange,
+        ),
     ),
     Match.when(
       { kind: "castTriggeredReactionSpell" },

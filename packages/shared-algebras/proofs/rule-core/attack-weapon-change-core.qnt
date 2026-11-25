@@ -72,7 +72,9 @@ module attackWeaponChangeCore {
   // Grapple or Shove that takes an attack's place is such an attack, and
   // carries its change before it the same way; one a Flurry of Blows Unarmed
   // Strike pays for is no Attack action attack, carries no change, and
-  // leaves the allowance as it was.
+  // leaves the allowance as it was. A readied Attack's attack, made with a
+  // Reaction on another creature's turn, carries its one change on its
+  // release, before or after the attack, and leaves no allowance.
   pure def afterAttack(
     turn: AttackWeaponChangeTurn,
     changedBeforeAttack: bool,

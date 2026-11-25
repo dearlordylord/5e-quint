@@ -10,7 +10,8 @@
 // attack of the action ("Unarmed Strike") carries it the same way. After: an
 // attack made without one leaves the `weaponChangeAfterAttack` allowance,
 // which the `changeWeaponAfterAttack` command spends before the Attack
-// action's next attack (ASSUMPTIONS.md A63).
+// action's next attack (ASSUMPTIONS.md A63). A readied attack's release
+// carries its change before or after it (readied-attack-weapon-change.ts).
 import { Result } from "effect";
 import {
   spendUnarmedStrikeActionResource,
@@ -46,6 +47,7 @@ import {
   type AppliedAttackWeaponChange,
 } from "./owned-weapon-custody.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import { invalidResult, resolvedResult } from "./result-helpers.ts";
 
 export type ChangeWeaponAfterAttackSubject = Extract<
@@ -256,6 +258,7 @@ export function resolveChangeWeaponAfterAttack(
   const applied = appliedWeaponChange(
     input.state,
     input.subject,
+    input.subject.actorId,
     input.subject.weaponChange,
     input.fills,
   );
@@ -314,9 +317,7 @@ function withWeaponDropOutcome(
 
 /**
  * Resolves an attack of the Attack action, or a Grapple or Shove in its place,
- * first applying the weapon change its subject carries. A resumed subject
- * finds the change already applied, so Battle applies it once; the drop
- * position fill is the change's own and never reaches the attack.
+ * first applying the weapon change its subject carries.
  */
 export function resolveAttackWithWeaponChange<
   Input extends BattleResolutionInput & {
@@ -338,35 +339,109 @@ export function resolveAttackWithWeaponChange<
       "Only a Grapple or Shove in place of an Attack action attack can carry a weapon change.",
     );
   }
-  const actorId = input.subject.actorId;
-  const changeFillIds = new Set(
-    weaponChangeInitialHoles(actorId, change).map((hole) => hole.holeId),
+  return resolveWithWeaponChangeBefore(
+    input,
+    input.subject.actorId,
+    change,
+    resolveAttack,
   );
-  const attackFills = input.fills.filter(
-    (fill) => !changeFillIds.has(fill.holeId),
-  );
+}
+
+/**
+ * Resolves an attack after the weapon change its attacker makes right before
+ * it. A resumed subject finds the change already applied, so Battle applies it
+ * once; the drop position fill is the change's own and never reaches the
+ * attack.
+ */
+export function resolveWithWeaponChangeBefore<
+  Input extends BattleResolutionInput,
+>(
+  input: Input,
+  attackerId: CombatantId,
+  change: AttackWeaponChange,
+  resolveAttack: (input: Input) => BattleResolutionResult,
+): BattleResolutionResult {
+  const attackFills = fillsWithoutWeaponChange(attackerId, change, input.fills);
   if (
     input.state.subjectResolutionPhase.kind === "subjectContinuation" &&
-    ownedWeaponChangeIsApplied(input.state, actorId, change)
+    ownedWeaponChangeIsApplied(input.state, attackerId, change)
   ) {
     return withWeaponDropOutcome(
       resolveAttack({ ...input, fills: attackFills }),
-      actorId,
+      attackerId,
       change,
     );
   }
   const applied = appliedWeaponChange(
     input.state,
     input.subject,
+    attackerId,
     change,
     input.fills,
   );
   if (applied.tag !== "applied") return applied.result;
   return withWeaponDropOutcome(
     resolveAttack({ ...input, state: applied.state, fills: attackFills }),
-    actorId,
+    attackerId,
     change,
   );
+}
+
+/**
+ * Resolves an attack, then the weapon change its attacker makes right after
+ * it. Battle asks where a dropped weapon lands before the attack starts, and
+ * makes the change once the attack is over, so a resumed attack makes it
+ * once too. The caller has admitted the change against the hands as the
+ * attack leaves them.
+ */
+export function resolveWithWeaponChangeAfter<
+  Input extends BattleResolutionInput,
+>(
+  input: Input,
+  attackerId: CombatantId,
+  change: AttackWeaponChange,
+  resolveAttack: (input: Input) => BattleResolutionResult,
+): BattleResolutionResult {
+  const facts = appliedWeaponChangeFacts(attackerId, change, input.fills);
+  if (facts.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [facts.hole]);
+  }
+  // The landing position stays among the attack's fills, so that an attack
+  // resumed after a Reaction to its hit replays it; the attack reads only
+  // its own (readiedAttackFills).
+  const result = resolveAttack(input);
+  if (result.tag !== "resolved") return result;
+  const changed = stateWithOwnedWeaponChange(
+    result.state,
+    attackerId,
+    facts.change,
+  );
+  /* v8 ignore start -- @preserve -- The caller admitted this change against the hands as the attack leaves them. */
+  if (changed.tag === "invalid") {
+    return invalidResult(input.state, "staleSubject", changed.message);
+  }
+  /* v8 ignore stop -- @preserve */
+  return withWeaponDropOutcome(
+    {
+      ...result,
+      state: changed.state,
+      snapshot: snapshotBattle(changed.state),
+    },
+    attackerId,
+    change,
+  );
+}
+
+/** The fills that answer the attack: every one but the weapon change's own. */
+export function fillsWithoutWeaponChange(
+  attackerId: CombatantId,
+  change: AttackWeaponChange,
+  fills: readonly BattleFill[],
+): readonly BattleFill[] {
+  const changeFillIds = new Set(
+    weaponChangeInitialHoles(attackerId, change).map((hole) => hole.holeId),
+  );
+  return fills.filter((fill) => !changeFillIds.has(fill.holeId));
 }
 
 function subjectWeaponChange(
@@ -389,12 +464,12 @@ function weaponChangeAfterAttackIsAvailable(
 function appliedWeaponChange(
   state: BattleState,
   subject: BattleSubject,
+  actorId: CombatantId,
   change: AttackWeaponChange,
   fills: readonly BattleFill[],
 ):
   | { readonly tag: "applied"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
-  const actorId = subject.actorId;
   const issue = ownedWeaponChangeIssue(state, actorId, change);
   if (issue !== null) {
     return {

@@ -144,6 +144,7 @@ import {
   BattleInterruptSubjectSchema,
   battleInterruptAttackExecutionSelectionWithFields,
   ReadyTriggerDescription,
+  ReadiedAttackWeaponChangeSchema,
   SpellInvocationRefSchema,
 } from "../battle-subjects.ts";
 import {
@@ -5057,6 +5058,7 @@ type BattleFillEncoded =
                   readonly kind: "releaseReadiedAttack";
                   readonly targetId: string;
                   readonly procedureRef: string;
+                  readonly weaponChange?: typeof ReadiedAttackWeaponChangeSchema.Encoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -5374,6 +5376,7 @@ export function battleInterruptDecisionFillSchema() {
               BattleAttackProcedureExecutionRef,
               BattleStatBlockProcedureExecutionRef,
             ]),
+            weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
             fills: Schema.Array(BattleFillSchema),
           }),
           Schema.Struct({

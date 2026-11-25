@@ -21,6 +21,7 @@ import {
   interruptDecisionFill,
   battleFrontierInterruptDecisionForState,
   battleObjectId,
+  battleTablePositionId,
   characterBattleFeatureInitForTest,
   combatantId,
   findHole,
@@ -32,11 +33,18 @@ import {
 import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-events.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import type { BattleSubject } from "./battle-subjects.ts";
-import type { BattleFill } from "./battle-state-execution.ts";
+import type {
+  BattleSubject,
+  ReadiedAttackWeaponChange,
+} from "./battle-subjects.ts";
+import type { BattleFill, BattleState } from "./battle-state-execution.ts";
+import { weaponDropPositionHole } from "./battle-reducer/attack-weapon-change.ts";
+import { battleGroundObjectState } from "./battle-reducer/object-custody-queries.ts";
 import type { CombatantId } from "./identity.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+
+const dropPositionId = battleTablePositionId("dropped-after-readied-attack");
 
 type TransactionOperation = Parameters<
   typeof settleBattleRuntimeTransaction
@@ -156,7 +164,21 @@ function releaseReadiedAttack(
   readied: ReturnType<typeof readyAttackAndReportTrigger>,
   targetId: CombatantId,
   spatialFill = targetSpatialFactsFill(targetId, readied.response.selection, 5),
+  weaponChange?: ReadiedAttackWeaponChange,
 ) {
+  const changeFills: BattleFill[] =
+    weaponChange?.change.kind === "drop"
+      ? [
+          {
+            kind: "weaponDropPosition",
+            holeId: weaponDropPositionHole(
+              fighterId,
+              weaponChange.change.objectId,
+            ).holeId,
+            value: { positionId: dropPositionId },
+          },
+        ]
+      : [];
   const released = pendingFrontier(
     driver.settle({
       kind: "interruptDecision",
@@ -167,7 +189,8 @@ function releaseReadiedAttack(
           kind: "releaseReadiedAttack",
           targetId,
           procedureRef: readied.response.selection.procedureRef,
-          fills: [spatialFill],
+          ...(weaponChange === undefined ? {} : { weaponChange }),
+          fills: [...changeFills, spatialFill],
         },
       }),
     }),
@@ -307,7 +330,8 @@ test("direct readied attack continuation accepts reordered facts but rejects rep
  */
 function readiedDaggerHitOnUncannyDodgeRogue(
   rogueAnswer: "useUncannyDodge" | "decline",
-): number {
+  weaponChange?: ReadiedAttackWeaponChange,
+): { readonly hpLost: number; readonly state: BattleState } {
   const rogueId = combatantId("readied-attack-rogue");
   const driver = transactionDriver(
     startBattleSessionRight({
@@ -346,7 +370,13 @@ function readiedDaggerHitOnUncannyDodgeRogue(
     [fighterId, goblinId],
     rogueId,
   );
-  const attackRoll = releaseReadiedAttack(driver, readied, rogueId);
+  const attackRoll = releaseReadiedAttack(
+    driver,
+    readied,
+    rogueId,
+    targetSpatialFactsFill(rogueId, readied.response.selection, 5),
+    weaponChange,
+  );
   const hit = pendingFrontier(
     driver.subject(attackRoll.replaySubject, [
       attackRollFill(findHole(attackRoll.holes, "attackRoll"), {
@@ -395,15 +425,30 @@ function readiedDaggerHitOnUncannyDodgeRogue(
   expect(finished.tag).toBe("settled");
   const state = driver.session().state;
   expect(state.readiedResponses.has(fighterId)).toBe(false);
-  return hpBefore - (state.combatants.get(rogueId)?.hp ?? 0);
+  return { hpLost: hpBefore - (state.combatants.get(rogueId)?.hp ?? 0), state };
 }
 
 test("a readied attack resumes to its damage after a Reaction to its hit, used or declined", () => {
-  const declinedDamage = readiedDaggerHitOnUncannyDodgeRogue("decline");
-  const dodgedDamage = readiedDaggerHitOnUncannyDodgeRogue("useUncannyDodge");
+  const declinedDamage = readiedDaggerHitOnUncannyDodgeRogue("decline").hpLost;
+  const dodgedDamage =
+    readiedDaggerHitOnUncannyDodgeRogue("useUncannyDodge").hpLost;
 
   expect(declinedDamage).toBeGreaterThan(0);
   expect(dodgedDamage).toBe(Math.floor(declinedDamage / 2));
+});
+
+test("a readied attack resumed after a Reaction to its hit makes its weapon change after it once it's over", () => {
+  const daggerId = battleObjectId("main:weapon_dagger");
+  const dropped = readiedDaggerHitOnUncannyDodgeRogue("decline", {
+    timing: "afterAttack",
+    change: { kind: "drop", objectId: daggerId },
+  });
+
+  expect(dropped.hpLost).toBeGreaterThan(0);
+  expect(battleGroundObjectState(dropped.state, fighterId, daggerId)).toEqual({
+    positionId: dropPositionId,
+    source: { kind: "attackWeaponChange" },
+  });
 });
 
 test("the attack-hit replay keeps a fixed target's spatial facts and compares them by value, in any order", () => {

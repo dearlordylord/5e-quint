@@ -142,6 +142,11 @@ export function readyActionSubject(
     : null;
 }
 
+/**
+ * The readied attack against this target, if the reactor can make it: among
+ * the attacks it can make now, or among `attacks`, the ones it could make
+ * after a weapon change.
+ */
 export function readiedAttackOption(
   state: BattleState,
   actorId: CombatantId,
@@ -150,6 +155,7 @@ export function readiedAttackOption(
     BattleReadyResponse,
     { readonly kind: "attack" }
   >["selection"]["procedureRef"],
+  attacks?: readonly BoundSupportedAttackActionOption[],
 ): BoundSupportedAttackActionOption | undefined {
   const readied = state.readiedResponses.get(actorId);
   if (
@@ -159,7 +165,7 @@ export function readiedAttackOption(
     return undefined;
   }
   const selection = readied.response.selection;
-  return attackActionOptionsForActor(state, actorId).find(
+  return (attacks ?? attackActionOptionsForActor(state, actorId)).find(
     (attack) =>
       boundAttackExecutionSelectionMatchesOption(selection, attack) &&
       attackTargetChoices(state, actorId, attack).includes(targetId),

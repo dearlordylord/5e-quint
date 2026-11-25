@@ -142,6 +142,10 @@ import {
 } from "./battle-runtime-protocol.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { readiedAttackOption } from "./ready.ts";
+import {
+  readiedAttackFills,
+  resolveReadiedAttackWithWeaponChange,
+} from "./readied-attack-weapon-change.ts";
 import { resolveWeaponMasteryGraze } from "./weapon-mastery-graze.ts";
 import {
   WEAPON_MASTERY_GRAZE_DECISION_HOLE_ID,
@@ -218,7 +222,14 @@ type ReactionAttackRollPreparation =
 export function resolveOpportunityAttackCommand(
   input: OpportunityAttackResolutionInput,
 ): BattleResolutionResult {
-  const result = resolveReactionAttackCommand(input);
+  const subject = input.subject;
+  const result =
+    subject.command === "releaseReadiedAttack"
+      ? resolveReadiedAttackWithWeaponChange(
+          { ...input, subject },
+          resolveReactionAttackCommand,
+        )
+      : resolveReactionAttackCommand(input);
   if (
     input.subject.command !== "releaseReadiedAttack" ||
     result.tag !== "resolved"
@@ -465,7 +476,7 @@ function resolveReactionAttackCommand(
   if (binding.tag === "result") return binding.result;
   const { reactor, target, attack } = binding;
   const fillSet = attackFillSet(
-    input.fills,
+    reactionAttackFills(subject, input.fills),
     subject.reactorId,
     input.state,
     ongoingFeatureEnemyRelationshipDecisionRequired(
@@ -525,6 +536,16 @@ function resolveReactionAttackCommand(
     pendingAttackDamageReductions,
     rollPreparation,
   });
+}
+
+/** The fills the reaction attack itself reads. */
+function reactionAttackFills(
+  subject: OpportunityAttackResolutionInput["subject"],
+  fills: OpportunityAttackResolutionInput["fills"],
+): OpportunityAttackResolutionInput["fills"] {
+  return subject.command === "releaseReadiedAttack"
+    ? readiedAttackFills(subject, fills)
+    : fills;
 }
 
 function reactionAttackBinding(

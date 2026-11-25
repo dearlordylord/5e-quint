@@ -303,6 +303,7 @@ import {
   type BonusActionStandardActionSubject,
   type SpellInvocationRef,
   type MonkFocusFlurryOfBlowsStrikeSubject,
+  type ReadiedAttackWeaponChange,
 } from "./battle-subjects.ts";
 import {
   type CharacterBattleMetamagicOptionFact,
@@ -1255,6 +1256,7 @@ export type BattleInterruptProcedureSelection = {
       readonly kind: "releaseReadiedAttack";
       readonly procedureRef: BattleInterruptAttackExecutionSelection["procedureRef"];
       readonly targetId: CombatantId;
+      readonly weaponChange?: ReadiedAttackWeaponChange;
     }
   | {
       readonly kind: "castTriggeredReactionSpell";

@@ -126,6 +126,54 @@ export const AttackWeaponChangeSchema = Schema.Union([
 ]);
 export type AttackWeaponChange = typeof AttackWeaponChangeSchema.Type;
 
+/**
+ * When a readied Attack's one weapon change happens: right before the attack
+ * or right after it ("Attack [Action]": "You do so either before or after the
+ * attack").
+ */
+export const READIED_ATTACK_WEAPON_CHANGE_TIMINGS = [
+  "beforeAttack",
+  "afterAttack",
+] as const;
+export type ReadiedAttackWeaponChangeTiming =
+  (typeof READIED_ATTACK_WEAPON_CHANGE_TIMINGS)[number];
+
+/**
+ * The one weapon change a readied Attack carries when its reactor releases
+ * it, and whether it comes before or after the attack.
+ */
+export const ReadiedAttackWeaponChangeSchema = Schema.Struct({
+  timing: Schema.Literals(READIED_ATTACK_WEAPON_CHANGE_TIMINGS),
+  change: AttackWeaponChangeSchema,
+});
+export type ReadiedAttackWeaponChange =
+  typeof ReadiedAttackWeaponChangeSchema.Type;
+
+/** Whether two weapon changes equip or unequip the same weapon the same way. */
+export function attackWeaponChangesEqual(
+  left: AttackWeaponChange,
+  right: AttackWeaponChange,
+): boolean {
+  return (
+    left.kind === right.kind &&
+    left.objectId === right.objectId &&
+    (left.kind !== "equip" ||
+      (right.kind === "equip" && left.slot === right.slot))
+  );
+}
+
+/** Whether two readied Attack releases carry the same weapon change, if any. */
+export function readiedAttackWeaponChangesEqual(
+  left: ReadiedAttackWeaponChange | undefined,
+  right: ReadiedAttackWeaponChange | undefined,
+): boolean {
+  if (left === undefined || right === undefined) return left === right;
+  return (
+    left.timing === right.timing &&
+    attackWeaponChangesEqual(left.change, right.change)
+  );
+}
+
 export const BATTLE_RUNTIME_COMMANDS = [
   "endTurn",
   "endConcentration",
@@ -690,6 +738,7 @@ const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
   ]),
   attackAbility: Schema.optionalKey(Schema.Never),
   attackDamageType: Schema.optionalKey(Schema.Never),
+  weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
 });
 
 const BattleInterruptCastTriggeredReactionSpellSubjectSchema = Schema.Struct({
@@ -741,6 +790,10 @@ export const BattleInterruptSubjectSchema = Schema.Union([
   BattleInterruptRetaliationAttackSubjectSchema,
 ]);
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
+/** The release of a readied attack at one target, with its weapon change. */
+export type BattleReleaseReadiedAttackSubject =
+  typeof BattleInterruptReleaseReadiedAttackSubjectSchema.Type;
 
 // SRD 5.2.1 "Your Turn", Interacting with Things, and "Utilize [Action]": an
 // object interaction, charged as the turn's free interaction or the Utilize

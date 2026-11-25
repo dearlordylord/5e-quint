@@ -24,14 +24,34 @@ function isNestedChoiceSchema(member: ChoiceSchema): member is Exclude<
 > {
   return member.fields.kind.literal !== "reactionRollOrDamageReduction";
 }
-const nestedChoiceSchema = resolutionSchema.fields.choice.mapMembers(
-  (members) =>
+type ResolutionChoice = typeof resolutionSchema.fields.choice;
+/** Each nested procedure choice, with its fills left for later. */
+type WithoutFills<Choice> = Choice extends { readonly kind: string }
+  ? Omit<Choice, "fills"> & { readonly fills: readonly [] }
+  : never;
+type NestedChoice = WithoutFills<
+  Exclude<
+    ResolutionChoice["Type"],
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >
+>;
+type NestedChoiceEncoded = WithoutFills<
+  Exclude<
+    ResolutionChoice["Encoded"],
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >
+>;
+// Mapping the union's members one at a time gives TypeScript one struct per
+// member only in name: it types the result as a struct over the union of their
+// fields, which loses a member's optional keys. The declared type keeps them.
+const nestedChoiceSchema: Schema.Codec<NestedChoice, NestedChoiceEncoded> =
+  resolutionSchema.fields.choice.mapMembers((members) =>
     members
       .filter(isNestedChoiceSchema)
       .map((member) =>
         member.mapFields((fields) => ({ ...fields, fills: Schema.Tuple([]) })),
       ),
-);
+  );
 const readyResolutionSchema = resolutionSchema.mapFields((fields) => ({
   ...fields,
   choice: nestedChoiceSchema,
@@ -78,10 +98,16 @@ function readyNestedSelection(
         kind: command,
         fills: [] as const,
       }),
-      releaseReadiedAttack: ({ command, procedureRef, targetId }) => ({
+      releaseReadiedAttack: ({
+        command,
+        procedureRef,
+        targetId,
+        weaponChange,
+      }) => ({
         kind: command,
         procedureRef,
         targetId,
+        ...(weaponChange === undefined ? {} : { weaponChange }),
         fills: [] as const,
       }),
       castTriggeredReactionSpell: ({ command, procedureRef }) => ({

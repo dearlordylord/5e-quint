@@ -6563,25 +6563,30 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-change-discovery.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-readied-attack-weapon-change.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
       ],
-      "reason": "The QNT owner models a weapon held, stowed or on the ground; equipping a weapon that is not in hand into a hand slot whose weapon is out of hand, with the slot's hands empty, and the slot's previous weapon leaving the loadout where it is; stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle binds an attack for every owned weapon it can execute at battle start, moves the bindings with the weapons between the hand slots and the other owned weapons, applies a change carried on the attack, or on a Grapple or Shove in an attack's place, before it looks up the attack or the grappling hand, offers the change after it as its own command, and asks the table where a dropped weapon lands. The focused MBT witnesses one loadout weapon; the owned-weapons contract test witnesses slot admission, the Two-Handed off-hand refusal and the departing weapon's custody for weapons outside the loadout.",
+      "reason": "The QNT owner models a weapon held, stowed or on the ground; equipping a weapon that is not in hand into a hand slot whose weapon is out of hand, with the slot's hands empty, and the slot's previous weapon leaving the loadout where it is; stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle binds an attack for every owned weapon it can execute at battle start, moves the bindings with the weapons between the hand slots and the other owned weapons, applies a change carried on the attack, or on a Grapple or Shove in an attack's place, before it looks up the attack or the grappling hand, offers the change after it as its own command, lets a readied attack's release carry its one change before or after the attack, and asks the table where a dropped weapon lands. The focused MBT witnesses one loadout weapon; the owned-weapons contract test witnesses slot admission, the Two-Handed off-hand refusal and the departing weapon's custody for weapons outside the loadout; the readied-attack contract test witnesses a readied attack's change before and after it.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
         "packages/battle-runtime/src/battle-reducer/owned-weapon-custody.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/readied-attack-weapon-change.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/rules-glossary.md#Attack [Action]"
       ],
-      "title": "Attack weapon change: each Attack action attack can equip or unequip one owned weapon, before or after the attack"
+      "title": "Attack weapon change: each Attack action attack, a readied one included, can equip or unequip one owned weapon, before or after the attack"
     },
     {
       "id": "BATTLE.ATTACK.TARGET_COVER",

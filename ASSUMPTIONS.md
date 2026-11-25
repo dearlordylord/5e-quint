@@ -347,6 +347,16 @@ change and leave a change still left as it was. Preparing Ready grants no
 change before its trigger, so the Grapple or Shove that Ready holds carries
 none. Any change still left at the end of the turn is also gone.
 
+A readied Attack is the Attack action taken with a Reaction when its trigger
+occurs, so its one attack gets the one change too, on another creature's turn.
+The reactor chooses it when releasing the readied attack: a change before the
+attack, after which the readied attack must still be there, or a change after
+it. A change after the attack is chosen before the roll, against the hands as
+the attack will leave them, and Battle makes it as soon as the attack is over.
+Where a weapon dropped after the attack lands is asked when the attack is
+released. Preparing Ready grants no change, and no other Reaction attack, such
+as an Opportunity Attack, carries one.
+
 Equipping draws a carried weapon, or picks up one lying on the ground, into
 one hand slot of the character's loadout: the main hand or the off hand. The
 slot's own weapon goes back with its loadout grip. Another weapon takes the
@@ -367,11 +377,16 @@ either before or after the attack." It also says "Equipping a weapon includes
 drawing it from a sheath or picking it up. Unequipping a weapon includes
 sheathing, stowing, or dropping it." "Unarmed Strike" calls an Unarmed Strike
 "a melee attack" whose options include Grapple and Shove, and a Grapple is
-"possible only if ... you have a hand free to grab it." The SRD doesn't say how
-long after the attack the change may wait, or where a dropped weapon lands. The
-change belongs to the Attack action, so the model ends the window at the
-action's next attack, which keeps each change to one attack, and asks the table
-where the weapon lands.
+"possible only if ... you have a hand free to grab it." "Ready [Action]" lets
+the creature choose "the action you will take in response to that trigger" and
+"take your Reaction right after the trigger finishes"; an Opportunity Attack is
+"one melee attack" with the Reaction, not the Attack action. The SRD doesn't say
+how long after the attack the change may wait, when a readied attack's change
+after it is chosen, or where a dropped weapon lands. The change belongs to the
+Attack action, so the model ends the window at the action's next attack, which
+keeps each change to one attack, and asks the table where the weapon lands. A
+readied attack's Reaction ends with the attack, so its change after the attack
+is chosen with the release.
 
 **Temporary implementation restriction (not a rules assumption):** Battle
 brings into the battle only owned weapons it can execute; one it can't stays
@@ -382,7 +397,8 @@ property's Bonus Action attack, so another weapon goes in the off hand only
 beside a main weapon in hand, and a Two-Handed weapon never goes there. The
 slot's own weapon takes the hands its loadout grip gives it, so under a
 two-handed main grip an off-hand weapon has none, even while the main weapon
-is out of hand. The SRD sets none of these limits. Wild Shape's equipment
+is out of hand. A change after a readied throw can't name the thrown weapon,
+which rests wherever it lands. The SRD sets none of these limits. Wild Shape's equipment
 choice covers the loadout's objects only, so an owned weapon outside the
 loadout stays carried whatever the druid chooses.
 
