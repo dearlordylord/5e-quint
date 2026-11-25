@@ -27,6 +27,7 @@ const UNIT_PROCEDURE_EXPOSURE = {
   ongoingFeatureActivationMovementRider: boundContinuation(),
   passiveInitiativeRollMode: internal(),
   brutalStrike: boundContinuation(),
+  combatTurnStartHeroicInspiration: internal(),
   creatureSpaceMovementPermission: internal(),
   cunningStrike: boundContinuation(),
   cunningStrikeOptionGrant: boundContinuation(),
@@ -184,6 +185,8 @@ export const UNIT_SUPPORT_EXPOSURE = {
   bonusActionHealingMovementRider:
     UNIT_PROCEDURE_EXPOSURE["bonusActionHealingMovementRider"],
   brutalStrike: UNIT_PROCEDURE_EXPOSURE["brutalStrike"],
+  combatTurnStartHeroicInspiration:
+    UNIT_PROCEDURE_EXPOSURE["combatTurnStartHeroicInspiration"],
   cunningStrike: UNIT_PROCEDURE_EXPOSURE["cunningStrike"],
   cunningStrikeOptionGrant: UNIT_PROCEDURE_EXPOSURE["cunningStrikeOptionGrant"],
   druidWildCompanionSpellCast:

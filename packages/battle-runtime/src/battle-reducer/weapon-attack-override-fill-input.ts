@@ -92,6 +92,7 @@ function classifyWeaponAttackOverrideFill(
       persistentAreaSourceTurnTranslation: ordinaryFillIsInvalid,
       startTurnOccurrenceOrder: ordinaryFillIsInvalid,
       temporaryHitPointChoice: ordinaryFillIsInvalid,
+      turnStartHeroicInspirationChoice: ordinaryFillIsInvalid,
       teleportDestination: ordinaryFillIsInvalid,
       spatialMeleeSpellAttackProxyPosition: ordinaryFillIsInvalid,
       spellTargetAllocation: ordinaryFillIsInvalid,

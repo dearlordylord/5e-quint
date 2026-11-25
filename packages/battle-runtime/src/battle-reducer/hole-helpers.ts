@@ -339,6 +339,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "temporaryHitPointChoice" as const,
       ),
       byBattleHoleKind(
+        "turnStartHeroicInspirationChoice",
+        () => "turnStartHeroicInspirationChoice" as const,
+      ),
+      byBattleHoleKind(
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,
       ),

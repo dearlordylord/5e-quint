@@ -45,6 +45,7 @@ module battleRuntimeFillKinds {
     | TargetAbilityChoicesFillKind
     | TargetChoiceFillKind
     | TemporaryHitPointChoiceFillKind
+    | TurnStartHeroicInspirationChoiceFillKind
     | UnitFeatureDecisionFillKind
     | WildShapeEquipmentDispositionFillKind
 }

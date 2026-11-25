@@ -1852,6 +1852,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.battleContinuation,
     ),
+    turnStartHeroicInspirationChoice: account(
+      "continuation",
+      "turnStartHeroicInspirationChoice",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
     toolPossessionFacts: account(
       "continuation",
       "toolPossessionFacts",
@@ -4161,6 +4170,15 @@ export const OPERATION_ACCOUNTING = {
         "resolveBrutalStrikeAfterDamage",
       ),
       REASONS.unitContinuation,
+    ),
+    combatTurnStartHeroicInspiration: account(
+      "internal",
+      "combatTurnStartHeroicInspiration",
+      at(
+        "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts",
+        "turnStartHeroicInspirationOffer",
+      ),
+      REASONS.unitFact,
     ),
     creatureSpaceMovementPermission: account(
       "internal",
