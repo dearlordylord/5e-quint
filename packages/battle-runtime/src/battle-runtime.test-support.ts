@@ -3337,12 +3337,12 @@ export function abilityCheckFill(
         readonly naturalD20?: number;
         readonly rollMode?: AttackRollMode;
         readonly rolledD20s?: TestD20RolledD20s;
-        readonly d20TestNaturalOneReroll?: Extract<
+        readonly d20TestRerolls?: Extract<
           BattleFill,
           { readonly kind: "abilityCheck" }
-        >["value"]["d20TestNaturalOneReroll"];
+        >["value"]["d20TestRerolls"];
       },
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "abilityCheck" }> {
   if (
     hole.kind !== "abilityCheck" &&
     hole.kind !== "spellcastingAbilityCheck"
@@ -3358,9 +3358,9 @@ export function abilityCheckFill(
       ...(testD20TestRoll(checkValue) === undefined
         ? {}
         : { d20TestRoll: testD20TestRoll(checkValue)! }),
-      ...(checkValue.d20TestNaturalOneReroll === undefined
+      ...(checkValue.d20TestRerolls === undefined
         ? {}
-        : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: checkValue.d20TestRerolls }),
     },
   };
 }
@@ -3442,10 +3442,10 @@ export function deathSavingThrowFill(
     | number
     | {
         readonly roll: number;
-        readonly d20TestNaturalOneReroll?: Extract<
+        readonly d20TestRerolls?: Extract<
           BattleFill,
           { readonly kind: "deathSavingThrow" }
-        >["d20TestNaturalOneReroll"];
+        >["d20TestRerolls"];
       },
 ): BattleFill {
   if (hole.kind !== "deathSavingThrow") {
@@ -3456,9 +3456,9 @@ export function deathSavingThrowFill(
     kind: "deathSavingThrow",
     holeId: hole.holeId,
     value: d20Roll(value.roll),
-    ...(value.d20TestNaturalOneReroll === undefined
+    ...(value.d20TestRerolls === undefined
       ? {}
-      : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+      : { d20TestRerolls: value.d20TestRerolls }),
   };
 }
 
@@ -3474,17 +3474,17 @@ export function concentrationSavingThrowFill(
             readonly rollMode?: AttackRollMode;
             readonly rolledD20s?: TestD20RolledD20s;
             readonly withoutRoll?: never;
-            readonly d20TestNaturalOneReroll?: Extract<
+            readonly d20TestRerolls?: Extract<
               BattleFill,
               { readonly kind: "concentrationSavingThrow" }
-            >["value"]["d20TestNaturalOneReroll"];
+            >["value"]["d20TestRerolls"];
           }
         | {
             readonly succeeded: boolean;
             readonly withoutRoll: true;
             readonly d20TestRoll?: never;
             readonly naturalD20?: never;
-            readonly d20TestNaturalOneReroll?: never;
+            readonly d20TestRerolls?: never;
           }
       ),
 ): BattleFill {
@@ -3504,7 +3504,7 @@ export function concentrationSavingThrowFill(
   }
   const d20TestRoll = testD20TestRoll(value);
   if (d20TestRoll === undefined) {
-    if (value.d20TestNaturalOneReroll !== undefined) {
+    if (value.d20TestRerolls !== undefined) {
       throw new Error(
         "A concentration Saving Throw without a D20 Test roll cannot include a reroll decision.",
       );
@@ -3524,10 +3524,9 @@ export function concentrationSavingThrowFill(
     value: {
       succeeded: value.succeeded,
       d20TestRoll,
-      ...(!("d20TestNaturalOneReroll" in value) ||
-      value.d20TestNaturalOneReroll === undefined
+      ...(!("d20TestRerolls" in value) || value.d20TestRerolls === undefined
         ? {}
-        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: value.d20TestRerolls }),
     },
   };
 }
@@ -3818,10 +3817,10 @@ export function savingThrowOutcomeFill(
     readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
     readonly withoutRoll?: true;
-    readonly d20TestNaturalOneReroll?: Extract<
+    readonly d20TestRerolls?: Extract<
       BattleFill,
       { readonly kind: "savingThrowOutcome" }
-    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+    >["value"]["outcomes"][number]["d20TestRerolls"];
   }[],
   relationshipFacts?: Extract<
     BattleFill,
@@ -3877,10 +3876,10 @@ function d20TestSavingThrowOutcomeValue(outcome: {
   readonly rollMode?: AttackRollMode;
   readonly rolledD20s?: TestD20RolledD20s;
   readonly withoutRoll?: true;
-  readonly d20TestNaturalOneReroll?: Extract<
+  readonly d20TestRerolls?: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+  >["value"]["outcomes"][number]["d20TestRerolls"];
 }): Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
@@ -3894,7 +3893,7 @@ function d20TestSavingThrowOutcomeValue(outcome: {
   }
   const d20TestRoll = testD20TestRoll(outcome);
   if (d20TestRoll === undefined) {
-    if (outcome.d20TestNaturalOneReroll !== undefined) {
+    if (outcome.d20TestRerolls !== undefined) {
       throw new Error(
         "A Saving Throw without a D20 Test roll cannot include a reroll decision.",
       );
@@ -3909,9 +3908,9 @@ function d20TestSavingThrowOutcomeValue(outcome: {
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
     d20TestRoll,
-    ...(outcome.d20TestNaturalOneReroll === undefined
+    ...(outcome.d20TestRerolls === undefined
       ? {}
-      : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
+      : { d20TestRerolls: outcome.d20TestRerolls }),
   };
 }
 

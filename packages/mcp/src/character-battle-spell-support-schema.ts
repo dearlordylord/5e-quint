@@ -1,3 +1,4 @@
+import { UNOWNED_SPELL_MECHANICS_FACETS } from "@dnd/battle-runtime";
 import { UnitId } from "@dnd/shared/game-facts";
 import { MECHANICS_GRAPH_NODE_ROLES } from "@dnd/surface/surface/mechanics-graph-path";
 import { Schema } from "effect";
@@ -39,7 +40,7 @@ export const CharacterBattleSpellSupportSchema = Schema.Array(
         Schema.Struct({ kind: Schema.Literal("noMatchingBattleProcedure") }),
         Schema.Struct({
           kind: Schema.Literal("unownedMechanicsFacet"),
-          facet: Schema.Literal("deathAftermath"),
+          facet: Schema.Literals(UNOWNED_SPELL_MECHANICS_FACETS),
         }),
       ]),
       nextStep: Schema.Literal("planWithoutBattleCasting"),

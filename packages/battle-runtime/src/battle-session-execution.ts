@@ -1,4 +1,5 @@
 import { resolveMoveAfterMovement } from "./battle-reducer/movement-procedures.ts";
+import { resolveD20TestRerollFills } from "./battle-reducer/d20-test-reroll-fills.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
@@ -47,6 +48,7 @@ import type {
 import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
+import { resolveWithSavingThrowCoverCheck } from "./battle-reducer/saving-throw-cover.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
   battleD20TestCircumstanceRequests,
@@ -825,6 +827,26 @@ function resolveBattleSubjectWithInterruptRoute(
   input: BattleResolutionInput,
   handledInterruptOccurrence?: BattleHandledInterruptOccurrence,
 ): BattleResolutionResult {
+  return resolveWithSavingThrowCoverCheck({
+    fills: input.fills,
+    resolveFills: (fills) =>
+      resolveBattleSubjectFillsWithInterruptRoute(
+        { ...input, fills },
+        handledInterruptOccurrence,
+      ),
+    invalid: (message) => ({
+      tag: "invalid",
+      reason: "invalidFill",
+      message,
+      snapshot: snapshotBattle(input.state),
+    }),
+  });
+}
+
+function resolveBattleSubjectFillsWithInterruptRoute(
+  input: BattleResolutionInput,
+  handledInterruptOccurrence?: BattleHandledInterruptOccurrence,
+): BattleResolutionResult {
   const phase = input.state.subjectResolutionPhase;
   const reportsReadyTrigger = isBattleReadyTriggerReportSubject(input.subject);
   if (hasStaleSubjectContinuation(phase, reportsReadyTrigger, input.subject)) {
@@ -884,18 +906,39 @@ function resolveSubjectMechanicalContinuation(input: {
     input.reportsReadyTrigger
   )
     return resolveAdmittedBattleSubject(input.input, input.routeOptions);
-  const result = resolveMoveAfterMovement({
-    state: {
-      ...input.input.state,
-      subjectResolutionPhase: { kind: "subjectSelection" },
-    },
-    subject: phase.subject,
-    movement: phase.admittedMovement,
-    remainingFills: input.input.fills,
+  const movement = phase.admittedMovement;
+  const resolveAfterMovement = (admitted: {
+    readonly state: BattleState;
+    readonly fills: readonly BattleFill[];
+  }): BattleResolutionResult => {
+    const result = resolveMoveAfterMovement({
+      state: {
+        ...admitted.state,
+        subjectResolutionPhase: { kind: "subjectSelection" },
+      },
+      subject: phase.subject,
+      movement,
+      remainingFills: admitted.fills,
+    });
+    return result.tag === "needsHoles"
+      ? mechanicalResultWithPreservedSubjectPhase(
+          result,
+          admitted.state.subjectResolutionPhase,
+        )
+      : result;
+  };
+  // The fills after an admitted movement skip the dispatcher, so their rolled
+  // D20 Test outcomes are checked, and their Heroic Inspiration spent, here.
+  const d20TestRerolls = resolveD20TestRerollFills({
+    resolutionInput: input.input,
+    resolvePrefix: resolveAfterMovement,
   });
-  return result.tag === "needsHoles"
-    ? mechanicalResultWithPreservedSubjectPhase(result, phase)
-    : result;
+  return d20TestRerolls.tag === "settled"
+    ? d20TestRerolls.result
+    : resolveAfterMovement({
+        state: d20TestRerolls.state,
+        fills: input.input.fills,
+      });
 }
 
 function interruptRouteOptionsForSubjectResolution(input: {

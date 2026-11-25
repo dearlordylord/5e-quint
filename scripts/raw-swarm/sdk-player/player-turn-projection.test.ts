@@ -91,7 +91,7 @@ const beforeSession = {
           ],
         ],
       },
-      groundObjects: { $map: [] },
+      objectCustody: { $map: [] },
     },
   },
   battlefield: {

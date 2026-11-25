@@ -1,3 +1,8 @@
+import type {
+  BattleCreatureState,
+  BattleState,
+  CharacterBattleCreatureState,
+} from "../../battle-state-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-attack-override
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
@@ -35,7 +40,7 @@ import {
 } from "../../weapon-attack-override-admission.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { loadoutHeldWeaponSlotIsUsable } from "../wild-shape-equipment.ts";
-import { battleObjectIsOnGround } from "../battle-object-lifecycle.ts";
+import { loadoutWeaponIsHeld } from "../character-effective-loadout.ts";
 import {
   discoverWeaponAttackOverrideCastAct,
   weaponAttackOverrideExecutor,
@@ -1197,7 +1202,7 @@ function resolveWeaponAttackOverrideProfile(
     {
       snapshot: snapshotBattle,
       activeDruidWildShapeEffect,
-      battleObjectIsOnGround,
+      loadoutWeaponIsHeld,
       loadoutHeldWeaponSlotIsUsable,
       spellCastInterruptFrame,
       interruptWindowProgress,
@@ -1248,9 +1253,15 @@ export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   }),
   admitMechanics: admitWeaponAttackOverrideMechanics,
   discoverCastAct: (state, actorId, invocation) =>
-    discoverWeaponAttackOverrideCastAct(state, actorId, invocation, {
+    discoverWeaponAttackOverrideCastAct<
+      CharacterBattleCreatureState["origin"]["selectedLoadout"],
+      BattleCreatureState,
+      BattleState,
+      Parameters<WeaponAttackOverrideProfile["discoverCastAct"]>[2],
+      ReturnType<typeof activeDruidWildShapeEffect>
+    >(state, actorId, invocation, {
       activeDruidWildShapeEffect,
-      battleObjectIsOnGround,
+      loadoutWeaponIsHeld,
       loadoutHeldWeaponSlotIsUsable,
     }),
   resolve: resolveWeaponAttackOverrideProfile,

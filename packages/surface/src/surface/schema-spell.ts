@@ -771,6 +771,13 @@ type SpellcastingAbilityCheckAbility = Schema.Schema.Type<
   typeof SpellcastingAbilityCheckAbilitySchema
 >;
 type UsageLimit = Schema.Schema.Type<typeof UsageLimitSchema>;
+// RAW: Sacred Flame, "The target gains no benefit from Half Cover or
+// Three-Quarters Cover for this save." A save gate marks that denial; without
+// it, a Dexterity save takes the target's cover.
+const SaveCoverBenefitDenialSchema = Schema.Literal("denied");
+type SaveCoverBenefitDenial = Schema.Schema.Type<
+  typeof SaveCoverBenefitDenialSchema
+>;
 type AbilityFilter = Schema.Schema.Type<typeof AbilityFilterSchema>;
 type SavingThrowSourceFilter = Schema.Schema.Type<
   typeof SavingThrowSourceFilterSchema
@@ -2044,6 +2051,7 @@ type ActivationPhase =
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
       readonly autoSuccessIfTarget?: never;
       readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
+      readonly saveCoverBenefit?: SaveCoverBenefitDenial;
       readonly usageLimit?: UsageLimit;
     }
   | {
@@ -2057,6 +2065,7 @@ type ActivationPhase =
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
       readonly autoSuccessIfTarget: SaveGateTargetAutoSuccessPredicate;
       readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
+      readonly saveCoverBenefit?: SaveCoverBenefitDenial;
       readonly usageLimit?: UsageLimit;
     }
   | {
@@ -2070,6 +2079,7 @@ type ActivationPhase =
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
       readonly autoSuccessIfTarget: AnySaveGateTargetAutoSuccessPredicate;
       readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
+      readonly saveCoverBenefit?: SaveCoverBenefitDenial;
       readonly usageLimit?: UsageLimit;
     }
   | {
@@ -4792,6 +4802,7 @@ export const ActivationPhaseSchema: Schema.Codec<
         saveAppliesIf: optionalExact(
           Schema.Literals(["unwilling_target", "unwilling_creature_target"]),
         ),
+        saveCoverBenefit: optionalExact(SaveCoverBenefitDenialSchema),
         usageLimit: optionalExact(UsageLimitSchema),
       }),
       Schema.Struct({
@@ -4809,6 +4820,7 @@ export const ActivationPhaseSchema: Schema.Codec<
         saveAppliesIf: optionalExact(
           Schema.Literals(["unwilling_target", "unwilling_creature_target"]),
         ),
+        saveCoverBenefit: optionalExact(SaveCoverBenefitDenialSchema),
         usageLimit: optionalExact(UsageLimitSchema),
       }),
       Schema.Struct({
@@ -4826,6 +4838,7 @@ export const ActivationPhaseSchema: Schema.Codec<
         saveAppliesIf: optionalExact(
           Schema.Literals(["unwilling_target", "unwilling_creature_target"]),
         ),
+        saveCoverBenefit: optionalExact(SaveCoverBenefitDenialSchema),
         usageLimit: optionalExact(UsageLimitSchema),
       }),
       Schema.Struct({

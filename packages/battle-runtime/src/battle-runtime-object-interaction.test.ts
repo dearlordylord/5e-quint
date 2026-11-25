@@ -383,7 +383,7 @@ describe("held-weapon pickup", () => {
     const pickedUp = requireResolved(
       interact(fallen, pickupSubject(fighterId), false),
     ).state;
-    expect(pickedUp.groundObjects.has(fighterId)).toBe(false);
+    expect(pickedUp.objectCustody.has(fighterId)).toBe(false);
     expect(pickedUp.currentTurnResources.objectInteraction).toBe("spent");
     const armed = pickedUp.combatants.get(fighterId);
     if (armed === undefined || !isCharacterBattleCreatureState(armed)) {
@@ -406,7 +406,7 @@ describe("held-weapon pickup", () => {
       interact(spent, pickupSubject(fighterId), false),
     ).state;
     expect(pickedUp.currentTurnResources.actionTakenThisTurn).toBe(true);
-    expect(pickedUp.groundObjects.has(fighterId)).toBe(false);
+    expect(pickedUp.objectCustody.has(fighterId)).toBe(false);
   });
 
   it("refuses a pickup of an object that isn't on the ground", () => {

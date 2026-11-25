@@ -89,7 +89,7 @@ function validatedPacketFixture() {
             ],
           ],
         },
-        groundObjects: { $map: [] },
+        objectCustody: { $map: [] },
       },
     },
     battlefield: {

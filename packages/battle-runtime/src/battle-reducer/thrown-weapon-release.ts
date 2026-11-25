@@ -17,9 +17,16 @@ import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import { type BattleSubject, sameBattleSubject } from "../battle-subjects.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import {
+  battleGroundObjectPlacements,
   battleStateWithGroundObjects,
+  battleStateWithObjectCustody,
   battleStateWithoutGroundObject,
 } from "./battle-object-lifecycle.ts";
+import { loadoutWeaponIsStowed } from "./character-effective-loadout.ts";
+import {
+  battleGroundObjectState,
+  battleObjectIsOnGround,
+} from "./object-custody-queries.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { interruptedProcedureSubject } from "./subject-continuation-phase.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
@@ -70,7 +77,20 @@ export function stateWithThrownWeaponReleased(input: {
     return input.state;
   }
   /* v8 ignore stop -- @preserve */
-  const placed = battleStateWithGroundObjects(input.state, [
+  // A Thrown weapon drawn as part of its attack leaves the sheath as it flies.
+  const drawn = loadoutWeaponIsStowed(
+    input.state,
+    input.attackerId,
+    attack.weaponObjectId,
+  )
+    ? battleStateWithObjectCustody(
+        input.state,
+        input.attackerId,
+        attack.weaponObjectId,
+        null,
+      )
+    : input.state;
+  const placed = battleStateWithGroundObjects(drawn, [
     {
       actorId: input.attackerId,
       objectId: attack.weaponObjectId,
@@ -137,7 +157,7 @@ export function stateWithAcceptedThrowInHand(
     return state;
   }
   const { actorId, objectId } = phase.acceptedThrownWeaponRelease;
-  const grounded = state.groundObjects.get(actorId)?.get(objectId);
+  const grounded = battleGroundObjectState(state, actorId, objectId);
   return grounded?.source.kind === "thrownWeaponAttack"
     ? battleStateWithoutGroundObject(state, actorId, objectId)
     : state;
@@ -175,20 +195,18 @@ function thrownWeaponDropsFinishedBy(
   stateBefore: BattleState,
   state: BattleState,
 ): readonly BattleDroppedObjectOutcome[] {
-  return [...state.groundObjects].flatMap(([actorId, objects]) =>
-    [...objects].flatMap(
-      ([objectId, { source }]): readonly BattleDroppedObjectOutcome[] =>
-        source.kind === "thrownWeaponAttack" &&
-        thrownWeaponAttackFinished({
-          stateBefore,
-          state,
-          actorId,
-          objectId,
-          source,
-        })
-          ? [{ kind: "objectDropped", actorId, objectId, source }]
-          : [],
-    ),
+  return battleGroundObjectPlacements(state).flatMap(
+    ({ actorId, objectId, source }): readonly BattleDroppedObjectOutcome[] =>
+      source.kind === "thrownWeaponAttack" &&
+      thrownWeaponAttackFinished({
+        stateBefore,
+        state,
+        actorId,
+        objectId,
+        source,
+      })
+        ? [{ kind: "objectDropped", actorId, objectId, source }]
+        : [],
   );
 }
 
@@ -203,9 +221,11 @@ function thrownWeaponAttackFinished(input: {
   readonly objectId: BattleObjectId;
   readonly source: ThrownWeaponDropSource;
 }): boolean {
-  const landedNow =
-    input.stateBefore.groundObjects.get(input.actorId)?.has(input.objectId) !==
-    true;
+  const landedNow = !battleObjectIsOnGround(
+    input.stateBefore,
+    input.actorId,
+    input.objectId,
+  );
   // The resolved result ends its subject, so only a frame still on the stack
   // keeps the attack in flight after it, whatever its continuation recorded.
   return (

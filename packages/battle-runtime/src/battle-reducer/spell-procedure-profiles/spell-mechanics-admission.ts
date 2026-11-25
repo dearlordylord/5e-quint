@@ -24,6 +24,7 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type {
+  ActivationPhase,
   Attachment,
   Components,
   DurationEndTrigger,
@@ -1188,6 +1189,20 @@ export type SpellProcedureMechanicsInspectionView<
       readonly tag: "unsupported";
       readonly issues: ReadonlyNonEmptyArray<Issue>;
     };
+/**
+ * Authored mechanics facets that leave a spell without a Battle owner unless
+ * a procedure applies them.
+ * - deathAftermath: no Battle procedure owns what follows a death.
+ * - saveCoverBenefit: a save gate denies its target the benefit of cover, and
+ *   an admitted procedure doesn't carry that denial to its saving throw.
+ */
+export const UNOWNED_SPELL_MECHANICS_FACETS = [
+  "deathAftermath",
+  "saveCoverBenefit",
+] as const;
+export type UnownedSpellMechanicsFacet =
+  (typeof UNOWNED_SPELL_MECHANICS_FACETS)[number];
+
 export type BattleSpellMechanicsAdmission<
   Admitted extends AdmittedSpellMechanicsView = AdmittedSpellMechanicsView,
   Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
@@ -1198,7 +1213,7 @@ export type BattleSpellMechanicsAdmission<
         | { readonly kind: "noMatchingBattleProcedure" }
         | {
             readonly kind: "unownedMechanicsFacet";
-            readonly facet: "deathAftermath";
+            readonly facet: UnownedSpellMechanicsFacet;
           };
     }
   | {
@@ -1360,6 +1375,74 @@ type AdmissionIssueFor<Inspection> = Inspection extends {
   ? Issue
   : never;
 
+const byMechanicsFamily = Match.discriminator("family");
+const byActivationPhaseKind = Match.discriminator("kind");
+
+/** Inspect the executable phase positions owned by the parsed mechanics. */
+function mechanicsDenySaveCoverBenefit(mechanics: SpellMechanics): boolean {
+  return Match.value(mechanics).pipe(
+    byMechanicsFamily("activation", "triggered_reaction", ({ phases }) =>
+      phases.some(phaseDeniesSaveCoverBenefit),
+    ),
+    byMechanicsFamily("ongoing_effect", ({ initialPhase }) =>
+      initialPhase === undefined
+        ? false
+        : phaseDeniesSaveCoverBenefit(initialPhase),
+    ),
+    byMechanicsFamily(
+      "modal_ongoing_effect",
+      "modal_activation",
+      "passive_hit_intercept",
+      "anchored_trigger",
+      "magic_circle_ward",
+      "stone_merge",
+      "glyph_warding",
+      "spawned_creature",
+      "reanimated_creature",
+      "templated_multi_spawn",
+      "object_repair",
+      "minor_magic_effect_menu",
+      () => false,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function phaseDeniesSaveCoverBenefit(phase: ActivationPhase): boolean {
+  return Match.value(phase).pipe(
+    byActivationPhaseKind(
+      "save_gate",
+      ({ saveCoverBenefit }) => saveCoverBenefit !== undefined,
+    ),
+    byActivationPhaseKind(
+      "attack_roll",
+      ({ continue: continuation }) =>
+        continuation?.next.some(phaseDeniesSaveCoverBenefit) ?? false,
+    ),
+    byActivationPhaseKind("random_table", ({ outcomes }) =>
+      outcomes.some(
+        ({ phases }) => phases?.some(phaseDeniesSaveCoverBenefit) ?? false,
+      ),
+    ),
+    byActivationPhaseKind("ability_check_gate", "direct", () => false),
+    Match.exhaustive,
+  );
+}
+
+/**
+ * Whether an admitted procedure carries a save gate's cover denial: its facts
+ * project the denial, which its executable invocation then carries to the
+ * saving throw hole.
+ */
+function admittedAppliesSaveCoverDenial(
+  admitted: AdmittedSpellMechanicsView,
+): boolean {
+  return (
+    "saveCoverBenefit" in admitted.facts &&
+    admitted.facts.saveCoverBenefit === "denied"
+  );
+}
+
 export function admitBattleSpellMechanicsFrom<
   const Admissions extends readonly AnySpellProcedureMechanicsAdmission[],
 >(
@@ -1395,6 +1478,15 @@ export function admitBattleSpellMechanicsFrom(
   if (unsupportedIssues !== undefined) {
     return { tag: "rejected", issues: unsupportedIssues };
   }
+
+  if (
+    mechanicsDenySaveCoverBenefit(source.mechanics) &&
+    !supported.every(admittedAppliesSaveCoverDenial)
+  )
+    return {
+      tag: "notBattleOwned",
+      reason: { kind: "unownedMechanicsFacet", facet: "saveCoverBenefit" },
+    };
 
   const admittedProcedures = spellProcedureNonEmpty(supported);
   return admittedProcedures === undefined

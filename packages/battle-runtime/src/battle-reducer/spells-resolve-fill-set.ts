@@ -1,3 +1,4 @@
+import type { SpellSaveTargetSelection } from "./saving-throw-cover.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -108,7 +109,7 @@ import {
   type SpatialQualificationIssue,
 } from "./ranged-attack-close-combat.ts";
 import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
-import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -1280,7 +1281,7 @@ export function spellFillSet(
     if (fill.kind === "savingThrowOutcome") {
       const effectiveSavingThrowOutcomeFill = {
         ...fill,
-        value: effectiveD20TestNaturalOneRerollSavingThrowOutcomes(fill.value),
+        value: savingThrowOutcomesThatStand(fill.value),
       };
       if (isSaveGatedConditionWithRepeatDamageRepeatSaveFill(fill)) {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1296,9 +1297,7 @@ export function spellFillSet(
           };
         }
         /* v8 ignore stop -- @preserve */
-        saveGatedConditionWithRepeatDamageRepeatSaves.push(
-          effectiveSavingThrowOutcomeFill,
-        );
+        saveGatedConditionWithRepeatDamageRepeatSaves.push(fill);
         continue;
       }
       if (
@@ -2535,4 +2534,44 @@ function spellAttackSequencePartIndexForHole(
     }
   }
   return null;
+}
+
+/** The complete target evidence carried by single and multiple target fills. */
+function spellFillSetTargetSpatialFacts(
+  fillSet: Pick<
+    Extract<SpellFillSet, { readonly tag: "ok" }>,
+    "targetSpatialFacts" | "targetList" | "targetAllocation"
+  >,
+): readonly BattleTargetSpatialFact[] {
+  return [
+    ...fillSet.targetSpatialFacts,
+    ...(fillSet.targetList?.spatialFacts ?? []),
+    ...(fillSet.targetAllocation?.spatialFacts ?? []),
+  ];
+}
+
+/** The actual single/list/allocation selection with all its admission evidence. */
+export function spellFillSetTargetSelection(
+  fillSet: Pick<
+    Extract<SpellFillSet, { readonly tag: "ok" }>,
+    "targetId" | "targetSpatialFacts" | "targetList" | "targetAllocation"
+  >,
+): SpellSaveTargetSelection | undefined {
+  if (
+    [fillSet.targetId, fillSet.targetList, fillSet.targetAllocation].every(
+      (selection) => selection === undefined,
+    )
+  ) {
+    return undefined;
+  }
+  return {
+    targetIds: [
+      ...(fillSet.targetId === undefined ? [] : [fillSet.targetId]),
+      ...(fillSet.targetList?.targetIds ?? []),
+      ...(fillSet.targetAllocation?.allocations.map(
+        ({ targetId }) => targetId,
+      ) ?? []),
+    ],
+    spatialFacts: spellFillSetTargetSpatialFacts(fillSet),
+  };
 }

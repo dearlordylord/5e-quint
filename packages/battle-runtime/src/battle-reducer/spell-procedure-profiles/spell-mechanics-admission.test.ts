@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
 import { PositiveInteger } from "@dnd/shared/types";
+import type {
+  ActivationPhase,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   spellActivationEffectPath,
@@ -73,6 +77,76 @@ function unsupportedAdmission<P extends BattleSpellProcedureKey>(
 }
 
 describe("battle spell static mechanics admission", () => {
+  test("cover denial stays owned through nested executable phase positions", () => {
+    const base = spellRecord("sacred_flame").mechanics;
+    const ongoing = spellRecord("grease").mechanics;
+    const attack = spellRecord("fire_bolt").mechanics;
+    if (
+      base.family !== "activation" ||
+      base.phases[0].kind !== "save_gate" ||
+      ongoing.family !== "ongoing_effect" ||
+      attack.family !== "activation" ||
+      attack.phases[0].kind !== "attack_roll"
+    )
+      throw new Error(
+        "Expected typed save, ongoing and attack fixture mechanics.",
+      );
+    const denied = base.phases[0];
+    const phases: readonly ActivationPhase[] = [
+      denied,
+      {
+        kind: "random_table",
+        roll: { die: 4 },
+        outcomes: [
+          { min: 1, max: 4, label: "Synthetic outcome", phases: [denied] },
+        ],
+      },
+      {
+        ...attack.phases[0],
+        continue: {
+          kind: "repeat",
+          when: {
+            kind: "damage_roll_has_duplicate_faces",
+            minimumMultiplicity: 2,
+          },
+          limits: [{ kind: "exclude_already_targeted_in_same_cast" }],
+          next: [denied],
+        },
+      },
+    ];
+    const candidates: readonly SpellMechanics[] = phases.flatMap(
+      (phase): readonly SpellMechanics[] => [
+        { ...base, phases: [phase] },
+        {
+          ...base,
+          family: "triggered_reaction",
+          interruptsTrigger: true,
+          phases: [phase],
+        },
+        { ...ongoing, initialPhase: phase },
+      ],
+    );
+    const admission = supportedAdmission("spellAttackDamage", {
+      consumed: [spellMechanicsHeaderPath("family")],
+      unowned: [],
+    });
+    for (const mechanics of candidates) {
+      expect(
+        admitBattleSpellMechanicsFrom(
+          {
+            mechanics,
+            spellDefinitionRuleFacts:
+              projectSpellDefinitionRuleFacts(mechanics),
+          },
+          [admission],
+        ),
+      ).toEqual({
+        tag: "notBattleOwned",
+        reason: { kind: "unownedMechanicsFacet", facet: "saveCoverBenefit" },
+      });
+    }
+  });
+
   test("keeps complete and partial evidence structurally distinct", () => {
     const headerPath = spellMechanicsHeaderPath("level");
     const phasePath = spellActivationPhasePath(PositiveInteger(1));

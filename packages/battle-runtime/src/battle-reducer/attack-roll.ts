@@ -1,4 +1,5 @@
 import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
@@ -1413,7 +1414,7 @@ export function applyWeaponMasteryToppleSavingThrow(
 ):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
-  const outcomes = fill.value.outcomes;
+  const outcomes = savingThrowOutcomesThatStand(fill.value).outcomes;
   if (outcomes.length === 0) {
     return { tag: "ok", state };
   }

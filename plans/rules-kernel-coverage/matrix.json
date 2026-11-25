@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 183,
-    "covered": 172,
+    "total": 185,
+    "covered": 174,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 143,
+      "battle": 145,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 172,
+      "covered": 174,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 203,
+    "total": 206,
     "bySubject": {
-      "battle-hole-family": 101,
-      "battle-fill-kind": 60,
-      "battle-subject-kind": 42
+      "battle-hole-family": 102,
+      "battle-fill-kind": 61,
+      "battle-subject-kind": 43
     },
     "byClassification": {
-      "semantic-frontier": 155,
+      "semantic-frontier": 156,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 48,
+      "table-owned-fact": 50,
       "unsupported-dead-branch": 0
     }
   },
@@ -6407,6 +6407,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-thrown-weapon-attacks.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-change-discovery.test.ts"
         }
       ],
       "profiles": [],
@@ -6419,7 +6423,9 @@
         "packages/battle-runtime/src/battle-reducer/thrown-weapon-attack.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6437,18 +6443,29 @@
       "parityWitnesses": [
         {
           "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/heroic-inspiration-d20-tests.test.ts"
+        },
+        {
+          "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/heroic-inspiration-reroll.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/heroic-inspiration-physical-die.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
       ],
-      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it; an admitted reroll replaces the roll as it stands, the original or another source's reroll of it, or under Advantage or Disadvantage one chosen d20 of any face, keeps the roll's modifiers and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls applies it in turn with the natural-1 reroll and Seeking Spell on every weapon, Unarmed Strike, Opportunity, additional and spell attack roll. The executable parity witness covers the offer, decline, reroll and spend on hit and miss, the chosen die under Advantage, the kept modifiers, sources deciding in turn with the natural-1 reroll and Seeking Spell, Opportunity and spell attacks, interrupt replays, fill equality and the codec.",
+      "reason": "The QNT owner admits a Heroic Inspiration reroll only for a player character who has it, on any D20 Test; an admitted reroll replaces the roll as it stands, the original or another source's reroll of it, or under Advantage or Disadvantage one chosen d20 of any face, keeps a total's modifiers or replaces a Saving Throw's or Death Saving Throw's bare d20, and spends Heroic Inspiration, while a decline keeps both. heroic-inspiration-reroll owns availability, the option, the decision checks and the spend; attack-roll-d20-test-rerolls applies it in turn with the natural-1 reroll and Seeking Spell on every attack roll; d20-test-reroll-fills checks every ability check, saving throw and Concentration save before the subject resolves, with d20-test-outcome-rerolls owning the rolls that stand; the Glyph release and the Death Saving Throw apply it in one step. The executable parity witnesses cover the offer, decline, reroll and spend on attacks, saving throws, an area save, Concentration, ability checks, Death Saving Throws and an end-of-turn repeat save, the chosen die under Advantage, the kept modifiers, sources deciding in turn with the natural-1 reroll and Seeking Spell, Opportunity and spell attacks, interrupt replays, fill equality and the codec.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/heroic-inspiration-reroll.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6457,7 +6474,7 @@
         "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
         "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die"
       ],
-      "title": "A player character who has Heroic Inspiration can expend it to reroll an attack roll and must use the new roll, in turn with the other reroll sources"
+      "title": "A player character who has Heroic Inspiration can expend it to reroll any D20 Test and must use the new roll, in turn with the other reroll sources"
     },
     {
       "id": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
@@ -6530,6 +6547,39 @@
       "title": "Help's Assist an Ability Check option: the helper's skill proficiency and a table-decided ally give Advantage on that ally's next check with the skill, used by that check or expired at the start of the helper's next turn"
     },
     {
+      "id": "BATTLE.ACTION.ATTACK_WEAPON_CHANGE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/attack-weapon-change.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-attack-weapon-change.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-change-discovery.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
+      ],
+      "reason": "The QNT owner models a loadout weapon held, stowed or on the ground; equipping a weapon that is not in hand into empty hands, and stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle applies a change carried on the attack before it looks up the attack, offers the change after it as its own command, and asks the table where a dropped weapon lands.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
+        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Attack [Action]"
+      ],
+      "title": "Attack weapon change: each Attack action attack can equip or unequip one loadout weapon, before or after the attack"
+    },
+    {
       "id": "BATTLE.ATTACK.TARGET_COVER",
       "kind": "boundary-protocol",
       "parityWitnesses": [
@@ -6557,6 +6607,34 @@
         "UBIQUITOUS_LANGUAGE.md#Combat"
       ],
       "title": "An attack roll on a creature or object, with a weapon, a Stat Block attack, an Opportunity Attack or a spell, meets the target's AC plus the bonus of the table-supplied degree of cover, and Total Cover refuses direct targeting by attacks and spells"
+    },
+    {
+      "id": "BATTLE.SAVE.DEXTERITY_COVER",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-saving-throw-cover.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
+      ],
+      "reason": "The QNT owner models which saves cover adds to (Dexterity only), the bonus of each degree, and an effect's denial of the benefit. The table rules each target's degree for the specific effect: a spell target keeps the degree on its spellTarget fact, which the spell's save hole projects as a cover flat bonus, and any other rolled Dexterity save outcome carries an optional cover degree. The runtime derives the bonus and never takes one from the table. saving-throw-cover resolves all other fills to find the save hole each covered outcome answers independently of array order, and refuses cover on a save cover adds nothing to, on a save whose effect denies the benefit, and on a spell target already ruled by its fact. A save gate's saveCoverBenefit denial reaches the saveGatedDamage save hole; spell admission leaves a spell without a Battle owner when an admitted procedure doesn't carry the denial. The parity witness covers an area Dexterity save with each degree, a Constitution save refusing cover in both fill orders with no-cover controls, a targeted Dexterity save projecting each degree from the same canonical target admission and refusing outcome cover, correlated degree/bonus codec boundaries, and Sacred Flame denying the benefit.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/shared-algebras/src/cover-algebra.ts",
+        "packages/battle-runtime/src/battle-reducer/saving-throw-cover.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/playing-the-game.md#Cover",
+        ".references/srd-5.2.1/spells.md#Sacred Flame",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "A Dexterity saving throw adds the bonus of the target's table-ruled degree of cover against the effect, unless the effect denies the benefit of cover for the save"
     },
     {
       "id": "BATTLE.ACTION.OBJECT_INTERACTION_COST",
@@ -8810,6 +8888,30 @@
       "subject": "battle-fill-kind"
     },
     {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.ATTACK_WEAPON_CHANGE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "weaponDropPosition",
+      "id": "BattleWeaponDropPositionHole",
+      "reason": "Where a weapon dropped with an attack lands is the table's placement. The reducer requests the position and keeps the weapon on the ground there for its owner to pick up.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.ATTACK_WEAPON_CHANGE"
+      ],
+      "fillKind": "weaponDropPosition",
+      "followUpTaskIds": [],
+      "id": "weaponDropPosition",
+      "reason": "Weapon drop position fills carry the table's placement of a dropped weapon; Battle owns the weapon's custody once it lands.",
+      "subject": "battle-fill-kind"
+    },
+    {
       "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
       "followUpTaskIds": [],
@@ -8817,6 +8919,15 @@
       "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
       "subject": "battle-subject-kind",
       "subjectKind": "runtimeObjectInteraction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
+      "followUpTaskIds": [],
+      "id": "runtimeAttackWeaponChange",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeAttackWeaponChange"
     },
     {
       "classification": "semantic-frontier",
@@ -13558,7 +13669,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Executable closed examples cover reroll, forced lower roll, decline, availability, stacking and the chosen die under Advantage and Disadvantage for the Heroic Inspiration reroll core.",
+      "evidence": "Executable closed examples cover reroll, forced lower roll, decline, availability, stacking and the chosen die under Advantage and Disadvantage for the Heroic Inspiration reroll core, and the bare-d20 reroll of a Saving Throw and a Death Saving Throw.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core-examples.qnt",
       "role": "proof-only"
@@ -13594,8 +13705,23 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns which weapon change an Attack action attack allows: equipping, stowing or dropping one loadout weapon, and the change left after an attack, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.ACTION.ATTACK_WEAPON_CHANGE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover sheathing, dropping, drawing and picking up a weapon, no change that does nothing or needs an occupied hand, the change left after an attack without one, and its end with the turn.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Identity-independent Cover semantics: a table-supplied degree of cover either refuses direct targeting (Total Cover) or adds 0, 2 or 5 to the Armor Class an attack roll must meet. Object and creature attack owners import it instead of keeping their own cover arithmetic.",
-      "obligationIds": ["BATTLE.ATTACK.TARGET_COVER"],
+      "obligationIds": [
+        "BATTLE.ATTACK.TARGET_COVER",
+        "BATTLE.SAVE.DEXTERITY_COVER"
+      ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt",
       "role": "semantic-core"
     },
@@ -15045,6 +15171,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21120,6 +21256,29 @@
     {
       "blockedBy": [],
       "generatorSubset": [
+        "record",
+        "record-update",
+        "pure-def",
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "set",
+        "if-expression",
+        "variant",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.ACTION.ATTACK_WEAPON_CHANGE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
         "variant",
         "pure-def",
         "int",
@@ -21129,6 +21288,26 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.TARGET_COVER",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "pure-def",
+        "int",
+        "bool",
+        "pattern-match",
+        "arithmetic",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.SAVE.DEXTERITY_COVER",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt"
       ],

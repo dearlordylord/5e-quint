@@ -1,5 +1,6 @@
-import { acceptedAttackReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
+import { acceptedSubjectReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
 import { optionalProperty } from "./optional-property.ts";
+import { resolveWithSavingThrowCoverCheck } from "./battle-reducer/saving-throw-cover.ts";
 import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
@@ -10,7 +11,7 @@ import type {
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleAcceptedAttackReplayEvidence,
+  BattleAcceptedSubjectReplayEvidence,
   BattleInterruptRouteOptions,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -115,6 +116,30 @@ export function endTurn(input: {
   readonly actorId: CombatantId;
   readonly fills?: readonly BattleFill[];
 }): BattleResolutionResult {
+  return resolveWithSavingThrowCoverCheck({
+    fills: input.fills ?? [],
+    resolveFills: (fills) => endTurnWithFills({ ...input, fills }),
+    invalid: (message) => invalidCoverFill(input.state, message),
+  });
+}
+
+function invalidCoverFill(
+  state: BattleState,
+  message: string,
+): BattleResolutionResult {
+  return {
+    tag: "invalid",
+    reason: "invalidFill",
+    message,
+    snapshot: snapshotBattle(state),
+  };
+}
+
+function endTurnWithFills(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly fills?: readonly BattleFill[];
+}): BattleResolutionResult {
   const subject = {
     tag: "runtimeCommand" as const,
     actorId: input.actorId,
@@ -152,6 +177,23 @@ export function endTurn(input: {
 }
 
 export function deliverTouchSpellThroughSpawnedCompanion(input: {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >;
+  readonly fills: BattleResolutionInput["fills"];
+  readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
+}): BattleResolutionResult {
+  return resolveWithSavingThrowCoverCheck({
+    fills: input.fills,
+    resolveFills: (fills) =>
+      deliverTouchSpellThroughSpawnedCompanionWithFills({ ...input, fills }),
+    invalid: (message) => invalidCoverFill(input.state, message),
+  });
+}
+
+function deliverTouchSpellThroughSpawnedCompanionWithFills(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
@@ -362,7 +404,7 @@ function battleResolutionWithExecutionSnapshot(
                         "admittedMovement",
                         continuation.admittedMovement,
                       ),
-                      ...acceptedAttackReplayEvidence(continuation),
+                      ...acceptedSubjectReplayEvidence(continuation),
                       ...(continuation.handledInterruptTrigger !== undefined
                         ? {
                             handledInterruptTrigger:
@@ -407,7 +449,7 @@ function continuationMetadata(
     BattleState["subjectResolutionPhase"],
     { readonly kind: "subjectContinuation" }
   >["admittedMovement"];
-} & BattleAcceptedAttackReplayEvidence {
+} & BattleAcceptedSubjectReplayEvidence {
   if (
     result.tag === "invalid" ||
     result.state.subjectResolutionPhase.kind !== "subjectContinuation"
@@ -423,7 +465,7 @@ function continuationMetadata(
       result.state.subjectResolutionPhase.subject,
       pendingSubject,
     )
-      ? acceptedAttackReplayEvidence(result.state.subjectResolutionPhase)
+      ? acceptedSubjectReplayEvidence(result.state.subjectResolutionPhase)
       : {}),
     handledInterruptTrigger:
       result.state.subjectResolutionPhase.handledInterruptTrigger ??

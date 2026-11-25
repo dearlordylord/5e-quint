@@ -3,6 +3,10 @@ import {
   restoreBattleRuntimeContinuation,
 } from "./battle-runtime-transaction.ts";
 import { heldWeaponPickupTransition } from "./battle-reducer/battle-object-lifecycle.ts";
+import {
+  battleGroundObjectState,
+  battleObjectIsOnGround,
+} from "./battle-reducer/object-custody-queries.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
@@ -1840,7 +1844,7 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
     },
   ]);
   expect(
-    resolved.state.groundObjects.get(druidId)?.get(shield.objectId),
+    battleGroundObjectState(resolved.state, druidId, shield.objectId),
   ).toEqual({
     positionId: druidGroundPositionId,
     source: {
@@ -1956,7 +1960,7 @@ test("does not turn fallen Heavy armor into worn armor through weapon pickup", (
     tag: "invalid",
     reason: "notSelectedLoadoutWeapon",
   });
-  expect(reverted.state.groundObjects.get(druidId)?.has(armorObjectId)).toBe(
+  expect(battleObjectIsOnGround(reverted.state, druidId, armorObjectId)).toBe(
     true,
   );
   expect(Number(snapshotCreature(reverted.snapshot, druidId).armorClass)).toBe(
@@ -2020,7 +2024,7 @@ test("does not turn a fallen Shield into a wielded Shield through weapon pickup"
     tag: "invalid",
     reason: "notSelectedLoadoutWeapon",
   });
-  expect(reverted.state.groundObjects.get(druidId)?.has(shieldObjectId)).toBe(
+  expect(battleObjectIsOnGround(reverted.state, druidId, shieldObjectId)).toBe(
     true,
   );
 });
@@ -2090,7 +2094,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   if (pickedUp.tag !== "applied") {
     throw new Error(pickedUp.message);
   }
-  const remainingGroundObjects = pickedUp.state.groundObjects.get(druidId);
+  const remainingGroundObjects = pickedUp.state.objectCustody.get(druidId);
   if (remainingGroundObjects === undefined) {
     throw new Error("Expected the off-hand weapon to remain on the ground.");
   }
@@ -2098,6 +2102,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
     [
       offHandWeaponItemId,
       {
+        kind: "onGround",
         positionId: druidOffHandGroundPositionId,
         source: droppedSource,
       },
@@ -2109,7 +2114,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
     throw new Error(offHandPickedUp.message);
   }
   const remainingAfterOffHandPickup =
-    offHandPickedUp.state.groundObjects.get(druidId);
+    offHandPickedUp.state.objectCustody.get(druidId);
   if (remainingAfterOffHandPickup === undefined) {
     throw new Error("Expected the main weapon to remain on the ground.");
   }
@@ -4224,14 +4229,21 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
   });
 
   expect(hasSpell(revertedSession, "shillelagh")).toBe(false);
-  expect(
-    discoverBattleActCandidates(revertedSession.state).some((act) =>
-      isAttackActForProcedure(
-        act,
-        trueFormMainAttackProcedureRef(revertedSession.state),
-      ),
+  const revertedMainAttacks = discoverBattleActCandidates(
+    revertedSession.state,
+  ).filter((act) =>
+    isAttackActForProcedure(
+      act,
+      trueFormMainAttackProcedureRef(revertedSession.state),
     ),
-  ).toBe(false);
+  );
+  // The fallen Quarterstaff can be picked up only as part of an attack with
+  // it (Rules Glossary, "Attack [Action]", Equipping and Unequipping Weapons).
+  expect(
+    revertedMainAttacks.map((act) =>
+      "weaponChange" in act.subject ? act.subject.weaponChange : undefined,
+    ),
+  ).toEqual([{ kind: "equip", objectId: quarterstaff.objectId }]);
   expect(
     resolveBattleSubject({
       state: revertedSession.state,

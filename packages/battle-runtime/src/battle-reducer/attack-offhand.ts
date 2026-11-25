@@ -44,8 +44,8 @@ import { armorClassAgainstAttack } from "./attack-target-cover.ts";
 import {
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  battleStateAfterHeroicInspirationReroll,
 } from "./attack-roll-d20-test-rerolls.ts";
+import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 
 import {
   applyAttackDamageAmount,

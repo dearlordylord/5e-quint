@@ -189,6 +189,12 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         "objectInteractionRuling",
         () => "objectInteractionRuling" as const,
       ),
+    )
+    .pipe(
+      byBattleFillKind(
+        "weaponDropPosition",
+        () => "weaponDropPosition" as const,
+      ),
       byBattleFillKind(
         "temporaryHitPointChoice",
         () => "temporaryHitPointChoice" as const,
@@ -501,6 +507,10 @@ function runtimeCommandSubjectKind(
         () => "runtimeObjectInteraction" as const,
       ),
       byCommand("pickUpHeldWeapon", () => "runtimeObjectInteraction" as const),
+      byCommand(
+        "changeWeaponAfterAttack",
+        () => "runtimeAttackWeaponChange" as const,
+      ),
       byCommand("changeWeaponGrip", () => "runtimeWeaponGrip" as const),
       Match.exhaustive,
     );

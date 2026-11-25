@@ -680,10 +680,11 @@ describe("action-economy-algebra", () => {
     const spentFlurry = spendUnarmedStrikeActionResource(state);
     expect(Result.isSuccess(spentFlurry)).toBe(true);
     if (Result.isFailure(spentFlurry)) return;
-    expect(spentFlurry.success.actionResources).toEqual([
+    expect(spentFlurry.success.spentResource).toEqual(flurry);
+    expect(spentFlurry.success.state.actionResources).toEqual([
       { kind: "action", source: "turn" },
     ]);
-    expect(spentFlurry.success.actionTakenThisTurn).toBe(false);
+    expect(spentFlurry.success.state.actionTakenThisTurn).toBe(false);
 
     const selected = spendMatchingActionResource(
       grantTestUnitActionResource(),

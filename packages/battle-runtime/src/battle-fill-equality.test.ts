@@ -26,6 +26,7 @@ import {
   BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
   type BattleAttackRollResult,
   type BattleD20TestRoll,
+  type BattleD20TestMultipleRoll,
   type BattleD20TestNaturalOneRerollDecision,
   type BattleD20TestNaturalOneRerollOutcomeDecision,
   type BattleSpellAttackRerollDecision,
@@ -60,7 +61,7 @@ const d20RollArbitrary: fc.Arbitrary<D20Roll> = fc
 const combatantIdArbitrary = fc
   .integer({ min: 0, max: 8 })
   .map((index) => combatantId(`combatant:equality:${index}`));
-const multipleD20TestRollArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc
+const multipleD20TestRollArbitrary: fc.Arbitrary<BattleD20TestMultipleRoll> = fc
   .tuple(
     dieRollArbitrary,
     dieRollArbitrary,
@@ -113,13 +114,14 @@ const naturalOneRerollRollDecisionArbitrary: fc.Arbitrary<BattleD20TestNaturalOn
     fc
       .tuple(
         fc.constantFrom("first" as const, "second" as const),
-        baseAttackRollArbitrary,
+        fc.integer({ min: -10, max: 40 }),
+        multipleD20TestRollArbitrary,
       )
       .map(
-        ([die, result]): BattleD20TestNaturalOneRerollDecision => ({
+        ([die, total, d20TestRoll]): BattleD20TestNaturalOneRerollDecision => ({
           kind: "rerollRolledDie" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: { die, result },
+          replacement: { die, result: { total, d20TestRoll } },
         }),
       ),
   );
@@ -143,7 +145,7 @@ const naturalOneRerollOutcomeDecisionArbitrary: fc.Arbitrary<BattleD20TestNatura
       .tuple(
         fc.constantFrom("first" as const, "second" as const),
         fc.boolean(),
-        d20TestRollArbitrary,
+        multipleD20TestRollArbitrary,
       )
       .map(
         ([
@@ -188,19 +190,19 @@ const concentrationSavingThrowArbitrary: fc.Arbitrary<ConcentrationSavingThrowFi
       d20TestRollArbitrary,
       fc.option(naturalOneRerollOutcomeDecisionArbitrary, { nil: undefined }),
     )
-    .map(([holeId, succeeded, d20TestRoll, d20TestNaturalOneReroll]) => ({
+    .map(([holeId, succeeded, d20TestRoll, naturalOneReroll]) => ({
       kind: "concentrationSavingThrow",
       holeId,
       value: {
         succeeded,
         d20TestRoll,
-        ...(d20TestNaturalOneReroll === undefined
+        ...(naturalOneReroll === undefined
           ? {}
-          : { d20TestNaturalOneReroll }),
+          : { d20TestRerolls: [naturalOneReroll] as const }),
       },
     }));
 const naturalOneRerollDieDecisionArbitrary: fc.Arbitrary<
-  NonNullable<DeathSavingThrowFill["d20TestNaturalOneReroll"]>
+  NonNullable<DeathSavingThrowFill["d20TestRerolls"]>[number]
 > = fc.oneof(
   fc.constant({
     kind: "decline",
@@ -347,7 +349,7 @@ const comparableBattleFillArbitrary: fc.Arbitrary<BattleContinuationComparableFi
         kind: fc.constant("deathSavingThrow" as const),
         holeId: battleHoleIdArbitrary,
         value: d20RollArbitrary,
-        d20TestNaturalOneReroll: naturalOneRerollDieDecisionArbitrary,
+        d20TestRerolls: fc.tuple(naturalOneRerollDieDecisionArbitrary),
       }),
     ),
   );
@@ -414,7 +416,12 @@ describe("battle fill equality", () => {
         die: "first",
         result: {
           total: 13,
-          d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+          d20TestRoll: {
+            tag: "multiple",
+            first: DieRollResult(13),
+            second: DieRollResult(2),
+            rollMode: "advantage",
+          },
         },
       },
     } as const;
@@ -474,7 +481,7 @@ describe("battle fill equality", () => {
       value: {
         succeeded: false,
         d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
-        d20TestNaturalOneReroll: decision,
+        d20TestRerolls: [decision],
       },
     });
     const outcomeReroll = {
@@ -503,8 +510,10 @@ describe("battle fill equality", () => {
           result: {
             succeeded: resultSucceeded,
             d20TestRoll: {
-              tag: "single",
-              naturalD20: DieRollResult(replacementNaturalD20),
+              tag: "multiple",
+              first: DieRollResult(replacementNaturalD20),
+              second: DieRollResult(2),
+              rollMode: "advantage",
             },
           },
         },
@@ -578,12 +587,12 @@ describe("battle fill equality", () => {
     }
 
     const deathSavingThrow = (
-      decision: NonNullable<DeathSavingThrowFill["d20TestNaturalOneReroll"]>,
+      decision: NonNullable<DeathSavingThrowFill["d20TestRerolls"]>[number],
     ): DeathSavingThrowFill => ({
       kind: "deathSavingThrow",
       holeId: holeId("equality-hole:reroll-death-save"),
       value: d20Roll(10),
-      d20TestNaturalOneReroll: decision,
+      d20TestRerolls: [decision],
     });
     const deathReroll = {
       kind: "reroll",
@@ -685,7 +694,7 @@ describe("resubmitted fill continuity", () => {
     const savingThrows = (
       first: Partial<{
         readonly succeeded: boolean;
-        readonly d20TestNaturalOneReroll: typeof outcomeReroll;
+        readonly d20TestRerolls: readonly [typeof outcomeReroll];
       }>,
     ): SavingThrowOutcomeFill => ({
       kind: "savingThrowOutcome",
@@ -709,7 +718,7 @@ describe("resubmitted fill continuity", () => {
     expect(
       battleResubmittedFillKeepsAcceptedFill(
         savingThrows({}),
-        savingThrows({ d20TestNaturalOneReroll: outcomeReroll }),
+        savingThrows({ d20TestRerolls: [outcomeReroll] }),
       ),
     ).toBe(true);
     expect(
@@ -720,22 +729,22 @@ describe("resubmitted fill continuity", () => {
     ).toBe(false);
     expect(
       battleResubmittedFillKeepsAcceptedFill(
-        savingThrows({ d20TestNaturalOneReroll: outcomeReroll }),
+        savingThrows({ d20TestRerolls: [outcomeReroll] }),
         savingThrows({}),
       ),
     ).toBe(false);
 
     const concentration = (
-      d20TestNaturalOneReroll?: typeof outcomeReroll,
+      naturalOneReroll?: typeof outcomeReroll,
     ): ConcentrationSavingThrowFill => ({
       kind: "concentrationSavingThrow",
       holeId: holeId("continuity-hole:concentration"),
       value: {
         succeeded: false,
         d20TestRoll: naturalOneRoll,
-        ...(d20TestNaturalOneReroll === undefined
+        ...(naturalOneReroll === undefined
           ? {}
-          : { d20TestNaturalOneReroll }),
+          : { d20TestRerolls: [naturalOneReroll] as const }),
       },
     });
     expect(
@@ -755,16 +764,16 @@ describe("resubmitted fill continuity", () => {
   test("a death saving throw may add a natural-1 decision", () => {
     const deathSavingThrow = (
       value: number,
-      d20TestNaturalOneReroll?: NonNullable<
-        DeathSavingThrowFill["d20TestNaturalOneReroll"]
-      >,
+      naturalOneReroll?: NonNullable<
+        DeathSavingThrowFill["d20TestRerolls"]
+      >[number],
     ): DeathSavingThrowFill => ({
       kind: "deathSavingThrow",
       holeId: holeId("continuity-hole:death-save"),
       value: d20Roll(value),
-      ...(d20TestNaturalOneReroll === undefined
+      ...(naturalOneReroll === undefined
         ? {}
-        : { d20TestNaturalOneReroll }),
+        : { d20TestRerolls: [naturalOneReroll] as const }),
     });
     const reroll = {
       kind: "reroll",

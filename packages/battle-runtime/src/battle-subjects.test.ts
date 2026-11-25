@@ -157,6 +157,12 @@ describe("BattleSubject identity", () => {
       dropProne: {},
       interactWithObject: {},
       pickUpHeldWeapon: { objectId: battleObjectId("subject-pickup-weapon") },
+      changeWeaponAfterAttack: {
+        weaponChange: {
+          kind: "stow",
+          objectId: battleObjectId("subject-pickup-weapon"),
+        },
+      },
       changeWeaponGrip: { grip: "two_handed" },
       releaseReadiedSpell: {
         readiedSpellCasterId: targetId,

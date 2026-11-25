@@ -1016,6 +1016,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.changeWeaponAfterAttack": account(
+      "operation",
+      "runtimeCommand.changeWeaponAfterAttack",
+      at(
+        "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
+        "resolveChangeWeaponAfterAttack",
+      ),
+      REASONS.admittedSubject,
+    ),
     "runtimeCommand.interactWithObject": account(
       "operation",
       "runtimeCommand.interactWithObject",
@@ -1621,6 +1630,15 @@ export const OPERATION_ACCOUNTING = {
     objectInteractionRuling: account(
       "continuation",
       "objectInteractionRuling",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
+    weaponDropPosition: account(
+      "continuation",
+      "weaponDropPosition",
       at(
         "packages/battle-runtime/src/battle-runtime-transaction.ts",
         "settleBattleRuntimeTransaction",
@@ -3692,8 +3710,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "d20TestNaturalOneReroll",
       at(
-        "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts",
-        "resolveD20TestNaturalOneRerollFills",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "resolveD20TestRerollFills",
       ),
       REASONS.unitContinuation,
     ),
@@ -4193,8 +4211,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "d20TestNaturalOneReroll",
       at(
-        "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts",
-        "resolveD20TestNaturalOneRerollFills",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "resolveD20TestRerollFills",
       ),
       REASONS.unitContinuation,
     ),
