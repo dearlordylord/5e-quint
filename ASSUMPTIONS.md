@@ -346,12 +346,8 @@ Versatile damage "when used with two hands to make a melee attack". The SRD
 says when two hands are required, not that any other weapon can't be held in
 both.
 
-**Temporary implementation restriction (not a rules assumption):** Battle
-Runtime keeps the loadout's grip for the whole battle; a creature can't yet
-change grip during a battle. Changing grip in battle, and offering the starting
-grip in equipment setup, is tracked in
-[#669](https://github.com/dearlordylord/5e-quint/issues/669), which retires
-this restriction.
+The loadout's grip is the grip the weapon starts the battle with; A65 covers
+changing it during the battle.
 
 ## A64: A stat block's ammunition attack needs no free hand
 
@@ -368,6 +364,27 @@ such as the Spy's Hand Crossbow and Shortsword in
 `.references/srd-5.2.1/monsters-A-Z.md`, but it never says what the creature
 holds in each hand when it attacks. The SRD gives no fact to test the free
 hand against, so Battle takes each stat block attack as usable as written.
+
+## A65: A creature changes its weapon grip for free on its own turn
+
+**Assumption:** During a battle, a character can change its held main weapon
+between the `one_handed` and `two_handed` grips. The change costs no action,
+Bonus Action, movement or object interaction. Battle offers it on the
+creature's own turn while it can act (it isn't Incapacitated), including while
+Command's Halt applies, since a change of grip is neither a move nor an action.
+A `two_handed` grip needs the other hand free of any shield, off-hand weapon,
+grapple or held object. A Two-Handed weapon keeps its `two_handed` grip (A58).
+Changing grip off the creature's turn is the table's ruling, outside Battle.
+
+**Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Versatile," says
+the weapon "can be used with one or two hands" and deals its Versatile damage
+"when used with two hands to make a melee attack." The SRD never says what
+changing between one and two hands costs or when it can happen. It isn't
+equipping or unequipping a weapon (`.references/srd-5.2.1/rules-glossary.md`,
+"Attack [Action]"), since the weapon stays in hand, and nothing in "Your Turn"
+(`.references/srd-5.2.1/playing-the-game.md`) charges for it. Battle adds no
+cost the SRD doesn't state, and keeps the change to the creature's own turn,
+as it does the free object interaction (A60).
 
 ## A59: A Chromatic Orb leap measures cover from the previous target
 
