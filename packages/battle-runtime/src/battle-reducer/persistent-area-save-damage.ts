@@ -1,4 +1,5 @@
 import { optionalProperty } from "../optional-property.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
@@ -1573,7 +1574,9 @@ function parseSingleTargetPersistentAreaSave(
       message: `${procedureName} Saving Throw outcome must not include area facts.`,
     };
   }
-  const [outcome, ...additionalOutcomes] = fill.value.outcomes;
+  const [outcome, ...additionalOutcomes] = savingThrowOutcomesThatStand(
+    fill.value,
+  ).outcomes;
   if (
     outcome === undefined ||
     additionalOutcomes.length > 0 ||

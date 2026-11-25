@@ -26,9 +26,10 @@ Triggered Reaction spells are executed by
 landing, and fly-speed cleanup are executed by
 `battle-reducer/environmental-fall-procedures.ts`. The dispatcher selects and
 delegates these admitted procedures without owning their staged algorithms.
-Natural-1 D20 reroll fill replay and decision-hole projection are owned by
-`battle-reducer/d20-test-natural-one-reroll-procedures.ts`, which receives the
-post-D20 prefix-resolution operation as a closed capability. Attack-hit Bonus Action
+The central check of D20 Test reroll decisions on ability checks and saving
+throws (natural-1 rerolls and Heroic Inspiration), the re-asked holes, and the
+Heroic Inspiration spend are owned by `battle-reducer/d20-test-reroll-fills.ts`,
+which receives the post-D20 prefix-resolution operation as a closed capability. Attack-hit Bonus Action
 spell admission, fill parsing, and execution are owned by
 `battle-reducer/attack-hit-bonus-action-spell-procedures.ts`.
 Levitate altitude and self-transformation controls live in

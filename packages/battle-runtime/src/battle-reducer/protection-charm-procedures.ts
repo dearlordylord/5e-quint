@@ -1,5 +1,6 @@
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import type {
   BattleFill,
   BattleResolutionInputForSubject,
@@ -101,7 +102,8 @@ export function resolveProtectionRelevantEffectSaveCommand(
     input.state,
     input.subject.actorId,
     effect,
-    saveFill.value.outcomes[0]?.succeeded === true,
+    savingThrowOutcomesThatStand(saveFill.value).outcomes[0]?.succeeded ===
+      true,
   );
   return {
     tag: "resolved",

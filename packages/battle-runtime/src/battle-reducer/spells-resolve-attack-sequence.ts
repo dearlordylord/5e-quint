@@ -78,13 +78,12 @@ import {
   saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget,
 } from "./staged-condition-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
   attackRollAfterD20TestRerolls,
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  battleStateAfterHeroicInspirationReroll,
 } from "./attack-roll-d20-test-rerolls.ts";
+import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellCastInterruptFrame,
@@ -848,25 +847,6 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       input.input.subject,
       [concentrationSave],
     );
-  }
-  if (concentrationFill !== undefined) {
-    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
-      actor: spellReduction.target,
-      originalD20TestRoll: concentrationFill.value.d20TestRoll,
-      decision: concentrationFill.value.d20TestNaturalOneReroll,
-      withoutRoll: concentrationFill.value.withoutRoll,
-      succeeded: concentrationFill.value.succeeded,
-    });
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (d20TestNaturalOneRerollIssue !== null) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        d20TestNaturalOneRerollIssue,
-      );
-    }
-    /* v8 ignore stop -- @preserve */
   }
   const damageOccurrenceKey = saveGatedConditionDamageOccurrenceKeyForHole(
     spellAttackSequencePartDamageDispositionHoleKey(

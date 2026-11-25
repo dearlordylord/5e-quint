@@ -1,4 +1,4 @@
-import { acceptedAttackReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
+import { acceptedSubjectReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
 import { optionalProperty } from "./optional-property.ts";
 import type {
   BattleActDiscoveryCandidate,
@@ -10,7 +10,7 @@ import type {
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleAcceptedAttackReplayEvidence,
+  BattleAcceptedSubjectReplayEvidence,
   BattleInterruptRouteOptions,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -362,7 +362,7 @@ function battleResolutionWithExecutionSnapshot(
                         "admittedMovement",
                         continuation.admittedMovement,
                       ),
-                      ...acceptedAttackReplayEvidence(continuation),
+                      ...acceptedSubjectReplayEvidence(continuation),
                       ...(continuation.handledInterruptTrigger !== undefined
                         ? {
                             handledInterruptTrigger:
@@ -407,7 +407,7 @@ function continuationMetadata(
     BattleState["subjectResolutionPhase"],
     { readonly kind: "subjectContinuation" }
   >["admittedMovement"];
-} & BattleAcceptedAttackReplayEvidence {
+} & BattleAcceptedSubjectReplayEvidence {
   if (
     result.tag === "invalid" ||
     result.state.subjectResolutionPhase.kind !== "subjectContinuation"
@@ -423,7 +423,7 @@ function continuationMetadata(
       result.state.subjectResolutionPhase.subject,
       pendingSubject,
     )
-      ? acceptedAttackReplayEvidence(result.state.subjectResolutionPhase)
+      ? acceptedSubjectReplayEvidence(result.state.subjectResolutionPhase)
       : {}),
     handledInterruptTrigger:
       result.state.subjectResolutionPhase.handledInterruptTrigger ??

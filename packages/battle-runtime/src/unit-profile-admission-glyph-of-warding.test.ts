@@ -2,7 +2,11 @@ import { Schema } from "effect";
 import { SpatialMeleeSpellAttackProxyRepeatTargetingSchema } from "./active-effect/codecs.ts";
 import { admittedSpellInvocationCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
@@ -88,6 +92,7 @@ import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedur
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+  HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
 } from "./battle-state-execution.ts";
@@ -4644,8 +4649,15 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         }),
       }),
     ).toMatchObject({
-      tag: "invalidWitness",
-      reason: "savingThrowOutcomeMismatch",
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "savingThrowOutcome",
+          d20TestNaturalOneRerolls: [
+            { effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND },
+          ],
+        },
+      ],
     });
 
     const rerolled = releaseGlyphExplosiveRune({
@@ -4661,14 +4673,16 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             targetId: spellTargetId,
             succeeded: false,
             d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
-            d20TestNaturalOneReroll: {
-              kind: "reroll",
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-              replacement: {
-                succeeded: true,
-                d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+                replacement: {
+                  succeeded: true,
+                  d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+                },
               },
-            },
+            ],
           },
         ],
       }),
@@ -4817,6 +4831,143 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const damagedTarget = released.state.combatants.get(spellTargetId);
     expect(Number(damagedTarget?.hp)).toBe(30);
     expect(damagedTarget?.concentration).toBeNull();
+  });
+
+  test("explosive-rune release offers Heroic Inspiration on a Concentration save, and a reroll that succeeds keeps Concentration", () => {
+    const baseState = stateWithTargetConcentration(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        }),
+        glyphBattle({
+          targetHp: 50,
+          targetMaxHp: 50,
+          targetHeroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+        }),
+      ),
+      spellTargetId,
+    );
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            { targetId: spellTargetId, succeeded: false, withoutRoll: true },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[4, 4, 4, 4, 4]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
+    };
+    const release = (
+      concentrationValue: Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >["value"],
+      holeId: Extract<
+        BattleHole,
+        { readonly kind: "concentrationSavingThrow" }
+      >["holeId"],
+    ) =>
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(
+            glyphEffectRef(baseState),
+          ),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: {
+            ...areaMembership,
+            concentrationSavingThrows: [
+              {
+                kind: "concentrationSavingThrow",
+                holeId,
+                value: concentrationValue,
+              },
+            ],
+          },
+        },
+      });
+    const pending = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(
+          glyphEffectRef(baseState),
+        ),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership,
+      },
+    });
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const concentration = requireReleaseHole(
+      pending.holes,
+      "concentrationSavingThrow",
+    );
+    const failed = {
+      succeeded: false,
+      d20TestRoll: { tag: "single" as const, naturalD20: DieRollResult(4) },
+    };
+
+    const offered = release(failed, concentration.holeId);
+    expect(offered.tag).toBe("needsHoles");
+    if (offered.tag !== "needsHoles") return;
+    expect(
+      requireReleaseHole(offered.holes, "concentrationSavingThrow"),
+    ).toMatchObject({
+      holeId: concentration.holeId,
+      heroicInspirationRerolls: [
+        { effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND },
+      ],
+    });
+
+    const released = release(
+      {
+        ...failed,
+        d20TestRerolls: [
+          {
+            kind: "reroll" as const,
+            effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+            replacement: {
+              succeeded: true,
+              d20TestRoll: {
+                tag: "single" as const,
+                naturalD20: DieRollResult(17),
+              },
+            },
+          },
+        ] as const,
+      },
+      concentration.holeId,
+    );
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const target = requireCombatant(released.state, spellTargetId);
+    expect(Number(target.hp)).toBe(30);
+    expect(target.concentration).not.toBeNull();
+    expect(
+      target.origin.kind === "character"
+        ? target.origin.heroicInspiration
+        : undefined,
+    ).toEqual(NO_HEROIC_INSPIRATION);
   });
 
   test("explosive-rune release requests and consumes zero-HP damage disposition fills", () => {

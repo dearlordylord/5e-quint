@@ -2,6 +2,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.open-hand-technique
 
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
@@ -195,7 +196,9 @@ function resolveOpenHandTechniqueSaveChoice(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const outcomes = input.savingThrow.value.outcomes;
+  const outcomes = savingThrowOutcomesThatStand(
+    input.savingThrow.value,
+  ).outcomes;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcomes.length !== 1 || outcomes[0]?.targetId !== hit.targetId) {
     return {

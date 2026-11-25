@@ -108,7 +108,7 @@ import {
   type SpatialQualificationIssue,
 } from "./ranged-attack-close-combat.ts";
 import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
-import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -1280,7 +1280,7 @@ export function spellFillSet(
     if (fill.kind === "savingThrowOutcome") {
       const effectiveSavingThrowOutcomeFill = {
         ...fill,
-        value: effectiveD20TestNaturalOneRerollSavingThrowOutcomes(fill.value),
+        value: savingThrowOutcomesThatStand(fill.value),
       };
       if (isSaveGatedConditionWithRepeatDamageRepeatSaveFill(fill)) {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1296,9 +1296,7 @@ export function spellFillSet(
           };
         }
         /* v8 ignore stop -- @preserve */
-        saveGatedConditionWithRepeatDamageRepeatSaves.push(
-          effectiveSavingThrowOutcomeFill,
-        );
+        saveGatedConditionWithRepeatDamageRepeatSaves.push(fill);
         continue;
       }
       if (

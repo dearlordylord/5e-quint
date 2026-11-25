@@ -157,6 +157,10 @@ export function characterCreature(input: {
     CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
+  readonly heroicInspiration?: Extract<
+    CharacterBattleCombatantInit["creatureInit"],
+    { readonly kind: "character" }
+  >["heroicInspiration"];
 }): BattleCreatureInit {
   const attack = input.attack ?? null;
   const selectedLoadout =
@@ -210,6 +214,9 @@ export function characterCreature(input: {
         battleAmmunitionStock(ammunition, 20),
       ),
       characterId: characterId(`${input.combatantId}-character`),
+      ...(input.heroicInspiration === undefined
+        ? {}
+        : { heroicInspiration: input.heroicInspiration }),
       characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
@@ -594,10 +601,10 @@ export function abilityCheckFill(
     | {
         readonly total: number;
         readonly naturalD20?: number;
-        readonly d20TestNaturalOneReroll?: Extract<
+        readonly d20TestRerolls?: Extract<
           BattleFill,
           { readonly kind: "abilityCheck" }
-        >["value"]["d20TestNaturalOneReroll"];
+        >["value"]["d20TestRerolls"];
       },
   spatialFacts?: Extract<
     BattleFill,
@@ -617,9 +624,9 @@ export function abilityCheckFill(
               naturalD20: checkValue.naturalD20,
             })!,
           }),
-      ...(checkValue.d20TestNaturalOneReroll === undefined
+      ...(checkValue.d20TestRerolls === undefined
         ? {}
-        : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
+        : { d20TestRerolls: checkValue.d20TestRerolls }),
     },
     ...(spatialFacts === undefined ? {} : { spatialFacts }),
   };

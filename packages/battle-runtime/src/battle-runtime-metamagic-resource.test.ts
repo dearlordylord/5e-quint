@@ -47,7 +47,7 @@ import type {
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import { HEROIC_INSPIRATION_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
-import { ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE } from "./battle-reducer/attack-roll-d20-test-rerolls.ts";
+import { D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE } from "./battle-reducer/d20-test-reroll-sequence.ts";
 import { SEEKING_SPELL_REPLACEMENT_MODIFIER_MESSAGE } from "./battle-reducer/spells-resolve.ts";
 import {
   EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
@@ -3041,7 +3041,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       ]),
     ).toMatchObject({
       tag: "invalid",
-      message: ATTACK_ROLL_D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE,
+      message: D20_TEST_REROLL_SOURCE_REPEATED_MESSAGE,
     });
 
     const hitRerolls = [
