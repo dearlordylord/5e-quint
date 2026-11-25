@@ -25,7 +25,10 @@ import type {
   BattleReadyActionSubject,
   ReadiedAttackWeaponChange,
 } from "../battle-subjects.ts";
-import { readiedAttackWeaponChangesEqual } from "../battle-subjects.ts";
+import {
+  isReadiedWeaponChangeAction,
+  readiedAttackWeaponChangesEqual,
+} from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   fillsWithoutWeaponChange,
@@ -122,8 +125,7 @@ function readiedActionWeaponChangesAfter(
   const readied = state.readiedResponses.get(reactorId);
   if (readied?.response.kind !== "action") return [];
   const subject = readied.response.subject;
-  return subject.tag === "action" &&
-    (subject.action === "grapple" || subject.action === "shove")
+  return subject.tag === "action" && isReadiedWeaponChangeAction(subject.action)
     ? readiedUnarmedStrikeWeaponChangesAfter(state, subject)
     : [];
 }

@@ -70,6 +70,7 @@ export function battleFillInputSchemaForOperation(
   schema: McpObjectInputSchema,
   input: {
     readonly ordinaryAllowed: boolean;
+    readonly readiedActionWeaponChangeAllowed: boolean;
     readonly reactionChoices: readonly string[];
     readonly modifierKinds: readonly string[];
     readonly declineAllowed: boolean;
@@ -110,6 +111,13 @@ export function battleFillInputSchemaForOperation(
           const choiceProperties = choice.properties;
           if (!schemaObject(choiceProperties))
             throw new Error("Generated Reaction choice must declare fields.");
+          const projectedChoiceProperties = { ...choiceProperties };
+          if (
+            admittedKinds.includes("releaseReadiedAction") &&
+            !input.readiedActionWeaponChangeAllowed
+          ) {
+            delete projectedChoiceProperties.weaponChange;
+          }
           const modifierChoice = admittedKinds.includes(
             "reactionRollOrDamageReduction",
           );
@@ -129,7 +137,7 @@ export function battleFillInputSchemaForOperation(
             {
               ...choice,
               properties: {
-                ...choiceProperties,
+                ...projectedChoiceProperties,
                 kind: { ...schemaField(choice, "kind"), enum: admittedKinds },
                 ...modifiers,
                 fills: modifierChoice

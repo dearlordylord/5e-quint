@@ -717,6 +717,17 @@ const BattleInterruptReleaseReadiedMovementSubjectSchema = Schema.Struct({
   readiedMovementActorId: CombatantId,
 });
 
+export const READIED_WEAPON_CHANGE_ACTIONS = ["grapple", "shove"] as const;
+export type ReadiedWeaponChangeAction =
+  (typeof READIED_WEAPON_CHANGE_ACTIONS)[number];
+export function isReadiedWeaponChangeAction(
+  action: string,
+): action is ReadiedWeaponChangeAction {
+  return READIED_WEAPON_CHANGE_ACTIONS.some(
+    (candidate) => candidate === action,
+  );
+}
+
 const BattleInterruptReleaseReadiedActionSubjectSchema = Schema.Struct({
   tag: Schema.Literal("runtimeCommand"),
   actorId: CombatantId,
