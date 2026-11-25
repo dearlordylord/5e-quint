@@ -193,26 +193,33 @@ describe("weapons the character owns outside its loadout", () => {
     );
   });
 
-  it("refuses a carried Ammunition weapon without its ammunition stock, as it would one in hand", () => {
-    const started = startBattle({
+  it("admits a carried Ammunition weapon without its ammunition stock, which can't attack even once drawn", () => {
+    // SRD 5.2.1 equipment.md "Ammunition": "You can use a weapon that has the
+    // Ammunition property to make a ranged attack only if you have ammunition
+    // to fire from it."
+    const slingId = battleObjectId("main:weapon_sling");
+    const state = startBattleRight({
       battleId: battleId("battle-owned-weapon-ammunition"),
       combatants: [
         characterSeed({
           initiative: 20,
-          otherOwnedWeapons: [
-            {
-              itemId: battleObjectId("main:weapon_sling"),
-              attack: testSlingAttack(),
-            },
-          ],
+          otherOwnedWeapons: [{ itemId: slingId, attack: testSlingAttack() }],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(Result.isFailure(started)).toBe(true);
-    expect(JSON.stringify(started)).toContain(
-      "Character battle initialization requires an explicit",
+    const drawn = changed(
+      changed(state, { kind: "stow", objectId: longswordId }),
+      { kind: "equip", objectId: slingId, slot: "mainWeapon" },
     );
+
+    expect(fighter(drawn).origin.attack?.weaponObjectId).toBe(slingId);
+    expect(
+      attackActionOptionsForActor(drawn, fighterId).filter(
+        (attack) =>
+          attack.kind === "weapon" && attack.weaponObjectId === slingId,
+      ),
+    ).toEqual([]);
   });
 
   it("refuses an owned weapon without an authored presentation source, as it would one in hand", () => {

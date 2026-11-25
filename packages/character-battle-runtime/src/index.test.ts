@@ -11953,9 +11953,9 @@ describe("Character Build battle projection", () => {
       discoverBattleActs(afterMainAttackSession).map((act) => act.summary),
     ).toEqual(
       expect.arrayContaining([
-        "Make the Light property Bonus Action attack with Club.",
+        "Make the Light property Bonus Action attack with Club (bludgeoning).",
         "Make the Light property Bonus Action attack with Club (radiant).",
-        "Make the Light property Bonus Action attack with Club (Charisma).",
+        "Make the Light property Bonus Action attack with Club (Charisma, bludgeoning).",
         `Make the Light property Bonus Action attack with ${offHandAttackName}.`,
       ]),
     );
