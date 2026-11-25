@@ -136,7 +136,8 @@ export function readyActionSubject(
   return subject.tag === "action" &&
     subject.action !== "attack" &&
     subject.action !== "multiattack" &&
-    subject.action !== "ready"
+    subject.action !== "ready" &&
+    !("weaponChange" in subject)
     ? subject
     : null;
 }

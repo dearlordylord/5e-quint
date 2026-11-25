@@ -338,11 +338,14 @@ change can come before the attack, carried on the attack itself, or after it.
 A change after the attack must come before the character's next attack as part
 of the Attack action. If that next attack carries its own change before its
 roll, any change still left from the attack before it is gone. A Grapple or
-Shove that takes the place of one of these attacks also leaves a change after
-it and ends the window of the attack before it. Other attacks, such as an
-off-hand attack with a Bonus Action, or a Grapple or Shove with a Flurry of
-Blows Unarmed Strike, leave a change still left as it was. Any change still
-left at the end of the turn is also gone.
+Shove that takes the place of one of these attacks is such an attack too: it
+can carry its own change before it, such as stowing a weapon to free the hand
+a Grapple grabs with, or leave one after it, and it ends the window of the
+attack before it. Other attacks, such as an off-hand attack with a Bonus
+Action, or a Grapple or Shove with a Flurry of Blows Unarmed Strike, carry no
+change and leave a change still left as it was. Preparing Ready grants no
+change before its trigger, so the Grapple or Shove that Ready holds carries
+none. Any change still left at the end of the turn is also gone.
 
 Equipping draws a carried weapon, or picks up one lying on the ground, into
 one hand slot of the character's loadout: the main hand or the off hand. The
@@ -362,17 +365,17 @@ table's call.
 unequip one weapon when you make an attack as part of this action. You do so
 either before or after the attack." It also says "Equipping a weapon includes
 drawing it from a sheath or picking it up. Unequipping a weapon includes
-sheathing, stowing, or dropping it." The SRD doesn't say how long after the
-attack the change may wait, or where a dropped weapon lands. The change belongs
-to the Attack action, so the model ends the window at the action's next attack,
-which keeps each change to one attack, and asks the table where the weapon
-lands.
+sheathing, stowing, or dropping it." "Unarmed Strike" calls an Unarmed Strike
+"a melee attack" whose options include Grapple and Shove, and a Grapple is
+"possible only if ... you have a hand free to grab it." The SRD doesn't say how
+long after the attack the change may wait, or where a dropped weapon lands. The
+change belongs to the Attack action, so the model ends the window at the
+action's next attack, which keeps each change to one attack, and asks the table
+where the weapon lands.
 
 **Temporary implementation restriction (not a rules assumption):** Battle
 brings into the battle only owned weapons it can execute; one it can't stays
-out, as if left behind. A Grapple or Shove can't carry a change before it yet:
-a character makes that change after the attack before it, or with another
-attack. The object interaction that picks a fallen weapon up puts back only a
+out, as if left behind. The object interaction that picks a fallen weapon up puts back only a
 loadout weapon, into its own slot. Battle's Attack action attacks with the
 main weapon, and its off hand holds only the second weapon of the Light
 property's Bonus Action attack, so another weapon goes in the off hand only

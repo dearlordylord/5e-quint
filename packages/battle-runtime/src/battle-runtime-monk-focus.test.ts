@@ -45,6 +45,7 @@ import {
   spellRecord,
   targetFill,
   testBattleCreatureStateWithConditions,
+  battleObjectId,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -873,6 +874,40 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(grappled.state.currentTurnResources.weaponChangeAfterAttack).toBe(
       "unavailable",
     );
+  });
+
+  test("a Grapple or Shove that Flurry of Blows pays for carries no weapon change before it", () => {
+    const activated = activateFlurryOfBlows(
+      monkFocusBattle({ usesRemaining: 2, weaponAttackAvailable: true }),
+    );
+    const flurryOnly = stateWithoutTurnActionResource(activated.state);
+    const options = discoverBattleActCandidates(flurryOnly).flatMap((act) =>
+      act.subject.tag === "action" &&
+      (act.subject.action === "grapple" || act.subject.action === "shove")
+        ? [act.subject]
+        : [],
+    );
+    // A Bonus Action Grapple or Shove isn't an attack of the Attack action
+    // (ASSUMPTIONS.md A63).
+    expect(options).toEqual([
+      { tag: "action", actorId: fighterId, action: "grapple" },
+      { tag: "action", actorId: fighterId, action: "shove" },
+    ]);
+    expect(
+      resolveBattleSubject({
+        state: flurryOnly,
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "grapple",
+          weaponChange: {
+            kind: "stow",
+            objectId: battleObjectId("main:weapon_longsword"),
+          },
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Flurry of Blows resources can pay for Shove Unarmed Strike effects", () => {

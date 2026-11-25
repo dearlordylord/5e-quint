@@ -6,10 +6,16 @@
 // equip a weapon before an attack, you don't need to use it for that attack."
 //
 // Before: the Attack action subject carries the change, which Battle applies
-// before it looks up the attack. After: an attack made without one leaves the
-// `weaponChangeAfterAttack` allowance, which the `changeWeaponAfterAttack`
-// command spends before the Attack action's next attack (ASSUMPTIONS.md A63).
-import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
+// before it looks up the attack. A Grapple or Shove that takes the place of an
+// attack of the action ("Unarmed Strike") carries it the same way. After: an
+// attack made without one leaves the `weaponChangeAfterAttack` allowance,
+// which the `changeWeaponAfterAttack` command spends before the Attack
+// action's next attack (ASSUMPTIONS.md A63).
+import { Result } from "effect";
+import {
+  spendUnarmedStrikeActionResource,
+  type RuntimeActionResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import {
   holeId,
   holeInstanceKey,
@@ -65,6 +71,17 @@ type AttackActionSubject = Extract<
   { readonly tag: "action"; readonly action: "attack" }
 >;
 
+/** A Grapple or Shove: an Unarmed Strike option an attack can take. */
+type UnarmedStrikeOptionSubject = Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "grapple" | "shove" }
+>;
+
+/** The subjects that can carry a weapon change before them. */
+type WeaponChangeBeforeSubject =
+  | AttackActionSubject
+  | UnarmedStrikeOptionSubject;
+
 const WEAPON_DROP_POSITION_HOLE_INSTANCE = holeInstanceKey(
   "battle:attack-weapon-change:drop-position",
 );
@@ -109,26 +126,48 @@ export function stateWithWeaponChangeAfterAttackAllowance(
   return stateWithWeaponChangeAllowanceAfter(
     state,
     subject.actorId,
-    attackSubjectWeaponChange(subject) === undefined
-      ? "available"
-      : "unavailable",
+    subjectWeaponChange(subject) === undefined ? "available" : "unavailable",
   );
 }
 
 /**
  * The weapon change a Grapple or Shove leaves after it. One that replaces an
- * attack of the Attack action opens the same window as any other attack of
- * the action; it carries no change before it. One another feature pays for,
- * such as a Flurry of Blows Unarmed Strike, leaves the window as it was.
+ * attack of the Attack action leaves what any other attack of the action
+ * leaves: one after it, unless it carried its change before. One another
+ * feature pays for, such as a Flurry of Blows Unarmed Strike, leaves the
+ * window as it was.
  */
 export function stateWithWeaponChangeAfterUnarmedStrikeOption(
   state: BattleState,
-  actorId: CombatantId,
+  subject: UnarmedStrikeOptionSubject,
   spentResource: RuntimeActionResource,
 ): BattleState {
   return ACTION_RESOURCE_SOURCE_TAKES_ATTACK_ACTION_ATTACK[spentResource.source]
-    ? stateWithWeaponChangeAllowanceAfter(state, actorId, "available")
+    ? stateWithWeaponChangeAllowanceAfter(
+        state,
+        subject.actorId,
+        subjectWeaponChange(subject) === undefined
+          ? "available"
+          : "unavailable",
+      )
     : state;
+}
+
+/**
+ * Whether the next Grapple or Shove would take the place of an attack of the
+ * Attack action, by the action resource it would spend, so it can carry a
+ * weapon change before it. One that Flurry of Blows pays for can't.
+ */
+export function unarmedStrikeOptionTakesAttackActionAttack(
+  state: BattleState,
+): boolean {
+  const spent = spendUnarmedStrikeActionResource(state.currentTurnResources);
+  return (
+    Result.isSuccess(spent) &&
+    ACTION_RESOURCE_SOURCE_TAKES_ATTACK_ACTION_ATTACK[
+      spent.success.spentResource.source
+    ]
+  );
 }
 
 /**
@@ -274,21 +313,31 @@ function withWeaponDropOutcome(
 }
 
 /**
- * Resolves an Attack action subject, first applying the weapon change it
- * carries. A resumed subject finds the change already applied, so Battle
- * applies it once; the drop position fill is the change's own and never
- * reaches the attack.
+ * Resolves an attack of the Attack action, or a Grapple or Shove in its place,
+ * first applying the weapon change its subject carries. A resumed subject
+ * finds the change already applied, so Battle applies it once; the drop
+ * position fill is the change's own and never reaches the attack.
  */
 export function resolveAttackWithWeaponChange<
   Input extends BattleResolutionInput & {
-    readonly subject: AttackActionSubject;
+    readonly subject: WeaponChangeBeforeSubject;
   },
 >(
   input: Input,
   resolveAttack: (input: Input) => BattleResolutionResult,
 ): BattleResolutionResult {
-  const change = attackSubjectWeaponChange(input.subject);
+  const change = subjectWeaponChange(input.subject);
   if (change === undefined) return resolveAttack(input);
+  if (
+    input.subject.action !== "attack" &&
+    !unarmedStrikeOptionTakesAttackActionAttack(input.state)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Only a Grapple or Shove in place of an Attack action attack can carry a weapon change.",
+    );
+  }
   const actorId = input.subject.actorId;
   const changeFillIds = new Set(
     weaponChangeInitialHoles(actorId, change).map((hole) => hole.holeId),
@@ -320,8 +369,8 @@ export function resolveAttackWithWeaponChange<
   );
 }
 
-function attackSubjectWeaponChange(
-  subject: AttackActionSubject,
+function subjectWeaponChange(
+  subject: WeaponChangeBeforeSubject,
 ): AttackWeaponChange | undefined {
   return "weaponChange" in subject ? subject.weaponChange : undefined;
 }

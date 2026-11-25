@@ -69,9 +69,10 @@ module attackWeaponChangeCore {
 
   // The allowance an Attack action attack on the creature's own turn leaves:
   // a change after it, unless it carried its change before the roll. A
-  // Grapple or Shove that takes an attack's place carries no change before
-  // it; one a Flurry of Blows Unarmed Strike pays for is no Attack action
-  // attack, and leaves the allowance as it was.
+  // Grapple or Shove that takes an attack's place is such an attack, and
+  // carries its change before it the same way; one a Flurry of Blows Unarmed
+  // Strike pays for is no Attack action attack, carries no change, and
+  // leaves the allowance as it was.
   pure def afterAttack(
     turn: AttackWeaponChangeTurn,
     changedBeforeAttack: bool,

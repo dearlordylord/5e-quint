@@ -25,9 +25,13 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 import {
   changeWeaponAfterAttackActs,
+  unarmedStrikeOptionTakesAttackActionAttack,
   weaponChangeInitialHoles,
 } from "./attack-weapon-change.ts";
-import { ownedWeaponChanges } from "./owned-weapon-custody.ts";
+import {
+  ownedWeaponChanges,
+  stateWithProspectiveWeaponChange,
+} from "./owned-weapon-custody.ts";
 import type { AttackWeaponChange } from "../battle-subjects.ts";
 import { optionalProperty } from "../optional-property.ts";
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
@@ -42,8 +46,10 @@ import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Match, Result } from "effect";
 import type {
   BattleMovementSpeedKind,
+  BattleReadyActionSubject,
   BattleRuntimeCommand,
   BattleSubject,
+  BattleUnarmedStrikeOptionWithWeaponChangeSubject,
   CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
@@ -93,13 +99,11 @@ import {
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
   escapeSpellRestraintSkillCheck,
-  grappleTargetChoices,
   grappleTargetHole,
   hiddenSearchTargetChoices,
   hideSkillCheck,
   saveGatedAreaControlShakeAwakeTargetHole,
   searchTargetHole,
-  shoveTargetChoices,
   shoveTargetHole,
   hitPointBudgetConditionShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
@@ -198,6 +202,7 @@ import type {
   BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleState,
+  BattleTargetChoiceHole,
   StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import type { SelfTransformationModeKind } from "./domain-constants.ts";
@@ -494,6 +499,112 @@ function weaponChangeAttackActs(
   });
 }
 
+const UNARMED_STRIKE_OPTIONS = ["grapple", "shove"] as const;
+type UnarmedStrikeOption = (typeof UNARMED_STRIKE_OPTIONS)[number];
+
+const UNARMED_STRIKE_OPTION_TARGET_HOLE = {
+  grapple: grappleTargetHole,
+  shove: shoveTargetHole,
+} as const satisfies {
+  readonly [Option in UnarmedStrikeOption]: (
+    state: BattleState,
+    actorId: CombatantId,
+  ) => BattleTargetChoiceHole;
+};
+
+/**
+ * The Grapples and Shoves the actor can make (SRD 5.2.1 Rules Glossary,
+ * "Unarmed Strike"). One that takes the place of an attack of the Attack
+ * action can also carry that attack's weapon change before it ("Attack
+ * [Action]", Equipping and Unequipping Weapons), such as stowing a weapon to
+ * free a hand to grab with. Its targets are the ones it has once the change
+ * is done.
+ */
+function unarmedStrikeOptionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly BattleActDiscoveryCandidate[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || !actorCanMakeUnarmedStrikeOption(state, actor)) {
+    return [];
+  }
+  const changes = unarmedStrikeOptionTakesAttackActionAttack(state)
+    ? ownedWeaponChanges(state, actor)
+    : [];
+  return [
+    ...UNARMED_STRIKE_OPTIONS.flatMap((action) =>
+      unarmedStrikeOptionAct(state, actorId, action),
+    ),
+    ...UNARMED_STRIKE_OPTIONS.flatMap((action) =>
+      changes.flatMap((change) =>
+        unarmedStrikeOptionWithWeaponChangeAct(state, actorId, action, change),
+      ),
+    ),
+  ];
+}
+
+function actorCanMakeUnarmedStrikeOption(
+  state: BattleState,
+  actor: BattleCreatureState,
+): boolean {
+  return (
+    combatantCanTakeActions(actor) &&
+    !isPresentSpawnedCompanionCombatant(state, actor.combatantId) &&
+    !actorHasStatBlockMultiattackActionResource(state, actor.combatantId) &&
+    canSpendUnarmedStrikeActionResource(state.currentTurnResources)
+  );
+}
+
+function unarmedStrikeOptionAct(
+  state: BattleState,
+  actorId: CombatantId,
+  action: UnarmedStrikeOption,
+): readonly BattleActDiscoveryCandidate[] {
+  const targetHole = UNARMED_STRIKE_OPTION_TARGET_HOLE[action](state, actorId);
+  const subject: Extract<
+    BattleReadyActionSubject,
+    { readonly action: UnarmedStrikeOption }
+  > = { tag: "action", actorId, action };
+  return targetHole.choices.length === 0
+    ? []
+    : [{ subject, initialHoles: [targetHole] }];
+}
+
+function unarmedStrikeOptionWithWeaponChangeAct(
+  state: BattleState,
+  actorId: CombatantId,
+  action: UnarmedStrikeOption,
+  weaponChange: AttackWeaponChange,
+): readonly BattleActDiscoveryCandidate[] {
+  const changed = stateWithProspectiveWeaponChange(
+    state,
+    actorId,
+    weaponChange,
+  );
+  if (changed.tag === "invalid") return [];
+  const targetHole = UNARMED_STRIKE_OPTION_TARGET_HOLE[action](
+    changed.state,
+    actorId,
+  );
+  const subject: BattleUnarmedStrikeOptionWithWeaponChangeSubject = {
+    tag: "action",
+    actorId,
+    action,
+    weaponChange,
+  };
+  return targetHole.choices.length === 0
+    ? []
+    : [
+        {
+          subject,
+          initialHoles: [
+            ...weaponChangeInitialHoles(actorId, weaponChange),
+            targetHole,
+          ],
+        },
+      ];
+}
+
 function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry | null,
@@ -641,30 +752,7 @@ function discoverBattleActsWithoutRouteEvents(
       initialHoles: [searchTargetHole(state, actorId)],
     });
   }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !isPresentSpawnedCompanionCombatant(state, actorId) &&
-    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
-    canSpendUnarmedStrikeActionResource(state.currentTurnResources) &&
-    grappleTargetChoices(state, actorId).length > 0
-  ) {
-    acts.push({
-      subject: { tag: "action", actorId, action: "grapple" },
-      initialHoles: [grappleTargetHole(state, actorId)],
-    });
-  }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !isPresentSpawnedCompanionCombatant(state, actorId) &&
-    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
-    canSpendUnarmedStrikeActionResource(state.currentTurnResources) &&
-    shoveTargetChoices(state, actorId).length > 0
-  ) {
-    acts.push({
-      subject: { tag: "action", actorId, action: "shove" },
-      initialHoles: [shoveTargetHole(state, actorId)],
-    });
-  }
+  acts.push(...unarmedStrikeOptionActs(state, actorId));
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&

@@ -100,7 +100,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
-      "module/binding:discoverBattleActsWithoutRouteEvents": 68
+      "module/binding:discoverBattleActsWithoutRouteEvents": 58
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11

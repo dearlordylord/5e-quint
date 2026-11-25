@@ -815,11 +815,13 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("grapple"),
+    weaponChange: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("shove"),
+    weaponChange: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -849,6 +851,28 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
 ]);
 export type BattleReadyActionSubject =
   typeof BattleReadyActionSubjectSchema.Type;
+
+// SRD 5.2.1 Rules Glossary, "Unarmed Strike": a Grapple or Shove can take the
+// place of an attack of the Attack action, and "Attack [Action]", Equipping
+// and Unequipping Weapons, lets that attack equip or unequip one weapon
+// before it. Preparing Ready grants no change before the trigger, so the
+// Grapple or Shove that Ready holds carries none (ASSUMPTIONS.md A63).
+const BattleUnarmedStrikeOptionWithWeaponChangeSubjectSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("grapple"),
+    weaponChange: AttackWeaponChangeSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shove"),
+    weaponChange: AttackWeaponChangeSchema,
+  }),
+]);
+export type BattleUnarmedStrikeOptionWithWeaponChangeSubject =
+  typeof BattleUnarmedStrikeOptionWithWeaponChangeSubjectSchema.Type;
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
@@ -886,6 +910,7 @@ export const BattleSubjectSchema = Schema.Union([
     statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   BattleReadyActionSubjectSchema,
+  BattleUnarmedStrikeOptionWithWeaponChangeSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
@@ -1955,7 +1980,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       (action) => JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "shove" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
+      JSON.stringify([
+        action.tag,
+        action.actorId,
+        action.action,
+        "weaponChange" in action ? (action.weaponChange ?? null) : null,
+      ]),
     ),
     Match.when({ tag: "bonusActionDashSpell" }, (spell) =>
       JSON.stringify([
@@ -2098,7 +2128,12 @@ function battleSubjectKey(subject: BattleSubject): string {
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "grapple" }, (action) =>
-          JSON.stringify([action.tag, action.actorId, action.action]),
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.action,
+            "weaponChange" in action ? (action.weaponChange ?? null) : null,
+          ]),
         ),
         Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
           JSON.stringify([action.tag, action.actorId, action.action]),

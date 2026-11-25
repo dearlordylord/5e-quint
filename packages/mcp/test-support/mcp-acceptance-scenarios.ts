@@ -814,6 +814,11 @@ export async function verifyBaselineVertical(
     ...GENERIC_COMBAT_ACTION_LABELS,
     "Help (Ability Check)",
     "Unarmed Strike (Shove)",
+    // A Grapple or Shove that first stows, or first drops, the held weapon.
+    "Unarmed Strike (Grapple)",
+    "Unarmed Strike (Grapple)",
+    "Unarmed Strike (Shove)",
+    "Unarmed Strike (Shove)",
     "Adrenaline Rush: Dash",
     "Second Wind",
     "Move",
@@ -1282,6 +1287,11 @@ export async function verifyWidthVertical(client: Client) {
     "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
     "Help (Ability Check)",
+    "Unarmed Strike (Shove)",
+    // A Grapple or Shove that first stows, or first drops, the held weapon.
+    "Unarmed Strike (Grapple)",
+    "Unarmed Strike (Grapple)",
+    "Unarmed Strike (Shove)",
     "Unarmed Strike (Shove)",
     "Adrenaline Rush: Dash",
     "Second Wind",

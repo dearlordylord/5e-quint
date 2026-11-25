@@ -495,13 +495,7 @@ export function ownedWeaponChangeAttackQuery(
       readonly actor: CharacterBattleCreatureState;
       readonly equipment: BattleEquipmentQuery;
     } {
-  const changed = stateWithOwnedWeaponChange(
-    state,
-    actorId,
-    change.kind === "drop"
-      ? { kind: "stow", objectId: change.objectId }
-      : change,
-  );
+  const changed = stateWithProspectiveWeaponChange(state, actorId, change);
   if (changed.tag === "invalid") return changed;
   const actor = changed.state.combatants.get(actorId);
   /* v8 ignore next -- @preserve -- the change has just been admitted for this character. */
@@ -523,6 +517,26 @@ export function ownedWeaponChangeAttackQuery(
       grapples: changed.state.grapples,
     },
   };
+}
+
+/**
+ * The battle as it would be after a weapon change, for what the character's
+ * hands could do then. A dropped weapon frees its hands as a stowed one does;
+ * where it lands is the table's answer, which a prospective change doesn't
+ * need, so the projection stows it.
+ */
+export function stateWithProspectiveWeaponChange(
+  state: BattleState,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+): OwnedWeaponChangeResult {
+  return stateWithOwnedWeaponChange(
+    state,
+    actorId,
+    change.kind === "drop"
+      ? { kind: "stow", objectId: change.objectId }
+      : change,
+  );
 }
 
 function custodyWithObjectOnGround(
