@@ -443,7 +443,12 @@ export function resolveActiveInterruptProcedure(input: {
       fill.spatialFacts.some((fact) => fact.kind === "attackTargetDistance"),
     );
   // A readied attack's weapon change after it is made once the attack is
-  // over, at the landing position the selection gave a dropped weapon.
+  // over, at the landing position the selection or a later answer gave a
+  // dropped weapon.
+  const recorded = stateRecordingWeaponDropFills(
+    input.resolution.state,
+    input.resolution.fills,
+  );
   const continuationWeaponDropFills = activeInterrupt.fills.filter(
     (fill) =>
       fill.kind === "weaponDropPosition" &&
@@ -453,6 +458,7 @@ export function resolveActiveInterruptProcedure(input: {
   );
   const continuationResolution = {
     ...input.resolution,
+    state: recorded,
     // The transaction owner may already carry the initial spatial fill in its
     // replay vector. Retain it exactly once; duplicate submitted fills still
     // reach native validation unchanged.
@@ -501,6 +507,42 @@ export function resolveActiveInterruptProcedure(input: {
     interruptResult,
     input.execution,
   );
+}
+
+/**
+ * Record on the active interrupt each weapon landing position answered after
+ * its selection, so the procedure's completion finds it whatever path the
+ * procedure resumed by.
+ */
+function stateRecordingWeaponDropFills(
+  state: BattleState,
+  submitted: readonly BattleFill[],
+): BattleState {
+  const frame = currentInterruptCheckpoint(state);
+  const activeInterrupt = frame?.activeInterrupt;
+  /* v8 ignore next -- @preserve -- The caller resolves only an active interrupt. */
+  if (frame === null || activeInterrupt === undefined) return state;
+  const answered = submitted.filter(
+    (fill) =>
+      fill.kind === "weaponDropPosition" &&
+      !activeInterrupt.fills.some((kept) => kept.holeId === fill.holeId),
+  );
+  if (answered.length === 0) return state;
+  const recordedFrame: BattleInterruptCheckpoint = {
+    ...frame,
+    activeInterrupt: {
+      ...activeInterrupt,
+      fills: [...activeInterrupt.fills, ...answered],
+    },
+  };
+  copyInterruptCheckpointIdentity(frame, recordedFrame);
+  return {
+    ...state,
+    interruptStack: [
+      ...state.interruptStack.slice(0, -1),
+      interruptCheckpointFrame(recordedFrame),
+    ],
+  };
 }
 
 function resolveReactionRollOrDamageReduction(input: {

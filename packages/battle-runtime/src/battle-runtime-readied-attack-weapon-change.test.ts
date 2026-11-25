@@ -29,7 +29,10 @@ import {
   testShortswordAttack,
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import { weaponDropPositionHole } from "./battle-reducer/attack-weapon-change.ts";
+import {
+  weaponChangeDropOutcome,
+  weaponDropPositionHole,
+} from "./battle-reducer/attack-weapon-change.ts";
 import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
 import {
@@ -231,6 +234,41 @@ function releasedAndMissed(
   );
 }
 
+/** Answers the release's drop position hole, then misses the Goblin. */
+function missedAfterAnsweringDropHole(
+  unplaced: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+) {
+  const placed = resolveBattleSubject({
+    state: unplaced.state,
+    subject: replaySubjectForTest(unplaced),
+    fills: [dropFill(longswordId)],
+  });
+  if (placed.tag !== "needsHoles") {
+    throw new Error("Expected the readied attack roll.");
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state: placed.state,
+      subject: replaySubjectForTest(placed),
+      fills: [
+        attackRollFill(
+          findHole(battleResolutionHolesForTest(placed), "attackRoll"),
+          { total: 2, naturalD20: 2 },
+        ),
+      ],
+    }),
+  );
+}
+
+function replaySubjectForTest(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+) {
+  if (result.frontier.kind !== "holes") {
+    throw new Error("Expected the procedure's holes.");
+  }
+  return result.frontier.replaySubject;
+}
+
 function heldWeaponId(state: BattleState) {
   const fighter = state.combatants.get(fighterId);
   if (fighter === undefined || !isCharacterBattleCreatureState(fighter)) {
@@ -355,6 +393,14 @@ describe("weapon change with a readied Attack", () => {
     }
     expect(battleResolutionHolesForTest(unplaced)).toEqual([
       weaponDropPositionHole(fighterId, longswordId),
+    ]);
+    const placedLater = missedAfterAnsweringDropHole(unplaced);
+    expect(
+      battleGroundObjectState(placedLater.state, fighterId, longswordId)
+        ?.positionId,
+    ).toBe(dropPositionId);
+    expect(placedLater.droppedObjects).toEqual([
+      weaponChangeDropOutcome(fighterId, longswordId),
     ]);
 
     const attacked = releasedAndMissed(triggered, weaponChange, [
