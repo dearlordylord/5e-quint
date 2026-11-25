@@ -61,7 +61,7 @@ import {
   thresholdTierDamageExpr,
 } from "../spells-execution-facts.ts";
 import { loadoutHeldWeaponSlotIsUsable } from "../wild-shape-equipment.ts";
-import { battleObjectIsOnGround } from "../battle-object-lifecycle.ts";
+import { loadoutWeaponIsHeld } from "../character-effective-loadout.ts";
 import { attackTargetHole } from "../hole-helpers.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -1101,11 +1101,11 @@ function spellHostedWeaponAttackForExecution(
   if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
     return undefined;
   }
-  return battleObjectIsOnGround(state, actorId, componentWeaponObjectId)
-    ? undefined
-    : spellHostedWeaponAttacks(actor).find(
+  return loadoutWeaponIsHeld(state, actorId, componentWeaponObjectId)
+    ? spellHostedWeaponAttacks(actor).find(
         ({ objectId }) => objectId === componentWeaponObjectId,
-      );
+      )
+    : undefined;
 }
 
 function spellHostedWeaponAttackBonusDamageAdditions(

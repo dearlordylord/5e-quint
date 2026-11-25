@@ -45,7 +45,6 @@
       "module/binding:battleInitializationLeafIssueFromStateIssue": 10
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts": {
-      "module/binding:attackActionOptionsForActor": 9,
       "module/binding:attackDamageHole": 12,
       "module/binding:martialArtsLoadoutEligible": 10,
       "module/binding:offHandAttackActionOptionsForActor": 12,
@@ -107,7 +106,7 @@
       "module/binding:applyBattleMovement": 11
     },
     "packages/battle-runtime/src/battle-reducer/character-effective-loadout.ts": {
-      "module/binding:characterEffectiveLoadoutFromOrigin": 13
+      "module/binding:characterEffectiveLoadoutFromOrigin": 9
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
       "module/binding:concentrationRouteForResolution": 22,

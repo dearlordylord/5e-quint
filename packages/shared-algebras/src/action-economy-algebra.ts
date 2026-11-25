@@ -721,17 +721,32 @@ export function spendAction<T extends ActionEconomyState>(
   return Result.succeed(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
+/**
+ * Spends the action resource an Unarmed Strike option (a Grapple or Shove)
+ * uses, and names it, so the caller knows whether the Attack action or
+ * another feature, such as Flurry of Blows, paid for it.
+ */
 export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
   state: T,
-): Result.Result<T, ActionEconomySpendError> {
+): Result.Result<
+  { readonly state: T; readonly spentResource: RuntimeActionResource },
+  ActionEconomySpendError
+> {
   const actionResourceIndex = compatibleUnarmedStrikeActionResourceIndex(
     state.actionResources,
   );
-  if (actionResourceIndex === null) {
+  const spentResource =
+    actionResourceIndex === null
+      ? undefined
+      : state.actionResources[actionResourceIndex];
+  if (actionResourceIndex === null || spentResource === undefined) {
     return Result.fail("no action resource available");
   }
 
-  return Result.succeed(spendActionResourceAtIndex(state, actionResourceIndex));
+  return Result.succeed({
+    state: spendActionResourceAtIndex(state, actionResourceIndex),
+    spentResource,
+  });
 }
 
 export function spendMatchingActionResource<T extends ActionEconomyState>(

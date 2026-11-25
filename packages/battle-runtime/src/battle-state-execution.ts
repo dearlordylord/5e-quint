@@ -4230,6 +4230,18 @@ export type BattleJumpDistanceMultiplier = {
   readonly multiplier: 2;
 };
 
+/**
+ * Whether the creature can still equip or unequip a weapon after the Attack
+ * action attack it just made. An attack that changed a weapon before its roll
+ * leaves none.
+ */
+export const WEAPON_CHANGE_AFTER_ATTACK_STATES = [
+  "unavailable",
+  "available",
+] as const;
+export type WeaponChangeAfterAttackState =
+  (typeof WEAPON_CHANGE_AFTER_ATTACK_STATES)[number];
+
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
@@ -4240,6 +4252,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  readonly weaponChangeAfterAttack: WeaponChangeAfterAttackState;
   readonly brutalStrike:
     | { readonly kind: "available" }
     | {
@@ -4561,7 +4574,13 @@ export type BattleState = {
     BattleExecutionScopeAllocation
   >;
   readonly companions: BattleCompanions;
-  readonly groundObjects: ReadonlyMap<CombatantId, BattleActorGroundObjects>;
+  /**
+   * Each creature's objects that aren't where its loadout puts them: on the
+   * ground, or, for a selected-loadout weapon, sheathed or stowed. One entry
+   * per object, so no object is in two places at once. A loadout weapon with
+   * no entry is in hand.
+   */
+  readonly objectCustody: ReadonlyMap<CombatantId, BattleActorObjectCustody>;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -5269,6 +5288,18 @@ export type BattleObjectInteractionRulingHole = {
   readonly actorId: CombatantId;
   readonly objectInteraction: ObjectInteractionState;
 };
+/**
+ * Asks the table where a weapon dropped with an attack lands. The table
+ * places it; Battle keeps it on the ground there for its owner.
+ */
+export type BattleWeaponDropPositionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "weaponDropPosition";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
+};
 export type BattleToolPossessionFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5404,6 +5435,7 @@ export type BattleDroppedObjectSource =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
     }
+  | { readonly kind: "attackWeaponChange" }
   | {
       /** SRD 5.2.1 "Thrown": the weapon left its owner's hand in an attack. */
       readonly kind: "thrownWeaponAttack";
@@ -5413,12 +5445,19 @@ export type BattleGroundObjectState = {
   readonly positionId: BattleTablePositionId;
   readonly source: BattleDroppedObjectSource;
 };
-declare const battleActorGroundObjectsNonEmpty: unique symbol;
-export type BattleActorGroundObjects = ReadonlyMap<
+/**
+ * Where one of a creature's objects is instead of where its loadout puts it:
+ * lying on the ground, or sheathed or stowed.
+ */
+export type BattleObjectCustody =
+  | ({ readonly kind: "onGround" } & BattleGroundObjectState)
+  | { readonly kind: "stowed" };
+declare const battleActorObjectCustodyNonEmpty: unique symbol;
+export type BattleActorObjectCustody = ReadonlyMap<
   BattleObjectId,
-  BattleGroundObjectState
+  BattleObjectCustody
 > & {
-  readonly [battleActorGroundObjectsNonEmpty]: true;
+  readonly [battleActorObjectCustodyNonEmpty]: true;
 };
 export type BattleDroppedObjectOutcome = {
   readonly kind: "objectDropped";
@@ -7081,6 +7120,7 @@ export type BattleHole =
   | BattleSpatialMeleeSpellAttackProxyPositionHole
   | BattleHeldObjectFactsHole
   | BattleObjectInteractionRulingHole
+  | BattleWeaponDropPositionHole
   | BattleToolPossessionFactsHole
   | BattleCunningStrikeEndTurnCoverFactsHole
   | BattleSpawnedCompanionConnectionHole
@@ -7429,6 +7469,11 @@ export type BattleFill =
       readonly kind: "objectInteractionRuling";
       readonly holeId: BattleHoleId;
       readonly value: ObjectInteractionRuling;
+    }
+  | {
+      readonly kind: "weaponDropPosition";
+      readonly holeId: BattleHoleId;
+      readonly value: { readonly positionId: BattleTablePositionId };
     }
   | {
       readonly kind: "toolPossessionFacts";
@@ -8314,6 +8359,8 @@ export type BattleTurnSnapshot = {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  /** Whether a weapon change is left from the last Attack action attack. */
+  readonly weaponChangeAfterAttack: WeaponChangeAfterAttackState;
   readonly brutalStrikeChosenThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];

@@ -272,7 +272,7 @@ export function controlledReviewEvidenceFixture(input: {
             ],
           ],
         },
-        groundObjects: { $map: [] },
+        objectCustody: { $map: [] },
       },
     },
     battlefield: {

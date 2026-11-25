@@ -1691,7 +1691,7 @@ describe("battle runtime: Hunter's Prey", () => {
     requireHole(afterMiss(melee), "unitFeatureDecision");
     expect(
       requireResolved(afterMiss({ ...melee, weaponDelivery: "thrown" })).state
-        .groundObjects.size,
+        .objectCustody.size,
     ).toBe(1);
   });
 

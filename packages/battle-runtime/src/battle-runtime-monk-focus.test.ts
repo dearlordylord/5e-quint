@@ -864,6 +864,15 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(grappled.state.grapples).toEqual([
       expect.objectContaining({ grapplerId: fighterId, targetId: goblinId }),
     ]);
+    // A Bonus Action Grapple isn't an attack of the Attack action, so it
+    // opens no weapon change after it (ASSUMPTIONS.md A63).
+    expect(flurryOnly.combatants.get(fighterId)?.origin.kind).toBe("character");
+    expect(flurryOnly.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+    expect(grappled.state.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
   });
 
   test("Flurry of Blows resources can pay for Shove Unarmed Strike effects", () => {
@@ -911,6 +920,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
     );
 
     expect(flurryResourceCount(shoved.snapshot.turn.actionResources)).toBe(1);
+    expect(shoved.state.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
     expect(
       shoved.snapshot.turn.actionResources.some(
         (resource) => resource.source === "turn",

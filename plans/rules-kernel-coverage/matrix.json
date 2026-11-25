@@ -36,7 +36,7 @@
     "byClassification": {
       "semantic-frontier": 155,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 48,
+      "table-owned-fact": 50,
       "unsupported-dead-branch": 0
     }
   },
@@ -6530,6 +6530,33 @@
       "title": "Help's Assist an Ability Check option: the helper's skill proficiency and a table-decided ally give Advantage on that ally's next check with the skill, used by that check or expired at the start of the helper's next turn"
     },
     {
+      "id": "BATTLE.ACTION.ATTACK_WEAPON_CHANGE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/attack-weapon-change.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-attack-weapon-change.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
+      ],
+      "reason": "The QNT owner models a loadout weapon held, stowed or on the ground; equipping a weapon that is not in hand into empty hands, and stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle applies a change carried on the attack before it looks up the attack, offers the change after it as its own command, and asks the table where a dropped weapon lands.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
+        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Attack [Action]"
+      ],
+      "title": "Attack weapon change: each Attack action attack can equip or unequip one loadout weapon, before or after the attack"
+    },
+    {
       "id": "BATTLE.ATTACK.TARGET_COVER",
       "kind": "boundary-protocol",
       "parityWitnesses": [
@@ -8810,6 +8837,30 @@
       "subject": "battle-fill-kind"
     },
     {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.ATTACK_WEAPON_CHANGE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "weaponDropPosition",
+      "id": "BattleWeaponDropPositionHole",
+      "reason": "Where a weapon dropped with an attack lands is the table's placement. The reducer requests the position and keeps the weapon on the ground there for its owner to pick up.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.ACTION.ATTACK_WEAPON_CHANGE"
+      ],
+      "fillKind": "weaponDropPosition",
+      "followUpTaskIds": [],
+      "id": "weaponDropPosition",
+      "reason": "Weapon drop position fills carry the table's placement of a dropped weapon; Battle owns the weapon's custody once it lands.",
+      "subject": "battle-fill-kind"
+    },
+    {
       "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
       "followUpTaskIds": [],
@@ -8817,6 +8868,15 @@
       "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
       "subject": "battle-subject-kind",
       "subjectKind": "runtimeObjectInteraction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
+      "followUpTaskIds": [],
+      "id": "runtimeAttackWeaponChange",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeAttackWeaponChange"
     },
     {
       "classification": "semantic-frontier",
@@ -13594,6 +13654,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns which weapon change an Attack action attack allows: equipping, stowing or dropping one loadout weapon, and the change left after an attack, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.ACTION.ATTACK_WEAPON_CHANGE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover sheathing, dropping, drawing and picking up a weapon, no change that does nothing or needs an occupied hand, the change left after an attack without one, and its end with the turn.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Identity-independent Cover semantics: a table-supplied degree of cover either refuses direct targeting (Total Cover) or adds 0, 2 or 5 to the Armor Class an attack roll must meet. Object and creature attack owners import it instead of keeping their own cover arithmetic.",
       "obligationIds": ["BATTLE.ATTACK.TARGET_COVER"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt",
@@ -15045,6 +15117,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21114,6 +21196,29 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "record-update",
+        "pure-def",
+        "bool",
+        "boolean-connective",
+        "comparison",
+        "set",
+        "if-expression",
+        "variant",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.ACTION.ATTACK_WEAPON_CHANGE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
       ],
       "status": "generation-subset-clean"
     },

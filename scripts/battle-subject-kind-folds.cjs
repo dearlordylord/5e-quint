@@ -107,6 +107,8 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "interactWithObject":
     case "pickUpHeldWeapon":
       return "runtimeObjectInteraction";
+    case "changeWeaponAfterAttack":
+      return "runtimeAttackWeaponChange";
     case "changeWeaponGrip":
       return "runtimeWeaponGrip";
     case "protectionRelevantEffectSave":

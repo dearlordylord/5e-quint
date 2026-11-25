@@ -116,7 +116,7 @@ type WeaponAttackOverrideUsabilityRuntime<
   State,
 > = {
   readonly activeDruidWildShapeEffect: (actor: Actor) => ActiveDruidWildShape;
-  readonly battleObjectIsOnGround: (
+  readonly loadoutWeaponIsHeld: (
     state: State,
     actorId: CombatantId,
     objectId: BattleObjectId,
@@ -151,7 +151,7 @@ function weaponAttackOverrideWeaponIsUsable<
 ): boolean {
   return (
     actor.origin.kind === "character" &&
-    !runtime.battleObjectIsOnGround(
+    runtime.loadoutWeaponIsHeld(
       state,
       actor.combatantId,
       invocation.activeEffect.weaponItemId,
@@ -234,7 +234,7 @@ export function weaponAttackOverrideExecutor<
       readonly activeDruidWildShapeEffect: (
         actor: Actor,
       ) => ActiveDruidWildShape;
-      readonly battleObjectIsOnGround: (
+      readonly loadoutWeaponIsHeld: (
         state: State,
         actorId: CombatantId,
         objectId: BattleObjectId,

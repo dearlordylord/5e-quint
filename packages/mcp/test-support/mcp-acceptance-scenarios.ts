@@ -808,6 +808,9 @@ export async function verifyBaselineVertical(
   assert.deepEqual(actionLabels(fighterActs), [
     "Attack",
     "Attack",
+    // An Unarmed Strike that first stows, or first drops, the held weapon.
+    "Attack",
+    "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS,
     "Help (Ability Check)",
     "Unarmed Strike (Shove)",
@@ -1272,6 +1275,9 @@ export async function verifyWidthVertical(client: Client) {
 
   const fighterActs = await callTool(client, "discover_battle_acts", {});
   assert.deepEqual(actionLabels(fighterActs), [
+    "Attack",
+    "Attack",
+    // An Unarmed Strike that first stows, or first drops, the held weapon.
     "Attack",
     "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,

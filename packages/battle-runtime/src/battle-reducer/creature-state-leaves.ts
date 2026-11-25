@@ -198,9 +198,9 @@ export function combatantHandUses(
     combatant,
     combatant.armorClass.rightHandUse,
   );
-  const grounded =
+  const unheld =
     combatant.origin.kind === "character"
-      ? groundedLoadoutObjects(
+      ? unheldLoadoutObjects(
           combatant.origin.selectedLoadout,
           characterEffectiveLoadoutFromOrigin(
             state,
@@ -208,10 +208,10 @@ export function combatantHandUses(
             combatant.origin,
           ),
         )
-      : NO_GROUNDED_LOADOUT_OBJECTS;
+      : NO_UNHELD_LOADOUT_OBJECTS;
   return {
     left: handUseForOccupancy(
-      handUseWithGroundedLoadout(leftHandUse, grounded),
+      handUseWithUnheldLoadout(leftHandUse, unheld),
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -219,7 +219,7 @@ export function combatantHandUses(
       ),
     ),
     right: handUseForOccupancy(
-      handUseWithGroundedLoadout(rightHandUse, grounded),
+      handUseWithUnheldLoadout(rightHandUse, unheld),
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -241,24 +241,24 @@ export function firstFreeHand(
   return undefined;
 }
 
-/** Which of a character's selected loadout hand objects are on the ground. */
-export type GroundedLoadoutObjects = {
+/** Which of a character's selected loadout hand objects it no longer holds. */
+export type UnheldLoadoutObjects = {
   readonly shield: boolean;
   readonly offHandWeapon: boolean;
   readonly mainWeapon: boolean;
 };
 
-const NO_GROUNDED_LOADOUT_OBJECTS: GroundedLoadoutObjects = {
+const NO_UNHELD_LOADOUT_OBJECTS: UnheldLoadoutObjects = {
   shield: false,
   offHandWeapon: false,
   mainWeapon: false,
 };
 
 /** The selected loadout hand objects that the effective loadout no longer holds. */
-export function groundedLoadoutObjects(
+export function unheldLoadoutObjects(
   selected: CharacterBattleLoadoutRef,
   effective: CharacterBattleLoadoutRef,
-): GroundedLoadoutObjects {
+): UnheldLoadoutObjects {
   return {
     shield: selected.shield !== undefined && effective.shield === undefined,
     offHandWeapon:
@@ -269,17 +269,18 @@ export function groundedLoadoutObjects(
 }
 
 /**
- * A loadout object on the ground no longer occupies its hand. A main weapon
- * held with the `two_handed` grip occupies both, so it frees both.
+ * A loadout object no longer held (on the ground or stowed) no longer occupies
+ * its hand. A main weapon held with the `two_handed` grip occupies both, so it
+ * frees both.
  */
-export function handUseWithGroundedLoadout(
+export function handUseWithUnheldLoadout(
   handUse: HandUse,
-  grounded: GroundedLoadoutObjects,
+  unheld: UnheldLoadoutObjects,
 ): HandUse {
   return Match.value(handUse).pipe(
-    Match.when("shield", () => (grounded.shield ? "free" : handUse)),
-    Match.when("offWeapon", () => (grounded.offHandWeapon ? "free" : handUse)),
-    Match.when("mainWeapon", () => (grounded.mainWeapon ? "free" : handUse)),
+    Match.when("shield", () => (unheld.shield ? "free" : handUse)),
+    Match.when("offWeapon", () => (unheld.offHandWeapon ? "free" : handUse)),
+    Match.when("mainWeapon", () => (unheld.mainWeapon ? "free" : handUse)),
     Match.whenOr("free", "grapple", "spellCreatedHeldObject", () => handUse),
     Match.exhaustive,
   );

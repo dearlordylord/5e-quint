@@ -16,6 +16,7 @@ export function resetBattleTurnResources(
     levelOnePlusSpellCastsThisTurn: [],
     quickenedLevelOnePlusSpellCastsThisTurn: [],
     attackRollMadeThisTurn: false,
+    weaponChangeAfterAttack: "unavailable",
     brutalStrike: { kind: "available" },
     attackDamageRidersUsedThisTurn: [],
     stunningStrikesUsedThisTurn: [],

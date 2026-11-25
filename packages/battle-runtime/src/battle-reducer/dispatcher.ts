@@ -190,6 +190,11 @@ import {
   resolveMovementProcedure,
 } from "./movement-procedures.ts";
 import {
+  isChangeWeaponAfterAttackSubject,
+  resolveChangeWeaponAfterAttack,
+} from "./attack-weapon-change.ts";
+import { isEndTurnSubject } from "./reducer-route-subject-query.ts";
+import {
   isObjectInteractionSubject,
   resolveObjectInteraction,
 } from "./object-interaction.ts";
@@ -980,7 +985,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
-    if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
+    if (isEndTurnSubject(subject)) {
       return input.state.currentTurnResources.compelledHalt === null
         ? resolveEndTurnCommand({
             ...input,
@@ -1009,6 +1014,9 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         subject,
         ...handledInterruptRouteOption,
       });
+    }
+    if (isChangeWeaponAfterAttackSubject(subject)) {
+      return resolveChangeWeaponAfterAttack({ ...input, subject });
     }
     if (isObjectInteractionSubject(subject)) {
       return resolveObjectInteraction({ ...input, subject });

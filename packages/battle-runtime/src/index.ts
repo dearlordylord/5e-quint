@@ -447,7 +447,8 @@ export {
   type BattleActPresentation,
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
-  type BattleActorGroundObjects,
+  type BattleActorObjectCustody,
+  type BattleObjectCustody,
   type BattleActiveEffectExpiration,
   type BattleAcrobaticMovementFact,
   type BattleAcrobaticMovementPath,
@@ -712,11 +713,11 @@ export {
   type WildShapeLoadoutObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
-  battleObjectIsOnGround,
   battleStateWithGroundObjects,
   type BattleGroundObjectPlacement,
   type BattleGroundObjectPlacementResult,
 } from "./battle-reducer/battle-object-lifecycle.ts";
+export { battleObjectIsOnGround } from "./battle-reducer/object-custody-queries.ts";
 export {
   characterEffectiveLoadout,
   characterEffectiveLoadoutFromOrigin,

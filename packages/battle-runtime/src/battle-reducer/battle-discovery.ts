@@ -22,6 +22,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
+import {
+  changeWeaponAfterAttackActs,
+  weaponChangeInitialHoles,
+} from "./attack-weapon-change.ts";
+import {
+  loadoutWeaponChanges,
+  stateWithLoadoutWeaponChange,
+} from "./loadout-weapon-custody.ts";
+import type { AttackWeaponChange } from "../battle-subjects.ts";
 import { optionalProperty } from "../optional-property.ts";
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -390,6 +399,15 @@ function appendOrdinaryAttackActs(
 ): void {
   const hasOpenStatBlockMultiattackDispatch =
     actorHasStatBlockMultiattackActionResource(state, actorId);
+  if (
+    !combatantCanTakeActions(state.combatants.get(actorId)) ||
+    !(
+      hasOpenStatBlockMultiattackDispatch ||
+      canSpendAction(state.currentTurnResources, "attack")
+    )
+  ) {
+    return;
+  }
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -397,9 +415,6 @@ function appendOrdinaryAttackActs(
     attackActionOptionIsOrdinaryAttackAction(state, actorId, attack),
   );
   if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    (hasOpenStatBlockMultiattackDispatch ||
-      canSpendAction(state.currentTurnResources, "attack")) &&
     attackActionOptions.some(
       (attack) =>
         attackTargetChoices(state, actorId, attack).length > 0 ||
@@ -407,25 +422,89 @@ function appendOrdinaryAttackActs(
     )
   ) {
     acts.push(
-      ...attackActionOptions.flatMap((attack) => {
-        const targetHole = ordinaryAttackTargetHole(state, actorId, attack);
-        return targetHole.choices.length === 0 &&
-          targetHole.attack?.acceptsObjectTarget !== true
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "action" as const,
-                  actorId,
-                  action: "attack" as const,
-                  ...attackSubjectPart(attack),
-                },
-                initialHoles: [targetHole],
-              },
-            ];
-      }),
+      ...attackActionOptions.flatMap((attack) =>
+        ordinaryAttackActs(state, actorId, attack, undefined),
+      ),
     );
   }
+  // A weapon change can bring an attack into reach that none had before it,
+  // so its acts are checked against the state after each change.
+  acts.push(...weaponChangeAttackActs(state, actorId));
+}
+
+function ordinaryAttackActs(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: ReturnType<typeof attackActionOptionsForActor>[number],
+  weaponChange: AttackWeaponChange | undefined,
+): BattleActDiscoveryCandidate[] {
+  const targetHole = ordinaryAttackTargetHole(state, actorId, attack);
+  if (
+    targetHole.choices.length === 0 &&
+    targetHole.attack?.acceptsObjectTarget !== true
+  ) {
+    return [];
+  }
+  const subject = {
+    tag: "action" as const,
+    actorId,
+    action: "attack" as const,
+    ...attackSubjectPart(attack),
+  };
+  return [
+    {
+      subject:
+        weaponChange === undefined || subject.attackAbility === undefined
+          ? subject
+          : { ...subject, weaponChange },
+      initialHoles: [targetHole],
+    },
+  ];
+}
+
+/**
+ * The attacks that carry a weapon change before the roll (SRD 5.2.1 Rules
+ * Glossary, "Attack [Action]", Equipping and Unequipping Weapons): for each
+ * change the character can make, every ordinary attack it could make once the
+ * change is done. A weapon equipped first needn't be the one used. A dropped
+ * weapon leaves the same attacks as a stowed one, and the act asks first where
+ * it lands.
+ */
+function weaponChangeAttackActs(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleActDiscoveryCandidate[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) return [];
+  return loadoutWeaponChanges(state, actor).flatMap((change) => {
+    const changed = stateWithLoadoutWeaponChange(state, actorId, {
+      kind: change.kind === "drop" ? "stow" : change.kind,
+      objectId: change.objectId,
+    });
+    /* v8 ignore next -- @preserve -- loadoutWeaponChanges admits only changes that apply. */
+    if (changed.tag !== "applied") return [];
+    const dropHoles = weaponChangeInitialHoles(actorId, change);
+    return (
+      attackActionOptionsForActor(changed.state, actorId)
+        .filter((attack) =>
+          attackActionOptionIsOrdinaryAttackAction(
+            changed.state,
+            actorId,
+            attack,
+          ),
+        )
+        .flatMap((attack) =>
+          ordinaryAttackActs(changed.state, actorId, attack, change),
+        )
+        // Only the character Attack action subject carries a weapon change.
+        .filter((act) => "weaponChange" in act.subject)
+        .map((act) =>
+          dropHoles.length === 0
+            ? act
+            : { ...act, initialHoles: [...dropHoles, ...act.initialHoles] },
+        )
+    );
+  });
 }
 
 function discoverBattleActsWithoutRouteEvents(
@@ -477,6 +556,7 @@ function discoverBattleActsWithoutRouteEvents(
     acts.push(...movementActs(state, actorId));
     acts.push(...proneTransitionActs(state, actor));
     acts.push(...objectInteractionActs(state, actor));
+    acts.push(...changeWeaponAfterAttackActs(state, actor));
     acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
     acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
     acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
@@ -704,6 +784,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   acts.push(...proneTransitionActs(state, actor));
   acts.push(...objectInteractionActs(state, actor));
+  acts.push(...changeWeaponAfterAttackActs(state, actor));
   acts.push(...weaponGripChangeActs(state, actor));
   acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
   acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));

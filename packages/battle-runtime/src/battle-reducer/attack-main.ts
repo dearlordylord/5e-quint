@@ -298,13 +298,21 @@ import {
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
+  spendAttackActionForSubject,
   validateAttackDamageDieFloorChoice,
   resolveFollowUpAttackDamageChoice,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
+import { resolveAttackWithWeaponChange } from "./attack-weapon-change.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 export function resolveAttack(
+  input: AttackBattleResolutionInput,
+): BattleResolutionResult {
+  return resolveAttackWithWeaponChange(input, resolveAttackAfterWeaponChange);
+}
+
+function resolveAttackAfterWeaponChange(
   input: AttackBattleResolutionInput,
 ): BattleResolutionResult {
   const attack = attackActionOptionForSubject(input.state, input.subject);
@@ -315,7 +323,12 @@ export function resolveAttack(
       "Attack resolution requires a supported Attack action option.",
     );
   }
-  return resolveSelectedAttackProcedure(input, attack, spendAttackAction);
+  return resolveSelectedAttackProcedure(
+    input,
+    attack,
+    (state, _actorId, selected, timing) =>
+      spendAttackActionForSubject(state, input.subject, selected, timing),
+  );
 }
 
 type AttackProcedureResolutionInput = Omit<

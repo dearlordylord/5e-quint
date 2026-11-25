@@ -23,6 +23,7 @@ import {
   battleStateWithGroundObjects,
   heldWeaponPickupTransition,
 } from "./battle-reducer/battle-object-lifecycle.ts";
+import { battleObjectIsOnGround } from "./battle-reducer/object-custody-queries.ts";
 import { characterEffectiveLoadout } from "./battle-reducer/character-effective-loadout.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
@@ -120,7 +121,7 @@ function expectOccupiedPickupRefused(
     snapshot: before,
   });
   expect(snapshotBattle(state)).toEqual(before);
-  expect(state.groundObjects.get(fighterId)?.has(objectId)).toBe(true);
+  expect(battleObjectIsOnGround(state, fighterId, objectId)).toBe(true);
 }
 
 function withSpellHeldObject(
@@ -157,7 +158,7 @@ describe("selected weapon pickup hand custody", () => {
       swordId,
     );
     expect(after.currentTurnResources.objectInteraction).toBe("spent");
-    expect(after.groundObjects.has(fighterId)).toBe(false);
+    expect(after.objectCustody.has(fighterId)).toBe(false);
     expect(combatantHandUses(after, actor(after), after.grapples)).toEqual({
       left: "shield",
       right: "mainWeapon",

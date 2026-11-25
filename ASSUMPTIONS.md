@@ -330,6 +330,45 @@ Reaction, including readied movement, comes with a free interaction. The model
 ties the free interaction to a turn the creature can act on, and lets a
 readied interaction take only the action Ready held.
 
+## A63: A weapon change after an attack comes before the next attack
+
+**Assumption:** Each attack a character makes as part of its Attack action on
+its own turn can equip or unequip one of its selected loadout's weapons. The
+change can come before the attack, carried on the attack itself, or after it.
+A change after the attack must come before the character's next attack as part
+of the Attack action. If that next attack carries its own change before its
+roll, any change still left from the attack before it is gone. A Grapple or
+Shove that takes the place of one of these attacks also leaves a change after
+it and ends the window of the attack before it. Other attacks, such as an
+off-hand attack with a Bonus Action, or a Grapple or Shove with a Flurry of
+Blows Unarmed Strike, leave a change still left as it was. Any change still
+left at the end of the turn is also gone.
+
+Equipping draws a stowed weapon, or picks up one lying on the ground, and puts
+it back in hand with its loadout grip. The hands the grip uses must be empty.
+Unequipping either sheathes or stows a held weapon, which Battle treats the
+same, or drops it. A dropped weapon lands where the table places it, and stays
+on the ground for its owner to pick up again. As with A60, whether the creature
+can reach a fallen weapon is the table's call.
+
+**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Attack
+[Action]," Equipping and Unequipping Weapons, says "You can either equip or
+unequip one weapon when you make an attack as part of this action. You do so
+either before or after the attack." It also says "Equipping a weapon includes
+drawing it from a sheath or picking it up. Unequipping a weapon includes
+sheathing, stowing, or dropping it." The SRD doesn't say how long after the
+attack the change may wait, or where a dropped weapon lands. The change belongs
+to the Attack action, so the model ends the window at the action's next attack,
+which keeps each change to one attack, and asks the table where the weapon
+lands.
+
+**Temporary implementation restriction (not a rules assumption):** Battle can
+change only the selected loadout's main-hand and off-hand weapons. Other owned
+weapons don't enter the battle yet (#230), and a weapon goes back to the hands
+and grip its loadout gives it (#669). A Grapple or Shove can't carry a change
+before it yet: a character makes that change after the attack before it, or
+with another attack.
+
 ## A58: Any weapon may be held with both hands
 
 **Assumption:** A loadout's main weapon has a grip. Any weapon may take the

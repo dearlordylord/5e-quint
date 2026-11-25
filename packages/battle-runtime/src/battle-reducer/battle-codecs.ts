@@ -224,6 +224,7 @@ import {
 } from "../unit-feature-support.ts";
 import {
   BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
+  WEAPON_CHANGE_AFTER_ATTACK_STATES,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
@@ -1432,6 +1433,7 @@ export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
       procedureRef: BattleProcedureExecutionRef,
       formExecutionRef: BattleStatBlockExecutionScopeRef,
     }),
+    Schema.Struct({ kind: Schema.Literal("attackWeaponChange") }),
     Schema.Struct({
       kind: Schema.Literal("thrownWeaponAttack"),
       procedureRef: BattleAttackProcedureExecutionRef,
@@ -2553,6 +2555,12 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("objectInteractionRuling"),
     actorId: CombatantId,
     objectInteraction: Schema.Literals(OBJECT_INTERACTION_STATES),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("weaponDropPosition"),
+    actorId: CombatantId,
+    objectId: BattleObjectId,
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -4731,6 +4739,13 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "weaponDropPosition";
+      readonly holeId: string;
+      readonly value: {
+        readonly positionId: string;
+      };
+    }
+  | {
       readonly kind: "toolPossessionFacts";
       readonly holeId: string;
       readonly value: {
@@ -5890,6 +5905,13 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
+      kind: Schema.Literal("weaponDropPosition"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        positionId: BattleTablePositionId,
+      }),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("toolPossessionFacts"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -6303,6 +6325,7 @@ const BattleTurnSnapshotInferredSchema = Schema.Struct({
   levelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   quickenedLevelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   attackRollMadeThisTurn: Schema.Boolean,
+  weaponChangeAfterAttack: Schema.Literals(WEAPON_CHANGE_AFTER_ATTACK_STATES),
   brutalStrikeChosenThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
     Schema.Struct({
@@ -8648,6 +8671,7 @@ function serializedBattleHoleExecutionReferences(
       ],
       heldObjectFacts: noSerializedExecutionReferences,
       objectInteractionRuling: noSerializedExecutionReferences,
+      weaponDropPosition: noSerializedExecutionReferences,
       weaponAttackDamageEnhancementTargetItem: (value) => [
         source(value.sourceProcedureRef),
       ],
@@ -8966,6 +8990,7 @@ function serializedRuntimeCommandReferencePolicy(
       dropProne: actorOwned,
       interactWithObject: actorOwned,
       pickUpHeldWeapon: actorOwned,
+      changeWeaponAfterAttack: actorOwned,
       changeWeaponGrip: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
