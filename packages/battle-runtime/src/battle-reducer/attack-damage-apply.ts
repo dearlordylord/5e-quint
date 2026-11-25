@@ -116,7 +116,10 @@ import {
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
-import { combatantHandUses } from "./creature-state-leaves.ts";
+import {
+  combatantHandUses,
+  weaponIsHeldWithTwoHands,
+} from "./creature-state-leaves.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
   loadoutWeaponIsStowed,
@@ -860,24 +863,57 @@ function weaponAttackOptionsForActor(
   attack: BoundCharacterWeaponAttackActionOption,
   attachedWeaponItemId: BattleObjectId | undefined,
   abilityMode: WeaponAttackAbilityMode = { kind: "ordinary" },
-  equipment: BattleObjectCustodyQuery = state,
+  equipment: BattleEquipmentQuery = state,
 ): readonly BoundCharacterWeaponAttackActionOption[] {
-  return characterWeaponAttackDeliveryOptions(attack).flatMap((delivery) => {
-    const projected = weaponAttackWithActiveSpellEffects(
-      state,
-      actor,
-      weaponAttackWithMeleeGripAndMartialArtsDamage(equipment, actor, delivery),
-      attachedWeaponItemId,
-    );
-    const withAbilityMode = Match.value(abilityMode).pipe(
-      Match.when({ kind: "ordinary" }, () => projected),
-      Match.when({ kind: "lightExtraAttack" }, ({ procedureRefs }) =>
-        lightExtraAttackWithAbilityChoices(projected, procedureRefs),
-      ),
-      Match.exhaustive,
-    );
-    return attackAbilityAndDamageTypeOptions(withAbilityMode);
-  });
+  return characterWeaponAttackDeliveryOptions(attack)
+    .filter((delivery) =>
+      weaponAttackHasRequiredHands(equipment, actor, delivery),
+    )
+    .flatMap((delivery) => {
+      const projected = weaponAttackWithActiveSpellEffects(
+        state,
+        actor,
+        weaponAttackWithMeleeGripAndMartialArtsDamage(
+          equipment,
+          actor,
+          delivery,
+        ),
+        attachedWeaponItemId,
+      );
+      const withAbilityMode = Match.value(abilityMode).pipe(
+        Match.when({ kind: "ordinary" }, () => projected),
+        Match.when({ kind: "lightExtraAttack" }, ({ procedureRefs }) =>
+          lightExtraAttackWithAbilityChoices(projected, procedureRefs),
+        ),
+        Match.exhaustive,
+      );
+      return attackAbilityAndDamageTypeOptions(withAbilityMode);
+    });
+}
+
+/** Two-Handed applies to every delivery, including a weapon drawn for a throw. */
+function weaponAttackHasRequiredHands(
+  equipment: BattleEquipmentQuery,
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+): boolean {
+  if (!attack.weapon.properties.some(({ kind }) => kind === "two_handed"))
+    return true;
+  if (weaponIsHeldWithTwoHands(equipment, actor, attack.weaponObjectId))
+    return true;
+  const loadout = characterEffectiveLoadoutFromOrigin(
+    equipment,
+    actor.combatantId,
+    actor.origin,
+  );
+  if (
+    loadout.weapon?.itemId === attack.weaponObjectId ||
+    loadout.offHandWeapon?.itemId === attack.weaponObjectId ||
+    !weaponAttackIsThrown(attack)
+  )
+    return false;
+  const hands = combatantHandUses(equipment, actor, equipment.grapples);
+  return hands.left === "free" && hands.right === "free";
 }
 
 function lightExtraAttackWithAbilityChoices(

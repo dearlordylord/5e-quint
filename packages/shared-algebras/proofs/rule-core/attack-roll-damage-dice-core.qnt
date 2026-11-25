@@ -123,8 +123,11 @@ module attackRollDamageDiceCore {
     meleeAttack: bool,
   }
 
-  // Both hands hold a weapon held with the two-handed grip; one hand holds it
-  // otherwise.
+  // Holding and attacking differ: Two-Handed restricts the attack, not holding.
+  pure def weaponAttackHandsAllowed(twoHandedWeapon: bool, handsForAttack: int): bool =
+    not(twoHandedWeapon) or handsForAttack == 2
+
+  // A two-handed grip holds both hands; the other grip holds one.
   pure def weaponGripHandsHeld(grip: WeaponGrip): int =
     match grip {
       | OneHandedGrip => 1

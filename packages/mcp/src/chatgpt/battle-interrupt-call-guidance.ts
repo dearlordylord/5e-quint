@@ -94,8 +94,9 @@ function readyNestedSelection(
         kind: command,
         fills: [] as const,
       }),
-      releaseReadiedAction: ({ command }) => ({
+      releaseReadiedAction: ({ command, weaponChange }) => ({
         kind: command,
+        ...(weaponChange === undefined ? {} : { weaponChange }),
         fills: [] as const,
       }),
       releaseReadiedAttack: ({

@@ -14,7 +14,7 @@
 // a slot whose weapon isn't in hand moves that weapon out of the loadout, and
 // moves the attack bindings with them, so each owned weapon keeps exactly one
 // binding (ASSUMPTIONS.md A63).
-import { Match } from "effect";
+import { Match, Result } from "effect";
 import type { HandUse, WeaponGrip } from "@dnd/shared/types";
 import type { UnitId } from "@dnd/shared/game-facts";
 import {
@@ -43,6 +43,7 @@ import {
 } from "./battle-object-lifecycle.ts";
 import {
   battleObjectIsOnGround,
+  ownedWeaponObjectIds,
   type BattleActorObjectCustodyQuery,
   type BattleEquipmentQuery,
   type BattleObjectCustodyQuery,
@@ -99,7 +100,11 @@ export type OwnedWeaponChangeIssue = {
 };
 
 export type OwnedWeaponChangeResult =
-  | { readonly tag: "applied"; readonly state: BattleState }
+  | {
+      readonly tag: "applied";
+      readonly state: BattleState;
+      readonly actor: CharacterBattleCreatureState;
+    }
   | OwnedWeaponChangeIssue;
 
 /**
@@ -112,44 +117,61 @@ export function ownedWeaponChangeIssue(
   actorId: CombatantId,
   change: AttackWeaponChange,
 ): OwnedWeaponChangeIssue | null {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return issue(
-      "missingCombatant",
-      "A weapon change requires an actor in this battle.",
-    );
-  }
-  if (!isCharacterBattleCreatureState(actor)) {
-    return issue(
-      "actorNotCharacter",
-      "A weapon change applies to a character's owned weapons.",
-    );
-  }
-  if (combatantActiveDruidWildShape(actor) !== null) {
-    return issue(
-      "activeFormWeaponChangeUnsupported",
-      "A creature in Wild Shape can't equip or unequip its weapons.",
-    );
-  }
-  if (!ownedWeaponIds(actor).includes(change.objectId)) {
-    return issue(
-      "notOwnedWeapon",
-      "A weapon change equips or unequips a weapon the character owns.",
-    );
-  }
-  const held = ownedWeaponIsHeld(state, actor, change.objectId);
+  const admission = weaponChangeActor(state, actorId, change);
+  if (Result.isFailure(admission)) return admission.failure;
+  const actor = admission.success;
   return Match.value(change).pipe(
-    Match.when({ kind: "equip" }, ({ objectId, slot }) =>
-      held
-        ? issue("weaponAlreadyHeld", "That weapon is already in hand.")
-        : equipIssue(state, actor, objectId, slot),
+    Match.when({ kind: "equip" }, ({ objectId, slot }) => {
+      const plan = admittedEquipPlan(state, actor, objectId, slot);
+      return plan.tag === "invalid" ? plan : null;
+    }),
+    Match.whenOr({ kind: "stow" }, { kind: "drop" }, () =>
+      unequipIssue(ownedWeaponIsHeld(state, actor, change.objectId)),
     ),
-    Match.when({ kind: "stow" }, () => unequipIssue(held)),
-    Match.when({ kind: "drop" }, () => unequipIssue(held)),
     Match.exhaustive,
   );
 }
 
+function weaponChangeActor(
+  state: BattleState,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+): Result.Result<CharacterBattleCreatureState, OwnedWeaponChangeIssue> {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return Result.fail(
+      issue(
+        "missingCombatant",
+        "A weapon change requires an actor in this battle.",
+      ),
+    );
+  }
+  if (!isCharacterBattleCreatureState(actor)) {
+    return Result.fail(
+      issue(
+        "actorNotCharacter",
+        "A weapon change applies to a character's owned weapons.",
+      ),
+    );
+  }
+  if (combatantActiveDruidWildShape(actor) !== null) {
+    return Result.fail(
+      issue(
+        "activeFormWeaponChangeUnsupported",
+        "A creature in Wild Shape can't equip or unequip its weapons.",
+      ),
+    );
+  }
+  if (!ownedWeaponObjectIds(actor).includes(change.objectId)) {
+    return Result.fail(
+      issue(
+        "notOwnedWeapon",
+        "A weapon change equips or unequips a weapon the character owns.",
+      ),
+    );
+  }
+  return Result.succeed(actor);
+}
 function unequipIssue(held: boolean): OwnedWeaponChangeIssue | null {
   return held
     ? null
@@ -166,16 +188,19 @@ function unequipIssue(held: boolean): OwnedWeaponChangeIssue | null {
  * main weapon in hand. A Two-Handed weapon can't be held in the off hand, and
  * the hands the slot gives the weapon must be free.
  */
-function equipIssue(
+function admittedEquipPlan(
   state: BattleState,
   actor: CharacterBattleCreatureState,
   objectId: BattleObjectId,
   slot: LoadoutWeaponSlot,
-): OwnedWeaponChangeIssue | null {
+): EquipPlan | OwnedWeaponChangeIssue {
+  if (ownedWeaponIsHeld(state, actor, objectId)) {
+    return issue("weaponAlreadyHeld", "That weapon is already in hand.");
+  }
   const plan = equipPlan(state, actor, objectId, slot);
   if (plan.tag === "invalid") return plan;
   return weaponHandsAreFree(state, actor, plan.hands)
-    ? null
+    ? plan
     : issue(
         "handsOccupied",
         "The hands that hold this weapon are holding something else.",
@@ -198,16 +223,20 @@ function equipPlan(
   slot: LoadoutWeaponSlot,
 ): EquipPlan | OwnedWeaponChangeIssue {
   if (loadoutWeaponSlot(actor, objectId) === slot) {
-    // The slot's own weapon goes back as the loadout holds it: its hands
-    // follow the loadout's main grip, whether or not the main weapon is in
-    // hand, so a two-handed main weapon keeps the off hand.
     const loadoutMainGrip = actor.origin.selectedLoadout.weapon?.grip;
     const grip = Match.value(slot).pipe(
-      Match.when("mainWeapon", () => loadoutMainGrip),
+      Match.when("mainWeapon", () =>
+        holdingGrip(state, actor, loadoutMainGrip),
+      ),
       Match.when("offWeapon", () => undefined),
       Match.exhaustive,
     );
-    return planned(slot, loadoutMainGrip, grip, undefined);
+    return planned(
+      slot,
+      slot === "mainWeapon" ? grip : loadoutMainGrip,
+      grip,
+      undefined,
+    );
   }
   const binding = ownedWeaponAttack(actor, objectId);
   if (binding === undefined) {
@@ -220,7 +249,7 @@ function equipPlan(
     slotVacancyIssue(state, actor, slot) ??
     slotFitIssue(state, actor, slot, binding);
   if (refusal !== null) return refusal;
-  const grip = enteringGrip(slot, binding);
+  const grip = holdingGrip(state, actor, enteringGrip(slot, binding));
   return planned(slot, mainGripBeside(state, actor, slot, grip), grip, binding);
 }
 
@@ -294,7 +323,19 @@ function offHandFitIssue(
     : null;
 }
 
-/** The grip another weapon goes in the main hand with: two hands for a Two-Handed one. */
+/** Keep the preferred grip when its hands are free; otherwise hold in one hand. */
+function holdingGrip(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  preferred: WeaponGrip | undefined,
+): WeaponGrip | undefined {
+  return preferred === "two_handed" &&
+    !weaponHandsAreFree(state, actor, weaponSlotHands("mainWeapon", preferred))
+    ? "one_handed"
+    : preferred;
+}
+
+/** Prefer two hands for a Two-Handed weapon when drawing it. */
 function enteringGrip(
   slot: LoadoutWeaponSlot,
   binding: BoundCharacterWeaponAttackActionOption,
@@ -448,31 +489,34 @@ export function stateWithOwnedWeaponChange(
   actorId: CombatantId,
   change: AppliedAttackWeaponChange,
 ): OwnedWeaponChangeResult {
-  const admission = ownedWeaponChangeIssue(state, actorId, change);
-  if (admission !== null) return admission;
+  const admission = weaponChangeActor(state, actorId, change);
+  if (Result.isFailure(admission)) return admission.failure;
+  const actor = admission.success;
   return Match.value(change).pipe(
-    Match.when({ kind: "equip" }, ({ objectId, slot }) =>
-      equippedWeapon(state, actorId, objectId, slot),
-    ),
-    Match.when({ kind: "stow" }, ({ objectId }) =>
-      applied(
-        battleStateWithObjectCustody(
-          state,
-          actorId,
-          objectId,
-          WEAPON_CHANGE_CUSTODY.stow,
-        ),
-      ),
-    ),
-    Match.when({ kind: "drop" }, ({ objectId, positionId }) =>
-      applied(
-        battleStateWithObjectCustody(state, actorId, objectId, {
-          ...WEAPON_CHANGE_CUSTODY.drop,
-          positionId,
-          source: { kind: "attackWeaponChange" },
-        }),
-      ),
-    ),
+    Match.when({ kind: "equip" }, ({ objectId, slot }) => {
+      const plan = admittedEquipPlan(state, actor, objectId, slot);
+      return plan.tag === "invalid"
+        ? plan
+        : equippedWeapon(state, actor, objectId, slot, plan);
+    }),
+    Match.whenOr({ kind: "stow" }, { kind: "drop" }, (unequip) => {
+      const refusal = unequipIssue(
+        ownedWeaponIsHeld(state, actor, unequip.objectId),
+      );
+      if (refusal !== null) return refusal;
+      const custody =
+        unequip.kind === "stow"
+          ? WEAPON_CHANGE_CUSTODY.stow
+          : {
+              ...WEAPON_CHANGE_CUSTODY.drop,
+              positionId: unequip.positionId,
+              source: { kind: "attackWeaponChange" } as const,
+            };
+      return applied(
+        battleStateWithObjectCustody(state, actorId, unequip.objectId, custody),
+        actor,
+      );
+    }),
     Match.exhaustive,
   );
 }
@@ -497,14 +541,9 @@ export function ownedWeaponChangeAttackQuery(
     } {
   const changed = stateWithProspectiveWeaponChange(state, actorId, change);
   if (changed.tag === "invalid") return changed;
-  const actor = changed.state.combatants.get(actorId);
-  /* v8 ignore next -- @preserve -- the change has just been admitted for this character. */
-  if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
-    return issue("missingCombatant", "The weapon change has no character.");
-  }
   return {
     tag: "projected",
-    actor,
+    actor: changed.actor,
     equipment: {
       objectCustody:
         change.kind === "drop"
@@ -590,32 +629,40 @@ export function ownedWeaponChangeIsApplied(
  */
 function equippedWeapon(
   state: BattleState,
-  actorId: CombatantId,
+  actor: CharacterBattleCreatureState,
   objectId: BattleObjectId,
   slot: LoadoutWeaponSlot,
+  plan: EquipPlan,
 ): OwnedWeaponChangeResult {
-  const actor = state.combatants.get(actorId);
-  /* v8 ignore next -- @preserve -- ownedWeaponChangeIssue has just admitted this character. */
-  if (actor === undefined || !isCharacterBattleCreatureState(actor))
-    return applied(state);
-  const plan = equipPlan(state, actor, objectId, slot);
-  /* v8 ignore next -- @preserve -- the same admission planned this equip. */
-  if (plan.tag === "invalid") return plan;
+  const actorId = actor.combatantId;
   const formerSlot = loadoutWeaponSlot(actor, objectId);
   const departing = slotWeapon(actor.origin.selectedLoadout, slot);
+  const origin =
+    plan.moved === undefined
+      ? actor.origin
+      : originWithWeaponInSlot(actor, plan.moved, slot, plan.grip);
+  const equipped: CharacterBattleCreatureState = {
+    ...actor,
+    armorClass: {
+      ...actor.armorClass,
+      ...handUsesWithWeaponInSlot(actor, plan.hands, slot, formerSlot),
+    },
+    origin:
+      slot === "mainWeapon" &&
+      origin.selectedLoadout.weapon !== undefined &&
+      plan.grip !== undefined
+        ? {
+            ...origin,
+            selectedLoadout: {
+              ...origin.selectedLoadout,
+              weapon: { ...origin.selectedLoadout.weapon, grip: plan.grip },
+            },
+          }
+        : origin,
+  };
   const moved = {
     ...state,
-    combatants: new Map(state.combatants).set(actorId, {
-      ...actor,
-      armorClass: {
-        ...actor.armorClass,
-        ...handUsesWithWeaponInSlot(actor, plan.hands, slot, formerSlot),
-      },
-      origin:
-        plan.moved === undefined
-          ? actor.origin
-          : originWithWeaponInSlot(actor, plan.moved, slot, plan.grip),
-    }),
+    combatants: new Map(state.combatants).set(actorId, equipped),
   };
   const inHand = battleStateWithObjectCustody(moved, actorId, objectId, null);
   return applied(
@@ -624,6 +671,7 @@ function equippedWeapon(
       !loadoutWeaponIsStowed(inHand, actorId, departing.itemId)
       ? inHand
       : battleStateWithObjectCustody(inHand, actorId, departing.itemId, null),
+    equipped,
   );
 }
 
@@ -737,7 +785,7 @@ function mainGrip(
 }
 
 /** Whether one of the character's owned weapons is in its hand now. */
-function ownedWeaponIsHeld(
+export function ownedWeaponIsHeld(
   state: BattleState,
   actor: CharacterBattleCreatureState,
   objectId: BattleObjectId,
@@ -746,21 +794,6 @@ function ownedWeaponIsHeld(
     loadoutWeaponSlot(actor, objectId) !== null &&
     loadoutWeaponIsHeld(state, actor.combatantId, objectId)
   );
-}
-
-/** The battle objects of every weapon the character owns: its loadout's, then the rest. */
-function ownedWeaponIds(
-  actor: CharacterBattleCreatureState,
-): readonly BattleObjectId[] {
-  const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
-  return [
-    ...[weapon?.itemId, offHandWeapon?.itemId].filter(
-      (itemId): itemId is BattleObjectId => itemId !== undefined,
-    ),
-    ...actor.origin.otherOwnedWeaponAttacks.map(
-      ({ weaponObjectId }) => weaponObjectId,
-    ),
-  ];
 }
 
 /** The attack Battle bound for one of the character's owned weapons. */
@@ -800,8 +833,11 @@ function slotAttack(
     : undefined;
 }
 
-function applied(state: BattleState): OwnedWeaponChangeResult {
-  return { tag: "applied", state };
+function applied(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): OwnedWeaponChangeResult {
+  return { tag: "applied", state, actor };
 }
 
 function issue(

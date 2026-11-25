@@ -99,12 +99,11 @@ import {
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
   escapeSpellRestraintSkillCheck,
-  grappleTargetHole,
+  unarmedStrikeOptionTargetHole,
   hiddenSearchTargetChoices,
   hideSkillCheck,
   saveGatedAreaControlShakeAwakeTargetHole,
   searchTargetHole,
-  shoveTargetHole,
   hitPointBudgetConditionShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 import {
@@ -502,16 +501,6 @@ function weaponChangeAttackActs(
 const UNARMED_STRIKE_OPTIONS = ["grapple", "shove"] as const;
 type UnarmedStrikeOption = (typeof UNARMED_STRIKE_OPTIONS)[number];
 
-const UNARMED_STRIKE_OPTION_TARGET_HOLE = {
-  grapple: grappleTargetHole,
-  shove: shoveTargetHole,
-} as const satisfies {
-  readonly [Option in UnarmedStrikeOption]: (
-    state: BattleState,
-    actorId: CombatantId,
-  ) => BattleTargetChoiceHole;
-};
-
 /**
  * The Grapples and Shoves the actor can make (SRD 5.2.1 Rules Glossary,
  * "Unarmed Strike"). One that takes the place of an attack of the Attack
@@ -560,7 +549,7 @@ function unarmedStrikeOptionAct(
   actorId: CombatantId,
   action: UnarmedStrikeOption,
 ): readonly BattleActDiscoveryCandidate[] {
-  const targetHole = UNARMED_STRIKE_OPTION_TARGET_HOLE[action](state, actorId);
+  const targetHole = unarmedStrikeOptionTargetHole(state, actorId, action);
   const subject: Extract<
     BattleReadyActionSubject,
     { readonly action: UnarmedStrikeOption }
@@ -582,9 +571,10 @@ function unarmedStrikeOptionWithWeaponChangeAct(
     weaponChange,
   );
   if (changed.tag === "invalid") return [];
-  const targetHole = UNARMED_STRIKE_OPTION_TARGET_HOLE[action](
+  const targetHole = unarmedStrikeOptionTargetHole(
     changed.state,
     actorId,
+    action,
   );
   const subject: BattleUnarmedStrikeOptionWithWeaponChangeSubject = {
     tag: "action",

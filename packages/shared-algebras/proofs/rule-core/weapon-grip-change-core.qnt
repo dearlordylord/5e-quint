@@ -7,8 +7,8 @@
 // to make a melee attack". A creature holding its weapon can change how it
 // holds it. The SRD gives the change no cost or timing, so it costs nothing on
 // the creature's own turn while it can act (ASSUMPTIONS.md A65). A Two-Handed
-// weapon keeps its two-handed grip (ASSUMPTIONS.md A58), and a two-handed grip
-// needs the other hand free.
+// weapon needs two hands only when attacking with it; holding it in one hand
+// is allowed (equipment.md "Two-Handed"). A two-handed grip needs the other hand free.
 // Import-free, so simulated drivers can compose over it as a pure leaf; the
 // grips themselves are attack-roll-damage-dice-core's WeaponGrip.
 module weaponGripChangeCore {
@@ -16,7 +16,6 @@ module weaponGripChangeCore {
     ownTurn: bool,
     canAct: bool,
     holdsWeapon: bool,
-    twoHandedWeapon: bool,
     heldWithTwoHands: bool,
     // The hand the weapon doesn't hold with a one-handed grip holds nothing:
     // no shield, off-hand weapon, grapple or held object.
@@ -41,6 +40,5 @@ module weaponGripChangeCore {
   pure def oneHandedGripChangeAllowed(facts: WeaponGripChangeFacts): bool = and {
     weaponGripChangeOpen(facts),
     facts.heldWithTwoHands,
-    not(facts.twoHandedWeapon),
   }
 }

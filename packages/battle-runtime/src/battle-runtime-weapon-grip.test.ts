@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE
+// KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE BATTLE.DAMAGE.ATTACK_BRANCHES
 import { unitId } from "@dnd/shared/game-facts";
 import type { WeaponGrip } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
@@ -284,7 +284,7 @@ describe("changing a weapon grip during a battle", () => {
     });
   });
 
-  it("keeps a Two-Handed weapon in two hands", () => {
+  it("holds a Two-Handed weapon in one hand but attacks only after taking it in both hands", () => {
     const state = startBattleRight({
       battleId: battleId("synthetic-weapon-grip-two-handed"),
       combatants: [
@@ -293,7 +293,32 @@ describe("changing a weapon grip during a battle", () => {
       ],
     });
     expect(hands(state)).toEqual({ left: "mainWeapon", right: "mainWeapon" });
-    expectRefused(state, "one_handed", "twoHandedWeapon");
+    const held = requireResolved(changeGrip(state, "one_handed")).state;
+    expect(hands(held)).toEqual({ left: "free", right: "mainWeapon" });
+    const greataxeAttacks = (candidate: BattleState) =>
+      discoverBattleActCandidates(candidate).filter(
+        ({ subject }) =>
+          subject.tag === "action" &&
+          subject.action === "attack" &&
+          "procedureRef" in subject &&
+          subject.procedureRef ===
+            actor(candidate).origin.attack?.procedureRef &&
+          !("weaponChange" in subject),
+      );
+    expect(greataxeAttacks(held)).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state: held,
+        subject: fighterAttackSubject(state, "Greataxe"),
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    const bothHands = requireResolved(changeGrip(held, "two_handed")).state;
+    expect(greataxeAttacks(bothHands)).not.toEqual([]);
+    expect(hands(bothHands)).toEqual({
+      left: "mainWeapon",
+      right: "mainWeapon",
+    });
   });
 
   it("refuses a grip the weapon already has, a dropped weapon, and another creature's turn", () => {

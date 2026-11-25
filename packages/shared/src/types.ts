@@ -100,7 +100,7 @@ export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
 
 /**
  * How a creature holds its main weapon. A Two-Handed weapon needs the
- * `two_handed` grip; a Versatile weapon can be held with either.
+ * `two_handed` grip when attacking; either grip can hold it.
  */
 export const WEAPON_GRIPS = ["one_handed", "two_handed"] as const;
 export type WeaponGrip = (typeof WEAPON_GRIPS)[number];

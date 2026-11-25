@@ -408,7 +408,7 @@ export function resolveBeforeWeaponChangeAfter<
   const facts = appliedWeaponChangeFacts(attackerId, change, input.fills);
   // The landing position stays among the attack's fills, so that an attack
   // resumed after a Reaction to its hit replays it; the attack reads only
-  // its own (readiedAttackFills).
+  // its own (readiedReleaseFills).
   return facts.tag === "needsHoles"
     ? needsHolesResult(input.state, input.subject, [facts.hole])
     : resolveAttack(input);
@@ -476,29 +476,28 @@ function appliedWeaponChange(
 ):
   | { readonly tag: "applied"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
-  const issue = ownedWeaponChangeIssue(state, actorId, change);
-  if (issue !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(state, "staleSubject", issue.message),
-    };
-  }
   const withFacts = appliedWeaponChangeFacts(actorId, change, fills);
   if (withFacts.tag === "needsHoles") {
+    const issue = ownedWeaponChangeIssue(state, actorId, change);
+    if (issue !== null) {
+      return {
+        tag: "result",
+        result: invalidResult(state, "staleSubject", issue.message),
+      };
+    }
+
     return {
       tag: "result",
       result: needsHolesResult(state, subject, [withFacts.hole]),
     };
   }
   const changed = stateWithOwnedWeaponChange(state, actorId, withFacts.change);
-  /* v8 ignore start -- @preserve -- ownedWeaponChangeIssue has just admitted this change against the same state. */
   if (changed.tag === "invalid") {
     return {
       tag: "result",
       result: invalidResult(state, "staleSubject", changed.message),
     };
   }
-  /* v8 ignore stop -- @preserve */
   return { tag: "applied", state: changed.state };
 }
 

@@ -126,9 +126,8 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
 } from "../battle-interrupt-triggers.ts";
 import {
-  WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS,
   WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES,
-  type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
 } from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -487,24 +486,22 @@ const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
   objectId: BattleObjectId,
 });
 
-const WildShapeLoadoutObjectRefSchemaByKind = {
+const WildShapeEquipmentObjectRefSchemaByKind = {
   armor: WildShapeArmorLoadoutObjectRefSchema,
   shield: WildShapeShieldLoadoutObjectRefSchema,
   mainWeapon: WildShapeMainWeaponLoadoutObjectRefSchema,
   offHandWeapon: WildShapeOffHandWeaponLoadoutObjectRefSchema,
+  carriedWeapon: Schema.Struct({
+    kind: Schema.Literal("carriedWeapon"),
+    objectId: BattleObjectId,
+  }),
 } as const satisfies Record<
-  WildShapeLoadoutObjectRef["kind"],
+  WildShapeEquipmentObjectRef["kind"],
   Schema.Constraint
 >;
 
-const WildShapeLoadoutObjectRefSchema = Schema.Union([
-  ...Object.values(WildShapeLoadoutObjectRefSchemaByKind),
-]);
-
-const WildShapeWornLoadoutObjectRefSchema = Schema.Union([
-  ...WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS.map(
-    (kind) => WildShapeLoadoutObjectRefSchemaByKind[kind],
-  ),
+const WildShapeEquipmentObjectRefSchema = Schema.Union([
+  ...Object.values(WildShapeEquipmentObjectRefSchemaByKind),
 ]);
 
 const WildShapeFallInActorSpaceWitnessSchema = Schema.Struct({
@@ -514,16 +511,16 @@ const WildShapeFallInActorSpaceWitnessSchema = Schema.Struct({
 
 const WildShapeEquipmentDispositionChoiceSchema = Schema.Union([
   Schema.Struct({
-    item: WildShapeLoadoutObjectRefSchema,
+    item: WildShapeEquipmentObjectRefSchema,
     disposition: Schema.Literal("falls"),
     fallInActorSpace: WildShapeFallInActorSpaceWitnessSchema,
   }),
   Schema.Struct({
-    item: WildShapeLoadoutObjectRefSchema,
+    item: WildShapeEquipmentObjectRefSchema,
     disposition: Schema.Literal("merges"),
   }),
   Schema.Struct({
-    item: WildShapeWornLoadoutObjectRefSchema,
+    item: WildShapeEquipmentObjectRefSchema,
     disposition: Schema.Literal("worn"),
     practicality: Schema.Union([
       Schema.Struct({
@@ -2533,7 +2530,7 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("wildShapeEquipmentDisposition"),
     actorId: CombatantId,
     formExecutionRef: BattleStatBlockExecutionScopeRef,
-    candidates: Schema.Array(WildShapeLoadoutObjectRefSchema),
+    candidates: Schema.Array(WildShapeEquipmentObjectRefSchema),
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -5052,6 +5049,7 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "releaseReadiedAction";
+                  readonly weaponChange?: typeof ReadiedAttackWeaponChangeSchema.Encoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -5367,6 +5365,7 @@ export function battleInterruptDecisionFillSchema() {
           }),
           Schema.Struct({
             kind: Schema.Literal("releaseReadiedAction"),
+            weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
             fills: Schema.Array(BattleFillSchema),
           }),
           Schema.Struct({
@@ -10323,7 +10322,11 @@ function pendingReadiedActionChoiceOwnsBoundResponse(
   return readiedResponses.some(
     (readied) =>
       readied.actorId === subject.reactorId &&
-      readied.response.kind === "action",
+      readied.response.kind === "action" &&
+      (subject.weaponChange === undefined ||
+        (readied.response.subject.tag === "action" &&
+          (readied.response.subject.action === "grapple" ||
+            readied.response.subject.action === "shove"))),
   );
 }
 

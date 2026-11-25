@@ -60,6 +60,8 @@ import {
 import { readiedAttackOption } from "./ready.ts";
 import {
   readiedAttackWeaponChanges,
+  readiedUnarmedStrikeIsAvailable,
+  readiedUnarmedStrikeWeaponChanges,
   type ReadiedAttackRelease,
 } from "./readied-attack-weapon-change.ts";
 import { weaponChangeInitialHoles } from "./attack-weapon-change.ts";
@@ -724,22 +726,43 @@ export function readiedActionReactionChoices(
   const reactorId = frame.readiedActorId;
   const readied = state.readiedResponses.get(reactorId);
   const reactor = state.combatants.get(reactorId);
-  return readied?.response.kind === "action" &&
-    reactor !== undefined &&
-    combatantCanTakeReactions(reactor)
-    ? [
-        {
-          kind: "nestedProcedure",
-          initialHoles: [],
-          subject: {
-            tag: "runtimeCommand",
-            actorId: currentActorId(state),
-            command: "releaseReadiedAction",
-            reactorId,
+  if (
+    readied?.response.kind !== "action" ||
+    reactor === undefined ||
+    !combatantCanTakeReactions(reactor)
+  )
+    return [];
+  const release = {
+    tag: "runtimeCommand",
+    actorId: currentActorId(state),
+    command: "releaseReadiedAction",
+    reactorId,
+  } as const;
+  const held = readied.response.subject;
+  if (
+    held.tag !== "action" ||
+    (held.action !== "grapple" && held.action !== "shove")
+  ) {
+    return [{ kind: "nestedProcedure", initialHoles: [], subject: release }];
+  }
+  return [
+    ...(readiedUnarmedStrikeIsAvailable(state, held)
+      ? [
+          {
+            kind: "nestedProcedure" as const,
+            initialHoles: [],
+            subject: release,
           },
-        },
-      ]
-    : [];
+        ]
+      : []),
+    ...readiedUnarmedStrikeWeaponChanges(state, held).map(
+      (weaponChange): BattleInterruptProcedureChoice => ({
+        kind: "nestedProcedure",
+        initialHoles: weaponChangeInitialHoles(reactorId, weaponChange.change),
+        subject: { ...release, weaponChange },
+      }),
+    ),
+  ];
 }
 
 export function readiedAttackReactionChoices(

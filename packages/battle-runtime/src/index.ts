@@ -716,10 +716,12 @@ export { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runti
 export {
   validateWildShapeEquipmentDispositionFill,
   wildShapeLoadoutObjectRefs,
+  wildShapeEquipmentObjectRefs,
   type ActiveWildShapeEquipmentDisposition,
   type WildShapeEquipmentDispositionChoice,
   type WildShapeEquipmentDispositionFillValue,
   type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
   battleStateWithGroundObjects,

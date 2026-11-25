@@ -8,7 +8,6 @@ module weaponGripChangeCoreExamples {
     ownTurn: true,
     canAct: true,
     holdsWeapon: true,
-    twoHandedWeapon: false,
     heldWithTwoHands: false,
     otherHandFree: true,
   }
@@ -37,10 +36,13 @@ module weaponGripChangeCoreExamples {
     )),
   }
 
-  run aTwoHandedWeaponKeepsItsTwoHandedGrip = all {
-    assert(not(oneHandedGripChangeAllowed(
-      { ...oneHandedLongsword, twoHandedWeapon: true, heldWithTwoHands: true },
-    ))),
+  run aTwoHandedWeaponCanBeHeldInOneHand = all {
+    assert(oneHandedGripChangeAllowed(
+      { ...oneHandedLongsword, heldWithTwoHands: true },
+    )),
+    assert(not(weaponAttackHandsAllowed(true, weaponGripHandsHeld(OneHandedGrip)))),
+    assert(weaponAttackHandsAllowed(true, weaponGripHandsHeld(TwoHandedGrip))),
+    assert(weaponAttackHandsAllowed(false, weaponGripHandsHeld(OneHandedGrip))),
   }
 
   run noChangeToTheSameGripOrWithoutTheWeaponOrOffTurn = all {

@@ -21,6 +21,8 @@ import type {
   AttackWeaponChange,
   BattleInterruptSubject,
   BattleReleaseReadiedAttackSubject,
+  BattleReleaseReadiedActionSubject,
+  BattleReadyActionSubject,
   ReadiedAttackWeaponChange,
 } from "../battle-subjects.ts";
 import { readiedAttackWeaponChangesEqual } from "../battle-subjects.ts";
@@ -32,9 +34,12 @@ import {
   stateWithWeaponChangeAfterAttack,
   weaponChangeDropOutcome,
 } from "./attack-weapon-change.ts";
-import { loadoutWeaponIsStowed } from "./character-effective-loadout.ts";
+import { unarmedStrikeOptionTargetHole } from "./hole-helpers.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
 import {
   ownedWeaponChanges,
+  ownedWeaponIsHeld,
+  stateWithProspectiveWeaponChange,
   stateWithOwnedWeaponChange,
 } from "./owned-weapon-custody.ts";
 import { attackActionOptionsAfterWeaponChange } from "./attack-damage-apply.ts";
@@ -47,6 +52,81 @@ export type ReadiedAttackRelease = Pick<
   BattleReleaseReadiedAttackSubject,
   "reactorId" | "targetId" | "procedureRef"
 >;
+
+type ReadiedUnarmedStrikeSubject = Extract<
+  BattleReadyActionSubject,
+  { readonly tag: "action"; readonly action: "grapple" | "shove" }
+>;
+type ReadiedReleaseSubject =
+  | BattleReleaseReadiedAttackSubject
+  | BattleReleaseReadiedActionSubject;
+
+/** Release-time legality, without spending the interrupted creature's action. */
+export function readiedUnarmedStrikeIsAvailable(
+  state: BattleState,
+  subject: ReadiedUnarmedStrikeSubject,
+): boolean {
+  return (
+    unarmedStrikeOptionTargetHole(state, subject.actorId, subject.action)
+      .choices.length > 0
+  );
+}
+
+export function readiedUnarmedStrikeWeaponChanges(
+  state: BattleState,
+  subject: ReadiedUnarmedStrikeSubject,
+): readonly ReadiedAttackWeaponChange[] {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor === undefined) return [];
+  const changes = ownedWeaponChanges(state, actor);
+  return [
+    ...changes
+      .filter((change) => {
+        const changed = stateWithProspectiveWeaponChange(
+          state,
+          subject.actorId,
+          change,
+        );
+        return (
+          changed.tag === "applied" &&
+          readiedUnarmedStrikeIsAvailable(changed.state, subject)
+        );
+      })
+      .map(
+        (change): ReadiedAttackWeaponChange => ({
+          timing: "beforeAttack",
+          change,
+        }),
+      ),
+    ...readiedUnarmedStrikeWeaponChangesAfter(state, subject),
+  ];
+}
+
+function readiedUnarmedStrikeWeaponChangesAfter(
+  state: BattleState,
+  subject: ReadiedUnarmedStrikeSubject,
+): readonly ReadiedAttackWeaponChange[] {
+  const actor = state.combatants.get(subject.actorId);
+  return actor !== undefined && readiedUnarmedStrikeIsAvailable(state, subject)
+    ? ownedWeaponChanges(state, actor).map((change) => ({
+        timing: "afterAttack",
+        change,
+      }))
+    : [];
+}
+
+function readiedActionWeaponChangesAfter(
+  state: BattleState,
+  reactorId: CombatantId,
+): readonly ReadiedAttackWeaponChange[] {
+  const readied = state.readiedResponses.get(reactorId);
+  if (readied?.response.kind !== "action") return [];
+  const subject = readied.response.subject;
+  return subject.tag === "action" &&
+    (subject.action === "grapple" || subject.action === "shove")
+    ? readiedUnarmedStrikeWeaponChangesAfter(state, subject)
+    : [];
+}
 
 /**
  * The weapon changes a reactor can make with the readied attack against this
@@ -129,13 +209,11 @@ function stateWithHandsAfterAttack(
   attack: BoundSupportedAttackActionOption,
 ): BattleState | undefined {
   const thrown = thrownWeaponObjectId(attack);
-  // A Thrown weapon drawn as part of its attack was never in hand.
-  if (
-    thrown === undefined ||
-    loadoutWeaponIsStowed(state, attackerId, thrown)
-  ) {
-    return state;
-  }
+  if (thrown === undefined) return state;
+  const actor = state.combatants.get(attackerId);
+  if (!isCharacterBattleCreatureState(actor)) return undefined;
+  // A spare or stowed Thrown weapon is drawn and released within the attack.
+  if (!ownedWeaponIsHeld(state, actor, thrown)) return state;
   const released = stateWithOwnedWeaponChange(state, attackerId, {
     kind: "stow",
     objectId: thrown,
@@ -155,9 +233,9 @@ function thrownWeaponObjectId(
  * made right before or right after the attack. Battle admits the change
  * against the battle as discovery offered it.
  */
-export function resolveReadiedAttackWithWeaponChange<
+export function resolveReadiedReleaseWithWeaponChange<
   Input extends BattleResolutionInput & {
-    readonly subject: BattleReleaseReadiedAttackSubject;
+    readonly subject: ReadiedReleaseSubject;
   },
 >(
   input: Input,
@@ -184,17 +262,18 @@ export function resolveReadiedAttackWithWeaponChange<
 
 function resolveReadiedAttackThenWeaponChange<
   Input extends BattleResolutionInput & {
-    readonly subject: BattleReleaseReadiedAttackSubject;
+    readonly subject: ReadiedReleaseSubject;
   },
 >(
   input: Input,
   weaponChange: ReadiedAttackWeaponChange,
   resolveAttack: (input: Input) => BattleResolutionResult,
 ): BattleResolutionResult {
-  const offered = readiedAttackWeaponChangesAfter(
-    input.state,
-    input.subject,
-  ).some((candidate) =>
+  const changes =
+    input.subject.command === "releaseReadiedAttack"
+      ? readiedAttackWeaponChangesAfter(input.state, input.subject)
+      : readiedActionWeaponChangesAfter(input.state, input.subject.reactorId);
+  const offered = changes.some((candidate) =>
     readiedAttackWeaponChangesEqual(candidate, weaponChange),
   );
   /* v8 ignore start -- @preserve -- The Reaction window admits only the releases it offers, and a resumed readied attack finds the reactor's hands as they were before it, a thrown weapon back in hand. */
@@ -221,7 +300,7 @@ function resolveReadiedAttackThenWeaponChange<
  * change dropped is reported once. Any other procedure the Reaction window
  * ran ends as it is.
  */
-export function readiedAttackReleaseEnd(
+export function readiedReleaseWeaponChangeEnd(
   state: BattleState,
   procedure: {
     readonly subject: BattleInterruptSubject;
@@ -233,7 +312,8 @@ export function readiedAttackReleaseEnd(
 } {
   const subject = procedure.subject;
   if (
-    subject.command !== "releaseReadiedAttack" ||
+    (subject.command !== "releaseReadiedAttack" &&
+      subject.command !== "releaseReadiedAction") ||
     subject.weaponChange === undefined
   ) {
     return { state, droppedObjects: [] };
@@ -264,8 +344,8 @@ export function readiedAttackReleaseEnd(
  * The fills a readied attack reads: every one but the landing position of
  * the weapon its release drops.
  */
-export function readiedAttackFills(
-  subject: BattleReleaseReadiedAttackSubject,
+export function readiedReleaseFills(
+  subject: ReadiedReleaseSubject,
   fills: readonly BattleFill[],
 ): readonly BattleFill[] {
   return subject.weaponChange === undefined

@@ -589,7 +589,10 @@ describe("weapon change before a Grapple or Shove", () => {
         ? [response.subject]
         : [],
     );
-    expect(readiedOptions).toEqual([shoveSubject()]);
+    expect(readiedOptions).toHaveLength(2);
+    expect(readiedOptions).toEqual(
+      expect.arrayContaining([grappleSubject(), shoveSubject()]),
+    );
   });
 });
 

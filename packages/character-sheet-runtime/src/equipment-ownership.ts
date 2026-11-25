@@ -69,7 +69,7 @@ export function expectedEquipmentKindForLoadoutSlot(
 
 export type EquipmentLoadoutStructureIssue =
   | {
-      readonly tag: "weaponCannotBeHeldOneHanded";
+      readonly tag: "twoHandedWeaponInOffHand";
       readonly itemId: CharacterEquipmentItemId;
     }
   | {
@@ -85,8 +85,8 @@ export type EquipmentLoadoutStructureIssue =
  * shared by the mutable operation and the persisted-build parser so stored
  * state cannot bypass the same shield, hand-use, or grip invariants.
  *
- * A Two-Handed weapon needs the main hand's `two_handed` grip, so it is
- * refused in the off hand or with a `one_handed` grip. A `two_handed` grip
+ * A Two-Handed weapon may be held in one hand but remains unsupported in
+ * the off-hand slot. A `two_handed` grip
  * uses both hands, so it leaves none for a shield or an off-hand weapon. Any
  * weapon may take the `two_handed` grip (ASSUMPTIONS.md A58).
  */
@@ -103,16 +103,7 @@ export function equipmentLoadoutStructureIssues(
   if (weapon !== undefined) {
     issues.push(
       ...Match.value(weapon.grip).pipe(
-        Match.when("one_handed", () =>
-          weaponRequiresTwoHands(weapon.itemId, unitLibrary)
-            ? [
-                {
-                  tag: "weaponCannotBeHeldOneHanded" as const,
-                  itemId: weapon.itemId,
-                },
-              ]
-            : [],
-        ),
+        Match.when("one_handed", () => []),
         Match.when("two_handed", () =>
           loadout.shield !== undefined || loadout.offHandWeapon !== undefined
             ? [
@@ -134,7 +125,7 @@ export function equipmentLoadoutStructureIssues(
     weaponRequiresTwoHands(offHandWeapon.itemId, unitLibrary)
   ) {
     issues.push({
-      tag: "weaponCannotBeHeldOneHanded",
+      tag: "twoHandedWeaponInOffHand",
       itemId: offHandWeapon.itemId,
     });
   }
@@ -160,8 +151,8 @@ export function equipmentLoadoutStructureIssueMessage(
 ): string {
   return Match.value(issue).pipe(
     Match.when(
-      { tag: "weaponCannotBeHeldOneHanded" },
-      ({ itemId }) => `Weapon ${itemId} cannot be held one-handed.`,
+      { tag: "twoHandedWeaponInOffHand" },
+      ({ itemId }) => `Weapon ${itemId} cannot be held in the off-hand slot.`,
     ),
     Match.when(
       { tag: "twoHandedGripHandConflict" },

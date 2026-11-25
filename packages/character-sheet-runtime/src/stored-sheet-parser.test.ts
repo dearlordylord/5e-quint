@@ -35,6 +35,16 @@ const warlock: CharacterBuild = {
   spellcasting: warlockSpellcastingWithCantrips(["eldritch_blast"]),
 };
 
+test("parses a Two-Handed weapon held with one hand", () => {
+  const build = armorClassBuild({
+    startingClass: "class_fighter",
+    weapon: "weapon_greataxe",
+  });
+  expect(parseCharacterBuild(build, unitLibrary)).toEqual(
+    Result.succeed(build),
+  );
+});
+
 describe("stored Character Sheet primitive parsers", () => {
   test("resource counts parse exactly the nonnegative integers", () => {
     fc.assert(
@@ -1548,15 +1558,6 @@ describe("stored Character Build parser", () => {
       }),
       expected:
         "Character Build loadout cannot combine shield and off-hand weapon.",
-    },
-    {
-      name: "a two-handed weapon with one-handed grip",
-      value: armorClassBuild({
-        startingClass: "class_fighter",
-        weapon: "weapon_greataxe",
-      }),
-      expected:
-        "Character Build loadout weapon main:weapon_greataxe cannot be held one-handed.",
     },
     {
       name: "a weapon loadout with an unknown grip",

@@ -55,7 +55,7 @@ import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { releasePendingSpellSlotUseThisTurn } from "./spell-turn-resources.ts";
 import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
-import { readiedAttackReleaseEnd } from "./readied-attack-weapon-change.ts";
+import { readiedReleaseWeaponChangeEnd } from "./readied-attack-weapon-change.ts";
 import { handledInterruptRouteProjection } from "./replay-continuation.ts";
 import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 
@@ -910,7 +910,7 @@ function completeActiveInterruptProcedure(
       "No active interrupt procedure is pending completion.",
     );
   }
-  const ended = readiedAttackReleaseEnd(state, activeInterrupt);
+  const ended = readiedReleaseWeaponChangeEnd(state, activeInterrupt);
   return advanceInterruptCheckpointAfterResponder({
     state: ended.state,
     frame,
@@ -1184,10 +1184,14 @@ function sameInterruptProcedureChoice(
     ),
     Match.when(
       { kind: "releaseReadiedAction" },
-      () =>
+      (decision) =>
         choice.kind === "nestedProcedure" &&
         choice.subject.command === "releaseReadiedAction" &&
-        choice.subject.reactorId === responderId,
+        choice.subject.reactorId === responderId &&
+        readiedAttackWeaponChangesEqual(
+          choice.subject.weaponChange,
+          decision.weaponChange,
+        ),
     ),
     Match.when(
       { kind: "releaseReadiedAttack" },

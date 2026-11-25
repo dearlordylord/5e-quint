@@ -133,6 +133,12 @@ export function readyActionSubject(
   subject: import("../battle-subjects.ts").BattleSubject,
 ): BattleReadyActionSubject | null {
   if (isObjectInteractionSubject(subject)) return subject;
+  if (
+    subject.tag === "action" &&
+    (subject.action === "grapple" || subject.action === "shove")
+  ) {
+    return { tag: "action", actorId: subject.actorId, action: subject.action };
+  }
   return subject.tag === "action" &&
     subject.action !== "attack" &&
     subject.action !== "multiattack" &&

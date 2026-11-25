@@ -420,7 +420,7 @@ import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import type {
   WildShapeEquipmentDispositionFillValue,
-  WildShapeLoadoutObjectRef,
+  WildShapeEquipmentObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
@@ -1251,6 +1251,7 @@ export type BattleInterruptProcedureSelection = {
     }
   | {
       readonly kind: "releaseReadiedAction";
+      readonly weaponChange?: ReadiedAttackWeaponChange;
     }
   | {
       readonly kind: "releaseReadiedAttack";
@@ -7247,7 +7248,7 @@ export type BattleWildShapeEquipmentDispositionHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
-  readonly candidates: readonly WildShapeLoadoutObjectRef[];
+  readonly candidates: readonly WildShapeEquipmentObjectRef[];
 };
 export type BattleReadyDeclarationHole = {
   readonly holeInstanceKey: HoleInstanceKey;

@@ -1,3 +1,4 @@
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
 import { subjectContinuationPhaseFor } from "./battle-reducer/subject-continuation-phase.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
 import { type HandUse, resourceCount } from "@dnd/shared/types";
@@ -9,10 +10,12 @@ import {
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
-import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import {
+  combatantHandUses,
+  weaponIsHeldWithTwoHands,
+} from "./battle-reducer/creature-state-leaves.ts";
 import type { BattleEquipmentQuery } from "./battle-reducer/object-custody-queries.ts";
 import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/character-effective-loadout.ts";
-import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleAmmunitionKind,
@@ -20,7 +23,7 @@ import type {
   BattleCreatureState,
   BattleState,
 } from "./battle-state-execution.ts";
-import type { BattleObjectId, CombatantId } from "./identity.ts";
+import type { CombatantId } from "./identity.ts";
 
 export function battleAmmunitionStock(
   ammunition: BattleAmmunitionKind,
@@ -100,7 +103,7 @@ function ammunitionWeaponHandsAreAvailable(
   combatant: BattleCreatureState,
   attack: Extract<SupportedAttackActionOption, { readonly kind: "weapon" }>,
 ): boolean {
-  if (combatant.origin.kind !== "character") return false;
+  if (!isCharacterBattleCreatureState(combatant)) return false;
   const loadout = characterEffectiveLoadoutFromOrigin(
     state,
     combatant.combatantId,
@@ -111,11 +114,7 @@ function ammunitionWeaponHandsAreAvailable(
   if (
     attack.weapon.properties.some((property) => property.kind === "two_handed")
   ) {
-    return twoHandedAmmunitionWeaponIsHeld({
-      weapon: loadout.weapon,
-      weaponObjectId: attack.weaponObjectId,
-      handUses,
-    });
+    return weaponIsHeldWithTwoHands(state, combatant, attack.weaponObjectId);
   }
   if (!handUses.includes("free")) return false;
   if (loadout.weapon?.itemId === attack.weaponObjectId) {
@@ -124,19 +123,6 @@ function ammunitionWeaponHandsAreAvailable(
   return (
     loadout.offHandWeapon?.itemId === attack.weaponObjectId &&
     handUses.includes("offWeapon")
-  );
-}
-
-function twoHandedAmmunitionWeaponIsHeld(input: {
-  readonly weapon: CharacterBattleLoadoutRef["weapon"];
-  readonly weaponObjectId: BattleObjectId;
-  readonly handUses: readonly [HandUse, HandUse];
-}): boolean {
-  return (
-    input.weapon?.itemId === input.weaponObjectId &&
-    input.weapon.grip === "two_handed" &&
-    input.handUses.includes("mainWeapon") &&
-    input.handUses.every((hand) => ["mainWeapon", "free"].includes(hand))
   );
 }
 

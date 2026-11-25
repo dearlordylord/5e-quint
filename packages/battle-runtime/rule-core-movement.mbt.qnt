@@ -67,7 +67,6 @@ module ruleCoreMovementMbt {
     ownTurn: qCurrentActor == fighterActor,
     canAct: true,
     holdsWeapon: true,
-    twoHandedWeapon: false,
     heldWithTwoHands: qMainWeaponGrip == "two_handed",
     otherHandFree: qFighterHasFreeHand,
   }

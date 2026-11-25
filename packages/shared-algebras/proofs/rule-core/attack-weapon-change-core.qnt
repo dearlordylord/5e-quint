@@ -91,7 +91,8 @@ module attackWeaponChangeCore {
   type ReadiedReleaseChangeTiming = BeforeReadiedAttack | AfterReadiedAttack
 
   // The weapon's custody after a readied Attack release's change. Before the
-  // attack, the readied attack must still be there once the change is made.
+  // attack, the readied attack (including a Grapple or Shove) must still be
+  // there once the change is made.
   // After it, the change comes once the attack is over, after any Reaction to
   // it: the hands are as the attack and those Reactions leave them, the
   // weapon the attack threw lies wherever it landed, so no change names it,

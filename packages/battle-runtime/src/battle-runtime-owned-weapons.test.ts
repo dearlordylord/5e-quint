@@ -332,6 +332,70 @@ describe("weapons the character owns outside its loadout", () => {
     });
   });
 
+  it("draws a Two-Handed weapon into one free hand, then needs both hands to attack", () => {
+    const occupied = changed(
+      changed(armedFighterBattle(), {
+        kind: "equip",
+        objectId: daggerId,
+        slot: "offWeapon",
+      }),
+      { kind: "stow", objectId: longswordId },
+    );
+    const drawn = changed(occupied, {
+      kind: "equip",
+      objectId: greataxeId,
+      slot: "mainWeapon",
+    });
+    expect(fighter(drawn).origin.selectedLoadout.weapon?.grip).toBe(
+      "one_handed",
+    );
+    expect(combatantHandUses(drawn, fighter(drawn), [])).toEqual({
+      left: "offWeapon",
+      right: "mainWeapon",
+    });
+    expect(
+      attackActionOptionsForActor(drawn, fighterId).some(
+        (attack) =>
+          attack.kind === "weapon" && attack.weaponObjectId === greataxeId,
+      ),
+    ).toBe(false);
+    const grip = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "changeWeaponGrip",
+      grip: "two_handed",
+    } as const;
+    expect(
+      resolveBattleSubject({ state: drawn, subject: grip, fills: [] }),
+    ).toMatchObject({ tag: "invalid" });
+    const freed = changed(drawn, { kind: "stow", objectId: daggerId });
+    const ready = requireResolved(
+      resolveBattleSubject({ state: freed, subject: grip, fills: [] }),
+    ).state;
+    const attacked = missedAttack(
+      ready,
+      fighterAttackSubject(ready, "Greataxe"),
+    );
+    expect(attacked.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+
+    // Redrawing the same selected weapon obeys the same holding rule.
+    const stowed = changed(drawn, { kind: "stow", objectId: greataxeId });
+    const redrawn = changed(stowed, {
+      kind: "equip",
+      objectId: greataxeId,
+      slot: "mainWeapon",
+    });
+    expect(fighter(redrawn).origin.selectedLoadout.weapon?.grip).toBe(
+      "one_handed",
+    );
+    expect(combatantHandUses(redrawn, fighter(redrawn), [])).toEqual({
+      left: "offWeapon",
+      right: "mainWeapon",
+    });
+  });
+
   it("puts a weapon in the off hand only beside a main weapon in hand", () => {
     expect(
       ownedWeaponChangeIssue(stowedLongsword(), fighterId, {

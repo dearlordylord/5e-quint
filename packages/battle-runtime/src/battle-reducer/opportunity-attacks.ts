@@ -143,8 +143,8 @@ import {
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { readiedAttackOption } from "./ready.ts";
 import {
-  readiedAttackFills,
-  resolveReadiedAttackWithWeaponChange,
+  readiedReleaseFills,
+  resolveReadiedReleaseWithWeaponChange,
 } from "./readied-attack-weapon-change.ts";
 import { resolveWeaponMasteryGraze } from "./weapon-mastery-graze.ts";
 import {
@@ -225,7 +225,7 @@ export function resolveOpportunityAttackCommand(
   const subject = input.subject;
   const result =
     subject.command === "releaseReadiedAttack"
-      ? resolveReadiedAttackWithWeaponChange(
+      ? resolveReadiedReleaseWithWeaponChange(
           { ...input, subject },
           resolveReactionAttackCommand,
         )
@@ -544,7 +544,7 @@ function reactionAttackFills(
   fills: OpportunityAttackResolutionInput["fills"],
 ): OpportunityAttackResolutionInput["fills"] {
   return subject.command === "releaseReadiedAttack"
-    ? readiedAttackFills(subject, fills)
+    ? readiedReleaseFills(subject, fills)
     : fills;
 }
 

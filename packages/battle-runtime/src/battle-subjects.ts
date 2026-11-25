@@ -722,6 +722,7 @@ const BattleInterruptReleaseReadiedActionSubjectSchema = Schema.Struct({
   actorId: CombatantId,
   command: Schema.Literal("releaseReadiedAction"),
   reactorId: CombatantId,
+  weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
 });
 
 const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
@@ -788,6 +789,9 @@ export const BattleInterruptSubjectSchema = Schema.Union([
   BattleInterruptRetaliationAttackSubjectSchema,
 ]);
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
+export type BattleReleaseReadiedActionSubject =
+  typeof BattleInterruptReleaseReadiedActionSubjectSchema.Type;
 
 /** The release of a readied attack at one target, with its weapon change. */
 export type BattleReleaseReadiedAttackSubject =

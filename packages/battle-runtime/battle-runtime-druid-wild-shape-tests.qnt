@@ -78,6 +78,22 @@ module battleRuntimeDruidWildShapeTests {
     }
   }
 
+  run test_druid_wild_shape_carried_equipment_uses_the_same_disposition_boundary = {
+    val choices = {
+      ...allMergedEquipmentResolution,
+      carriedWeapons: List(EquipmentMerged, EquipmentWorn, EquipmentFell),
+    }
+    val result = assumeFormWithEquipmentResult(initialProjection, largeFastFormFacts, choices)
+    val empty = assumeFormWithEquipmentResult(initialProjection, largeFastFormFacts, allMergedEquipmentResolution)
+    all {
+      assert(result.droppedEquipmentCount == 1),
+      assert(empty.droppedEquipmentCount == 0),
+      // Carried equipment does not become a held loadout weapon.
+      assert(result.projection.equipmentDisposition == empty.projection.equipmentDisposition),
+      assert(canUseWornMainWeapon(result.projection) == false),
+    }
+  }
+
   run test_druid_wild_shape_fallen_equipment_projects_object_boundary = {
     val result = assumeFormWithEquipmentResult(initialProjection, largeFastFormFacts, fallenShieldEquipmentDisposition)
     all {

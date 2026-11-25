@@ -354,17 +354,21 @@ attack, after which the readied attack must still be there, or a change after
 it. A change after the attack is chosen before the roll, against the hands as
 the attack will leave them. Battle makes it once the readied attack is over,
 after any Reaction to its hit or damage, and only if the reactor can still
-take actions and the weapon is still where the change needs it. Where a weapon
+take actions, the required hand is free, and the weapon is still where the
+change needs it. A Grapple that grabs with that hand can therefore prevent a
+preselected equip after it; a resisted Grapple leaves that hand free. Where a weapon
 dropped after the attack lands is asked when the attack is released. Preparing Ready grants no change, and no other Reaction attack, such
 as an Opportunity Attack, carries one.
 
 Equipping draws a carried weapon, or picks up one lying on the ground, into
 one hand slot of the character's loadout: the main hand or the off hand. The
-slot's own weapon goes back with its loadout grip. Another weapon takes the
+slot's own weapon prefers its loadout grip, using one hand if the other hand is occupied. Another weapon takes the
 slot once the slot's weapon, if any, is out of hand; that weapon then leaves
 the loadout, still carried or lying where it fell. In the main hand a
-Two-Handed weapon takes a two-handed grip and any other weapon a one-handed
-one, which A65's grip change can then change. The hands the slot gives the
+Two-Handed weapon takes a two-handed grip when both hands are free, otherwise
+it is held in one hand. Any other weapon takes a one-handed grip. A65's grip
+change can then change this holding grip; attacking with a Two-Handed weapon
+still requires two hands. The hands the slot gives the
 weapon must be empty. Unequipping either sheathes or stows a
 held weapon, which Battle treats the same, or drops it. A dropped weapon lands
 where the table places it, and stays on the ground for its owner to pick up
@@ -391,22 +395,19 @@ is chosen with the release.
 
 **Temporary implementation restriction (not a rules assumption):** Battle
 brings into the battle only owned weapons it can execute; one it can't stays
-out, as if left behind. The object interaction that picks a fallen weapon up puts back only a
-loadout weapon, into its own slot. Battle's Attack action attacks with the
-main weapon, and its off hand holds only the second weapon of the Light
-property's Bonus Action attack, so another weapon goes in the off hand only
-beside a main weapon in hand, and a Two-Handed weapon never goes there. The
-slot's own weapon takes the hands its loadout grip gives it, so under a
-two-handed main grip an off-hand weapon has none, even while the main weapon
-is out of hand. A change after a readied throw can't name the thrown weapon,
-which rests wherever it lands. The SRD sets none of these limits. Wild Shape's equipment
-choice covers the loadout's objects only, so an owned weapon outside the
-loadout stays carried whatever the druid chooses.
+out, as if left behind. The object interaction that picks a fallen weapon up
+puts back only a loadout weapon, into its own slot. The supported weapon-slot
+restrictions are owned by
+[Battle's implementation boundaries](packages/battle-runtime/README.md#weapon-slot-implementation-restrictions).
+A change after a readied throw can't name the thrown weapon, which rests
+wherever it lands. Wild Shape's equipment choice also includes carried spare
+owned weapons; weapons already on the ground remain there.
 
 ## A58: Any weapon may be held with both hands
 
 **Assumption:** A loadout's main weapon has a grip. Any weapon may take the
-`two_handed` grip, and a Two-Handed weapon needs it. A `two_handed` grip
+`two_handed` grip. A Two-Handed weapon needs that grip when attacking with it,
+but may be held with the `one_handed` grip. A `two_handed` grip
 occupies both hands, so the same loadout can't also hold a shield or an
 off-hand weapon, and neither hand is free for a grapple or a held object. A
 Versatile weapon deals its Versatile damage on a melee attack while it is held
@@ -446,7 +447,8 @@ Bonus Action, movement or object interaction. Battle offers it on the
 creature's own turn while it can act (it isn't Incapacitated), including while
 Command's Halt applies, since a change of grip is neither a move nor an action.
 A `two_handed` grip needs the other hand free of any shield, off-hand weapon,
-grapple or held object. A Two-Handed weapon keeps its `two_handed` grip (A58).
+grapple or held object. A Two-Handed weapon may be held in one hand; attacking
+with it requires its `two_handed` grip (A58).
 Changing grip off the creature's turn is the table's ruling, outside Battle.
 
 **Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Versatile," says

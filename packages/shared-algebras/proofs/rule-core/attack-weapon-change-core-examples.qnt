@@ -69,6 +69,14 @@ module attackWeaponChangeCoreExamples {
     assert(not(canChangeAfterAttack(afterAttack(otherCreatureTurn, false)))),
   }
 
+  run aReadiedGrappleCanStowFirstAndRechecksItsHandAfterTheSave = all {
+    // The stow frees the hand needed by the released Unarmed Strike option.
+    assert(readiedReleaseChangeCustody(HeldWeapon, StowWeapon, true, BeforeReadiedAttack, true, false, true) == Set(StowedWeapon)),
+    // A successful grab leaves the destination hand occupied; a resisted grab does not.
+    assert(readiedReleaseChangeCustody(StowedWeapon, EquipWeapon, false, AfterReadiedAttack, true, false, true) == Set()),
+    assert(readiedReleaseChangeCustody(StowedWeapon, EquipWeapon, true, AfterReadiedAttack, true, false, true) == Set(HeldWeapon)),
+  }
+
   run aReadiedReleaseCarriesItsChangeBeforeOrAfterTheAttack = all {
     assert(readiedReleaseChangeCustody(HeldWeapon, StowWeapon, true, AfterReadiedAttack, true, false, true) == Set(StowedWeapon)),
     assert(readiedReleaseChangeCustody(StowedWeapon, EquipWeapon, true, BeforeReadiedAttack, true, false, true) == Set(HeldWeapon)),
