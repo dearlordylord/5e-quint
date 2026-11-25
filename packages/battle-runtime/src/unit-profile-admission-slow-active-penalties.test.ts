@@ -18,18 +18,13 @@ import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import {
-  abilityModifier,
-  currentArmorClass,
-} from "@dnd/shared-algebras/armor-class-algebra";
+import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus } from "@dnd/shared/types";
 import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
-import {
-  activeEffectArmorClass,
-  combatantCanTakeReactions,
-} from "./battle-reducer/creature-state.ts";
+import { collectedArmorClass } from "./battle-reducer/armor-class-collector.ts";
+import { combatantCanTakeReactions } from "./battle-reducer/creature-state.ts";
 import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -140,9 +135,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect("spell" in savingThrow).toBe(false);
 
     const baseTarget = requireCombatant(state.state, spellTargetId);
-    const baseArmorClass = Number(
-      currentArmorClass(activeEffectArmorClass(state.state, baseTarget)),
-    );
+    const baseArmorClass = Number(collectedArmorClass(state.state, baseTarget));
     const cast = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
@@ -181,9 +174,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     ]);
     expect(savedTarget.activeEffects).toEqual([]);
     expect(Number(effectiveWalkSpeed(cast.state, target))).toBe(15);
-    expect(
-      Number(currentArmorClass(activeEffectArmorClass(cast.state, target))),
-    ).toBe(baseArmorClass - 2);
+    expect(Number(collectedArmorClass(cast.state, target))).toBe(
+      baseArmorClass - 2,
+    );
     expect(savingThrowFlatBonusProjections(cast.state, "dex")).toEqual([
       {
         kind: "effect",

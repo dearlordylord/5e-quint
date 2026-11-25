@@ -63,7 +63,7 @@ import {
   DamageRelationshipDecisionsByHole,
   damageRelationshipDecisionFillCheck,
 } from "./damage-relationship-decisions.ts";
-import { armorClassAgainstAttack } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,

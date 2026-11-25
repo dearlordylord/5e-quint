@@ -187,7 +187,8 @@ function armorFormulaValue(
   );
 }
 
-function baseArmorClassValue(armorClassState: ArmorClassState): number {
+/** The value of the creature's base AC calculation. */
+export function baseArmorClassValue(armorClassState: ArmorClassState): number {
   return Match.value(armorClassState.base).pipe(
     Match.when({ kind: "stat_block" }, ({ ac }) => Number(ac)),
     Match.when({ kind: "ability_sum" }, ({ base, abilityModifiers }) =>
@@ -244,14 +245,20 @@ function bonusApplies(
   );
 }
 
+/** The creature's AC bonuses that apply to its current base and loadout. */
+export function applyingArmorClassBonuses(
+  armorClassState: ArmorClassState,
+): ReadonlyArray<ArmorClassBonusSource> {
+  return armorClassState.bonuses.filter((bonus) =>
+    bonusApplies(armorClassState, bonus),
+  );
+}
+
 export function currentArmorClass(
   armorClassState: ArmorClassState,
 ): ArmorClass {
-  const withBonuses = armorClassState.bonuses.reduce(
-    (total, bonus) =>
-      bonusApplies(armorClassState, bonus)
-        ? total + Number(bonus.bonus)
-        : total,
+  const withBonuses = applyingArmorClassBonuses(armorClassState).reduce(
+    (total, bonus) => total + Number(bonus.bonus),
     baseArmorClassValue(armorClassState),
   );
   const withFloors = armorClassState.floors.reduce(

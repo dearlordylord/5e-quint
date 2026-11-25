@@ -6,12 +6,6 @@
 // in creature-state.ts so execution roots do not inherit those owners.
 
 import {
-  armorClass,
-  armorClassDelta,
-  currentArmorClass,
-  type ArmorClassState,
-} from "@dnd/shared-algebras/armor-class-algebra";
-import {
   hasCondition,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
@@ -53,19 +47,14 @@ export {
   nonKnockOutLifecycleFields,
 } from "./creature-hit-point-state.ts";
 
-import { LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS } from "./domain-constants.ts";
-import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
+import { collectedArmorClass } from "./armor-class-collector.ts";
 import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
 import {
   activeDruidWildShapeEffect,
-  combatantDruidWildShapeArmorClassState,
   combatantEffectiveSize,
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
-import {
-  characterEffectiveLoadoutFromOrigin,
-  loadoutWeaponIsHeld,
-} from "./character-effective-loadout.ts";
+import { loadoutWeaponIsHeld } from "./character-effective-loadout.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
@@ -73,8 +62,6 @@ import {
   combatantInvisibleBenefitDenied,
   currentActorId,
   grappledBy,
-  unheldLoadoutObjects,
-  handUseWithUnheldLoadout,
 } from "./creature-state-leaves.ts";
 
 export {
@@ -422,7 +409,7 @@ export function combatantSnapshot(
         location: spatial.location,
       };
     }),
-    armorClass: currentArmorClass(activeEffectArmorClass(state, combatant)),
+    armorClass: collectedArmorClass(state, combatant),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
     conditions: activeConditions(
@@ -519,123 +506,6 @@ export function characterResourceSnapshot(
     return { ...common, usage: "unlimited" };
   }
   return { ...common, usage: "limited", usesRemaining };
-}
-
-export function activeEffectArmorClass(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): ArmorClassState {
-  const baseArmorClassEffect = combatant.activeEffects.find(
-    (effect) => effect.kind === "spellBaseArmorClass",
-  );
-  const baseArmorClass =
-    combatantDruidWildShapeArmorClassState(combatant) ??
-    groundEffectiveCharacterArmorClass(state, combatant);
-  const withBase =
-    baseArmorClassEffect === undefined || baseArmorClass.base.kind === "armor"
-      ? baseArmorClass
-      : {
-          ...baseArmorClass,
-          base: {
-            kind: "ability_sum" as const,
-            base: armorClass(baseArmorClassEffect.base),
-            abilityModifiers: [baseArmorClassEffect.ability] as const,
-            source: "spell_base_plus_ability" as const,
-          },
-        };
-  const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
-    effect.kind === "spellArmorClassBonus"
-      ? [{ kind: "flat" as const, bonus: armorClassDelta(effect.bonus) }]
-      : effect.kind === "linkedDefenseResistanceDamageShare"
-        ? [
-            {
-              kind: "flat" as const,
-              bonus: armorClassDelta(
-                LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS,
-              ),
-            },
-          ]
-        : [],
-  );
-  const turnConstraintPenaltyEffect = combatant.activeEffects.flatMap(
-    (effect) => {
-      if (effect.kind !== "saveGatedTurnConstraintBundle") {
-        return [];
-      }
-      const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
-        state,
-        effect,
-      );
-      return boundEffect === undefined ? [] : [boundEffect];
-    },
-  )[0];
-  const armorClassBonuses =
-    turnConstraintPenaltyEffect === undefined
-      ? spellArmorClassBonuses
-      : [
-          ...spellArmorClassBonuses,
-          {
-            kind: "flat" as const,
-            bonus: armorClassDelta(
-              turnConstraintPenaltyEffect.constraints.armorClassDelta,
-            ),
-          },
-        ];
-  const withBonuses =
-    armorClassBonuses.length === 0
-      ? withBase
-      : { ...withBase, bonuses: [...withBase.bonuses, ...armorClassBonuses] };
-  const spellArmorClassFloors = combatant.activeEffects.flatMap((effect) =>
-    effect.kind === "spellArmorClassFloor" ? [{ floor: effect.floor }] : [],
-  );
-  return spellArmorClassFloors.length === 0
-    ? withBonuses
-    : {
-        ...withBonuses,
-        floors: [...withBonuses.floors, ...spellArmorClassFloors],
-      };
-}
-
-function groundEffectiveCharacterArmorClass(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): ArmorClassState {
-  if (combatant.origin.kind !== "character") return combatant.armorClass;
-  const selected = combatant.origin.selectedLoadout;
-  const effective = characterEffectiveLoadoutFromOrigin(
-    state,
-    combatant.combatantId,
-    combatant.origin,
-  );
-  const armorGrounded =
-    selected.armor !== undefined && effective.armor === undefined;
-  const unheld = unheldLoadoutObjects(selected, effective);
-  const armorAvailable = !armorGrounded;
-  const shieldAvailable = !unheld.shield;
-  const usesShield = selected.shield !== undefined && shieldAvailable;
-  const usesArmoredBase =
-    combatant.armorClass.base.kind === "armor" && !armorGrounded;
-  return {
-    ...combatant.armorClass,
-    base: usesArmoredBase
-      ? combatant.armorClass.base
-      : usesShield
-        ? combatant.origin.unarmoredArmorClassBases.shielded
-        : combatant.origin.unarmoredArmorClassBases.unshielded,
-    bonuses: combatant.armorClass.bonuses.filter((bonus) => {
-      if (bonus.kind === "shield") return shieldAvailable;
-      if (bonus.kind === "wearing_armor") return armorAvailable;
-      return true;
-    }),
-    leftHandUse: handUseWithUnheldLoadout(
-      combatant.armorClass.leftHandUse,
-      unheld,
-    ),
-    rightHandUse: handUseWithUnheldLoadout(
-      combatant.armorClass.rightHandUse,
-      unheld,
-    ),
-  };
 }
 
 export function combatantZeroHpLifecycleSnapshot(
