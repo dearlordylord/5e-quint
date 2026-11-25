@@ -478,10 +478,6 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
       fills: [],
     });
     const targetHole = requireHole(initial, "spellTargetList");
-    const condition = spellConditionChoiceFill(
-      requireHole(initial, "conditionChoice"),
-      "blinded",
-    );
     const selected = spellTargetListFill(
       targetHole,
       wizardId,
@@ -502,6 +498,17 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
           : fact,
       ),
     };
+    const condition = spellConditionChoiceFill(
+      requireHole(
+        resolveBattleSubject({
+          state: session.state,
+          subject,
+          fills: [coveredSelection],
+        }),
+        "conditionChoice",
+      ),
+      "blinded",
+    );
     const hole = requireHole(
       resolveBattleSubject({
         state: session.state,
