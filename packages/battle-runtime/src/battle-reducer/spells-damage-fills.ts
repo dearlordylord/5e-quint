@@ -1177,7 +1177,7 @@ export function spellSavingThrowOutcomeHole(
      * Complete target evidence for canonical admission, including disposition.
      * Omit it where the save's effect doesn't originate at the caster.
      */
-    readonly targetSelection?: SpellSaveTargetSelection;
+    readonly targetSelection?: SpellSaveTargetSelection | undefined;
   } = {},
 ): BattleSpellSavingThrowOutcomeHole {
   const { heightenedSpellTargetId, relationshipFacts = [] } = context;
