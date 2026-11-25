@@ -1,11 +1,14 @@
 import { loadoutHandUses } from "@dnd/shared-algebras/armor-class-algebra";
+import type { HandUse } from "@dnd/shared/types";
 import { combatantHandUses } from "./creature-state-leaves.ts";
+import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.OBJECT_INTERACTION_COST
 import type {
   BattleDroppedObjectSource,
   BattleGroundObjectState,
   BattleCreatureState,
-  BattleActorGroundObjects,
+  BattleActorObjectCustody,
+  BattleObjectCustody,
   BattleState,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -20,7 +23,7 @@ export type BattleGroundObjectPlacement = BattleGroundObjectState & {
   readonly objectId: BattleObjectId;
 };
 
-/** A selected-loadout weapon on the ground that its owner can pick up. */
+/** A selected-loadout weapon on the ground that its owner picks up. */
 export type BattleHeldWeaponPickup = {
   readonly actorId: CombatantId;
   readonly objectId: BattleObjectId;
@@ -53,35 +56,75 @@ export function battleStateWithGroundObjects(
   state: BattleState,
   placements: readonly BattleGroundObjectPlacement[],
 ): BattleGroundObjectPlacementResult {
-  if (placements.length === 0) return { tag: "applied", state };
-  const groundObjects = new Map(state.groundObjects);
+  let placed = state;
   for (const { actorId, objectId, ...groundObject } of placements) {
-    const actorGroundObjects = new Map(groundObjects.get(actorId) ?? []);
-    if (actorGroundObjects.has(objectId)) {
+    if (placed.objectCustody.get(actorId)?.has(objectId) === true) {
       return {
         tag: "conflict",
         actorId,
         objectId,
-        message: "Battle object is already on the ground.",
+        message: "Battle object is already on the ground or stowed.",
       };
     }
-    groundObjects.set(
-      actorId,
-      battleActorGroundObjectsFromEntries([
-        [objectId, groundObject],
-        ...actorGroundObjects,
-      ]),
-    );
+    placed = battleStateWithObjectCustody(placed, actorId, objectId, {
+      kind: "onGround",
+      ...groundObject,
+    });
   }
-  return { tag: "applied", state: { ...state, groundObjects } };
+  return { tag: "applied", state: placed };
 }
 
-export function battleObjectIsOnGround(
+/** Every object on the ground, with its owner. */
+export function battleGroundObjectPlacements(
+  state: BattleState,
+): readonly BattleGroundObjectPlacement[] {
+  return [...state.objectCustody].flatMap(([actorId, objects]) =>
+    [...objects].flatMap(([objectId, custody]) =>
+      custody.kind === "onGround"
+        ? [
+            {
+              actorId,
+              objectId,
+              positionId: custody.positionId,
+              source: custody.source,
+            },
+          ]
+        : [],
+    ),
+  );
+}
+
+/**
+ * The state with one of an actor's objects in this custody, or, for null,
+ * back where its loadout puts it. A new entry comes first.
+ */
+export function battleStateWithObjectCustody(
   state: BattleState,
   actorId: CombatantId,
   objectId: BattleObjectId,
-): boolean {
-  return state.groundObjects.get(actorId)?.has(objectId) === true;
+  custody: BattleObjectCustody | null,
+): BattleState {
+  const others = [...(state.objectCustody.get(actorId) ?? [])];
+  const index = others.findIndex(([id]) => id === objectId);
+  const entries =
+    custody === null
+      ? others.filter(([id]) => id !== objectId)
+      : index === -1
+        ? [[objectId, custody] as const, ...others]
+        : others.map((entry, at) =>
+            at === index ? ([objectId, custody] as const) : entry,
+          );
+  const objectCustody = new Map(state.objectCustody);
+  const [first, ...rest] = entries;
+  if (first === undefined) {
+    objectCustody.delete(actorId);
+  } else {
+    objectCustody.set(
+      actorId,
+      battleActorObjectCustodyFromEntries([first, ...rest]),
+    );
+  }
+  return { ...state, objectCustody };
 }
 
 /**
@@ -120,21 +163,9 @@ export function battleStateWithoutGroundObject(
   actorId: CombatantId,
   objectId: BattleObjectId,
 ): BattleState {
-  const actorGroundObjects = state.groundObjects.get(actorId);
-  if (actorGroundObjects?.has(objectId) !== true) return state;
-  const groundObjects = new Map(state.groundObjects);
-  const remainingActorGroundObjects = new Map(actorGroundObjects);
-  remainingActorGroundObjects.delete(objectId);
-  const [firstRemaining, ...otherRemaining] = remainingActorGroundObjects;
-  if (firstRemaining === undefined) {
-    groundObjects.delete(actorId);
-  } else {
-    groundObjects.set(
-      actorId,
-      battleActorGroundObjectsFromEntries([firstRemaining, ...otherRemaining]),
-    );
-  }
-  return { ...state, groundObjects };
+  return battleObjectIsOnGround(state, actorId, objectId)
+    ? battleStateWithObjectCustody(state, actorId, objectId, null)
+    : state;
 }
 
 const OBJECT_NOT_ON_GROUND = {
@@ -174,7 +205,8 @@ function heldWeaponPickupIssue(
   if (!battleObjectIsOnGround(state, actor.combatantId, objectId)) {
     return OBJECT_NOT_ON_GROUND;
   }
-  if (!selectedLoadoutWeaponIds(actor).includes(objectId)) {
+  const slot = loadoutWeaponSlot(actor, objectId);
+  if (slot === null) {
     return {
       tag: "invalid",
       reason: "notSelectedLoadoutWeapon",
@@ -182,7 +214,7 @@ function heldWeaponPickupIssue(
         "Held-weapon pickup restores only a weapon of the selected loadout.",
     };
   }
-  if (!pickupRequiredHandsAreFree(state, actor, objectId)) {
+  if (!loadoutWeaponHandsAreFree(state, actor, slot)) {
     return {
       tag: "invalid",
       reason: "handsOccupied",
@@ -193,58 +225,68 @@ function heldWeaponPickupIssue(
   return null;
 }
 
-function pickupRequiredHandsAreFree(
-  state: BattleState,
+/** The hand use a selected-loadout weapon has in its loadout. */
+export type LoadoutWeaponSlot = Extract<HandUse, "mainWeapon" | "offWeapon">;
+
+/** Which loadout slot this weapon fills, or null when it isn't a loadout weapon. */
+export function loadoutWeaponSlot(
   actor: CharacterBattleCreatureState,
   objectId: BattleObjectId,
-): boolean {
-  const selected = actor.origin.selectedLoadout;
-  const role =
-    selected.weapon?.itemId === objectId ? "mainWeapon" : "offWeapon";
-  const required = loadoutHandUses({
-    holdsShield: selected.shield !== undefined,
-    holdsOffHandWeapon: selected.offHandWeapon !== undefined,
-    mainWeaponGrip: selected.weapon?.grip,
-  });
-  const actual = combatantHandUses(state, actor, state.grapples);
-  return (
-    (required.leftHandUse !== role || actual.left === "free") &&
-    (required.rightHandUse !== role || actual.right === "free")
-  );
-}
-
-/** The fallen selected-loadout weapons the actor can pick back up. */
-export function groundedHeldWeaponPickups(
-  state: BattleState,
-  actor: BattleCreatureState,
-): readonly BattleHeldWeaponPickup[] {
-  if (!battleObjectLifecycleActorIsCharacter(actor)) return [];
-  return selectedLoadoutWeaponIds(actor)
-    .filter(
-      (objectId) => heldWeaponPickupIssue(state, actor, objectId) === null,
-    )
-    .map((objectId) => ({ actorId: actor.combatantId, objectId }));
-}
-
-function selectedLoadoutWeaponIds(
-  actor: CharacterBattleCreatureState,
-): readonly BattleObjectId[] {
+): LoadoutWeaponSlot | null {
   const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
-  return [weapon?.itemId, offHandWeapon?.itemId].filter(
-    (itemId): itemId is BattleObjectId => itemId !== undefined,
-  );
+  if (weapon?.itemId === objectId) return "mainWeapon";
+  if (offHandWeapon?.itemId === objectId) return "offWeapon";
+  return null;
 }
 
-function battleActorGroundObjectsFromEntries(
+/**
+ * The hands a loadout weapon occupies are those its selected loadout's grip
+ * gives it, whatever the hand state says now: a spell-created object can
+ * take a hand the weapon left and then leave it simply free. Anything else
+ * the other hand might hold is left out, and under a two-handed grip the main
+ * weapon holds the off hand, so an off-hand weapon has no hand to go back to.
+ */
+export function loadoutWeaponHands(
+  actor: CharacterBattleCreatureState,
+  slot: LoadoutWeaponSlot,
+): readonly ("left" | "right")[] {
+  const loadout = loadoutHandUses({
+    holdsShield: false,
+    holdsOffHandWeapon: slot === "offWeapon",
+    mainWeaponGrip: actor.origin.selectedLoadout.weapon?.grip,
+  });
+  return (
+    [
+      ["left", loadout.leftHandUse],
+      ["right", loadout.rightHandUse],
+    ] as const
+  ).flatMap(([hand, use]) => (use === slot ? [hand] : []));
+}
+
+/**
+ * Whether a loadout weapon can go back in hand: its loadout gives it at least
+ * one hand, and every such hand is empty.
+ */
+export function loadoutWeaponHandsAreFree(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  slot: LoadoutWeaponSlot,
+): boolean {
+  const current = combatantHandUses(state, actor, state.grapples);
+  const hands = loadoutWeaponHands(actor, slot);
+  return hands.length > 0 && hands.every((hand) => current[hand] === "free");
+}
+
+function battleActorObjectCustodyFromEntries(
   entries: readonly [
-    readonly [BattleObjectId, BattleGroundObjectState],
-    ...ReadonlyArray<readonly [BattleObjectId, BattleGroundObjectState]>,
+    readonly [BattleObjectId, BattleObjectCustody],
+    ...ReadonlyArray<readonly [BattleObjectId, BattleObjectCustody]>,
   ],
-): BattleActorGroundObjects {
+): BattleActorObjectCustody {
   // Brands are erased at runtime; the non-empty tuple proves this Map cannot
-  // encode the redundant actor-with-no-ground-objects state.
+  // encode the redundant actor-with-no-object-custody state.
   // eslint-disable-next-line no-restricted-syntax -- the tuple is the runtime proof required by this erased non-empty-map brand
-  return new Map(entries) as unknown as BattleActorGroundObjects;
+  return new Map(entries) as unknown as BattleActorObjectCustody;
 }
 
 function battleObjectLifecycleActorIsCharacter(

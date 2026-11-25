@@ -1,6 +1,7 @@
 import { combatantAnchoredAreaOriginIs } from "./spell-area-origin.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.ongoing-feature-activation-movement-rider
 import { resolveOngoingFeatureActivationMovement } from "./ongoing-feature-activation-movement.ts";
+import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
@@ -2234,7 +2235,7 @@ function attackActionAreaSaveDamageReplacementFills(
         };
       }
       /* v8 ignore stop -- @preserve */
-      savingThrows = fill;
+      savingThrows = savingThrowOutcomeFillThatStands(fill);
       continue;
     }
     if (
@@ -2544,7 +2545,7 @@ function magicActionSaveGatedConditionFills(
         };
       }
       /* v8 ignore stop -- @preserve */
-      savingThrows = fill;
+      savingThrows = savingThrowOutcomeFillThatStands(fill);
       continue;
     }
     /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
@@ -2815,7 +2816,7 @@ function magicActionAreaSaveDamageHealingFills(
         };
       }
       /* v8 ignore stop -- @preserve */
-      savingThrows = fill;
+      savingThrows = savingThrowOutcomeFillThatStands(fill);
       continue;
     }
     if (

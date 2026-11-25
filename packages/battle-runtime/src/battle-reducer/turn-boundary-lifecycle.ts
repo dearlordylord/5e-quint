@@ -9,6 +9,7 @@ import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle stat-block.resource-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.combat-turn-start-heroic-inspiration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -122,14 +123,19 @@ import {
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
+import {
+  battleStateAfterTurnStartHeroicInspirationChoice,
+  turnStartHeroicInspirationChoiceHole,
+  turnStartHeroicInspirationOffer,
+} from "./turn-start-heroic-inspiration.ts";
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
-  d20TestNaturalOneRerollDieDecisionRequired,
-  d20TestNaturalOneRerollDieIssue,
-  d20TestNaturalOneRerollHoleWithOption,
-  effectiveD20TestNaturalOneRerollDeathSavingThrow,
-} from "./d20-test-natural-one-reroll.ts";
+  d20TestDeathSavingThrowRerolls,
+  d20TestHoleWithRerollOptions,
+} from "./d20-test-outcome-rerolls.ts";
+import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
+import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
   applyHitPointMaximumIncreaseExpiration,
   applyStartTurnDeathSavingThrow,
@@ -415,6 +421,7 @@ type StartTurnOccurrenceHandle =
         { readonly kind: "turnStartTemporaryHitPoints" }
       >;
     }
+  | { readonly kind: "turnStartHeroicInspiration" }
   | {
       readonly kind: "spellConditionTurnStartDamage";
       readonly effect: Extract<
@@ -485,6 +492,13 @@ function startTurnOccurrenceOptionForHandle(
         "Grant start-turn Temporary Hit Points",
       ),
     ),
+    Match.when({ kind: "turnStartHeroicInspiration" }, () =>
+      startTurnOccurrenceOption(
+        "turnStartHeroicInspiration",
+        {},
+        "Offer start-turn Heroic Inspiration",
+      ),
+    ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effect }) =>
       spellTurnStartDamageOccurrenceOption(effect),
     ),
@@ -531,6 +545,9 @@ function startTurnOccurrenceHandlesForState(
         ? [{ kind: "turnStartTemporaryHitPoints" as const, effect }]
         : [],
     ) ?? []),
+    ...(turnStartHeroicInspirationOffer(actor) === undefined
+      ? []
+      : [{ kind: "turnStartHeroicInspiration" as const }]),
     ...spellTurnStartDamageEffects(actor).map(
       (effect): StartTurnOccurrenceHandle =>
         effect.kind === "spellCondition"
@@ -1898,6 +1915,20 @@ export function spellTurnStartSavingThrowOutcomeHoleId(
   return holeId(spellTurnStartSavingThrowOutcomeHoleKey(sourceTurn, effect));
 }
 
+/** The saving throw fill for a hole, as the roll that stands after its rerolls. */
+function savingThrowOutcomeFillThatStandsFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: { readonly holeId: BattleHoleId },
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
+  return fill === undefined
+    ? undefined
+    : savingThrowOutcomeFillThatStands(fill);
+}
+
 function spellTurnStartSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
@@ -1905,7 +1936,7 @@ function spellTurnStartSavingThrowOutcomeFor(
   >[],
   hole: BattleSpellTurnStartSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function validateSpellTurnStartSavingThrowOutcome(
@@ -2027,7 +2058,7 @@ function hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
   >[],
   hole: BattleStagedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function endTurnSavingThrowFlatBonuses(
@@ -2185,7 +2216,7 @@ function spellConditionEndTurnSavingThrowOutcomeFor(
   >[],
   hole: BattleSpellConditionEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function spellConditionCountedEndTurnSavingThrowOutcomeHole(
@@ -2239,7 +2270,7 @@ function spellConditionCountedEndTurnSavingThrowOutcomeFor(
   >[],
   hole: BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function unitFeatureConditionEndTurnSaveEffects(
@@ -2300,7 +2331,7 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   >[],
   hole: BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
@@ -2348,7 +2379,7 @@ function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
   >[],
   hole: BattleTurnConstraintEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function abilityD20TestRollModeEndTurnSaveEffects(
@@ -2408,7 +2439,7 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
   >[],
   hole: BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
@@ -2418,7 +2449,7 @@ function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
   >[],
   hole: BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find((fill) => fill.holeId === hole.holeId);
+  return savingThrowOutcomeFillThatStandsFor(fills, hole);
 }
 
 function validateSingleTargetSavingThrowOutcome(
@@ -4032,6 +4063,12 @@ function resolveOrderedStartTurnOccurrenceHandle(input: {
         occurrence,
       }),
     ),
+    Match.when({ kind: "turnStartHeroicInspiration" }, () =>
+      resolveOrderedTurnStartHeroicInspirationOccurrence({
+        ...input,
+        occurrence,
+      }),
+    ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, (handle) =>
       resolveOrderedSpellTurnStartDamageOccurrence({
         ...input,
@@ -4103,13 +4140,15 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
     };
   }
   const fill = fills[0]!;
-  if (
-    d20TestNaturalOneRerollDieDecisionRequired({
-      actor,
-      originalNaturalD20: Number(fill.value),
-      decision: fill.d20TestNaturalOneReroll,
-    })
-  ) {
+  // The start-turn occurrence resolves in one step with the turn boundary, so
+  // a Heroic Inspiration spend needs no replay record.
+  const rerolls = d20TestDeathSavingThrowRerolls({
+    state: input.state,
+    scope: { kind: "oneStep" },
+    roll: { rollerId: input.input.sourceTurn.actorId, holeId: hole.holeId },
+    fill,
+  });
+  if (rerolls.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: turnBoundaryNeedsHolesResult({
@@ -4119,28 +4158,27 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
         endingActorId: input.input.endingActorId,
         sourceTurn: input.input.sourceTurn,
         occurrence: input.occurrence,
-        holes: [d20TestNaturalOneRerollHoleWithOption(hole)],
+        holes: [d20TestHoleWithRerollOptions(hole, rerolls.options)],
       }),
     };
   }
-  const issue = d20TestNaturalOneRerollDieIssue({
-    actor,
-    originalNaturalD20: Number(fill.value),
-    decision: fill.d20TestNaturalOneReroll,
-  });
-  if (issue !== null) {
+  if (rerolls.tag === "invalid") {
     return {
       tag: "result",
-      result: invalidResult(input.resultState, "invalidFill", issue),
+      result: invalidResult(input.resultState, "invalidFill", rerolls.issue),
     };
   }
+  const spent = battleStateAfterHeroicInspirationReroll(
+    input.state,
+    rerolls.heroicInspirationUse,
+  );
   return ordinaryStartTurnOccurrenceAdvance(
     {
-      ...input.state,
+      ...spent,
       combatants: applyStartTurnDeathSavingThrow(
-        input.state.combatants,
+        spent.combatants,
         input.input.sourceTurn.actorId,
-        effectiveD20TestNaturalOneRerollDeathSavingThrow(fill).value,
+        rerolls.roll,
       ),
     },
     new Set([hole.holeId]),
@@ -4291,6 +4329,75 @@ function resolveOrderedTemporaryHitPointOccurrence(input: {
     choice: fills[0]!.value,
   });
   return ordinaryStartTurnOccurrenceAdvance(state, new Set([hole.holeId]));
+}
+
+// SRD 5.2.1 classes.md, Champion, Heroic Warrior: "During combat, you can give
+// yourself Heroic Inspiration whenever you start your turn without it."
+// The offer is taken from the creature as earlier ordered occurrences left it,
+// so the choice applies to that creature.
+function resolveOrderedTurnStartHeroicInspirationOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const actorId = input.input.sourceTurn.actorId;
+  const offer = turnStartHeroicInspirationOffer(
+    input.state.combatants.get(actorId),
+  );
+  /* v8 ignore start -- @preserve -- The occurrence is listed only with the offer, and no start-turn occurrence gives Heroic Inspiration or removes the feature before it. */
+  if (offer === undefined) {
+    return ordinaryStartTurnOccurrenceAdvance(input.state);
+  }
+  /* v8 ignore stop -- @preserve */
+  const hole = turnStartHeroicInspirationChoiceHole({
+    sourceTurn: input.input.sourceTurn,
+    occurrenceId: input.occurrence.occurrenceId,
+    sourceProcedureRef: offer.sourceProcedureRef,
+  });
+  const fills = input.input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "turnStartHeroicInspirationChoice" }
+    > =>
+      fill.kind === "turnStartHeroicInspirationChoice" &&
+      fill.holeId === hole.holeId,
+  );
+  const [fill, ...extraFills] = fills;
+  if (fill === undefined) {
+    return {
+      tag: "result",
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [hole],
+      }),
+    };
+  }
+  if (extraFills.length > 0) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Heroic Inspiration choice must answer its exact occurrence once.",
+      ),
+    };
+  }
+  return ordinaryStartTurnOccurrenceAdvance(
+    battleStateAfterTurnStartHeroicInspirationChoice({
+      state: input.state,
+      offer,
+      choice: fill.value,
+    }),
+    new Set([hole.holeId]),
+  );
 }
 
 function temporaryHitPointStateAfterOrderedChoice(input: {
@@ -6151,19 +6258,6 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const deathSavingThrowResolution = resolveDeathSavingThrowNaturalOneReroll({
-    state: input.state,
-    subject: input.subject,
-    endingActorId: actorId,
-    sourceTurn: nextSourceTurn,
-    nextActor,
-    nextActorId,
-    fill: deathSavingThrowFill,
-    orderedOccurrenceHandles: orderedStartTurnOccurrenceHandles,
-  });
-  if (deathSavingThrowResolution !== undefined) {
-    return deathSavingThrowResolution;
-  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     rechargeRollFill?.kind === "statBlockRechargeRoll" &&
@@ -6322,69 +6416,12 @@ function startTurnSaveGatedConditionWithRepeatDamageRepeatSaveResult(input: {
   });
 }
 
-function resolveDeathSavingThrowNaturalOneReroll(input: {
-  readonly state: BattleState;
-  readonly subject: BattleSubject;
-  readonly endingActorId: CombatantId;
-  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-  readonly nextActor: BattleCreatureState | undefined;
-  readonly nextActorId: CombatantId;
-  readonly fill:
-    | Extract<BattleFill, { readonly kind: "deathSavingThrow" }>
-    | undefined;
-  readonly orderedOccurrenceHandles: readonly StartTurnOccurrenceHandle[];
-}): BattleResolutionResult | undefined {
-  if (input.fill === undefined) return undefined;
-  const originalNaturalD20 = Number(input.fill.value);
-  const decision = input.fill.d20TestNaturalOneReroll;
-  if (
-    d20TestNaturalOneRerollDieDecisionRequired({
-      actor: input.nextActor,
-      originalNaturalD20,
-      decision,
-    })
-  ) {
-    const deathSavingThrowHandle = input.orderedOccurrenceHandles.find(
-      (handle) => handle.kind === "deathSavingThrow",
-    );
-    if (deathSavingThrowHandle === undefined) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Death Saving Throw fill has no matching start-turn occurrence.",
-      );
-    }
-    return turnBoundaryNeedsHolesResult({
-      kind: "incomingStartTurnOccurrence",
-      state: input.state,
-      subject: input.subject,
-      endingActorId: input.endingActorId,
-      sourceTurn: input.sourceTurn,
-      occurrence: startTurnOccurrenceProjectionForHandle(
-        deathSavingThrowHandle,
-      ),
-      holes: [
-        d20TestNaturalOneRerollHoleWithOption(
-          deathSavingThrowHole(input.nextActorId),
-        ),
-      ],
-    });
-  }
-  const issue = d20TestNaturalOneRerollDieIssue({
-    actor: input.nextActor,
-    originalNaturalD20,
-    decision,
-  });
-  return issue === null
-    ? undefined
-    : invalidResult(input.state, "invalidFill", issue);
-}
-
 const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
   "persistentAreaSourceTurnTranslation",
   "startTurnOccurrenceOrder",
   "temporaryHitPointChoice",
+  "turnStartHeroicInspirationChoice",
   "concentrationSavingThrow",
   "deathSavingThrow",
   "rolledDice",

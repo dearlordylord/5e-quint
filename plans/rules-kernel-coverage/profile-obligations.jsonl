@@ -212,3 +212,4 @@
 {"profileId":"unit-feature.passive-initiative-roll-mode","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.ongoing-feature-activation-movement-rider","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.weapon-mastery-graze","obligationIds":["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE","BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.combat-turn-start-heroic-inspiration","obligationIds":["BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION"]}

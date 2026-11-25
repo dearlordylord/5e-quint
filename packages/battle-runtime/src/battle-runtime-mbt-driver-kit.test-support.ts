@@ -18874,6 +18874,16 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         }),
       )
       .pipe(
+        Match.when({ kind: "turnStartHeroicInspirationChoice" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves start-turn Heroic Inspiration choices to focused turn-boundary witnesses.",
+          );
+        }),
+        Match.when({ kind: "weaponDropPosition" }, () => {
+          throw new Error(
+            "Battle runtime MBT leaves weapon drop positions to the focused weapon change witness.",
+          );
+        }),
         Match.when({ kind: "areaWindStrength" }, () => {
           throw new Error(
             "Generic battle runtime MBT does not model area wind-strength holes.",

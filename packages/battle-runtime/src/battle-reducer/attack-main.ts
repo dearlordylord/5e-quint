@@ -50,9 +50,11 @@ import {
 import {
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,
-  battleStateAfterHeroicInspirationReroll,
-  type AttackRollHeroicInspirationUse,
 } from "./attack-roll-d20-test-rerolls.ts";
+import {
+  battleStateAfterHeroicInspirationReroll,
+  type HeroicInspirationUse,
+} from "./heroic-inspiration-reroll.ts";
 
 import {
   attackRollHole,
@@ -298,13 +300,21 @@ import {
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
+  spendAttackActionForSubject,
   validateAttackDamageDieFloorChoice,
   resolveFollowUpAttackDamageChoice,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
+import { resolveAttackWithWeaponChange } from "./attack-weapon-change.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 export function resolveAttack(
+  input: AttackBattleResolutionInput,
+): BattleResolutionResult {
+  return resolveAttackWithWeaponChange(input, resolveAttackAfterWeaponChange);
+}
+
+function resolveAttackAfterWeaponChange(
   input: AttackBattleResolutionInput,
 ): BattleResolutionResult {
   const attack = attackActionOptionForSubject(input.state, input.subject);
@@ -315,7 +325,12 @@ export function resolveAttack(
       "Attack resolution requires a supported Attack action option.",
     );
   }
-  return resolveSelectedAttackProcedure(input, attack, spendAttackAction);
+  return resolveSelectedAttackProcedure(
+    input,
+    attack,
+    (state, _actorId, selected, timing) =>
+      spendAttackActionForSubject(state, input.subject, selected, timing),
+  );
 }
 
 type AttackProcedureResolutionInput = Omit<
@@ -1216,29 +1231,19 @@ function resolveOrdinaryObjectAttack<
       "This attack procedure does not support an ordinary object target.",
     );
   }
-  const objectFact =
-    fillSet.target.spatialFacts.length === 1
-      ? fillSet.target.spatialFacts[0]
-      : undefined;
-  const targetCover = directTargetCover(objectFact?.cover);
-  const objectFactIssues = ordinaryObjectAttackTargetIssues({
-    targetCover,
-    objectFact,
+  const targetAdmission = admitOrdinaryObjectAttackTarget({
+    target: fillSet.target,
     attackerId,
-    objectId: fillSet.target.objectId,
     attack,
   });
-  if (
-    objectFact === undefined ||
-    targetCover === null ||
-    objectFactIssues.length > 0
-  ) {
+  if (Result.isFailure(targetAdmission)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `Invalid object attack target: ${objectFactIssues.join("; ")}.`,
+      targetAdmission.failure,
     );
   }
+  const { objectFact, targetCover } = targetAdmission.success;
   const rollPreparation = prepareOrdinaryObjectAttackRoll({
     input: input.input,
     attack,
@@ -1291,6 +1296,36 @@ function ordinaryObjectAttackIsUnsupported<
   );
 }
 
+function admitOrdinaryObjectAttackTarget<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly target: OrdinaryObjectAttackFillSet["target"];
+  readonly attackerId: CombatantId;
+  readonly attack: Attack;
+}): Result.Result<
+  {
+    readonly objectFact: OrdinaryObjectAttackTableFact;
+    readonly targetCover: DirectTargetCover;
+  },
+  string
+> {
+  const objectFact =
+    input.target.spatialFacts.length === 1
+      ? input.target.spatialFacts[0]
+      : undefined;
+  const targetCover = directTargetCover(objectFact?.cover);
+  const issues = ordinaryObjectAttackTargetIssues({
+    objectFact,
+    targetCover,
+    attackerId: input.attackerId,
+    objectId: input.target.objectId,
+    attack: input.attack,
+  });
+  return objectFact === undefined || targetCover === null || issues.length > 0
+    ? Result.fail(`Invalid object attack target: ${issues.join("; ")}.`)
+    : Result.succeed({ objectFact, targetCover });
+}
+
 function ordinaryObjectAttackTargetIssues<
   Attack extends BoundSupportedAttackActionOption,
 >(input: {
@@ -1324,7 +1359,7 @@ type OrdinaryObjectAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly heroicInspirationUse: HeroicInspirationUse;
     };
 
 type OrdinaryObjectAttackRollContext<
@@ -2342,7 +2377,7 @@ export function resolveSelectedAttackProcedure<
     const duplicateInterceptionCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
       attacker: duplicateInterceptionAttacker,
-      target: requireCurrentAttackTarget(attackRolledState, target),
+      target: requireCurrentAttackParticipant(attackRolledState, target),
       targetSpatialFacts: fillSet.targetSpatialFacts,
       triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
       fill: fillSet.duplicateHitInterceptionRoll,
@@ -2666,8 +2701,14 @@ export function resolveSelectedAttackProcedure<
   const weaponMasteryPushApplied = hit
     ? applyWeaponMasteryPushOnHit({
         state: openHandTechniqueApplied.state,
-        attackerId,
-        targetId: target.combatantId,
+        attacker: requireCurrentAttackParticipant(
+          openHandTechniqueApplied.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(
+          openHandTechniqueApplied.state,
+          target,
+        ),
         attack,
         targetSpatialFacts: fillSet.targetSpatialFacts,
       })
@@ -2694,7 +2735,7 @@ export function resolveSelectedAttackProcedure<
     ? weaponMasteryToppleSavingThrowHole({
         state: weaponMasteryPushApplied.state,
         attacker,
-        target: requireCurrentAttackTarget(
+        target: requireCurrentAttackParticipant(
           weaponMasteryPushApplied.state,
           target,
         ),
@@ -2732,22 +2773,28 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
   const weaponHitAppliedState = hit
-    ? applyWeaponMasterySapOnHit(
-        toppleApplied.state,
-        attackerId,
-        target.combatantId,
+    ? applyWeaponMasterySapOnHit({
+        state: toppleApplied.state,
+        attacker: requireCurrentAttackParticipant(
+          toppleApplied.state,
+          attacker,
+        ),
+        target: requireCurrentAttackParticipant(toppleApplied.state, target),
         attack,
-      )
+      })
     : toppleApplied.state;
   const hitAppliedState =
     hit && attack.kind === "statBlockAttack"
       ? applyStatBlockAttackHitConditionRiders({
           state: weaponHitAppliedState,
-          target: requireCurrentAttackTarget(weaponHitAppliedState, target),
+          target: requireCurrentAttackParticipant(
+            weaponHitAppliedState,
+            target,
+          ),
           attack,
         })
       : weaponHitAppliedState;
-  const damageTarget = requireCurrentAttackTarget(hitAppliedState, target);
+  const damageTarget = requireCurrentAttackParticipant(hitAppliedState, target);
   if (
     fixedDamageAmount !== null &&
     fixedDamageByTypeBeforeTargetAdjustments !== null
@@ -3036,10 +3083,10 @@ export function resolveSelectedAttackProcedure<
     // A weapon has one mastery property per attack, so Slow never applies to
     // Graze miss damage.
     const fixedDamageWithWeaponMasterySpeedReductionState =
-      applyWeaponMasterySlowAfterDamage({
+      applyWeaponMasterySlowToPresentParticipants({
         state: fixedDamageAppliedState,
-        attackerId,
-        targetId: target.combatantId,
+        attacker,
+        target,
         attack,
         damageAmount: Number(reducedFixedDamageAmount),
       });
@@ -3619,10 +3666,10 @@ export function resolveSelectedAttackProcedure<
     }
     /* v8 ignore stop -- @preserve */
     const damageWithWeaponMasterySpeedReductionState =
-      applyWeaponMasterySlowAfterDamage({
+      applyWeaponMasterySlowToPresentParticipants({
         state: cunningStrike.state,
-        attackerId,
-        targetId: target.combatantId,
+        attacker,
+        target,
         attack,
         damageAmount: Number(reducedDamageAmount),
       });
@@ -3784,19 +3831,48 @@ function weaponMasteryGrazeMissDamage(input: {
   );
 }
 
-function requireCurrentAttackTarget(
+function applyWeaponMasterySlowToPresentParticipants(
+  input: Parameters<typeof applyWeaponMasterySlowAfterDamage>[0],
+): BattleState {
+  const attacker = attackParticipantAfterDamage(input.state, input.attacker);
+  const target = attackParticipantAfterDamage(input.state, input.target);
+  return attacker === null || target === null
+    ? input.state
+    : applyWeaponMasterySlowAfterDamage({ ...input, attacker, target });
+}
+
+/** Damage can retire a participant; other missing resolved participants violate roster ownership. */
+function attackParticipantAfterDamage(
   state: BattleState,
-  resolvedTarget: BattleCreatureState,
+  resolvedParticipant: BattleCreatureState,
+): BattleCreatureState | null {
+  const current = state.combatants.get(resolvedParticipant.combatantId);
+  if (current !== undefined) return current;
+  if (
+    state.executionScopeCursors.get(resolvedParticipant.combatantId)?.kind ===
+    "retired"
+  )
+    return null;
+  /* v8 ignore start -- @preserve -- Internal invariant: a previously resolved participant's absence after damage requires the canonical roster-removal operation to have retired its execution scope. */
+  throw new Error("Attack damage must retain or retire resolved participants.");
+  /* v8 ignore stop -- @preserve */
+}
+
+function requireCurrentAttackParticipant(
+  state: BattleState,
+  resolvedParticipant: BattleCreatureState,
 ): BattleCreatureState {
-  const currentTarget = state.combatants.get(resolvedTarget.combatantId);
-  /* v8 ignore start -- @preserve -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved target combatant while possibly replacing its state value. */
-  if (currentTarget === undefined) {
+  const currentParticipant = state.combatants.get(
+    resolvedParticipant.combatantId,
+  );
+  /* v8 ignore start -- @preserve -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved attacker and target combatants while possibly replacing their state values. */
+  if (currentParticipant === undefined) {
     throw new Error(
-      "Attack-roll transitions must preserve the resolved target.",
+      "Attack-roll transitions must preserve the resolved attacker and target.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  return currentTarget;
+  return currentParticipant;
 }
 
 function withOpenHandTechniqueShovePushes(
@@ -4333,7 +4409,7 @@ type AdditionalWeaponAttackRollResolution =
       readonly tag: "ok";
       readonly fill: AdditionalWeaponAttackRollFill;
       readonly attackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: AttackRollHeroicInspirationUse;
+      readonly heroicInspirationUse: HeroicInspirationUse;
     };
 
 function resolveAdditionalWeaponAttackRoll(input: {
@@ -5070,19 +5146,15 @@ function prepareWeaponMasteryCleaveAttack(input: {
   const secondTargetId = targetFill.value;
   const cleaveTargetFacts =
     additionalWeaponAttackTargetSpatialFacts(targetFill);
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  const targetAdmission =
-    secondTarget === undefined
-      ? null
-      : weaponMasteryCleaveTargetAdmission({
-          attackerId: input.subject.actorId,
-          firstTargetId: input.firstTargetId,
-          secondTarget,
-          attack: cleaveAttack,
-          targetSpatialFacts: cleaveTargetFacts,
-        });
+  const targetAdmission = weaponMasteryCleaveTargetAdmission({
+    attackerId: input.subject.actorId,
+    firstTargetId: input.firstTargetId,
+    secondTarget: input.state.combatants.get(secondTargetId),
+    attack: cleaveAttack,
+    targetSpatialFacts: cleaveTargetFacts,
+  });
   /* v8 ignore start -- @preserve -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
-  if (secondTarget === undefined || targetAdmission === null) {
+  if (targetAdmission === null) {
     return {
       tag: "result",
       result: invalidResult(
@@ -5093,6 +5165,7 @@ function prepareWeaponMasteryCleaveAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const secondTarget = targetAdmission.target;
   const cleaveRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,
@@ -5887,21 +5960,17 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
   }
   const secondTargetId = targetFill.value;
   const targetFacts = additionalWeaponAttackTargetSpatialFacts(targetFill);
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  const targetAdmission =
-    secondTarget === undefined
-      ? null
-      : huntersPreyHordeBreakerTargetAdmission({
-          state: input.state,
-          attackerId: input.subject.actorId,
-          sourceProcedureRef: procedureRef,
-          firstTargetId: input.firstTargetId,
-          secondTarget,
-          attack: hordeBreakerAttack,
-          targetSpatialFacts: targetFacts,
-        });
+  const targetAdmission = huntersPreyHordeBreakerTargetAdmission({
+    state: input.state,
+    attackerId: input.subject.actorId,
+    sourceProcedureRef: procedureRef,
+    firstTargetId: input.firstTargetId,
+    secondTarget: input.state.combatants.get(secondTargetId),
+    attack: hordeBreakerAttack,
+    targetSpatialFacts: targetFacts,
+  });
   /* v8 ignore start -- @preserve -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
-  if (secondTarget === undefined || targetAdmission === null) {
+  if (targetAdmission === null) {
     return {
       tag: "result",
       result: invalidResult(
@@ -5912,6 +5981,7 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const secondTarget = targetAdmission.target;
   const hordeBreakerRollMode = qualifiedAttackRollMode(
     input.state,
     input.subject.actorId,

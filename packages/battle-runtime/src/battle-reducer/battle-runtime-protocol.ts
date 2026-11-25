@@ -49,6 +49,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   levelOnePlusSpellCastsThisTurn: [],
   quickenedLevelOnePlusSpellCastsThisTurn: [],
   attackRollMadeThisTurn: false,
+  weaponChangeAfterAttack: "unavailable" as const,
   brutalStrike: { kind: "available" } as const,
   attackDamageRidersUsedThisTurn: [],
   stunningStrikesUsedThisTurn: [],

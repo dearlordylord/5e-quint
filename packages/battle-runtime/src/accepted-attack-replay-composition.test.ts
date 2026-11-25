@@ -1,3 +1,4 @@
+import { battleGroundObjectState } from "./battle-reducer/object-custody-queries.ts";
 import { optionalProperty } from "./optional-property.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import { Match } from "effect";
@@ -277,9 +278,11 @@ test.each(PARENT_ATTACK_KINDS)(
     Match.value(kind).pipe(
       Match.when("throw", () =>
         expect(
-          awaiting.state.groundObjects
-            .get(fighterId)
-            ?.get(parent.attack.weaponObjectId)?.positionId,
+          battleGroundObjectState(
+            awaiting.state,
+            fighterId,
+            parent.attack.weaponObjectId,
+          )?.positionId,
         ).toBe(landingPosition),
       ),
       Match.when("ammunition", () =>
@@ -373,11 +376,13 @@ test.each(PARENT_ATTACK_KINDS)(
     }
     Match.value(kind).pipe(
       Match.when("throw", () => {
-        expect(completed.state.groundObjects.get(fighterId)?.size).toBe(1);
+        expect(completed.state.objectCustody.get(fighterId)?.size).toBe(1);
         expect(
-          completed.state.groundObjects
-            .get(fighterId)
-            ?.get(parent.attack.weaponObjectId)?.positionId,
+          battleGroundObjectState(
+            completed.state,
+            fighterId,
+            parent.attack.weaponObjectId,
+          )?.positionId,
         ).toBe(landingPosition);
         expect(completed.droppedObjects).toEqual([
           {

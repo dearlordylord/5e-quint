@@ -49,8 +49,8 @@
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 631,
-      "numerator": 449,
-      "percent": "71.2%"
+      "numerator": 453,
+      "percent": "71.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 450
+      "value": 454
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 244,
@@ -67,28 +67,28 @@
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 450,
-      "numerator": 450,
+      "denominator": 454,
+      "numerator": 454,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 171,
-      "numerator": 166,
+      "denominator": 172,
+      "numerator": 167,
       "percent": "97.1%"
     },
     "qntProofCoverage": {
-      "denominator": 171,
-      "numerator": 163,
+      "denominator": 172,
+      "numerator": 164,
       "percent": "95.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 216,
-      "numerator": 191,
-      "percent": "88.4%"
+      "denominator": 217,
+      "numerator": 192,
+      "percent": "88.5%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 216,
-      "numerator": 214,
+      "denominator": 217,
+      "numerator": 215,
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "81.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 171,
-      "numerator": 166,
+      "denominator": 172,
+      "numerator": 167,
       "percent": "97.1%"
     },
     "runtimeParityCoverage": {
-      "denominator": 171,
-      "numerator": 166,
+      "denominator": 172,
+      "numerator": 167,
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
@@ -8344,19 +8344,46 @@
           "ownerPath": "packages/mcp/src/manual-mcp-battle-surface.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.combat-turn-start-heroic-inspiration",
+      "profileKind": "battle-procedure",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface combat_turn_start_heroic_inspiration mechanics through the same Surface guard the Character Sheet uses, and retains a literal support profile on the character combatant. The turn boundary offers the choice as a start-turn occurrence the player orders with the others, only when the creature starts its turn without Heroic Inspiration, and giving it sets the battle creature's Heroic Inspiration, which settlement writes back. The battle's opening turn runs no start-turn occurrences, so it makes no offer there.",
+      "taskRefs": [
+        "GH686-HEROIC-WARRIOR-TURN-START"
+      ],
+      "title": "Unit feature offers Heroic Inspiration when a combat turn starts without it",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/combat-turn-start-heroic-inspiration.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 216,
-        "numerator": 191,
-        "percent": "88.4%"
+        "denominator": 217,
+        "numerator": 192,
+        "percent": "88.5%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 216,
-        "numerator": 214,
+        "denominator": 217,
+        "numerator": 215,
         "percent": "99.1%"
       }
     },
@@ -12082,6 +12109,22 @@
         "profileKind": "persistent-effect",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "A creature whose feature lets it give itself Heroic Inspiration in combat can do so when it starts its turn without it, in the order the player chooses among start-of-turn effects"
+          }
+        ],
+        "profileId": "unit-feature.combat-turn-start-heroic-inspiration",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
         ]
       }
     ],
@@ -23500,6 +23543,22 @@
         "unit-feature.weapon-mastery-graze"
       ],
       "taskId": "GH530-WEAPON-MASTERY-GRAZE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Heroic Warrior turn-start rule-core examples cover the offer when a combat turn starts without Heroic Inspiration, giving and declining it, and no offer with Heroic Inspiration, without the feature, or outside combat.",
+      "profileIds": [
+        "unit-feature.combat-turn-start-heroic-inspiration"
+      ],
+      "taskId": "GH686-HEROIC-WARRIOR-TURN-START"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle runtime tests cover the start-turn offer, giving and declining it, no offer with Heroic Inspiration or without the feature, both orders with a Death Saving Throw at 0 Hit Points, rejection of a second answer and of an answer when nothing is offered, and the hole and fill codecs and fill equality.",
+      "profileIds": [
+        "unit-feature.combat-turn-start-heroic-inspiration"
+      ],
+      "taskId": "GH686-HEROIC-WARRIOR-TURN-START"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -53731,6 +53790,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
+      "unitId": "weapon_mace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_morningstar.json",
+      "unitId": "weapon_morningstar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_whip.json",
+      "unitId": "weapon_whip"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_sling.json",
+      "unitId": "weapon_sling"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-sheet.prepared-spell-rest-replacement",
@@ -57385,44 +57516,8 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
-      "unitId": "weapon_mace"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_maul.json",
       "unitId": "weapon_maul"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_morningstar.json",
-      "unitId": "weapon_morningstar"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -57547,24 +57642,6 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_sling.json",
-      "unitId": "weapon_sling"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_trident.json",
       "unitId": "weapon_trident"
     },
@@ -57603,24 +57680,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_warhammer.json",
       "unitId": "weapon_warhammer"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_whip.json",
-      "unitId": "weapon_whip"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

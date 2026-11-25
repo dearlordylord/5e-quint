@@ -46,6 +46,7 @@ import type {
 } from "./profile.ts";
 import {} from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
+import { SAVE_COVER_BENEFITS } from "@dnd/shared-algebras/cover-algebra";
 import { Match, Schema } from "effect";
 import { invalidResult } from "../result-helpers.ts";
 import {
@@ -319,6 +320,7 @@ const SaveGatedDamageCommonFields = {
   ),
   failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
   saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
+  saveCoverBenefit: Schema.Literals(SAVE_COVER_BENEFITS),
   postSaveAreaEffect: Schema.optionalKey(SpellPostSaveAreaEffectSchema),
 } as const;
 

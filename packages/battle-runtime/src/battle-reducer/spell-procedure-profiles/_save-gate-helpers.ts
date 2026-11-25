@@ -870,6 +870,7 @@ export type SaveGatedDamageMechanicsFacts = {
   readonly targeting: SaveGatedDamageInvocation["targeting"];
   readonly rangeFeet: SaveGatedDamageInvocation["rangeFeet"];
   readonly saveRollModeRule: SaveGatedDamageInvocation["saveRollModeRule"];
+  readonly saveCoverBenefit: SaveGatedDamageInvocation["saveCoverBenefit"];
   readonly successDamage: SaveGatedDamageInvocation["successDamage"];
   readonly failedSaveEffects: SaveGatedDamageFailedSaveEffects;
   readonly postSaveAreaEffect: SpellPostSaveAreaEffect | null;
@@ -4932,6 +4933,7 @@ export function saveGatedDamageMechanicsFacts(
       targeting: readyFacts.targeting,
       rangeFeet: readyFacts.rangeFeet,
       saveRollModeRule: saveGatedDamageSaveRollModeRule(spell, phase),
+      saveCoverBenefit: phase.saveCoverBenefit ?? "available",
       successDamage: phase.onSuccess.kind === "half_damage" ? "half" : "none",
       failedSaveEffects: readyFacts.failedSaveEffects,
       postSaveAreaEffect,
@@ -5337,6 +5339,7 @@ export function saveGatedDamageInvocationsFromFacts(
     failedSaveConditionEffects: input.facts.failedSaveEffects.conditionEffects,
     failedSaveAbilityChoices: input.facts.failedSaveEffects.abilityChoices,
     saveRollModeRule: input.facts.saveRollModeRule,
+    saveCoverBenefit: input.facts.saveCoverBenefit,
     ...(input.facts.postSaveAreaEffect === null
       ? {}
       : { postSaveAreaEffect: input.facts.postSaveAreaEffect }),

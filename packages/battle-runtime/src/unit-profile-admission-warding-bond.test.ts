@@ -642,6 +642,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     ]);
     expect(savingThrowFlatBonusProjections(resolved.state, "wis")).toEqual([
       {
+        kind: "effect",
         targetId: spellTargetId,
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
@@ -719,6 +720,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         combatantId: spellTargetId,
         targetFlatBonuses: expect.arrayContaining([
           {
+            kind: "effect",
             targetId: spellTargetId,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: effect.sourceProcedureRef,

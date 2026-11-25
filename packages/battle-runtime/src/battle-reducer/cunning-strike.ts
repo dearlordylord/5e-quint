@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   difficultyClass,
@@ -515,7 +516,7 @@ function resolveCunningStrikeSavingThrow(
   return {
     tag: "ok",
     state:
-      fill.value.outcomes[0]?.succeeded === true
+      savingThrowOutcomesThatStand(fill.value).outcomes[0]?.succeeded === true
         ? savingThrowState
         : applyFailure(savingThrowState),
   };

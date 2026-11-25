@@ -121,7 +121,7 @@ import {
   resolveProtectionRelevantEffectSaveCommand,
 } from "./protection-charm-procedures.ts";
 import { resolveCastAttackHitBonusActionSpellCommand } from "./attack-hit-bonus-action-spell-procedures.ts";
-import { resolveD20TestNaturalOneRerollFills } from "./d20-test-natural-one-reroll-procedures.ts";
+import { resolveD20TestRerollFills } from "./d20-test-reroll-fills.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { battleReducerRouteForInterrupt } from "./interrupt-route-projection.ts";
 import { battleReducerRouteForResolution } from "./reducer-route.ts";
@@ -190,9 +190,18 @@ import {
   resolveMovementProcedure,
 } from "./movement-procedures.ts";
 import {
+  isChangeWeaponAfterAttackSubject,
+  resolveChangeWeaponAfterAttack,
+} from "./attack-weapon-change.ts";
+import { isEndTurnSubject } from "./reducer-route-subject-query.ts";
+import {
   isObjectInteractionSubject,
   resolveObjectInteraction,
 } from "./object-interaction.ts";
+import {
+  isWeaponGripChangeSubject,
+  resolveWeaponGripChange,
+} from "./weapon-grip.ts";
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
@@ -407,15 +416,34 @@ function resolveBattleSubjectInternal(
     /* v8 ignore stop -- @preserve */
     return resolveBattleSubjectInternal(replayAdmission.input, options);
   }
-  const d20TestNaturalOneRerollResult = resolveD20TestNaturalOneRerollFills({
+  const d20TestRerolls = resolveD20TestRerollFills({
     resolutionInput: input,
     resolvePrefix: (prefixInput) =>
-      resolveBattleSubjectAfterD20TestNaturalOneReroll(prefixInput, options),
+      resolveBattleSubjectAfterD20TestRerolls(prefixInput, options),
   });
-  if (d20TestNaturalOneRerollResult !== undefined) {
-    return d20TestNaturalOneRerollResult;
+  if (d20TestRerolls.tag === "settled") {
+    return d20TestRerolls.result;
   }
-  return resolveBattleSubjectAfterD20TestNaturalOneReroll(input, options);
+  if (d20TestRerolls.state === input.state) {
+    return resolveBattleSubjectAfterD20TestRerolls(input, options);
+  }
+  const rerolledAdmission = admitBattleResolutionInput({
+    ...input,
+    state: d20TestRerolls.state,
+  });
+  /* v8 ignore start -- @preserve -- Spending Heroic Inspiration changes only the roller's Heroic Inspiration and the subject's accepted rolls, and preserves every admitted procedure binding. */
+  if (rerolledAdmission.tag === "staleCharacterProcedure") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The selected character procedure reference is no longer bound to this actor.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return resolveBattleSubjectAfterD20TestRerolls(
+    rerolledAdmission.input,
+    options,
+  );
 }
 
 const INTERRUPT_COMMAND_REQUIRES_CHECKPOINT = {
@@ -782,7 +810,7 @@ function isSpatialMeleeSpellAttackProxySubject(
   return subject.tag === "actionSpell" || subject.tag === "bonusActionSpell";
 }
 
-function resolveBattleSubjectAfterD20TestNaturalOneReroll(
+function resolveBattleSubjectAfterD20TestRerolls(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
@@ -889,22 +917,21 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         },
       );
     }
-    if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
-      return resolveOffHandAttack({
-        ...input,
-        subject,
-        ...interruptConsumerOptions,
-      });
-    }
-    if (
-      subject.tag === "bonusAction" &&
-      subject.action === "martialArtsUnarmedStrike"
-    ) {
-      return resolveMartialArtsBonusUnarmedStrike({
-        ...input,
-        subject,
-        ...interruptConsumerOptions,
-      });
+    if (subject.tag === "bonusAction") {
+      if (subject.action === "offHandAttack") {
+        return resolveOffHandAttack({
+          ...input,
+          subject,
+          ...interruptConsumerOptions,
+        });
+      }
+      if (subject.action === "martialArtsUnarmedStrike") {
+        return resolveMartialArtsBonusUnarmedStrike({
+          ...input,
+          subject,
+          ...interruptConsumerOptions,
+        });
+      }
     }
     if (subject.tag === "monkFocusOption") {
       return resolveMonkFocusOption({ ...input, subject });
@@ -976,7 +1003,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
-    if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
+    if (isEndTurnSubject(subject)) {
       return input.state.currentTurnResources.compelledHalt === null
         ? resolveEndTurnCommand({
             ...input,
@@ -1006,8 +1033,14 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...handledInterruptRouteOption,
       });
     }
+    if (isChangeWeaponAfterAttackSubject(subject)) {
+      return resolveChangeWeaponAfterAttack({ ...input, subject });
+    }
     if (isObjectInteractionSubject(subject)) {
       return resolveObjectInteraction({ ...input, subject });
+    }
+    if (isWeaponGripChangeSubject(subject)) {
+      return resolveWeaponGripChange({ ...input, subject });
     }
     if (isPersistentSpatialSpellProcedureSubject(subject)) {
       return resolvePersistentSpatialSpellProcedureCommand({

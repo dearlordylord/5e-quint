@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.RANGED_CLOSE_COMBAT_ROLL_MODE
+import { battleGroundObjectState } from "./battle-reducer/object-custody-queries.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -502,7 +503,7 @@ describe("Sanctuary targeting interdiction", () => {
       throw new Error(`Expected the lost throw to resolve, got ${lost.tag}.`);
     }
     expect(lost.droppedObjects).toBeUndefined();
-    expect(lost.state.groundObjects.has(attackerId)).toBe(false);
+    expect(lost.state.objectCustody.has(attackerId)).toBe(false);
   });
 
   test("a thrown Dagger moved to a new target keeps its landing position", () => {
@@ -568,7 +569,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const daggerId = battleObjectId("main:weapon_dagger");
     expect(
-      missed.state.groundObjects.get(attackerId)?.get(daggerId)?.positionId,
+      battleGroundObjectState(missed.state, attackerId, daggerId)?.positionId,
     ).toBe(landing.positionId);
     expect(missed.droppedObjects).toEqual([
       {

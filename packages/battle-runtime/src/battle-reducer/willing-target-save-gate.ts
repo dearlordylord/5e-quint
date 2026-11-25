@@ -101,6 +101,12 @@ export function resolveWillingTargetSaveGate(input: {
           input.state,
           input.actorId,
           input.invocation,
+          {
+            targetSelection: {
+              targetIds: [input.targetId],
+              spatialFacts: input.targetSpatialFacts,
+            },
+          },
         ),
       ]),
     };

@@ -45,6 +45,8 @@ module battleRuntimeSubjectKinds {
     | RuntimeEffectControlSubjectKind
     | RuntimeHeldObjectReleaseSubjectKind
     | RuntimeObjectInteractionSubjectKind
+    | RuntimeAttackWeaponChangeSubjectKind
+    | RuntimeWeaponGripSubjectKind
     | RuntimeProtectionSaveSubjectKind
     | RuntimeProtectionPreventionSubjectKind
     | RuntimeTransformationModeSubjectKind

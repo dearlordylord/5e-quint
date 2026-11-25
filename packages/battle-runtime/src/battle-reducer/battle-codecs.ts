@@ -42,6 +42,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
+import { COVER_BONUS_BY_DEGREE } from "@dnd/shared-algebras/cover-algebra";
 import {
   AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   OBJECT_INTERACTION_STATES,
@@ -58,6 +59,7 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
+  BONUS_COVER_TYPES,
   COVER_TYPES,
   RULED_COVER_TYPES,
   CreatureId,
@@ -224,6 +226,7 @@ import {
 } from "../unit-feature-support.ts";
 import {
   BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
+  WEAPON_CHANGE_AFTER_ATTACK_STATES,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
@@ -241,6 +244,7 @@ import type { StatBlockExecutionSnapshot } from "../stat-block-execution-state.t
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
+  BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES,
 } from "../battle-state-execution.ts";
 import {
   ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS,
@@ -1431,6 +1435,7 @@ export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
       procedureRef: BattleProcedureExecutionRef,
       formExecutionRef: BattleStatBlockExecutionScopeRef,
     }),
+    Schema.Struct({ kind: Schema.Literal("attackWeaponChange") }),
     Schema.Struct({
       kind: Schema.Literal("thrownWeaponAttack"),
       procedureRef: BattleAttackProcedureExecutionRef,
@@ -1461,12 +1466,27 @@ const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
   rollMode: Schema.Literals(ATTACK_ROLL_MODES),
 });
 
-const BattleSavingThrowFlatBonusProjectionSchema = Schema.Struct({
-  targetId: CombatantId,
-  sourceCombatantId: CombatantId,
-  sourceProcedureRef: BattleProcedureExecutionRef,
-  bonus: Schema.Finite,
-});
+const BattleSavingThrowFlatBonusProjectionSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("effect"),
+    targetId: CombatantId,
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    bonus: Schema.Finite,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cover"),
+    targetId: CombatantId,
+    cover: Schema.Literal("half"),
+    bonus: Schema.Literal(COVER_BONUS_BY_DEGREE.half),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cover"),
+    targetId: CombatantId,
+    cover: Schema.Literal("threeQuarters"),
+    bonus: Schema.Literal(COVER_BONUS_BY_DEGREE.threeQuarters),
+  }),
+]);
 
 const BattleDamageOccurrenceSourceSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("untrackedDamage") }),
@@ -1765,6 +1785,33 @@ const HeroicInspirationRerollHoleOptionsFields = (() => {
   };
 })();
 
+/** Every reroll a D20 Test hole can offer, outside attack-only sources. */
+const D20TestRerollHoleOptionsFields = mergeBattleHoleFieldPairs(
+  D20TestNaturalOneRerollHoleOptionsFields,
+  HeroicInspirationRerollHoleOptionsFields,
+);
+
+/** A labeled D20 Test hole member with the rerolls it can offer. */
+function withD20TestRerollLabeledHoleOptions<
+  const Fields extends Schema.Struct.Fields,
+>(schema: Schema.Struct<Fields>) {
+  return schema.pipe(
+    Schema.fieldsAssign(D20TestRerollHoleOptionsFields.labeled),
+  );
+}
+
+/** The mechanical D20 Test hole member with the rerolls it can offer. */
+function withD20TestRerollMechanicalHoleOptions<
+  const Fields extends Schema.Struct.Fields & {
+    readonly label: Schema.Top;
+  },
+>(schema: Schema.Struct<Fields>) {
+  return mechanicalBattleHoleSchemaFromLabeled(schema).pipe(
+    Schema.fieldsAssign(D20TestRerollHoleOptionsFields.mechanical),
+    Schema.annotate({}),
+  );
+}
+
 const AttackRollFeatureActivationFields = (() => {
   const schemas = pairedBattleHoleNestedMemberVariants(
     {
@@ -1901,7 +1948,23 @@ const BattleInterruptDecisionHolePayloadMember = pairedBattleHoleMember({
   eligibleResponders: Schema.Array(CombatantId),
 });
 
-const GenericSavingThrowHolePayloadMembers = [
+/** The direction a directional persistent area moves in: not a D20 Test. */
+const DirectionalPersistentAreaDirectionChoiceHolePayloadMember = Schema.Struct(
+  {
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
+    label: Schema.String,
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
+    areaId: BattleAreaId,
+    directionId: BattleLineDirectionId,
+    requiresTableSpatialFact: Schema.Literal(true),
+  },
+);
+
+/** Saving Throw holes: each a D20 Test that declares its reroll options. */
+const GenericSavingThrowHoleBaseMembers = [
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
@@ -2099,17 +2162,6 @@ const GenericSavingThrowHolePayloadMembers = [
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
-    label: Schema.String,
-    sourceCombatantId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    effectRef: BattleEffectExecutionRef,
-    areaId: BattleAreaId,
-    directionId: BattleLineDirectionId,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     spellConditionEndTurnSave: Schema.Struct({
@@ -2191,53 +2243,43 @@ const GenericSavingThrowHolePayloadMembers = [
   }),
 ] as const;
 
+const GenericSavingThrowHolePayloadMembers = [
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[0]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[1]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[2]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[3]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[4]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[5]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[6]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[7]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[8]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[9]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[10]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[11]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[12]),
+  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[13]),
+] as const satisfies {
+  readonly length: (typeof GenericSavingThrowHoleBaseMembers)["length"];
+};
+
 const GenericSavingThrowMechanicalHolePayloadMembers = [
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[0],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[1],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[2],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[3],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[4],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[5],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[6],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[7],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[8],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[9],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[10],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[11],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[12],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[13],
-  ),
-  mechanicalBattleHoleSchemaFromLabeled(
-    GenericSavingThrowHolePayloadMembers[14],
-  ),
-] as const;
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[0]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[1]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[2]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[3]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[4]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[5]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[6]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[7]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[8]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[9]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[10]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[11]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[12]),
+  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[13]),
+] as const satisfies {
+  readonly length: (typeof GenericSavingThrowHoleBaseMembers)["length"];
+};
 
 const AdditionalStructuralHolePayloadMembers = [
   Schema.Struct({
@@ -2274,6 +2316,13 @@ const AdditionalStructuralHolePayloadMembers = [
     directionRequirement: Schema.Literal("awayFromSource"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("turnStartHeroicInspirationChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    sourceTurn: BattleStartTurnSourceTurnSchema,
+    occurrenceId: BattleStartTurnOccurrenceId,
+  }),
 ] as const;
 
 const AdditionalStructuralMechanicalHolePayloadMembers = [
@@ -2295,7 +2344,18 @@ const AdditionalStructuralMechanicalHolePayloadMembers = [
   mechanicalBattleHoleSchemaFromLabeled(
     AdditionalStructuralHolePayloadMembers[2],
   ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    AdditionalStructuralHolePayloadMembers[3],
+  ),
 ] as const;
+
+const BattleSpellSaveCoverSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("denied") }),
+  Schema.Struct({
+    kind: Schema.Literal("ruledOnSpellTargets"),
+    targetIds: Schema.NonEmptyArray(CombatantId),
+  }),
+]);
 
 const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ...BattleHoleBaseFieldsSchema,
@@ -2306,6 +2366,7 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
   targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
   targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  saveCover: Schema.optionalKey(BattleSpellSaveCoverSchema),
   relationshipFactRequest: Schema.optionalKey(
     BattleSavingThrowRelationshipFactRequestSchema,
   ),
@@ -2506,22 +2567,27 @@ const BattleHolePayloadMembers = [
     choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    outcomeTargeting: Schema.Literal("targetList"),
-    objectContactSave: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      objectId: BattleObjectId,
-      targetIds: Schema.Array(CombatantId),
-    }),
-    ability: Schema.Literal("con"),
-    dc: Schema.Struct({ kind: Schema.Literal("caster_spell_save_dc") }),
-    areaChoices: Schema.Tuple([]),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      outcomeTargeting: Schema.Literal("targetList"),
+      objectContactSave: Schema.Struct({
+        sourceCombatantId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        objectId: BattleObjectId,
+        targetIds: Schema.Array(CombatantId),
+      }),
+      ability: Schema.Literal("con"),
+      dc: Schema.Struct({ kind: Schema.Literal("caster_spell_save_dc") }),
+      areaChoices: Schema.Tuple([]),
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("objectDropResolution"),
@@ -2542,6 +2608,12 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("objectInteractionRuling"),
     actorId: CombatantId,
     objectInteraction: Schema.Literals(OBJECT_INTERACTION_STATES),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("weaponDropPosition"),
+    actorId: CombatantId,
+    objectId: BattleObjectId,
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3053,47 +3125,57 @@ const BattleHolePayloadMembers = [
     maxDistanceFeet: MovementFeet,
     requiresTableSpatialFact: Schema.Literal(true),
   }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    spellTurnStartSave: Schema.Struct({
-      targetId: CombatantId,
-      effectRef: BattleEffectExecutionRef,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      save: Schema.Struct({
-        ability: AbilitySchema,
-        dc: DcSourceSchema,
-        successEnds: Schema.Literal("spell"),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      spellTurnStartSave: Schema.Struct({
+        targetId: CombatantId,
+        effectRef: BattleEffectExecutionRef,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        sourceCombatantId: CombatantId,
+        save: Schema.Struct({
+          ability: AbilitySchema,
+          dc: DcSourceSchema,
+          successEnds: Schema.Literal("spell"),
+        }),
       }),
-    }),
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: Schema.Tuple([]),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    directionalPersistentArea: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      directionId: BattleLineDirectionId,
-      trigger: Schema.Literal("endsTurnInLine"),
-      save: Schema.Struct({
-        ability: Schema.Literal("str"),
-        dc: DcSourceSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: Schema.Tuple([]),
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      directionalPersistentArea: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        effectRef: BattleEffectExecutionRef,
+        areaId: BattleAreaId,
+        directionId: BattleLineDirectionId,
+        trigger: Schema.Literal("endsTurnInLine"),
+        save: Schema.Struct({
+          ability: Schema.Literal("str"),
+          dc: DcSourceSchema,
+        }),
+        pushDistanceFeet: MovementFeet,
       }),
-      pushDistanceFeet: MovementFeet,
-    }),
-    ability: Schema.Literal("str"),
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
+      ability: Schema.Literal("str"),
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
@@ -3104,122 +3186,152 @@ const BattleHolePayloadMembers = [
     directionId: BattleLineDirectionId,
     requiresTableSpatialFact: Schema.Literal(true),
   }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    spellConditionEndTurnSave: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      condition: Schema.Literals(ALL_CONDITIONS),
-      save: SpellConditionRepeatSaveSchema,
-    }),
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    spellConditionCountedEndTurnSave: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      condition: Schema.Literals(ALL_CONDITIONS),
-      save: SpellConditionRepeatSaveSchema,
-      successes: Schema.Finite,
-      failures: Schema.Finite,
-      successThreshold: Schema.Finite,
-      failureThreshold: Schema.Finite,
-    }),
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    unitFeatureConditionEndTurnSave: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      condition: Schema.Literals(ALL_CONDITIONS),
-      save: SpellConditionRepeatSaveSchema,
-    }),
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    abilityD20TestRollModeEndTurnSave: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      affectedAbility: AbilitySchema,
-      save: SpellConditionRepeatSaveSchema,
-    }),
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    movableZone: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "endsTurnWithinFiveFeetOfSphere",
-        "rammedBySphere",
-      ]),
-      save: Schema.Struct({
-        ability: Schema.Literal("dex"),
-        dc: DcSourceSchema,
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      spellConditionEndTurnSave: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        condition: Schema.Literals(ALL_CONDITIONS),
+        save: SpellConditionRepeatSaveSchema,
       }),
-    }),
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      spellConditionCountedEndTurnSave: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        condition: Schema.Literals(ALL_CONDITIONS),
+        save: SpellConditionRepeatSaveSchema,
+        successes: Schema.Finite,
+        failures: Schema.Finite,
+        successThreshold: Schema.Finite,
+        failureThreshold: Schema.Finite,
       }),
-    ),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    movableZone: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "appearsInArea",
-        "areaMovesIntoSpace",
-        "entersArea",
-        "endsTurnInArea",
-      ]),
-      save: Schema.Struct({
-        ability: Schema.Literal("con"),
-        dc: DcSourceSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      unitFeatureConditionEndTurnSave: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        condition: Schema.Literals(ALL_CONDITIONS),
+        save: SpellConditionRepeatSaveSchema,
       }),
-    }),
-    ability: Schema.Literal("con"),
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      abilityD20TestRollModeEndTurnSave: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        affectedAbility: AbilitySchema,
+        save: SpellConditionRepeatSaveSchema,
       }),
-    ),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      movableZone: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        effectRef: BattleEffectExecutionRef,
+        areaId: BattleAreaId,
+        trigger: Schema.Literals([
+          "endsTurnWithinFiveFeetOfSphere",
+          "rammedBySphere",
+        ]),
+        save: Schema.Struct({
+          ability: Schema.Literal("dex"),
+          dc: DcSourceSchema,
+        }),
+      }),
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(
+        Schema.Struct({
+          targetId: CombatantId,
+          rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+        }),
+      ),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      movableZone: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        effectRef: BattleEffectExecutionRef,
+        areaId: BattleAreaId,
+        trigger: Schema.Literals([
+          "appearsInArea",
+          "areaMovesIntoSpace",
+          "entersArea",
+          "endsTurnInArea",
+        ]),
+        save: Schema.Struct({
+          ability: Schema.Literal("con"),
+          dc: DcSourceSchema,
+        }),
+      }),
+      ability: Schema.Literal("con"),
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(
+        Schema.Struct({
+          targetId: CombatantId,
+          rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+        }),
+      ),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("movableZoneRamMovement"),
@@ -3243,21 +3355,30 @@ const BattleHolePayloadMembers = [
     }),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    protectionRelevantEffectSave: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      relevantEffect: Schema.Literals(["charmed", "frightened", "possession"]),
-      save: SpellConditionRepeatSaveSchema,
-    }),
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      protectionRelevantEffectSave: Schema.Struct({
+        ...BattleProcedureSourceSchema,
+        effectRef: BattleEffectExecutionRef,
+        relevantEffect: Schema.Literals([
+          "charmed",
+          "frightened",
+          "possession",
+        ]),
+        save: SpellConditionRepeatSaveSchema,
+      }),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: EmptySpellAreaChoicesSchema,
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestRerollHoleOptionsFields,
+  ),
   pairedBattleHoleMemberWithFields(
     {
       ...BattleHoleBaseFieldsSchema,
@@ -3282,7 +3403,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3301,7 +3422,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3309,7 +3430,7 @@ const BattleHolePayloadMembers = [
       outcomeTargeting: Schema.Literals(["singleTarget", "targetList"]),
       areaInput: Schema.optionalKey(Schema.Never),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3317,7 +3438,7 @@ const BattleHolePayloadMembers = [
       outcomeTargeting: Schema.Literal("area"),
       areaInput: BattleSpellAreaInputRequestSchema,
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3336,7 +3457,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3357,7 +3478,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3376,7 +3497,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedUnqualifiedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3418,7 +3539,7 @@ const BattleHolePayloadMembers = [
       combatantId: CombatantId,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3439,7 +3560,7 @@ const BattleHolePayloadMembers = [
       ),
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleMovementHoleCommonFieldsSchema,
@@ -3475,7 +3596,7 @@ const BattleHolePayloadMembers = [
       dc: DifficultyClass,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3510,7 +3631,7 @@ const BattleHolePayloadMembers = [
         }),
       ]),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    D20TestRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3613,6 +3734,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   FirstBattleHolePayloadMember.labeled,
   ...RemainingBattleHolePayloadMembers.map(({ labeled }) => labeled),
   ...GenericSavingThrowHolePayloadMembers,
+  DirectionalPersistentAreaDirectionChoiceHolePayloadMember,
   ...AdditionalStructuralHolePayloadMembers,
 ]);
 
@@ -3634,6 +3756,7 @@ const BattleOrdinaryHolePayloadUnionSchema = Schema.Union([
   FirstBattleHolePayloadMember.labeled,
   ...RemainingBattleHolePayloadMembers.map(({ labeled }) => labeled),
   ...GenericSavingThrowHolePayloadMembers,
+  DirectionalPersistentAreaDirectionChoiceHolePayloadMember,
   ...AdditionalStructuralHolePayloadMembers,
 ]);
 export const BattleOrdinaryHoleSchema: Schema.Codec<
@@ -3660,6 +3783,9 @@ const BattleMechanicalOrdinaryHoleCodecSchema = Schema.Union([
     ({ mechanical }) => mechanical,
   ),
   ...GenericSavingThrowMechanicalHolePayloadMembers,
+  mechanicalBattleHoleSchemaFromLabeled(
+    DirectionalPersistentAreaDirectionChoiceHolePayloadMember,
+  ),
   ...AdditionalStructuralMechanicalHolePayloadMembers,
 ]);
 export const BattleMechanicalOrdinaryHoleSchema: typeof BattleMechanicalOrdinaryHoleCodecSchema =
@@ -3717,7 +3843,10 @@ const BattleD20TestRollReplacementSchema = Schema.Struct({
 
 const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
-  result: BattleD20TestRollReplacementSchema,
+  result: Schema.Struct({
+    ...BattleD20TestRollReplacementSchema.fields,
+    d20TestRoll: BattleD20TestMultipleRollSchema,
+  }),
 });
 
 function battleD20TestRollRerollDecisionSchema<const EffectKind extends string>(
@@ -3761,55 +3890,86 @@ const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
   result: Schema.Struct({
     succeeded: Schema.Boolean,
-    d20TestRoll: BattleD20TestRollSchema,
+    d20TestRoll: BattleD20TestMultipleRollSchema,
   }),
 });
 
-const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("decline"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("reroll"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: Schema.Struct({
-      succeeded: Schema.Boolean,
-      d20TestRoll: BattleD20TestRollSchema,
+function battleD20TestOutcomeRerollDecisionSchema<
+  const EffectKind extends string,
+>(effectKind: EffectKind) {
+  return Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("decline"),
+      effectKind: Schema.Literal(effectKind),
     }),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("rerollRolledDie"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: BattleD20TestRolledDieOutcomeReplacementSchema,
-  }),
-]);
+    Schema.Struct({
+      kind: Schema.Literal("reroll"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: Schema.Struct({
+        succeeded: Schema.Boolean,
+        d20TestRoll: BattleD20TestRollSchema,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rerollRolledDie"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: BattleD20TestRolledDieOutcomeReplacementSchema,
+    }),
+  ]);
+}
 
-const BattleD20TestNaturalOneRerollDieDecisionSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("decline"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("reroll"),
-    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: D20Roll,
-  }),
-]);
+function battleD20TestDieRerollDecisionSchema<const EffectKind extends string>(
+  effectKind: EffectKind,
+) {
+  return Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("decline"),
+      effectKind: Schema.Literal(effectKind),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("reroll"),
+      effectKind: Schema.Literal(effectKind),
+      replacement: D20Roll,
+    }),
+  ]);
+}
+
+const BattleRolledOutcomeD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
+  Schema.Union([
+    battleD20TestOutcomeRerollDecisionSchema("d20_test_natural_one_reroll"),
+    battleD20TestOutcomeRerollDecisionSchema(
+      HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+    ),
+  ]),
+);
+
+const BattleDeathSavingThrowD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
+  Schema.Union([
+    battleD20TestDieRerollDecisionSchema("d20_test_natural_one_reroll"),
+    battleD20TestDieRerollDecisionSchema(HEROIC_INSPIRATION_REROLL_EFFECT_KIND),
+  ]),
+);
+
+const BattleAbilityCheckD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
+  Schema.Union([
+    BattleD20TestNaturalOneRerollDecisionSchema,
+    BattleHeroicInspirationRerollDecisionSchema,
+  ]),
+);
 
 const BattleD20TestRolledOutcomeFields = {
   succeeded: Schema.Boolean,
   d20TestRoll: BattleD20TestRollSchema,
   withoutRoll: Schema.optionalKey(Schema.Never),
-  d20TestNaturalOneReroll: Schema.optionalKey(
-    BattleD20TestNaturalOneRerollOutcomeDecisionSchema,
+  d20TestRerolls: Schema.optionalKey(
+    BattleRolledOutcomeD20TestRerollDecisionsSchema,
   ),
 } as const;
 const BattleD20TestWithoutRollOutcomeFields = {
   succeeded: Schema.Boolean,
   withoutRoll: Schema.Literal(true),
   d20TestRoll: Schema.optionalKey(Schema.Never),
-  d20TestNaturalOneReroll: Schema.optionalKey(Schema.Never),
+  d20TestRerolls: Schema.optionalKey(Schema.Never),
 } as const;
 const BattleD20TestRolledOutcomeSchema = Schema.Struct(
   BattleD20TestRolledOutcomeFields,
@@ -3825,10 +3985,12 @@ const BattleSavingThrowOutcomeSchema = Schema.Union([
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestRolledOutcomeFields,
+    cover: Schema.optionalKey(Schema.Literals(BONUS_COVER_TYPES)),
   }),
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestWithoutRollOutcomeFields,
+    cover: Schema.optionalKey(Schema.Never),
   }),
 ]);
 
@@ -4462,6 +4624,11 @@ type BattleFillEncoded =
       readonly value: (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
     }
   | {
+      readonly kind: "turnStartHeroicInspirationChoice";
+      readonly holeId: string;
+      readonly value: (typeof BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES)[number];
+    }
+  | {
       readonly kind: "persistentAreaSourceTurnTranslation";
       readonly holeId: string;
       readonly value: {
@@ -4715,6 +4882,13 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "weaponDropPosition";
+      readonly holeId: string;
+      readonly value: {
+        readonly positionId: string;
+      };
+    }
+  | {
       readonly kind: "toolPossessionFacts";
       readonly holeId: string;
       readonly value: {
@@ -4798,16 +4972,9 @@ type BattleFillEncoded =
       readonly kind: "deathSavingThrow";
       readonly holeId: string;
       readonly value: number;
-      readonly d20TestNaturalOneReroll?:
-        | {
-            readonly kind: "decline";
-            readonly effectKind: "d20_test_natural_one_reroll";
-          }
-        | {
-            readonly kind: "reroll";
-            readonly effectKind: "d20_test_natural_one_reroll";
-            readonly replacement: number;
-          };
+      readonly d20TestRerolls?: Schema.Codec.Encoded<
+        typeof BattleDeathSavingThrowD20TestRerollDecisionsSchema
+      >;
     }
   | {
       readonly kind: "statBlockRechargeRoll";
@@ -4949,7 +5116,9 @@ type BattleFillEncoded =
       readonly value: {
         readonly total: number;
         readonly d20TestRoll?: BattleD20TestRollEncoded;
-        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
+        readonly d20TestRerolls?: Schema.Codec.Encoded<
+          typeof BattleAbilityCheckD20TestRerollDecisionsSchema
+        >;
       };
       readonly spatialFacts?: readonly {
         readonly kind: "spellRestraintEscapeActorWithinTargetReach";
@@ -5732,6 +5901,11 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Literals(BATTLE_TEMPORARY_HIT_POINT_CHOICES),
     }),
     Schema.Struct({
+      kind: Schema.Literal("turnStartHeroicInspirationChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literals(BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("persistentAreaSourceTurnTranslation"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -5869,6 +6043,13 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
+      kind: Schema.Literal("weaponDropPosition"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        positionId: BattleTablePositionId,
+      }),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("toolPossessionFacts"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -5955,8 +6136,8 @@ export const BattleFillSchema: Schema.Codec<
       kind: Schema.Literal("deathSavingThrow"),
       holeId: BattleHoleIdSchema,
       value: D20Roll,
-      d20TestNaturalOneReroll: Schema.optionalKey(
-        BattleD20TestNaturalOneRerollDieDecisionSchema,
+      d20TestRerolls: Schema.optionalKey(
+        BattleDeathSavingThrowD20TestRerollDecisionsSchema,
       ),
     }),
     Schema.Struct({
@@ -6015,8 +6196,8 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.check(Schema.isInt())),
         d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
-        d20TestNaturalOneReroll: Schema.optionalKey(
-          BattleD20TestNaturalOneRerollDecisionSchema,
+        d20TestRerolls: Schema.optionalKey(
+          BattleAbilityCheckD20TestRerollDecisionsSchema,
         ),
       }),
       spatialFacts: Schema.optionalKey(
@@ -6282,6 +6463,7 @@ const BattleTurnSnapshotInferredSchema = Schema.Struct({
   levelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   quickenedLevelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   attackRollMadeThisTurn: Schema.Boolean,
+  weaponChangeAfterAttack: Schema.Literals(WEAPON_CHANGE_AFTER_ATTACK_STATES),
   brutalStrikeChosenThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
     Schema.Struct({
@@ -8047,6 +8229,26 @@ function serializedSubjectProcedureReference(
 const noSerializedExecutionReferences =
   (): readonly SerializedExecutionReferenceOwnership[] => [];
 
+function savingThrowFlatBonusReferences(
+  bonuses: readonly Schema.Schema.Type<
+    typeof BattleSavingThrowFlatBonusProjectionSchema
+  >[],
+): readonly SerializedExecutionReferenceOwnership[] {
+  return bonuses.flatMap((bonus) =>
+    Match.value(bonus).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        effect: (effect) => [
+          serializedExecutionReference(
+            effect.sourceProcedureRef,
+            effect.sourceCombatantId,
+          ),
+        ],
+        cover: () => [],
+      }),
+    ),
+  );
+}
+
 function serializedBattleHoleExecutionReferences(
   hole: EncodedBattleHole,
 ): readonly SerializedExecutionReferenceOwnership[] {
@@ -8123,9 +8325,7 @@ function serializedBattleHoleExecutionReferences(
   const savingThrowReferences = (
     value: Extract<EncodedBattleHole, { readonly kind: "savingThrowOutcome" }>,
   ): readonly SerializedExecutionReferenceOwnership[] => {
-    const bonuses = value.targetFlatBonuses.map((bonus) =>
-      owned(bonus.sourceProcedureRef, bonus.sourceCombatantId),
-    );
+    const bonuses = savingThrowFlatBonusReferences(value.targetFlatBonuses);
     const procedureSource = (owner: {
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly sourceCombatantId: CombatantId;
@@ -8627,6 +8827,7 @@ function serializedBattleHoleExecutionReferences(
       ],
       heldObjectFacts: noSerializedExecutionReferences,
       objectInteractionRuling: noSerializedExecutionReferences,
+      weaponDropPosition: noSerializedExecutionReferences,
       weaponAttackDamageEnhancementTargetItem: (value) => [
         source(value.sourceProcedureRef),
       ],
@@ -8721,6 +8922,9 @@ function serializedBattleHoleExecutionReferences(
           value.sourceTurn.actorId,
         ),
       ],
+      turnStartHeroicInspirationChoice: (value) => [
+        source(value.sourceProcedureRef, value.sourceTurn.actorId),
+      ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
       spellcastingAbilityCheck: (value) => {
@@ -8768,9 +8972,7 @@ function serializedBattleHoleExecutionReferences(
           value.damageOccurrence,
           value.combatantId,
         ),
-        ...value.targetFlatBonuses.map((bonus) =>
-          owned(bonus.sourceProcedureRef, bonus.sourceCombatantId),
-        ),
+        ...savingThrowFlatBonusReferences(value.targetFlatBonuses),
       ],
       cunningStrikeEndTurnCoverFacts: noSerializedExecutionReferences,
       deathSavingThrow: noSerializedExecutionReferences,
@@ -8942,6 +9144,8 @@ function serializedRuntimeCommandReferencePolicy(
       dropProne: actorOwned,
       interactWithObject: actorOwned,
       pickUpHeldWeapon: actorOwned,
+      changeWeaponAfterAttack: actorOwned,
+      changeWeaponGrip: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
       endPersistentAreaSaveConditionEscapeForDeparture: actorOwned,

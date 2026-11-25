@@ -168,6 +168,15 @@ export {
 
 export { interruptChoiceResponderId } from "./battle-state-execution.ts";
 export { ALLOCATED_SPELL_DAMAGE_CHOICE_REJECTION_PRIORITY } from "./battle-reducer/spells-damage-fills.ts";
+export {
+  SAVING_THROW_COVER_RULINGS,
+  savingThrowCoverRuling,
+  type SavingThrowCoverRuling,
+} from "./battle-reducer/saving-throw-cover.ts";
+export {
+  UNOWNED_SPELL_MECHANICS_FACETS,
+  type UnownedSpellMechanicsFacet,
+} from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 
 export {
   spellActiveEffectExecutionRef,
@@ -447,7 +456,8 @@ export {
   type BattleActPresentation,
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
-  type BattleActorGroundObjects,
+  type BattleActorObjectCustody,
+  type BattleObjectCustody,
   type BattleActiveEffectExpiration,
   type BattleAcrobaticMovementFact,
   type BattleAcrobaticMovementPath,
@@ -712,11 +722,11 @@ export {
   type WildShapeLoadoutObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
-  battleObjectIsOnGround,
   battleStateWithGroundObjects,
   type BattleGroundObjectPlacement,
   type BattleGroundObjectPlacementResult,
 } from "./battle-reducer/battle-object-lifecycle.ts";
+export { battleObjectIsOnGround } from "./battle-reducer/object-custody-queries.ts";
 export {
   characterEffectiveLoadout,
   characterEffectiveLoadoutFromOrigin,
@@ -814,6 +824,7 @@ export {
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
+  COMBAT_TURN_START_HEROIC_INSPIRATION_SUPPORT_PROFILE,
   CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,

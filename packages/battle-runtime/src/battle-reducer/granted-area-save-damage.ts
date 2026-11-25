@@ -22,6 +22,7 @@ import {
   fillsMatchingHoleIds,
   resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import {
   applyAvailableSpellDamageReduction,
   damageAmountByTypeAfterTargetAdjustments,
@@ -142,7 +143,7 @@ function resolveGrantedAreaSaveDamageActionWithEffect(
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
   /* v8 ignore stop -- @preserve */
-  const outcomes = saveFill.value.outcomes;
+  const outcomes = savingThrowOutcomesThatStand(saveFill.value).outcomes;
   const savingThrowTargetIds = outcomes.map((outcome) => outcome.targetId);
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     saveFill.relationshipFacts ?? [],

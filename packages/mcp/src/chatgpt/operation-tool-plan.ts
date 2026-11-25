@@ -148,6 +148,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     objectContactTargets: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     objectDropResolution: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     objectInteractionRuling: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
+    weaponDropPosition: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     objectTargetChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     ongoingSpellTargetChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     persistentAreaSourceTurnTranslation: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
@@ -172,6 +173,7 @@ export const CHATGPT_OPERATION_EXPOSURE = {
     temporaryAbilityCheckRollModeActiveEffectCount:
       CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     temporaryHitPointChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
+    turnStartHeroicInspirationChoice: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     toolPossessionFacts: CHATGPT_ORDINARY_BATTLE_CONTINUATION,
     turnConstraintSomaticSpellFailureOutcome:
       CHATGPT_ORDINARY_BATTLE_CONTINUATION,

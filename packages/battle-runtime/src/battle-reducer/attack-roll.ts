@@ -1,4 +1,5 @@
 import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
+import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
@@ -501,21 +502,24 @@ export function consumeHelpAttackForAttackRoll(
   };
 }
 
-export function applyWeaponMasterySapOnHit(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): BattleState {
-  const attacker = state.combatants.get(attackerId);
-  if (attacker === undefined) return state;
+/**
+ * The caller passes the attacker and target as they are in `state`, so the
+ * only no-op is an attack without the Sap mastery.
+ */
+export function applyWeaponMasterySapOnHit(input: {
+  readonly state: BattleState;
+  readonly attacker: BattleCreatureState;
+  readonly target: BattleCreatureState;
+  readonly attack: SupportedAttackActionOption;
+}): BattleState {
+  const { state, attacker, target, attack } = input;
+  const attackerId = attacker.combatantId;
   const selection = selectedWeaponMasteryProperty({
     attacker,
     attack,
     supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   });
-  const target = state.combatants.get(targetId);
-  if (selection === null || target === undefined) {
+  if (selection === null) {
     return state;
   }
   const allocation = allocateBattleEffectOccurrenceForCreature({
@@ -542,7 +546,7 @@ export function applyWeaponMasterySapOnHit(
   ];
   return {
     ...state,
-    combatants: new Map(state.combatants).set(targetId, {
+    combatants: new Map(state.combatants).set(target.combatantId, {
       ...allocation.owner,
       activeEffects,
     }),
@@ -628,10 +632,15 @@ export function tacticalMasterAttackWithReplacement<
   };
 }
 
+/**
+ * The caller passes the attacker and target as they are in `state`. The
+ * result is `ok` with no shove pushes only when the attack lacks the Push
+ * mastery; malformed fills return `invalid`.
+ */
 export function applyWeaponMasteryPushOnHit(input: {
   readonly state: BattleState;
-  readonly attackerId: CombatantId;
-  readonly targetId: CombatantId;
+  readonly attacker: BattleCreatureState;
+  readonly target: BattleCreatureState;
   readonly attack: SupportedAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }):
@@ -641,19 +650,13 @@ export function applyWeaponMasteryPushOnHit(input: {
       readonly shovePushes: readonly BattleShovePushOutcome[];
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const attacker = input.state.combatants.get(input.attackerId);
-  if (attacker === undefined)
-    return { tag: "ok", state: input.state, shovePushes: [] };
+  const { attacker, target } = input;
   const selection = selectedWeaponMasteryProperty({
     attacker,
     attack: input.attack,
     supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   });
   if (selection === null) {
-    return { tag: "ok", state: input.state, shovePushes: [] };
-  }
-  const target = input.state.combatants.get(input.targetId);
-  if (target === undefined) {
     return { tag: "ok", state: input.state, shovePushes: [] };
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -664,7 +667,12 @@ export function applyWeaponMasteryPushOnHit(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const pushDisposition = weaponMasteryPushDispositionForAttack(input);
+  const pushDisposition = weaponMasteryPushDispositionForAttack({
+    attackerId: attacker.combatantId,
+    targetId: target.combatantId,
+    attack: input.attack,
+    targetSpatialFacts: input.targetSpatialFacts,
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (pushDisposition === undefined) {
     return {
@@ -690,19 +698,19 @@ export function applyWeaponMasteryPushOnHit(input: {
     state: input.state,
     shovePushes: [
       {
-        targetId: input.targetId,
+        targetId: target.combatantId,
         disposition: pushDisposition,
       },
     ],
   };
 }
 
-function weaponMasteryPushDispositionForAttack(
-  input: Pick<
-    Parameters<typeof applyWeaponMasteryPushOnHit>[0],
-    "attackerId" | "targetId" | "attack" | "targetSpatialFacts"
-  >,
-):
+function weaponMasteryPushDispositionForAttack(input: {
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}):
   | Extract<
       BattleTargetSpatialFact,
       { readonly kind: "weaponMasteryPushDisposition" }
@@ -722,25 +730,28 @@ function weaponMasteryPushDispositionForAttack(
   )?.disposition;
 }
 
+/**
+ * The caller passes the attacker and target as they are in `state`, so the
+ * only no-ops are no damage and an attack without the Slow mastery.
+ */
 export function applyWeaponMasterySlowAfterDamage(input: {
   readonly state: BattleState;
-  readonly attackerId: CombatantId;
-  readonly targetId: CombatantId;
+  readonly attacker: BattleCreatureState;
+  readonly target: BattleCreatureState;
   readonly attack: SupportedAttackActionOption;
   readonly damageAmount: number;
 }): BattleState {
   if (input.damageAmount <= 0) {
     return input.state;
   }
-  const attacker = input.state.combatants.get(input.attackerId);
-  if (attacker === undefined) return input.state;
+  const { attacker, target } = input;
+  const attackerId = attacker.combatantId;
   const selection = selectedWeaponMasteryProperty({
     attacker,
     attack: input.attack,
     supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   });
-  const target = input.state.combatants.get(input.targetId);
-  if (selection === null || target === undefined) {
+  if (selection === null) {
     return input.state;
   }
   const allocation = allocateBattleEffectOccurrenceForCreature({
@@ -748,9 +759,9 @@ export function applyWeaponMasterySlowAfterDamage(input: {
     effect: {
       kind: "unitFeatureSpeedDelta",
       sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: input.attackerId,
+      sourceCombatantId: attackerId,
       deltaFeet: movementDeltaFeet(-10),
-      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
+      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
     },
   });
   const activeEffects = [
@@ -766,7 +777,7 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   ];
   return {
     ...input.state,
-    combatants: new Map(input.state.combatants).set(input.targetId, {
+    combatants: new Map(input.state.combatants).set(target.combatantId, {
       ...allocation.owner,
       activeEffects,
     }),
@@ -781,7 +792,7 @@ export function applyWeaponMasteryToppleSavingThrow(
 ):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
-  const outcomes = fill.value.outcomes;
+  const outcomes = savingThrowOutcomesThatStand(fill.value).outcomes;
   if (outcomes.length === 0) {
     return { tag: "ok", state };
   }
@@ -1101,33 +1112,40 @@ export function huntersPreyHordeBreakerDamageHole(
   };
 }
 
+type AdditionalWeaponAttackTargetAdmission = NonNullable<
+  ReturnType<typeof creatureAttackTargetAdmission>
+> & { readonly target: BattleCreatureState };
+
 export function huntersPreyHordeBreakerTargetAdmission(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly firstTargetId: CombatantId;
-  readonly secondTarget: BattleCreatureState;
+  readonly secondTarget: BattleCreatureState | undefined;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-}): ReturnType<typeof creatureAttackTargetAdmission> {
+}): AdditionalWeaponAttackTargetAdmission | null {
+  const secondTarget = input.secondTarget;
+  if (secondTarget === undefined) return null;
   if (
-    input.secondTarget.combatantId === input.firstTargetId ||
+    secondTarget.combatantId === input.firstTargetId ||
     !input.targetSpatialFacts.some(
       (fact) =>
         fact.kind === "hordeBreakerSecondTargetEligible" &&
         fact.attackerId === input.attackerId &&
         fact.sourceProcedureRef === input.sourceProcedureRef &&
         fact.originalTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTarget.combatantId,
+        fact.secondTargetId === secondTarget.combatantId,
     )
   )
     return null;
-  return creatureAttackTargetAdmission(
+  const admission = creatureAttackTargetAdmission(
     input.attackerId,
-    input.secondTarget,
+    secondTarget,
     input.attack,
     input.targetSpatialFacts,
   );
+  return admission === null ? null : { ...admission, target: secondTarget };
 }
 
 export function huntersPreyHordeBreakerTargetIsLegal(
@@ -1221,27 +1239,30 @@ function cleaveAbilityChoice(
 export function weaponMasteryCleaveTargetAdmission(input: {
   readonly attackerId: CombatantId;
   readonly firstTargetId: CombatantId;
-  readonly secondTarget: BattleCreatureState;
+  readonly secondTarget: BattleCreatureState | undefined;
   readonly attack: CharacterWeaponAttackActionOption;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-}): ReturnType<typeof creatureAttackTargetAdmission> {
+}): AdditionalWeaponAttackTargetAdmission | null {
+  const secondTarget = input.secondTarget;
+  if (secondTarget === undefined) return null;
   if (
-    input.secondTarget.combatantId === input.firstTargetId ||
+    secondTarget.combatantId === input.firstTargetId ||
     !input.targetSpatialFacts.some(
       (fact) =>
         fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
         fact.attackerId === input.attackerId &&
         fact.firstTargetId === input.firstTargetId &&
-        fact.secondTargetId === input.secondTarget.combatantId,
+        fact.secondTargetId === secondTarget.combatantId,
     )
   )
     return null;
-  return creatureAttackTargetAdmission(
+  const admission = creatureAttackTargetAdmission(
     input.attackerId,
-    input.secondTarget,
+    secondTarget,
     input.attack,
     input.targetSpatialFacts,
   );
+  return admission === null ? null : { ...admission, target: secondTarget };
 }
 
 export function weaponMasteryCleaveTargetIsLegal(

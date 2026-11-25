@@ -10,6 +10,7 @@ import {
   type SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import type { BattleEquipmentQuery } from "./battle-reducer/object-custody-queries.ts";
 import { characterEffectiveLoadoutFromOrigin } from "./battle-reducer/character-effective-loadout.ts";
 import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -58,7 +59,7 @@ export function ammunitionStockIsAvailable(
  * one-handed weapon needs a free hand to load (SRD "Ammunition").
  */
 export function ammunitionForAttackIsReady(
-  state: BattleState,
+  state: BattleEquipmentQuery,
   combatant: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
 ): boolean {
@@ -77,7 +78,7 @@ export function ammunitionForAttackIsReady(
  * represented (ASSUMPTIONS.md A64).
  */
 function ammunitionCanBeDrawn(
-  state: BattleState,
+  state: BattleEquipmentQuery,
   combatant: BattleCreatureState,
   attack: SupportedAttackActionOption,
 ): boolean {
@@ -95,7 +96,7 @@ function ammunitionCanBeDrawn(
 }
 
 function ammunitionWeaponHandsAreAvailable(
-  state: BattleState,
+  state: BattleEquipmentQuery,
   combatant: BattleCreatureState,
   attack: Extract<SupportedAttackActionOption, { readonly kind: "weapon" }>,
 ): boolean {
@@ -196,21 +197,20 @@ export function spendAmmunitionForAcceptedAttack(input: {
   readonly attack: BoundSupportedAttackActionOption;
 }): BattleState {
   const phase = input.state.subjectResolutionPhase;
-  const alreadySpent =
-    phase.kind === "subjectContinuation"
-      ? phase.acceptedAttackAmmunitionSpend
-      : undefined;
-  if (
-    phase.kind === "subjectContinuation" &&
-    alreadySpent?.actorId === input.actorId &&
-    boundAttackExecutionSelectionMatchesOption(
-      alreadySpent.attackSelection,
-      input.attack,
-    )
-  ) {
-    const { acceptedAttackAmmunitionSpend: _consumed, ...remainingPhase } =
-      phase;
-    return { ...input.state, subjectResolutionPhase: remainingPhase };
+  if (phase.kind === "subjectContinuation") {
+    const alreadySpent = phase.acceptedAttackAmmunitionSpend;
+    if (
+      alreadySpent !== undefined &&
+      alreadySpent.actorId === input.actorId &&
+      boundAttackExecutionSelectionMatchesOption(
+        alreadySpent.attackSelection,
+        input.attack,
+      )
+    ) {
+      const { acceptedAttackAmmunitionSpend: _consumed, ...remainingPhase } =
+        phase;
+      return { ...input.state, subjectResolutionPhase: remainingPhase };
+    }
   }
   const ammunition = ammunitionRequirementForAttack(input.attack);
   if (ammunition === null) return input.state;

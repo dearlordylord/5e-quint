@@ -2,7 +2,7 @@ import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity
 import { Match } from "effect";
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import type {
-  BattleAcceptedAttackReplayEvidence,
+  BattleAcceptedSubjectReplayEvidence,
   BattleInterruptCheckpoint,
   BattleInterruptedProcedure,
   BattleState,
@@ -33,14 +33,14 @@ export function subjectContinuationPhaseFor(
   );
 }
 
-/** Project only the accepted attack witnesses owned by a phase or checkpoint. */
-export function acceptedAttackReplayEvidence(
-  source: BattleAcceptedAttackReplayEvidence,
-): BattleAcceptedAttackReplayEvidence {
+/** Project only the accepted roll and attack witnesses owned by a phase or checkpoint. */
+export function acceptedSubjectReplayEvidence(
+  source: BattleAcceptedSubjectReplayEvidence,
+): BattleAcceptedSubjectReplayEvidence {
   return {
     ...optionalProperty(
-      "acceptedHeroicInspirationReroll",
-      source.acceptedHeroicInspirationReroll,
+      "acceptedHeroicInspirationRerolls",
+      source.acceptedHeroicInspirationRerolls,
     ),
     ...optionalProperty(
       "acceptedAttackAmmunitionSpend",
@@ -53,11 +53,11 @@ export function acceptedAttackReplayEvidence(
   };
 }
 
-/** Freeze the parent's accepted attack witnesses before a nested subject executes. */
-export function checkpointWithAcceptedAttackReplayEvidence<
+/** Freeze the parent's accepted witnesses before a nested subject executes. */
+export function checkpointWithAcceptedSubjectReplayEvidence<
   Checkpoint extends BattleInterruptCheckpoint,
 >(state: BattleState, frame: Checkpoint): Checkpoint {
-  const accepted = acceptedAttackReplayEvidence(
+  const accepted = acceptedSubjectReplayEvidence(
     subjectContinuationPhaseFor(
       state,
       interruptedProcedureSubject(frame.continuation),
@@ -75,13 +75,13 @@ export function checkpointWithAcceptedAttackReplayEvidence<
   return checkpoint;
 }
 
-/** Restore the owner's witnesses, never a nested subject's accepted attack. */
+/** Restore the owner's witnesses, never a nested subject's. */
 export function stateForSubjectContinuation(
   state: BattleState,
   continuation: BattleInterruptedProcedure,
 ): BattleState {
   const {
-    acceptedHeroicInspirationReroll: _previousHeroicInspiration,
+    acceptedHeroicInspirationRerolls: _previousHeroicInspiration,
     acceptedAttackAmmunitionSpend: _previousAmmunition,
     acceptedThrownWeaponRelease: _previousThrow,
     ...phase
@@ -93,7 +93,7 @@ export function stateForSubjectContinuation(
     ...state,
     subjectResolutionPhase: {
       ...phase,
-      ...acceptedAttackReplayEvidence(continuation),
+      ...acceptedSubjectReplayEvidence(continuation),
     },
   };
 }

@@ -1016,6 +1016,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.changeWeaponAfterAttack": account(
+      "operation",
+      "runtimeCommand.changeWeaponAfterAttack",
+      at(
+        "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
+        "resolveChangeWeaponAfterAttack",
+      ),
+      REASONS.admittedSubject,
+    ),
     "runtimeCommand.interactWithObject": account(
       "operation",
       "runtimeCommand.interactWithObject",
@@ -1040,6 +1049,15 @@ export const OPERATION_ACCOUNTING = {
       at(
         "packages/battle-runtime/src/battle-reducer/movement-procedures.ts",
         "resolveMovementProcedure",
+      ),
+      REASONS.admittedSubject,
+    ),
+    "runtimeCommand.changeWeaponGrip": account(
+      "operation",
+      "runtimeCommand.changeWeaponGrip",
+      at(
+        "packages/battle-runtime/src/battle-reducer/weapon-grip.ts",
+        "resolveWeaponGripChange",
       ),
       REASONS.admittedSubject,
     ),
@@ -1618,6 +1636,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.battleContinuation,
     ),
+    weaponDropPosition: account(
+      "continuation",
+      "weaponDropPosition",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
     objectTargetChoice: account(
       "continuation",
       "objectTargetChoice",
@@ -1819,6 +1846,15 @@ export const OPERATION_ACCOUNTING = {
     temporaryHitPointChoice: account(
       "continuation",
       "temporaryHitPointChoice",
+      at(
+        "packages/battle-runtime/src/battle-runtime-transaction.ts",
+        "settleBattleRuntimeTransaction",
+      ),
+      REASONS.battleContinuation,
+    ),
+    turnStartHeroicInspirationChoice: account(
+      "continuation",
+      "turnStartHeroicInspirationChoice",
       at(
         "packages/battle-runtime/src/battle-runtime-transaction.ts",
         "settleBattleRuntimeTransaction",
@@ -3674,8 +3710,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "d20TestNaturalOneReroll",
       at(
-        "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts",
-        "resolveD20TestNaturalOneRerollFills",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "resolveD20TestRerollFills",
       ),
       REASONS.unitContinuation,
     ),
@@ -4135,6 +4171,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitContinuation,
     ),
+    combatTurnStartHeroicInspiration: account(
+      "internal",
+      "combatTurnStartHeroicInspiration",
+      at(
+        "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts",
+        "turnStartHeroicInspirationOffer",
+      ),
+      REASONS.unitFact,
+    ),
     creatureSpaceMovementPermission: account(
       "internal",
       "creatureSpaceMovementPermission",
@@ -4166,8 +4211,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "d20TestNaturalOneReroll",
       at(
-        "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts",
-        "resolveD20TestNaturalOneRerollFills",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "resolveD20TestRerollFills",
       ),
       REASONS.unitContinuation,
     ),

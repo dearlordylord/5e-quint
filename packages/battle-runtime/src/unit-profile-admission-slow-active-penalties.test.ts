@@ -186,6 +186,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     ).toBe(baseArmorClass - 2);
     expect(savingThrowFlatBonusProjections(cast.state, "dex")).toEqual([
       {
+        kind: "effect",
         targetId: spellTargetId,
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,

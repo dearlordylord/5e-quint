@@ -45,10 +45,9 @@
       "module/binding:battleInitializationLeafIssueFromStateIssue": 10
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts": {
-      "module/binding:attackActionOptionsForActor": 9,
       "module/binding:attackDamageHole": 12,
       "module/binding:martialArtsLoadoutEligible": 10,
-      "module/binding:offHandAttackActionOptionsForActor": 13,
+      "module/binding:offHandAttackActionOptionsForActor": 12,
       "module/binding:weaponAttackWithActiveSacredWeapon": 13
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-redirect.ts": {
@@ -108,7 +107,7 @@
       "module/binding:applyBattleMovement": 11
     },
     "packages/battle-runtime/src/battle-reducer/character-effective-loadout.ts": {
-      "module/binding:characterEffectiveLoadoutFromOrigin": 13
+      "module/binding:characterEffectiveLoadoutFromOrigin": 9
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
       "module/binding:concentrationRouteForResolution": 22,
@@ -143,13 +142,6 @@
       "module/binding:resolveCunningStrikeHideInvisibleEndSuppression": 10,
       "module/binding:resolveCunningStrikePostDamageMovement": 9
     },
-    "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts": {
-      "module/binding:validateD20TestNaturalOneRerollFills": 18
-    },
-    "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll.ts": {
-      "module/binding:d20TestNaturalOneRerollDieIssue": 9,
-      "module/binding:d20TestNaturalOneRerollOutcomeIssue": 9
-    },
     "packages/battle-runtime/src/battle-reducer/damage-apply.ts": {
       "module/binding:applyBattleHitPointDamage": 22,
       "module/binding:applyHpDamage": 16,
@@ -162,7 +154,7 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 68
+      "module/binding:resolveBattleSubjectAfterD20TestRerolls/call:iife:argument--1": 68
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,
@@ -180,7 +172,7 @@
       "module/binding:glyphDurableOccurrenceReleaseFromCompletedInscription": 10,
       "module/binding:glyphExplosiveRuneDamageLifecycleCheck": 17,
       "module/binding:glyphExplosiveRuneReleaseWitnessValidation": 10,
-      "module/binding:glyphExplosiveRuneSavingThrowCheck": 10,
+      "module/binding:glyphExplosiveRuneSavingThrowCheck": 9,
       "module/binding:glyphStoredSpellFullDurationEffectSupportsExpiration": 30,
       "module/binding:glyphStoredSpellHostilePlacementValidation": 17,
       "module/binding:glyphStoredSpellReleaseWitnessValidation": 16,
@@ -188,7 +180,7 @@
       "module/binding:glyphWardingOccurrenceSupported": 21,
       "module/binding:glyphWardingSpellGlyphSupported": 18,
       "module/binding:glyphWardingTriggerSupported": 12,
-      "module/binding:releaseGlyphExplosiveRune": 10
+      "module/binding:releaseGlyphExplosiveRune": 9
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-continuation.ts": {
       "module/binding:attackDamageContinuationCunningStrikeFillSet": 9,
@@ -403,7 +395,7 @@
       "module/binding:saveDamageReplacementForInvocation": 11,
       "module/binding:savingThrowRollModeProjections": 17,
       "module/binding:spellDamageByTypeForTarget": 9,
-      "module/binding:spellSavingThrowOutcomeHole": 19,
+      "module/binding:spellSavingThrowOutcomeHole": 16,
       "module/binding:validateSpellAttackSequencePartDamageFill": 14,
       "module/binding:validateSpellDamageFill": 31
     },
@@ -436,7 +428,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts": {
       "module/binding:resolveSpellAttackSequenceAct": 20,
-      "module/binding:resolveSpellAttackSequenceCreaturePart": 64,
+      "module/binding:resolveSpellAttackSequenceCreaturePart": 62,
       "module/binding:resolveSpellAttackSequenceObjectPart": 22
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts": {
@@ -515,7 +507,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurnCommandForParent": 73
+      "module/binding:resolveEndTurnCommandForParent": 72
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {
       "module/binding:sacredWeaponHeldMeleeWeapons": 13,
@@ -596,7 +588,7 @@
       "module/binding:statBlockAttackMechanicsSupport": 12
     },
     "packages/battle-runtime/src/unit-feature-support.ts": {
-      "module/binding:attackActionAreaSaveDamageReplacementProfileForUnit": 23,
+      "module/binding:attackActionAreaSaveDamageReplacementProfileForUnit": 22,
       "module/binding:attackActionAttackCountScalingProfileForUnit": 10,
       "module/binding:attackDamageDieFloorProfileForUnit": 10,
       "module/binding:attackDamageRiderMechanicsProjection": 19,

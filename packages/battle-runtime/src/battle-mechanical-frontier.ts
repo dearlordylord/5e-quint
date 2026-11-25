@@ -217,6 +217,7 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
       objectInteractionRuling: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      weaponDropPosition: (value) => projectHoleWithoutPresentationLabel(value),
       helpAttackAllyDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
       helpAttackEnemyDecision: (value) =>
@@ -273,6 +274,8 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       temporaryAbilityCheckRollModeActiveEffectCount: (value) =>
         projectHoleWithoutPresentationLabel(value),
       temporaryHitPointChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      turnStartHeroicInspirationChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
       toolPossessionFacts: (value) =>
         projectHoleWithoutPresentationLabel(value),

@@ -1078,34 +1078,53 @@ function fallingCreatureTargetFactMatches(
   );
 }
 
+type SpellObjectTargetTableFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectTarget" }
+>;
+
+type AdmittedSpellObjectTargetFact = Omit<
+  SpellObjectTargetTableFact,
+  "cover"
+> & {
+  readonly cover: DirectTargetCover;
+};
+
 export function spellObjectTargetFact(
-  facts: readonly Extract<
-    BattleTargetSpatialFact,
-    { readonly kind: "spellObjectTarget" }
-  >[],
+  facts: readonly SpellObjectTargetTableFact[],
   actorId: CombatantId,
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<SingleCreatureOrObjectSpellAttackDamageInvocation>,
-):
-  | (Omit<
-      Extract<BattleTargetSpatialFact, { readonly kind: "spellObjectTarget" }>,
-      "cover"
-    > & { readonly cover: DirectTargetCover })
-  | null {
+): AdmittedSpellObjectTargetFact | null {
   for (const fact of facts) {
-    if (
-      fact.casterId !== actorId ||
-      fact.objectId !== objectId ||
-      fact.sourceProcedureRef !== invocation.sourceProcedureRef ||
-      fact.rangeFeet !== invocation.rangeFeet ||
-      (spellAttackRequiresExactDistance(invocation) &&
-        fact.distanceFeet > invocation.rangeFeet)
-    )
-      continue;
-    const cover = directTargetCover(fact.cover);
-    if (cover !== null) return { ...fact, cover };
+    const admitted = admitSpellObjectTargetFact(
+      fact,
+      actorId,
+      objectId,
+      invocation,
+    );
+    if (admitted !== null) return admitted;
   }
   return null;
+}
+
+function admitSpellObjectTargetFact(
+  fact: SpellObjectTargetTableFact,
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: BattleExecutableSpellInvocation<SingleCreatureOrObjectSpellAttackDamageInvocation>,
+): AdmittedSpellObjectTargetFact | null {
+  if (
+    fact.casterId !== actorId ||
+    fact.objectId !== objectId ||
+    fact.sourceProcedureRef !== invocation.sourceProcedureRef ||
+    fact.rangeFeet !== invocation.rangeFeet ||
+    (spellAttackRequiresExactDistance(invocation) &&
+      fact.distanceFeet > invocation.rangeFeet)
+  )
+    return null;
+  const cover = directTargetCover(fact.cover);
+  return cover === null ? null : { ...fact, cover };
 }
 
 export function spellObjectTargetSightFact(

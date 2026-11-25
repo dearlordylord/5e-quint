@@ -1,5 +1,5 @@
 import {
-  checkpointWithAcceptedAttackReplayEvidence,
+  checkpointWithAcceptedSubjectReplayEvidence,
   interruptedProcedureSubject,
 } from "./subject-continuation-phase.ts";
 import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
@@ -104,7 +104,7 @@ export function openBattleInterruptWindow(input: {
     interruptStack: [
       ...input.state.interruptStack,
       interruptCheckpointFrame(
-        checkpointWithAcceptedAttackReplayEvidence(input.state, input.frame),
+        checkpointWithAcceptedSubjectReplayEvidence(input.state, input.frame),
       ),
     ],
   };

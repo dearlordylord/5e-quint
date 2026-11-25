@@ -2249,6 +2249,7 @@ describe("Stat Block execution references", () => {
           targetRollModes: [],
           targetFlatBonuses: [
             {
+              kind: "effect",
               targetId: actorId,
               sourceCombatantId: fighterId,
               sourceProcedureRef: fighterAttackProcedureRef,
@@ -2270,6 +2271,7 @@ describe("Stat Block execution references", () => {
           damageAmount: 1,
           targetFlatBonuses: [
             {
+              kind: "effect",
               targetId: actorId,
               sourceCombatantId: actorId,
               sourceProcedureRef: unboundProcedureRef,

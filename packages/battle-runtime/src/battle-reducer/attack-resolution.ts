@@ -17,6 +17,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+import {
+  stateWithWeaponChangeAfterAttackAllowance,
+  stateWithWeaponChangeAfterUnarmedStrikeOption,
+} from "./attack-weapon-change.ts";
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import type {
   ActionEconomyState,
@@ -110,7 +114,7 @@ import {
   validateCunningStrikeDamageRollSelection,
   type CunningStrikeContext,
 } from "./cunning-strike.ts";
-import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "./d20-test-natural-one-reroll.ts";
+import { abilityCheckValueThatStands } from "./d20-test-rolls-that-stand.ts";
 
 import { attackDamageContinuationConcentrationFrame } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
@@ -139,7 +143,7 @@ import {
   shoveForTarget,
 } from "./movement-speed.ts";
 
-import { invalidResult } from "./result-helpers.ts";
+import { invalidResult, resolvedResult } from "./result-helpers.ts";
 import {
   readyDeclarationHole,
   readyDeclarationFill,
@@ -1443,10 +1447,11 @@ export function resolveGrapple(
   }
   /* v8 ignore stop -- @preserve */
   const nextState = applyGrappleSavingThrowOutcome({
-    state: {
-      ...input.state,
-      currentTurnResources: spent.success,
-    },
+    state: stateWithWeaponChangeAfterUnarmedStrikeOption(
+      { ...input.state, currentTurnResources: spent.success.state },
+      input.subject.actorId,
+      spent.success.spentResource,
+    ),
     link: link.link,
     relationshipFacts,
     outcome: fillSet.outcome.value,
@@ -1592,10 +1597,14 @@ export function resolveShove(
     relationshipFacts,
   );
   const afterEffect = applyShoveOutcome({
-    state: {
-      ...savingThrowExtendedState,
-      currentTurnResources: spent.success,
-    },
+    state: stateWithWeaponChangeAfterUnarmedStrikeOption(
+      {
+        ...savingThrowExtendedState,
+        currentTurnResources: spent.success.state,
+      },
+      input.subject.actorId,
+      spent.success.spentResource,
+    ),
     targetId: fillSet.targetId,
     outcome: fillSet.outcome.value,
   });
@@ -1922,7 +1931,7 @@ export function abilityCheckFill(
       /* v8 ignore stop -- @preserve */
       check = {
         ...fill,
-        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(fill.value),
+        value: abilityCheckValueThatStands(fill.value),
       };
       continue;
     }
@@ -2538,6 +2547,24 @@ export function openClassFeatureExtraAttackResource(input: {
       })),
     ],
   };
+}
+
+/**
+ * Spends the attack for its subject and leaves the weapon change an Attack
+ * action attack allows after it.
+ */
+export function spendAttackActionForSubject(
+  state: BattleState,
+  subject: BattleAttackHostSubject,
+  attack: BoundSupportedAttackActionOption,
+  timing: { readonly kind: "acceptedAttack" | "attackPreventedBeforeRoll" },
+): BattleTerminalResolutionResult {
+  const spent = spendAttackAction(state, subject.actorId, attack, timing);
+  return spent.tag === "resolved"
+    ? resolvedResult(
+        stateWithWeaponChangeAfterAttackAllowance(spent.state, subject),
+      )
+    : spent;
 }
 
 export function spendAttackAction(

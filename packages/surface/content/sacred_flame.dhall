@@ -9,9 +9,9 @@
 --    levels 5 (2d8), 11 (3d8), and 17 (4d8)."
 --
 -- ZERO-WIDENING VALIDATION REFERENCE. Standard cantrip save_gate
--- with threshold_tiers damage. The cover-immunity clause is DM
--- agenda (cover is spatial, per ARCHITECTURE.md §1 — session
--- resolves whether cover applies).
+-- with threshold_tiers damage. The cover clause is saveCoverBenefit
+-- "denied": the table still rules the target's cover, and the save
+-- adds no bonus for it.
 
 let sacredFlame =
       { kind = "spell"
@@ -61,6 +61,7 @@ let sacredFlame =
                         }
                     }
                 , onSuccess = { kind = "none" }
+                , saveCoverBenefit = "denied"
                 }
               ]
           }

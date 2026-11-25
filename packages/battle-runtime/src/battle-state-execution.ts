@@ -150,6 +150,10 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
+import type {
+  CoverBenefit,
+  SaveCoverBenefit,
+} from "@dnd/shared-algebras/cover-algebra";
 import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
@@ -182,6 +186,7 @@ import {
   MovementFeet,
   movementFeet,
   type Condition,
+  type BonusCoverType,
   type CoverType,
   type RuledCoverType,
   type D6RollResult,
@@ -893,7 +898,7 @@ export type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly operation: "createAndAttack" | "repositionAndAttack";
 };
-export type BattleInterruptedProcedure = BattleAcceptedAttackReplayEvidence &
+export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
   (
     | {
         readonly kind: "replay";
@@ -3544,6 +3549,8 @@ type SupportedSpellInvocationShape =
       readonly failedSaveConditionEffects: readonly SpellFailedSaveConditionEffect[];
       readonly failedSaveAbilityChoices: readonly Ability[] | null;
       readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
+      /** Whether the save takes the target's cover. */
+      readonly saveCoverBenefit: SaveCoverBenefit;
       readonly postSaveAreaEffect?: SpellPostSaveAreaEffect;
     })
   | (PreparedDamageSpellSource & {
@@ -4212,10 +4219,13 @@ export type PendingAttackRollMissToHitReplacementContext = {
   readonly targetId: CombatantId;
   readonly attackRoll: BattleAttackRollResult;
 };
-/** The attack roll that spent a creature's Heroic Inspiration on its reroll. */
-export type BattleAcceptedHeroicInspirationReroll = {
-  readonly actorId: CombatantId;
-  readonly attackRollHoleId: HoleId;
+/**
+ * One D20 Test roll within a subject: the creature that rolled it and the hole
+ * it filled. A save hole names several creatures' rolls, one each.
+ */
+export type BattleD20TestRollKey = {
+  readonly rollerId: CombatantId;
+  readonly holeId: HoleId;
 };
 
 type PendingAttackRollMissToHitReplacementSelection = {
@@ -4230,6 +4240,18 @@ export type BattleJumpDistanceMultiplier = {
   readonly multiplier: 2;
 };
 
+/**
+ * Whether the creature can still equip or unequip a weapon after the Attack
+ * action attack it just made. An attack that changed a weapon before its roll
+ * leaves none.
+ */
+export const WEAPON_CHANGE_AFTER_ATTACK_STATES = [
+  "unavailable",
+  "available",
+] as const;
+export type WeaponChangeAfterAttackState =
+  (typeof WEAPON_CHANGE_AFTER_ATTACK_STATES)[number];
+
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
@@ -4240,6 +4262,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  readonly weaponChangeAfterAttack: WeaponChangeAfterAttackState;
   readonly brutalStrike:
     | { readonly kind: "available" }
     | {
@@ -4518,16 +4541,17 @@ export type LegendaryActionWindow = {
   readonly consumed: boolean;
 };
 
-/** Accepted attack outcomes owned by a subject while its resolution can replay. */
-export type BattleAcceptedAttackReplayEvidence = {
-  readonly acceptedHeroicInspirationReroll?: BattleAcceptedHeroicInspirationReroll;
+/** Accepted roll and attack outcomes owned by a subject while its resolution can replay. */
+export type BattleAcceptedSubjectReplayEvidence = {
+  /** The rolls of this subject that spent their roller's Heroic Inspiration. */
+  readonly acceptedHeroicInspirationRerolls?: ReadonlyNonEmptyArray<BattleD20TestRollKey>;
   readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
   readonly acceptedThrownWeaponRelease?: BattleAcceptedThrownWeaponRelease;
 };
 
 export type BattleSubjectResolutionPhase =
   | { readonly kind: "subjectSelection" }
-  | (BattleAcceptedAttackReplayEvidence & {
+  | (BattleAcceptedSubjectReplayEvidence & {
       readonly kind: "subjectContinuation";
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
@@ -4561,7 +4585,13 @@ export type BattleState = {
     BattleExecutionScopeAllocation
   >;
   readonly companions: BattleCompanions;
-  readonly groundObjects: ReadonlyMap<CombatantId, BattleActorGroundObjects>;
+  /**
+   * Each creature's objects that aren't where its loadout puts them: on the
+   * ground, or, for a selected-loadout weapon, sheathed or stowed. One entry
+   * per object, so no object is in two places at once. A loadout weapon with
+   * no entry is in hand.
+   */
+  readonly objectCustody: ReadonlyMap<CombatantId, BattleActorObjectCustody>;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -5096,6 +5126,17 @@ export type BattleObjectContactTargetsHole = {
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
 };
+/**
+ * The rerolls a D20 Test hole offers its roller, outside attack-only sources.
+ * Every D20 Test hole declares them, so a hole asked again with an undecided
+ * reroll carries the option in its own type and codec.
+ */
+export type BattleD20TestRerollHoleOptions = {
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
+};
 export type BattleObjectContactSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5113,7 +5154,7 @@ export type BattleObjectContactSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleObjectDropResolution =
   | {
       readonly targetId: CombatantId;
@@ -5269,6 +5310,18 @@ export type BattleObjectInteractionRulingHole = {
   readonly actorId: CombatantId;
   readonly objectInteraction: ObjectInteractionState;
 };
+/**
+ * Asks the table where a weapon dropped with an attack lands. The table
+ * places it; Battle keeps it on the ground there for its owner.
+ */
+export type BattleWeaponDropPositionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "weaponDropPosition";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
+};
 export type BattleToolPossessionFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5404,6 +5457,7 @@ export type BattleDroppedObjectSource =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
     }
+  | { readonly kind: "attackWeaponChange" }
   | {
       /** SRD 5.2.1 "Thrown": the weapon left its owner's hand in an attack. */
       readonly kind: "thrownWeaponAttack";
@@ -5413,12 +5467,19 @@ export type BattleGroundObjectState = {
   readonly positionId: BattleTablePositionId;
   readonly source: BattleDroppedObjectSource;
 };
-declare const battleActorGroundObjectsNonEmpty: unique symbol;
-export type BattleActorGroundObjects = ReadonlyMap<
+/**
+ * Where one of a creature's objects is instead of where its loadout puts it:
+ * lying on the ground, or sheathed or stowed.
+ */
+export type BattleObjectCustody =
+  | ({ readonly kind: "onGround" } & BattleGroundObjectState)
+  | { readonly kind: "stowed" };
+declare const battleActorObjectCustodyNonEmpty: unique symbol;
+export type BattleActorObjectCustody = ReadonlyMap<
   BattleObjectId,
-  BattleGroundObjectState
+  BattleObjectCustody
 > & {
-  readonly [battleActorGroundObjectsNonEmpty]: true;
+  readonly [battleActorObjectCustodyNonEmpty]: true;
 };
 export type BattleDroppedObjectOutcome = {
   readonly kind: "objectDropped";
@@ -5549,11 +5610,18 @@ export type BattleD20TestNaturalOneRerollOption = {
   readonly label: string;
 };
 export type BattleD20TestRoll = D20TestRoll;
+export type BattleD20TestMultipleRoll = Extract<
+  BattleD20TestRoll,
+  { readonly tag: "multiple" }
+>;
 export type BattleD20TestRolledDieKey = D20TestRolledDieKey;
 export type BattleD20TestRollReplacement = AttackRollResult;
 export type BattleD20TestRolledDieRollReplacement = {
   readonly die: BattleD20TestRolledDieKey;
-  readonly result: BattleD20TestRollReplacement;
+  /** The final pair: only the chosen die may differ from the preceding roll. */
+  readonly result: Omit<BattleD20TestRollReplacement, "d20TestRoll"> & {
+    readonly d20TestRoll: BattleD20TestMultipleRoll;
+  };
 };
 /**
  * A decision on one D20 Test reroll source after a roll: decline it, replace
@@ -5587,6 +5655,15 @@ export type BattleHeroicInspirationRerollOption = {
 };
 export type BattleHeroicInspirationRerollDecision =
   BattleD20TestRollRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+/** One reroll source's decision on an ability check's d20, named by its effect kind. */
+export type BattleAbilityCheckD20TestRerollDecision =
+  | BattleD20TestNaturalOneRerollDecision
+  | BattleHeroicInspirationRerollDecision;
+/** An ability check's D20 Test reroll decisions in the order the roller made them. */
+export type BattleAbilityCheckD20TestRerollDecisions = readonly [
+  BattleAbilityCheckD20TestRerollDecision,
+  ...BattleAbilityCheckD20TestRerollDecision[],
+];
 /** One reroll source's decision on an attack roll's d20, named by its effect kind. */
 export type BattleAttackRollD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDecision
@@ -5608,34 +5685,82 @@ export type BattleD20TestOutcomeReplacement = {
 };
 export type BattleD20TestRolledDieOutcomeReplacement = {
   readonly die: BattleD20TestRolledDieKey;
-  readonly result: BattleD20TestOutcomeReplacement;
+  /** The table's outcome and final pair after replacing the chosen die. */
+  readonly result: Omit<BattleD20TestOutcomeReplacement, "d20TestRoll"> & {
+    readonly d20TestRoll: BattleD20TestMultipleRoll;
+  };
 };
 export type BattleD20TestDieReplacement = D20Roll;
-export type BattleD20TestNaturalOneRerollOutcomeDecision =
+/**
+ * A decision on one D20 Test reroll source after a roll whose success the
+ * table rules (a saving throw): decline it, replace the roll, or (under
+ * Advantage or Disadvantage) replace one rolled die. Each replacement states
+ * the new roll and whether it succeeds. `EffectKind` names the source.
+ */
+export type BattleD20TestOutcomeRerollDecision<EffectKind extends string> =
   | {
       readonly kind: "decline";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
     }
   | {
       readonly kind: "reroll";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestOutcomeReplacement;
     }
   | {
       readonly kind: "rerollRolledDie";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestRolledDieOutcomeReplacement;
     };
-export type BattleD20TestNaturalOneRerollDieDecision =
+export type BattleD20TestNaturalOneRerollOutcomeDecision =
+  BattleD20TestOutcomeRerollDecision<
+    typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND
+  >;
+export type BattleHeroicInspirationOutcomeRerollDecision =
+  BattleD20TestOutcomeRerollDecision<
+    typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND
+  >;
+/** One reroll source's decision on a rolled outcome's d20, named by its effect kind. */
+export type BattleRolledOutcomeD20TestRerollDecision =
+  | BattleD20TestNaturalOneRerollOutcomeDecision
+  | BattleHeroicInspirationOutcomeRerollDecision;
+/**
+ * A rolled outcome's D20 Test reroll decisions in the order the roller made
+ * them, as on an attack roll (ASSUMPTIONS.md A55).
+ */
+export type BattleRolledOutcomeD20TestRerollDecisions = readonly [
+  BattleRolledOutcomeD20TestRerollDecision,
+  ...BattleRolledOutcomeD20TestRerollDecision[],
+];
+/**
+ * A decision on one D20 Test reroll source after a bare d20 roll (a Death
+ * Saving Throw): decline it or replace the die.
+ */
+export type BattleD20TestDieRerollDecision<EffectKind extends string> =
   | {
       readonly kind: "decline";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
     }
   | {
       readonly kind: "reroll";
-      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly effectKind: EffectKind;
       readonly replacement: BattleD20TestDieReplacement;
     };
+export type BattleD20TestNaturalOneRerollDieDecision =
+  BattleD20TestDieRerollDecision<
+    typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND
+  >;
+export type BattleHeroicInspirationDieRerollDecision =
+  BattleD20TestDieRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+/** One reroll source's decision on a Death Saving Throw's d20. */
+export type BattleDeathSavingThrowD20TestRerollDecision =
+  | BattleD20TestNaturalOneRerollDieDecision
+  | BattleHeroicInspirationDieRerollDecision;
+/** A Death Saving Throw's D20 Test reroll decisions in the order the roller made them. */
+export type BattleDeathSavingThrowD20TestRerollDecisions = readonly [
+  BattleDeathSavingThrowD20TestRerollDecision,
+  ...BattleDeathSavingThrowD20TestRerollDecision[],
+];
 export type BattleSpellDamageRerollOption = {
   readonly effectKind: "damage_dice_reroll";
   readonly label: string;
@@ -5821,7 +5946,7 @@ export type BattleSpellTurnStartSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleStagedConditionRepeatSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5841,7 +5966,7 @@ export type BattleStagedConditionRepeatSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleSaveGatedConditionRepeatTrigger = "endTurn" | "damage";
 export type BattleDamageOccurrenceSource =
   | { readonly kind: "untrackedDamage" }
@@ -5871,7 +5996,7 @@ export type BattleSaveGatedConditionRepeatSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5893,7 +6018,7 @@ export type BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattlePersistentAreaSaveConditionTrigger =
   | "entersArea"
   | "endsTurnInArea";
@@ -5919,7 +6044,7 @@ export type BattlePersistentAreaSaveConditionSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattlePersistentAreaSaveConditionEscapeTrigger =
   | "entersArea"
   | "startsTurnInArea";
@@ -5945,7 +6070,7 @@ export type BattlePersistentAreaSaveConditionEscapeSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattlePersistentAreaSaveCompositeTrigger =
   | "entersArea"
   | "startsTurnInArea";
@@ -5980,7 +6105,7 @@ export type BattlePersistentAreaSaveCompositeSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6004,7 +6129,7 @@ export type BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6028,7 +6153,7 @@ export type BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleStationaryPersistentAreaSaveDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6092,7 +6217,7 @@ export type BattleDirectionalPersistentAreaSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleDirectionalPersistentAreaDirectionChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6122,7 +6247,7 @@ export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6140,7 +6265,7 @@ export type BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleTurnConstraintEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6160,7 +6285,7 @@ export type BattleTurnConstraintEndTurnSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6178,7 +6303,7 @@ export type BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleCollisionRepositionPersistentAreaSaveDamageTrigger =
   | "endsTurnWithinFiveFeetOfSphere"
   | "rammedBySphere";
@@ -6234,7 +6359,7 @@ export type BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeH
     readonly areaChoices: readonly [];
     readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
     readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-  };
+  } & BattleD20TestRerollHoleOptions;
 export type BattleCollisionRepositionPersistentAreaSaveDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6278,7 +6403,7 @@ export type BattleDirectedRepositionPersistentAreaSaveDamageSavingThrowOutcomeHo
     readonly areaChoices: readonly [];
     readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
     readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-  };
+  } & BattleD20TestRerollHoleOptions;
 export type BattleDirectedRepositionPersistentAreaSaveDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6330,7 +6455,7 @@ export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
-};
+} & BattleD20TestRerollHoleOptions;
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6448,23 +6573,34 @@ export type BattleD20TestRolledOutcome = {
   readonly succeeded: boolean;
   readonly d20TestRoll: BattleD20TestRoll;
   readonly withoutRoll?: never;
-  readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecision;
+  readonly d20TestRerolls?: BattleRolledOutcomeD20TestRerollDecisions;
 };
 export type BattleD20TestWithoutRollOutcome = {
   readonly succeeded: boolean;
   readonly withoutRoll: true;
   readonly d20TestRoll?: never;
-  readonly d20TestNaturalOneReroll?: never;
+  readonly d20TestRerolls?: never;
 };
 export type BattleD20TestOutcome =
   | BattleD20TestRolledOutcome
   | BattleD20TestWithoutRollOutcome;
 export type BattleRolledSavingThrowOutcome = BattleD20TestRolledOutcome & {
   readonly targetId: CombatantId;
+  /**
+   * The degree of cover the table rules the target has against the effect,
+   * on a saving throw that cover adds to (see `savingThrowCoverRuling`), for a
+   * target whose cover the hole didn't already take from its spellTarget
+   * fact (see `BattleSpellSaveCover`).
+   * Without it, the target has no cover. It declares the degree the table
+   * ruled: like every saving throw bonus, its bonus counts in `succeeded`,
+   * and the runtime checks the degree against the hole.
+   */
+  readonly cover?: BonusCoverType;
 };
 export type BattleSavingThrowWithoutRollOutcome =
   BattleD20TestWithoutRollOutcome & {
     readonly targetId: CombatantId;
+    readonly cover?: never;
   };
 export type BattleSavingThrowOutcome =
   | BattleRolledSavingThrowOutcome
@@ -6565,12 +6701,22 @@ export type BattleSavingThrowRollModeProjection = {
   readonly targetId: CombatantId;
   readonly rollMode: AttackRollMode;
 };
-export type BattleSavingThrowFlatBonusProjection = {
-  readonly targetId: CombatantId;
-  readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly bonus: number;
-};
+/**
+ * A flat bonus the target adds to its saving throw: from a creature's effect,
+ * or from the degree of cover the table ruled for the target.
+ */
+export type BattleSavingThrowFlatBonusProjection =
+  | {
+      readonly kind: "effect";
+      readonly targetId: CombatantId;
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly bonus: number;
+    }
+  | ({
+      readonly kind: "cover";
+      readonly targetId: CombatantId;
+    } & CoverBenefit);
 export type BattleSpellAreaInputRequest = {
   readonly kind:
     | "areaMembership"
@@ -6578,6 +6724,21 @@ export type BattleSpellAreaInputRequest = {
     | NonNullable<BattleSpellAreaChoice["kind"]>;
 };
 
+/**
+ * What a spell's saving throw says about cover, when it says anything.
+ * - denied: the spell gives its targets no benefit from Half Cover or
+ *   Three-Quarters Cover for this save.
+ * - ruledOnSpellTargets: the targets whose cover against the effect the
+ *   table already ruled on their spellTarget fact, with or without a degree.
+ *   Their outcomes carry no cover; a degree's bonus shows in the hole's
+ *   targetFlatBonuses.
+ */
+export type BattleSpellSaveCover =
+  | { readonly kind: "denied" }
+  | {
+      readonly kind: "ruledOnSpellTargets";
+      readonly targetIds: ReadonlyNonEmptyArray<CombatantId>;
+    };
 export type BattleSpellSavingThrowOutcomeHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6589,7 +6750,12 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly areaChoices: readonly BattleSpellAreaChoice[];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  /** Without it, cover adds to a Dexterity save on each target's outcome. */
+  readonly saveCover?: BattleSpellSaveCover;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 } & (
   | {
@@ -6621,6 +6787,9 @@ export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
@@ -6640,6 +6809,9 @@ export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6652,6 +6824,9 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 } & (
   | {
@@ -6733,6 +6908,9 @@ export type BattleDeathSavingThrowHole = {
   readonly combatantId: CombatantId;
   readonly rollMode?: AttackRollMode;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleStatBlockRechargeRollHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6758,6 +6936,9 @@ export type BattleConcentrationSavingThrowHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly rollMode?: AttackRollMode;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleInterruptDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6814,10 +6995,34 @@ export type BattleTemporaryHitPointChoiceHole = {
   readonly existingTemporaryHitPoints: Hp;
   readonly grantedTemporaryHitPoints: Hp;
 };
+export const BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES = [
+  "giveHeroicInspiration",
+  "decline",
+] as const;
+export type BattleTurnStartHeroicInspirationChoice =
+  (typeof BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES)[number];
+/**
+ * A creature whose feature lets it give itself Heroic Inspiration when it
+ * starts its turn without it (Heroic Warrior) chooses whether to.
+ */
+export type BattleTurnStartHeroicInspirationChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "turnStartHeroicInspirationChoice";
+  readonly label: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  /** The turn that starts; its actor is the creature that chooses. */
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+  readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
+};
 export const BATTLE_START_TURN_OCCURRENCE_KINDS = [
   "deathSavingThrow",
   "statBlockRecharge",
   "turnStartTemporaryHitPoints",
+  "turnStartHeroicInspiration",
   "spellConditionTurnStartDamage",
   "spellTurnStartDamageAndSave",
   "persistentAreaSourceTurnTranslation",
@@ -6880,6 +7085,9 @@ export type BattleAbilityCheckHole = {
   readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleSpellcastingAbilityCheckHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6914,6 +7122,9 @@ export type BattleSpellcastingAbilityCheckHole = {
   );
   readonly requiresTableSpatialFact?: boolean;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly heroicInspirationRerolls?: readonly [
+    BattleHeroicInspirationRerollOption,
+  ];
 };
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -7057,6 +7268,7 @@ export type BattleHole =
   | BattleSpatialMeleeSpellAttackProxyPositionHole
   | BattleHeldObjectFactsHole
   | BattleObjectInteractionRulingHole
+  | BattleWeaponDropPositionHole
   | BattleToolPossessionFactsHole
   | BattleCunningStrikeEndTurnCoverFactsHole
   | BattleSpawnedCompanionConnectionHole
@@ -7125,6 +7337,7 @@ export type BattleHole =
   | BattleInterruptDecisionHole
   | BattleStartTurnOccurrenceOrderHole
   | BattleTemporaryHitPointChoiceHole
+  | BattleTurnStartHeroicInspirationChoiceHole
   | BattlePersistentAreaSourceTurnTranslationHole
   | BattleMovementHole
   | BattleControlledVerticalSuspensionAltitudeChangeHole
@@ -7264,6 +7477,11 @@ export type BattleTemporaryHitPointChoiceFill = {
   readonly holeId: BattleHoleId;
   readonly value: BattleTemporaryHitPointChoice;
 };
+export type BattleTurnStartHeroicInspirationChoiceFill = {
+  readonly kind: "turnStartHeroicInspirationChoice";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleTurnStartHeroicInspirationChoice;
+};
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
   readonly holeId: BattleHoleId;
@@ -7271,6 +7489,7 @@ export type BattleBrutalStrikeForcefulBlowMovementFill = {
 };
 export type BattleFill =
   | BattleTemporaryHitPointChoiceFill
+  | BattleTurnStartHeroicInspirationChoiceFill
   | {
       readonly kind: "readyDeclaration";
       readonly holeId: BattleHoleId;
@@ -7398,6 +7617,11 @@ export type BattleFill =
       readonly kind: "objectInteractionRuling";
       readonly holeId: BattleHoleId;
       readonly value: ObjectInteractionRuling;
+    }
+  | {
+      readonly kind: "weaponDropPosition";
+      readonly holeId: BattleHoleId;
+      readonly value: { readonly positionId: BattleTablePositionId };
     }
   | {
       readonly kind: "toolPossessionFacts";
@@ -7560,7 +7784,7 @@ export type BattleFill =
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
       readonly value: D20Roll;
-      readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDieDecision;
+      readonly d20TestRerolls?: BattleDeathSavingThrowD20TestRerollDecisions;
     }
   | {
       readonly kind: "statBlockRechargeRoll";
@@ -7612,7 +7836,7 @@ export type BattleFill =
       readonly value: {
         readonly total: number;
         readonly d20TestRoll?: BattleD20TestRoll;
-        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
+        readonly d20TestRerolls?: BattleAbilityCheckD20TestRerollDecisions;
       };
       readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];
     }
@@ -8283,6 +8507,8 @@ export type BattleTurnSnapshot = {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  /** Whether a weapon change is left from the last Attack action attack. */
+  readonly weaponChangeAfterAttack: WeaponChangeAfterAttackState;
   readonly brutalStrikeChosenThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];

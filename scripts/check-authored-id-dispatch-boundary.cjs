@@ -2451,6 +2451,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "persistent-area-obscurement.ts",
     "self-transformation-mode.ts",
     "spell-created-held-object.ts",
+    "spell-mechanics-admission.ts",
   ].flatMap((fileName) =>
     exactCollisionsAt(
       "magic_circle",
@@ -2793,6 +2794,17 @@ for (const [spellId, relativePath, identifiers, reason] of [
 }
 EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
   ...exactCollisionsAt(
+    "slow",
+    "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+    [
+      {
+        identifier: "applyWeaponMasterySlowToPresentParticipants",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "slow names the parsed weapon-mastery effect applied to present post-damage participants, not the spell",
+  ),
+  ...exactCollisionsAt(
     "light",
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
     [
@@ -2837,9 +2849,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "8ee50a6cd5f39b51b5e59f13e1c839ba2df2a40bfcacb769a433b657e24ed3ab",
-  siteCount: 1727,
-  violationCount: 1847,
+  sha256: "19148f53ff598e934a19f4485e8ad8793698274b79e88c5d00af0e69a6a53ad4",
+  siteCount: 1739,
+  violationCount: 1859,
 };
 
 function escapeForRegExp(text) {

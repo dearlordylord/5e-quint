@@ -198,6 +198,9 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
+      // An Unarmed Strike that first stows, or first drops, the held weapon.
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Help (Ability Check)",
       "Unarmed Strike (Shove)",
@@ -587,6 +590,9 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
       "Attack",
+      // An Unarmed Strike that first stows, or first drops, the held weapon.
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Help (Ability Check)",
       "Unarmed Strike (Shove)",
@@ -652,6 +658,9 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(surged)).toEqual([
       "Attack",
       "Attack",
+      // An Unarmed Strike that first stows, or first drops, the held weapon.
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Help (Ability Check)",
       "Unarmed Strike (Shove)",
@@ -660,6 +669,9 @@ describe("end-user MCP vertical", () => {
       "Move",
       "Drop Prone",
       "Interact with an Object",
+      // The attack before Action Surge left a stow or drop of the weapon.
+      "Equip or Unequip Weapon",
+      "Equip or Unequip Weapon",
       "Ready",
       "End Turn",
     ]);

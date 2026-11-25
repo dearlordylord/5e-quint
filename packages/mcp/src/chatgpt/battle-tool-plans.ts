@@ -19,6 +19,11 @@ export const CHATGPT_BATTLE_TOOLS = {
     description:
       "Use when the active combatant chooses its available Flurry of Blows option. Start the extra unarmed-strike sequence; make each offered strike separately with attack.",
   },
+  change_weapon_grip: {
+    family: "battleActions",
+    description:
+      "Use when the active combatant changes how it holds its main weapon, in one hand or with both. It costs no action or movement; a two-handed grip needs the other hand free, and the grip sets the weapon's Versatile damage.",
+  },
   compelled_drop: {
     family: "battleActions",
     description:
@@ -112,6 +117,11 @@ export const CHATGPT_BATTLE_TOOLS = {
     family: "battleActions",
     description:
       "Attempt to hide with the admitted circumstances and action cost.",
+  },
+  equip_or_unequip_weapon: {
+    family: "battleActions",
+    description:
+      "Use after an Attack action attack made without a weapon change, to draw, stow, or drop one selected weapon before the action's next attack. A change before an attack rides on the attack act itself.",
   },
   interact_with_object: {
     family: "battleActions",

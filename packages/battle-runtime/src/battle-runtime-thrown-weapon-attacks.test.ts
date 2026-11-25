@@ -1,4 +1,10 @@
+import {
+  battleGroundObjectState,
+  battleObjectIsOnGround,
+} from "./battle-reducer/object-custody-queries.ts";
 import { objectInteractionRulingHole } from "./battle-reducer/object-interaction.ts";
+import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-custody.ts";
+import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // SRD 5.2.1 "Thrown": a Melee weapon with the Thrown property can be thrown to
 // make a ranged attack with the ability modifier of its melee attack, and the
@@ -55,6 +61,7 @@ import {
   characterSeed,
   concentrationSavingThrowFill,
   damageRollFill,
+  difficultyClass,
   fighterId,
   goblinId,
   requireHole,
@@ -151,7 +158,9 @@ const spearId = battleObjectId("main:weapon_spear");
  * A Spear goes through Battle's own weapon admission, with no synthetic
  * mastery: of the published Thrown weapons, it is the one Battle admits today.
  */
-function battleWithSpear(): BattleState {
+function battleWithSpear(
+  grip: "one_handed" | "two_handed" = "one_handed",
+): BattleState {
   const spear = unitLibrary.requireUnit("weapon_spear");
   if (spear.kind !== "weapon") {
     throw new Error("Expected Spear weapon Unit.");
@@ -171,7 +180,7 @@ function battleWithSpear(): BattleState {
           weapon: {
             itemId: spearId,
             unitId: parseSharedUnitId("weapon_spear"),
-            grip: "one_handed",
+            grip,
           },
         },
       }),
@@ -508,7 +517,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       },
     ]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId),
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId),
     ).toEqual({
       positionId: landingPosition,
       source: {
@@ -575,7 +584,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       }),
     );
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(spearId)?.positionId,
+      battleGroundObjectState(completed.state, fighterId, spearId)?.positionId,
     ).toBe(landingPosition);
     expect(
       attackActionOptionsForActor(completed.state, fighterId).map(
@@ -597,8 +606,158 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
 
     expect(
-      completed.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(completed.state, fighterId, mainDaggerId),
     ).toBe(true);
+  });
+
+  test("a stowed Dagger is drawn as part of its throw, keeping the weapon change, and lands", () => {
+    // SRD 5.2.1 equipment.md "Thrown": "you can draw that weapon as part of
+    // the attack", so the draw isn't the Attack action's weapon change.
+    const stowed = stateWithLoadoutWeaponChange(
+      battleWithDaggers({ mainHand: "dagger" }),
+      fighterId,
+      { kind: "stow", objectId: mainDaggerId },
+    );
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const state = stowed.state;
+    expect(
+      attackActionOptionsForActor(state, fighterId).map((attack) =>
+        attack.kind === "weapon" ? attack.weaponDelivery?.kind : attack.kind,
+      ),
+    ).toEqual(["thrown", "unarmedStrike"]);
+
+    const subject = attackSubjectFor(state, "thrown");
+    const completed = requireResolved(
+      throwToCompletion({
+        state,
+        subject,
+        facts: [noEnemyNear(subject), landingFact(subject)],
+        attackTotal: 2,
+      }),
+    );
+
+    expect(
+      battleObjectIsOnGround(completed.state, fighterId, mainDaggerId),
+    ).toBe(true);
+    expect(
+      loadoutWeaponIsStowed(completed.state, fighterId, mainDaggerId),
+    ).toBe(false);
+    expect(completed.state.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "available",
+    );
+  });
+
+  test("a stowed Dagger has no throw while no hand is free", () => {
+    const stowed = stateWithLoadoutWeaponChange(
+      battleWithDaggers({ mainHand: "dagger" }),
+      fighterId,
+      { kind: "stow", objectId: mainDaggerId },
+    );
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const fighter = stowed.state.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const grappling: BattleState = {
+      ...stowed.state,
+      grapples: [
+        {
+          grapplerId: fighterId,
+          targetId: goblinId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand:
+            fighter.armorClass.rightHandUse === "mainWeapon" ? "right" : "left",
+        },
+      ],
+    };
+
+    expect(
+      attackActionOptionsForActor(grappling, fighterId).map(
+        (attack) => attack.kind,
+      ),
+    ).toEqual(["unarmedStrike"]);
+  });
+
+  test("a stowed two-handed Spear is drawn for its throw into the one free hand", () => {
+    // SRD 5.2.1 equipment.md "Versatile" asks for two hands only on a melee
+    // attack; a throw draws the weapon into one hand.
+    const spearBattle = battleWithSpear("two_handed");
+    const stowed = stateWithLoadoutWeaponChange(spearBattle, fighterId, {
+      kind: "stow",
+      objectId: spearId,
+    });
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const grappling: BattleState = {
+      ...stowed.state,
+      grapples: [
+        {
+          grapplerId: fighterId,
+          targetId: goblinId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand: "left",
+        },
+      ],
+    };
+
+    expect(
+      attackActionOptionsForActor(grappling, fighterId).map((attack) =>
+        attack.kind === "weapon" ? attack.weaponDelivery?.kind : attack.kind,
+      ),
+    ).toEqual(["thrown", "unarmedStrike"]);
+  });
+
+  test("a stowed off-hand Dagger is drawn for its Light extra throw after a Shortsword attack", () => {
+    const stowed = stateWithLoadoutWeaponChange(
+      battleWithDaggers({ mainHand: "shortsword" }),
+      fighterId,
+      { kind: "stow", objectId: offHandDaggerId },
+    );
+    if (stowed.tag !== "applied") throw new Error(stowed.message);
+    const state = stowed.state;
+    const shortsword = attackSubjectFor(state, undefined);
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: shortsword, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: shortsword,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterShortsword = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: shortsword,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 2, naturalD20: 2 }),
+        ],
+      }),
+    ).state;
+
+    expect(
+      offHandAttackActionOptionsForActor(afterShortsword, fighterId).map(
+        (attack) => attack.weaponDelivery?.kind,
+      ),
+    ).toEqual(["thrown"]);
+    const subject = thrownOffHandSubject(afterShortsword);
+    const completed = requireResolved(
+      throwToCompletion({
+        state: afterShortsword,
+        subject,
+        facts: [noEnemyNear(subject), landingFact(subject)],
+        attackTotal: 2,
+      }),
+    );
+    expect(
+      battleObjectIsOnGround(completed.state, fighterId, offHandDaggerId),
+    ).toBe(true);
+    expect(
+      loadoutWeaponIsStowed(completed.state, fighterId, offHandDaggerId),
+    ).toBe(false);
   });
 
   test("a thrown Dagger leaves the hand once its hit is accepted, before its damage", () => {
@@ -624,7 +783,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       throw new Error("Expected the thrown Dagger's damage hole.");
     }
     expect(
-      awaitingDamage.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(awaitingDamage.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(landingFact(subject).positionId);
 
@@ -641,7 +800,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(completed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(landingFact(subject).positionId);
   });
@@ -672,7 +831,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       }),
     );
 
-    expect(completed.state.groundObjects.has(fighterId)).toBe(false);
+    expect(completed.state.objectCustody.has(fighterId)).toBe(false);
     expect(completed.droppedObjects).toBeUndefined();
   });
 
@@ -850,7 +1009,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       }),
     );
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(offHandDaggerId)
+      battleGroundObjectState(completed.state, fighterId, offHandDaggerId)
         ?.source,
     ).toEqual({
       kind: "thrownWeaponAttack",
@@ -943,7 +1102,8 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(resumed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      resumed.state.groundObjects.get(fighterId)?.get(mainDaggerId)?.positionId,
+      battleGroundObjectState(resumed.state, fighterId, mainDaggerId)
+        ?.positionId,
     ).toBe(battleTablePositionId("goblin-space"));
 
     const replayed = requireResolved(
@@ -1025,7 +1185,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       throw new Error("Expected the readied attack's damage hole.");
     }
     expect(
-      awaitingDamage.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(awaitingDamage.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(landingFact(attack).positionId);
     expect(
@@ -1043,7 +1203,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
     expect(resolved.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
     expect(
-      resolved.state.groundObjects.get(fighterId)?.get(mainDaggerId)?.source,
+      battleGroundObjectState(resolved.state, fighterId, mainDaggerId)?.source,
     ).toEqual({
       kind: "thrownWeaponAttack",
       procedureRef: attack.procedureRef,
@@ -1140,7 +1300,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     // The hit is accepted, so the Dagger has left the hand while the window
     // is open; the result that ends the attack reports it.
     expect(
-      awaitingReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(awaitingReaction.state, fighterId, mainDaggerId),
     ).toBe(true);
     const pending = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
@@ -1176,7 +1336,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       throw new Error("Expected the damage roll after Uncanny Dodge.");
     }
     expect(
-      afterReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(afterReaction.state, fighterId, mainDaggerId),
     ).toBe(true);
     const completed = requireResolved(
       resolveBattleSubject({
@@ -1192,7 +1352,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(completed.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
@@ -1286,7 +1446,7 @@ describe("battle runtime: thrown weapon attacks", () => {
       trigger: "attackDamage",
     });
     expect(
-      awaitingReaction.state.groundObjects.get(fighterId)?.has(mainDaggerId),
+      battleObjectIsOnGround(awaitingReaction.state, fighterId, mainDaggerId),
     ).toBe(true);
     const pending = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
@@ -1333,7 +1493,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(completed.droppedObjects).toEqual([thrownDaggerDrop(attack)]);
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(battleTablePositionId("goblin-space"));
   });
@@ -1405,7 +1565,7 @@ describe("battle runtime: thrown weapon attacks", () => {
 
     expect(declined.droppedObjects).toEqual([thrownDaggerDrop(subject)]);
     expect(
-      declined.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(declined.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
@@ -1418,7 +1578,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
 
     expect(
-      completed.state.groundObjects.get(fighterId)?.get(mainDaggerId)
+      battleGroundObjectState(completed.state, fighterId, mainDaggerId)
         ?.positionId,
     ).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   });
@@ -1581,7 +1741,7 @@ function dartHoles(result: BattleResolutionResult): readonly BattleHole[] {
 /** The Dart on the ground, and the result's one report of it. */
 function expectDartLandedAndReported(result: BattleResolutionResult) {
   const resolved = requireResolved(result);
-  const landed = resolved.state.groundObjects.get(spellCasterId)?.get(dartId);
+  const landed = battleGroundObjectState(resolved.state, spellCasterId, dartId);
   expect(landed?.positionId).toBe(THROWN_WEAPON_LANDING_POSITION_FOR_TEST);
   expect(resolved.droppedObjects).toEqual([
     {
