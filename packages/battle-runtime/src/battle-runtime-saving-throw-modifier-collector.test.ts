@@ -3,6 +3,8 @@
 // Disadvantage on Dexterity saving throws." "Advantage": "If circumstances
 // cause a roll to have both Advantage and Disadvantage, ... you don't have
 // either of them." spells.md, Haste: "Advantage on Dexterity saving throws".
+// "Paralyzed", "Petrified", "Stunned" and "Unconscious": "You automatically
+// fail Strength and Dexterity saving throws."
 import type { Condition } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { savingThrowContributions } from "./battle-reducer/saving-throw-modifier-collector.ts";
@@ -15,6 +17,7 @@ import {
   magicSubject,
   requireHole,
   resolveBattleSubject,
+  savingThrowOutcomeFill,
   skeletonId,
   testBattleCreatureStateWithConditions,
   wizardId,
@@ -56,15 +59,23 @@ function withDexteritySaveAdvantage(state: BattleState): BattleState {
 }
 
 // Acid Splash asks for a Dexterity saving throw.
+function acidSplash(
+  state: BattleState,
+  fills: Parameters<typeof resolveBattleSubject>[0]["fills"] = [],
+) {
+  return resolveBattleSubject({
+    session: battleRuntimeSessionForTest({ state, context: base.context }),
+    subject: magicSubject("acid_splash"),
+    fills,
+  });
+}
+
+function acidSplashSaveHole(state: BattleState) {
+  return requireHole(acidSplash(state), "savingThrowOutcome");
+}
+
 function acidSplashRollModes(state: BattleState) {
-  return requireHole(
-    resolveBattleSubject({
-      session: battleRuntimeSessionForTest({ state, context: base.context }),
-      subject: magicSubject("acid_splash"),
-      fills: [],
-    }),
-    "savingThrowOutcome",
-  ).targetRollModes;
+  return acidSplashSaveHole(state).targetRollModes;
 }
 
 describe("saving throw modifier collector", () => {
@@ -122,5 +133,58 @@ describe("saving throw modifier collector", () => {
       { role: "rollMode", source: "targetCondition", mode: "disadvantage" },
       { role: "rollMode", source: "procedureRule", mode: "advantage" },
     ]);
+  });
+
+  test.each(["paralyzed", "petrified", "stunned", "unconscious"] as const)(
+    "a %s target fails a Dexterity saving throw without rolling",
+    (condition) => {
+      const state = skeletonWith(base.state, condition);
+      const hole = acidSplashSaveHole(state);
+      expect(hole.targetAutomaticFailures).toEqual([
+        { targetId: skeletonId, conditions: [condition] },
+      ]);
+      expect(
+        acidSplash(state, [
+          savingThrowOutcomeFill(hole, [
+            { targetId: skeletonId, succeeded: true, naturalD20: 15 },
+          ]),
+        ]),
+      ).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message: `${skeletonId} automatically fails this saving throw; its outcome is a failure without a roll.`,
+      });
+      expect(
+        acidSplash(state, [
+          savingThrowOutcomeFill(hole, [
+            { targetId: skeletonId, succeeded: false, naturalD20: 2 },
+          ]),
+        ]).tag,
+      ).toBe("invalid");
+      expect(
+        acidSplash(state, [
+          savingThrowOutcomeFill(hole, [
+            { targetId: skeletonId, succeeded: false, withoutRoll: true },
+          ]),
+        ]).tag,
+      ).not.toBe("invalid");
+    },
+  );
+
+  test("automatic failure reaches only Strength and Dexterity saving throws", () => {
+    const state = skeletonWith(base.state, "stunned");
+    const skeleton = requireCombatant(state, skeletonId);
+    expect(
+      savingThrowContributions(state, skeleton, { ability: "str" }),
+    ).toEqual([
+      {
+        role: "automaticFailure",
+        source: "targetCondition",
+        condition: "stunned",
+      },
+    ]);
+    expect(
+      savingThrowContributions(state, skeleton, { ability: "con" }),
+    ).toEqual([]);
   });
 });

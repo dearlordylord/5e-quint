@@ -6,11 +6,15 @@
 // RAW: .references/srd-5.2.1/rules-glossary.md, "Dodge" ("you make Dexterity
 // saving throws with Advantage"), "Restrained" ("You have Disadvantage on
 // Dexterity saving throws"), "Advantage" and "Disadvantage" (one of each
-// cancels, however many there are).
+// cancels, however many there are), and "Paralyzed", "Petrified", "Stunned"
+// and "Unconscious" ("You automatically fail Strength and Dexterity saving
+// throws").
 import { Match } from "effect";
 import {
   hasCondition,
   isIncapacitated,
+  type StrengthAndDexteritySaveFailingCondition,
+  strengthAndDexteritySaveFailingConditions,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { Condition } from "@dnd/shared/types";
 import type { Ability } from "@dnd/surface/surface/types";
@@ -19,6 +23,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleExecutableSpellInvocation,
+  BattleSavingThrowAutomaticFailureProjection,
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   BattleSpellTargetListRelationshipFact,
@@ -74,6 +79,11 @@ export type SavingThrowContribution =
       readonly role: "bonus";
       readonly source: SavingThrowBonusSource;
       readonly bonus: BattleSavingThrowFlatBonusProjection;
+    }
+  | {
+      readonly role: "automaticFailure";
+      readonly source: "targetCondition";
+      readonly condition: StrengthAndDexteritySaveFailingCondition;
     };
 
 /** A spell whose own text gives some targets Advantage or Disadvantage. */
@@ -112,6 +122,7 @@ export type SavingThrowContext = {
 export type SavingThrowTargetModifiers = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
 };
 
 type RollModeContribution = Extract<
@@ -156,6 +167,21 @@ function targetConditionContributions(
 ): readonly RollModeContribution[] {
   return ability === "dex" && hasCondition(target.conditions, "restrained")
     ? rollModeContributions("targetCondition", "disadvantage")
+    : [];
+}
+
+function automaticFailureContributions(
+  target: BattleCreatureState,
+  ability: Ability,
+): readonly SavingThrowContribution[] {
+  return ability === "str" || ability === "dex"
+    ? strengthAndDexteritySaveFailingConditions(target.conditions).map(
+        (condition) => ({
+          role: "automaticFailure" as const,
+          source: "targetCondition" as const,
+          condition,
+        }),
+      )
     : [];
 }
 
@@ -371,6 +397,7 @@ export function savingThrowContributions(
   return [
     ...dodgeContributions(state, target, ability),
     ...targetConditionContributions(target, ability),
+    ...automaticFailureContributions(target, ability),
     ...passiveFeatureContributions(target, ability, avoidsCondition),
     ...target.activeEffects.flatMap((effect) =>
       activeEffectRollModeContributions(effect, ability, avoidsCondition),
@@ -395,8 +422,8 @@ function targetsFor(
 }
 
 /**
- * The roll mode and flat bonuses a saving throw hole carries for each target,
- * from the collector's contributions.
+ * The roll mode, flat bonuses and automatic failure a saving throw hole
+ * carries for each target, from the collector's contributions.
  */
 export function savingThrowTargetModifiers(
   state: BattleState,
@@ -418,13 +445,24 @@ export function savingThrowTargetModifiers(
     targetFlatBonuses: contributions.flatMap(({ contributions: entries }) =>
       entries.flatMap((entry) => (entry.role === "bonus" ? [entry.bonus] : [])),
     ),
+    targetAutomaticFailures: contributions.flatMap(
+      ({ targetId, contributions: entries }) => {
+        const [first, ...rest] = entries.flatMap((entry) =>
+          entry.role === "automaticFailure" ? [entry.condition] : [],
+        );
+        return first === undefined
+          ? []
+          : [{ targetId, conditions: [first, ...rest] }];
+      },
+    ),
   };
 }
 
 /**
  * A turn-boundary save hole is also rebuilt without the battle state, only to
  * find the fill that stands for it. Then only the save's own procedure
- * sources are known, and its roll modes and bonuses are not read.
+ * sources are known, and its roll modes, bonuses and automatic failures
+ * are not read.
  */
 export function savingThrowTargetModifiersWhenStateKnown(
   state: BattleState | undefined,
@@ -441,5 +479,6 @@ export function savingThrowTargetModifiersWhenStateKnown(
       ),
     ),
     targetFlatBonuses: [],
+    targetAutomaticFailures: [],
   };
 }

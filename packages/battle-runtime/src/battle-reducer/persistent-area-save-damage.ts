@@ -1782,7 +1782,12 @@ function persistentAreaSavingThrowHoleFacts(
     | TranslatingPersistentAreaAreaHazardEffect,
 ): Pick<
   BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole,
-  "ability" | "dc" | "areaChoices" | "targetRollModes" | "targetFlatBonuses"
+  | "ability"
+  | "dc"
+  | "areaChoices"
+  | "targetRollModes"
+  | "targetFlatBonuses"
+  | "targetAutomaticFailures"
 > {
   return {
     ability: effect.save.ability,

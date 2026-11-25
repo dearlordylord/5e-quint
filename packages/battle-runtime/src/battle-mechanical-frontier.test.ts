@@ -429,6 +429,7 @@ const projectionHoles = [
     areaChoices: [],
     targetRollModes: [],
     targetFlatBonuses: [],
+    targetAutomaticFailures: [],
     targetIds: ["projection-target"],
     d20TestNaturalOneRerolls: [projectionNestedReroll],
   }),
@@ -440,6 +441,7 @@ const projectionHoles = [
     areaChoices: [],
     targetRollModes: [],
     targetFlatBonuses: [],
+    targetAutomaticFailures: [],
     targetIds: ["projection-target"],
   }),
   projectionHole("selfTransformationModeChoice", {

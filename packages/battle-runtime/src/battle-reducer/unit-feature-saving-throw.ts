@@ -17,6 +17,7 @@ type UnitFeatureSavingThrowProjection = Pick<
   | "targetIds"
   | "targetRollModes"
   | "targetFlatBonuses"
+  | "targetAutomaticFailures"
 >;
 
 export function unitFeatureSingleTargetSavingThrowProjection(input: {

@@ -592,6 +592,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       targetIds: [],
       targetRollModes: [],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
     } as BattleHole;
 
     expect(

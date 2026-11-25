@@ -381,6 +381,7 @@ export function battleInputGuidance(hole: BattleHole) {
         ...battleAreaInputInstructions(hole),
         ...spatialFactInstructions(hole),
         ...savingThrowCoverInstructions(hole),
+        ...savingThrowAutomaticFailureInstructions(hole),
       ],
     },
   ];
@@ -397,6 +398,17 @@ function savingThrowCoverInstructions(hole: BattleHole): readonly string[] {
     ]),
     Match.exhaustive,
   );
+}
+
+function savingThrowAutomaticFailureInstructions(
+  hole: BattleHole,
+): readonly string[] {
+  if (hole.kind !== "savingThrowOutcome") return [];
+  return hole.targetAutomaticFailures.length === 0
+    ? []
+    : [
+        "Each target in targetAutomaticFailures fails this saving throw without rolling, because of the conditions listed with it. Give its outcome succeeded false and withoutRoll true, with no d20TestRoll.",
+      ];
 }
 
 function replacementTargetNeedsFreshProximity(hole: BattleHole): boolean {

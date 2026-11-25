@@ -83,7 +83,10 @@ type HazardSavingThrow =
   | MovablePersistentAreaEffect["save"];
 type SingleTargetSavingThrowProjections<Save extends HazardSavingThrow> = Pick<
   BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole,
-  "areaChoices" | "targetRollModes" | "targetFlatBonuses"
+  | "areaChoices"
+  | "targetRollModes"
+  | "targetFlatBonuses"
+  | "targetAutomaticFailures"
 > & {
   readonly ability: Save["ability"];
   readonly dc: Save["dc"];

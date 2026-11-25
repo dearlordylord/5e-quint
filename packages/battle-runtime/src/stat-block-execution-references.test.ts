@@ -2256,6 +2256,7 @@ describe("Stat Block execution references", () => {
               bonus: 1,
             },
           ],
+          targetAutomaticFailures: [],
         }),
       ),
     ).not.toThrow();

@@ -36,6 +36,29 @@ export const isIncapacitated = (state: ConditionState): boolean =>
   state.stunned ||
   state.unconscious;
 
+/**
+ * The conditions under which a creature automatically fails Strength and
+ * Dexterity saving throws. RAW: .references/srd-5.2.1/rules-glossary.md,
+ * Paralyzed, Petrified, Stunned and Unconscious: "You automatically fail
+ * Strength and Dexterity saving throws."
+ */
+export const STRENGTH_AND_DEXTERITY_SAVE_FAILING_CONDITIONS = [
+  "paralyzed",
+  "petrified",
+  "stunned",
+  "unconscious",
+] as const satisfies readonly ConditionFlag[];
+export type StrengthAndDexteritySaveFailingCondition =
+  (typeof STRENGTH_AND_DEXTERITY_SAVE_FAILING_CONDITIONS)[number];
+
+/** The conditions this creature has that fail its Strength and Dexterity saves. */
+export const strengthAndDexteritySaveFailingConditions = (
+  state: ConditionState,
+): readonly StrengthAndDexteritySaveFailingCondition[] =>
+  STRENGTH_AND_DEXTERITY_SAVE_FAILING_CONDITIONS.filter(
+    (condition) => state[condition],
+  );
+
 export const conditionStatesEqual = (
   left: ConditionState,
   right: ConditionState,
