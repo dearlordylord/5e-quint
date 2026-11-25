@@ -261,6 +261,27 @@ describe("attack-roll mode collector: one rule on every route", () => {
     expect(attackRollModeFromContributions(contributions)).toBe("normal");
   });
 
+  // RAW: playing-the-game.md, "Unseen Attackers and Targets": "When you make
+  // an attack roll against a target you can't see, you have Disadvantage."
+  test("an object the attacker can't see gives Disadvantage, and an unasked sight fact gives none", () => {
+    const state = fighterVsGoblinBattle();
+    const attack = firstMeleeAttack(state, fighterId);
+    const againstObject = (attackerCanSeeObject: boolean | undefined) =>
+      attackRollModeContributions(state, {
+        attackerId: fighterId,
+        target: { kind: "object", objectId, attackerCanSeeObject },
+        means: { kind: "attack", attack, opportunityAttack: false },
+        targetSpatialFacts: [],
+        ranged: { longRange: false, closeCombat: false },
+      });
+
+    expect(againstObject(false)).toEqual([
+      { source: "attackerCannotSeeTarget", mode: "disadvantage" },
+    ]);
+    expect(againstObject(true)).toEqual([]);
+    expect(againstObject(undefined)).toEqual([]);
+  });
+
   test("a creature-only source supplies nothing against an object", () => {
     const state = withCondition(
       fighterVsGoblinBattle(),
