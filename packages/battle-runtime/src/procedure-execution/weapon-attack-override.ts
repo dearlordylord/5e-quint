@@ -172,7 +172,7 @@ export function discoverWeaponAttackOverrideCastAct<
   Invocation extends WeaponAttackOverrideExecutableInvocation,
   ActiveDruidWildShape,
 >(
-  state: State,
+  state: State & WeaponAttackOverrideBattleState<Actor>,
   actorId: CombatantId,
   invocation: Invocation,
   runtime: WeaponAttackOverrideUsabilityRuntime<

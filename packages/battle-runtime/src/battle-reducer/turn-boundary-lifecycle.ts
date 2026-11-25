@@ -6258,18 +6258,6 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const deathSavingThrowResolution = resolveDeathSavingThrowRerolls({
-    state: input.state,
-    subject: input.subject,
-    endingActorId: actorId,
-    sourceTurn: nextSourceTurn,
-    nextActorId,
-    fill: deathSavingThrowFill,
-    orderedOccurrenceHandles: orderedStartTurnOccurrenceHandles,
-  });
-  if (deathSavingThrowResolution !== undefined) {
-    return deathSavingThrowResolution;
-  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     rechargeRollFill?.kind === "statBlockRechargeRoll" &&
@@ -6428,52 +6416,6 @@ function startTurnSaveGatedConditionWithRepeatDamageRepeatSaveResult(input: {
   });
 }
 
-function resolveDeathSavingThrowRerolls(input: {
-  readonly state: BattleState;
-  readonly subject: BattleSubject;
-  readonly endingActorId: CombatantId;
-  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-  readonly nextActorId: CombatantId;
-  readonly fill:
-    | Extract<BattleFill, { readonly kind: "deathSavingThrow" }>
-    | undefined;
-  readonly orderedOccurrenceHandles: readonly StartTurnOccurrenceHandle[];
-}): BattleResolutionResult | undefined {
-  if (input.fill === undefined) return undefined;
-  const hole = deathSavingThrowHole(input.nextActorId);
-  const rerolls = d20TestDeathSavingThrowRerolls({
-    state: input.state,
-    scope: { kind: "oneStep" },
-    roll: { rollerId: input.nextActorId, holeId: hole.holeId },
-    fill: input.fill,
-  });
-  if (rerolls.tag === "decisionsRequired") {
-    const deathSavingThrowHandle = input.orderedOccurrenceHandles.find(
-      (handle) => handle.kind === "deathSavingThrow",
-    );
-    if (deathSavingThrowHandle === undefined) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Death Saving Throw fill has no matching start-turn occurrence.",
-      );
-    }
-    return turnBoundaryNeedsHolesResult({
-      kind: "incomingStartTurnOccurrence",
-      state: input.state,
-      subject: input.subject,
-      endingActorId: input.endingActorId,
-      sourceTurn: input.sourceTurn,
-      occurrence: startTurnOccurrenceProjectionForHandle(
-        deathSavingThrowHandle,
-      ),
-      holes: [d20TestHoleWithRerollOptions(hole, rerolls.options)],
-    });
-  }
-  return rerolls.tag === "invalid"
-    ? invalidResult(input.state, "invalidFill", rerolls.issue)
-    : undefined;
-}
 
 const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
