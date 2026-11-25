@@ -14,6 +14,7 @@ import {
 } from "../battle-subjects.ts";
 import type {
   BattleCreatureState,
+  BattleObjectCustody,
   BattleState,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -23,14 +24,18 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
-  battleStateWithGroundObjects,
   battleStateWithObjectCustody,
   heldWeaponPickupTransition,
   loadoutWeaponHands,
   loadoutWeaponHandsAreFree,
+  type LoadoutWeaponSlot,
   loadoutWeaponSlot,
 } from "./battle-object-lifecycle.ts";
-import { battleObjectIsOnGround } from "./object-custody-queries.ts";
+import {
+  battleObjectIsOnGround,
+  type BattleEquipmentQuery,
+  type BattleActorObjectCustodyQuery,
+} from "./object-custody-queries.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
 import { combatantActiveDruidWildShape } from "./creature-state-leaves.ts";
 import {
@@ -49,6 +54,15 @@ export type AppliedAttackWeaponChange =
       readonly objectId: BattleObjectId;
       readonly positionId: BattleTablePositionId;
     };
+
+const WEAPON_CHANGE_CUSTODY = {
+  equip: null,
+  stow: { kind: "stowed" },
+  drop: { kind: "onGround" },
+} as const satisfies Record<
+  AttackWeaponChange["kind"],
+  Pick<BattleObjectCustody, "kind"> | null
+>;
 
 export const LOADOUT_WEAPON_CHANGE_ISSUE_REASONS = [
   "missingCombatant",
@@ -82,6 +96,21 @@ export function loadoutWeaponChangeIssue(
   actorId: CombatantId,
   change: AttackWeaponChange,
 ): LoadoutWeaponChangeIssue | null {
+  const admission = admittedLoadoutWeaponChange(state, actorId, change);
+  return admission.tag === "invalid" ? admission : null;
+}
+
+function admittedLoadoutWeaponChange(
+  state: BattleState,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+):
+  | LoadoutWeaponChangeIssue
+  | {
+      readonly tag: "admitted";
+      readonly actor: CharacterBattleCreatureState;
+      readonly slot: LoadoutWeaponSlot;
+    } {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return issue(
@@ -109,7 +138,7 @@ export function loadoutWeaponChangeIssue(
     );
   }
   const held = loadoutWeaponIsHeld(state, actorId, change.objectId);
-  return Match.value(change.kind).pipe(
+  const admission = Match.value(change.kind).pipe(
     Match.when("equip", () => {
       if (held) {
         return issue("weaponAlreadyHeld", "That weapon is already in hand.");
@@ -128,6 +157,7 @@ export function loadoutWeaponChangeIssue(
     ),
     Match.exhaustive,
   );
+  return admission ?? { tag: "admitted", actor, slot };
 }
 
 /** Every weapon change this character can make now. */
@@ -159,6 +189,41 @@ export function groundedLoadoutWeaponPickups(
   );
 }
 
+export function loadoutWeaponChangeAttackQuery(
+  state: BattleState,
+  actorId: CombatantId,
+  change: AttackWeaponChange,
+):
+  | LoadoutWeaponChangeIssue
+  | {
+      readonly tag: "projected";
+      readonly actor: CharacterBattleCreatureState;
+      readonly equipment: BattleEquipmentQuery;
+    } {
+  const admission = admittedLoadoutWeaponChange(state, actorId, change);
+  if (admission.tag === "invalid") return admission;
+  const actor =
+    change.kind === "equip"
+      ? actorWithLoadoutWeaponInHand(admission.actor, admission.slot)
+      : admission.actor;
+  const objects = new Map<BattleObjectId, Pick<BattleObjectCustody, "kind">>(
+    state.objectCustody.get(actorId),
+  );
+  const custody = WEAPON_CHANGE_CUSTODY[change.kind];
+  if (custody === null) objects.delete(change.objectId);
+  else objects.set(change.objectId, custody);
+  const objectCustody = new Map<CombatantId, BattleActorObjectCustodyQuery>(
+    state.objectCustody,
+  );
+  if (objects.size === 0) objectCustody.delete(actorId);
+  else objectCustody.set(actorId, objects);
+  return {
+    tag: "projected",
+    actor,
+    equipment: { objectCustody, grapples: state.grapples },
+  };
+}
+
 /**
  * Applies a weapon change that `loadoutWeaponChangeIssue` admits. Equip draws
  * a stowed weapon or picks a fallen one up; stow sheathes or stows a held one;
@@ -169,16 +234,16 @@ export function stateWithLoadoutWeaponChange(
   actorId: CombatantId,
   change: AppliedAttackWeaponChange,
 ): LoadoutWeaponChangeResult {
-  const admission = loadoutWeaponChangeIssue(state, actorId, change);
-  if (admission !== null) return admission;
+  const admission = admittedLoadoutWeaponChange(state, actorId, change);
+  if (admission.tag === "invalid") return admission;
   return Match.value(change).pipe(
     Match.when({ kind: "equip" }, ({ objectId }) => {
       if (loadoutWeaponIsStowed(state, actorId, objectId)) {
         return applied(
           withLoadoutWeaponInHand(
             battleStateWithObjectCustody(state, actorId, objectId, null),
-            actorId,
-            objectId,
+            admission.actor,
+            admission.slot,
           ),
         );
       }
@@ -189,32 +254,32 @@ export function stateWithLoadoutWeaponChange(
       }
       /* v8 ignore stop -- @preserve */
       return applied(
-        withLoadoutWeaponInHand(pickedUp.state, actorId, objectId),
+        withLoadoutWeaponInHand(
+          pickedUp.state,
+          admission.actor,
+          admission.slot,
+        ),
       );
     }),
     Match.when({ kind: "stow" }, ({ objectId }) =>
       applied(
+        battleStateWithObjectCustody(
+          state,
+          actorId,
+          objectId,
+          WEAPON_CHANGE_CUSTODY.stow,
+        ),
+      ),
+    ),
+    Match.when({ kind: "drop" }, ({ objectId, positionId }) =>
+      applied(
         battleStateWithObjectCustody(state, actorId, objectId, {
-          kind: "stowed",
+          ...WEAPON_CHANGE_CUSTODY.drop,
+          positionId,
+          source: { kind: "attackWeaponChange" },
         }),
       ),
     ),
-    Match.when({ kind: "drop" }, ({ objectId, positionId }) => {
-      const placed = battleStateWithGroundObjects(state, [
-        {
-          actorId,
-          objectId,
-          positionId,
-          source: { kind: "attackWeaponChange" },
-        },
-      ]);
-      /* v8 ignore start -- @preserve -- loadoutWeaponChangeIssue has just admitted a held weapon, which is not on the ground. */
-      if (placed.tag === "conflict") {
-        return issue("weaponNotHeld", placed.message);
-      }
-      /* v8 ignore stop -- @preserve */
-      return applied(placed.state);
-    }),
     Match.exhaustive,
   );
 }
@@ -239,30 +304,34 @@ export function loadoutWeaponChangeIsApplied(
   );
 }
 
-/** A weapon back in hand holds the hands its loadout grip gives it. */
-function withLoadoutWeaponInHand(
-  state: BattleState,
-  actorId: CombatantId,
-  objectId: BattleObjectId,
-): BattleState {
-  const actor = state.combatants.get(actorId);
-  /* v8 ignore next -- @preserve -- loadoutWeaponChangeIssue has just admitted this character's loadout weapon. */
-  if (actor === undefined || !isCharacterBattleCreatureState(actor))
-    return state;
-  const slot = loadoutWeaponSlot(actor, objectId);
-  /* v8 ignore next -- @preserve -- the same admission proved the slot. */
-  if (slot === null) return state;
+/** A weapon back in hand holds the hands its admitted loadout grip gives it. */
+function actorWithLoadoutWeaponInHand(
+  actor: CharacterBattleCreatureState,
+  slot: LoadoutWeaponSlot,
+): CharacterBattleCreatureState {
   const hands = loadoutWeaponHands(actor, slot);
-  const combatants = new Map(state.combatants);
-  combatants.set(actorId, {
+  return {
     ...actor,
     armorClass: {
       ...actor.armorClass,
       ...(hands.includes("left") ? { leftHandUse: slot } : {}),
       ...(hands.includes("right") ? { rightHandUse: slot } : {}),
     },
-  });
-  return { ...state, combatants };
+  };
+}
+
+function withLoadoutWeaponInHand(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  slot: LoadoutWeaponSlot,
+): BattleState {
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      actor.combatantId,
+      actorWithLoadoutWeaponInHand(actor, slot),
+    ),
+  };
 }
 
 function selectedLoadoutWeaponIds(
