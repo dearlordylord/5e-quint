@@ -339,8 +339,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         d20TestRerolls: [
           rerollRolledDieRoll({
             die: "first",
-            naturalD20: 20,
-            result: { total: 25, naturalD20: 20, rollMode: "advantage" },
+            first: 20,
+            second: 10,
+            result: { total: 25, rollMode: "advantage" },
           }),
         ],
       }),
@@ -383,8 +384,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         d20TestRerolls: [
           rerollRolledDieRoll({
             die: "first",
-            naturalD20: 12,
-            result: { total: 17, naturalD20: 12, rollMode: "advantage" },
+            first: 12,
+            second: 1,
+            result: { total: 17, rollMode: "advantage" },
           }),
         ],
       }),
@@ -433,8 +435,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         d20TestRerolls: [
           rerollRolledDieRoll({
             die: "first",
-            naturalD20: 12,
-            result: { total: 15, naturalD20: 10, rollMode: "disadvantage" },
+            first: 12,
+            second: 10,
+            result: { total: 15, rollMode: "disadvantage" },
           }),
         ],
       }),
@@ -475,8 +478,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           d20TestRerolls: [
             rerollRolledDieRoll({
               die: "second",
-              naturalD20: 12,
-              result: { total: 6, naturalD20: 1, rollMode: "disadvantage" },
+              first: 1,
+              second: 12,
+              result: { total: 6, rollMode: "disadvantage" },
             }),
           ],
         }),
@@ -518,8 +522,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       d20TestRerolls: [
         rerollRolledDieRoll({
           die: "first",
-          naturalD20: 20,
-          result: { total: 25, naturalD20: 20, rollMode: "advantage" },
+          first: 20,
+          second: 10,
+          result: { total: 25, rollMode: "advantage" },
         }),
       ],
     });
@@ -545,8 +550,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       d20TestRerolls: [
         rerollRolledDieOutcome({
           die: "first",
-          naturalD20: 12,
-          result: { succeeded: true, naturalD20: 10 },
+          first: 12,
+          second: 10,
+          rollMode: "disadvantage",
+          result: { succeeded: true },
         }),
       ],
     });
@@ -555,7 +562,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       succeeded: true,
       d20TestRoll: {
         tag: "multiple",
-        first: DieRollResult(10),
+        first: DieRollResult(12),
         second: DieRollResult(10),
         rollMode: "disadvantage",
       },
@@ -1219,8 +1226,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
               d20TestRerolls: [
                 rerollRolledDieOutcome({
                   die: "first",
-                  naturalD20: 20,
-                  result: { succeeded: true, naturalD20: 20 },
+                  first: 20,
+                  second: 10,
+                  rollMode: "advantage",
+                  result: { succeeded: true },
                 }),
               ],
             },
@@ -1858,8 +1867,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
             d20TestRerolls: [
               rerollRolledDieOutcome({
                 die: "first",
-                naturalD20: 20,
-                result: { succeeded: true, naturalD20: 20 },
+                first: 20,
+                second: 2,
+                rollMode: "advantage",
+                result: { succeeded: true },
               }),
             ],
           }),
@@ -2241,13 +2252,16 @@ function rerollRoll(input: {
 
 function rerollRolledDieRoll(input: {
   readonly die: "first" | "second";
-  readonly naturalD20: number;
+  readonly first: number;
+  readonly second: number;
   readonly result: {
     readonly total: number;
-    readonly naturalD20: number;
     readonly rollMode: "advantage" | "disadvantage";
   };
-}): BattleD20TestNaturalOneRerollDecision {
+}): Extract<
+  BattleD20TestNaturalOneRerollDecision,
+  { readonly kind: "rerollRolledDie" }
+> {
   return {
     kind: "rerollRolledDie",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
@@ -2257,8 +2271,8 @@ function rerollRolledDieRoll(input: {
         total: input.result.total,
         d20TestRoll: {
           tag: "multiple",
-          first: DieRollResult(input.result.naturalD20),
-          second: DieRollResult(input.result.naturalD20),
+          first: DieRollResult(input.first),
+          second: DieRollResult(input.second),
           rollMode: input.result.rollMode,
         },
       },
@@ -2308,10 +2322,11 @@ function rerollOutcome(input: {
 
 function rerollRolledDieOutcome(input: {
   readonly die: "first" | "second";
-  readonly naturalD20: number;
+  readonly first: number;
+  readonly second: number;
+  readonly rollMode: "advantage" | "disadvantage";
   readonly result: {
     readonly succeeded: boolean;
-    readonly naturalD20: number;
   };
 }): Extract<
   NonNullable<
@@ -2330,8 +2345,10 @@ function rerollRolledDieOutcome(input: {
       result: {
         succeeded: input.result.succeeded,
         d20TestRoll: {
-          tag: "single",
-          naturalD20: DieRollResult(input.result.naturalD20),
+          tag: "multiple",
+          first: DieRollResult(input.first),
+          second: DieRollResult(input.second),
+          rollMode: input.rollMode,
         },
       },
     },
@@ -2465,10 +2482,10 @@ function replayHalflingLuckRawD20RerollChoice(): {
       d20TestRerolls: [
         rerollRolledDieRoll({
           die: "first",
-          naturalD20: 20,
+          first: 20,
+          second: 10,
           result: {
             total: 25,
-            naturalD20: 20,
             rollMode: "advantage",
           },
         }),

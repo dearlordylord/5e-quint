@@ -57,17 +57,40 @@ export function directTargetCover(
  * The bonus Half Cover and Three-Quarters Cover each give, to AC and to
  * Dexterity saving throws alike.
  */
+export const COVER_BONUS_BY_DEGREE = {
+  half: 2,
+  threeQuarters: 5,
+} as const satisfies Record<BonusCoverType, CoverArmorClassBonus>;
+
 export const COVER_BONUSES = [
-  2, 5,
-] as const satisfies readonly CoverArmorClassBonus[];
+  COVER_BONUS_BY_DEGREE.half,
+  COVER_BONUS_BY_DEGREE.threeQuarters,
+] as const;
 export type CoverBonus = (typeof COVER_BONUSES)[number];
 
-export function coverBonus(cover: BonusCoverType): CoverBonus {
+export type CoverBenefit = {
+  readonly [Degree in BonusCoverType]: {
+    readonly cover: Degree;
+    readonly bonus: (typeof COVER_BONUS_BY_DEGREE)[Degree];
+  };
+}[BonusCoverType];
+
+export function coverBenefit(cover: BonusCoverType): CoverBenefit {
   return Match.value(cover).pipe(
-    Match.when("half", (): CoverBonus => 2),
-    Match.when("threeQuarters", (): CoverBonus => 5),
+    Match.when("half", () => ({
+      cover: "half" as const,
+      bonus: COVER_BONUS_BY_DEGREE.half,
+    })),
+    Match.when("threeQuarters", () => ({
+      cover: "threeQuarters" as const,
+      bonus: COVER_BONUS_BY_DEGREE.threeQuarters,
+    })),
     Match.exhaustive,
   );
+}
+
+export function coverBonus(cover: BonusCoverType): CoverBonus {
+  return coverBenefit(cover).bonus;
 }
 
 /**

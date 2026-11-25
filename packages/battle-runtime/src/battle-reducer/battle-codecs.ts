@@ -42,7 +42,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
-import { COVER_BONUSES } from "@dnd/shared-algebras/cover-algebra";
+import { COVER_BONUS_BY_DEGREE } from "@dnd/shared-algebras/cover-algebra";
 import {
   AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   OBJECT_INTERACTION_STATES,
@@ -1477,8 +1477,14 @@ const BattleSavingThrowFlatBonusProjectionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("cover"),
     targetId: CombatantId,
-    cover: Schema.Literals(BONUS_COVER_TYPES),
-    bonus: Schema.Literals(COVER_BONUSES),
+    cover: Schema.Literal("half"),
+    bonus: Schema.Literal(COVER_BONUS_BY_DEGREE.half),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cover"),
+    targetId: CombatantId,
+    cover: Schema.Literal("threeQuarters"),
+    bonus: Schema.Literal(COVER_BONUS_BY_DEGREE.threeQuarters),
   }),
 ]);
 
@@ -3837,7 +3843,10 @@ const BattleD20TestRollReplacementSchema = Schema.Struct({
 
 const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
-  result: BattleD20TestRollReplacementSchema,
+  result: Schema.Struct({
+    ...BattleD20TestRollReplacementSchema.fields,
+    d20TestRoll: BattleD20TestMultipleRollSchema,
+  }),
 });
 
 function battleD20TestRollRerollDecisionSchema<const EffectKind extends string>(
@@ -3881,7 +3890,7 @@ const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
   die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
   result: Schema.Struct({
     succeeded: Schema.Boolean,
-    d20TestRoll: BattleD20TestRollSchema,
+    d20TestRoll: BattleD20TestMultipleRollSchema,
   }),
 });
 

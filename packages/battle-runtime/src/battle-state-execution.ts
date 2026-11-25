@@ -151,7 +151,7 @@ import type {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import type {
-  CoverBonus,
+  CoverBenefit,
   SaveCoverBenefit,
 } from "@dnd/shared-algebras/cover-algebra";
 import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
@@ -5610,11 +5610,18 @@ export type BattleD20TestNaturalOneRerollOption = {
   readonly label: string;
 };
 export type BattleD20TestRoll = D20TestRoll;
+export type BattleD20TestMultipleRoll = Extract<
+  BattleD20TestRoll,
+  { readonly tag: "multiple" }
+>;
 export type BattleD20TestRolledDieKey = D20TestRolledDieKey;
 export type BattleD20TestRollReplacement = AttackRollResult;
 export type BattleD20TestRolledDieRollReplacement = {
   readonly die: BattleD20TestRolledDieKey;
-  readonly result: BattleD20TestRollReplacement;
+  /** The final pair: only the chosen die may differ from the preceding roll. */
+  readonly result: Omit<BattleD20TestRollReplacement, "d20TestRoll"> & {
+    readonly d20TestRoll: BattleD20TestMultipleRoll;
+  };
 };
 /**
  * A decision on one D20 Test reroll source after a roll: decline it, replace
@@ -5678,7 +5685,10 @@ export type BattleD20TestOutcomeReplacement = {
 };
 export type BattleD20TestRolledDieOutcomeReplacement = {
   readonly die: BattleD20TestRolledDieKey;
-  readonly result: BattleD20TestOutcomeReplacement;
+  /** The table's outcome and final pair after replacing the chosen die. */
+  readonly result: Omit<BattleD20TestOutcomeReplacement, "d20TestRoll"> & {
+    readonly d20TestRoll: BattleD20TestMultipleRoll;
+  };
 };
 export type BattleD20TestDieReplacement = D20Roll;
 /**
@@ -6703,12 +6713,10 @@ export type BattleSavingThrowFlatBonusProjection =
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly bonus: number;
     }
-  | {
+  | ({
       readonly kind: "cover";
       readonly targetId: CombatantId;
-      readonly cover: BonusCoverType;
-      readonly bonus: CoverBonus;
-    };
+    } & CoverBenefit);
 export type BattleSpellAreaInputRequest = {
   readonly kind:
     | "areaMembership"

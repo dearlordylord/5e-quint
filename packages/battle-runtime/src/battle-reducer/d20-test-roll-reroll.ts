@@ -1,7 +1,10 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
 // Replacement checks shared by every D20 Test reroll source: the natural-1
 // reroll, Heroic Inspiration and Seeking Spell. Each source supplies its own messages and
 // which rolled faces it may replace. Also the roll after one decision, for each
 // kind of D20 Test roll.
+
+import { Match } from "effect";
 
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -78,10 +81,6 @@ export function d20TestRolledDieRollReplacementIssue(input: {
   return d20TestRolledDieProjectionIssue({
     facts: input.facts,
     replacement: input.replacement,
-    projectedNaturalD20: Number(
-      selectedD20TestNaturalD20(input.replacement.result.d20TestRoll),
-    ),
-    projectedTotal: input.replacement.result.total,
     messages: input.messages,
     rerollableFace: input.rerollableFace,
   });
@@ -94,8 +93,6 @@ export function d20TestRolledDieProjectionIssue(input: {
   readonly replacement:
     | BattleD20TestRolledDieRollReplacement
     | BattleD20TestRolledDieOutcomeReplacement;
-  readonly projectedNaturalD20: number;
-  readonly projectedTotal?: number | undefined;
   readonly messages: D20TestRollRerollMessages;
   readonly rerollableFace: D20TestRerollableFace;
 }): string | null {
@@ -106,25 +103,25 @@ export function d20TestRolledDieProjectionIssue(input: {
   if (!input.rerollableFace(Number(original[input.replacement.die]))) {
     return input.messages.dieSelection;
   }
-  const replacementFace = selectedD20TestNaturalD20(
-    input.replacement.result.d20TestRoll,
+  const replacement = input.replacement.result.d20TestRoll;
+  if (replacement.rollMode !== original.rollMode) {
+    return input.messages.mode;
+  }
+  const untouchedDieMatches = Match.value(input.replacement.die).pipe(
+    Match.when("first", () => replacement.second === original.second),
+    Match.when("second", () => replacement.first === original.first),
+    Match.exhaustive,
   );
-  const replaced = replaceD20TestRoll(
-    original,
-    input.replacement.die,
-    replacementFace,
-  );
-  const projectedNaturalD20 = Number(selectedD20TestNaturalD20(replaced));
-  if (input.projectedNaturalD20 !== projectedNaturalD20) {
+  if (!untouchedDieMatches) {
     return input.messages.projection;
   }
   if (
-    input.projectedTotal !== undefined &&
+    "total" in input.replacement.result &&
     input.facts.total !== undefined &&
-    input.projectedTotal !==
+    input.replacement.result.total !==
       input.facts.total -
         Number(selectedD20TestNaturalD20(original)) +
-        projectedNaturalD20
+        Number(selectedD20TestNaturalD20(replacement))
   ) {
     return input.messages.projection;
   }
@@ -146,10 +143,7 @@ export function d20TestRollAfterReroll<
     return {
       ...roll,
       total: decision.replacement.result.total,
-      d20TestRoll: d20TestRollAfterRolledDieReplacement(
-        roll.d20TestRoll,
-        decision.replacement,
-      ),
+      d20TestRoll: decision.replacement.result.d20TestRoll,
     };
   }
   return decision.kind === "reroll"
@@ -175,10 +169,7 @@ export function d20TestOutcomeAfterReroll<
     return {
       ...outcome,
       succeeded: decision.replacement.result.succeeded,
-      d20TestRoll: d20TestRollAfterRolledDieReplacement(
-        outcome.d20TestRoll,
-        decision.replacement,
-      ),
+      d20TestRoll: decision.replacement.result.d20TestRoll,
     };
   }
   return decision.kind === "reroll"
@@ -196,36 +187,6 @@ export function d20TestDieAfterReroll(
   decision: BattleD20TestDieRerollDecision<string>,
 ): BattleD20TestDieReplacement {
   return decision.kind === "reroll" ? decision.replacement : naturalD20;
-}
-
-function replaceD20TestRoll(
-  roll: Extract<BattleD20TestRoll, { readonly tag: "multiple" }>,
-  die: "first" | "second",
-  replacementFace: Extract<
-    BattleD20TestRoll,
-    { readonly tag: "single" }
-  >["naturalD20"],
-): Extract<BattleD20TestRoll, { readonly tag: "multiple" }> {
-  return {
-    ...roll,
-    [die]: replacementFace,
-  } as const;
-}
-
-export function d20TestRollAfterRolledDieReplacement(
-  original: BattleD20TestRoll | undefined,
-  replacement:
-    | BattleD20TestRolledDieRollReplacement
-    | BattleD20TestRolledDieOutcomeReplacement,
-): BattleD20TestRoll {
-  const replacementRoll = replacement.result.d20TestRoll;
-  return original?.tag === "multiple"
-    ? replaceD20TestRoll(
-        original,
-        replacement.die,
-        selectedD20TestNaturalD20(replacementRoll),
-      )
-    : replacementRoll;
 }
 
 /**

@@ -6,10 +6,7 @@
 // or a Death Saving Throw) and spends it when the reroll is taken.
 
 import { NO_HEROIC_INSPIRATION } from "@dnd/shared/game-facts";
-import {
-  selectedD20TestNaturalD20,
-  type AttackRollMode,
-} from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Brand, Match } from "effect";
 
 import {
@@ -317,9 +314,6 @@ export function heroicInspirationRerollOutcomeIssue(input: {
         d20TestRolledDieProjectionIssue({
           facts: { d20TestRoll: input.originalD20TestRoll },
           replacement,
-          projectedNaturalD20: Number(
-            selectedD20TestNaturalD20(replacement.result.d20TestRoll),
-          ),
           messages: HEROIC_INSPIRATION_REROLL_MESSAGES,
           rerollableFace: anyD20Face,
         }),

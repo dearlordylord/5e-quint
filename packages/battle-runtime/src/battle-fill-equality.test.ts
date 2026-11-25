@@ -26,6 +26,7 @@ import {
   BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
   type BattleAttackRollResult,
   type BattleD20TestRoll,
+  type BattleD20TestMultipleRoll,
   type BattleD20TestNaturalOneRerollDecision,
   type BattleD20TestNaturalOneRerollOutcomeDecision,
   type BattleSpellAttackRerollDecision,
@@ -60,7 +61,7 @@ const d20RollArbitrary: fc.Arbitrary<D20Roll> = fc
 const combatantIdArbitrary = fc
   .integer({ min: 0, max: 8 })
   .map((index) => combatantId(`combatant:equality:${index}`));
-const multipleD20TestRollArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc
+const multipleD20TestRollArbitrary: fc.Arbitrary<BattleD20TestMultipleRoll> = fc
   .tuple(
     dieRollArbitrary,
     dieRollArbitrary,
@@ -113,13 +114,14 @@ const naturalOneRerollRollDecisionArbitrary: fc.Arbitrary<BattleD20TestNaturalOn
     fc
       .tuple(
         fc.constantFrom("first" as const, "second" as const),
-        baseAttackRollArbitrary,
+        fc.integer({ min: -10, max: 40 }),
+        multipleD20TestRollArbitrary,
       )
       .map(
-        ([die, result]): BattleD20TestNaturalOneRerollDecision => ({
+        ([die, total, d20TestRoll]): BattleD20TestNaturalOneRerollDecision => ({
           kind: "rerollRolledDie" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: { die, result },
+          replacement: { die, result: { total, d20TestRoll } },
         }),
       ),
   );
@@ -143,7 +145,7 @@ const naturalOneRerollOutcomeDecisionArbitrary: fc.Arbitrary<BattleD20TestNatura
       .tuple(
         fc.constantFrom("first" as const, "second" as const),
         fc.boolean(),
-        d20TestRollArbitrary,
+        multipleD20TestRollArbitrary,
       )
       .map(
         ([
@@ -414,7 +416,12 @@ describe("battle fill equality", () => {
         die: "first",
         result: {
           total: 13,
-          d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+          d20TestRoll: {
+            tag: "multiple",
+            first: DieRollResult(13),
+            second: DieRollResult(2),
+            rollMode: "advantage",
+          },
         },
       },
     } as const;
@@ -503,8 +510,10 @@ describe("battle fill equality", () => {
           result: {
             succeeded: resultSucceeded,
             d20TestRoll: {
-              tag: "single",
-              naturalD20: DieRollResult(replacementNaturalD20),
+              tag: "multiple",
+              first: DieRollResult(replacementNaturalD20),
+              second: DieRollResult(2),
+              rollMode: "advantage",
             },
           },
         },

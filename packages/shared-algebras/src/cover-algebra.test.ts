@@ -5,6 +5,7 @@ import {
   bonusCover,
   coverArmorClassBonus,
   coverBonus,
+  coverBenefit,
   coverTargeting,
   directTargetCover,
   ruledCoverField,
@@ -52,6 +53,11 @@ describe("cover algebra", () => {
   test("Half Cover adds 2 and Three-Quarters Cover adds 5 to a Dexterity saving throw", () => {
     expect(coverBonus("half")).toBe(2);
     expect(coverBonus("threeQuarters")).toBe(5);
+    expect(coverBenefit("half")).toEqual({ cover: "half", bonus: 2 });
+    expect(coverBenefit("threeQuarters")).toEqual({
+      cover: "threeQuarters",
+      bonus: 5,
+    });
   });
 
   test("only Half Cover and Three-Quarters Cover add a bonus", () => {

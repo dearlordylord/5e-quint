@@ -24,6 +24,7 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type {
+  ActivationPhase,
   Attachment,
   Components,
   DurationEndTrigger,
@@ -418,6 +419,7 @@ type SpellAreaAttachmentField = Exclude<
   SpellAreaAttachmentRequiredField
 >;
 type SpellAreaHoleAttachment = Extract<
+  ActivationPhase,
   Attachment,
   { readonly kind: "hole" }
 > & {
@@ -473,6 +475,7 @@ type SpellTargetAttachment = Omit<SpellTargetHoleAttachment, "value"> & {
   readonly value: SpellTargetAttachmentValue;
 };
 type SpellDirectTargetAttachment = Extract<
+  ActivationPhase,
   Attachment,
   { readonly kind: "target" }
 >;
@@ -1374,34 +1377,55 @@ type AdmissionIssueFor<Inspection> = Inspection extends {
   ? Issue
   : never;
 
-/**
- * Whether any save gate in a spell's mechanics, nested ones included, denies
- * its target the benefit of cover for the save.
- */
-function mechanicsDenySaveCoverBenefit(
-  mechanics: SpellMechanicsAdmissionSource["mechanics"],
-): boolean {
-  return mechanicsNodeDeniesSaveCoverBenefit(mechanics);
+/** Inspect the executable phase positions owned by the parsed mechanics. */
+function mechanicsDenySaveCoverBenefit(mechanics: SpellMechanics): boolean {
+  return Match.value(mechanics).pipe(
+    Match.whenOr("activation", "triggered_reaction", ({ phases }) =>
+      phases.some(phaseDeniesSaveCoverBenefit),
+    ),
+    Match.when("ongoing_effect", ({ initialPhase }) =>
+      initialPhase === undefined
+        ? false
+        : phaseDeniesSaveCoverBenefit(initialPhase),
+    ),
+    Match.whenOr(
+      "modal_ongoing_effect",
+      "modal_activation",
+      "passive_hit_intercept",
+      "anchored_trigger",
+      "magic_circle_ward",
+      "stone_merge",
+      "glyph_warding",
+      "spawned_creature",
+      "reanimated_creature",
+      "templated_multi_spawn",
+      "object_repair",
+      "minor_magic_effect_menu",
+      () => false,
+    ),
+    Match.exhaustive,
+  );
 }
 
-/**
- * The structural search behind mechanicsDenySaveCoverBenefit. It looks through
- * every nested field of the parsed mechanics rather than listing where phases
- * nest, so a save gate nested in a place added to Surface later is still
- * found, and the spell is refused rather than given cover it shouldn't get.
- */
-function mechanicsNodeDeniesSaveCoverBenefit(node: unknown): boolean {
-  if (Array.isArray(node))
-    return node.some(mechanicsNodeDeniesSaveCoverBenefit);
-  if (typeof node !== "object" || node === null) return false;
-  if (
-    "kind" in node &&
-    node.kind === "save_gate" &&
-    "saveCoverBenefit" in node &&
-    node.saveCoverBenefit !== undefined
-  )
-    return true;
-  return Object.values(node).some(mechanicsNodeDeniesSaveCoverBenefit);
+function phaseDeniesSaveCoverBenefit(phase: ActivationPhase): boolean {
+  return Match.value(phase).pipe(
+    Match.when(
+      "save_gate",
+      ({ saveCoverBenefit }) => saveCoverBenefit !== undefined,
+    ),
+    Match.when(
+      "attack_roll",
+      ({ continue: continuation }) =>
+        continuation?.next.some(phaseDeniesSaveCoverBenefit) ?? false,
+    ),
+    Match.when("random_table", ({ outcomes }) =>
+      outcomes.some(
+        ({ phases }) => phases?.some(phaseDeniesSaveCoverBenefit) ?? false,
+      ),
+    ),
+    Match.whenOr("ability_check_gate", "direct", () => false),
+    Match.exhaustive,
+  );
 }
 
 /**

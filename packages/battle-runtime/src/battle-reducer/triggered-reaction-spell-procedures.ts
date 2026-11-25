@@ -1,4 +1,4 @@
-import { spellFillSetSpellTargetFacts } from "./spells-resolve-fill-set.ts";
+import { spellFillSetTargetSpatialFacts } from "./spells-resolve-fill-set.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Match } from "effect";
@@ -477,7 +477,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     input.state,
     input.subject.reactorId,
     input.invocation,
-    { spellTargetFacts: spellFillSetSpellTargetFacts(fillSet) },
+    { targetSpatialFacts: spellFillSetTargetSpatialFacts(fillSet) },
   );
   if (fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.state, input.subject, [savingThrowHole]);

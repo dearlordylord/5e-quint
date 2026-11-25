@@ -76,7 +76,6 @@ import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-p
 import {
   savingThrowCoverRuling,
   spellTargetSaveCover,
-  type SpellTargetFact,
 } from "./saving-throw-cover.ts";
 import {
   attackDamageAbilityModifierChoiceUnsupportedIssue,
@@ -1174,10 +1173,10 @@ export function spellSavingThrowOutcomeHole(
     readonly heightenedSpellTargetId?: CombatantId | undefined;
     readonly relationshipFacts?: readonly BattleSpellTargetListRelationshipFact[];
     /**
-     * The spell's target facts, whose cover the save projects. Leave them out
-     * where the save's effect doesn't originate at the caster.
+     * Complete target evidence for canonical admission, including disposition.
+     * Omit it where the save's effect doesn't originate at the caster.
      */
-    readonly spellTargetFacts?: readonly SpellTargetFact[];
+    readonly targetSpatialFacts?: readonly BattleTargetSpatialFact[];
   } = {},
 ): BattleSpellSavingThrowOutcomeHole {
   const { heightenedSpellTargetId, relationshipFacts = [] } = context;
@@ -1188,10 +1187,11 @@ export function spellSavingThrowOutcomeHole(
       ? invocation.targeting
       : spellSavingThrowTargeting(invocation);
   const cover = spellSaveCover({
+    state,
     invocation,
     casterId: actorId,
     ability,
-    spellTargetFacts: context.spellTargetFacts,
+    targetSpatialFacts: context.targetSpatialFacts,
   });
   return {
     kind: "savingThrowOutcome",
@@ -1269,10 +1269,11 @@ export function spellSavingThrowOutcomeHole(
  * fact, with the bonus each ruled degree gives.
  */
 function spellSaveCover(input: {
+  readonly state: BattleState;
   readonly invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2];
   readonly casterId: CombatantId;
   readonly ability: Ability;
-  readonly spellTargetFacts: readonly SpellTargetFact[] | undefined;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[] | undefined;
 }): {
   readonly fact: { readonly saveCover?: BattleSpellSaveCover };
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
@@ -1282,9 +1283,10 @@ function spellSaveCover(input: {
   }
   const cover = spellTargetSaveCover({
     ruling: savingThrowCoverRuling({ ability: input.ability }),
+    state: input.state,
     casterId: input.casterId,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    spellTargetFacts: input.spellTargetFacts ?? [],
+    invocation: input.invocation,
+    targetSpatialFacts: input.targetSpatialFacts ?? [],
   });
   const [firstTargetId, ...otherTargetIds] = cover.ruledTargetIds;
   return {

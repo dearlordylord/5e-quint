@@ -252,7 +252,8 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
           d20TestRerolls: [
             rerollRolledDie({
               die: "first",
-              naturalD20: 18,
+              first: 18,
+              second: 4,
               total: 23,
             }),
           ],
@@ -864,7 +865,8 @@ describe("Heroic Inspiration reroll on attack rolls", () => {
       d20TestRerolls: [
         rerollRolledDie({
           die: "first",
-          naturalD20: 18,
+          first: 18,
+          second: 4,
           total: 23,
         }),
       ],
@@ -1115,9 +1117,13 @@ function naturalOneReroll(input: {
 
 function rerollRolledDie(input: {
   readonly die: "first" | "second";
-  readonly naturalD20: number;
+  readonly first: number;
+  readonly second: number;
   readonly total: number;
-}): BattleHeroicInspirationRerollDecision {
+}): Extract<
+  BattleHeroicInspirationRerollDecision,
+  { readonly kind: "rerollRolledDie" }
+> {
   return {
     kind: "rerollRolledDie",
     effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
@@ -1127,8 +1133,8 @@ function rerollRolledDie(input: {
         total: input.total,
         d20TestRoll: {
           tag: "multiple",
-          first: DieRollResult(input.naturalD20),
-          second: DieRollResult(input.naturalD20),
+          first: DieRollResult(input.first),
+          second: DieRollResult(input.second),
           rollMode: "advantage",
         },
       },

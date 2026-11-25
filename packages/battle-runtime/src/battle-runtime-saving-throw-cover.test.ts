@@ -7,14 +7,15 @@
 import type { BonusCoverType, RuledCoverType } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { Result, Schema } from "effect";
 import {
   savingThrowCoverRuling,
   savingThrowFillsCoverIssue,
-  spellTargetSaveCover,
 } from "./battle-reducer/saving-throw-cover.ts";
 import { admitRegisteredSpellProcedureMechanics } from "./battle-reducer/spell-procedure-profiles/admission-registry.ts";
 import type { BattleHole, BattleSubject } from "./index.ts";
 import {
+  BattleHoleSchema,
   battleId,
   cantripSpellInvocationRef,
   characterSeed,
@@ -138,7 +139,7 @@ function burningHands() {
         ),
       ],
     });
-  return { hole, save };
+  return { state, subject, hole, save };
 }
 
 const SYNTHETIC_TARGETED_DEX_CANTRIP_ID = "synthetic_radiant_descent";
@@ -219,7 +220,7 @@ function targetedSave(spell: SpellRecord) {
         ),
       ],
     });
-  return { state, subject, saveHole, save };
+  return { state, subject, target, saveHole, save };
 }
 
 /** Grease with its initial save gate denying the benefit of cover. */
@@ -308,24 +309,35 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     if (hole.kind !== "savingThrowOutcome") throw new Error("Expected a save.");
     expect(hole.ability).toBe("con");
     expect(savingThrowCoverRuling(hole)).toBe("noCoverBenefit");
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          target,
-          withOutcomeCover(
-            savingThrowOutcomeFill(hole, [rolled(skeletonId, true)]),
-            new Map([[skeletonId, "half"]]),
-          ),
-        ],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Cover adds nothing to this saving throw; omit cover on its outcomes.",
-    });
+    const coveredSave = withOutcomeCover(
+      savingThrowOutcomeFill(hole, [rolled(skeletonId, true)]),
+      new Map([[skeletonId, "half"]]),
+    );
+    for (const fills of [
+      [target, coveredSave],
+      [coveredSave, target],
+    ]) {
+      expect(resolveBattleSubject({ state, subject, fills })).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          "Cover adds nothing to this saving throw; omit cover on its outcomes.",
+      });
+    }
+    const uncoveredSave = savingThrowOutcomeFill(hole, [
+      rolled(skeletonId, true),
+    ]);
+    for (const fills of [
+      [target, uncoveredSave],
+      [uncoveredSave, target],
+    ]) {
+      expect(
+        requireHole(
+          resolveBattleSubject({ state, subject, fills }),
+          "rolledDice",
+        ),
+      ).toMatchObject({ kind: "rolledDice" });
+    }
   });
 
   test("a targeted spell's Dexterity save shows the cover ruled on its spellTarget fact and refuses it again on the outcome", () => {
@@ -352,38 +364,91 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     expect(save("half", undefined).tag).not.toBe("invalid");
   });
 
-  test("a spell's save takes each target's cover once, from that caster's spellTarget fact", () => {
-    const { saveHole } = targetedSave(syntheticTargetedDexCantrip());
-    const hole = saveHole(undefined);
-    if (!("sourceProcedureRef" in hole)) {
-      throw new Error("Expected a spell's save hole.");
-    }
-    const { sourceProcedureRef } = hole;
-    const fact = {
-      kind: "spellTarget",
-      casterId: wizardId,
-      targetId: skeletonId,
-      sourceProcedureRef,
-      cover: "half",
-    } as const;
-    expect(
-      spellTargetSaveCover({
-        ruling: "coverBenefit",
-        casterId: wizardId,
-        sourceProcedureRef,
-        spellTargetFacts: [
-          fact,
-          { ...fact, cover: "threeQuarters" },
-          { ...fact, casterId: secondSkeletonId, targetId: secondSkeletonId },
-          { ...fact, targetId: secondSkeletonId, cover: "total" },
+  test("save guidance uses the same admissible target fact as targeting", () => {
+    const { state, subject, target } = targetedSave(
+      syntheticTargetedDexCantrip(),
+    );
+    for (const cover of ["half", "threeQuarters"] as const) {
+      const admittedTarget = target(cover);
+      const totalTarget = target("total");
+      // Contradictory duplicate evidence is a boundary edge case: admission
+      // skips Total Cover and the save must retain that same admitted fact.
+      const result = resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            ...admittedTarget,
+            spatialFacts: [
+              ...(totalTarget.spatialFacts ?? []),
+              ...(admittedTarget.spatialFacts ?? []),
+            ],
+          },
         ],
-      }),
-    ).toEqual({
-      ruledTargetIds: [skeletonId, secondSkeletonId],
-      flatBonuses: [
-        { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
-      ],
-    });
+      });
+      const hole = requireHole(result, "savingThrowOutcome");
+      expect(coverBonuses(hole)).toEqual([
+        {
+          kind: "cover",
+          targetId: skeletonId,
+          cover,
+          bonus: cover === "half" ? 2 : 5,
+        },
+      ]);
+      expect(hole).toMatchObject({
+        saveCover: { kind: "ruledOnSpellTargets", targetIds: [skeletonId] },
+      });
+    }
+  });
+
+  test("cover validation does not hide duplicate saving throw answers", () => {
+    const { state, subject, hole } = burningHands();
+    const fill = withOutcomeCover(
+      savingThrowOutcomeFill(hole, [rolled(skeletonId, true), rolled(secondSkeletonId, false)]),
+      new Map([[skeletonId, "half"]]),
+    );
+    expect(resolveBattleSubject({
+      state,
+      subject,
+      fills: [fill, fill],
+    })).toMatchObject({ tag: "invalid" });
+  });
+
+  test("the hole codec keeps cover degrees correlated with their bonuses", () => {
+    const { saveHole } = targetedSave(syntheticTargetedDexCantrip());
+    const hole = saveHole("half");
+    for (const [cover, bonus] of [
+      ["half", 2],
+      ["threeQuarters", 5],
+    ] as const) {
+      expect(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleHoleSchema)({
+            ...hole,
+            targetFlatBonuses: [
+              { kind: "cover", targetId: skeletonId, cover, bonus },
+            ],
+          }),
+        ),
+      ).toBe(true);
+    }
+    // These cross-pairs are impossible rule facts, even when storage receives
+    // otherwise well-formed data.
+    for (const [cover, bonus] of [
+      ["half", 5],
+      ["threeQuarters", 2],
+    ] as const) {
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleHoleSchema)({
+            ...hole,
+            targetFlatBonuses: [
+              { kind: "cover", targetId: skeletonId, cover, bonus },
+            ],
+          }),
+        ),
+      ).toBe(true);
+    }
   });
 
   test("a covered save fill that answers no open hole is left to the resolution to refuse", () => {
@@ -394,7 +459,7 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
       savingThrowOutcomeFill(saveHole(undefined), [rolled(skeletonId, true)]),
       new Map([[skeletonId, "half"]]),
     );
-    // Without its target fill first, the save hole isn't open yet.
+    // Without a target fact anywhere in the fill set, the save cannot open.
     expect(
       savingThrowFillsCoverIssue([fill], (fills) =>
         resolveBattleSubject({ state, subject, fills }),

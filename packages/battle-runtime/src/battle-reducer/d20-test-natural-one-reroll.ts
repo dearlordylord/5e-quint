@@ -1,7 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleCreatureState,
   BattleD20TestNaturalOneRerollDieDecision,
@@ -295,9 +294,6 @@ function d20TestNaturalOneRerollRolledDieOutcomeIssue(input: {
   return d20TestRolledDieProjectionIssue({
     facts: input.facts,
     replacement: input.replacement,
-    projectedNaturalD20: Number(
-      selectedD20TestNaturalD20(input.replacement.result.d20TestRoll),
-    ),
     messages: D20_TEST_NATURAL_ONE_REROLL_MESSAGES,
     rerollableFace: d20FaceIsNaturalOne,
   });

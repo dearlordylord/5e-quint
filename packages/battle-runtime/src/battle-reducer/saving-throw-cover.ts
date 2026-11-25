@@ -9,20 +9,22 @@
 // target's spellTarget fact.
 import {
   bonusCover,
-  coverBonus,
-  directTargetCover,
+  coverBenefit,
   savingThrowBenefitsFromCover,
 } from "@dnd/shared-algebras/cover-algebra";
 import type { BonusCoverType } from "@dnd/shared/types";
 import type {
+  BattleExecutableSpellInvocation,
   BattleFill,
   BattleHole,
   BattleResolutionResult,
   BattleSavingThrowFlatBonusProjection,
   BattleSpellSaveCover,
+  BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
+import { spellTargetAdmission } from "./spells-targeting.ts";
 
 /**
  * Whether a saving throw hole lets cover add to the save.
@@ -48,13 +50,13 @@ type SavingThrowOutcomeFill = Extract<
   { readonly kind: "savingThrowOutcome" }
 >;
 /** A spell's target fact, which carries the cover ruled for its target. */
-export type SpellTargetFact = Extract<
+type SpellTargetFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellTarget" }
 >;
 
 /** Whether a target fact is a spellTarget fact. */
-export function isSpellTargetFact(
+function isSpellTargetFact(
   fact: BattleTargetSpatialFact,
 ): fact is SpellTargetFact {
   return fact.kind === "spellTarget";
@@ -86,22 +88,17 @@ function coverRuledTargetIds(
 export function coverSavingThrowFlatBonus(
   targetId: CombatantId,
   cover: BonusCoverType,
-): BattleSavingThrowFlatBonusProjection {
-  return { kind: "cover", targetId, cover, bonus: coverBonus(cover) };
+): Extract<BattleSavingThrowFlatBonusProjection, { readonly kind: "cover" }> {
+  return { kind: "cover", targetId, ...coverBenefit(cover) };
 }
 
-/**
- * The cover a spell's saving throw takes from its targeting, when cover adds
- * to it: each target the caster's spell has a spellTarget fact for keeps the
- * cover ruled there, from its first such fact, and its degree's bonus shows as
- * a flat bonus. Total Cover gives none, since a spell can't target a creature
- * behind it.
- */
+/** Project cover from the same admission that makes each spell target legal. */
 export function spellTargetSaveCover(input: {
   readonly ruling: SavingThrowCoverRuling;
+  readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly spellTargetFacts: readonly SpellTargetFact[];
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): {
   readonly ruledTargetIds: readonly CombatantId[];
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
@@ -109,24 +106,31 @@ export function spellTargetSaveCover(input: {
   if (input.ruling === "noCoverBenefit") {
     return { ruledTargetIds: [], flatBonuses: [] };
   }
-  const factByTargetId = new Map<CombatantId, SpellTargetFact>();
-  for (const fact of input.spellTargetFacts) {
-    if (
-      fact.casterId === input.casterId &&
-      fact.sourceProcedureRef === input.sourceProcedureRef &&
-      !factByTargetId.has(fact.targetId)
-    )
-      factByTargetId.set(fact.targetId, fact);
-  }
-  const facts = [...factByTargetId.values()];
+  const targetIds = new Set(
+    input.targetSpatialFacts
+      .filter(isSpellTargetFact)
+      .filter(
+        (fact) =>
+          fact.casterId === input.casterId &&
+          fact.sourceProcedureRef === input.invocation.sourceProcedureRef,
+      )
+      .map((fact) => fact.targetId),
+  );
+  const admitted = [...targetIds].flatMap((targetId) => {
+    const admission = spellTargetAdmission(
+      input.state,
+      input.casterId,
+      targetId,
+      input.invocation,
+      input.targetSpatialFacts,
+    );
+    return admission === null ? [] : [{ targetId, ...admission }];
+  });
   return {
-    ruledTargetIds: facts.map((fact) => fact.targetId),
-    flatBonuses: facts.flatMap((fact) => {
-      const degree = directTargetCover(fact.cover);
-      const cover = degree === null ? null : bonusCover(degree);
-      return cover === null
-        ? []
-        : [coverSavingThrowFlatBonus(fact.targetId, cover)];
+    ruledTargetIds: admitted.map(({ targetId }) => targetId),
+    flatBonuses: admitted.flatMap(({ targetId, cover: degree }) => {
+      const cover = bonusCover(degree);
+      return cover === null ? [] : [coverSavingThrowFlatBonus(targetId, cover)];
     }),
   };
 }
@@ -175,9 +179,9 @@ function frontierSavingThrowHole(
 
 /**
  * Why a fill's outcome cover doesn't answer the saving throw hole it fills, or
- * null. Each saving throw fill with cover is checked against the hole that the
- * fills before it leave open. When those fills don't leave it open, the
- * resolution itself reports why, so this check has nothing to add.
+ * null. Resolve all other fills to discover the hole, since a fill set's facts
+ * are not ordered by their position in the input array. Duplicate or unrelated
+ * fills remain the resolver's responsibility.
  */
 export function savingThrowFillsCoverIssue(
   fills: readonly BattleFill[],
@@ -187,7 +191,9 @@ export function savingThrowFillsCoverIssue(
     if (fill.kind !== "savingThrowOutcome") continue;
     if (coveredOutcomeTargetIds(fill).length === 0) continue;
     const hole = frontierSavingThrowHole(
-      resolveFills(fills.slice(0, index)),
+      resolveFills(
+        fills.filter((_, candidateIndex) => candidateIndex !== index),
+      ),
       fill,
     );
     if (hole === undefined) continue;
