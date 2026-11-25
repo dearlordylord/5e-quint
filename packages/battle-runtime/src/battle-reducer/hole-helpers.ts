@@ -342,12 +342,12 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "turnStartHeroicInspirationChoice",
         () => "turnStartHeroicInspirationChoice" as const,
       ),
+    )
+    .pipe(
       byBattleHoleKind(
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,
       ),
-    )
-    .pipe(
       byBattleHoleKind(
         "wildShapeEquipmentDisposition",
         () => "wildShapeEquipmentDisposition" as const,
