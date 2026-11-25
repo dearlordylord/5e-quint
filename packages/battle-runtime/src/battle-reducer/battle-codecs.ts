@@ -245,6 +245,7 @@ import type { StatBlockExecutionSnapshot } from "../stat-block-execution-state.t
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
+  BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES,
 } from "../battle-state-execution.ts";
 import {
   ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS,
@@ -2279,6 +2280,13 @@ const AdditionalStructuralHolePayloadMembers = [
     directionRequirement: Schema.Literal("awayFromSource"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("turnStartHeroicInspirationChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    sourceTurn: BattleStartTurnSourceTurnSchema,
+    occurrenceId: BattleStartTurnOccurrenceId,
+  }),
 ] as const;
 
 const AdditionalStructuralMechanicalHolePayloadMembers = [
@@ -2299,6 +2307,9 @@ const AdditionalStructuralMechanicalHolePayloadMembers = [
   ),
   mechanicalBattleHoleSchemaFromLabeled(
     AdditionalStructuralHolePayloadMembers[2],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    AdditionalStructuralHolePayloadMembers[3],
   ),
 ] as const;
 
@@ -4473,6 +4484,11 @@ type BattleFillEncoded =
       readonly value: (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
     }
   | {
+      readonly kind: "turnStartHeroicInspirationChoice";
+      readonly holeId: string;
+      readonly value: (typeof BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES)[number];
+    }
+  | {
       readonly kind: "persistentAreaSourceTurnTranslation";
       readonly holeId: string;
       readonly value: {
@@ -5748,6 +5764,11 @@ export const BattleFillSchema: Schema.Codec<
       kind: Schema.Literal("temporaryHitPointChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literals(BATTLE_TEMPORARY_HIT_POINT_CHOICES),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("turnStartHeroicInspirationChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literals(BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES),
     }),
     Schema.Struct({
       kind: Schema.Literal("persistentAreaSourceTurnTranslation"),
@@ -8744,6 +8765,9 @@ function serializedBattleHoleExecutionReferences(
           activeEffect("turnStartTemporaryHitPoints"),
           value.sourceTurn.actorId,
         ),
+      ],
+      turnStartHeroicInspirationChoice: (value) => [
+        source(value.sourceProcedureRef, value.sourceTurn.actorId),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),

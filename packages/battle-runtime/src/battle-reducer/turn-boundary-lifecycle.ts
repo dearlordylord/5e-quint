@@ -9,6 +9,7 @@ import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle stat-block.resource-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.combat-turn-start-heroic-inspiration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -122,6 +123,11 @@ import {
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
+import {
+  battleStateAfterTurnStartHeroicInspirationChoice,
+  turnStartHeroicInspirationChoiceHole,
+  turnStartHeroicInspirationOffer,
+} from "./turn-start-heroic-inspiration.ts";
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
@@ -415,6 +421,7 @@ type StartTurnOccurrenceHandle =
         { readonly kind: "turnStartTemporaryHitPoints" }
       >;
     }
+  | { readonly kind: "turnStartHeroicInspiration" }
   | {
       readonly kind: "spellConditionTurnStartDamage";
       readonly effect: Extract<
@@ -485,6 +492,13 @@ function startTurnOccurrenceOptionForHandle(
         "Grant start-turn Temporary Hit Points",
       ),
     ),
+    Match.when({ kind: "turnStartHeroicInspiration" }, () =>
+      startTurnOccurrenceOption(
+        "turnStartHeroicInspiration",
+        {},
+        "Offer start-turn Heroic Inspiration",
+      ),
+    ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effect }) =>
       spellTurnStartDamageOccurrenceOption(effect),
     ),
@@ -531,6 +545,9 @@ function startTurnOccurrenceHandlesForState(
         ? [{ kind: "turnStartTemporaryHitPoints" as const, effect }]
         : [],
     ) ?? []),
+    ...(turnStartHeroicInspirationOffer(actor) === undefined
+      ? []
+      : [{ kind: "turnStartHeroicInspiration" as const }]),
     ...spellTurnStartDamageEffects(actor).map(
       (effect): StartTurnOccurrenceHandle =>
         effect.kind === "spellCondition"
@@ -4032,6 +4049,12 @@ function resolveOrderedStartTurnOccurrenceHandle(input: {
         occurrence,
       }),
     ),
+    Match.when({ kind: "turnStartHeroicInspiration" }, () =>
+      resolveOrderedTurnStartHeroicInspirationOccurrence({
+        ...input,
+        occurrence,
+      }),
+    ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, (handle) =>
       resolveOrderedSpellTurnStartDamageOccurrence({
         ...input,
@@ -4291,6 +4314,75 @@ function resolveOrderedTemporaryHitPointOccurrence(input: {
     choice: fills[0]!.value,
   });
   return ordinaryStartTurnOccurrenceAdvance(state, new Set([hole.holeId]));
+}
+
+// SRD 5.2.1 classes.md, Champion, Heroic Warrior: "During combat, you can give
+// yourself Heroic Inspiration whenever you start your turn without it."
+// The offer is taken from the creature as earlier ordered occurrences left it,
+// so the choice applies to that creature.
+function resolveOrderedTurnStartHeroicInspirationOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const actorId = input.input.sourceTurn.actorId;
+  const offer = turnStartHeroicInspirationOffer(
+    input.state.combatants.get(actorId),
+  );
+  /* v8 ignore start -- @preserve -- The occurrence is listed only with the offer, and no start-turn occurrence gives Heroic Inspiration or removes the feature before it. */
+  if (offer === undefined) {
+    return ordinaryStartTurnOccurrenceAdvance(input.state);
+  }
+  /* v8 ignore stop -- @preserve */
+  const hole = turnStartHeroicInspirationChoiceHole({
+    sourceTurn: input.input.sourceTurn,
+    occurrenceId: input.occurrence.occurrenceId,
+    sourceProcedureRef: offer.sourceProcedureRef,
+  });
+  const fills = input.input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "turnStartHeroicInspirationChoice" }
+    > =>
+      fill.kind === "turnStartHeroicInspirationChoice" &&
+      fill.holeId === hole.holeId,
+  );
+  const [fill, ...extraFills] = fills;
+  if (fill === undefined) {
+    return {
+      tag: "result",
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [hole],
+      }),
+    };
+  }
+  if (extraFills.length > 0) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Heroic Inspiration choice must answer its exact occurrence once.",
+      ),
+    };
+  }
+  return ordinaryStartTurnOccurrenceAdvance(
+    battleStateAfterTurnStartHeroicInspirationChoice({
+      state: input.state,
+      offer,
+      choice: fill.value,
+    }),
+    new Set([hole.holeId]),
+  );
 }
 
 function temporaryHitPointStateAfterOrderedChoice(input: {
@@ -6385,6 +6477,7 @@ const END_TURN_FILL_KINDS = [
   "persistentAreaSourceTurnTranslation",
   "startTurnOccurrenceOrder",
   "temporaryHitPointChoice",
+  "turnStartHeroicInspirationChoice",
   "concentrationSavingThrow",
   "deathSavingThrow",
   "rolledDice",

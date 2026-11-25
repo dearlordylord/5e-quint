@@ -6,6 +6,7 @@ import type { AttackRollDefenseSelection as SharedAttackRollDefenseSelection } f
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.combat-turn-start-heroic-inspiration
 import { optionalProperty } from "./optional-property.ts";
 import { Match, Result } from "effect";
 import { sameStringSet } from "./same-string-set.ts";
@@ -45,7 +46,10 @@ import type {
   StandardActionKind,
   AuthoredUnitSource,
 } from "@dnd/surface/surface/types";
-import { isEffectAtom } from "@dnd/surface/surface/types";
+import {
+  isCombatTurnStartHeroicInspirationMechanics,
+  isEffectAtom,
+} from "@dnd/surface/surface/types";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type {
   CharacterBattleClassLevel,
@@ -89,6 +93,8 @@ export type {
 export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
 export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
+export const COMBAT_TURN_START_HEROIC_INSPIRATION_SUPPORT_PROFILE =
+  "combatTurnStartHeroicInspiration";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
@@ -242,6 +248,7 @@ type BardicInspirationDieSize =
   | (typeof BARDIC_INSPIRATION_DIE_TIERS)[number]["dieSize"];
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
   "markedCreatureDefensesDisclosure",
+  COMBAT_TURN_START_HEROIC_INSPIRATION_SUPPORT_PROFILE,
   "attackRollDefense",
   "alternateActionCost",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -1263,6 +1270,18 @@ function markedCreatureDisclosureSupportProfiles(
     : [];
 }
 
+// SRD 5.2.1 classes.md, Champion, Heroic Warrior: "During combat, you can give
+// yourself Heroic Inspiration whenever you start your turn without it." The
+// Character Sheet admits the same feature through the same Surface guard.
+function combatTurnStartHeroicInspirationSupportProfiles(
+  unit: BattleUnitSupportSource,
+): BattleUnitSupportProfile[] {
+  return unit.kind === "class_feature" &&
+    isCombatTurnStartHeroicInspirationMechanics(unit.mechanics)
+    ? [COMBAT_TURN_START_HEROIC_INSPIRATION_SUPPORT_PROFILE]
+    : [];
+}
+
 function presentSupportProfiles(
   profile: BattleUnitSupportProfile | null,
 ): readonly BattleUnitSupportProfile[] {
@@ -1345,7 +1364,10 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     ...supportInput,
     unit: huntersPreyAdmission.unit,
   };
-  const supportProfiles = markedCreatureDisclosureSupportProfiles(input.unit);
+  const supportProfiles = [
+    ...markedCreatureDisclosureSupportProfiles(input.unit),
+    ...combatTurnStartHeroicInspirationSupportProfiles(input.unit),
+  ];
 
   const bonusActionStandardActionSupport =
     battleBonusActionStandardActionSupportForUnit(input.unit);

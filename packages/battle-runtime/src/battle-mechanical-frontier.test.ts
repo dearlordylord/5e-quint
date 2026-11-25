@@ -548,6 +548,11 @@ const projectionHoles = [
     existingTemporaryHitPoints: 2,
     grantedTemporaryHitPoints: 5,
   }),
+  projectionHole("turnStartHeroicInspirationChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    sourceTurn: { actorId: "projection-actor", round: 1 },
+    occurrenceId: "projection-occurrence",
+  }),
   projectionHole("toolPossessionFacts", {
     actorId: "projection-actor",
     toolIds: ["poisoners_kit"],

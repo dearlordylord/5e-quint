@@ -26,6 +26,7 @@ export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
   "persistentAreaSourceTurnTranslation",
   "startTurnOccurrenceOrder",
   "temporaryHitPointChoice",
+  "turnStartHeroicInspirationChoice",
   "toolPossessionFacts",
   "cunningStrikeEndTurnCoverFacts",
   "deathSavingThrow",
@@ -125,6 +126,10 @@ export function battleContinuationFillEquals(
         arrayValuesEqual(left.value.occurrenceIds, b.value.occurrenceIds),
       temporaryHitPointChoice: (left) =>
         b.kind === "temporaryHitPointChoice" &&
+        left.holeId === b.holeId &&
+        left.value === b.value,
+      turnStartHeroicInspirationChoice: (left) =>
+        b.kind === "turnStartHeroicInspirationChoice" &&
         left.holeId === b.holeId &&
         left.value === b.value,
       toolPossessionFacts: (left) =>
