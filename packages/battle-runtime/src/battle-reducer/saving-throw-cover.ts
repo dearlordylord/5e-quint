@@ -96,7 +96,10 @@ export function spellTargetSaveCover(input: {
   readonly ruledTargetIds: readonly CombatantId[];
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 } {
-  if (input.ruling === "noCoverBenefit" || input.targetSelection === undefined) {
+  if (
+    input.ruling === "noCoverBenefit" ||
+    input.targetSelection === undefined
+  ) {
     return { ruledTargetIds: [], flatBonuses: [] };
   }
   const selection = input.targetSelection;

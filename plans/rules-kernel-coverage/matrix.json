@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 183,
-    "covered": 172,
+    "total": 185,
+    "covered": 174,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 143,
+      "battle": 145,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 172,
+      "covered": 174,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 203,
+    "total": 206,
     "bySubject": {
-      "battle-hole-family": 101,
-      "battle-fill-kind": 60,
-      "battle-subject-kind": 42
+      "battle-hole-family": 102,
+      "battle-fill-kind": 61,
+      "battle-subject-kind": 43
     },
     "byClassification": {
-      "semantic-frontier": 155,
+      "semantic-frontier": 156,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 50,
       "unsupported-dead-branch": 0
@@ -6407,6 +6407,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-thrown-weapon-attacks.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-change-discovery.test.ts"
         }
       ],
       "profiles": [],
@@ -6419,7 +6423,9 @@
         "packages/battle-runtime/src/battle-reducer/thrown-weapon-attack.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6442,6 +6448,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/heroic-inspiration-reroll.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/heroic-inspiration-physical-die.test.ts"
         }
       ],
       "profiles": [],
@@ -6454,7 +6464,8 @@
         "packages/battle-runtime/src/battle-reducer/heroic-inspiration-reroll.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6544,6 +6555,10 @@
           "ownerPath": "packages/battle-runtime/src/attack-weapon-change.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-attack-weapon-change.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-change-discovery.test.ts"
         }
       ],
       "profiles": [],
@@ -6554,7 +6569,9 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
-        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts"
+        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6604,7 +6621,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
       ],
-      "reason": "The QNT owner models which saves cover adds to (Dexterity only), the bonus of each degree, and an effect's denial of the benefit. The table rules each target's degree for the specific effect: a spell target keeps the degree on its spellTarget fact, which the spell's save hole projects as a cover flat bonus, and any other rolled Dexterity save outcome carries an optional cover degree. The runtime derives the bonus and never takes one from the table. saving-throw-cover replays the prefix fills to find the save hole each covered outcome answers, and refuses cover on a save cover adds nothing to, on a save whose effect denies the benefit, and on a spell target already ruled by its fact. A save gate's saveCoverBenefit denial reaches the saveGatedDamage save hole; spell admission leaves a spell without a Battle owner when an admitted procedure doesn't carry the denial. The parity witness covers an area Dexterity save with each degree, a Constitution save refusing cover, a targeted Dexterity save projecting each degree from its spellTarget fact and refusing outcome cover, and Sacred Flame denying the benefit.",
+      "reason": "The QNT owner models which saves cover adds to (Dexterity only), the bonus of each degree, and an effect's denial of the benefit. The table rules each target's degree for the specific effect: a spell target keeps the degree on its spellTarget fact, which the spell's save hole projects as a cover flat bonus, and any other rolled Dexterity save outcome carries an optional cover degree. The runtime derives the bonus and never takes one from the table. saving-throw-cover resolves all other fills to find the save hole each covered outcome answers independently of array order, and refuses cover on a save cover adds nothing to, on a save whose effect denies the benefit, and on a spell target already ruled by its fact. A save gate's saveCoverBenefit denial reaches the saveGatedDamage save hole; spell admission leaves a spell without a Battle owner when an admitted procedure doesn't carry the denial. The parity witness covers an area Dexterity save with each degree, a Constitution save refusing cover in both fill orders with no-cover controls, a targeted Dexterity save projecting each degree from the same canonical target admission and refusing outcome cover, correlated degree/bonus codec boundaries, and Sacred Flame denying the benefit.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/shared-algebras/src/cover-algebra.ts",

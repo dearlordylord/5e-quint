@@ -223,10 +223,19 @@ describe("Heroic Warrior at the start of a combat turn", () => {
       endTurn({
         state,
         actorId: goblinId,
-        fills: [order, choice, deathSavingThrowFill(deathSaveHole, {
-          roll: 12,
-          d20TestRerolls: [{ kind: "decline", effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND }],
-        })],
+        fills: [
+          order,
+          choice,
+          deathSavingThrowFill(deathSaveHole, {
+            roll: 12,
+            d20TestRerolls: [
+              {
+                kind: "decline",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+              },
+            ],
+          }),
+        ],
       }),
     ).state;
 
@@ -272,26 +281,45 @@ describe("Heroic Warrior at the start of a combat turn", () => {
     const [choiceHole] = holesWhenFighterTurnStarts(state, [order]);
     const choice = choiceFill(choiceHole, "giveHeroicInspiration");
     const [deathHole] = holesWhenFighterTurnStarts(state, [order, choice]);
-    if (deathHole?.kind !== "deathSavingThrow") throw new Error("Expected the Death Save.");
-    const [rerollHole] = holesWhenFighterTurnStarts(state, [order, choice, deathSavingThrowFill(deathHole, 6)]);
+    if (deathHole?.kind !== "deathSavingThrow")
+      throw new Error("Expected the Death Save.");
+    const [rerollHole] = holesWhenFighterTurnStarts(state, [
+      order,
+      choice,
+      deathSavingThrowFill(deathHole, 6),
+    ]);
     expect(rerollHole).toMatchObject({
       kind: "deathSavingThrow",
-      heroicInspirationRerolls: [{ effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND }],
+      heroicInspirationRerolls: [
+        { effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND },
+      ],
     });
     const rolled = deathSavingThrowFill(deathHole, {
       roll: 6,
-      d20TestRerolls: [{
-        kind: "reroll",
-        effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-        replacement: d20Roll(20),
-      }],
+      d20TestRerolls: [
+        {
+          kind: "reroll",
+          effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+          replacement: d20Roll(20),
+        },
+      ],
     });
-    const resolved = requireResolved(endTurn({ state, actorId: goblinId, fills: [order, choice, rolled] })).state;
+    const resolved = requireResolved(
+      endTurn({ state, actorId: goblinId, fills: [order, choice, rolled] }),
+    ).state;
     expect(Number(resolved.combatants.get(fighterId)?.hp)).toBe(1);
     expect(heroicInspirationOf(resolved)).toEqual(NO_HEROIC_INSPIRATION);
-    expect(resolved.subjectResolutionPhase).toEqual({ kind: "subjectSelection" });
+    expect(resolved.subjectResolutionPhase).toEqual({
+      kind: "subjectSelection",
+    });
     // The completed prior actor's procedure cannot reopen the incoming offer.
-    expect(endTurn({ state: resolved, actorId: goblinId, fills: [order, choice, rolled] }).tag).toBe("invalid");
+    expect(
+      endTurn({
+        state: resolved,
+        actorId: goblinId,
+        fills: [order, choice, rolled],
+      }).tag,
+    ).toBe("invalid");
     expect(heroicInspirationOf(resolved)).toEqual(NO_HEROIC_INSPIRATION);
   });
 
@@ -304,21 +332,30 @@ describe("Heroic Warrior at the start of a combat turn", () => {
     const holes = holesWhenFighterTurnStarts(state);
     expect(holes).toHaveLength(1);
     const hole = holes[0];
-    if (hole?.kind !== "deathSavingThrow") throw new Error("Expected only the Death Save.");
-    const resolved = requireResolved(endTurn({
-      state,
-      actorId: goblinId,
-      fills: [deathSavingThrowFill(hole, {
-        roll: 6,
-        d20TestRerolls: [{
-          kind: "reroll",
-          effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-          replacement: d20Roll(12),
-        }],
-      })],
-    })).state;
+    if (hole?.kind !== "deathSavingThrow")
+      throw new Error("Expected only the Death Save.");
+    const resolved = requireResolved(
+      endTurn({
+        state,
+        actorId: goblinId,
+        fills: [
+          deathSavingThrowFill(hole, {
+            roll: 6,
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: d20Roll(12),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).state;
     expect(heroicInspirationOf(resolved)).toEqual(NO_HEROIC_INSPIRATION);
-    expect(resolved.subjectResolutionPhase).toEqual({ kind: "subjectSelection" });
+    expect(resolved.subjectResolutionPhase).toEqual({
+      kind: "subjectSelection",
+    });
   });
 
   test("a Death Save ordered before the grant has no Inspiration to spend", () => {
@@ -330,14 +367,17 @@ describe("Heroic Warrior at the start of a combat turn", () => {
     const [orderHole] = holesWhenFighterTurnStarts(state);
     const order = occurrenceOrderFill(orderHole, "deathSavingThrow");
     const [deathHole] = holesWhenFighterTurnStarts(state, [order]);
-    if (deathHole?.kind !== "deathSavingThrow") throw new Error("Expected the Death Save first.");
+    if (deathHole?.kind !== "deathSavingThrow")
+      throw new Error("Expected the Death Save first.");
     const death = deathSavingThrowFill(deathHole, 12);
     const [choiceHole] = holesWhenFighterTurnStarts(state, [order, death]);
-    const resolved = requireResolved(endTurn({
-      state,
-      actorId: goblinId,
-      fills: [order, death, choiceFill(choiceHole, "giveHeroicInspiration")],
-    })).state;
+    const resolved = requireResolved(
+      endTurn({
+        state,
+        actorId: goblinId,
+        fills: [order, death, choiceFill(choiceHole, "giveHeroicInspiration")],
+      }),
+    ).state;
     expect(heroicInspirationOf(resolved)).toEqual(HEROIC_INSPIRATION_AVAILABLE);
   });
 

@@ -2568,7 +2568,9 @@ export function spellFillSetTargetSelection(
     targetIds: [
       ...(fillSet.targetId === undefined ? [] : [fillSet.targetId]),
       ...(fillSet.targetList?.targetIds ?? []),
-      ...(fillSet.targetAllocation?.allocations.map(({ targetId }) => targetId) ?? []),
+      ...(fillSet.targetAllocation?.allocations.map(
+        ({ targetId }) => targetId,
+      ) ?? []),
     ],
     spatialFacts: spellFillSetTargetSpatialFacts(fillSet),
   };

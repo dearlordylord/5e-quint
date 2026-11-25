@@ -114,16 +114,18 @@ describe("battle spell static mechanics admission", () => {
         },
       },
     ];
-    const candidates: readonly SpellMechanics[] = phases.flatMap((phase): readonly SpellMechanics[] => [
-      { ...base, phases: [phase] },
-      {
-        ...base,
-        family: "triggered_reaction",
-        interruptsTrigger: true,
-        phases: [phase],
-      },
-      { ...ongoing, initialPhase: phase },
-    ]);
+    const candidates: readonly SpellMechanics[] = phases.flatMap(
+      (phase): readonly SpellMechanics[] => [
+        { ...base, phases: [phase] },
+        {
+          ...base,
+          family: "triggered_reaction",
+          interruptsTrigger: true,
+          phases: [phase],
+        },
+        { ...ongoing, initialPhase: phase },
+      ],
+    );
     const admission = supportedAdmission("spellAttackDamage", {
       consumed: [spellMechanicsHeaderPath("family")],
       unowned: [],

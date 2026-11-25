@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 183
-- Covered obligations: 172
+- Total obligations: 185
+- Covered obligations: 174
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   172 |
+| covered                  |   174 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   143 |
+| battle             |   145 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -220,17 +220,17 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Battle Hole Frontier
 
-- Total classified rows: 203
+- Total classified rows: 206
 
 | Subject             | Count |
 | ------------------- | ----: |
-| battle-hole-family  |   101 |
-| battle-fill-kind    |    60 |
-| battle-subject-kind |    42 |
+| battle-hole-family  |   102 |
+| battle-fill-kind    |    61 |
+| battle-subject-kind |    43 |
 
 | Classification                    | Count |
 | --------------------------------- | ----: |
-| semantic-frontier                 |   155 |
+| semantic-frontier                 |   156 |
 | deterministic-boundary-projection |     0 |
 | table-owned-fact                  |    50 |
 | unsupported-dead-branch           |     0 |
@@ -976,7 +976,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/help-ability-check-core-examples.qnt`                                    | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt`                                           | semantic-core           | `BATTLE.ACTION.ATTACK_WEAPON_CHANGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `packages/shared-algebras/proofs/rule-core/attack-weapon-change-core-examples.qnt`                                  | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt`                                                  | semantic-core           | `BATTLE.ATTACK.TARGET_COVER`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt`                                                  | semantic-core           | `BATTLE.ATTACK.TARGET_COVER`, `BATTLE.SAVE.DEXTERITY_COVER`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `packages/shared-algebras/proofs/rule-core/cover-defense-core-examples.qnt`                                         | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/object-interaction-cost-core.qnt`                                        | semantic-core           | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt`                               | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
