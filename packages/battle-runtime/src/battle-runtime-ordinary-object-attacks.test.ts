@@ -661,16 +661,25 @@ describe("battle runtime: ordinary object attacks", () => {
     ).toMatchObject({ tag: "resolved" });
   });
 
-  test("long range gives Disadvantage while being hidden does not grant Advantage against an object", () => {
+  // RAW: rules-glossary.md, Hide [Action]: "you have the Invisible condition
+  // while hidden"; Invisible: "your attack rolls have Advantage. If a creature
+  // can somehow see you, you don't gain this benefit against that creature."
+  // An object can't see the attacker, so the Advantage cancels long range.
+  test("long range gives Disadvantage, and being hidden gives Advantage that cancels it against an object", () => {
     const base = goblinTurnBattle();
     const goblin = base.combatants.get(goblinId)!;
-    const state = {
+    const hidden = {
       ...base,
       combatants: new Map(base.combatants).set(goblinId, {
         ...goblin,
         hidden: { discoveryDc: difficultyClass(16) },
       }),
     };
+    expect(longRangeObjectRollMode(base)).toBe("disadvantage");
+    expect(longRangeObjectRollMode(hidden)).toBe("normal");
+  });
+
+  function longRangeObjectRollMode(state: ReturnType<typeof goblinTurnBattle>) {
     const subject = goblinAttackSubject(state, "Shortbow");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -707,9 +716,8 @@ describe("battle runtime: ordinary object attacks", () => {
       }),
       "attackRoll",
     );
-
-    expect(rollHole.rollMode).toBe("disadvantage");
-  });
+    return rollHole.rollMode;
+  }
 
   test("filters each immune damage component before applying one attack's threshold", () => {
     const objectId = battleObjectId("synthetic_mixed_damage_target");
