@@ -645,6 +645,65 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(request("escapeCheck")).toBe("abilityCheck");
   });
 
+  test("the table's circumstance on a grapple save combines with each choice's own roll mode", () => {
+    const hole = {
+      kind: "grappleOutcome",
+      holeId: holeId("synthetic-grapple-save"),
+      holeInstanceKey: holeInstanceKey("synthetic-grapple-save-instance"),
+      label: "Synthetic grapple save",
+      actorId: secondTargetId,
+      targetId: firstTargetId,
+      dc: difficultyClass(12),
+      mode: "grappleSave",
+      targetSavingThrowChoices: [
+        {
+          ability: "str",
+          targetRollModes: [],
+          targetFlatBonuses: [],
+          targetAutomaticFailures: [],
+        },
+        {
+          ability: "dex",
+          targetRollModes: [
+            { targetId: firstTargetId, rollMode: "disadvantage" },
+          ],
+          targetFlatBonuses: [],
+          targetAutomaticFailures: [],
+        },
+      ],
+    } as const satisfies BattleHole;
+    const requests = battleD20TestCircumstanceRequests({
+      resolutionId: d20TestResolutionId(`${resolutionId}:grapple-table`),
+      holes: [hole],
+      resolvedFills: [],
+    });
+    const [request] = requests;
+    if (request === undefined)
+      throw new Error("Expected a grapple save request.");
+    const [projected] = battleHolesWithTableD20TestCircumstances({
+      holes: [hole],
+      requests,
+      admitted: new Map([
+        [
+          request.requestRef,
+          {
+            requestRef: request.requestRef,
+            testKind: "savingThrow",
+            source: "advantage",
+          },
+        ],
+      ]),
+    });
+    expect(projected).toMatchObject({
+      targetSavingThrowChoices: [
+        {
+          targetRollModes: [{ targetId: firstTargetId, rollMode: "advantage" }],
+        },
+        { targetRollModes: [{ targetId: firstTargetId, rollMode: "normal" }] },
+      ],
+    });
+  });
+
   test.each([
     [undefined, undefined, "normal"],
     [undefined, "advantage", "advantage"],
