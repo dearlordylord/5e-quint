@@ -51,7 +51,7 @@ import {
   concentrationSavingThrowHole,
 } from "./battle-reducer/damage-apply.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
-import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import {
   discoverBattleActs,
@@ -1679,7 +1679,11 @@ function saveGatedTurnConstraintBundleProjection(
     slowMultiattackTargetId,
   );
   const dexteritySavingThrowDelta =
-    savingThrowFlatBonusProjections(state.battle.state, "dex").find(
+    savingThrowTargetModifiers(
+      state.battle.state,
+      { ability: "dex" },
+      "everyCombatant",
+    ).targetFlatBonuses.find(
       (projection) => projection.targetId === spellTargetId,
     )?.bonus ?? 0;
   const turnResources = state.battle.state.currentTurnResources;

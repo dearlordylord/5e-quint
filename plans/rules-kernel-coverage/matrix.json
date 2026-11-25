@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 185,
-    "covered": 174,
+    "total": 186,
+    "covered": 175,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 145,
+      "battle": 146,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 174,
+      "covered": 175,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6719,6 +6719,38 @@
         "ASSUMPTIONS.md#a65-a-creature-changes-its-weapon-grip-for-free-on-its-own-turn"
       ],
       "title": "Weapon grip change: a character changes its held main weapon between one and two hands on its own turn at no cost, a two-handed grip needs the other hand free, and the grip sets the hands held and the Versatile damage die"
+    },
+    {
+      "id": "BATTLE.SAVING_THROW.MODIFIER_COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-saving-throw-modifier-collector.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models how the sources that reach one target's saving throw combine: Dodge's Advantage and Restrained's Disadvantage on Dexterity saves, the other counted Advantage and Disadvantage sources with one of each cancelling, the sum of the bonuses, and the Strength and Dexterity saves that Paralyzed, Petrified, Stunned and Unconscious fail without a roll. The runtime collector names each source as a contribution (Dodge, Restrained, passive features, active effects, the spell's own save rule, the procedure's own Advantage or Disadvantage, Warding Bond's linked defense, Slow's penalty and cover), and every saving throw outcome hole reads it, including the turn-boundary repeat saves that used to carry none. The parity test checks Restrained through Acid Splash's hole and the collector, its cancellation with an effect's Advantage, and a procedure's own source.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/saving-throw-modifier-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Dodge [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Restrained [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Paralyzed [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Advantage",
+        ".references/srd-5.2.1/rules-glossary.md#Disadvantage",
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/spells.md#Haste",
+        ".references/srd-5.2.1/spells.md#Slow",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "Every route that asks for a saving throw asks one collector which Advantage, Disadvantage and bonuses reach each target, so Dodge, Restrained, features, effects, the spell's own rule and cover combine the same way on every save"
     }
   ],
   "battleHoleFrontier": [
@@ -13766,6 +13798,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns how the sources that reach one target's saving throw combine: Dodge and Restrained on Dexterity saves, counted Advantage and Disadvantage with one of each cancelling, summed bonuses, and the Strength and Dexterity saves that Paralyzed, Petrified, Stunned and Unconscious fail without a roll, over the D20 Test circumstance core's combination.",
+      "obligationIds": ["BATTLE.SAVING_THROW.MODIFIER_COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover Restrained and Dodge on Dexterity and other saves, an Advantage and a Disadvantage cancelling, bonuses adding, and a Paralyzed target failing Strength and Dexterity saves but rolling Constitution.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15397,6 +15441,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21367,6 +21421,33 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "variant",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "arithmetic",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.SAVING_THROW.MODIFIER_COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

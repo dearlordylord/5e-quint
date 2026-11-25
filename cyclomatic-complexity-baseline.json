@@ -392,9 +392,8 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts": {
       "module/binding:saveDamageReplacementForInvocation": 11,
-      "module/binding:savingThrowRollModeProjections": 17,
       "module/binding:spellDamageByTypeForTarget": 9,
-      "module/binding:spellSavingThrowOutcomeHole": 16,
+      "module/binding:spellSavingThrowOutcomeHole": 13,
       "module/binding:validateSpellAttackSequencePartDamageFill": 14,
       "module/binding:validateSpellDamageFill": 31
     },

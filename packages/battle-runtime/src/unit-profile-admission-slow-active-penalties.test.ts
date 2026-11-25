@@ -32,7 +32,7 @@ import {
 } from "./battle-reducer/creature-state.ts";
 import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
-import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -184,7 +184,13 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(
       Number(currentArmorClass(activeEffectArmorClass(cast.state, target))),
     ).toBe(baseArmorClass - 2);
-    expect(savingThrowFlatBonusProjections(cast.state, "dex")).toEqual([
+    expect(
+      savingThrowTargetModifiers(
+        cast.state,
+        { ability: "dex" },
+        "everyCombatant",
+      ).targetFlatBonuses,
+    ).toEqual([
       {
         kind: "effect",
         targetId: spellTargetId,
@@ -193,7 +199,13 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         bonus: -2,
       },
     ]);
-    expect(savingThrowFlatBonusProjections(cast.state, "wis")).toEqual([]);
+    expect(
+      savingThrowTargetModifiers(
+        cast.state,
+        { ability: "wis" },
+        "everyCombatant",
+      ).targetFlatBonuses,
+    ).toEqual([]);
     expect(combatantCanTakeReactions(target)).toBe(false);
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual({
       sourceProcedureRef: act.subject.procedureRef,
@@ -318,7 +330,13 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(target.activeEffects).toEqual([]);
     expect(Number(effectiveWalkSpeed(saved.state, target))).toBe(30);
     expect(combatantCanTakeReactions(target)).toBe(true);
-    expect(savingThrowFlatBonusProjections(saved.state, "dex")).toEqual([]);
+    expect(
+      savingThrowTargetModifiers(
+        saved.state,
+        { ability: "dex" },
+        "everyCombatant",
+      ).targetFlatBonuses,
+    ).toEqual([]);
     expect(
       requireCombatant(saved.state, spellCasterId).concentration,
     ).toBeNull();

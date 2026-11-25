@@ -7,6 +7,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import {
   applyCondition,
   hasCondition,
@@ -43,7 +44,6 @@ import type {
 } from "../battle-state-execution.ts";
 import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "./knocked-out-state.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 
 import {
   activeEffectCondition,
@@ -305,17 +305,22 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: targetHasProtectionRelevantEffectSaveAdvantage(
+    ...savingThrowTargetModifiers(
       state,
-      targetId,
-      effect,
-    )
-      ? [{ targetId, rollMode: "advantage" }]
-      : [],
-    targetFlatBonuses: [...state.combatants].flatMap(([, target]) =>
-      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
-        target,
-      ),
+      {
+        ability: effect.save.ability,
+        procedureSources: {
+          rollModes: targetHasProtectionRelevantEffectSaveAdvantage(
+            state,
+            targetId,
+            effect,
+          )
+            ? [{ targetId, rollMode: "advantage" }]
+            : [],
+          bonuses: [],
+        },
+      },
+      [targetId],
     ),
   };
 }

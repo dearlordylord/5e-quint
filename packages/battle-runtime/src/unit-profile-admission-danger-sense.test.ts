@@ -14,7 +14,7 @@ import { spellSlotInvocationRef } from "./index.ts";
 import { requireActorAdmittedSpellActForTest } from "./spell-effect-fixture.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   applyCondition,
   barbarianDangerSenseUnitId,
@@ -114,13 +114,25 @@ describe("L12G deterministic Danger Sense admission", () => {
   test("Danger Sense projects Advantage for Dexterity saves while not Incapacitated", () => {
     const state = dangerSenseBattle();
 
-    expect(savingThrowRollModeProjections(state.state, "dex")).toEqual([
+    expect(
+      savingThrowTargetModifiers(
+        state.state,
+        { ability: "dex" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([
       {
         targetId: spellTargetId,
         rollMode: "advantage",
       },
     ]);
-    expect(savingThrowRollModeProjections(state.state, "con")).toEqual([]);
+    expect(
+      savingThrowTargetModifiers(
+        state.state,
+        { ability: "con" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([]);
   });
 
   test("Danger Sense is suppressed while the target is Incapacitated", () => {
@@ -139,9 +151,13 @@ describe("L12G deterministic Danger Sense admission", () => {
       }),
     };
 
-    expect(savingThrowRollModeProjections(incapacitatedState, "dex")).toEqual(
-      [],
-    );
+    expect(
+      savingThrowTargetModifiers(
+        incapacitatedState,
+        { ability: "dex" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([]);
   });
 
   test("Danger Sense routes matching saves through projection and Incapacitated suppression owners", () => {
