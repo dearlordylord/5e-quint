@@ -145,8 +145,6 @@ import {
   hitPointBudgetConditionShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
 
-const byBattleHoleKind = Match.discriminator("kind");
-
 export type BattleHoleFamilyKind = BattleHole["kind"];
 
 export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
