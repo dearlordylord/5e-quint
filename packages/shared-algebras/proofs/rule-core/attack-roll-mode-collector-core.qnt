@@ -15,16 +15,22 @@
 //   "When you make an attack roll against a target you can't see, you have
 //   Disadvantage." It names any target. "When a creature can't see you, you
 //   have Advantage on attack rolls against it" names a creature.
-// - .references/srd-5.2.1/rules-glossary.md#Invisible and #Hide [Action]:
-//   the hidden or Invisible creature's Advantage and Disadvantage are against
-//   or from a creature that can't see it.
+// - .references/srd-5.2.1/rules-glossary.md#Invisible: "Attack rolls against
+//   you have Disadvantage, and your attack rolls have Advantage. If a creature
+//   can somehow see you, you don't gain this benefit against that creature."
+//   The attacker's Advantage is lost only to a creature that sees it, so it
+//   reaches an object; the Disadvantage is on rolls against a creature.
+//   #Hide [Action]: while hidden, you have the Invisible condition.
 // - .references/srd-5.2.1/rules-glossary.md#Dodge [Action]: "Any attack roll
 //   made against you has Disadvantage if you can see the attacker".
 // - .references/srd-5.2.1/rules-glossary.md#Help [Action], "Assist an Attack
 //   Roll.": Advantage on the ally's next attack roll against the chosen enemy.
 // - .references/srd-5.2.1/rules-glossary.md#Paralyzed, #Petrified,
-//   #Restrained, #Stunned, #Prone, #Unconscious: sources from the target
-//   creature's own conditions.
+//   #Restrained, #Stunned, #Prone: sources from the target creature's own
+//   conditions.
+// - .references/srd-5.2.1/rules-glossary.md#Unconscious, "Attacks Affected.":
+//   "Attack rolls against you have Advantage." Its implied Prone is the Prone
+//   target source.
 // - .references/srd-5.2.1/playing-the-game.md#Ranged Attacks: long range and
 //   "Ranged Attacks in Close Combat" each impose Disadvantage on a ranged
 //   attack roll, "with a weapon, a spell, or some other means".
@@ -55,6 +61,7 @@ module attackRollModeCollectorCore {
     | HelpedAttackSource
     | TargetConditionSource
     | ProneTargetSource
+    | UnconsciousTargetSource
     | LongRangeSource
     | RangedCloseCombatSource
 
@@ -69,13 +76,15 @@ module attackRollModeCollectorCore {
     HelpedAttackSource,
     TargetConditionSource,
     ProneTargetSource,
+    UnconsciousTargetSource,
     LongRangeSource,
     RangedCloseCombatSource,
   )
 
   // A source whose RAW text names a creature on the other side reaches only a
   // creature target. The attacker's own conditions, Grappled, not seeing the
-  // target, and the Ranged Attacks rules name "any target" or the attack.
+  // target, the hidden or Invisible attacker, and the Ranged Attacks rules name
+  // "any target", the attacker's own rolls, or the attack.
   pure def sourceReachesTarget(
     source: AttackRollModeSource,
     targetKind: AttackRollTargetKind,
@@ -87,15 +96,16 @@ module attackRollModeCollectorCore {
           | AttackerConditionSource => true
           | GrappledAttackerSource => true
           | AttackerCannotSeeTargetSource => true
+          | HiddenAttackerSource => true
           | LongRangeSource => true
           | RangedCloseCombatSource => true
           | TargetCannotSeeAttackerSource => false
-          | HiddenAttackerSource => false
           | HiddenTargetSource => false
           | DodgingTargetSource => false
           | HelpedAttackSource => false
           | TargetConditionSource => false
           | ProneTargetSource => false
+          | UnconsciousTargetSource => false
         }
     }
 
@@ -105,6 +115,7 @@ module attackRollModeCollectorCore {
     targetKind: AttackRollTargetKind,
     attacker: AttackerAttackRollConditions,
     target: TargetAttackRollConditions,
+    targetUnconscious: bool,
     targetDistanceFeet: AttackRollTargetDistance,
     attackerGrappledByOtherThanTarget: bool,
     attackerCanSeeTarget: bool,
@@ -162,6 +173,7 @@ module attackRollModeCollectorCore {
       | HelpedAttackSource => advantageIf(c.attackerHelpedAgainstTarget)
       | TargetConditionSource => targetConditionAttackRollSources(c.target)
       | ProneTargetSource => proneTargetSources(c)
+      | UnconsciousTargetSource => advantageIf(c.targetUnconscious)
       | LongRangeSource => disadvantageIf(c.ranged and c.longRange)
       | RangedCloseCombatSource => disadvantageIf(closeCombatImposesDisadvantage(c))
     }

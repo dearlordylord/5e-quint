@@ -93,7 +93,7 @@ export function attackerConditionAttackRollModeSources(
  * distance (rules-glossary.md, each "Attacks Affected." entry: "Attack rolls
  * against you have Advantage"): Paralyzed, Petrified, Restrained and Stunned.
  * Two conditions with the same benefit are not listed: Unconscious's
- * Advantage joins the Prone target source in attack-roll.ts, and Blinded's
+ * Advantage is its own source in attack-roll-mode-collector.ts, and Blinded's
  * comes through the table-supplied sight facts
  * (`attackTargetCannotSeeAttacker`).
  */

@@ -176,6 +176,7 @@ import {
   attackRollModeFromContributions,
   collectedAttackRollMode,
   objectAttackRangedCircumstances,
+  objectTargetSight,
   rangedAttackRollCircumstances,
   type AttackRollModeContribution,
   type AttackRollModeMeans,
@@ -261,7 +262,7 @@ export function requiredSpellObjectTargetAttackRollMode(
   attackerId: CombatantId,
   invocation: RuntimeSpellProcedure,
   targetObjectId: BattleObjectId,
-  attackerCanSeeObject: boolean | undefined,
+  sightFact: { readonly attackerCanSeeObject: boolean } | null,
   enemyProximity: RangedAttackEnemyProximityEvidence | null,
 ): AttackRollMode | undefined | SpatialQualificationIssue {
   const means = { kind: "spell" as const, invocation };
@@ -275,7 +276,11 @@ export function requiredSpellObjectTargetAttackRollMode(
   if ("tag" in ranged) return ranged;
   return collectedAttackRollMode(state, {
     attackerId,
-    target: { kind: "object", objectId: targetObjectId, attackerCanSeeObject },
+    target: {
+      kind: "object",
+      objectId: targetObjectId,
+      sight: objectTargetSight(sightFact),
+    },
     means,
     targetSpatialFacts: [],
     ranged,
@@ -296,7 +301,7 @@ export function requiredOrdinaryObjectAttackRollMode(
     target: {
       kind: "object",
       objectId: fact.objectId,
-      attackerCanSeeObject: fact.attackerCanSeeObject,
+      sight: objectTargetSight(fact),
     },
     means: { kind: "attack", attack, opportunityAttack: false },
     targetSpatialFacts: [],

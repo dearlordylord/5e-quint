@@ -5502,7 +5502,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt"
       ],
-      "reason": "The QNT owner models which general sources reach an attack roll by its target kind: the attacker's own conditions, Grappled, not seeing the target and the Ranged Attacks rules reach a creature or an object, while sources whose RAW names a creature on the other side (the target's conditions and Prone, its sight of the attacker, hidden attacker or target, Dodge and Help) reach only a creature. The circumstances carry no means, so a weapon and a spell attack agree. The runtime collector writes each source once, names it in each contribution, and is called by the creature and object routes for weapon, Unarmed Strike, Stat Block, spell and Opportunity Attack rolls. The parity test checks a Grappled attacker's Disadvantage against an object by weapon and by spell, none against its grappler, named contributions cancelling, and Help reaching no object.",
+      "reason": "The QNT owner models which general sources reach an attack roll by its target kind: the attacker's own conditions, Grappled, not seeing the target, the hidden or Invisible attacker's Advantage and the Ranged Attacks rules reach a creature or an object, while sources whose RAW names a creature on the other side (the target's conditions, Prone and Unconscious, its sight of the attacker, a hidden target, Dodge and Help) reach only a creature. The circumstances carry no means, so a weapon and a spell attack agree. The runtime collector writes each source once, names it in each contribution, and is called by the creature and object routes for weapon, Unarmed Strike, Stat Block, spell and Opportunity Attack rolls. The parity test checks a Grappled attacker's Disadvantage against an object by weapon and by spell, none against its grappler, named contributions cancelling, an unseen object's Disadvantage, an outlined object's Advantage and Disadvantage for a spell attack, the attacker's ongoing feature on a spell attack against an object, a hidden attacker's Advantage against an object, and Help reaching no object.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
@@ -5515,6 +5515,8 @@
         ".references/srd-5.2.1/rules-glossary.md#Grappled",
         ".references/srd-5.2.1/rules-glossary.md#Dodge [Action]",
         ".references/srd-5.2.1/rules-glossary.md#Help [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Invisible",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious",
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "Every attack-roll route asks one collector for its Advantage and Disadvantage sources, each named, so a source reaches every attack roll its RAW text covers whatever the target or means"

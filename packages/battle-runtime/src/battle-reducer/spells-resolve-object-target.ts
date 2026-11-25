@@ -287,7 +287,7 @@ function resolveObjectTargetSpellAttackCore(
     input.actorId,
     input.invocation,
     input.fillSet.objectTarget.objectId,
-    sightFact?.attackerCanSeeObject,
+    sightFact,
     input.fillSet.targetEnemyProximity,
   );
   const rollInput = prepareAttackRollInput({

@@ -8,6 +8,7 @@ module attackRollModeCollectorCoreExamples {
     targetKind: CreatureAttackRollTarget,
     attacker: noAttackerAttackRollConditions,
     target: noTargetAttackRollConditions,
+    targetUnconscious: false,
     targetDistanceFeet: 5,
     attackerGrappledByOtherThanTarget: false,
     attackerCanSeeTarget: true,
@@ -37,8 +38,8 @@ module attackRollModeCollectorCoreExamples {
       restrained: true,
       stunned: true,
     },
+    targetUnconscious: true,
     targetCanSeeAttacker: false,
-    attackerHidden: true,
     attackerHelpedAgainstTarget: true,
   }
 
@@ -75,6 +76,27 @@ module attackRollModeCollectorCoreExamples {
     assert(attackRollModeSources.forall(source =>
       sourceContribution(source, againstObject(everyCreatureSideSource)) == noSources
     )),
+  }
+
+  // Invisible: the attacker's Advantage is lost only to a creature that sees
+  // it, so it reaches an object; the hidden target's Disadvantage doesn't.
+  run hiddenAttackerReachesEveryTarget = all {
+    val hidden = { ...plainCircumstances, attackerHidden: true }
+    val hiddenTarget = { ...plainCircumstances, targetHidden: true }
+    all {
+      assert(collectedAttackRollMode(hidden) == AdvantageD20TestRoll),
+      assert(collectedAttackRollMode(againstObject(hidden)) == AdvantageD20TestRoll),
+      assert(collectedAttackRollMode(hiddenTarget) == DisadvantageD20TestRoll),
+      assert(collectedAttackRollMode(againstObject(hiddenTarget)) == NormalD20TestRoll),
+    }
+  }
+
+  run unconsciousTargetGivesAdvantage = all {
+    val unconscious = { ...plainCircumstances, targetUnconscious: true, targetDistanceFeet: 30 }
+    all {
+      assert(collectedAttackRollMode(unconscious) == AdvantageD20TestRoll),
+      assert(collectedAttackRollMode(againstObject(unconscious)) == NormalD20TestRoll),
+    }
   }
 
   run rangedSourcesReachEveryTarget = all {

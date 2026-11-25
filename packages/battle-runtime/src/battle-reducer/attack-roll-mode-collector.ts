@@ -69,7 +69,7 @@ type RuntimeSpellProcedure =
  * named for what it is, and each says for itself which attack rolls it reaches
  * (see `ATTACK_ROLL_MODE_SOURCE_CONTRIBUTIONS`), so no route can leave one out.
  */
-export const ATTACK_ROLL_MODE_SOURCES = [
+const ATTACK_ROLL_MODE_SOURCES = [
   "attackerCondition",
   "grappledAttacker",
   "attackerCannotSeeTarget",
@@ -98,14 +98,34 @@ export type AttackRollModeContribution = {
   readonly mode: Exclude<AttackRollMode, "normal">;
 };
 
+/**
+ * Whether the attacker can see an object target. An ordinary object attack
+ * always asks the table; a spell attack asks only when a source reads it (an
+ * outlined object), so the fact may not have been asked for.
+ */
+export type ObjectTargetSight =
+  | { readonly kind: "sightNotAsked" }
+  | { readonly kind: "sightFact"; readonly attackerCanSeeObject: boolean };
+
+/** The object sight a route has, from the table's fact if it asked for one. */
+export function objectTargetSight(
+  sightFact: { readonly attackerCanSeeObject: boolean } | null,
+): ObjectTargetSight {
+  return sightFact === null
+    ? { kind: "sightNotAsked" }
+    : {
+        kind: "sightFact",
+        attackerCanSeeObject: sightFact.attackerCanSeeObject,
+      };
+}
+
 /** What the attack roll is made against. */
 export type AttackRollModeTarget =
   | { readonly kind: "creature"; readonly creature: BattleCreatureState }
   | {
       readonly kind: "object";
       readonly objectId: BattleObjectId;
-      /** The table's sight fact for the object, when the attack asked for one. */
-      readonly attackerCanSeeObject: boolean | undefined;
+      readonly sight: ObjectTargetSight;
     };
 
 /** How the attack roll is made. */
@@ -191,10 +211,10 @@ const ATTACK_ROLL_MODE_SOURCE_CONTRIBUTIONS = {
         ),
       ),
     ),
+  // SRD Invisible: "your attack rolls have Advantage", unless the target can
+  // see you. An object never sees the attacker.
   hiddenAttacker: (facts) =>
-    forCreatureTarget(facts, () =>
-      advantageIf(combatantHasHiddenAttackRollBenefit(facts.attacker)),
-    ),
+    advantageIf(combatantHasHiddenAttackRollBenefit(facts.attacker)),
   hiddenTarget: (facts) =>
     forCreatureTarget(facts, (target) =>
       disadvantageIf(combatantHasHiddenAttackRollBenefit(target)),
@@ -264,7 +284,7 @@ const ATTACK_ROLL_MODE_SOURCE_CONTRIBUTIONS = {
   outlinedObject: (facts) =>
     advantageIf(
       facts.target.kind === "object" &&
-        facts.target.attackerCanSeeObject === true &&
+        attackerSeesObject(facts.target.sight) === true &&
         facts.state.objectOutlines.some(
           (outline) =>
             facts.target.kind === "object" &&
@@ -428,7 +448,12 @@ function attackerCannotSeeTarget(facts: CollectorFacts): boolean {
         facts.attackerId,
         facts.target.creature.combatantId,
       )
-    : facts.target.attackerCanSeeObject === false;
+    : attackerSeesObject(facts.target.sight) === false;
+}
+
+/** The table's answer, or undefined when the attack didn't ask. */
+function attackerSeesObject(sight: ObjectTargetSight): boolean | undefined {
+  return sight.kind === "sightFact" ? sight.attackerCanSeeObject : undefined;
 }
 
 function creatureTargetDistanceFeet(
@@ -558,7 +583,8 @@ function activeEffectSources(facts: CollectorFacts): D20TestRollModeSources {
 }
 
 function attackerCanSeeTarget(facts: CollectorFacts): boolean | undefined {
-  if (facts.target.kind === "object") return facts.target.attackerCanSeeObject;
+  if (facts.target.kind === "object")
+    return attackerSeesObject(facts.target.sight);
   return (
     facts.attacker !== undefined &&
     !attackerCannotSeeTarget(facts) &&
@@ -616,7 +642,7 @@ function ongoingFeatureSpellAttackSources(
   };
 }
 
-export function ongoingFeatureGrantsAttackRollMode(
+function ongoingFeatureGrantsAttackRollMode(
   state: BattleState,
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState | undefined,
@@ -815,7 +841,7 @@ export function attackAbilityMatchesModifier(
   );
 }
 
-export function hasDodgeAttackRollBenefit(
+function hasDodgeAttackRollBenefit(
   state: BattleState,
   target: BattleCreatureState,
   attacker: BattleCreatureState,

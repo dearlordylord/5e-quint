@@ -13,6 +13,7 @@ import {
   difficultyClass,
   Hp,
   movementFeet,
+  NonNegativeInteger,
   type Condition,
 } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
@@ -21,6 +22,7 @@ import {
   attackRollModeContributions,
   attackRollModeFromContributions,
   type AttackRollModeContext,
+  type ObjectTargetSight,
 } from "./battle-reducer/attack-roll-mode-collector.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
@@ -52,7 +54,14 @@ import type {
   BattleGrappleLink,
   BattleState,
 } from "./battle-state-execution.ts";
-import { battleObjectId, type CombatantId } from "./identity.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
+import {
+  battleObjectId,
+  battleProcedureExecutionCursor,
+  battleProcedureExecutionRef,
+  combatantId,
+  type CombatantId,
+} from "./identity.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 
 const objectId = battleObjectId("synthetic_collector_target");
@@ -155,9 +164,98 @@ function fireBoltBattle() {
   });
 }
 
+function outlinedByWizard(
+  session: ReturnType<typeof fireBoltBattle>,
+  state: BattleState,
+): BattleState {
+  const hole = findHole(
+    findAct(session, magicSubject("fire_bolt")).initialHoles,
+    "objectTargetChoice",
+  );
+  return {
+    ...state,
+    objectOutlines: [
+      {
+        kind: "saveGatedTargetProjectionObject",
+        objectId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        sourceCombatantId: wizardId,
+        expiresAt: { kind: "concentration", combatantId: wizardId },
+      },
+    ],
+  };
+}
+
+// A synthetic ongoing feature: Advantage on the wizard's own attack rolls, with
+// no ability filter, active until the start of the wizard's next turn.
+const selfAttackAdvantageFeature: Extract<
+  UnitFeatureProcedureExecution,
+  { readonly kind: "ongoingFeature" }
+> = {
+  kind: "ongoingFeature",
+  activationTrigger: "bonusAction",
+  spendsUse: false,
+  lifecycle: {
+    kind: "turnBoundary",
+    initialExpiration: "startOfNextTurn",
+    earlyEndConditions: [],
+    earlyEndArmorCategories: [],
+    extensionTriggers: [],
+  },
+  actionRestrictions: [],
+  rollModifiers: [{ mode: "advantage", affects: "selfRoll", on: "attackRoll" }],
+  spellModifiers: [],
+  damageModifiers: [],
+  resistances: [],
+};
+
+function withActiveSelfAttackAdvantage(state: BattleState): BattleState {
+  const wizard = requireCombatant(state, wizardId);
+  if (wizard.origin.kind !== "character") {
+    throw new Error("Expected the wizard to be a character.");
+  }
+  const ordinal = Number(wizard.origin.execution.nextProcedureOrdinal);
+  const procedureRef = battleProcedureExecutionRef(
+    wizard.origin.execution.scopeRef,
+    NonNegativeInteger(ordinal),
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(wizardId, {
+      ...wizard,
+      origin: {
+        ...wizard.origin,
+        execution: {
+          ...wizard.origin.execution,
+          nextProcedureOrdinal: battleProcedureExecutionCursor(ordinal + 1),
+          procedureBindings: [
+            ...wizard.origin.execution.procedureBindings,
+            {
+              procedureRef,
+              procedure: {
+                kind: "unitFeature",
+                source: { kind: "intrinsic" },
+                execution: selfAttackAdvantageFeature,
+              },
+            },
+          ],
+        },
+      },
+      activeOngoingFeatureOccurrences: new Map(
+        wizard.activeOngoingFeatureOccurrences,
+      ).set(procedureRef, {
+        kind: "turnBoundary",
+        expiresAt: { kind: "startOfTurn", combatantId: wizardId },
+      }),
+    }),
+  };
+}
+
 function fireBoltRollModeAgainstObject(
   session: ReturnType<typeof fireBoltBattle>,
   state: BattleState,
+  attackerCanSeeObject?: boolean,
 ) {
   const subject = findAct(session, magicSubject("fire_bolt")).subject;
   const hole = findHole(
@@ -187,6 +285,17 @@ function fireBoltRollModeAgainstObject(
         procedureRef: sourceProcedureRef,
         enemies: [],
       },
+      ...(attackerCanSeeObject === undefined
+        ? []
+        : [
+            {
+              kind: "spellObjectTargetSight",
+              casterId: wizardId,
+              objectId,
+              sourceProcedureRef,
+              attackerCanSeeObject,
+            } as const,
+          ]),
       {
         kind: "spellObjectIgnition",
         casterId: wizardId,
@@ -231,6 +340,45 @@ describe("attack-roll mode collector: one rule on every route", () => {
     ).toBeUndefined();
   });
 
+  // RAW: rules-glossary.md, Invisible: "your attack rolls have Advantage. If a
+  // creature can somehow see you, you don't gain this benefit against that
+  // creature." An object can't see the attacker.
+  test("a hidden attacker has Advantage against an object", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = requireCombatant(state, fighterId);
+    const hidden: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        hidden: { discoveryDc: difficultyClass(16) },
+      }),
+    };
+    expect(fighterRollModeAgainstObject(hidden)).toBe("advantage");
+  });
+
+  // RAW: playing-the-game.md, "Unseen Attackers and Targets", and the outline's
+  // Advantage for an attacker that can see the object.
+  test("a spell attack at an outlined object asks for sight, and either answer reaches the roll", () => {
+    const session = fireBoltBattle();
+    const outlined = outlinedByWizard(session, session.state);
+    expect(fireBoltRollModeAgainstObject(session, outlined, true)).toBe(
+      "advantage",
+    );
+    expect(fireBoltRollModeAgainstObject(session, outlined, false)).toBe(
+      "disadvantage",
+    );
+  });
+
+  test("the attacker's ongoing feature reaches a spell attack against an object", () => {
+    const session = fireBoltBattle();
+    expect(
+      fireBoltRollModeAgainstObject(
+        session,
+        withActiveSelfAttackAdvantage(session.state),
+      ),
+    ).toBe("advantage");
+  });
+
   test("names each source, and opposite sources cancel", () => {
     const state = withCondition(
       withCondition(fighterVsGoblinBattle(), "restrained", fighterId),
@@ -266,20 +414,22 @@ describe("attack-roll mode collector: one rule on every route", () => {
   test("an object the attacker can't see gives Disadvantage, and an unasked sight fact gives none", () => {
     const state = fighterVsGoblinBattle();
     const attack = firstMeleeAttack(state, fighterId);
-    const againstObject = (attackerCanSeeObject: boolean | undefined) =>
+    const againstObject = (sight: ObjectTargetSight) =>
       attackRollModeContributions(state, {
         attackerId: fighterId,
-        target: { kind: "object", objectId, attackerCanSeeObject },
+        target: { kind: "object", objectId, sight },
         means: { kind: "attack", attack, opportunityAttack: false },
         targetSpatialFacts: [],
         ranged: { longRange: false, closeCombat: false },
       });
 
-    expect(againstObject(false)).toEqual([
-      { source: "attackerCannotSeeTarget", mode: "disadvantage" },
-    ]);
-    expect(againstObject(true)).toEqual([]);
-    expect(againstObject(undefined)).toEqual([]);
+    expect(
+      againstObject({ kind: "sightFact", attackerCanSeeObject: false }),
+    ).toEqual([{ source: "attackerCannotSeeTarget", mode: "disadvantage" }]);
+    expect(
+      againstObject({ kind: "sightFact", attackerCanSeeObject: true }),
+    ).toEqual([]);
+    expect(againstObject({ kind: "sightNotAsked" })).toEqual([]);
   });
 
   test("a creature-only source supplies nothing against an object", () => {
@@ -289,14 +439,17 @@ describe("attack-roll mode collector: one rule on every route", () => {
       fighterId,
     );
     const attack = firstMeleeAttack(state, fighterId);
+    // Help names its helper only for expiry; the benefit reads the ally and
+    // the chosen enemy, so the helper needs no combatant record here.
+    const helperId = combatantId("synthetic_collector_helper");
     const helped: BattleState = {
       ...state,
       helpAttacks: [
         {
-          helperId: goblinId,
+          helperId,
           allyId: fighterId,
           targetEnemyId: goblinId,
-          expiresAt: { kind: "startOfTurn", combatantId: goblinId },
+          expiresAt: { kind: "startOfTurn", combatantId: helperId },
         },
       ],
     };
@@ -304,7 +457,11 @@ describe("attack-roll mode collector: one rule on every route", () => {
     expect(
       attackRollModeContributions(helped, {
         attackerId: fighterId,
-        target: { kind: "object", objectId, attackerCanSeeObject: true },
+        target: {
+          kind: "object",
+          objectId,
+          sight: { kind: "sightFact", attackerCanSeeObject: true },
+        },
         means: { kind: "attack", attack, opportunityAttack: false },
         targetSpatialFacts: [],
         ranged: { longRange: false, closeCombat: false },
