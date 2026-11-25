@@ -6416,7 +6416,6 @@ function startTurnSaveGatedConditionWithRepeatDamageRepeatSaveResult(input: {
   });
 }
 
-
 const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
   "persistentAreaSourceTurnTranslation",
