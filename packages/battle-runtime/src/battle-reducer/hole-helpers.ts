@@ -46,8 +46,10 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
+  ESCAPE_GRAPPLE_CHECKS,
   type BattleMovementSpeedKind,
   type BattleSubject,
+  type EscapeGrappleSkill,
 } from "../battle-subjects.ts";
 import {
   characterUnitProcedureBindings,
@@ -194,6 +196,53 @@ export interface BattleSkillCheck {
   readonly stateAfterCheck: BattleState;
 }
 
+/**
+ * The roll mode of an ability check with a skill, and the state once it is
+ * made: the one operation every check with a skill goes through, so a Help
+ * benefit for the skill gives the check Advantage and is used up by it. A
+ * check made to end a condition also counts the roll mode sources for ending
+ * that condition.
+ */
+interface SkillCheckRoll {
+  readonly rollMode: AttackRollMode | undefined;
+  readonly stateAfterCheck: BattleState;
+}
+
+function skillCheckRoll(
+  state: BattleState,
+  actorId: CombatantId,
+  check: {
+    readonly ability: Ability;
+    readonly skill: Skill;
+    readonly targetId?: CombatantId;
+    readonly endingCondition?: Condition;
+  },
+): SkillCheckRoll {
+  return {
+    rollMode: mechanicalD20TestRollMode(
+      D20TestRollModeSourcesMonoid.combineAll([
+        abilityCheckRollModeSources(state, actorId, check.ability, check),
+        check.endingCondition === undefined
+          ? { advantage: false, disadvantage: false }
+          : conditionEndAbilityCheckRollModeSources(
+              state,
+              actorId,
+              check.endingCondition,
+            ),
+        {
+          advantage: helpAbilityCheckGrantsAdvantage(
+            state,
+            actorId,
+            check.skill,
+          ),
+          disadvantage: false,
+        },
+      ]),
+    ),
+    stateAfterCheck: consumeHelpAbilityChecks(state, actorId, check.skill),
+  };
+}
+
 function skillCheck(
   state: BattleState,
   actorId: CombatantId,
@@ -210,21 +259,7 @@ function skillCheck(
     readonly requiresTableSpatialFact?: true;
   },
 ): BattleSkillCheck {
-  const sources = abilityCheckRollModeSources(
-    state,
-    actorId,
-    check.ability,
-    check,
-  );
-  const rollMode = mechanicalD20TestRollMode(
-    D20TestRollModeSourcesMonoid.combineAll([
-      sources,
-      {
-        advantage: helpAbilityCheckGrantsAdvantage(state, actorId, check.skill),
-        disadvantage: false,
-      },
-    ]),
-  );
+  const { rollMode, stateAfterCheck } = skillCheckRoll(state, actorId, check);
   return {
     hole: {
       holeInstanceKey: hole.holeInstanceKey,
@@ -240,7 +275,7 @@ function skillCheck(
         hole.requiresTableSpatialFact,
       ),
     },
-    stateAfterCheck: consumeHelpAbilityChecks(state, actorId, check.skill),
+    stateAfterCheck,
   };
 }
 
@@ -427,29 +462,25 @@ function skillAbilityCheckAdvantageMatches(
   );
 }
 
-export function requiredConditionEndAbilityCheckRollMode(
+/**
+ * Roll mode sources of a check made to end `condition` beyond those of its
+ * ability and skill: a feature's Advantage on checks to end that condition,
+ * and Poisoned's Disadvantage on ability checks.
+ */
+function conditionEndAbilityCheckRollModeSources(
   state: BattleState,
   actorId: CombatantId,
   condition: Condition,
-): AttackRollMode | undefined {
-  const hasDisadvantage =
-    activeAnyAbilityCheckRollModeEffectMatches(
-      state,
-      actorId,
-      "disadvantage",
-    ) || poisonedAbilityCheckDisadvantageMatches(state, actorId);
-  const hasAdvantage =
-    activeAnyAbilityCheckRollModeEffectMatches(state, actorId, "advantage") ||
-    passiveConditionEndAbilityCheckRollModeMatches(
+): D20TestRollModeSources {
+  return {
+    advantage: passiveConditionEndAbilityCheckRollModeMatches(
       state,
       actorId,
       condition,
       "advantage",
-    );
-  return mechanicalD20TestRollMode({
-    advantage: hasAdvantage,
-    disadvantage: hasDisadvantage,
-  });
+    ),
+    disadvantage: poisonedAbilityCheckDisadvantageMatches(state, actorId),
+  };
 }
 
 export function passivePerceptionModifierDelta(
@@ -528,26 +559,6 @@ function activeAbilityCheckRollModeEffectMatches(
         effect.mode === mode,
     ) ??
       false)
-  );
-}
-
-function activeAnyAbilityCheckRollModeEffectMatches(
-  state: BattleState,
-  actorId: CombatantId,
-  mode: AttackRollMode,
-): boolean {
-  const actor = state.combatants.get(actorId);
-  return (
-    actor?.activeEffects.some(
-      (effect) =>
-        effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-        !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
-          kind: "spellActiveEffect",
-          activeEffectKind: "spellObjectContactDamage",
-          effectRef: effect.sourceEffectRef,
-        }) &&
-        effect.mode === mode,
-    ) ?? false
   );
 }
 
@@ -892,26 +903,41 @@ export function shoveOutcomeHole(input: {
   };
 }
 
-export function escapeGrappleOutcomeHole(
+/**
+ * The check a Grappled creature makes to escape with the skill it chose: a
+ * Strength (Athletics) or Dexterity (Acrobatics) check against the grapple's
+ * escape DC that ends the Grappled condition on a success (SRD 5.2.1
+ * Grappling, "Ending a Grapple"). Whoever resolves it continues from
+ * `stateAfterCheck`.
+ */
+export function escapeGrappleCheck(
   state: BattleState,
   link: BattleGrappleLink,
   actorId: CombatantId,
-): BattleGrappleOutcomeHole {
-  const rollMode = requiredConditionEndAbilityCheckRollMode(
-    state,
-    actorId,
-    "grappled",
-  );
+  skill: EscapeGrappleSkill,
+): {
+  readonly hole: BattleGrappleOutcomeHole;
+  readonly stateAfterCheck: BattleState;
+} {
+  const check = ESCAPE_GRAPPLE_CHECKS[skill];
+  const { rollMode, stateAfterCheck } = skillCheckRoll(state, actorId, {
+    ability: check.ability,
+    skill,
+    endingCondition: "grappled",
+  });
   return {
-    kind: "grappleOutcome",
-    holeId: ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
-    holeInstanceKey: ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
-    label: "Escape Grapple ability check",
-    actorId,
-    targetId: link.grapplerId,
-    dc: link.escapeDc,
-    mode: "escapeCheck",
-    ...optionalProperty("rollMode", rollMode),
+    hole: {
+      kind: "grappleOutcome",
+      holeId: ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
+      holeInstanceKey: ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
+      label: `Escape Grapple ${check.checkName} check (DC ${link.escapeDc})`,
+      actorId,
+      targetId: link.grapplerId,
+      dc: link.escapeDc,
+      mode: "escapeCheck",
+      ...optionalProperty("rollMode", rollMode),
+    },
+    stateAfterCheck,
   };
 }
 

@@ -46,6 +46,7 @@ import type {
   BattleSubject,
   CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
+import { ESCAPE_GRAPPLE_SKILLS } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
 import {
   spawnedCompanionEntryForOwner,
@@ -91,7 +92,7 @@ import {
   ordinaryObjectAttackOptionIsSupported,
   bonusActionStandardActionActs,
   canHideInCurrentCircumstances,
-  escapeGrappleOutcomeHole,
+  escapeGrappleCheck,
   escapeSpellRestraintSkillCheck,
   grappleTargetChoices,
   grappleTargetHole,
@@ -494,6 +495,26 @@ function weaponChangeAttackActs(
   });
 }
 
+/** One Escape Grapple act for each skill the escaper can choose. */
+function escapeGrappleActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly BattleActDiscoveryCandidate[] {
+  const grapple = grappledBy(state, actorId);
+  if (
+    grapple === undefined ||
+    !combatantCanTakeActions(state.combatants.get(actorId)) ||
+    actorHasStatBlockMultiattackActionResource(state, actorId) ||
+    !canSpendEscapeGrappleActionResource(state.currentTurnResources, actorId)
+  ) {
+    return [];
+  }
+  return ESCAPE_GRAPPLE_SKILLS.map((skill) => ({
+    subject: { tag: "action", actorId, action: "escapeGrapple", skill },
+    initialHoles: [escapeGrappleCheck(state, grapple, actorId, skill).hole],
+  }));
+}
+
 function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry | null,
@@ -665,20 +686,7 @@ function discoverBattleActsWithoutRouteEvents(
       initialHoles: [shoveTargetHole(state, actorId)],
     });
   }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
-    canSpendEscapeGrappleActionResource(state.currentTurnResources, actorId) &&
-    grappledBy(state, actorId) !== undefined
-  ) {
-    const grapple = grappledBy(state, actorId);
-    if (grapple !== undefined) {
-      acts.push({
-        subject: { tag: "action", actorId, action: "escapeGrapple" },
-        initialHoles: [escapeGrappleOutcomeHole(state, grapple, actorId)],
-      });
-    }
-  }
+  acts.push(...escapeGrappleActs(state, actorId));
   for (const { targetId, effect } of spellRestraintEffectEntries(state)) {
     if (
       effect.escape?.kind === "abilityCheck" &&

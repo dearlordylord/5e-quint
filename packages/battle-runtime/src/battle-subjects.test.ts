@@ -342,7 +342,7 @@ describe("BattleSubject identity", () => {
       search: {},
       grapple: {},
       shove: {},
-      escapeGrapple: {},
+      escapeGrapple: { skill: "acrobatics" },
       escapeSpellRestraint: { targetId, effectRef },
       shakeAwakeFromStagedCondition: {},
       shakeAwakeFromAreaControl: {},

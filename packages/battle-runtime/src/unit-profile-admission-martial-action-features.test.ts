@@ -1429,6 +1429,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
     tag: "action",
     actorId: goliathId,
     action: "escapeGrapple",
+    skill: "athletics",
   } as const;
   const goliathTurn = requireResolved(
     endTurn({ state: grappled.state, actorId: grapplerId }),

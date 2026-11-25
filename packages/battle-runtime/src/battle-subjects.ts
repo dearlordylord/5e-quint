@@ -30,7 +30,7 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { DamageType } from "@dnd/surface/surface/types";
+import type { Ability, DamageType } from "@dnd/surface/surface/types";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
 import {
   BattleAreaId,
@@ -92,6 +92,35 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "shakeAwakeFromAreaControl",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
+
+/**
+ * The skills of the check a Grappled creature makes to escape: "a Strength
+ * (Athletics) or Dexterity (Acrobatics) check against the grapple's escape DC"
+ * (SRD 5.2.1 Grappling, "Ending a Grapple"). The escaper chooses one.
+ */
+export const ESCAPE_GRAPPLE_SKILLS = ["athletics", "acrobatics"] as const;
+export type EscapeGrappleSkill = (typeof ESCAPE_GRAPPLE_SKILLS)[number];
+
+/** The ability each escape skill is checked with, and how the check is named. */
+export const ESCAPE_GRAPPLE_CHECKS = {
+  athletics: {
+    ability: "str",
+    skillName: "Athletics",
+    checkName: "Strength (Athletics)",
+  },
+  acrobatics: {
+    ability: "dex",
+    skillName: "Acrobatics",
+    checkName: "Dexterity (Acrobatics)",
+  },
+} as const satisfies Record<
+  EscapeGrappleSkill,
+  {
+    readonly ability: Ability;
+    readonly skillName: string;
+    readonly checkName: string;
+  }
+>;
 
 export const BATTLE_SUBJECT_BONUS_ACTIONS = [
   "offHandAttack",
@@ -814,6 +843,7 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("escapeGrapple"),
+    skill: Schema.Literals(ESCAPE_GRAPPLE_SKILLS),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -2090,7 +2120,12 @@ function battleSubjectKey(subject: BattleSubject): string {
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
-          JSON.stringify([action.tag, action.actorId, action.action]),
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.action,
+            action.skill,
+          ]),
         ),
         Match.when(
           { tag: "action", action: "escapeSpellRestraint" },

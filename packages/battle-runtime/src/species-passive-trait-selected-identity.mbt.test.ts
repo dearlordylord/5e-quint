@@ -582,7 +582,12 @@ function escapeGrappleRollMode(input: {
   const escape = requireHole(
     resolveBattleSubject({
       state: actorTurn,
-      subject: { tag: "action", actorId, action: "escapeGrapple" },
+      subject: {
+        tag: "action",
+        actorId,
+        action: "escapeGrapple",
+        skill: "athletics",
+      },
       fills: [],
     }),
     "grappleOutcome",
@@ -923,6 +928,7 @@ function requirePassiveAbilityCheckRollModeRoute(
     tag: "action",
     actorId,
     action: "escapeGrapple",
+    skill: "athletics",
   };
   const escapeAct = discoverBattleActCandidates(actorTurn).find(
     (act) =>

@@ -121,7 +121,7 @@ import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
   canHideInCurrentCircumstances,
-  escapeGrappleOutcomeHole,
+  escapeGrappleCheck,
   escapeSpellRestraintSkillCheck,
   grappleOutcomeHole,
   grappleTargetHole,
@@ -1644,10 +1644,14 @@ export function resolveEscapeGrapple(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const check = escapeGrappleCheck(
+    input.state,
+    grapple,
+    input.subject.actorId,
+    input.subject.skill,
+  );
   if (fillSet.outcome === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      escapeGrappleOutcomeHole(input.state, grapple, input.subject.actorId),
-    ]);
+    return needsHolesResult(input.state, input.subject, [check.hole]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.outcome.holeId !== ESCAPE_GRAPPLE_OUTCOME_HOLE_ID) {
@@ -1673,11 +1677,13 @@ export function resolveEscapeGrapple(
   }
   /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
-    ...input.state,
+    ...check.stateAfterCheck,
     currentTurnResources: spent.success,
     grapples: fillSet.outcome.value.succeeded
-      ? input.state.grapples.filter((candidate) => candidate !== grapple)
-      : input.state.grapples,
+      ? check.stateAfterCheck.grapples.filter(
+          (candidate) => candidate !== grapple,
+        )
+      : check.stateAfterCheck.grapples,
   });
   return {
     tag: "resolved",
