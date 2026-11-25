@@ -25,7 +25,6 @@ module attackWeaponChangeCoreExamples {
 
   pure val freeSlot: EquipSlot = {
     slotWeaponHeld: false,
-    twoHandedIntoOffHand: false,
     slotHandsFree: true,
   }
 
@@ -39,9 +38,8 @@ module attackWeaponChangeCoreExamples {
     assert(departingWeaponCustody(HeldWeapon) == Set()),
   }
 
-  run noSlotForAWeaponWhileItsWeaponIsHeldOrForATwoHandedOneInTheOffHand = all {
+  run noSlotForAWeaponWhileItsWeaponIsHeldOrItsHandsAreFull = all {
     assert(not(slotTakesWeapon({ ...freeSlot, slotWeaponHeld: true }))),
-    assert(not(slotTakesWeapon({ ...freeSlot, twoHandedIntoOffHand: true }))),
     assert(not(slotTakesWeapon({ ...freeSlot, slotHandsFree: false }))),
     assert(weaponChangeCustody(StowedWeapon, EquipWeapon, slotTakesWeapon({ ...freeSlot, slotWeaponHeld: true })) == Set()),
   }

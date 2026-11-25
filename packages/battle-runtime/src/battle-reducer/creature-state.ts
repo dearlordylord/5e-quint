@@ -921,16 +921,19 @@ function characterBattleInitInvariantIssues(
   combatantId: CombatantId,
   creatureInit: CharacterBattleCreatureInit,
 ): BattleStateInitLeafIssue[] {
-  const attacks = [creatureInit.attack, creatureInit.offHandAttack].flatMap(
-    (attack) => {
-      if (attack === null || attack === undefined) return [];
-      return attack.weapon.properties.flatMap((property) =>
-        property.kind === "ammunition"
-          ? [{ attackType: "ranged" as const, ammunition: property.ammunition }]
-          : [],
-      );
-    },
-  );
+  // Every owned weapon's Ammunition needs its stock, carried or in hand.
+  const attacks = [
+    creatureInit.attack,
+    creatureInit.offHandAttack,
+    ...(creatureInit.otherOwnedWeapons ?? []).map(({ attack }) => attack),
+  ].flatMap((attack) => {
+    if (attack === null || attack === undefined) return [];
+    return attack.weapon.properties.flatMap((property) =>
+      property.kind === "ammunition"
+        ? [{ attackType: "ranged" as const, ammunition: property.ammunition }]
+        : [],
+    );
+  });
   return [
     ...missingRequiredAmmunitionKinds(
       attacks,

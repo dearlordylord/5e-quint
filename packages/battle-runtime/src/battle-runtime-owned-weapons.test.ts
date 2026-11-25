@@ -1,6 +1,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.ACTION.ATTACK_WEAPON_CHANGE
 import { describe, expect, it } from "vitest";
 import { unitId as parseUnitId } from "@dnd/shared/game-facts";
+import {
+  abilityModifier as battleAbilityModifier,
+  attackBonus,
+} from "@dnd/shared/types";
 import { Result, Schema } from "effect";
 import {
   attackRollFill,
@@ -19,10 +23,12 @@ import {
   requireHole,
   requireResolved,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   testCharacterWeaponAttackForUnit,
   testDaggerAttack,
   testShortswordAttack,
+  testSlingAttack,
 } from "./battle-runtime.test-support.ts";
 import type {
   BattleState,
@@ -30,8 +36,14 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { resolveBattleSubject, snapshotBattle, startBattle } from "./index.ts";
-import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
+import {
+  characterBoundWeaponAttacks,
+  isCharacterBattleCreatureState,
+} from "./battle-reducer/creature-state-queries.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { weaponAttackIsThrown } from "./battle-reducer/thrown-weapon-attack.ts";
+import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 import { battleObjectIsOnGround } from "./battle-reducer/object-custody-queries.ts";
 import {
   ownedWeaponChangeIssue,
@@ -178,6 +190,28 @@ describe("weapons the character owns outside its loadout", () => {
     expect(Result.isFailure(started)).toBe(true);
     expect(JSON.stringify(started)).toContain(
       "owned weapons outside the loadout must each be a battle object of their own",
+    );
+  });
+
+  it("refuses a carried Ammunition weapon without its ammunition stock, as it would one in hand", () => {
+    const started = startBattle({
+      battleId: battleId("battle-owned-weapon-ammunition"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          otherOwnedWeapons: [
+            {
+              itemId: battleObjectId("main:weapon_sling"),
+              attack: testSlingAttack(),
+            },
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Result.isFailure(started)).toBe(true);
+    expect(JSON.stringify(started)).toContain(
+      "Character battle initialization requires an explicit",
     );
   });
 
@@ -449,5 +483,130 @@ describe("weapons the character owns outside its loadout", () => {
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
     ).not.toThrow();
+  });
+
+  it("names a carried throw by the carried weapon's own binding", () => {
+    // The Dagger is bound with Strength and can also attack with Dexterity
+    // (SRD 5.2.1 equipment.md "Finesse"); only the other ability is named.
+    const dagger = {
+      ...testDaggerAttack(),
+      alternateAbilityChoices: [
+        {
+          ability: "dex" as const,
+          abilityModifier: battleAbilityModifier(2),
+          attackBonus: attackBonus(4),
+          damageAbilityModifier: battleAbilityModifier(2),
+        },
+      ],
+    } satisfies ReturnType<typeof testDaggerAttack>;
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-owned-weapons-carried-throw-name"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          otherOwnedWeapons: [{ itemId: daggerId, attack: dagger }],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const names = attackActionOptionsForActor(session.state, fighterId)
+      .filter(
+        (attack) =>
+          attack.kind === "weapon" &&
+          attack.weaponObjectId === daggerId &&
+          weaponAttackIsThrown(attack),
+      )
+      .map((attack) =>
+        Result.getOrThrow(
+          attackActionOptionPresentationName(
+            session.state,
+            session.context,
+            fighterId,
+            attack,
+          ),
+        ),
+      );
+
+    expect([...names].sort()).toEqual(["Dagger", "Dagger (Dexterity)"]);
+  });
+
+  it("offers one of a set of carried copies, and each copy on the ground", () => {
+    const firstId = daggerId;
+    const secondId = battleObjectId("main:weapon_dagger#2");
+    const thirdId = battleObjectId("main:weapon_dagger#3");
+    const copyIds = [firstId, secondId, thirdId];
+    const carried = changed(
+      startBattleRight({
+        battleId: battleId("battle-owned-weapons-copies"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            otherOwnedWeapons: [
+              { itemId: firstId, attack: testDaggerAttack() },
+              { itemId: secondId, attack: testDaggerAttack() },
+              { itemId: thirdId, attack: testDaggerAttack() },
+            ],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+      { kind: "stow", objectId: longswordId },
+    );
+    const equippedCopies = (state: BattleState) =>
+      new Set(
+        attackActs(state).flatMap((subject) =>
+          "weaponChange" in subject &&
+          subject.weaponChange?.kind === "equip" &&
+          copyIds.includes(subject.weaponChange.objectId)
+            ? [subject.weaponChange.objectId]
+            : [],
+        ),
+      );
+    const thrownWeapons = (state: BattleState) => {
+      const bindings = characterBoundWeaponAttacks(fighter(state));
+      return new Set(
+        attackActs(state).flatMap((subject) =>
+          !("weaponChange" in subject) &&
+          "weaponDelivery" in subject &&
+          subject.weaponDelivery === "thrown"
+            ? bindings
+                .filter(
+                  ({ procedureRef }) =>
+                    "procedureRef" in subject &&
+                    procedureRef === subject.procedureRef,
+                )
+                .map(({ weaponObjectId }) => weaponObjectId)
+            : [],
+        ),
+      );
+    };
+
+    expect(equippedCopies(carried)).toEqual(new Set([firstId]));
+    expect(thrownWeapons(carried)).toEqual(new Set([firstId]));
+
+    // The second copy is drawn, dropped, and then left lying when the third
+    // takes its slot.
+    const secondOnGround = changed(
+      changed(
+        changed(carried, {
+          kind: "equip",
+          objectId: secondId,
+          slot: "mainWeapon",
+        }),
+        {
+          kind: "drop",
+          objectId: secondId,
+          positionId: battleTablePositionId("dropped-dagger-position"),
+        },
+      ),
+      { kind: "equip", objectId: thirdId, slot: "mainWeapon" },
+    );
+    expect(battleObjectIsOnGround(secondOnGround, fighterId, secondId)).toBe(
+      true,
+    );
+    expect(equippedCopies(secondOnGround)).toEqual(
+      new Set([firstId, secondId]),
+    );
+    expect(thrownWeapons(secondOnGround)).toEqual(new Set([firstId, thirdId]));
   });
 });

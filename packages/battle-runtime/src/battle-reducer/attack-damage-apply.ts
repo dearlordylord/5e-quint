@@ -29,7 +29,10 @@ import {
   type CombatantId,
 } from "../identity.ts";
 import type { AttackWeaponChange, BattleSubject } from "../battle-subjects.ts";
-import { ownedWeaponChangeAttackQuery } from "./owned-weapon-custody.ts";
+import {
+  offeredOtherOwnedWeaponAttacks,
+  ownedWeaponChangeAttackQuery,
+} from "./owned-weapon-custody.ts";
 import type {
   BattleEquipmentQuery,
   BattleObjectCustodyQuery,
@@ -583,7 +586,7 @@ function carriedThrownWeaponAttackOptions(
   equipment: BattleEquipmentQuery,
 ): readonly BoundSupportedAttackActionOption[] {
   if (!creatureHasFreeHand(equipment, actor)) return [];
-  return actor.origin.otherOwnedWeaponAttacks.flatMap((carried) =>
+  return offeredOtherOwnedWeaponAttacks(equipment, actor).flatMap((carried) =>
     battleObjectIsOnGround(equipment, actor.combatantId, carried.weaponObjectId)
       ? []
       : uniqueAttackExecutionSelectionOptions(

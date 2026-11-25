@@ -47,7 +47,10 @@ import {
   type BattleEquipmentQuery,
   type BattleObjectCustodyQuery,
 } from "./object-custody-queries.ts";
-import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
+import {
+  characterBoundWeaponAttacks,
+  isCharacterBattleCreatureState,
+} from "./creature-state-queries.ts";
 import { combatantActiveDruidWildShape } from "./creature-state-leaves.ts";
 import {
   loadoutWeaponIsHeld,
@@ -338,18 +341,70 @@ function heldMainWeaponGrip(
     : undefined;
 }
 
-/** Every weapon change this character can make now. */
+/**
+ * Every weapon change this character can make now, for one of each set of
+ * interchangeable carried copies (see `offeredOtherOwnedWeaponAttacks`).
+ */
 export function ownedWeaponChanges(
   state: BattleState,
   actor: BattleCreatureState,
 ): readonly AttackWeaponChange[] {
   if (!isCharacterBattleCreatureState(actor)) return [];
-  return ownedWeaponIds(actor).flatMap((objectId) =>
+  const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
+  return [
+    ...[weapon?.itemId, offHandWeapon?.itemId].filter(
+      (itemId): itemId is BattleObjectId => itemId !== undefined,
+    ),
+    ...offeredOtherOwnedWeaponAttacks(state, actor).map(
+      ({ weaponObjectId }) => weaponObjectId,
+    ),
+  ].flatMap((objectId) =>
     weaponChangesOf(objectId).filter(
       (change) =>
         ownedWeaponChangeIssue(state, actor.combatantId, change) === null,
     ),
   );
+}
+
+/**
+ * The character's other owned weapons that Battle offers to use: every one on
+ * the ground, which lies where it fell, and of the carried ones only the first
+ * of each set of copies whose bindings differ in nothing but their battle
+ * object and procedure. Such copies make the same attacks and changes, so
+ * offering each would only repeat them.
+ */
+export function offeredOtherOwnedWeaponAttacks(
+  equipment: BattleObjectCustodyQuery,
+  actor: CharacterBattleCreatureState,
+): readonly BoundCharacterWeaponAttackActionOption[] {
+  const carriedKeys = new Set<string>();
+  return actor.origin.otherOwnedWeaponAttacks.filter((binding) => {
+    if (
+      battleObjectIsOnGround(
+        equipment,
+        actor.combatantId,
+        binding.weaponObjectId,
+      )
+    ) {
+      return true;
+    }
+    const key = interchangeableCopyKey(binding);
+    if (carriedKeys.has(key)) return false;
+    carriedKeys.add(key);
+    return true;
+  });
+}
+
+/** A binding apart from the copy it binds: its battle object and procedure. */
+function interchangeableCopyKey(
+  binding: BoundCharacterWeaponAttackActionOption,
+): string {
+  const {
+    weaponObjectId: _weaponObjectId,
+    procedureRef: _procedureRef,
+    ...attack
+  } = binding;
+  return JSON.stringify(attack);
 }
 
 /** Every weapon change that names this weapon, possible now or not. */
@@ -443,7 +498,9 @@ export function ownedWeaponChangeAttackQuery(
   const changed = stateWithOwnedWeaponChange(
     state,
     actorId,
-    change.kind === "drop" ? { kind: "stow", objectId: change.objectId } : change,
+    change.kind === "drop"
+      ? { kind: "stow", objectId: change.objectId }
+      : change,
   );
   if (changed.tag === "invalid") return changed;
   const actor = changed.state.combatants.get(actorId);
@@ -697,12 +754,9 @@ function ownedWeaponAttack(
   actor: CharacterBattleCreatureState,
   objectId: BattleObjectId,
 ): BoundCharacterWeaponAttackActionOption | undefined {
-  const { attack, offHandAttack, otherOwnedWeaponAttacks } = actor.origin;
-  return [
-    ...(attack === null ? [] : [attack]),
-    ...(offHandAttack === undefined ? [] : [offHandAttack]),
-    ...otherOwnedWeaponAttacks,
-  ].find(({ weaponObjectId }) => weaponObjectId === objectId);
+  return characterBoundWeaponAttacks(actor).find(
+    ({ weaponObjectId }) => weaponObjectId === objectId,
+  );
 }
 
 function slotWeapon(

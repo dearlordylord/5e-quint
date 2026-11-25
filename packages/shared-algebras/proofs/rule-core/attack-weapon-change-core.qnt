@@ -21,8 +21,9 @@ module attackWeaponChangeCore {
   // with the loadout's grip. Another weapon takes the slot once the slot's
   // weapon, if any, is out of hand; that weapon then leaves the loadout, still
   // carried, or lying where it fell (ASSUMPTIONS.md A63). That Battle puts
-  // another weapon in the off hand only beside a main weapon in hand is a
-  // limit of its slot model, not a rule, so it isn't modeled here (A63).
+  // another weapon in the off hand only beside a main weapon in hand, and
+  // never a Two-Handed one, is a limit of its slot model, not a rule, so it
+  // isn't modeled here (A63).
 
   type WeaponCustody = HeldWeapon | StowedWeapon | WeaponOnGround
 
@@ -32,16 +33,12 @@ module attackWeaponChangeCore {
   type EquipSlot = {
     // The slot's weapon is another one, still in hand.
     slotWeaponHeld: bool,
-    // The weapon has the Two-Handed property and the slot is the off hand.
-    // .references/srd-5.2.1/equipment.md "Two-Handed": "A Two-Handed weapon
-    // requires two hands when you attack with it."
-    twoHandedIntoOffHand: bool,
     // Every hand the slot gives the weapon, with its grip, is empty.
     slotHandsFree: bool,
   }
 
   pure def slotTakesWeapon(slot: EquipSlot): bool =
-    not(slot.slotWeaponHeld) and not(slot.twoHandedIntoOffHand) and slot.slotHandsFree
+    not(slot.slotWeaponHeld) and slot.slotHandsFree
 
   // Where the slot's previous weapon is once another weapon takes the slot.
   // It is out of hand, and leaving the loadout doesn't move it.

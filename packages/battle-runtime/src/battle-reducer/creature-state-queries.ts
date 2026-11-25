@@ -12,11 +12,27 @@ import type {
   OngoingFeatureSourceKey,
 } from "../battle-state-execution.ts";
 import { combatantWearingArmorCategory } from "./creature-state-leaves.ts";
+import type { BoundCharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 
 export function isCharacterBattleCreatureState(
   actor: BattleCreatureState | undefined,
 ): actor is CharacterBattleCreatureState {
   return actor?.origin.kind === "character";
+}
+
+/**
+ * Every weapon attack Battle bound for the character, one per owned weapon:
+ * its hand slots' weapons, then its other owned weapons.
+ */
+export function characterBoundWeaponAttacks(
+  actor: CharacterBattleCreatureState,
+): readonly BoundCharacterWeaponAttackActionOption[] {
+  const { attack, offHandAttack, otherOwnedWeaponAttacks } = actor.origin;
+  return [
+    ...(attack === null ? [] : [attack]),
+    ...(offHandAttack === undefined ? [] : [offHandAttack]),
+    ...otherOwnedWeaponAttacks,
+  ];
 }
 
 export function ongoingFeatureProfileForSourceKey(

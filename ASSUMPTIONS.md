@@ -350,11 +350,8 @@ slot's own weapon goes back with its loadout grip. Another weapon takes the
 slot once the slot's weapon, if any, is out of hand; that weapon then leaves
 the loadout, still carried or lying where it fell. In the main hand a
 Two-Handed weapon takes a two-handed grip and any other weapon a one-handed
-one, which A65's grip change can then change. A Two-Handed weapon never goes
-in the off hand. The hands the slot gives the weapon must be empty; the slot's
-own weapon takes the hands its loadout grip gives it, so under a two-handed
-main grip an off-hand weapon has none, even while the main weapon is out of
-hand. Unequipping either sheathes or stows a
+one, which A65's grip change can then change. The hands the slot gives the
+weapon must be empty. Unequipping either sheathes or stows a
 held weapon, which Battle treats the same, or drops it. A dropped weapon lands
 where the table places it, and stays on the ground for its owner to pick up
 again. As with A60, whether the creature can reach a fallen weapon is the
@@ -379,7 +376,12 @@ attack. The object interaction that picks a fallen weapon up puts back only a
 loadout weapon, into its own slot. Battle's Attack action attacks with the
 main weapon, and its off hand holds only the second weapon of the Light
 property's Bonus Action attack, so another weapon goes in the off hand only
-beside a main weapon in hand; the SRD sets no such limit.
+beside a main weapon in hand, and a Two-Handed weapon never goes there. The
+slot's own weapon takes the hands its loadout grip gives it, so under a
+two-handed main grip an off-hand weapon has none, even while the main weapon
+is out of hand. The SRD sets none of these limits. Wild Shape's equipment
+choice covers the loadout's objects only, so an owned weapon outside the
+loadout stays carried whatever the druid chooses.
 
 ## A58: Any weapon may be held with both hands
 
