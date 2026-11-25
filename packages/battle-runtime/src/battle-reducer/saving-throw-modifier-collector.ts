@@ -44,6 +44,8 @@ import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
 import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
+import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 
 /** Where a saving throw's Advantage or Disadvantage comes from. */
 export const SAVING_THROW_ROLL_MODE_SOURCES = [
@@ -360,8 +362,7 @@ function turnConstraintBonusContributions(
       ];
 }
 
-function bonusContributions(
-  state: BattleState,
+function targetBonusContributions(
   target: BattleCreatureState,
   context: SavingThrowContext,
 ): readonly SavingThrowContribution[] {
@@ -375,7 +376,6 @@ function bonusContributions(
         bonus,
       }),
     ),
-    ...turnConstraintBonusContributions(state, target, context.ability),
     ...(context.procedureSources?.bonuses ?? [])
       .filter((bonus) => bonus.targetId === target.combatantId)
       .map(
@@ -388,15 +388,14 @@ function bonusContributions(
   ];
 }
 
-/** Every source that reaches this target's saving throw, each named. */
-export function savingThrowContributions(
-  state: BattleState,
+// The sources the target and the save's own procedure carry, which need no
+// battle state.
+function targetCarriedContributions(
   target: BattleCreatureState,
   context: SavingThrowContext,
 ): readonly SavingThrowContribution[] {
   const { ability, avoidsCondition } = context;
   return [
-    ...dodgeContributions(state, target, ability),
     ...targetConditionContributions(target, ability),
     ...automaticFailureContributions(target, ability),
     ...passiveFeatureContributions(target, ability, avoidsCondition),
@@ -404,10 +403,67 @@ export function savingThrowContributions(
       activeEffectRollModeContributions(effect, ability, avoidsCondition),
     ),
     ...sizeChangeContributions(target, ability),
-    ...spellSaveRuleContributions(state, target, context.spellSaveRollModeRule),
     ...procedureRollModeContributions(target, context.procedureSources),
-    ...bonusContributions(state, target, context),
+    ...targetBonusContributions(target, context),
   ];
+}
+
+/** Every source that reaches this target's saving throw, each named. */
+export function savingThrowContributions(
+  state: BattleState,
+  target: BattleCreatureState,
+  context: SavingThrowContext,
+): readonly SavingThrowContribution[] {
+  return [
+    ...dodgeContributions(state, target, context.ability),
+    ...targetCarriedContributions(target, context),
+    ...spellSaveRuleContributions(state, target, context.spellSaveRollModeRule),
+    ...turnConstraintBonusContributions(state, target, context.ability),
+  ];
+}
+
+/**
+ * A saving throw that isn't a Dexterity save and has no spell rule of its
+ * own. Only Dexterity saves (Dodge, a turn constraint's penalty) and a
+ * spell's rule read the battle around the target.
+ */
+export type TargetCarriedSavingThrowContext = SavingThrowContext & {
+  readonly ability: Exclude<Ability, "dex">;
+  readonly spellSaveRollModeRule?: never;
+};
+
+/**
+ * Every source that reaches this target's saving throw, for a save whose
+ * sources the target and the save's procedure alone carry.
+ */
+export function targetCarriedSavingThrowContributions(
+  target: BattleCreatureState,
+  context: TargetCarriedSavingThrowContext,
+): readonly SavingThrowContribution[] {
+  return targetCarriedContributions(target, context);
+}
+
+/** The roll mode one target's contributions combine to, if any reaches it. */
+export function savingThrowRollModeFromContributions(
+  contributions: readonly SavingThrowContribution[],
+): AttackRollMode | undefined {
+  return mechanicalD20TestRollMode({
+    advantage: contributions.some(
+      (entry) => entry.role === "rollMode" && entry.mode === "advantage",
+    ),
+    disadvantage: contributions.some(
+      (entry) => entry.role === "rollMode" && entry.mode === "disadvantage",
+    ),
+  });
+}
+
+/** The flat bonuses among one target's contributions. */
+export function savingThrowFlatBonusesFromContributions(
+  contributions: readonly SavingThrowContribution[],
+): readonly BattleSavingThrowFlatBonusProjection[] {
+  return contributions.flatMap((entry) =>
+    entry.role === "bonus" ? [entry.bonus] : [],
+  );
 }
 
 function targetsFor(
@@ -444,7 +500,7 @@ export function savingThrowTargetModifiers(
       ),
     ),
     targetFlatBonuses: contributions.flatMap(({ contributions: entries }) =>
-      entries.flatMap((entry) => (entry.role === "bonus" ? [entry.bonus] : [])),
+      savingThrowFlatBonusesFromContributions(entries),
     ),
     targetAutomaticFailures: contributions.flatMap(
       ({ targetId, contributions: entries }) => {

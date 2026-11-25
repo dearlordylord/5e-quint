@@ -7,6 +7,7 @@
 // fail Strength and Dexterity saving throws."
 import type { Condition } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
 import { savingThrowContributions } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleState } from "./battle-state-execution.ts";
@@ -41,17 +42,20 @@ function skeletonWith(state: BattleState, condition: Condition): BattleState {
   };
 }
 
-function withDexteritySaveAdvantage(state: BattleState): BattleState {
+function withSaveAdvantage(
+  state: BattleState,
+  ability: "dex" | "con",
+): BattleState {
   return battleStateWithAllocatedEffectForTest({
     state,
     ownerId: skeletonId,
     effect: {
       kind: "savingThrowRollMode",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-save-advantage",
+        `synthetic-${ability}-save-advantage`,
       ),
       sourceCombatantId: wizardId,
-      ability: "dex",
+      ability,
       mode: "advantage",
       expiresAt: { kind: "concentration", combatantId: wizardId },
     },
@@ -103,8 +107,9 @@ describe("saving throw modifier collector", () => {
   });
 
   test("an effect's Advantage and Restrained's Disadvantage cancel", () => {
-    const state = withDexteritySaveAdvantage(
+    const state = withSaveAdvantage(
       skeletonWith(base.state, "restrained"),
+      "dex",
     );
     expect(acidSplashRollModes(state)).toEqual([
       { targetId: skeletonId, rollMode: "normal" },
@@ -186,5 +191,32 @@ describe("saving throw modifier collector", () => {
     expect(
       savingThrowContributions(state, skeleton, { ability: "con" }),
     ).toEqual([]);
+  });
+
+  test("a Concentration save takes the same sources as any Constitution save", () => {
+    const concentrating = (state: BattleState) => ({
+      ...requireCombatant(state, skeletonId),
+      concentration: {
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-concentration",
+        ),
+        effectKind: "spellEffect" as const,
+      },
+    });
+    expect(
+      concentrationSavingThrowHole(concentrating(base.state), 4)?.rollMode,
+    ).toBeUndefined();
+    expect(
+      concentrationSavingThrowHole(
+        concentrating(withSaveAdvantage(base.state, "con")),
+        4,
+      )?.rollMode,
+    ).toBe("advantage");
+    expect(
+      concentrationSavingThrowHole(
+        concentrating(withSaveAdvantage(base.state, "dex")),
+        4,
+      )?.rollMode,
+    ).toBeUndefined();
   });
 });
