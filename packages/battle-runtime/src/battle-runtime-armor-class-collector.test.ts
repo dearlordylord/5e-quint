@@ -5,7 +5,11 @@
 // becomes 13 plus its Dexterity modifier"; Shield of Faith: "+2 bonus to AC";
 // Barkskin: "an Armor Class of 17 if its AC is lower than that".
 // rules-glossary.md, "Cover": Half Cover gives "+2 bonus to AC".
-import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  armorClass,
+  armorClassDelta,
+  type ArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import type { RuledCoverType } from "@dnd/shared/types";
 import { Match } from "effect";
 import { describe, expect, test } from "vitest";
@@ -69,6 +73,29 @@ function goblinWithUnarmoredBase(
                 sourceUnitId: "synthetic_unarmored_calculation",
               }
             : unarmored.base,
+      },
+    }),
+  };
+}
+
+// Dexterity +3, with the given base, bonuses and floors.
+function goblinWithOwnArmorClass(
+  state: BattleState,
+  own: Pick<ArmorClassState, "base" | "bonuses" | "floors">,
+): BattleState {
+  const goblin = requireCombatant(state, goblinId);
+  const unarmored = defaultArmorClassState();
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(goblinId, {
+      ...goblin,
+      armorClass: {
+        ...unarmored,
+        abilityModifiers: {
+          ...unarmored.abilityModifiers,
+          dex: abilityModifier(3),
+        },
+        ...own,
       },
     }),
   };
@@ -251,6 +278,48 @@ describe("armor class collector: one rule on every route", () => {
       { role: "baseCalculation", source: "defaultUnarmored", armorClass: 13 },
       { role: "floor", source: "spellFloor", armorClass: 17 },
       { role: "cover", source: "cover", delta: 2 },
+    ]);
+  });
+  test("the creature's own bonuses add, and a floor below its AC changes nothing", () => {
+    const state = goblinWithOwnArmorClass(fighterVsGoblinBattle(), {
+      base: defaultArmorClassState().base,
+      bonuses: [
+        { kind: "flat", bonus: armorClassDelta(1) },
+        { kind: "unarmored_no_shield", bonus: armorClassDelta(2) },
+      ],
+      floors: [{ floor: armorClass(15) }],
+    });
+    expectEveryRouteAgrees(state, 16);
+    expect(
+      armorClassContributions(state, requireCombatant(state, goblinId), null),
+    ).toEqual([
+      { role: "baseCalculation", source: "defaultUnarmored", armorClass: 13 },
+      { role: "modifier", source: "featureBonus", delta: 1 },
+      { role: "modifier", source: "unarmoredFeature", delta: 2 },
+      { role: "floor", source: "featureFloor", armorClass: 15 },
+    ]);
+  });
+
+  test("a spell base calculation the creature already has is named as one", () => {
+    const state = goblinWithOwnArmorClass(fighterVsGoblinBattle(), {
+      base: {
+        kind: "ability_sum",
+        base: armorClass(13),
+        abilityModifiers: ["dex"],
+        source: "spell_base_plus_ability",
+      },
+      bonuses: [],
+      floors: [],
+    });
+    expectEveryRouteAgrees(state, 16);
+    expect(
+      armorClassContributions(state, requireCombatant(state, goblinId), null),
+    ).toEqual([
+      {
+        role: "baseCalculation",
+        source: "spellBaseCalculation",
+        armorClass: 16,
+      },
     ]);
   });
 });
