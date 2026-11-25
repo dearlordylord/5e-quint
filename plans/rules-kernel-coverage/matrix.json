@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 181,
-    "covered": 170,
+    "total": 182,
+    "covered": 171,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 141,
+      "battle": 142,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 170,
+      "covered": 171,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5351,6 +5351,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/attack-spatial.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts",
         "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts",
         "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
@@ -5390,7 +5391,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/d20-test-circumstance.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5435,7 +5437,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/ranged-attack-close-combat.ts",
         "packages/battle-runtime/src/battle-reducer/attack-spatial.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5471,7 +5474,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/d20-test-circumstance.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5484,6 +5488,36 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "Restrained, Paralyzed, Petrified and Stunned supply their attack-roll sources from canonical condition state, composed with every other source before cancellation"
+    },
+    {
+      "id": "BATTLE.ATTACK.ROLL_MODE_COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-attack-roll-mode-collector.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models which general sources reach an attack roll by its target kind: the attacker's own conditions, Grappled, not seeing the target and the Ranged Attacks rules reach a creature or an object, while sources whose RAW names a creature on the other side (the target's conditions and Prone, its sight of the attacker, hidden attacker or target, Dodge and Help) reach only a creature. The circumstances carry no means, so a weapon and a spell attack agree. The runtime collector writes each source once, names it in each contribution, and is called by the creature and object routes for weapon, Unarmed Strike, Stat Block, spell and Opportunity Attack rolls. The parity test checks a Grappled attacker's Disadvantage against an object by weapon and by spell, none against its grappler, named contributions cancelling, and Help reaching no object.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/playing-the-game.md#Unseen Attackers and Targets",
+        ".references/srd-5.2.1/playing-the-game.md#Ranged Attacks",
+        ".references/srd-5.2.1/rules-glossary.md#Grappled",
+        ".references/srd-5.2.1/rules-glossary.md#Dodge [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Help [Action]",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
+      ],
+      "title": "Every attack-roll route asks one collector for its Advantage and Disadvantage sources, each named, so a source reaches every attack roll its RAW text covers whatever the target or means"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
@@ -12946,6 +12980,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns which general attack-roll Advantage and Disadvantage sources reach a creature or an object target, independently of the means of the attack, over the D20 Test circumstance core's sources and combination.",
+      "obligationIds": ["BATTLE.ATTACK.ROLL_MODE_COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover Grappled, an unseen target and the Ranged Attacks sources reaching an object, creature-side sources not reaching one, and combination before cancellation.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt is the covered obligation QNT owner carrying the identity-free Stat Block initial-condition and condition-immunity admission matching predicate.",
       "obligationIds": ["BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt",
@@ -14935,6 +14981,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -20302,6 +20358,34 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block",
+        "list",
+        "fold",
+        "set"
+      ],
+      "obligationId": "BATTLE.ATTACK.ROLL_MODE_COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt"
       ],
       "status": "generation-subset-clean"
     },

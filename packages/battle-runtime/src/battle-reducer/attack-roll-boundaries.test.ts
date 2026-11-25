@@ -14,8 +14,8 @@ import {
   unitFeatureDecisionFill,
 } from "../battle-runtime.test-support.ts";
 import { combatantId } from "../identity.ts";
+import { activeEffectGrantsAttackRollMode } from "./attack-roll-mode-collector.ts";
 import {
-  activeEffectGrantsAttackRollMode,
   attackRollModeMatches,
   attackRollOngoingFeatureActivationProfile,
   consumeSelfAttackRollEffects,
