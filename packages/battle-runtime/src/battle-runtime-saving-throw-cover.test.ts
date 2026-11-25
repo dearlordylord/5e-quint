@@ -50,7 +50,10 @@ import {
 import { d20Roll } from "@dnd/shared/types";
 import { HEROIC_INSPIRATION_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { savingThrowOutcomeFillThatStands } from "./battle-reducer/d20-test-rolls-that-stand.ts";
-import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
+import {
+  spellConditionChoiceFill,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 
 type SaveFill = ReturnType<typeof savingThrowOutcomeFill>;
 
@@ -80,7 +83,6 @@ function wizardWith(input: {
   readonly name: string;
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly string[];
-  readonly preparedSpellRecords?: readonly SpellRecord[];
   readonly inspiredTarget?: boolean;
   readonly spellSlots?: readonly { spellLevel: 1 | 3; count: number }[];
 }) {
@@ -94,10 +96,9 @@ function wizardWith(input: {
         attack: null,
         spellcasting: wizardSpellcasting({
           cantrips: input.cantrips ?? [],
-          preparedSpells: [
-            ...(input.preparedSpells ?? []).map((id) => spellRecord(id)),
-            ...(input.preparedSpellRecords ?? []),
-          ],
+          preparedSpells: (input.preparedSpells ?? []).map((id) =>
+            spellRecord(id),
+          ),
           ...(input.spellSlots === undefined
             ? {}
             : { spellSlots: input.spellSlots }),
@@ -455,56 +456,10 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     });
   });
 
-  test("both actually selected targets retain their own admitted cover", () => {
-    const base = spellRecord("hold_person");
-    if (base.mechanics.family !== "activation")
-      throw new Error("Expected activation.");
-    const phase = base.mechanics.phases[0];
-    if (
-      phase?.kind !== "save_gate" ||
-      phase.attachment.kind !== "hole" ||
-      phase.attachment.value.kind !== "target"
-    ) {
-      throw new Error("Expected a target save gate.");
-    }
-    // A visibly synthetic two-target Dexterity save isolates target selection
-    // from the real spell's Wisdom save and Humanoid-only admission.
-    const spell = decodeSpellRecordForTest({
-      ...base,
-      id: "synthetic_paired_cover_binding",
-      name: "Synthetic Paired Cover Binding",
-      provenance: {
-        kind: "synthetic-test",
-        section: "battle-runtime/saving-throw-cover",
-      },
-      mechanics: {
-        ...base.mechanics,
-        phases: [
-          {
-            ...phase,
-            ability: "dex",
-            attachment: {
-              ...phase.attachment,
-              value: {
-                kind: "target",
-                selection: {
-                  mode: "choose_up_to",
-                  count: {
-                    kind: "linear",
-                    base: 1,
-                    baseLevel: 2,
-                    perSlotAboveBase: 1,
-                  },
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+  test("a selected pair keeps its outcome identities without adding cover to Constitution saves", () => {
     const session = wizardWith({
       name: "selected-pair-cover",
-      preparedSpellRecords: [spell],
+      preparedSpells: ["blindness_deafness"],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const subject = {
@@ -513,56 +468,74 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         session,
         wizardId,
-        spellSlotInvocationRef(spell.id, 3, "saveGatedCondition"),
+        spellSlotInvocationRef("blindness_deafness", 3, "saveGatedCondition"),
       ),
       mode: { tag: "cast" },
     } satisfies BattleSubject;
-    const targetHole = requireHole(
-      resolveBattleSubject({ state: session.state, subject, fills: [] }),
-      "spellTargetList",
+    const initial = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [],
+    });
+    const targetHole = requireHole(initial, "spellTargetList");
+    const condition = spellConditionChoiceFill(
+      requireHole(initial, "conditionChoice"),
+      "blinded",
     );
-    const selected = spellTargetListFill(targetHole, wizardId, spell.id, [
-      skeletonId,
-      secondSkeletonId,
-    ]);
+    const selected = spellTargetListFill(
+      targetHole,
+      wizardId,
+      "blindness_deafness",
+      [skeletonId, secondSkeletonId],
+    );
+    const coveredSelection = {
+      ...selected,
+      spatialFacts: selected.spatialFacts.map((fact) =>
+        fact.kind === "spellTarget"
+          ? {
+              ...fact,
+              cover:
+                fact.targetId === skeletonId
+                  ? ("half" as const)
+                  : ("threeQuarters" as const),
+            }
+          : fact,
+      ),
+    };
     const hole = requireHole(
       resolveBattleSubject({
         state: session.state,
         subject,
-        fills: [
-          {
-            ...selected,
-            spatialFacts: selected.spatialFacts.map((fact) =>
-              fact.kind === "spellTarget"
-                ? {
-                    ...fact,
-                    cover:
-                      fact.targetId === skeletonId
-                        ? ("half" as const)
-                        : ("threeQuarters" as const),
-                  }
-                : fact,
-            ),
-          },
-        ],
+        fills: [coveredSelection, condition],
       }),
       "savingThrowOutcome",
     );
-    expect(coverBonuses(hole)).toEqual([
-      { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
-      {
-        kind: "cover",
-        targetId: secondSkeletonId,
-        cover: "threeQuarters",
-        bonus: 5,
-      },
-    ]);
     expect(hole).toMatchObject({
-      saveCover: {
-        kind: "ruledOnSpellTargets",
-        targetIds: [skeletonId, secondSkeletonId],
-      },
+      ability: "con",
+      outcomeTargeting: "targetList",
     });
+    expect(coverBonuses(hole)).toEqual([]);
+    expect(hole).not.toHaveProperty("saveCover");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject,
+        fills: [
+          coveredSelection,
+          condition,
+          savingThrowOutcomeFill(hole, [
+            { targetId: skeletonId, succeeded: false, naturalD20: 6 },
+            { targetId: secondSkeletonId, succeeded: true, naturalD20: 18 },
+          ]),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(skeletonId)?.conditions).toMatchObject(
+      { blinded: true },
+    );
+    expect(
+      resolved.state.combatants.get(secondSkeletonId)?.conditions,
+    ).not.toHaveProperty("blinded", true);
   });
 
   test("a covered dodging target keeps its selected save and physical pair through Inspiration", () => {
