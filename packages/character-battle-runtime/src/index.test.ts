@@ -9456,6 +9456,27 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("projects worn armor's Strength requirement onto the battle loadout", () => {
+    const init = expectSuccess(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("chain-mail-fighter"),
+        characterId: characterId("character:chain-mail-fighter"),
+        displayName: "Chain Mail Fighter",
+        build: defenseBuild({ wearingArmor: true }),
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        unitLibrary,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.selectedLoadout.armor).toMatchObject({
+      unitId: "armor_chain_mail",
+      strengthRequirement: 13,
+    });
+  });
+
   test("threads selected Armor Class base choice through battle initialization", () => {
     const init = expectSuccess(
       battleCreatureInitFromCharacterBuild({
