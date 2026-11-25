@@ -35,7 +35,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
-  movementDeltaFeet,
+  movementFeet,
   SIZES,
   type Ability,
   type MovementFeet,
@@ -1380,10 +1380,10 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
     effect: {
-      kind: "unitFeatureSpeedDelta",
+      kind: "weaponMasterySpeedReduction",
       sourceProcedureRef: selection.procedureRef,
       sourceCombatantId: attackerId,
-      deltaFeet: movementDeltaFeet(-WEAPON_MASTERY_SPEED_REDUCTION_FEET),
+      reductionFeet: movementFeet(WEAPON_MASTERY_SPEED_REDUCTION_FEET),
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
     },
   });
@@ -1391,7 +1391,7 @@ export function applyWeaponMasterySlowAfterDamage(input: {
     ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
-          effect.kind === "unitFeatureSpeedDelta" &&
+          effect.kind === "weaponMasterySpeedReduction" &&
           "sourceProcedureRef" in effect &&
           effect.sourceProcedureRef === selection.procedureRef
         ),

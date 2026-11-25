@@ -35850,7 +35850,7 @@
           "Battle Unit admission consumes the authored Slow mastery Surface shape without dispatching on mastery authored identity",
           "the support profile preserves optional hit-with-damage timing, -10-foot Speed reduction, 10-foot maximum reduction, and start-of-attacker-next-turn expiration",
           "the attack resolver executes Slow through the generic weapon mastery owner, including Tactical Master replacement when the current attack selects Slow",
-          "the runtime applies the existing turn-bound unitFeatureSpeedDelta active effect and cleans it up through the shared active-effect lifecycle"
+          "the runtime applies the existing turn-bound weaponMasterySpeedReduction active effect and cleans it up through the shared active-effect lifecycle"
         ],
         "tag": "supported-profile"
       },

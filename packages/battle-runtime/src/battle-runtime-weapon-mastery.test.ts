@@ -66,7 +66,6 @@ import {
   hasCondition,
   holeId,
   Hp,
-  movementDeltaFeet,
   movementFeet,
   movementFill,
   resolveBattleInterrupt,
@@ -676,10 +675,10 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
       expect.objectContaining({
-        kind: "unitFeatureSpeedDelta",
+        kind: "weaponMasterySpeedReduction",
         sourceProcedureRef: slowProcedureRef,
         sourceCombatantId: fighterId,
-        deltaFeet: movementDeltaFeet(-10),
+        reductionFeet: movementFeet(10),
         expiresAt: { kind: "startOfTurn", combatantId: fighterId },
       }),
     );

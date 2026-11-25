@@ -12,6 +12,7 @@ import {
   heavyArmorClassState,
   longswordWeaponMasterySelections,
   movementDeltaFeet,
+  movementFeet,
   startBattleRight,
   statBlockCreatureInit,
   tacticalMasterReplacementUnitRefs,
@@ -70,10 +71,10 @@ function withSlowFrom(
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: requireCreature(state, targetId),
     effect: {
-      kind: "unitFeatureSpeedDelta",
+      kind: "weaponMasterySpeedReduction",
       sourceProcedureRef: fighterSlowProcedureRef(state),
       sourceCombatantId: attackerId,
-      deltaFeet: movementDeltaFeet(-10),
+      reductionFeet: movementFeet(10),
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
     },
   });
@@ -122,7 +123,7 @@ describe("Speed collector", () => {
 
     expect(
       goblin.activeEffects.filter(
-        (effect) => effect.kind === "unitFeatureSpeedDelta",
+        (effect) => effect.kind === "weaponMasterySpeedReduction",
       ),
     ).toHaveLength(2);
     expect(

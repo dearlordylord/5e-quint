@@ -365,7 +365,7 @@ const activeEffectOccurrenceSpatialProjectionHandlers = {
   turnStartTemporaryHitPoints: nonSpatialActiveEffectOccurrence,
   unitFeatureCondition: nonSpatialActiveEffectOccurrence,
   unitFeatureConditionEndTurnSave: nonSpatialActiveEffectOccurrence,
-  unitFeatureSpeedDelta: nonSpatialActiveEffectOccurrence,
+  weaponMasterySpeedReduction: nonSpatialActiveEffectOccurrence,
   linkedDefenseResistanceDamageShare: nonSpatialActiveEffectOccurrence,
 } satisfies {
   readonly [Kind in BattleActiveEffect["kind"]]: ((

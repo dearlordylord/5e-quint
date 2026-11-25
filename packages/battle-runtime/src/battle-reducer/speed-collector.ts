@@ -168,14 +168,16 @@ function deltaContributions(
   ];
 }
 
-// Slow is the only source of a unit feature's Speed delta. Each Slow keeps its
-// own end, at the start of its attacker's next turn, so every one stays on the
-// creature, and together they reduce its Speed only by the largest one.
+// Each Slow keeps its own end, at the start of its attacker's next turn, so
+// every one stays on the creature, and together they reduce its Speed only by
+// the largest one.
 function masterySpeedReductionDelta(combatant: BattleCreatureState): number {
-  return Math.min(
+  return -Math.max(
     0,
     ...combatant.activeEffects.flatMap((effect) =>
-      effect.kind === "unitFeatureSpeedDelta" ? [Number(effect.deltaFeet)] : [],
+      effect.kind === "weaponMasterySpeedReduction"
+        ? [Number(effect.reductionFeet)]
+        : [],
     ),
   );
 }
