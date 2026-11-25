@@ -19,6 +19,8 @@ import {
   battleId,
   cantripSpellInvocationRef,
   characterSeed,
+  endTurn,
+  requireResolved,
   requireCharacterSpellProcedureRefForTest,
   requireHole,
   resolveBattleSubject,
@@ -40,7 +42,10 @@ import {
   spellAdmissionSource,
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { statBlockId } from "@dnd/shared/game-facts";
+import { HEROIC_INSPIRATION_AVAILABLE, NO_HEROIC_INSPIRATION, statBlockId } from "@dnd/shared/game-facts";
+import { d20Roll } from "@dnd/shared/types";
+import { HEROIC_INSPIRATION_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
+import { savingThrowOutcomeFillThatStands } from "./battle-reducer/d20-test-rolls-that-stand.ts";
 import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 type SaveFill = ReturnType<typeof savingThrowOutcomeFill>;
@@ -72,6 +77,7 @@ function wizardWith(input: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly string[];
   readonly preparedSpellRecords?: readonly SpellRecord[];
+  readonly inspiredTarget?: boolean;
   readonly spellSlots?: readonly { spellLevel: 1 | 3; count: number }[];
 }) {
   return startBattleSessionRight({
@@ -94,15 +100,19 @@ function wizardWith(input: {
         }),
       }),
       skeletonCreatureInit({ initiative: 10 }),
-      statBlockCreatureInit({
-        combatantId: secondSkeletonId,
-        statBlockName: "Second Skeleton",
-        initiative: 8,
-        statBlock: assertStatBlockForTest(
-          statBlockCatalog,
-          statBlockId("stat_block_skeleton"),
-        ),
-      }),
+      input.inspiredTarget === true
+        ? characterSeed({
+            combatantId: secondSkeletonId,
+            displayName: "Inspired Defender",
+            initiative: 30,
+            heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+          })
+        : statBlockCreatureInit({
+            combatantId: secondSkeletonId,
+            statBlockName: "Second Skeleton",
+            initiative: 8,
+            statBlock: assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_skeleton")),
+          }),
     ],
   });
 }
@@ -492,6 +502,55 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     ]);
     expect(hole).toMatchObject({
       saveCover: { kind: "ruledOnSpellTargets", targetIds: [skeletonId, secondSkeletonId] },
+    });
+  });
+
+  test("a covered dodging target keeps its selected save and physical pair through Inspiration", () => {
+    const spell = syntheticTargetedDexCantrip();
+    const session = wizardWith({ name: "covered-reroll", cantrips: [spell], inspiredTarget: true });
+    const dodged = requireResolved(resolveBattleSubject({
+      state: session.state,
+      subject: { tag: "action", actorId: secondSkeletonId, action: "dodge" },
+      fills: [],
+    })).state;
+    const state = requireResolved(endTurn({ state: dodged, actorId: secondSkeletonId })).state;
+    const subject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      procedureRef: requireCharacterSpellProcedureRefForTest(session, wizardId, cantripSpellInvocationRef(spell.id, "saveGatedDamage")),
+      mode: { tag: "cast" },
+    } satisfies BattleSubject;
+    const targetHole = requireHole(resolveBattleSubject({ state, subject, fills: [] }), "targetChoice");
+    const selected = targetFill(targetHole, secondSkeletonId);
+    const target = {
+      ...selected,
+      spatialFacts: (selected.spatialFacts ?? []).map((fact) => fact.kind === "spellTarget" ? { ...fact, cover: "half" as const } : fact),
+    };
+    const saveHole = requireHole(resolveBattleSubject({ state, subject, fills: [target] }), "savingThrowOutcome");
+    expect(coverBonuses(saveHole)).toEqual([
+      { kind: "cover", targetId: secondSkeletonId, cover: "half", bonus: 2 },
+    ]);
+    const replacement = { tag: "multiple", first: d20Roll(2), second: d20Roll(3), rollMode: "advantage" } as const;
+    const fill = savingThrowOutcomeFill(saveHole, [{
+      targetId: secondSkeletonId,
+      succeeded: false,
+      d20TestRoll: { tag: "multiple", first: d20Roll(18), second: d20Roll(3), rollMode: "advantage" },
+      d20TestRerolls: [{
+        kind: "rerollRolledDie",
+        effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+        replacement: { die: "first", result: { succeeded: false, d20TestRoll: replacement } },
+      }],
+    }]);
+    const result = resolveBattleSubject({ state, subject, fills: [target, fill] });
+    requireHole(result, "rolledDice");
+    if (result.tag !== "needsHoles") throw new Error("Expected the damage frontier.");
+    const actor = result.state.combatants.get(secondSkeletonId);
+    if (actor?.origin.kind !== "character") throw new Error("Expected the inspired defender.");
+    expect(actor.origin.heroicInspiration).toEqual(NO_HEROIC_INSPIRATION);
+    expect(savingThrowOutcomeFillThatStands(fill).value.outcomes[0]).toMatchObject({
+      targetId: secondSkeletonId,
+      succeeded: false,
+      d20TestRoll: replacement,
     });
   });
 
