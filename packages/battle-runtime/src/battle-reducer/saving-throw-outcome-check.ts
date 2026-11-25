@@ -4,12 +4,18 @@
 // RAW: .references/srd-5.2.1/rules-glossary.md, "Paralyzed", "Petrified",
 // "Stunned" and "Unconscious": "You automatically fail Strength and Dexterity
 // saving throws."
+import { Result } from "effect";
 import type {
   BattleFill,
   BattleHole,
   BattleResolutionResult,
   BattleSavingThrowOutcome,
+  BattleSavingThrowRelationshipFact,
+  BattleShoveOutcomeHole,
+  BattleStrengthOrDexteritySavingThrowChoices,
 } from "../battle-state-execution.ts";
+import type { CombatantId } from "../identity.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { savingThrowOutcomeCoverIssue } from "./saving-throw-cover.ts";
 
 type SavingThrowOutcomeHole = Extract<
@@ -45,6 +51,63 @@ export function savingThrowOutcomeAutomaticFailureIssue(input: {
   return outcome === undefined
     ? null
     : `${outcome.targetId} automatically fails this saving throw; its outcome is a failure without a roll.`;
+}
+
+/**
+ * Why a Grapple or Shove outcome doesn't answer its target's saving throw
+ * choices, or null. A target that fails both the Strength and the Dexterity
+ * save without rolling can't succeed, whichever it chooses.
+ */
+function strengthOrDexteritySaveAutomaticFailureIssue(input: {
+  readonly targetId: CombatantId;
+  readonly targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoices;
+  readonly succeeded: boolean;
+}): string | null {
+  const failsEveryChoice = input.targetSavingThrowChoices.every((choice) =>
+    choice.targetAutomaticFailures.some(
+      ({ targetId }) => targetId === input.targetId,
+    ),
+  );
+  return input.succeeded && failsEveryChoice
+    ? `${input.targetId} automatically fails Strength and Dexterity saving throws; its outcome is a failure.`
+    : null;
+}
+
+/**
+ * A Grapple or Shove outcome's relationship facts, when the outcome answers
+ * its hole: it doesn't succeed where the target fails both saves without
+ * rolling, and its facts answer the hole's relationship request.
+ */
+export function admitStrengthOrDexteritySaveOutcome(input: {
+  readonly hole: Pick<
+    BattleShoveOutcomeHole,
+    | "actorId"
+    | "targetId"
+    | "targetSavingThrowChoices"
+    | "relationshipFactRequest"
+  >;
+  readonly outcome: {
+    readonly value: { readonly succeeded: boolean };
+    readonly relationshipFacts?: readonly BattleSavingThrowRelationshipFact[];
+  };
+  readonly relationshipFactsIssue: string;
+}): Result.Result<readonly BattleSavingThrowRelationshipFact[], string> {
+  const automaticFailureIssue = strengthOrDexteritySaveAutomaticFailureIssue({
+    ...input.hole,
+    succeeded: input.outcome.value.succeeded,
+  });
+  if (automaticFailureIssue !== null) {
+    return Result.fail(automaticFailureIssue);
+  }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    input.outcome.relationshipFacts ?? [],
+    input.hole.actorId,
+    [input.hole.targetId],
+    input.hole.relationshipFactRequest !== undefined,
+  );
+  return relationshipFacts === null
+    ? Result.fail(input.relationshipFactsIssue)
+    : Result.succeed(relationshipFacts);
 }
 
 /** Why a fill doesn't answer the saving throw hole it fills, or null. */

@@ -51,4 +51,17 @@ module savingThrowModifierCollectorCoreExamples {
       assert(savingThrowRequirement({ ...paralyzed, ability: ConstitutionSave }) == rolledWith(AdvantageD20TestRoll, 0)),
     }
   }
+
+  run grappleTargetChoosesBetweenStrengthAndDexterity = all {
+    val restrained = { ...plainDexteritySave, restrained: true }
+    val paralyzed = { ...plainDexteritySave, failsStrengthAndDexteritySaves: true }
+    all {
+      assert(strengthOrDexterityChoices(restrained) == [
+        rolledWith(NormalD20TestRoll, 0),
+        rolledWith(DisadvantageD20TestRoll, 0),
+      ]),
+      assert(strengthOrDexteritySaveCanSucceed(restrained)),
+      assert(not(strengthOrDexteritySaveCanSucceed(paralyzed))),
+    }
+  }
 }

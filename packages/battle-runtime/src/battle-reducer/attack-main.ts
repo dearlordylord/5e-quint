@@ -83,7 +83,6 @@ import {
   consumeHelpAttackForAttackRoll,
   recordWeaponMasteryCleaveUsed,
   recordAttackRollOngoingFeatures,
-  ongoingFeatureEnemyRelationshipDecisionRequired,
   requiredAttackRollMode,
   requiredOrdinaryObjectAttackRollMode,
   tacticalMasterAttackWithReplacement,
@@ -157,6 +156,7 @@ import {
   ordinaryObjectAttackOptionIsSupported,
   revealHidden,
 } from "./hole-helpers.ts";
+import { admitStrengthOrDexteritySaveOutcome } from "./saving-throw-outcome-check.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
@@ -306,7 +306,6 @@ import {
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
 import { resolveAttackWithWeaponChange } from "./attack-weapon-change.ts";
-import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 export function resolveAttack(
   input: AttackBattleResolutionInput,
@@ -1164,26 +1163,19 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
       ]),
     };
   }
-  const relationshipFacts = parseSavingThrowRelationshipFacts(
-    input.fillSet.grapplerPunchAndGrabOutcome.relationshipFacts ?? [],
-    eligibility.link.grapplerId,
-    [eligibility.link.targetId],
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      eligibility.link.grapplerId,
-      "enemySavingThrow",
-    ),
-  );
-  if (relationshipFacts === null) {
+  const admission = admitStrengthOrDexteritySaveOutcome({
+    hole: grappleOutcomeHole(input.state, eligibility.link),
+    outcome: input.fillSet.grapplerPunchAndGrabOutcome,
+    relationshipFactsIssue:
+      "Grappler Punch and Grab relationship facts must answer the saving-throw hole request.",
+  });
+  if (Result.isFailure(admission)) {
     return {
       tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Grappler Punch and Grab relationship facts must answer the saving-throw hole request.",
-      ),
+      result: invalidResult(input.state, "invalidFill", admission.failure),
     };
   }
+  const relationshipFacts = admission.success;
   const usedState = {
     ...input.state,
     currentTurnResources: {

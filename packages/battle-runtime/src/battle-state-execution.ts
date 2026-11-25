@@ -7159,6 +7159,24 @@ export type BattleSpellcastingAbilityCheckHole = {
     BattleHeroicInspirationRerollOption,
   ];
 };
+/**
+ * One of the saving throws a target chooses between, with the roll modes,
+ * bonuses and automatic failure that reach it.
+ */
+export type BattleSavingThrowChoice<SaveAbility extends Ability> = {
+  readonly ability: SaveAbility;
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
+};
+/**
+ * A Grapple or Shove target "must succeed on a Strength or Dexterity saving
+ * throw (it chooses which)".
+ */
+export type BattleStrengthOrDexteritySavingThrowChoices = readonly [
+  BattleSavingThrowChoice<"str">,
+  BattleSavingThrowChoice<"dex">,
+];
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -7167,10 +7185,19 @@ export type BattleGrappleOutcomeHole = {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly dc: DifficultyClass;
-  readonly mode: "grappleSave" | "escapeCheck";
-  readonly rollMode?: AttackRollMode;
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
-};
+} & (
+  | {
+      readonly mode: "grappleSave";
+      readonly targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoices;
+      readonly rollMode?: never;
+    }
+  | {
+      readonly mode: "escapeCheck";
+      readonly rollMode?: AttackRollMode;
+      readonly targetSavingThrowChoices?: never;
+    }
+);
 export type BattleShoveOutcomeValue =
   | {
       readonly succeeded: true;
@@ -7192,6 +7219,7 @@ export type BattleShoveOutcomeHole = {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly dc: DifficultyClass;
+  readonly targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoices;
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleTargetingSaveInterdictionOutcome =

@@ -14,6 +14,9 @@
 // - .references/srd-5.2.1/rules-glossary.md#Advantage and #Disadvantage, with
 //   playing-the-game.md "D20 Tests": one source of each cancels, however many
 //   there are. d20TestCircumstanceCore owns that combination.
+// - .references/srd-5.2.1/rules-glossary.md#Unarmed Strike: Grapple and
+//   Shove: "The target must succeed on a Strength or Dexterity saving throw
+//   (it chooses which)".
 // - Feature, spell and procedure sources (Haste's "Advantage on Dexterity
 //   saving throws", Heightened Spell's Disadvantage, Slow's "-2 penalty to ...
 //   Dexterity saving throws", Warding Bond's "+1 bonus ... to saving throws",
@@ -78,4 +81,22 @@ module savingThrowModifierCollectorCore {
         mode: d20TestRollModeFromSources(savingThrowRollModeSources(c)),
         bonus: savingThrowBonus(c),
       })
+
+  // A Grapple or Shove target chooses between these two saves, each with what
+  // reaches it.
+  pure def strengthOrDexterityChoices(
+    c: SavingThrowCircumstances,
+  ): List[SavingThrowRequirement] = [
+    savingThrowRequirement({ ...c, ability: StrengthSave }),
+    savingThrowRequirement({ ...c, ability: DexteritySave }),
+  ]
+
+  // The target can succeed only if one of its choices is rolled.
+  pure def strengthOrDexteritySaveCanSucceed(c: SavingThrowCircumstances): bool =
+    foldl(
+      strengthOrDexterityChoices(c),
+      false,
+      (rolledChoiceFound, requirement) =>
+        rolledChoiceFound or requirement != AutomaticallyFailedSave,
+    )
 }

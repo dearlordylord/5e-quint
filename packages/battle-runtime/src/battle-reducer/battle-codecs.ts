@@ -1496,6 +1496,24 @@ const BattleSavingThrowAutomaticFailureProjectionSchema = Schema.Struct({
   ),
 });
 
+function battleSavingThrowChoiceSchema<const SaveAbility extends "str" | "dex">(
+  ability: SaveAbility,
+) {
+  return Schema.Struct({
+    ability: Schema.Literal(ability),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
+  });
+}
+
+const BattleStrengthOrDexteritySavingThrowChoicesSchema = Schema.Tuple([
+  battleSavingThrowChoiceSchema("str"),
+  battleSavingThrowChoiceSchema("dex"),
+]);
+
 const BattleDamageOccurrenceSourceSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("untrackedDamage") }),
   Schema.Struct({
@@ -3740,7 +3758,19 @@ const BattleHolePayloadMembers = [
     relationshipFactRequest: Schema.optionalKey(
       BattleSavingThrowRelationshipFactRequestSchema,
     ),
-    mode: Schema.Literals(["grappleSave", "escapeCheck"]),
+    mode: Schema.Literal("grappleSave"),
+    targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoicesSchema,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("grappleOutcome"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+    dc: DifficultyClass,
+    relationshipFactRequest: Schema.optionalKey(
+      BattleSavingThrowRelationshipFactRequestSchema,
+    ),
+    mode: Schema.Literal("escapeCheck"),
     rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
   }),
   pairedBattleHoleMember({
@@ -3752,6 +3782,7 @@ const BattleHolePayloadMembers = [
     relationshipFactRequest: Schema.optionalKey(
       BattleSavingThrowRelationshipFactRequestSchema,
     ),
+    targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoicesSchema,
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,

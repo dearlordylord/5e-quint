@@ -617,7 +617,25 @@ describe("Table-authored per-test D20 circumstances", () => {
             actorId: secondTargetId,
             targetId: firstTargetId,
             dc: difficultyClass(12),
-            mode,
+            ...(mode === "grappleSave"
+              ? {
+                  mode,
+                  targetSavingThrowChoices: [
+                    {
+                      ability: "str",
+                      targetRollModes: [],
+                      targetFlatBonuses: [],
+                      targetAutomaticFailures: [],
+                    },
+                    {
+                      ability: "dex",
+                      targetRollModes: [],
+                      targetFlatBonuses: [],
+                      targetAutomaticFailures: [],
+                    },
+                  ],
+                }
+              : { mode }),
           },
         ],
         resolvedFills: [],

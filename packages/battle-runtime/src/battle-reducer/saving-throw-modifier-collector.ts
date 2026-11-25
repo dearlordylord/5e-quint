@@ -28,6 +28,7 @@ import type {
   BattleSavingThrowRollModeProjection,
   BattleSpellTargetListRelationshipFact,
   BattleState,
+  BattleStrengthOrDexteritySavingThrowChoices,
 } from "../battle-state-execution.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import { passiveSavingThrowRollModeDisposition } from "../unit-feature-execution-constants.ts";
@@ -481,4 +482,30 @@ export function savingThrowTargetModifiersWhenStateKnown(
     targetFlatBonuses: [],
     targetAutomaticFailures: [],
   };
+}
+
+/**
+ * The Strength and Dexterity saving throws a Grapple or Shove target chooses
+ * between, each with what reaches it.
+ */
+export function strengthOrDexteritySavingThrowChoices(
+  state: BattleState,
+  targetId: CombatantId,
+  avoidsCondition?: Condition,
+): BattleStrengthOrDexteritySavingThrowChoices {
+  const context = avoidsCondition === undefined ? {} : { avoidsCondition };
+  return [
+    {
+      ability: "str",
+      ...savingThrowTargetModifiers(state, { ability: "str", ...context }, [
+        targetId,
+      ]),
+    },
+    {
+      ability: "dex",
+      ...savingThrowTargetModifiers(state, { ability: "dex", ...context }, [
+        targetId,
+      ]),
+    },
+  ];
 }

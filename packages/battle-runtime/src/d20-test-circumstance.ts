@@ -8,6 +8,7 @@ import type {
   BattleFill,
   BattleHole,
   BattleOrdinaryHole,
+  BattleSavingThrowChoice,
 } from "./battle-state-execution.ts";
 import { Boolean, Brand, Result, Struct } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
@@ -644,16 +645,60 @@ export function battleHolesWithTableD20TestCircumstances(input: {
       };
     }
     const request = requests[0];
-    return request === undefined
-      ? hole
-      : {
-          ...hole,
-          rollMode: effectiveD20TestRollMode({
-            request,
-            admitted: input.admitted,
-          }),
-        };
+    if (request === undefined) return hole;
+    if (hole.kind === "grappleOutcome" && hole.mode === "grappleSave") {
+      return grappleSaveWithTableSource(
+        hole,
+        input.admitted.get(request.requestRef)?.source,
+      );
+    }
+    return {
+      ...hole,
+      rollMode: effectiveD20TestRollMode({
+        request,
+        admitted: input.admitted,
+      }),
+    };
   });
+}
+
+// The table's circumstance reaches whichever save the Grapple target chooses,
+// so it combines with each choice's own roll mode.
+function grappleSaveWithTableSource(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "grappleOutcome"; readonly mode: "grappleSave" }
+  >,
+  tableSource: TableD20TestCircumstanceSource | undefined,
+): BattleHole {
+  const withTableSource = <
+    Choice extends BattleSavingThrowChoice<"str" | "dex">,
+  >(
+    choice: Choice,
+  ): Choice => ({
+    ...choice,
+    targetRollModes: [
+      {
+        targetId: hole.targetId,
+        rollMode: combineD20TestRollMode(
+          mechanicalD20TestRollModeSources(
+            choice.targetRollModes.find(
+              ({ targetId }) => targetId === hole.targetId,
+            )?.rollMode,
+          ),
+          tableSource,
+        ),
+      },
+    ],
+  });
+  const [strength, dexterity] = hole.targetSavingThrowChoices;
+  return {
+    ...hole,
+    targetSavingThrowChoices: [
+      withTableSource(strength),
+      withTableSource(dexterity),
+    ],
+  };
 }
 
 const admittedAttackRollTableSources = new WeakMap<
