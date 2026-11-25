@@ -1375,18 +1375,21 @@ type AdmissionIssueFor<Inspection> = Inspection extends {
   ? Issue
   : never;
 
+const byMechanicsFamily = Match.discriminator("family");
+const byActivationPhaseKind = Match.discriminator("kind");
+
 /** Inspect the executable phase positions owned by the parsed mechanics. */
 function mechanicsDenySaveCoverBenefit(mechanics: SpellMechanics): boolean {
   return Match.value(mechanics).pipe(
-    Match.whenOr("activation", "triggered_reaction", ({ phases }) =>
+    byMechanicsFamily("activation", "triggered_reaction", ({ phases }) =>
       phases.some(phaseDeniesSaveCoverBenefit),
     ),
-    Match.when("ongoing_effect", ({ initialPhase }) =>
+    byMechanicsFamily("ongoing_effect", ({ initialPhase }) =>
       initialPhase === undefined
         ? false
         : phaseDeniesSaveCoverBenefit(initialPhase),
     ),
-    Match.whenOr(
+    byMechanicsFamily(
       "modal_ongoing_effect",
       "modal_activation",
       "passive_hit_intercept",
@@ -1407,21 +1410,21 @@ function mechanicsDenySaveCoverBenefit(mechanics: SpellMechanics): boolean {
 
 function phaseDeniesSaveCoverBenefit(phase: ActivationPhase): boolean {
   return Match.value(phase).pipe(
-    Match.when(
+    byActivationPhaseKind(
       "save_gate",
       ({ saveCoverBenefit }) => saveCoverBenefit !== undefined,
     ),
-    Match.when(
+    byActivationPhaseKind(
       "attack_roll",
       ({ continue: continuation }) =>
         continuation?.next.some(phaseDeniesSaveCoverBenefit) ?? false,
     ),
-    Match.when("random_table", ({ outcomes }) =>
+    byActivationPhaseKind("random_table", ({ outcomes }) =>
       outcomes.some(
         ({ phases }) => phases?.some(phaseDeniesSaveCoverBenefit) ?? false,
       ),
     ),
-    Match.whenOr("ability_check_gate", "direct", () => false),
+    byActivationPhaseKind("ability_check_gate", "direct", () => false),
     Match.exhaustive,
   );
 }
