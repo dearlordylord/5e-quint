@@ -352,9 +352,9 @@ occurs, so its one attack gets the one change too, on another creature's turn.
 The reactor chooses it when releasing the readied attack: a change before the
 attack, after which the readied attack must still be there, or a change after
 it. A change after the attack is chosen before the roll, against the hands as
-the attack will leave them, and Battle makes it as soon as the attack is over.
-Where a weapon dropped after the attack lands is asked when the attack is
-released. Preparing Ready grants no change, and no other Reaction attack, such
+the attack will leave them, and Battle makes it as soon as the attack is over,
+before any Reaction to the attack's damage. Where a weapon dropped after the
+attack lands is asked when the attack is released. Preparing Ready grants no change, and no other Reaction attack, such
 as an Opportunity Attack, carries one.
 
 Equipping draws a carried weapon, or picks up one lying on the ground, into

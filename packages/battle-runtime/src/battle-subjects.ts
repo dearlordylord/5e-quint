@@ -135,8 +135,6 @@ export const READIED_ATTACK_WEAPON_CHANGE_TIMINGS = [
   "beforeAttack",
   "afterAttack",
 ] as const;
-export type ReadiedAttackWeaponChangeTiming =
-  (typeof READIED_ATTACK_WEAPON_CHANGE_TIMINGS)[number];
 
 /**
  * The one weapon change a readied Attack carries when its reactor releases
@@ -150,7 +148,7 @@ export type ReadiedAttackWeaponChange =
   typeof ReadiedAttackWeaponChangeSchema.Type;
 
 /** Whether two weapon changes equip or unequip the same weapon the same way. */
-export function attackWeaponChangesEqual(
+function attackWeaponChangesEqual(
   left: AttackWeaponChange,
   right: AttackWeaponChange,
 ): boolean {

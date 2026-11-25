@@ -28,9 +28,10 @@ import {
   resolveWithWeaponChangeAfter,
   resolveWithWeaponChangeBefore,
 } from "./attack-weapon-change.ts";
+import { loadoutWeaponIsStowed } from "./character-effective-loadout.ts";
 import {
   ownedWeaponChanges,
-  stateWithProspectiveWeaponChange,
+  stateWithOwnedWeaponChange,
 } from "./owned-weapon-custody.ts";
 import { attackActionOptionsAfterWeaponChange } from "./attack-damage-apply.ts";
 import { readiedAttackOption } from "./ready.ts";
@@ -101,9 +102,9 @@ function readiedAttackWeaponChangesAfter(
     release.reactorId,
     attack,
   );
-  const reactor = afterAttack.combatants.get(release.reactorId);
-  /* v8 ignore start -- @preserve -- readiedAttackOption has just found the reactor's attack, and the projection keeps its combatants. */
-  if (reactor === undefined) return [];
+  const reactor = afterAttack?.combatants.get(release.reactorId);
+  /* v8 ignore start -- @preserve -- readiedAttackOption has just found the reactor's attack, the projection keeps its combatants, and a weapon in hand can be stowed. */
+  if (afterAttack === undefined || reactor === undefined) return [];
   /* v8 ignore stop -- @preserve */
   const thrown = thrownWeaponObjectId(attack);
   return ownedWeaponChanges(afterAttack, reactor)
@@ -115,21 +116,28 @@ function readiedAttackWeaponChangesAfter(
  * The battle as the attack leaves the attacker's hands: a thrown weapon in
  * hand has left it. Where it lands is the table's answer, which the
  * hands don't need, so the projection stows it; no change after the attack
- * names the thrown weapon, since it rests wherever it lands.
+ * names the thrown weapon, since it rests wherever it lands. Undefined when
+ * the thrown weapon in hand can't leave it.
  */
 function stateWithHandsAfterAttack(
   state: BattleState,
   attackerId: CombatantId,
   attack: BoundSupportedAttackActionOption,
-): BattleState {
+): BattleState | undefined {
   const thrown = thrownWeaponObjectId(attack);
-  if (thrown === undefined) return state;
-  const released = stateWithProspectiveWeaponChange(state, attackerId, {
+  // A Thrown weapon drawn as part of its attack was never in hand.
+  if (
+    thrown === undefined ||
+    loadoutWeaponIsStowed(state, attackerId, thrown)
+  ) {
+    return state;
+  }
+  const released = stateWithOwnedWeaponChange(state, attackerId, {
     kind: "stow",
     objectId: thrown,
   });
-  // A Thrown weapon drawn as part of its attack was never in hand.
-  return released.tag === "applied" ? released.state : state;
+  /* v8 ignore next -- @preserve -- A weapon in hand can be stowed. */
+  return released.tag === "applied" ? released.state : undefined;
 }
 
 function thrownWeaponObjectId(

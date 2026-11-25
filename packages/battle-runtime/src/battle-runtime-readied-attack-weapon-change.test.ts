@@ -397,6 +397,26 @@ describe("weapon change with a readied Attack", () => {
     expect(attacked.state.readiedResponses.has(fighterId)).toBe(false);
   });
 
+  it("draws a stowed weapon once the readied attack is over", () => {
+    const state = fighterWithStowedLongsword();
+    const unarmedStrike = fighterAttackSubject(state, "Unarmed Strike");
+    const triggered = readiedAttackTriggered(
+      state,
+      (response) =>
+        response.selection.procedureRef === unarmedStrike.procedureRef,
+    );
+    const draw = {
+      timing: "afterAttack",
+      change: { kind: "equip", objectId: longswordId, slot: "mainWeapon" },
+    } as const;
+
+    expect(offeredWeaponChanges(triggered.reported.state)).toContainEqual(draw);
+
+    const attacked = releasedAndMissed(triggered, draw);
+    expect(heldWeaponId(attacked.state)).toBe(longswordId);
+    expect(attacked.state.readiedResponses.has(fighterId)).toBe(false);
+  });
+
   it("offers a change before the readied attack only when the attack is still there after it", () => {
     const daggerId = battleObjectId("off:weapon_dagger");
     const shortswordId = testShortswordAttack().weaponObjectId;

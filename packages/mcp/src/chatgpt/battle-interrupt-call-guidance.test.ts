@@ -113,6 +113,20 @@ describe("Interrupt-decision call projection input contracts", () => {
       {
         subject: {
           ...common,
+          command: "releaseReadiedAttack",
+          reactorId: fighterId,
+          targetId: goblinId,
+          procedureRef: characterSelection.procedureRef,
+          weaponChange: {
+            timing: "afterAttack",
+            change: { kind: "stow", objectId: "main:weapon_longsword" },
+          },
+        },
+        tool: "attack",
+      },
+      {
+        subject: {
+          ...common,
           command: "castTriggeredReactionSpell",
           reactorId: fighterId,
           procedureRef,
@@ -226,6 +240,11 @@ describe("Interrupt-decision call projection input contracts", () => {
         ),
         fixture.subject.command,
       ).toBe(true);
+      if ("weaponChange" in fixture.subject) {
+        expect(call.arguments.fill.value).toMatchObject({
+          choice: { weaponChange: fixture.subject.weaponChange },
+        });
+      }
     }
   });
 

@@ -72,14 +72,44 @@ module attackWeaponChangeCore {
   // Grapple or Shove that takes an attack's place is such an attack, and
   // carries its change before it the same way; one a Flurry of Blows Unarmed
   // Strike pays for is no Attack action attack, carries no change, and
-  // leaves the allowance as it was. A readied Attack's attack, made with a
-  // Reaction on another creature's turn, carries its one change on its
-  // release, before or after the attack, and leaves no allowance.
+  // leaves the allowance as it was. An attack off the creature's own turn,
+  // such as a readied one, leaves the allowance as it was too: its change
+  // rides on its release (readiedReleaseChangeCustody).
   pure def afterAttack(
     turn: AttackWeaponChangeTurn,
     changedBeforeAttack: bool,
   ): AttackWeaponChangeTurn =
-    { ...turn, changeAfterAttack: not(changedBeforeAttack) }
+    if (turn.ownTurn) { ...turn, changeAfterAttack: not(changedBeforeAttack) }
+    else turn
+
+  // .references/srd-5.2.1/rules-glossary.md "Ready [Action]": the creature
+  // chooses the action it takes in response to the trigger, and takes it
+  // with its Reaction right after the trigger finishes. A readied Attack's
+  // attack is an attack made as part of that action, so its release carries
+  // the one change, chosen with it, before or after the attack
+  // (ASSUMPTIONS.md A63).
+  type ReadiedReleaseChangeTiming = BeforeReadiedAttack | AfterReadiedAttack
+
+  // The weapon's custody after a readied Attack release's change. Before the
+  // attack, the readied attack must still be there once the change is made.
+  // After it, the hands are as the attack leaves them, and the weapon the
+  // attack threw lies wherever it landed, so no change names it.
+  pure def readiedReleaseChangeCustody(
+    custody: WeaponCustody,
+    change: WeaponChange,
+    handsFree: bool,
+    timing: ReadiedReleaseChangeTiming,
+    readiedAttackRemains: bool,
+    thrownByAttack: bool,
+  ): Set[WeaponCustody] =
+    match timing {
+      | BeforeReadiedAttack =>
+          if (readiedAttackRemains) weaponChangeCustody(custody, change, handsFree)
+          else Set()
+      | AfterReadiedAttack =>
+          if (thrownByAttack) Set()
+          else weaponChangeCustody(custody, change, handsFree)
+    }
 
   pure def canChangeAfterAttack(turn: AttackWeaponChangeTurn): bool =
     turn.ownTurn and turn.canAct and turn.changeAfterAttack

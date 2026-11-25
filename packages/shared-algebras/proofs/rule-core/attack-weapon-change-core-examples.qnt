@@ -57,4 +57,25 @@ module attackWeaponChangeCoreExamples {
     assert(not(canChangeAfterAttack(startOwnTurn(endOwnTurn(afterAttack(ownTurn, false)))))),
     assert(not(canChangeAfterAttack({ ...afterAttack(ownTurn, false), canAct: false }))),
   }
+
+  pure val otherCreatureTurn: AttackWeaponChangeTurn = {
+    ownTurn: false,
+    canAct: true,
+    changeAfterAttack: false,
+  }
+
+  run aReadiedAttackLeavesNoChangeAfterIt = all {
+    assert(afterAttack(otherCreatureTurn, false) == otherCreatureTurn),
+    assert(not(canChangeAfterAttack(afterAttack(otherCreatureTurn, false)))),
+  }
+
+  run aReadiedReleaseCarriesItsChangeBeforeOrAfterTheAttack = all {
+    assert(readiedReleaseChangeCustody(HeldWeapon, StowWeapon, true, AfterReadiedAttack, true, false) == Set(StowedWeapon)),
+    assert(readiedReleaseChangeCustody(StowedWeapon, EquipWeapon, true, BeforeReadiedAttack, true, false) == Set(HeldWeapon)),
+    assert(readiedReleaseChangeCustody(StowedWeapon, EquipWeapon, true, AfterReadiedAttack, false, false) == Set(HeldWeapon)),
+    // No change before the attack that loses the readied attack.
+    assert(readiedReleaseChangeCustody(HeldWeapon, DropWeapon, true, BeforeReadiedAttack, false, false) == Set()),
+    // No change after the attack names the weapon it threw.
+    assert(readiedReleaseChangeCustody(HeldWeapon, StowWeapon, true, AfterReadiedAttack, true, true) == Set()),
+  }
 }
