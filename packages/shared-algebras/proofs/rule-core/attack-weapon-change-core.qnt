@@ -92,8 +92,10 @@ module attackWeaponChangeCore {
 
   // The weapon's custody after a readied Attack release's change. Before the
   // attack, the readied attack must still be there once the change is made.
-  // After it, the hands are as the attack leaves them, and the weapon the
-  // attack threw lies wherever it landed, so no change names it.
+  // After it, the change comes once the attack is over, after any Reaction to
+  // it: the hands are as the attack and those Reactions leave them, the
+  // weapon the attack threw lies wherever it landed, so no change names it,
+  // and a reactor that can no longer take actions doesn't finish its action.
   pure def readiedReleaseChangeCustody(
     custody: WeaponCustody,
     change: WeaponChange,
@@ -101,13 +103,14 @@ module attackWeaponChangeCore {
     timing: ReadiedReleaseChangeTiming,
     readiedAttackRemains: bool,
     thrownByAttack: bool,
+    reactorCanAct: bool,
   ): Set[WeaponCustody] =
     match timing {
       | BeforeReadiedAttack =>
           if (readiedAttackRemains) weaponChangeCustody(custody, change, handsFree)
           else Set()
       | AfterReadiedAttack =>
-          if (thrownByAttack) Set()
+          if (thrownByAttack or not(reactorCanAct)) Set()
           else weaponChangeCustody(custody, change, handsFree)
     }
 

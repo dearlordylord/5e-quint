@@ -37,6 +37,7 @@ import {
   battleObjectIsOnGround,
 } from "./battle-reducer/object-custody-queries.ts";
 import { stateWithOwnedWeaponChange } from "./battle-reducer/owned-weapon-custody.ts";
+import { readiedAttackReleaseEnd } from "./battle-reducer/readied-attack-weapon-change.ts";
 import type {
   BattleFill,
   BattleResolutionResult,
@@ -473,6 +474,65 @@ describe("weapon change with a readied Attack", () => {
       undefined,
       { timing: "beforeAttack", change: { kind: "stow", objectId: daggerId } },
     ]);
+  });
+
+  it("makes no change after the attack that the reactor can no longer make", () => {
+    const releaseOf = (
+      state: BattleState,
+      weaponChange: ReadiedAttackWeaponChange,
+    ) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId: goblinId,
+        command: "releaseReadiedAttack" as const,
+        reactorId: fighterId,
+        targetId: goblinId,
+        procedureRef: fighterAttackSubject(state).procedureRef,
+        weaponChange,
+      },
+      fills: [],
+    });
+    const stowAfter = {
+      timing: "afterAttack",
+      change: { kind: "stow", objectId: longswordId },
+    } as const;
+    const battleWith = (conditions: readonly "incapacitated"[]) =>
+      startBattleRight({
+        battleId: battleId("battle-readied-attack-weapon-change-end"),
+        combatants: [
+          characterSeed({ initiative: 20, conditions: [...conditions] }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+    const incapacitated = battleWith(["incapacitated"]);
+    const stowed = fighterWithStowedLongsword();
+    const able = battleWith([]);
+    expect(
+      loadoutWeaponIsStowed(
+        readiedAttackReleaseEnd(able, releaseOf(able, stowAfter)).state,
+        fighterId,
+        longswordId,
+      ),
+    ).toBe(true);
+
+    for (const [state, weaponChange] of [
+      // An Incapacitated reactor doesn't finish its action.
+      [incapacitated, stowAfter],
+      // The weapon is no longer in hand.
+      [stowed, stowAfter],
+      // A drop without its landing position.
+      [
+        fighterVsGoblinBattle(),
+        {
+          timing: "afterAttack",
+          change: { kind: "drop", objectId: longswordId },
+        },
+      ],
+    ] as const) {
+      expect(
+        readiedAttackReleaseEnd(state, releaseOf(state, weaponChange)),
+      ).toEqual({ state, droppedObjects: [] });
+    }
   });
 
   it("refuses a release naming a change the Reaction window doesn't offer", () => {

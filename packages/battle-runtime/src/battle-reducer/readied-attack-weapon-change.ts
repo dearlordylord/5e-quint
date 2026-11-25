@@ -11,6 +11,7 @@
 import { Match } from "effect";
 import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 import type {
+  BattleDroppedObjectOutcome,
   BattleFill,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -18,6 +19,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type {
   AttackWeaponChange,
+  BattleInterruptSubject,
   BattleReleaseReadiedAttackSubject,
   ReadiedAttackWeaponChange,
 } from "../battle-subjects.ts";
@@ -25,8 +27,10 @@ import { readiedAttackWeaponChangesEqual } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   fillsWithoutWeaponChange,
-  resolveWithWeaponChangeAfter,
+  resolveBeforeWeaponChangeAfter,
   resolveWithWeaponChangeBefore,
+  stateWithWeaponChangeAfterAttack,
+  weaponChangeDropOutcome,
 } from "./attack-weapon-change.ts";
 import { loadoutWeaponIsStowed } from "./character-effective-loadout.ts";
 import {
@@ -202,11 +206,57 @@ function resolveReadiedAttackThenWeaponChange<
     );
   }
   /* v8 ignore stop -- @preserve */
-  return resolveWithWeaponChangeAfter(
+  return resolveBeforeWeaponChangeAfter(
     input,
     input.subject.reactorId,
     weaponChange.change,
     resolveAttack,
+  );
+}
+
+/**
+ * The battle once a readied attack is over, however it got there: directly,
+ * or through the Reaction windows its hit and damage opened. A change after
+ * the attack is made now, after any Reaction to it, and a weapon either
+ * change dropped is reported once. Any other procedure the Reaction window
+ * ran ends as it is.
+ */
+export function readiedAttackReleaseEnd(
+  state: BattleState,
+  procedure: {
+    readonly subject: BattleInterruptSubject;
+    readonly fills: readonly BattleFill[];
+  },
+): {
+  readonly state: BattleState;
+  readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+} {
+  const subject = procedure.subject;
+  if (
+    subject.command !== "releaseReadiedAttack" ||
+    subject.weaponChange === undefined
+  ) {
+    return { state, droppedObjects: [] };
+  }
+  const { timing, change } = subject.weaponChange;
+  const dropped =
+    change.kind === "drop"
+      ? [weaponChangeDropOutcome(subject.reactorId, change.objectId)]
+      : [];
+  return Match.value(timing).pipe(
+    Match.when("beforeAttack", () => ({ state, droppedObjects: dropped })),
+    Match.when("afterAttack", () => {
+      const changed = stateWithWeaponChangeAfterAttack(
+        state,
+        subject.reactorId,
+        change,
+        procedure.fills,
+      );
+      return changed === undefined
+        ? { state, droppedObjects: [] }
+        : { state: changed, droppedObjects: dropped };
+    }),
+    Match.exhaustive,
   );
 }
 

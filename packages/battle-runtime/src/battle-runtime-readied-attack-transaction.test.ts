@@ -29,6 +29,8 @@ import {
   reactionModifierUnitRef,
   requireCharacterSpellProcedureRefForTest,
   spellSlotInvocationRef,
+  cuttingWordsDamageOnlyUnit,
+  cuttingWordsResource,
   testDaggerAttack,
   testShortswordAttack,
   uncannyDodgeUnit,
@@ -45,6 +47,7 @@ import type {
 import type { BattleFill } from "./battle-state-execution.ts";
 import { weaponDropPositionHole } from "./battle-reducer/attack-weapon-change.ts";
 import { battleGroundObjectState } from "./battle-reducer/object-custody-queries.ts";
+import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 import type { CombatantId } from "./identity.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -470,20 +473,58 @@ test("a readied attack resumed after a Reaction to its hit makes its weapon chan
   });
 });
 
+/** A target whose Reaction a readied attack's damage offers. */
+type DamageReactionTarget = "hellishRebuke" | "cuttingWords";
+
+function damageReactionTargetInit(
+  reaction: DamageReactionTarget,
+  targetId: CombatantId,
+) {
+  return reaction === "hellishRebuke"
+    ? characterSeed({
+        combatantId: targetId,
+        displayName: "Hellish Rebuke caster",
+        initiative: 10,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("hellish_rebuke")],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+      })
+    : characterSeed({
+        combatantId: targetId,
+        displayName: "Bard Target",
+        initiative: 10,
+        classLevels: [{ className: "bard", level: 3 }],
+        attack: null,
+        resources: [
+          cuttingWordsResource({ unit: cuttingWordsDamageOnlyUnit() }),
+        ],
+        characterUnitRefs: [
+          {
+            unit: cuttingWordsDamageOnlyUnit(),
+            supportProfiles: ["reactionRollOrDamageReduction"],
+          },
+        ],
+      });
+}
+
 /**
- * A Fighter with a Shortsword and a Dagger readies an attack for when a
- * Hellish Rebuke caster moves,
- * releases it at the caster with `weaponChange`, and hits. The caster's
- * Hellish Rebuke Reaction to the damage is offered and declined. Returns the
+ * A Fighter with a Shortsword and a Dagger readies an attack for when the
+ * target moves, releases it at the target with `weaponChange`, and hits. The
+ * target's Reaction to the damage is offered and declined: Hellish Rebuke
+ * once the damage is dealt, or Cutting Words on the damage roll. Returns the
  * battle and the drops the release reports once that window closes.
  */
-function readiedHitOnHellishRebukeCaster(
+function readiedHitBehindDamageReaction(
+  reaction: DamageReactionTarget,
   weaponChange: ReadiedAttackWeaponChange,
 ) {
-  const casterId = combatantId("readied-attack-rebuker");
+  const targetId = combatantId("readied-attack-damage-reactor");
   const mainAttack = testShortswordAttack();
   const session = startBattleSessionRight({
-    battleId: battleId("readied-attack-after-damage-reaction"),
+    battleId: battleId("readied-attack-damage-reaction"),
     combatants: [
       characterSeed({
         initiative: 20,
@@ -505,52 +546,43 @@ function readiedHitOnHellishRebukeCaster(
         },
       }),
       statBlockCreatureInit({ initiative: 15 }),
-      characterSeed({
-        combatantId: casterId,
-        displayName: "Hellish Rebuke caster",
-        initiative: 10,
-        attack: null,
-        spellcasting: wizardSpellcasting({
-          cantrips: [],
-          preparedSpells: [spellRecord("hellish_rebuke")],
-          spellSlots: [{ spellLevel: 2, count: 1 }],
-        }),
-      }),
+      damageReactionTargetInit(reaction, targetId),
     ],
   });
-  const rebuke = requireCharacterSpellProcedureRefForTest(
-    session,
-    casterId,
-    spellSlotInvocationRef("hellish_rebuke", 2, "saveGatedDamage"),
-  );
   const driver = transactionDriver(session);
   const readied = readyAttackAndReportTrigger(
     driver,
     [fighterId, goblinId],
-    casterId,
+    targetId,
   );
   const distance = targetSpatialFactsFill(
-    casterId,
+    targetId,
     readied.response.selection,
     5,
   );
   const attackRoll = releaseReadiedAttack(
     driver,
     readied,
-    casterId,
-    {
-      ...distance,
-      spatialFacts: [
-        ...distance.spatialFacts,
-        {
-          kind: "reactionSpellDamagerVisibleWithinRange",
-          reactorId: casterId,
-          damageSourceId: fighterId,
-          sourceProcedureRef: rebuke,
-          rangeFeet: movementFeet(60),
-        },
-      ],
-    },
+    targetId,
+    reaction === "hellishRebuke"
+      ? {
+          ...distance,
+          spatialFacts: [
+            ...distance.spatialFacts,
+            {
+              kind: "reactionSpellDamagerVisibleWithinRange",
+              reactorId: targetId,
+              damageSourceId: fighterId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                targetId,
+                spellSlotInvocationRef("hellish_rebuke", 2, "saveGatedDamage"),
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        }
+      : distance,
     weaponChange,
   );
   const damage = pendingFrontier(
@@ -562,26 +594,31 @@ function readiedHitOnHellishRebukeCaster(
     ]),
   );
   if (damage.kind !== "holes") throw new Error("Expected damage roll");
-  const rebukeWindow = pendingFrontier(
+  const reactionWindow = pendingFrontier(
     driver.subject(damage.replaySubject, [
       damageRollFill(findHole(damage.holes, "rolledDice"), 4),
     ]),
   );
-  if (rebukeWindow.kind !== "interruptDecision")
-    throw new Error("Expected the Hellish Rebuke after-damage window");
+  if (reactionWindow.kind !== "interruptDecision")
+    throw new Error("Expected the damage Reaction window");
+  expect(reactionWindow.trigger).toBe(
+    reaction === "hellishRebuke" ? "afterDamage" : "attackDamage",
+  );
+  // Only a change before the attack has been made while the window is open.
   expect(
     battleGroundObjectState(driver.session().state, fighterId, offHandDaggerId)
       ?.source,
   ).toEqual(
-    weaponChange.change.kind === "drop"
+    weaponChange.timing === "beforeAttack" &&
+      weaponChange.change.kind === "drop"
       ? { kind: "attackWeaponChange" }
       : undefined,
   );
   const declined = driver.settle({
     kind: "interruptDecision",
-    fill: interruptDecisionFill(rebukeWindow.decisionHole, {
+    fill: interruptDecisionFill(reactionWindow.decisionHole, {
       kind: "decline",
-      responderId: casterId,
+      responderId: targetId,
     }),
   });
   if (declined.tag !== "settled")
@@ -592,40 +629,43 @@ function readiedHitOnHellishRebukeCaster(
   };
 }
 
-test("a readied attack's weapon change is made before the Reaction window its damage opens, and its drop reported when that window closes", () => {
-  const daggerId = offHandDaggerId;
-  const droppedBefore = readiedHitOnHellishRebukeCaster({
-    timing: "beforeAttack",
-    change: { kind: "drop", objectId: daggerId },
-  });
-  const droppedAfter = readiedHitOnHellishRebukeCaster({
-    timing: "afterAttack",
-    change: { kind: "drop", objectId: daggerId },
-  });
-  const stowedAfter = readiedHitOnHellishRebukeCaster({
-    timing: "afterAttack",
-    change: { kind: "stow", objectId: daggerId },
-  });
-  const drop = {
-    kind: "objectDropped",
-    actorId: fighterId,
-    objectId: daggerId,
-    source: { kind: "attackWeaponChange" },
-  };
+test.each(["hellishRebuke", "cuttingWords"] as const)(
+  "a readied attack's weapon change after it is made once a Reaction to its damage (%s) is over, and a drop is reported once",
+  (reaction) => {
+    const daggerId = offHandDaggerId;
+    const droppedBefore = readiedHitBehindDamageReaction(reaction, {
+      timing: "beforeAttack",
+      change: { kind: "drop", objectId: daggerId },
+    });
+    const droppedAfter = readiedHitBehindDamageReaction(reaction, {
+      timing: "afterAttack",
+      change: { kind: "drop", objectId: daggerId },
+    });
+    const stowedAfter = readiedHitBehindDamageReaction(reaction, {
+      timing: "afterAttack",
+      change: { kind: "stow", objectId: daggerId },
+    });
+    const drop = {
+      kind: "objectDropped",
+      actorId: fighterId,
+      objectId: daggerId,
+      source: { kind: "attackWeaponChange" },
+    };
 
-  expect(droppedBefore.droppedObjects).toEqual([drop]);
-  expect(droppedAfter.droppedObjects).toEqual([drop]);
-  expect(
-    battleGroundObjectState(droppedAfter.state, fighterId, daggerId),
-  ).toEqual({
-    positionId: dropPositionId,
-    source: { kind: "attackWeaponChange" },
-  });
-  expect(stowedAfter.droppedObjects).toBeUndefined();
-  expect(
-    battleGroundObjectState(stowedAfter.state, fighterId, daggerId),
-  ).toBeUndefined();
-});
+    expect(droppedBefore.droppedObjects).toEqual([drop]);
+    expect(droppedAfter.droppedObjects).toEqual([drop]);
+    expect(
+      battleGroundObjectState(droppedAfter.state, fighterId, daggerId),
+    ).toEqual({
+      positionId: dropPositionId,
+      source: { kind: "attackWeaponChange" },
+    });
+    expect(stowedAfter.droppedObjects).toBeUndefined();
+    expect(loadoutWeaponIsStowed(stowedAfter.state, fighterId, daggerId)).toBe(
+      true,
+    );
+  },
+);
 
 test("a readied attack resumed after a Reaction to its hit makes its weapon change before it once", () => {
   const dropped = readiedDaggerHitOnUncannyDodgeRogue("decline", {

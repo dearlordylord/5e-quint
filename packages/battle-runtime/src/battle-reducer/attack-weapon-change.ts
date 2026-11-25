@@ -27,19 +27,13 @@ import type {
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
-  BattleInterruptCheckpoint,
-  BattleInterruptedProcedure,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleState,
   BattleWeaponDropPositionHole,
   WeaponChangeAfterAttackState,
 } from "../battle-state-execution.ts";
-import {
-  sameBattleSubject,
-  type AttackWeaponChange,
-  type BattleSubject,
-} from "../battle-subjects.ts";
+import type { AttackWeaponChange, BattleSubject } from "../battle-subjects.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import {
   combatantCanTakeActions,
@@ -53,13 +47,6 @@ import {
   type AppliedAttackWeaponChange,
 } from "./owned-weapon-custody.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
-import { optionalProperty } from "../optional-property.ts";
-import {
-  currentInterruptCheckpoint,
-  snapshotBattle,
-} from "./battle-snapshot.ts";
-import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
-import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
 import { invalidResult, resolvedResult } from "./result-helpers.ts";
 
 export type ChangeWeaponAfterAttackSubject = Extract<
@@ -276,8 +263,6 @@ export function resolveChangeWeaponAfterAttack(
   );
   if (applied.tag !== "applied") return applied.result;
   return withWeaponDropOutcome(
-    input.state,
-    input.subject,
     resolvedResult({
       ...applied.state,
       currentTurnResources: {
@@ -306,116 +291,35 @@ function weaponChangeTakesFills(
   );
 }
 
+/** The report of a weapon a weapon change dropped. */
+export function weaponChangeDropOutcome(
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+): BattleDroppedObjectOutcome {
+  return {
+    kind: "objectDropped",
+    actorId,
+    objectId,
+    source: { kind: "attackWeaponChange" },
+  };
+}
+
 /**
  * A resolved result that reports a weapon the change dropped, as Battle
  * reports every object that falls, so the caller learns that it lies on the
  * ground.
  */
-/**
- * The attack's result, reporting the weapon its change dropped once the
- * attack is over (attackEndCheckpoint).
- */
 function withWeaponDropOutcome(
-  stateBefore: BattleState,
-  subject: BattleSubject,
   result: BattleResolutionResult,
   actorId: CombatantId,
   change: AttackWeaponChange,
 ): BattleResolutionResult {
-  if (change.kind !== "drop") return result;
-  const dropped: BattleDroppedObjectOutcome = {
-    kind: "objectDropped",
-    actorId,
-    objectId: change.objectId,
-    source: { kind: "attackWeaponChange" },
-  };
-  if (result.tag === "resolved") {
-    return {
-      ...result,
-      droppedObjects: [...(result.droppedObjects ?? []), dropped],
-    };
-  }
-  if (result.tag !== "needsHoles") return result;
-  const checkpoint = attackEndCheckpoint(stateBefore, result.state, subject);
-  if (checkpoint === undefined) return result;
-  const state = stateReportingDropOnResume(result.state, checkpoint, dropped);
-  return { ...result, state, snapshot: snapshotBattle(state) };
-}
-
-/** Whether the attack's result finds it over (attackEndCheckpoint). */
-function attackIsOver(
-  stateBefore: BattleState,
-  subject: BattleSubject,
-  result: BattleResolutionResult,
-): result is Extract<
-  BattleResolutionResult,
-  { readonly tag: "resolved" | "needsHoles" }
-> {
-  return (
-    result.tag === "resolved" ||
-    (result.tag === "needsHoles" &&
-      attackEndCheckpoint(stateBefore, result.state, subject) !== undefined)
-  );
-}
-
-type AttackEndCheckpoint = Exclude<
-  BattleInterruptCheckpoint,
-  { readonly trigger: "attackDamage" }
-> & {
-  readonly continuation: Extract<
-    BattleInterruptedProcedure,
-    { readonly kind: "resolved" }
-  >;
-};
-
-/**
- * The Reaction window an attack opened once it was over, such as a Reaction
- * to its damage. The window resumes the attack as resolved, without resolving
- * its subject again, so what the attack's end makes is made before it opens
- * and reported when it closes. Any other window or hole leaves the attack
- * under way, and Battle resolves its subject again to finish it.
- */
-function attackEndCheckpoint(
-  stateBefore: BattleState,
-  state: BattleState,
-  subject: BattleSubject,
-): AttackEndCheckpoint | undefined {
-  if (state.interruptStack.length <= stateBefore.interruptStack.length) {
-    return undefined;
-  }
-  const checkpoint = currentInterruptCheckpoint(state);
-  if (checkpoint === null || checkpoint.trigger === "attackDamage") {
-    return undefined;
-  }
-  const continuation = checkpoint.continuation;
-  return continuation.kind === "resolved" &&
-    sameBattleSubject(continuation.subject, subject)
-    ? { ...checkpoint, continuation }
-    : undefined;
-}
-
-function stateReportingDropOnResume(
-  state: BattleState,
-  checkpoint: AttackEndCheckpoint,
-  dropped: BattleDroppedObjectOutcome,
-): BattleState {
-  const objectOutcomes = appendObjectOutcomeAccumulation(
-    checkpoint.continuation.objectOutcomes,
-    { droppedObjects: [dropped] },
-  );
-  const frame: BattleInterruptCheckpoint = {
-    ...checkpoint,
-    continuation: {
-      ...checkpoint.continuation,
-      ...optionalProperty("objectOutcomes", objectOutcomes),
-    },
-  };
-  copyInterruptCheckpointIdentity(checkpoint, frame);
+  if (result.tag !== "resolved" || change.kind !== "drop") return result;
   return {
-    ...state,
-    interruptStack: [
-      ...state.interruptStack.slice(0, -1),
-      { kind: "interruptCheckpoint", frame },
+    ...result,
+    droppedObjects: [
+      ...(result.droppedObjects ?? []),
+      weaponChangeDropOutcome(actorId, change.objectId),
     ],
   };
 }
@@ -444,11 +348,15 @@ export function resolveAttackWithWeaponChange<
       "Only a Grapple or Shove in place of an Attack action attack can carry a weapon change.",
     );
   }
-  return resolveWithWeaponChangeBefore(
-    input,
+  return withWeaponDropOutcome(
+    resolveWithWeaponChangeBefore(
+      input,
+      input.subject.actorId,
+      change,
+      resolveAttack,
+    ),
     input.subject.actorId,
     change,
-    resolveAttack,
   );
 }
 
@@ -456,7 +364,7 @@ export function resolveAttackWithWeaponChange<
  * Resolves an attack after the weapon change its attacker makes right before
  * it. A resumed subject finds the change already applied, so Battle applies it
  * once; the drop position fill is the change's own and never reaches the
- * attack.
+ * attack. The caller reports a dropped weapon once the attack is over.
  */
 export function resolveWithWeaponChangeBefore<
   Input extends BattleResolutionInput,
@@ -471,13 +379,7 @@ export function resolveWithWeaponChangeBefore<
     input.state.subjectResolutionPhase.kind === "subjectContinuation" &&
     ownedWeaponChangeIsApplied(input.state, attackerId, change)
   ) {
-    return withWeaponDropOutcome(
-      input.state,
-      input.subject,
-      resolveAttack({ ...input, fills: attackFills }),
-      attackerId,
-      change,
-    );
+    return resolveAttack({ ...input, fills: attackFills });
   }
   const applied = appliedWeaponChange(
     input.state,
@@ -487,23 +389,15 @@ export function resolveWithWeaponChangeBefore<
     input.fills,
   );
   if (applied.tag !== "applied") return applied.result;
-  return withWeaponDropOutcome(
-    input.state,
-    input.subject,
-    resolveAttack({ ...input, state: applied.state, fills: attackFills }),
-    attackerId,
-    change,
-  );
+  return resolveAttack({ ...input, state: applied.state, fills: attackFills });
 }
 
 /**
- * Resolves an attack, then the weapon change its attacker makes right after
- * it. Battle asks where a dropped weapon lands before the attack starts, and
- * makes the change once the attack is over, so a resumed attack makes it
- * once too. The caller has admitted the change against the hands as the
- * attack leaves them.
+ * Asks where a weapon dropped after the attack lands before the attack
+ * starts, then resolves the attack. The caller makes the change once the
+ * attack is over (stateWithWeaponChangeAfterAttack).
  */
-export function resolveWithWeaponChangeAfter<
+export function resolveBeforeWeaponChangeAfter<
   Input extends BattleResolutionInput,
 >(
   input: Input,
@@ -512,35 +406,36 @@ export function resolveWithWeaponChangeAfter<
   resolveAttack: (input: Input) => BattleResolutionResult,
 ): BattleResolutionResult {
   const facts = appliedWeaponChangeFacts(attackerId, change, input.fills);
-  if (facts.tag === "needsHoles") {
-    return needsHolesResult(input.state, input.subject, [facts.hole]);
-  }
   // The landing position stays among the attack's fills, so that an attack
   // resumed after a Reaction to its hit replays it; the attack reads only
   // its own (readiedAttackFills).
-  const result = resolveAttack(input);
-  if (!attackIsOver(input.state, input.subject, result)) return result;
-  const changed = stateWithOwnedWeaponChange(
-    result.state,
-    attackerId,
-    facts.change,
-  );
-  /* v8 ignore start -- @preserve -- The caller admitted this change against the hands as the attack leaves them. */
-  if (changed.tag === "invalid") {
-    return invalidResult(input.state, "staleSubject", changed.message);
+  return facts.tag === "needsHoles"
+    ? needsHolesResult(input.state, input.subject, [facts.hole])
+    : resolveAttack(input);
+}
+
+/**
+ * The battle once an attacker who can still act makes the weapon change it
+ * chose for right after its attack, with the landing position among `fills`.
+ * Undefined when it can't: an attacker that can no longer take actions
+ * doesn't finish its action, and a weapon no longer where the change needs
+ * it can't be changed.
+ */
+export function stateWithWeaponChangeAfterAttack(
+  state: BattleState,
+  attackerId: CombatantId,
+  change: AttackWeaponChange,
+  fills: readonly BattleFill[],
+): BattleState | undefined {
+  const facts = appliedWeaponChangeFacts(attackerId, change, fills);
+  if (
+    !combatantCanTakeActions(state.combatants.get(attackerId)) ||
+    facts.tag !== "applied"
+  ) {
+    return undefined;
   }
-  /* v8 ignore stop -- @preserve */
-  return withWeaponDropOutcome(
-    input.state,
-    input.subject,
-    {
-      ...result,
-      state: changed.state,
-      snapshot: snapshotBattle(changed.state),
-    },
-    attackerId,
-    change,
-  );
+  const changed = stateWithOwnedWeaponChange(state, attackerId, facts.change);
+  return changed.tag === "applied" ? changed.state : undefined;
 }
 
 /** The fills that answer the attack: every one but the weapon change's own. */

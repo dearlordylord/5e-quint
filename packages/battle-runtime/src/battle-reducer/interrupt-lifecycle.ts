@@ -55,6 +55,7 @@ import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { releasePendingSpellSlotUseThisTurn } from "./spell-turn-resources.ts";
 import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
+import { readiedAttackReleaseEnd } from "./readied-attack-weapon-change.ts";
 import { handledInterruptRouteProjection } from "./replay-continuation.ts";
 import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 
@@ -867,12 +868,24 @@ function completeActiveInterruptProcedure(
       "No active interrupt procedure is pending completion.",
     );
   }
+  const ended = readiedAttackReleaseEnd(state, activeInterrupt);
   return advanceInterruptCheckpointAfterResponder({
-    state,
+    state: ended.state,
     frame,
     responderId: activeInterrupt.responderId,
     execution,
-    ...optionalProperty("objectOutcomes", objectOutcomes),
+    ...optionalProperty(
+      "objectOutcomes",
+      ended.droppedObjects.length === 0
+        ? objectOutcomes
+        : {
+            ...objectOutcomes,
+            droppedObjects: [
+              ...(objectOutcomes?.droppedObjects ?? []),
+              ...ended.droppedObjects,
+            ],
+          },
+    ),
   });
 }
 
