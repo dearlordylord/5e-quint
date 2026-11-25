@@ -95,6 +95,7 @@ import {
   effectiveD20TestRollMode,
   d20TestResolutionId,
   type BattleD20TestCircumstanceRequest,
+  type BattleSingleD20TestCircumstanceRequest,
   type TableD20TestCircumstanceDecision,
   type TableD20TestCircumstanceSource,
 } from "./d20-test-circumstance.ts";
@@ -157,7 +158,7 @@ function syntheticBattleFill(value: unknown): BattleFill {
 function requestFor(
   testKind: BattleD20TestCircumstanceRequest["testKind"],
   resolvedFills: readonly BattleFill[] = [],
-): BattleD20TestCircumstanceRequest {
+): BattleSingleD20TestCircumstanceRequest {
   const holeKind =
     testKind === "attackRoll"
       ? "attackRoll"
@@ -185,10 +186,16 @@ function requestFor(
     holes: [hole],
     resolvedFills,
   })[0];
-  if (request === undefined) {
+  if (request === undefined || !isSingleRequest(request)) {
     throw new Error(`Synthetic ${testKind} hole did not produce a request.`);
   }
   return request;
+}
+
+function isSingleRequest(
+  request: BattleD20TestCircumstanceRequest,
+): request is BattleSingleD20TestCircumstanceRequest {
+  return request.savingThrowChoiceSources === undefined;
 }
 
 function decision(
@@ -357,7 +364,7 @@ describe("Table-authored per-test D20 circumstances", () => {
     ]);
   });
 
-  test("projects concentration and shove saving throws with their own roll modes", () => {
+  test("projects a concentration save's roll mode and each shove save choice's", () => {
     const concentrationHole = syntheticBattleHole({
       kind: "concentrationSavingThrow",
       holeId: holeId("synthetic-concentration-save"),
@@ -376,9 +383,23 @@ describe("Table-authored per-test D20 circumstances", () => {
       label: "Synthetic shove save",
       actorId: firstTargetId,
       targetId: secondTargetId,
-      ability: "str",
       dc: difficultyClass(12),
-      rollMode: "disadvantage",
+      targetSavingThrowChoices: [
+        {
+          ability: "str",
+          targetRollModes: [],
+          targetFlatBonuses: [],
+          targetAutomaticFailures: [],
+        },
+        {
+          ability: "dex",
+          targetRollModes: [
+            { targetId: secondTargetId, rollMode: "disadvantage" },
+          ],
+          targetFlatBonuses: [],
+          targetAutomaticFailures: [],
+        },
+      ],
     });
 
     expect(
@@ -396,7 +417,16 @@ describe("Table-authored per-test D20 circumstances", () => {
       {
         testKind: "savingThrow",
         targetId: secondTargetId,
-        mechanicalSources: { advantage: false, disadvantage: true },
+        savingThrowChoiceSources: [
+          {
+            ability: "str",
+            mechanicalSources: { advantage: false, disadvantage: false },
+          },
+          {
+            ability: "dex",
+            mechanicalSources: { advantage: false, disadvantage: true },
+          },
+        ],
       },
     ]);
   });
@@ -645,8 +675,23 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(request("escapeCheck")).toBe("abilityCheck");
   });
 
-  test("the table's circumstance on a grapple save combines with each choice's own roll mode", () => {
-    const hole = {
+  const strengthOrDexteritySaveChoices = [
+    {
+      ability: "str",
+      targetRollModes: [],
+      targetFlatBonuses: [],
+      targetAutomaticFailures: [],
+    },
+    {
+      ability: "dex",
+      targetRollModes: [{ targetId: firstTargetId, rollMode: "disadvantage" }],
+      targetFlatBonuses: [],
+      targetAutomaticFailures: [],
+    },
+  ] as const;
+
+  test.each([
+    {
       kind: "grappleOutcome",
       holeId: holeId("synthetic-grapple-save"),
       holeInstanceKey: holeInstanceKey("synthetic-grapple-save-instance"),
@@ -655,54 +700,60 @@ describe("Table-authored per-test D20 circumstances", () => {
       targetId: firstTargetId,
       dc: difficultyClass(12),
       mode: "grappleSave",
-      targetSavingThrowChoices: [
-        {
-          ability: "str",
-          targetRollModes: [],
-          targetFlatBonuses: [],
-          targetAutomaticFailures: [],
-        },
-        {
-          ability: "dex",
-          targetRollModes: [
-            { targetId: firstTargetId, rollMode: "disadvantage" },
+      targetSavingThrowChoices: strengthOrDexteritySaveChoices,
+    },
+    {
+      kind: "shoveOutcome",
+      holeId: holeId("synthetic-shove-save"),
+      holeInstanceKey: holeInstanceKey("synthetic-shove-save-instance"),
+      label: "Synthetic shove save",
+      actorId: secondTargetId,
+      targetId: firstTargetId,
+      dc: difficultyClass(12),
+      targetSavingThrowChoices: strengthOrDexteritySaveChoices,
+    },
+  ] as const satisfies readonly BattleHole[])(
+    "the table's circumstance on a $kind save combines with each choice's own roll mode",
+    (hole) => {
+      const requests = battleD20TestCircumstanceRequests({
+        resolutionId: d20TestResolutionId(`${resolutionId}:${hole.kind}-table`),
+        holes: [hole],
+        resolvedFills: [],
+      });
+      const [request] = requests;
+      if (request === undefined)
+        throw new Error("Expected a Strength-or-Dexterity save request.");
+      const [projected] = battleHolesWithTableD20TestCircumstances({
+        holes: [hole],
+        requests,
+        admitted: new Map([
+          [
+            request.requestRef,
+            {
+              requestRef: request.requestRef,
+              testKind: "savingThrow",
+              source: "advantage",
+            },
           ],
-          targetFlatBonuses: [],
-          targetAutomaticFailures: [],
-        },
-      ],
-    } as const satisfies BattleHole;
-    const requests = battleD20TestCircumstanceRequests({
-      resolutionId: d20TestResolutionId(`${resolutionId}:grapple-table`),
-      holes: [hole],
-      resolvedFills: [],
-    });
-    const [request] = requests;
-    if (request === undefined)
-      throw new Error("Expected a grapple save request.");
-    const [projected] = battleHolesWithTableD20TestCircumstances({
-      holes: [hole],
-      requests,
-      admitted: new Map([
-        [
-          request.requestRef,
+        ]),
+      });
+      expect(projected).toMatchObject({
+        targetSavingThrowChoices: [
           {
-            requestRef: request.requestRef,
-            testKind: "savingThrow",
-            source: "advantage",
+            ability: "str",
+            targetRollModes: [
+              { targetId: firstTargetId, rollMode: "advantage" },
+            ],
+          },
+          {
+            ability: "dex",
+            targetRollModes: [{ targetId: firstTargetId, rollMode: "normal" }],
           },
         ],
-      ]),
-    });
-    expect(projected).toMatchObject({
-      targetSavingThrowChoices: [
-        {
-          targetRollModes: [{ targetId: firstTargetId, rollMode: "advantage" }],
-        },
-        { targetRollModes: [{ targetId: firstTargetId, rollMode: "normal" }] },
-      ],
-    });
-  });
+      });
+      expect(projected).not.toHaveProperty("rollMode");
+    },
+  );
 
   test.each([
     [undefined, undefined, "normal"],
