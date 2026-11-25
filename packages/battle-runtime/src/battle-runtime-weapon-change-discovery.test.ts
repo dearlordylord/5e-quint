@@ -87,6 +87,7 @@ function thrownAttacks(state: ReturnType<typeof spearBattle>) {
     ({ subject, initialHoles }) =>
       subject.tag === "action" &&
       subject.action === "attack" &&
+      subject.attackAbility !== undefined &&
       subject.weaponDelivery === "thrown"
         ? [{ subject, initialHoles }]
         : [],
@@ -255,6 +256,7 @@ describe("weapon-change discovery preserves custody", () => {
         ({ subject }) =>
           subject.tag === "action" &&
           subject.action === "attack" &&
+          subject.attackAbility !== undefined &&
           subject.procedureRef === slingProcedure &&
           subject.weaponChange === undefined,
       ),
@@ -263,11 +265,16 @@ describe("weapon-change discovery preserves custody", () => {
       ({ subject }) =>
         subject.tag === "action" &&
         subject.action === "attack" &&
+        subject.attackAbility !== undefined &&
         subject.procedureRef === slingProcedure &&
         subject.weaponChange?.kind === "drop" &&
         subject.weaponChange.objectId === offHandSpearId,
     );
-    if (act?.subject.tag !== "action" || act.subject.action !== "attack")
+    if (
+      act?.subject.tag !== "action" ||
+      act.subject.action !== "attack" ||
+      act.subject.attackAbility === undefined
+    )
       throw new Error("Expected drop and Sling attack.");
     const drop = act.initialHoles.find(
       (hole) => hole.kind === "weaponDropPosition",

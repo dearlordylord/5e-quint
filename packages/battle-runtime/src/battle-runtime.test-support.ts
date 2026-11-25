@@ -3342,7 +3342,7 @@ export function abilityCheckFill(
           { readonly kind: "abilityCheck" }
         >["value"]["d20TestRerolls"];
       },
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "abilityCheck" }> {
   if (
     hole.kind !== "abilityCheck" &&
     hole.kind !== "spellcastingAbilityCheck"
