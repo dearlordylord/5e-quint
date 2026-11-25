@@ -117,7 +117,9 @@ export function defaultUnarmoredArmorClassBase(): Extract<
  * The hands a selected loadout holds. The main weapon takes the right hand,
  * and the left too when held with the `two_handed` grip; otherwise the left
  * hand holds the shield or the off-hand weapon, or is free. A hand the loadout
- * holds isn't free for a grapple or a held object.
+ * holds isn't free for a grapple or a held object. A battle can change the
+ * grip to `two_handed` only once the shield or off-hand weapon is off that
+ * hand, so the grip takes the left hand first.
  */
 export function loadoutHandUses(loadout: {
   readonly holdsShield: boolean;
@@ -125,13 +127,14 @@ export function loadoutHandUses(loadout: {
   readonly mainWeaponGrip: WeaponGrip | undefined;
 }): Pick<ArmorClassState, "leftHandUse" | "rightHandUse"> {
   return {
-    leftHandUse: loadout.holdsShield
-      ? "shield"
-      : loadout.holdsOffHandWeapon
-        ? "offWeapon"
-        : loadout.mainWeaponGrip === "two_handed"
-          ? "mainWeapon"
-          : "free",
+    leftHandUse:
+      loadout.mainWeaponGrip === "two_handed"
+        ? "mainWeapon"
+        : loadout.holdsShield
+          ? "shield"
+          : loadout.holdsOffHandWeapon
+            ? "offWeapon"
+            : "free",
     rightHandUse: loadout.mainWeaponGrip === undefined ? "free" : "mainWeapon",
   };
 }

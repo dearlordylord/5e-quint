@@ -25,7 +25,7 @@ import {
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   bindCharacterWeaponExecutionWeapon,
-  admitWeaponMeleeGripDamage,
+  admitVersatileMeleeDamage,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
@@ -848,12 +848,12 @@ function projectCharacterWeaponLoadoutRequest(
           battleWeaponDefinitionAdmissionIssues(weapon.id, boundWeapon.failure),
         );
       }
-      const gripDamage = admitWeaponMeleeGripDamage(
-        boundWeapon.success,
-        request.slot === "main" ? request.grip : "one_handed",
-      );
-      if (Result.isFailure(gripDamage))
-        return battleCreatureInitIssue(gripDamage.failure.message);
+      const versatileDamage =
+        request.slot === "main"
+          ? admitVersatileMeleeDamage(boundWeapon.success, request.grip)
+          : Result.succeed(undefined);
+      if (Result.isFailure(versatileDamage))
+        return battleCreatureInitIssue(versatileDamage.failure.message);
       const executionWeapon = boundWeapon.success;
 
       const weaponAttackAbilitySelection =

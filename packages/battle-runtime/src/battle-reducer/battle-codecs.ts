@@ -8966,6 +8966,7 @@ function serializedRuntimeCommandReferencePolicy(
       dropProne: actorOwned,
       interactWithObject: actorOwned,
       pickUpHeldWeapon: actorOwned,
+      changeWeaponGrip: actorOwned,
       linkedDefenseResistanceDamageShareSeparation: actorOwned,
       endPersistentAreaSaveConditionEscapeForAreaRemoval: actorOwned,
       endPersistentAreaSaveConditionEscapeForDeparture: actorOwned,

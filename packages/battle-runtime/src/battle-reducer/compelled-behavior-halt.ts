@@ -105,6 +105,8 @@ const COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND = {
   // there is none to interact with an object during (SRD 5.2.1 "Your Turn").
   interactWithObject: true,
   pickUpHeldWeapon: true,
+  // Changing grip is neither a move nor an action (ASSUMPTIONS.md A65).
+  changeWeaponGrip: false,
   releaseReadiedSpell: false,
   releaseReadiedMovement: false,
   reportReadyTrigger: false,

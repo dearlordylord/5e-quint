@@ -10,6 +10,7 @@ import {
   characterId,
   combatantId,
   initiativeScore,
+  resolveBattleSubject,
   startBattle,
 } from "@dnd/battle-runtime";
 import {
@@ -169,7 +170,7 @@ describe("weapon damage after grip and delivery", () => {
     },
   );
 
-  test("unused non-dice Versatile stays legal one-handed and fails only when selected two-handed", () => {
+  test("unused non-dice Versatile stays legal one-handed and fails when selected or changed to two-handed", () => {
     const syntheticId = unitId("synthetic_flat_versatile_weapon");
     const original = syntheticFinesseWeaponUnitLibrary.requireUnit(
       syntheticFinesseWeaponUnitId,
@@ -208,6 +209,18 @@ describe("weapon damage after grip and delivery", () => {
       kind: "dice",
       dieSize: 4,
     });
+    expect(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fixture.init.combatantId,
+          command: "changeWeaponGrip",
+          grip: "two_handed",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     const projected = characterBattleWeaponAttackInitProjection({
       build: withGrip(base, "two_handed"),
       unitLibrary: catalogue,
