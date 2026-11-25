@@ -241,8 +241,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts": {
       "module/binding:battleSpecialSpeedCandidates": 10,
-      "module/binding:battleTerminalSpeedZero": 9,
-      "module/binding:passiveSpeedBonusDelta": 12,
       "module/binding:passiveSpeedKindGrantKinds": 9,
       "module/binding:representedMovementSpeedKinds": 9
     },
@@ -310,6 +308,9 @@
     "packages/battle-runtime/src/battle-reducer/spatial-effect-routes.ts": {
       "module/binding:spatialEffectCompositionRouteForResolution": 13,
       "module/binding:spatialEffectCompositionRuntimeRouteForResolution": 28
+    },
+    "packages/battle-runtime/src/battle-reducer/speed-collector.ts": {
+      "module/binding:passiveSpeedBonusDelta": 12
     },
     "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts": {
       "module/binding:activeEffectDirectlyAppliesCondition": 24,

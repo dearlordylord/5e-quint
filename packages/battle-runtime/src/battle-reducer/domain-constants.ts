@@ -313,6 +313,12 @@ export const SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO = {
   denominator: 2,
 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA = -2;
+/** equipment.md, "Strength": the armor "reduces the wearer's speed by 10 feet". */
+export const HEAVY_ARMOR_STRENGTH_SPEED_REDUCTION_FEET = 10;
+/** equipment.md, "Slow": "you can reduce its Speed by 10 feet". */
+export const WEAPON_MASTERY_SPEED_REDUCTION_FEET = 10;
+/** A Speed that is halved. */
+export const SPEED_HALVED_RATIO = { numerator: 1, denominator: 2 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA = -2;
 export const SaveGatedTurnConstraintMaxAttacksSchema = Schema.Literal(1).pipe(
   Schema.brand("PositiveInteger"),

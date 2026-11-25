@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 185
-- Covered obligations: 174
+- Total obligations: 186
+- Covered obligations: 175
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   174 |
+| covered                  |   175 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   145 |
+| battle             |   146 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -217,6 +217,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                           | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION`             | battle             | covered                  | `unit-feature.combat-turn-start-heroic-inspiration`                                                                                                                                                                                                                                                                                                                                                                                              |
 | `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.MOVEMENT.SPEED_COLLECTOR`                                 | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -984,6 +985,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core-examples.qnt`                  | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt`                                             | semantic-core           | `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt`                                    | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt`                                                | semantic-core           | `BATTLE.MOVEMENT.SPEED_COLLECTOR`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt`                                       | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1313,6 +1316,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt`                               | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/shove-outcome-examples.qnt`                                              | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`                                                       | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt`                                       | qnt-owner-role | proof-only                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt`                                                | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/spell-access-free-cast.qnt`                                              | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt`                                 | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt`                                 | qnt-owner-role | semantic-core                                                                                                                                                                                            |
@@ -1680,6 +1685,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                           | generation-subset-clean | `record`, `pure-def`, `bool`, `boolean-connective`, `set`, `if-expression`, `variant`                                                                                                                                                                                                                              |          |           |
 | `BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION`             | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `pattern-match`                                                                                                                                                                                            |          |           |
 | `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | generation-subset-clean | `record`, `pure-def`, `bool`, `boolean-connective`                                                                                                                                                                                                                                                                 |          |           |
+| `BATTLE.MOVEMENT.SPEED_COLLECTOR`                                 | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `arithmetic`, `all-block`, `list`, `fold`                                                                                                                      |          |           |
 
 ### Generator Readiness Backlog
 

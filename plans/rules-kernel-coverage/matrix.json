@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 185,
-    "covered": 174,
+    "total": 186,
+    "covered": 175,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 145,
+      "battle": 146,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 174,
+      "covered": 175,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6719,6 +6719,42 @@
         "ASSUMPTIONS.md#a65-a-creature-changes-its-weapon-grip-for-free-on-its-own-turn"
       ],
       "title": "Weapon grip change: a character changes its held main weapon between one and two hands on its own turn at no cost, a two-handed grip needs the other hand free, and the grip sets the hands held and the Versatile damage die"
+    },
+    {
+      "id": "BATTLE.MOVEMENT.SPEED_COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-speed-collector.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models how the sources that change one creature's Speed combine: the deltas add, every Weapon Mastery Slow on the creature together reduces its Speed only by the largest one, heavy armor reduces a wearer below its Strength requirement by 10 feet, the ratios multiply after the deltas, a speed never drops below 0, Speed 0 holds every speed, and a special speed changes by the same amount. The runtime collector names each source as a contribution (passive features, spell deltas, Slow, Hamstring Blow, heavy armor's Strength, spell ratios, the save-gated turn constraint, halving, the grapple link, the Speed 0 conditions and effects) and every Speed reader takes its deltas, ratios and Speed 0 from it, so the grapple link and halving no longer depend on the caller. Character admission projects the worn armor's Strength requirement onto the battle loadout. The parity test checks two attackers' Slow giving -10 feet, heavy armor below and at its Strength, and a grapple link's Speed 0.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/speed-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Speed",
+        ".references/srd-5.2.1/rules-glossary.md#Grappled [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Paralyzed [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Petrified [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Restrained [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious [Condition]",
+        ".references/srd-5.2.1/equipment.md#Strength",
+        ".references/srd-5.2.1/equipment.md#Slow",
+        ".references/srd-5.2.1/classes.md#Hamstring Blow",
+        ".references/srd-5.2.1/classes.md#Stunning Strike",
+        ".references/srd-5.2.1/spells.md#Haste",
+        ".references/srd-5.2.1/spells.md#Slow",
+        "UBIQUITOUS_LANGUAGE.md#Movement"
+      ],
+      "title": "Every reader of a creature's Speed asks one collector which sources change it, so features, spells, Weapon Mastery Slow, Hamstring Blow, heavy armor's Strength, halving and Speed 0 combine the same way for every speed"
     }
   ],
   "battleHoleFrontier": [
@@ -13766,6 +13802,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns how the sources that change one creature's Speed combine: summed deltas, every Slow together counting only the largest reduction, heavy armor's Strength reduction, ratios after deltas, no speed below 0, Speed 0 holding every speed, and special speeds changing by the same amount.",
+      "obligationIds": ["BATTLE.MOVEMENT.SPEED_COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover two Slows reducing Speed by 10 feet, heavy armor below and at its Strength, deltas then ratios, Speed 0 holding a special speed, a reduction stopping at 0, and a special speed changing by the same amount.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15407,6 +15455,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21367,6 +21425,34 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "arithmetic",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.MOVEMENT.SPEED_COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

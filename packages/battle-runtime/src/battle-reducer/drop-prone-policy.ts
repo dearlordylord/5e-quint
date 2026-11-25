@@ -26,10 +26,6 @@ export function dropProneAvailable(
   ) {
     return false;
   }
-  const speed = effectiveWalkSpeed(
-    state,
-    actor,
-    state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
-  );
+  const speed = effectiveWalkSpeed(state, actor);
   return Number(speed) > 0;
 }

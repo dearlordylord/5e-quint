@@ -12,14 +12,6 @@ export function hasDodgeBenefit(
   return (
     target.dodging &&
     !isIncapacitated(target.conditions) &&
-    Number(
-      effectiveWalkSpeed(
-        state,
-        target,
-        state.grapples.some(
-          (grapple) => grapple.targetId === target.combatantId,
-        ),
-      ),
-    ) > 0
+    Number(effectiveWalkSpeed(state, target)) > 0
   );
 }

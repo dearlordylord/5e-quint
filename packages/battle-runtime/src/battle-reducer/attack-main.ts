@@ -940,17 +940,12 @@ function brutalStrikeForcefulBlowMovementBudget(
     return { movementBudgetFeet: movementFeet(0), speedKinds: [] };
   }
   /* v8 ignore stop -- @preserve */
-  const grappled = state.grapples.some(
-    (grapple) => grapple.targetId === attackerId,
-  );
   const speedKinds = representedMovementSpeedKinds(attacker).map((kind) => ({
     kind,
     movementBudgetFeet: Match.value(distance).pipe(
       Match.when("halfSpeed", () =>
         movementFeet(
-          Math.floor(
-            Number(effectiveMovementSpeed(state, attacker, kind, grappled)) / 2,
-          ),
+          Math.floor(Number(effectiveMovementSpeed(state, attacker, kind)) / 2),
         ),
       ),
       Match.exhaustive,

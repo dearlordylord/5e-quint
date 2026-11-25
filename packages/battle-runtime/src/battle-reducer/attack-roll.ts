@@ -159,6 +159,7 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
+  WEAPON_MASTERY_SPEED_REDUCTION_FEET,
 } from "./domain-constants.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
@@ -1382,7 +1383,7 @@ export function applyWeaponMasterySlowAfterDamage(input: {
       kind: "unitFeatureSpeedDelta",
       sourceProcedureRef: selection.procedureRef,
       sourceCombatantId: attackerId,
-      deltaFeet: movementDeltaFeet(-10),
+      deltaFeet: movementDeltaFeet(-WEAPON_MASTERY_SPEED_REDUCTION_FEET),
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
     },
   });

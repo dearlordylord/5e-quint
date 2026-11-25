@@ -13,12 +13,7 @@ export function applyDashToActor(
   speedKind: BattleMovementSpeedKind,
   spentResources: BattleTurnResources,
 ): BattleState {
-  const speed = effectiveMovementSpeed(
-    state,
-    actor,
-    speedKind,
-    state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
-  );
+  const speed = effectiveMovementSpeed(state, actor, speedKind);
   return {
     ...state,
     currentTurnResources: {
