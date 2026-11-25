@@ -2451,6 +2451,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "persistent-area-obscurement.ts",
     "self-transformation-mode.ts",
     "spell-created-held-object.ts",
+    "spell-mechanics-admission.ts",
   ].flatMap((fileName) =>
     exactCollisionsAt(
       "magic_circle",
