@@ -1,4 +1,5 @@
 import * as Result from "effect/Result";
+import { isSpellTargetFact } from "./saving-throw-cover.ts";
 import type {
   BattleResolutionResult,
   BattleSpellSavingThrowOutcomeValue,
@@ -101,6 +102,10 @@ export function resolveWillingTargetSaveGate(input: {
           input.state,
           input.actorId,
           input.invocation,
+          {
+            spellTargetFacts:
+              input.targetSpatialFacts.filter(isSpellTargetFact),
+          },
         ),
       ]),
     };

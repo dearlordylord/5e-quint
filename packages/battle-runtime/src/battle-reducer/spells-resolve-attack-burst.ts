@@ -909,6 +909,9 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         )
       : postRemarkableAthleteMovementState;
 
+  // The burst is an emanation from the primary target, so the cover ruled
+  // between the caster and that target for the attack isn't cover against the
+  // burst: each target's cover against the burst comes on its outcome.
   const savingThrowHole = spellSavingThrowOutcomeHole(
     damagedByAttack,
     input.actorId,

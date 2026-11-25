@@ -42,6 +42,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
+import { COVER_BONUSES } from "@dnd/shared-algebras/cover-algebra";
 import {
   AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   OBJECT_INTERACTION_STATES,
@@ -58,6 +59,7 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
+  BONUS_COVER_TYPES,
   COVER_TYPES,
   RULED_COVER_TYPES,
   CreatureId,
@@ -1464,12 +1466,21 @@ const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
   rollMode: Schema.Literals(ATTACK_ROLL_MODES),
 });
 
-const BattleSavingThrowFlatBonusProjectionSchema = Schema.Struct({
-  targetId: CombatantId,
-  sourceCombatantId: CombatantId,
-  sourceProcedureRef: BattleProcedureExecutionRef,
-  bonus: Schema.Finite,
-});
+const BattleSavingThrowFlatBonusProjectionSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("effect"),
+    targetId: CombatantId,
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    bonus: Schema.Finite,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cover"),
+    targetId: CombatantId,
+    cover: Schema.Literals(BONUS_COVER_TYPES),
+    bonus: Schema.Literals(COVER_BONUSES),
+  }),
+]);
 
 const BattleDamageOccurrenceSourceSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("untrackedDamage") }),
@@ -2332,6 +2343,14 @@ const AdditionalStructuralMechanicalHolePayloadMembers = [
   ),
 ] as const;
 
+const BattleSpellSaveCoverSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("denied") }),
+  Schema.Struct({
+    kind: Schema.Literal("ruledOnSpellTargets"),
+    targetIds: Schema.NonEmptyArray(CombatantId),
+  }),
+]);
+
 const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ...BattleHoleBaseFieldsSchema,
   kind: Schema.Literal("savingThrowOutcome"),
@@ -2341,6 +2360,7 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
   targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
   targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  saveCover: Schema.optionalKey(BattleSpellSaveCoverSchema),
   relationshipFactRequest: Schema.optionalKey(
     BattleSavingThrowRelationshipFactRequestSchema,
   ),
@@ -3956,10 +3976,12 @@ const BattleSavingThrowOutcomeSchema = Schema.Union([
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestRolledOutcomeFields,
+    cover: Schema.optionalKey(Schema.Literals(BONUS_COVER_TYPES)),
   }),
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestWithoutRollOutcomeFields,
+    cover: Schema.optionalKey(Schema.Never),
   }),
 ]);
 
@@ -8198,6 +8220,26 @@ function serializedSubjectProcedureReference(
 const noSerializedExecutionReferences =
   (): readonly SerializedExecutionReferenceOwnership[] => [];
 
+function savingThrowFlatBonusReferences(
+  bonuses: readonly Schema.Schema.Type<
+    typeof BattleSavingThrowFlatBonusProjectionSchema
+  >[],
+): readonly SerializedExecutionReferenceOwnership[] {
+  return bonuses.flatMap((bonus) =>
+    Match.value(bonus).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        effect: (effect) => [
+          serializedExecutionReference(
+            effect.sourceProcedureRef,
+            effect.sourceCombatantId,
+          ),
+        ],
+        cover: () => [],
+      }),
+    ),
+  );
+}
+
 function serializedBattleHoleExecutionReferences(
   hole: EncodedBattleHole,
 ): readonly SerializedExecutionReferenceOwnership[] {
@@ -8274,9 +8316,7 @@ function serializedBattleHoleExecutionReferences(
   const savingThrowReferences = (
     value: Extract<EncodedBattleHole, { readonly kind: "savingThrowOutcome" }>,
   ): readonly SerializedExecutionReferenceOwnership[] => {
-    const bonuses = value.targetFlatBonuses.map((bonus) =>
-      owned(bonus.sourceProcedureRef, bonus.sourceCombatantId),
-    );
+    const bonuses = savingThrowFlatBonusReferences(value.targetFlatBonuses);
     const procedureSource = (owner: {
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly sourceCombatantId: CombatantId;
@@ -8923,9 +8963,7 @@ function serializedBattleHoleExecutionReferences(
           value.damageOccurrence,
           value.combatantId,
         ),
-        ...value.targetFlatBonuses.map((bonus) =>
-          owned(bonus.sourceProcedureRef, bonus.sourceCombatantId),
-        ),
+        ...savingThrowFlatBonusReferences(value.targetFlatBonuses),
       ],
       cunningStrikeEndTurnCoverFacts: noSerializedExecutionReferences,
       deathSavingThrow: noSerializedExecutionReferences,

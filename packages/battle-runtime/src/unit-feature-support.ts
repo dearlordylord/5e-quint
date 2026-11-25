@@ -45,6 +45,7 @@ import type {
   DragonbornSpeciesSource,
   StandardActionKind,
   AuthoredUnitSource,
+  DcSource,
 } from "@dnd/surface/surface/types";
 import {
   isCombatTurnStartHeroicInspirationMechanics,
@@ -4714,6 +4715,11 @@ export function attackRollMissToHitReplacementProfileForUnit(
   };
 }
 
+/** Breath Weapon's DC: 8 plus the Constitution modifier and Proficiency Bonus. */
+function isBreathWeaponSaveDc(dc: DcSource): boolean {
+  return dc.kind === "innate_dc" && dc.base === 8 && dc.ability === "con";
+}
+
 export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
   readonly unit: AuthoredUnitSource;
   readonly draconicAncestryDamageType: DraconicAncestryDamageType;
@@ -4736,12 +4742,11 @@ export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
     resetCadence?.kind !== "long_rest" ||
     phase?.kind !== "save_gate" ||
     extraPhases.length !== 0 ||
+    phase.saveCoverBenefit !== undefined ||
     phase.attachment.kind !== "area" ||
     phase.attachment.origin.kind !== "self" ||
     phase.ability !== "dex" ||
-    phase.dc.kind !== "innate_dc" ||
-    phase.dc.base !== 8 ||
-    phase.dc.ability !== "con" ||
+    !isBreathWeaponSaveDc(phase.dc) ||
     phase.onFail.kind !== "damage" ||
     phase.onSuccess.kind !== "half_damage"
   ) {

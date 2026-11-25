@@ -125,6 +125,15 @@ export const RULED_COVER_TYPES = [
   "total",
 ] as const satisfies readonly CoverType[];
 export type RuledCoverType = (typeof RULED_COVER_TYPES)[number];
+/**
+ * A degree of cover that adds a bonus to a target's AC and Dexterity saving
+ * throws: Half Cover or Three-Quarters Cover.
+ */
+export const BONUS_COVER_TYPES = [
+  "half",
+  "threeQuarters",
+] as const satisfies readonly RuledCoverType[];
+export type BonusCoverType = (typeof BONUS_COVER_TYPES)[number];
 
 export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const;
 export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number];

@@ -74,6 +74,11 @@ import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.
 import { battleCreatureType } from "./domain-helpers.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import {
+  savingThrowCoverRuling,
+  spellTargetSaveCover,
+  type SpellTargetFact,
+} from "./saving-throw-cover.ts";
+import {
   attackDamageAbilityModifierChoiceUnsupportedIssue,
   attackDamageDieFloorChoiceUnsupportedIssue,
   ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
@@ -87,6 +92,7 @@ import {
   type BattleHoleId,
   type BattleSpellTargetListRelationshipFact,
   type BattleSavingThrowFlatBonusProjection,
+  type BattleSpellSaveCover,
   type BattleSavingThrowRollModeProjection,
   type BattleSpellAttackRollHole,
   type BattleSpellAbilityChoiceHole,
@@ -1164,20 +1170,29 @@ export function spellSavingThrowOutcomeHole(
       }
     >
   >,
-  heightenedSpellTargetId?: CombatantId,
-  relationshipFacts: readonly BattleSpellTargetListRelationshipFact[] = [],
+  context: {
+    readonly heightenedSpellTargetId?: CombatantId | undefined;
+    readonly relationshipFacts?: readonly BattleSpellTargetListRelationshipFact[];
+    /**
+     * The spell's target facts, whose cover the save projects. Leave them out
+     * where the save's effect doesn't originate at the caster.
+     */
+    readonly spellTargetFacts?: readonly SpellTargetFact[];
+  } = {},
 ): BattleSpellSavingThrowOutcomeHole {
+  const { heightenedSpellTargetId, relationshipFacts = [] } = context;
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.procedure}`;
-  const ability =
-    invocation.procedure === "attackBurstSaveDamage"
-      ? invocation.burst.ability
-      : invocation.procedure === "rollModifier"
-        ? (invocation.saveGate?.ability ?? "cha")
-        : invocation.ability;
+  const ability = spellSavingThrowAbility(invocation);
   const targeting =
     invocation.procedure === "rollModifier"
       ? invocation.targeting
       : spellSavingThrowTargeting(invocation);
+  const cover = spellSaveCover({
+    invocation,
+    casterId: actorId,
+    ability,
+    spellTargetFacts: context.spellTargetFacts,
+  });
   return {
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
@@ -1240,8 +1255,63 @@ export function spellSavingThrowOutcomeHole(
         : undefined,
       heightenedRollModeProjection(heightenedSpellTargetId),
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, ability),
+    targetFlatBonuses: [
+      ...savingThrowFlatBonusProjections(state, ability),
+      ...cover.flatBonuses,
+    ],
+    ...cover.fact,
   };
+}
+
+/**
+ * The cover facts of a spell's saving throw hole: whether the spell denies the
+ * benefit of cover, or which targets keep the cover ruled on their spellTarget
+ * fact, with the bonus each ruled degree gives.
+ */
+function spellSaveCover(input: {
+  readonly invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2];
+  readonly casterId: CombatantId;
+  readonly ability: Ability;
+  readonly spellTargetFacts: readonly SpellTargetFact[] | undefined;
+}): {
+  readonly fact: { readonly saveCover?: BattleSpellSaveCover };
+  readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+} {
+  if (spellSaveDeniesCoverBenefit(input.invocation)) {
+    return { fact: { saveCover: { kind: "denied" } }, flatBonuses: [] };
+  }
+  const cover = spellTargetSaveCover({
+    ruling: savingThrowCoverRuling({ ability: input.ability }),
+    casterId: input.casterId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellTargetFacts: input.spellTargetFacts ?? [],
+  });
+  const [firstTargetId, ...otherTargetIds] = cover.ruledTargetIds;
+  return {
+    fact:
+      firstTargetId === undefined
+        ? {}
+        : {
+            saveCover: {
+              kind: "ruledOnSpellTargets",
+              targetIds: [firstTargetId, ...otherTargetIds],
+            },
+          },
+    flatBonuses: cover.flatBonuses,
+  };
+}
+
+/**
+ * Whether the spell gives its targets no benefit from Half Cover or
+ * Three-Quarters Cover for this save.
+ */
+function spellSaveDeniesCoverBenefit(
+  invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2],
+): boolean {
+  return (
+    invocation.procedure === "saveGatedDamage" &&
+    invocation.saveCoverBenefit === "denied"
+  );
 }
 
 function spellSavingThrowAreaInput(
@@ -1729,6 +1799,7 @@ function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
     ? []
     : [
         {
+          kind: "effect",
           targetId: target.combatantId,
           sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,

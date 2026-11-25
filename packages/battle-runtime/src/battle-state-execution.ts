@@ -150,6 +150,10 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
+import type {
+  CoverBonus,
+  SaveCoverBenefit,
+} from "@dnd/shared-algebras/cover-algebra";
 import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
@@ -182,6 +186,7 @@ import {
   MovementFeet,
   movementFeet,
   type Condition,
+  type BonusCoverType,
   type CoverType,
   type RuledCoverType,
   type D6RollResult,
@@ -3544,6 +3549,8 @@ type SupportedSpellInvocationShape =
       readonly failedSaveConditionEffects: readonly SpellFailedSaveConditionEffect[];
       readonly failedSaveAbilityChoices: readonly Ability[] | null;
       readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
+      /** Whether the save takes the target's cover. */
+      readonly saveCoverBenefit: SaveCoverBenefit;
       readonly postSaveAreaEffect?: SpellPostSaveAreaEffect;
     })
   | (PreparedDamageSpellSource & {
@@ -6569,10 +6576,21 @@ export type BattleD20TestOutcome =
   | BattleD20TestWithoutRollOutcome;
 export type BattleRolledSavingThrowOutcome = BattleD20TestRolledOutcome & {
   readonly targetId: CombatantId;
+  /**
+   * The degree of cover the table rules the target has against the effect,
+   * on a saving throw that cover adds to (see `savingThrowCoverRuling`), for a
+   * target whose cover the hole didn't already take from its spellTarget
+   * fact (see `BattleSpellSaveCover`).
+   * Without it, the target has no cover. It declares the degree the table
+   * ruled: like every saving throw bonus, its bonus counts in `succeeded`,
+   * and the runtime checks the degree against the hole.
+   */
+  readonly cover?: BonusCoverType;
 };
 export type BattleSavingThrowWithoutRollOutcome =
   BattleD20TestWithoutRollOutcome & {
     readonly targetId: CombatantId;
+    readonly cover?: never;
   };
 export type BattleSavingThrowOutcome =
   | BattleRolledSavingThrowOutcome
@@ -6673,12 +6691,24 @@ export type BattleSavingThrowRollModeProjection = {
   readonly targetId: CombatantId;
   readonly rollMode: AttackRollMode;
 };
-export type BattleSavingThrowFlatBonusProjection = {
-  readonly targetId: CombatantId;
-  readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly bonus: number;
-};
+/**
+ * A flat bonus the target adds to its saving throw: from a creature's effect,
+ * or from the degree of cover the table ruled for the target.
+ */
+export type BattleSavingThrowFlatBonusProjection =
+  | {
+      readonly kind: "effect";
+      readonly targetId: CombatantId;
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly bonus: number;
+    }
+  | {
+      readonly kind: "cover";
+      readonly targetId: CombatantId;
+      readonly cover: BonusCoverType;
+      readonly bonus: CoverBonus;
+    };
 export type BattleSpellAreaInputRequest = {
   readonly kind:
     | "areaMembership"
@@ -6686,6 +6716,21 @@ export type BattleSpellAreaInputRequest = {
     | NonNullable<BattleSpellAreaChoice["kind"]>;
 };
 
+/**
+ * What a spell's saving throw says about cover, when it says anything.
+ * - denied: the spell gives its targets no benefit from Half Cover or
+ *   Three-Quarters Cover for this save.
+ * - ruledOnSpellTargets: the targets whose cover against the effect the
+ *   table already ruled on their spellTarget fact, with or without a degree.
+ *   Their outcomes carry no cover; a degree's bonus shows in the hole's
+ *   targetFlatBonuses.
+ */
+export type BattleSpellSaveCover =
+  | { readonly kind: "denied" }
+  | {
+      readonly kind: "ruledOnSpellTargets";
+      readonly targetIds: ReadonlyNonEmptyArray<CombatantId>;
+    };
 export type BattleSpellSavingThrowOutcomeHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6697,6 +6742,8 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly areaChoices: readonly BattleSpellAreaChoice[];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  /** Without it, cover adds to a Dexterity save on each target's outcome. */
+  readonly saveCover?: BattleSpellSaveCover;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,

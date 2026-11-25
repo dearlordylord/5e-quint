@@ -48,6 +48,7 @@ export function linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjection
     ? []
     : [
         {
+          kind: "effect",
           targetId: target.combatantId,
           sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
