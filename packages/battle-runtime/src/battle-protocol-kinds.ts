@@ -193,6 +193,12 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         "temporaryHitPointChoice",
         () => "temporaryHitPointChoice" as const,
       ),
+    )
+    .pipe(
+      byBattleFillKind(
+        "turnStartHeroicInspirationChoice",
+        () => "turnStartHeroicInspirationChoice" as const,
+      ),
       byBattleFillKind(
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,

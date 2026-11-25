@@ -274,6 +274,8 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       temporaryHitPointChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      turnStartHeroicInspirationChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       toolPossessionFacts: (value) =>
         projectHoleWithoutPresentationLabel(value),
       turnConstraintSomaticSpellFailureOutcome: (value) =>

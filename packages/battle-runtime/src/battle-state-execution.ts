@@ -6814,10 +6814,34 @@ export type BattleTemporaryHitPointChoiceHole = {
   readonly existingTemporaryHitPoints: Hp;
   readonly grantedTemporaryHitPoints: Hp;
 };
+export const BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES = [
+  "giveHeroicInspiration",
+  "decline",
+] as const;
+export type BattleTurnStartHeroicInspirationChoice =
+  (typeof BATTLE_TURN_START_HEROIC_INSPIRATION_CHOICES)[number];
+/**
+ * A creature whose feature lets it give itself Heroic Inspiration when it
+ * starts its turn without it (Heroic Warrior) chooses whether to.
+ */
+export type BattleTurnStartHeroicInspirationChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "turnStartHeroicInspirationChoice";
+  readonly label: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  /** The turn that starts; its actor is the creature that chooses. */
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+  readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
+};
 export const BATTLE_START_TURN_OCCURRENCE_KINDS = [
   "deathSavingThrow",
   "statBlockRecharge",
   "turnStartTemporaryHitPoints",
+  "turnStartHeroicInspiration",
   "spellConditionTurnStartDamage",
   "spellTurnStartDamageAndSave",
   "persistentAreaSourceTurnTranslation",
@@ -7125,6 +7149,7 @@ export type BattleHole =
   | BattleInterruptDecisionHole
   | BattleStartTurnOccurrenceOrderHole
   | BattleTemporaryHitPointChoiceHole
+  | BattleTurnStartHeroicInspirationChoiceHole
   | BattlePersistentAreaSourceTurnTranslationHole
   | BattleMovementHole
   | BattleControlledVerticalSuspensionAltitudeChangeHole
@@ -7264,6 +7289,11 @@ export type BattleTemporaryHitPointChoiceFill = {
   readonly holeId: BattleHoleId;
   readonly value: BattleTemporaryHitPointChoice;
 };
+export type BattleTurnStartHeroicInspirationChoiceFill = {
+  readonly kind: "turnStartHeroicInspirationChoice";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleTurnStartHeroicInspirationChoice;
+};
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
   readonly holeId: BattleHoleId;
@@ -7271,6 +7301,7 @@ export type BattleBrutalStrikeForcefulBlowMovementFill = {
 };
 export type BattleFill =
   | BattleTemporaryHitPointChoiceFill
+  | BattleTurnStartHeroicInspirationChoiceFill
   | {
       readonly kind: "readyDeclaration";
       readonly holeId: BattleHoleId;

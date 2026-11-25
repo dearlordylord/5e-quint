@@ -203,6 +203,7 @@ const PLAYER_HOLE_ADMISSION = {
   persistentAreaSourceTurnTranslation: true,
   startTurnOccurrenceOrder: true,
   temporaryHitPointChoice: true,
+  turnStartHeroicInspirationChoice: true,
 } as const satisfies Record<BattleHole["kind"], true>;
 
 const CharacterResourceStateSchema = Schema.Struct({

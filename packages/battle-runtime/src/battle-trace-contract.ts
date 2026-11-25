@@ -50,6 +50,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "movableZoneRepositionMovement",
   "startTurnOccurrenceOrder",
   "temporaryHitPointChoice",
+  "turnStartHeroicInspirationChoice",
   "persistentAreaSourceTurnTranslation",
   "savingThrowOutcome",
   "turnConstraintSomaticSpellFailureOutcome",

@@ -3,7 +3,10 @@ import {
   characterBuildFeatureUnitIds,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
-import type { CombatTurnStartHeroicInspirationMechanics } from "@dnd/surface/surface/types";
+import {
+  isCombatTurnStartHeroicInspirationMechanics,
+  type CombatTurnStartHeroicInspirationMechanics,
+} from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
 import {
@@ -76,11 +79,5 @@ function combatTurnStartHeroicInspirationFeature(input: {
 function isCombatTurnStartHeroicInspirationFeature(
   facts: CharacterSheetClassFeatureFacts,
 ): facts is CharacterSheetCombatTurnStartHeroicInspirationFeature {
-  return (
-    facts.mechanics.family === "combat_turn_start_heroic_inspiration" &&
-    facts.mechanics.trigger.kind === "start_turn" &&
-    facts.mechanics.trigger.encounter === "combat" &&
-    facts.mechanics.trigger.requiresMissingHeroicInspiration === true &&
-    facts.mechanics.grant.kind === "heroic_inspiration"
-  );
+  return isCombatTurnStartHeroicInspirationMechanics(facts.mechanics);
 }

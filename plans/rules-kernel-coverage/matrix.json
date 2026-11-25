@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 182,
-    "covered": 171,
+    "total": 183,
+    "covered": 172,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 142,
+      "battle": 143,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 171,
+      "covered": 172,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 201,
+    "total": 203,
     "bySubject": {
-      "battle-hole-family": 100,
-      "battle-fill-kind": 59,
+      "battle-hole-family": 101,
+      "battle-fill-kind": 60,
       "battle-subject-kind": 42
     },
     "byClassification": {
-      "semantic-frontier": 153,
+      "semantic-frontier": 155,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 48,
       "unsupported-dead-branch": 0
@@ -6588,6 +6588,32 @@
       "title": "Object interaction: the first object a creature interacts with on its turn is free unless the table rules it needs an action, and any other costs the Utilize action"
     },
     {
+      "id": "BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/combat-turn-start-heroic-inspiration.test.ts"
+        }
+      ],
+      "profiles": ["unit-feature.combat-turn-start-heroic-inspiration"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
+      ],
+      "reason": "The QNT owner offers the grant only to a creature with the feature that starts its turn in combat without Heroic Inspiration; giving it sets Heroic Inspiration and declining leaves it. turn-start-heroic-inspiration finds the feature's support procedure, builds the choice hole and applies the choice on the battle creature, whose Heroic Inspiration settlement writes back; the turn boundary offers it as a start-turn occurrence the player orders with the others. Known gap: startBattle begins the opening turn without any turn-boundary start-turn occurrences (Death Saving Throw, Recharge and the rest included), so a Heroic Warrior who takes the first turn of a battle is not offered the grant at the start of that turn, though RAW says whenever it starts its turn.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level-10-Heroic-Warrior",
+        ".references/srd-5.2.1/rules-glossary.md#Simultaneous-Effects",
+        ".references/srd-5.2.1/rules-glossary.md#Heroic-Inspiration"
+      ],
+      "title": "A creature whose feature lets it give itself Heroic Inspiration in combat can do so when it starts its turn without it, in the order the player chooses among start-of-turn effects"
+    },
+    {
       "id": "BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -6748,6 +6774,24 @@
       "followUpTaskIds": [],
       "id": "temporaryHitPointChoice",
       "reason": "The fill selects keepExisting or replaceWithGranted for one exact Temporary Hit Point grant occurrence. The focused runtime witness covers retaining a larger pool and accepting a lower granted pool; broader Temporary Hit Point award owners and formal ownership remain outside this Cloudkill increment.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "followUpTaskIds": [],
+      "holeKind": "turnStartHeroicInspirationChoice",
+      "id": "BattleTurnStartHeroicInspirationChoiceHole",
+      "reason": "When a creature whose feature lets it give itself Heroic Inspiration starts its turn in combat without Heroic Inspiration, this exact start-turn occurrence asks the creature whether to give itself Heroic Inspiration. The hole names the feature procedure and source turn; the creature's Heroic Inspiration stays on the battle creature.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "fillKind": "turnStartHeroicInspirationChoice",
+      "followUpTaskIds": [],
+      "id": "turnStartHeroicInspirationChoice",
+      "reason": "The fill selects giveHeroicInspiration or decline for one exact start-turn Heroic Inspiration occurrence. The focused runtime witness covers giving, declining, and ordering the occurrence with a Death Saving Throw.",
       "subject": "battle-fill-kind"
     },
     {
@@ -9745,6 +9789,10 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.weapon-mastery-graze"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION"],
+      "profileId": "unit-feature.combat-turn-start-heroic-inspiration"
     }
   ],
   "qntOwnerRoles": [
@@ -13570,6 +13618,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns when a start-of-turn Heroic Inspiration grant is offered and the Heroic Inspiration after giving or declining it, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the offer, giving, declining, and no offer with Heroic Inspiration, without the feature or outside combat for the start-of-turn Heroic Inspiration core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Owns when a creature can change how it holds its weapon between one and two hands, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt",
@@ -14990,6 +15050,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/chosen-prepared-spell-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21089,6 +21159,28 @@
     },
     {
       "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
       "generatorSubset": ["record", "pure-def", "bool", "boolean-connective"],
       "obligationId": "BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE",
       "proofOnly": [
@@ -21474,6 +21566,7 @@
     "unit-feature.bonus-action-healing-movement-rider",
     "unit-feature.bonus-action-ongoing-rage",
     "unit-feature.brutal-strike",
+    "unit-feature.combat-turn-start-heroic-inspiration",
     "unit-feature.creature-space-movement-permission",
     "unit-feature.cunning-strike",
     "unit-feature.cunning-strike-option-grant",
