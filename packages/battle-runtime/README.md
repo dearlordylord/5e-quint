@@ -15,7 +15,10 @@ Call `startBattle(BattleCreatureInit[])` with caller-supplied Initiative scores.
 Battle orders combatants and preserves caller order for ties; it does not roll
 or derive Initiative. Stat Block inputs carry explicit supported initial
 conditions; initialization rejects forbidden conditions and applies the canonical
-condition algebra.
+condition algebra. No input starts Grappled through its conditions: a grapple
+already in place is a `BattleStartInput.initialGrapples` entry naming the
+grappler, the target and the escape DC, and initialization holds it as the same
+grapple link an in-battle Grapple makes, or rejects it with the reason.
 
 Do not import character-creation runtimes or monster catalogs to reconstruct
 composition-owned facts. Spell components, equipment access, focus/pouch

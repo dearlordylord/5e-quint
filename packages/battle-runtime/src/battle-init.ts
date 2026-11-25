@@ -579,7 +579,7 @@ export type CharacterBattleCreatureInit = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
-  readonly conditions?: readonly Condition[];
+  readonly conditions?: readonly CharacterInitialCondition[];
   readonly positiveHpUnconscious?: BattlePositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
@@ -636,6 +636,13 @@ type RuntimeStatBlockBattleInitInput = {
   readonly presentation: BattleStatBlockPresentationSource;
   readonly spellInvocationAdmissionPlan: StatBlockSpellInvocationAdmissionPlan;
 };
+
+/**
+ * Conditions a character can start a battle with. Grappled is left out: it
+ * needs its grappler and escape DC, so a battle starts with it only through
+ * `BattleStartInput.initialGrapples`.
+ */
+export type CharacterInitialCondition = Exclude<Condition, "grappled">;
 
 export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
 export type StatBlockInitialCondition =

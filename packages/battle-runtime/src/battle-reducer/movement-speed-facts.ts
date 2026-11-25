@@ -209,7 +209,6 @@ export function battleTerminalSpeedZero(
 ): boolean {
   return (
     isGrappled ||
-    hasCondition(combatant.conditions, "grappled") ||
     combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
     combatant.activeEffects.some(
       (effect) => effect.kind === "spellSpeedZero",

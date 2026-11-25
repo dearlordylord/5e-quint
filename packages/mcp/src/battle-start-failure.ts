@@ -195,6 +195,10 @@ function characterProjectionReasonPayload(
       invariant,
     })),
     Match.when(
+      { reason: "characterBattleInitialConditions" },
+      ({ constraint }) => ({ constraint }),
+    ),
+    Match.when(
       { reason: "characterBattleResourceProjection" },
       ({ issueIndex }) => ({
         issueIndex,

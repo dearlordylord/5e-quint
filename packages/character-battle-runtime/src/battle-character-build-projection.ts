@@ -161,6 +161,10 @@ export type CharacterBattleInitIssueReason =
         | "notAboveMaximum";
     }
   | {
+      readonly kind: "characterBattleInitialConditions";
+      readonly constraint: "grappledNeedsInitialGrapple";
+    }
+  | {
       readonly kind: "characterBattleInvariant";
       readonly invariant:
         | "characterOriginRequired"
@@ -209,6 +213,10 @@ export function characterBattleInitIssueFactFields(
         field,
         constraint,
       }),
+      characterBattleInitialConditions: ({ kind, constraint }) => ({
+        reason: kind,
+        constraint,
+      }),
       characterBattleInvariant: ({ kind, invariant }) => ({
         reason: kind,
         invariant,
@@ -245,6 +253,10 @@ export function characterBattleInitIssueReasonFromFact(
       characterBattleInput: ({ reason, field, constraint }) => ({
         kind: reason,
         field,
+        constraint,
+      }),
+      characterBattleInitialConditions: ({ reason, constraint }) => ({
+        kind: reason,
         constraint,
       }),
       characterBattleInvariant: ({ reason, invariant }) => ({

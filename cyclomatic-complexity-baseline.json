@@ -241,13 +241,9 @@
     },
     "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts": {
       "module/binding:battleSpecialSpeedCandidates": 10,
-      "module/binding:battleTerminalSpeedZero": 9,
       "module/binding:passiveSpeedBonusDelta": 12,
       "module/binding:passiveSpeedKindGrantKinds": 9,
       "module/binding:representedMovementSpeedKinds": 9
-    },
-    "packages/battle-runtime/src/battle-reducer/movement-speed.ts": {
-      "module/binding:grappleLinkForTarget": 9
     },
     "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts": {
       "module/binding:openHandTechniqueFlurryHit": 14,

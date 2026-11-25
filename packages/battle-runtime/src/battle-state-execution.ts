@@ -423,6 +423,9 @@ import type {
 } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  BATTLE_GRAPPLE_ENDING_CAUSES,
+  BATTLE_GRAPPLE_HOLD_REJECTIONS,
+  BATTLE_INITIAL_GRAPPLE_REJECTIONS,
   type PerceptionGatedAttackRollDefenseBypassSense,
   CRITICAL_HIT_THRESHOLDS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
@@ -1515,6 +1518,28 @@ export type BattleGrappleLink = {
   readonly reachFeet: MovementFeet;
   readonly hand: BattleHand;
 };
+/** Why one combatant can't take hold of another in a grapple. */
+export type BattleGrappleHoldRejection =
+  (typeof BATTLE_GRAPPLE_HOLD_REJECTIONS)[number];
+/** Why a grapple that holds ends on its own. */
+export type BattleGrappleEndingCause =
+  (typeof BATTLE_GRAPPLE_ENDING_CAUSES)[number];
+/**
+ * A grapple that is already in place when the battle starts. The table says
+ * who holds whom, and that the target is within the grapple's reach. The
+ * escape DC comes from however the grapple began, which the battle didn't see
+ * (SRD Grappling: "However a grapple is initiated, it follows these rules"),
+ * so the table gives it too. The grappler holds the target with its first free
+ * hand, as an in-battle grapple does.
+ */
+export type BattleInitialGrapple = {
+  readonly grapplerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly escapeDc: DifficultyClass;
+};
+/** Why a battle can't start with an initial grapple. */
+export type BattleInitialGrappleRejection =
+  (typeof BATTLE_INITIAL_GRAPPLE_REJECTIONS)[number];
 export type BattleHiddenState = {
   readonly discoveryDc: DifficultyClass;
 };
@@ -4726,6 +4751,13 @@ export type BattleStateInitIssueFacts =
       readonly kind: "initialConditionImmune";
       readonly combatantId: CombatantId;
       readonly condition: Condition;
+    }
+  | {
+      readonly kind: "initialGrappleInvalid";
+      readonly grappleIndex: number;
+      readonly grapplerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly rejection: BattleInitialGrappleRejection;
     }
   | {
       readonly kind: "statBlockSourceInvalid";

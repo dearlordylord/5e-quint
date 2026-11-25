@@ -55,7 +55,6 @@ import {
   movementFeet,
   proficiencyBonusForCharacterLevel,
   resourceCount,
-  type Condition,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
@@ -114,7 +113,7 @@ export type CharacterBuildCreatureInput = {
   readonly hitPointMaximum?: Hp;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
-  readonly conditions?: readonly Condition[];
+  readonly conditions?: CharacterBattleCreatureInit["conditions"];
   readonly positiveHpUnconscious?: CharacterBattleCreatureInit["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
