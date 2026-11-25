@@ -720,11 +720,17 @@ const BattleInterruptReleaseReadiedMovementSubjectSchema = Schema.Struct({
 export const READIED_WEAPON_CHANGE_ACTIONS = ["grapple", "shove"] as const;
 export type ReadiedWeaponChangeAction =
   (typeof READIED_WEAPON_CHANGE_ACTIONS)[number];
-export function isReadiedWeaponChangeAction(
-  action: string,
-): action is ReadiedWeaponChangeAction {
-  return READIED_WEAPON_CHANGE_ACTIONS.some(
-    (candidate) => candidate === action,
+export function isReadiedWeaponChangeActionSubject(
+  subject: BattleReadyActionSubject,
+): subject is Extract<
+  BattleReadyActionSubject,
+  { readonly tag: "action"; readonly action: ReadiedWeaponChangeAction }
+> {
+  return (
+    subject.tag === "action" &&
+    READIED_WEAPON_CHANGE_ACTIONS.some(
+      (candidate) => candidate === subject.action,
+    )
   );
 }
 

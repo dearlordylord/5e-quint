@@ -366,7 +366,7 @@ export {
   CANTRIP_SPELL_PROCEDURES,
   BattleInterruptSubjectSchema,
   READIED_WEAPON_CHANGE_ACTIONS,
-  isReadiedWeaponChangeAction,
+  isReadiedWeaponChangeActionSubject,
   BattleSubjectSchema,
   BattleReadyResponseSchema,
   ReadyTriggerDescription,
