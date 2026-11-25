@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 import {
   HELD_WEAPON_LOADOUT_SLOTS,
   type CharacterBattleLoadoutRef,
