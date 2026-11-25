@@ -492,6 +492,31 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
   });
 
+  test("dropping the Dagger first offers no throw of it", () => {
+    // A dropped weapon lies on the ground, where it is picked up, not drawn
+    // (SRD 5.2.1 equipment.md "Thrown"), so it makes no attack after the drop,
+    // unlike a stowed one.
+    const acts = discoverBattleActs(sessionWithDaggers({ mainHand: "dagger" }));
+    const summariesAfter = (kind: "drop" | "stow") =>
+      acts.flatMap((act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        "weaponChange" in act.subject &&
+        act.subject.weaponChange?.kind === kind &&
+        act.subject.weaponChange.objectId === mainDaggerId
+          ? [act.summary]
+          : [],
+      );
+
+    expect(summariesAfter("stow")).toEqual([
+      "Take the Attack action by throwing Dagger.",
+      "Take the Attack action with Unarmed Strike.",
+    ]);
+    expect(summariesAfter("drop")).toEqual([
+      "Take the Attack action with Unarmed Strike.",
+    ]);
+  });
+
   test("a thrown Dagger lands at the table's position on a hit, out of the hand, and its owner can pick it up", () => {
     const state = battleWithDaggers({ mainHand: "dagger" });
     const subject = attackSubjectFor(state, "thrown");

@@ -467,8 +467,9 @@ function ordinaryAttackActs(
  * Glossary, "Attack [Action]", Equipping and Unequipping Weapons): for each
  * change the character can make, every ordinary attack it could make once the
  * change is done. A weapon equipped first needn't be the one used. A dropped
- * weapon leaves the same attacks as a stowed one, and the act asks first where
- * it lands.
+ * weapon frees its hands as a stowed one does, but it lies on the ground, so
+ * it makes none of its own attacks, not even a throw drawn as part of it; the
+ * act asks first where it lands.
  */
 function weaponChangeAttackActs(
   state: BattleState,
@@ -486,12 +487,13 @@ function weaponChangeAttackActs(
     const dropHoles = weaponChangeInitialHoles(actorId, change);
     return (
       attackActionOptionsForActor(changed.state, actorId)
-        .filter((attack) =>
-          attackActionOptionIsOrdinaryAttackAction(
-            changed.state,
-            actorId,
-            attack,
-          ),
+        .filter(
+          (attack) =>
+            attackActionOptionIsOrdinaryAttackAction(
+              changed.state,
+              actorId,
+              attack,
+            ) && !attackUsesDroppedWeapon(change, attack),
         )
         .flatMap((attack) =>
           ordinaryAttackActs(changed.state, actorId, attack, change),
@@ -505,6 +507,23 @@ function weaponChangeAttackActs(
         )
     );
   });
+}
+
+/**
+ * Whether an attack is made with the weapon a change drops. Discovery stows the
+ * weapon in its place, since the landing position is the table's answer, and a
+ * stowed Thrown weapon is drawn as part of its throw (SRD 5.2.1 equipment.md
+ * "Thrown"); a dropped one is picked up, not drawn.
+ */
+function attackUsesDroppedWeapon(
+  change: AttackWeaponChange,
+  attack: ReturnType<typeof attackActionOptionsForActor>[number],
+): boolean {
+  return (
+    change.kind === "drop" &&
+    attack.kind === "weapon" &&
+    attack.weaponObjectId === change.objectId
+  );
 }
 
 function discoverBattleActsWithoutRouteEvents(
