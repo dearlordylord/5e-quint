@@ -1,3 +1,4 @@
+import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import { loadoutHandUses } from "@dnd/shared-algebras/armor-class-algebra";
 import type { WeaponGrip } from "@dnd/shared/types";
 import { combatantHandUses } from "./creature-state-leaves.ts";
@@ -120,10 +121,10 @@ export function battleStateWithoutGroundObject(
 
 /** Which loadout slot this weapon fills, or null when it isn't a loadout weapon. */
 export function loadoutWeaponSlot(
-  actor: CharacterBattleCreatureState,
+  loadout: CharacterBattleLoadoutRef,
   objectId: BattleObjectId,
 ): LoadoutWeaponSlot | null {
-  const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
+  const { weapon, offHandWeapon } = loadout;
   if (weapon?.itemId === objectId) return "mainWeapon";
   if (offHandWeapon?.itemId === objectId) return "offWeapon";
   return null;

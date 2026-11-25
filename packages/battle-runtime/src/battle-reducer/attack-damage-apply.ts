@@ -1,3 +1,4 @@
+import { loadoutWeaponSlot } from "./battle-object-lifecycle.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.ATTACK_WEAPON_CHANGE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import { Match } from "effect";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
@@ -907,8 +908,7 @@ function weaponAttackHasRequiredHands(
     actor.origin,
   );
   if (
-    loadout.weapon?.itemId === attack.weaponObjectId ||
-    loadout.offHandWeapon?.itemId === attack.weaponObjectId ||
+    loadoutWeaponSlot(loadout, attack.weaponObjectId) !== null ||
     !weaponAttackIsThrown(attack)
   )
     return false;

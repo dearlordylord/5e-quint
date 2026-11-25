@@ -21,7 +21,8 @@ export function pickUpLoadoutWeapon(
   const actor = state.combatants.get(actorId);
   const slot =
     actor !== undefined && isCharacterBattleCreatureState(actor)
-      ? (loadoutWeaponSlot(actor, objectId) ?? "mainWeapon")
+      ? (loadoutWeaponSlot(actor.origin.selectedLoadout, objectId) ??
+        "mainWeapon")
       : "mainWeapon";
   return stateWithOwnedWeaponChange(state, actorId, {
     kind: "equip",

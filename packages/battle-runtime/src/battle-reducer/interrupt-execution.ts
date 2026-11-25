@@ -1,3 +1,4 @@
+import { isReadiedWeaponChangeActionSubject } from "../battle-subjects.ts";
 import {
   checkpointWithAcceptedSubjectReplayEvidence,
   interruptedProcedureSubject,
@@ -739,10 +740,7 @@ export function readiedActionReactionChoices(
     reactorId,
   } as const;
   const held = readied.response.subject;
-  if (
-    held.tag !== "action" ||
-    (held.action !== "grapple" && held.action !== "shove")
-  ) {
+  if (!isReadiedWeaponChangeActionSubject(held)) {
     return [{ kind: "nestedProcedure", initialHoles: [], subject: release }];
   }
   return [

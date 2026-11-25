@@ -1,3 +1,4 @@
+import { isReadiedWeaponChangeActionSubject } from "../battle-subjects.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
 
 import {
@@ -133,17 +134,13 @@ export function readyActionSubject(
   subject: import("../battle-subjects.ts").BattleSubject,
 ): BattleReadyActionSubject | null {
   if (isObjectInteractionSubject(subject)) return subject;
-  if (
-    subject.tag === "action" &&
-    (subject.action === "grapple" || subject.action === "shove")
-  ) {
+  if (subject.tag !== "action") return null;
+  if (isReadiedWeaponChangeActionSubject(subject)) {
     return { tag: "action", actorId: subject.actorId, action: subject.action };
   }
-  return subject.tag === "action" &&
-    subject.action !== "attack" &&
+  return subject.action !== "attack" &&
     subject.action !== "multiattack" &&
-    subject.action !== "ready" &&
-    !("weaponChange" in subject)
+    subject.action !== "ready"
     ? subject
     : null;
 }

@@ -222,7 +222,7 @@ function equipPlan(
   objectId: BattleObjectId,
   slot: LoadoutWeaponSlot,
 ): EquipPlan | OwnedWeaponChangeIssue {
-  if (loadoutWeaponSlot(actor, objectId) === slot) {
+  if (loadoutWeaponSlot(actor.origin.selectedLoadout, objectId) === slot) {
     const loadoutMainGrip = actor.origin.selectedLoadout.weapon?.grip;
     const grip = Match.value(slot).pipe(
       Match.when("mainWeapon", () =>
@@ -472,7 +472,8 @@ export function groundedLoadoutWeaponPickups(
   if (!isCharacterBattleCreatureState(actor)) return [];
   return ownedWeaponChanges(state, actor).flatMap((change) =>
     change.kind === "equip" &&
-    loadoutWeaponSlot(actor, change.objectId) === change.slot &&
+    loadoutWeaponSlot(actor.origin.selectedLoadout, change.objectId) ===
+      change.slot &&
     battleObjectIsOnGround(state, actor.combatantId, change.objectId)
       ? [change]
       : [],
@@ -606,7 +607,7 @@ export function ownedWeaponChangeIsApplied(
     Match.when(
       { kind: "equip" },
       ({ objectId, slot }) =>
-        loadoutWeaponSlot(actor, objectId) === slot &&
+        loadoutWeaponSlot(actor.origin.selectedLoadout, objectId) === slot &&
         loadoutWeaponIsHeld(state, actorId, objectId),
     ),
     Match.when({ kind: "stow" }, ({ objectId }) =>
@@ -635,7 +636,7 @@ function equippedWeapon(
   plan: EquipPlan,
 ): OwnedWeaponChangeResult {
   const actorId = actor.combatantId;
-  const formerSlot = loadoutWeaponSlot(actor, objectId);
+  const formerSlot = loadoutWeaponSlot(actor.origin.selectedLoadout, objectId);
   const departing = slotWeapon(actor.origin.selectedLoadout, slot);
   const origin =
     plan.moved === undefined
@@ -791,7 +792,7 @@ export function ownedWeaponIsHeld(
   objectId: BattleObjectId,
 ): boolean {
   return (
-    loadoutWeaponSlot(actor, objectId) !== null &&
+    loadoutWeaponSlot(actor.origin.selectedLoadout, objectId) !== null &&
     loadoutWeaponIsHeld(state, actor.combatantId, objectId)
   );
 }
