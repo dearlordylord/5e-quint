@@ -41,6 +41,7 @@ import {
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
+import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 type SaveFill = ReturnType<typeof savingThrowOutcomeFill>;
 
@@ -70,7 +71,8 @@ function wizardWith(input: {
   readonly name: string;
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly string[];
-  readonly spellSlots?: readonly { spellLevel: 1; count: number }[];
+  readonly preparedSpellRecords?: readonly SpellRecord[];
+  readonly spellSlots?: readonly { spellLevel: 1 | 3; count: number }[];
 }) {
   return startBattleSessionRight({
     battleId: battleId(`battle-save-cover-${input.name}`),
@@ -82,9 +84,10 @@ function wizardWith(input: {
         attack: null,
         spellcasting: wizardSpellcasting({
           cantrips: input.cantrips ?? [],
-          preparedSpells: (input.preparedSpells ?? []).map((id) =>
-            spellRecord(id),
-          ),
+          preparedSpells: [
+            ...(input.preparedSpells ?? []).map((id) => spellRecord(id)),
+            ...(input.preparedSpellRecords ?? []),
+          ],
           ...(input.spellSlots === undefined
             ? {}
             : { spellSlots: input.spellSlots }),
@@ -220,7 +223,7 @@ function targetedSave(spell: SpellRecord) {
         ),
       ],
     });
-  return { state, subject, target, saveHole, save };
+  return { state, subject, targetHole, target, saveHole, save };
 }
 
 /** Grease with its initial save gate denying the benefit of cover. */
@@ -399,6 +402,97 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
         saveCover: { kind: "ruledOnSpellTargets", targetIds: [skeletonId] },
       });
     }
+  });
+
+  test("unselected candidate evidence cannot add a save bonus or a ruled target", () => {
+    const { state, subject, targetHole, target } = targetedSave(syntheticTargetedDexCantrip());
+    const selected = target("half");
+    const candidate = targetFill(targetHole, secondSkeletonId);
+    const hole = requireHole(resolveBattleSubject({
+      state,
+      subject,
+      fills: [{
+        ...selected,
+        spatialFacts: [
+          ...(selected.spatialFacts ?? []),
+          ...(candidate.spatialFacts ?? []).map((fact) =>
+            fact.kind === "spellTarget" ? { ...fact, cover: "threeQuarters" as const } : fact,
+          ),
+        ],
+      }],
+    }), "savingThrowOutcome");
+    expect(coverBonuses(hole)).toEqual([
+      { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
+    ]);
+    expect(hole).toMatchObject({
+      saveCover: { kind: "ruledOnSpellTargets", targetIds: [skeletonId] },
+    });
+  });
+
+  test("both actually selected targets retain their own admitted cover", () => {
+    const base = spellRecord("hold_person");
+    if (base.mechanics.family !== "activation") throw new Error("Expected activation.");
+    const phase = base.mechanics.phases[0];
+    if (phase?.kind !== "save_gate" || phase.attachment.kind !== "hole" || phase.attachment.value.kind !== "target") {
+      throw new Error("Expected a target save gate.");
+    }
+    // A visibly synthetic two-target Dexterity save isolates target selection
+    // from the real spell's Wisdom save and Humanoid-only admission.
+    const spell = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_paired_cover_binding",
+      name: "Synthetic Paired Cover Binding",
+      provenance: { kind: "synthetic-test", section: "battle-runtime/saving-throw-cover" },
+      mechanics: {
+        ...base.mechanics,
+        phases: [{
+          ...phase,
+          ability: "dex",
+          attachment: {
+            ...phase.attachment,
+            value: {
+              kind: "target",
+              selection: {
+                mode: "choose_up_to",
+                count: { kind: "linear", base: 1, baseLevel: 2, perSlotAboveBase: 1 },
+              },
+            },
+          },
+        }],
+      },
+    });
+    const session = wizardWith({
+      name: "selected-pair-cover",
+      preparedSpellRecords: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const subject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session, wizardId, spellSlotInvocationRef(spell.id, 3, "saveGatedCondition"),
+      ),
+      mode: { tag: "cast" },
+    } satisfies BattleSubject;
+    const targetHole = requireHole(resolveBattleSubject({ state: session.state, subject, fills: [] }), "spellTargetList");
+    const selected = spellTargetListFill(targetHole, wizardId, spell.id, [skeletonId, secondSkeletonId]);
+    const hole = requireHole(resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [{
+        ...selected,
+        spatialFacts: selected.spatialFacts.map((fact) => fact.kind === "spellTarget"
+          ? { ...fact, cover: fact.targetId === skeletonId ? "half" as const : "threeQuarters" as const }
+          : fact),
+      }],
+    }), "savingThrowOutcome");
+    expect(coverBonuses(hole)).toEqual([
+      { kind: "cover", targetId: skeletonId, cover: "half", bonus: 2 },
+      { kind: "cover", targetId: secondSkeletonId, cover: "threeQuarters", bonus: 5 },
+    ]);
+    expect(hole).toMatchObject({
+      saveCover: { kind: "ruledOnSpellTargets", targetIds: [skeletonId, secondSkeletonId] },
+    });
   });
 
   test("cover validation does not hide duplicate saving throw answers", () => {

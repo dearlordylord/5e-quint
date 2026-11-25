@@ -1,4 +1,4 @@
-import { spellFillSetTargetSpatialFacts } from "./spells-resolve-fill-set.ts";
+import { spellFillSetTargetSelection } from "./spells-resolve-fill-set.ts";
 import {
   admitSpellAreaOrigin,
   spellAreaOriginMatchesCombatant,
@@ -650,7 +650,7 @@ export function resolvePersistentAreaSaveConditionSpellAct(input: {
     input.invocation,
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
@@ -807,7 +807,7 @@ export function resolveStagedSaveConditionSpellAct(
     input.input.state,
     input.actorId,
     input.invocation,
-    { targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet) },
+    { targetSelection: spellFillSetTargetSelection(input.fillSet) },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   const fillIssue = stagedSaveConditionFillIssue(input.fillSet);
@@ -926,7 +926,7 @@ export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
     input.invocation,
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
@@ -1051,7 +1051,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    { targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet) },
+    { targetSelection: spellFillSetTargetSelection(input.fillSet) },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -1407,7 +1407,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
       relationshipFacts: input.fillSet.targetList?.relationshipFacts ?? [],
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2709,7 +2709,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
       relationshipFacts: input.fillSet.targetList?.relationshipFacts ?? [],
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
@@ -2866,7 +2866,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     input.invocation,
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
@@ -3078,7 +3078,7 @@ export function resolveCompelledNextTurnBehaviorSpellAct(input: {
     input.invocation,
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
@@ -3222,7 +3222,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     input.invocation,
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {

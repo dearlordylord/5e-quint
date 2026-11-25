@@ -49,18 +49,11 @@ type SavingThrowOutcomeFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
-/** A spell's target fact, which carries the cover ruled for its target. */
-type SpellTargetFact = Extract<
-  BattleTargetSpatialFact,
-  { readonly kind: "spellTarget" }
->;
-
-/** Whether a target fact is a spellTarget fact. */
-function isSpellTargetFact(
-  fact: BattleTargetSpatialFact,
-): fact is SpellTargetFact {
-  return fact.kind === "spellTarget";
-}
+/** Selected targets and the complete evidence used to admit them. */
+export type SpellSaveTargetSelection = {
+  readonly targetIds: readonly CombatantId[];
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+};
 
 /** Whether this saving throw hole lets cover add to the save. */
 export function savingThrowCoverRuling(
@@ -98,31 +91,22 @@ export function spellTargetSaveCover(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly targetSelection: SpellSaveTargetSelection | undefined;
 }): {
   readonly ruledTargetIds: readonly CombatantId[];
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 } {
-  if (input.ruling === "noCoverBenefit") {
+  if (input.ruling === "noCoverBenefit" || input.targetSelection === undefined) {
     return { ruledTargetIds: [], flatBonuses: [] };
   }
-  const targetIds = new Set(
-    input.targetSpatialFacts
-      .filter(isSpellTargetFact)
-      .filter(
-        (fact) =>
-          fact.casterId === input.casterId &&
-          fact.sourceProcedureRef === input.invocation.sourceProcedureRef,
-      )
-      .map((fact) => fact.targetId),
-  );
-  const admitted = [...targetIds].flatMap((targetId) => {
+  const selection = input.targetSelection;
+  const admitted = selection.targetIds.flatMap((targetId) => {
     const admission = spellTargetAdmission(
       input.state,
       input.casterId,
       targetId,
       input.invocation,
-      input.targetSpatialFacts,
+      selection.spatialFacts,
     );
     return admission === null ? [] : [{ targetId, ...admission }];
   });

@@ -1,4 +1,4 @@
-import { spellFillSetTargetSpatialFacts } from "./spells-resolve-fill-set.ts";
+import { spellFillSetTargetSelection } from "./spells-resolve-fill-set.ts";
 import * as Result from "effect/Result";
 // Spell target-selection projections extracted from spells-resolve.ts.
 // Owns target, target-list, and roll-modifier choice interpretation for resolved spell fills.
@@ -467,7 +467,7 @@ export function rollModifierSpellAffectedTargets(input: {
     input.input.state,
     input.actorId,
     input.invocation,
-    { targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet) },
+    { targetSelection: spellFillSetTargetSelection(input.fillSet) },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return { tag: "needsHoles", hole: savingThrowHole };

@@ -1,3 +1,4 @@
+import type { SpellSaveTargetSelection } from "./saving-throw-cover.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -2536,7 +2537,7 @@ function spellAttackSequencePartIndexForHole(
 }
 
 /** The complete target evidence carried by single and multiple target fills. */
-export function spellFillSetTargetSpatialFacts(
+function spellFillSetTargetSpatialFacts(
   fillSet: Pick<
     Extract<SpellFillSet, { readonly tag: "ok" }>,
     "targetSpatialFacts" | "targetList" | "targetAllocation"
@@ -2547,4 +2548,28 @@ export function spellFillSetTargetSpatialFacts(
     ...(fillSet.targetList?.spatialFacts ?? []),
     ...(fillSet.targetAllocation?.spatialFacts ?? []),
   ];
+}
+
+/** The actual single/list/allocation selection with all its admission evidence. */
+export function spellFillSetTargetSelection(
+  fillSet: Pick<
+    Extract<SpellFillSet, { readonly tag: "ok" }>,
+    "targetId" | "targetSpatialFacts" | "targetList" | "targetAllocation"
+  >,
+): SpellSaveTargetSelection | undefined {
+  if (
+    fillSet.targetId === undefined &&
+    fillSet.targetList === undefined &&
+    fillSet.targetAllocation === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    targetIds: [
+      ...(fillSet.targetId === undefined ? [] : [fillSet.targetId]),
+      ...(fillSet.targetList?.targetIds ?? []),
+      ...(fillSet.targetAllocation?.allocations.map(({ targetId }) => targetId) ?? []),
+    ],
+    spatialFacts: spellFillSetTargetSpatialFacts(fillSet),
+  };
 }

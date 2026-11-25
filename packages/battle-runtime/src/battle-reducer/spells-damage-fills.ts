@@ -76,6 +76,7 @@ import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-p
 import {
   savingThrowCoverRuling,
   spellTargetSaveCover,
+  type SpellSaveTargetSelection,
 } from "./saving-throw-cover.ts";
 import {
   attackDamageAbilityModifierChoiceUnsupportedIssue,
@@ -1176,7 +1177,7 @@ export function spellSavingThrowOutcomeHole(
      * Complete target evidence for canonical admission, including disposition.
      * Omit it where the save's effect doesn't originate at the caster.
      */
-    readonly targetSpatialFacts?: readonly BattleTargetSpatialFact[];
+    readonly targetSelection?: SpellSaveTargetSelection;
   } = {},
 ): BattleSpellSavingThrowOutcomeHole {
   const { heightenedSpellTargetId, relationshipFacts = [] } = context;
@@ -1191,7 +1192,7 @@ export function spellSavingThrowOutcomeHole(
     invocation,
     casterId: actorId,
     ability,
-    targetSpatialFacts: context.targetSpatialFacts,
+    targetSelection: context.targetSelection,
   });
   return {
     kind: "savingThrowOutcome",
@@ -1273,7 +1274,7 @@ function spellSaveCover(input: {
   readonly invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2];
   readonly casterId: CombatantId;
   readonly ability: Ability;
-  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[] | undefined;
+  readonly targetSelection: SpellSaveTargetSelection | undefined;
 }): {
   readonly fact: { readonly saveCover?: BattleSpellSaveCover };
   readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
@@ -1286,7 +1287,7 @@ function spellSaveCover(input: {
     state: input.state,
     casterId: input.casterId,
     invocation: input.invocation,
-    targetSpatialFacts: input.targetSpatialFacts ?? [],
+    targetSelection: input.targetSelection,
   });
   const [firstTargetId, ...otherTargetIds] = cover.ruledTargetIds;
   return {

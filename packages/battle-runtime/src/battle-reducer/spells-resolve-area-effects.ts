@@ -1,4 +1,4 @@
-import { spellFillSetTargetSpatialFacts } from "./spells-resolve-fill-set.ts";
+import { spellFillSetTargetSelection } from "./spells-resolve-fill-set.ts";
 import * as Result from "effect/Result";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
@@ -985,7 +985,7 @@ export function resolveDirectionalPersistentAreaSpellAct(input: {
     input.invocation,
     {
       heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
-      targetSpatialFacts: spellFillSetTargetSpatialFacts(input.fillSet),
+      targetSelection: spellFillSetTargetSelection(input.fillSet),
     },
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
