@@ -117,11 +117,7 @@ export function d20TestRolledDieProjectionIssue(input: {
   }
   if (
     "total" in input.replacement.result &&
-    input.facts.total !== undefined &&
-    input.replacement.result.total !==
-      input.facts.total -
-        Number(selectedD20TestNaturalD20(original)) +
-        Number(selectedD20TestNaturalD20(replacement))
+    !d20TestRollReplacementKeepsModifier(input.facts, input.replacement.result)
   ) {
     return input.messages.projection;
   }

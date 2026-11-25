@@ -2558,9 +2558,9 @@ export function spellFillSetTargetSelection(
   >,
 ): SpellSaveTargetSelection | undefined {
   if (
-    fillSet.targetId === undefined &&
-    fillSet.targetList === undefined &&
-    fillSet.targetAllocation === undefined
+    [fillSet.targetId, fillSet.targetList, fillSet.targetAllocation].every(
+      (selection) => selection === undefined,
+    )
   ) {
     return undefined;
   }

@@ -917,22 +917,21 @@ function resolveBattleSubjectAfterD20TestRerolls(
         },
       );
     }
-    if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
-      return resolveOffHandAttack({
-        ...input,
-        subject,
-        ...interruptConsumerOptions,
-      });
-    }
-    if (
-      subject.tag === "bonusAction" &&
-      subject.action === "martialArtsUnarmedStrike"
-    ) {
-      return resolveMartialArtsBonusUnarmedStrike({
-        ...input,
-        subject,
-        ...interruptConsumerOptions,
-      });
+    if (subject.tag === "bonusAction") {
+      if (subject.action === "offHandAttack") {
+        return resolveOffHandAttack({
+          ...input,
+          subject,
+          ...interruptConsumerOptions,
+        });
+      }
+      if (subject.action === "martialArtsUnarmedStrike") {
+        return resolveMartialArtsBonusUnarmedStrike({
+          ...input,
+          subject,
+          ...interruptConsumerOptions,
+        });
+      }
     }
     if (subject.tag === "monkFocusOption") {
       return resolveMonkFocusOption({ ...input, subject });
