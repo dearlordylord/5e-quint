@@ -534,7 +534,7 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     const fill = savingThrowOutcomeFill(saveHole, [{
       targetId: secondSkeletonId,
       succeeded: false,
-      d20TestRoll: { tag: "multiple", first: d20Roll(18), second: d20Roll(3), rollMode: "advantage" },
+      d20TestRoll: { tag: "multiple", first: d20Roll(6), second: d20Roll(3), rollMode: "advantage" },
       d20TestRerolls: [{
         kind: "rerollRolledDie",
         effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
