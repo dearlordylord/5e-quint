@@ -62,6 +62,10 @@ export function weaponMasteryToppleSavingThrowHole({
       ),
     },
     targetIds: [target.combatantId],
-    ...savingThrowTargetModifiers(state, { ability: "con" }, "everyCombatant"),
+    ...savingThrowTargetModifiers(
+      state,
+      { ability: "con", avoidsCondition: "prone" },
+      "everyCombatant",
+    ),
   };
 }

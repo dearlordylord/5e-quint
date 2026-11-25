@@ -2231,7 +2231,7 @@ function spellConditionCountedEndTurnSavingThrowOutcomeHole(
     areaChoices: [],
     ...savingThrowTargetModifiersWhenStateKnown(
       state,
-      { ability: effect.save.ability },
+      { ability: effect.save.ability, avoidsCondition: effect.condition },
       [targetId],
     ),
   };
