@@ -317,7 +317,7 @@ function battleDruidWildShapeAvailableFormsFromSheet(input: {
 }
 
 export const grappledSheetConditionMessage =
-  "A sheet's Grappled condition has no grappler or escape DC; start the battle with an initial grapple instead.";
+  "A Character Sheet's Grappled condition names no grappler or escape DC, so it can't carry into a battle; a battle that starts with the grapple names it in its initial grapples.";
 
 /**
  * The sheet's conditions as battle initial conditions, or null when the sheet

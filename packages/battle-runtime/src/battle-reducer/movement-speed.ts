@@ -454,6 +454,19 @@ export function grappleLinkForTarget(
   if (hold.tag === "rejected") {
     return { tag: "invalid", message: hold.message };
   }
+  // SRD 5.2.1 Unarmed Strike, Grapple: "This grapple is possible only if the
+  // target is no more than one size larger than you".
+  if (
+    !targetIsNoMoreThanOneSizeLarger(
+      combatantEffectiveSize(hold.grappler),
+      combatantEffectiveSize(hold.target),
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: "Grapple target cannot be more than one size larger.",
+    };
+  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !facts.some(
@@ -473,11 +486,12 @@ export function grappleLinkForTarget(
 }
 
 /**
- * The grapple `grapplerId` would hold `targetId` in, before reach: another
- * combatant, not already Grappled, no more than one size larger, able to have
- * the Grappled condition, held with the grappler's first free hand (SRD
- * Grappling, "One Grapple per Hand"; Unarmed Strike, Grapple; Immunity). Reach
- * is a table fact that each caller supplies.
+ * The grapple `grapplerId` would hold `targetId` in, however it began: another
+ * combatant, not already Grappled, able to have the Grappled condition, held
+ * with the grappler's first free hand (SRD 5.2.1 Grappling, "However a grapple
+ * is initiated, it follows these rules" and "One Grapple per Hand"; Immunity).
+ * How the grapple began sets its other limits, such as the Unarmed Strike's
+ * size limit, and its reach, which each caller supplies as a table fact.
  */
 export function grappleHoldForTarget(
   state: BattleState,
@@ -496,19 +510,26 @@ export function grappleHoldForTarget(
       readonly message: string;
     } {
   const grappler = state.combatants.get(grapplerId);
-  const target = state.combatants.get(targetId);
-  if (grappler === undefined || target === undefined) {
+  if (grappler === undefined) {
     return {
       tag: "rejected",
-      rejection: "unknownCombatant",
-      message: "Grapple target must be another combatant in this battle.",
+      rejection: "unknownGrappler",
+      message: "Grappler must be a combatant in this battle.",
+    };
+  }
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return {
+      tag: "rejected",
+      rejection: "unknownTarget",
+      message: "Grapple target must be a combatant in this battle.",
     };
   }
   if (grapplerId === targetId) {
     return {
       tag: "rejected",
       rejection: "selfGrapple",
-      message: "Grapple target must be another combatant in this battle.",
+      message: "Grapple target must be a creature other than the grappler.",
     };
   }
   if (grappledBy(state, targetId) !== undefined) {
@@ -534,8 +555,13 @@ export function grappleHoldForTarget(
       message: "Grapple requires a free hand.",
     };
   }
-  const bodyRejection = grappleTargetBodyRejection(grappler, target);
-  if (bodyRejection !== null) return bodyRejection;
+  if (conditionApplicationPreventedByConditionImmunity(target, "grappled")) {
+    return {
+      tag: "rejected",
+      rejection: "targetImmune",
+      message: "Grapple target is immune to the Grappled condition.",
+    };
+  }
   return {
     tag: "ok",
     link: {
@@ -548,37 +574,6 @@ export function grappleHoldForTarget(
     grappler,
     target,
   };
-}
-
-/** Whether the target's own body rules out the hold: too large, or immune to Grappled. */
-function grappleTargetBodyRejection(
-  grappler: BattleCreatureState,
-  target: BattleCreatureState,
-): {
-  readonly tag: "rejected";
-  readonly rejection: "targetTooLarge" | "targetImmune";
-  readonly message: string;
-} | null {
-  if (
-    !targetIsNoMoreThanOneSizeLarger(
-      combatantEffectiveSize(grappler),
-      combatantEffectiveSize(target),
-    )
-  ) {
-    return {
-      tag: "rejected",
-      rejection: "targetTooLarge",
-      message: "Grapple target cannot be more than one size larger.",
-    };
-  }
-  if (conditionApplicationPreventedByConditionImmunity(target, "grappled")) {
-    return {
-      tag: "rejected",
-      rejection: "targetImmune",
-      message: "Grapple target is immune to the Grappled condition.",
-    };
-  }
-  return null;
 }
 
 export function shoveForTarget(

@@ -23,12 +23,12 @@ export const STANDARD_CREATURE_MELEE_REACH_FEET = movementFeet(5);
 export const GRAPPLE_TARGET_REACH_FEET = movementFeet(5);
 /** Why one combatant can't take hold of another in a grapple. */
 export const BATTLE_GRAPPLE_HOLD_REJECTIONS = [
-  "unknownCombatant",
+  "unknownGrappler",
+  "unknownTarget",
   "selfGrapple",
   "targetAlreadyGrappled",
   "grapplerInBeastForm",
   "noFreeHand",
-  "targetTooLarge",
   "targetImmune",
 ] as const;
 /** Why a grapple that holds ends on its own (SRD Grappling, "Ending a Grapple"). */

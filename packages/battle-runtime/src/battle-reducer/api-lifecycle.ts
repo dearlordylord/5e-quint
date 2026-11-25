@@ -422,6 +422,10 @@ export function battleInitializationIssueFactFields(
         combatantId,
         condition,
       }),
+      initialGrappledWithoutGrapple: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
       statBlockSourceInvalid: ({ kind, statBlockId, constraint }) => ({
         reason: kind,
         statBlockId,

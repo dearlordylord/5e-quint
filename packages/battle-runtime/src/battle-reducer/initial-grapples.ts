@@ -4,7 +4,9 @@
 // Escape Grapple, release and the ways a grapple ends all follow from it.
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { Match } from "effect";
 import type {
+  BattleGrappleEndingCause,
   BattleGrappleLink,
   BattleInitialGrapple,
   BattleInitialGrappleRejection,
@@ -25,9 +27,9 @@ export type InitialGrappleRejectionFact = {
 
 /**
  * The grapple links a battle starts with, from the table's initial grapples in
- * order. Each one is held as an in-battle Grapple would hold it, with the
- * grappler's first free hand left after the grapples before it, and keeps the
- * escape DC the table gives. A grapple that couldn't hold, or that would
+ * order. Each one follows the rules every grapple follows, however it began,
+ * with the grappler's first free hand left after the grapples before it, and
+ * keeps the escape DC the table gives. A grapple that couldn't hold, or that would
  * already have ended, is rejected rather than dropped.
  */
 export function admitInitialGrapples(
@@ -72,20 +74,30 @@ function initialGrappleLink(
     initial.targetId,
   );
   if (hold.tag === "rejected") return hold;
-  const { grappler, target } = hold;
-  // The same ending causes normalizeBattleGrapples applies. Admission already
-  // rejects a dead combatant, so today Incapacitation is the one that reaches
-  // here.
-  const endingCause = grappleEndingCause(grappler, target);
+  // The same ending causes normalizeBattleGrapples applies.
+  const endingCause = grappleEndingCause(hold.grappler, hold.target);
   if (endingCause !== null) {
     return {
       tag: "rejected",
       rejection: endingCause,
-      message:
-        endingCause === "grapplerIncapacitated"
-          ? "Initial grapple ends at once: the grappler has the Incapacitated condition."
-          : "Initial grapple ends at once: a dead creature can't grapple or be grappled.",
+      message: initialGrappleEndingMessage(endingCause),
     };
   }
   return { tag: "ok", link: { ...hold.link, escapeDc: initial.escapeDc } };
+}
+
+function initialGrappleEndingMessage(cause: BattleGrappleEndingCause): string {
+  return Match.value(cause).pipe(
+    Match.when(
+      "grapplerIncapacitated",
+      () =>
+        "Initial grapple ends at once: the grappler has the Incapacitated condition.",
+    ),
+    Match.when(
+      "combatantDead",
+      () =>
+        "Initial grapple ends at once: a dead creature can't grapple or be grappled.",
+    ),
+    Match.exhaustive,
+  );
 }

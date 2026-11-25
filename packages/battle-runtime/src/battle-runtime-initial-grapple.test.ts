@@ -264,8 +264,8 @@ describe("initial grapples", () => {
         { grapplerId: fighterId, targetId: missingId, escapeDc },
       ]),
     ).toEqual([
-      { grappleIndex: 0, rejection: "unknownCombatant" },
-      { grappleIndex: 1, rejection: "unknownCombatant" },
+      { grappleIndex: 0, rejection: "unknownGrappler" },
+      { grappleIndex: 1, rejection: "unknownTarget" },
     ]);
   });
 
@@ -280,23 +280,55 @@ describe("initial grapples", () => {
       { grappleIndex: 0, rejection: "selfGrapple" },
       { grappleIndex: 2, rejection: "targetAlreadyGrappled" },
     ]);
+  });
 
+  // SRD 5.2.1 Unarmed Strike, Grapple: "This grapple is possible only if the
+  // target is no more than one size larger than you". A grapple that began
+  // some other way, such as a monster's trait, has no such limit.
+  test("hold a target more than one size larger, which only an Unarmed Strike Grapple can't", () => {
     const baseTarget = statBlockRecord();
-    expect(
-      initialGrappleRejections(
-        [{ grapplerId: fighterId, targetId: goblinId, escapeDc }],
-        { initiative: 20 },
-        {
-          initiative: 10,
-          statBlock: {
-            ...baseTarget,
-            id: parseSharedStatBlockId("stat_block_huge_initial_grapple"),
-            name: "Huge Initial Grapple Target",
-            statBlock: { ...baseTarget.statBlock, size: "huge" },
-          },
+    const hugeTarget = {
+      initiative: 10,
+      statBlock: {
+        ...baseTarget,
+        id: parseSharedStatBlockId("stat_block_huge_initial_grapple"),
+        name: "Huge Initial Grapple Target",
+        statBlock: { ...baseTarget.statBlock, size: "huge" as const },
+      },
+    };
+    const state = startBattleRight({
+      battleId: battleId("initial-grapple-huge-target"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit(hugeTarget),
+      ],
+      initialGrapples: [
+        { grapplerId: fighterId, targetId: goblinId, escapeDc },
+      ],
+    });
+
+    expect(state.grapples).toEqual([
+      expect.objectContaining({ grapplerId: fighterId, targetId: goblinId }),
+    ]);
+    const released = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "releaseGrapple",
+          targetId: goblinId,
         },
-      ),
-    ).toEqual([{ grappleIndex: 0, rejection: "targetTooLarge" }]);
+        fills: [],
+      }),
+    ).state;
+    expect(
+      discoverBattleActCandidates(released).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    });
   });
 
   test("reject a grapple that would already have ended", () => {
@@ -306,6 +338,40 @@ describe("initial grapples", () => {
         { initiative: 20, conditions: ["stunned"] },
       ),
     ).toEqual([{ grappleIndex: 0, rejection: "grapplerIncapacitated" }]);
+    expect(
+      initialGrappleRejections(
+        [{ grapplerId: fighterId, targetId: goblinId, escapeDc }],
+        { initiative: 20 },
+        { initiative: 10, currentHp: 0 },
+      ),
+    ).toEqual([{ grappleIndex: 0, rejection: "combatantDead" }]);
+  });
+
+  test("reject a Grappled condition given without its grapple", () => {
+    const fighter = characterSeed({ initiative: 20 });
+    const started = startBattle({
+      battleId: battleId("initial-grappled-condition"),
+      combatants: [
+        {
+          ...fighter,
+          creatureInit: {
+            ...fighter.creatureInit,
+            // A caller outside the types names Grappled as a plain condition.
+            conditions: JSON.parse('["grappled"]'),
+          },
+        },
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(started).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "battleStateInitIssue",
+        kind: "initialGrappledWithoutGrapple",
+        combatantId: fighterId,
+      },
+    });
   });
 
   test("reject a target that can't have the Grappled condition, as an in-battle Grapple does", () => {

@@ -4753,6 +4753,14 @@ export type BattleStateInitIssueFacts =
       readonly condition: Condition;
     }
   | {
+      /**
+       * A creature input named the Grappled condition: a combatant starts
+       * Grappled only through `BattleStartInput.initialGrapples`.
+       */
+      readonly kind: "initialGrappledWithoutGrapple";
+      readonly combatantId: CombatantId;
+    }
+  | {
       readonly kind: "initialGrappleInvalid";
       readonly grappleIndex: number;
       readonly grapplerId: CombatantId;
