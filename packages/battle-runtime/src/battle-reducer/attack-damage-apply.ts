@@ -116,7 +116,6 @@ import { battleObjectIsOnGround } from "./object-custody-queries.ts";
 import { combatantHandUses } from "./creature-state-leaves.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
-  loadoutWeaponIsHeld,
   loadoutWeaponIsStowed,
 } from "./character-effective-loadout.ts";
 import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
