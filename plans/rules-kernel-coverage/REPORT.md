@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 182
-- Covered obligations: 171
+- Total obligations: 183
+- Covered obligations: 172
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   171 |
+| covered                  |   172 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   142 |
+| battle             |   143 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -214,20 +214,21 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.ATTACK.TARGET_COVER`                                      | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                           | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION`             | battle             | covered                  | `unit-feature.combat-turn-start-heroic-inspiration`                                                                                                                                                                                                                                                                                                                                                                                              |
+| `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
-- Total classified rows: 202
+- Total classified rows: 203
 
 | Subject             | Count |
 | ------------------- | ----: |
 | battle-hole-family  |   101 |
 | battle-fill-kind    |    60 |
-| battle-subject-kind |    41 |
+| battle-subject-kind |    42 |
 
 | Classification                    | Count |
 | --------------------------------- | ----: |
-| semantic-frontier                 |   154 |
+| semantic-frontier                 |   155 |
 | deterministic-boundary-projection |     0 |
 | table-owned-fact                  |    48 |
 | unsupported-dead-branch           |     0 |
@@ -974,6 +975,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/object-interaction-cost-core-examples.qnt`                               | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt`                           | semantic-core           | `BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core-examples.qnt`                  | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt`                                             | semantic-core           | `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt`                                    | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1665,6 +1668,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.ATTACK.TARGET_COVER`                                      | generation-subset-clean | `variant`, `pure-def`, `int`, `bool`, `pattern-match`, `arithmetic`, `all-block`                                                                                                                                                                                                                                   |          |           |
 | `BATTLE.ACTION.OBJECT_INTERACTION_COST`                           | generation-subset-clean | `record`, `pure-def`, `bool`, `boolean-connective`, `set`, `if-expression`, `variant`                                                                                                                                                                                                                              |          |           |
 | `BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION`             | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `pattern-match`                                                                                                                                                                                            |          |           |
+| `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | generation-subset-clean | `record`, `pure-def`, `bool`, `boolean-connective`                                                                                                                                                                                                                                                                 |          |           |
 
 ### Generator Readiness Backlog
 
