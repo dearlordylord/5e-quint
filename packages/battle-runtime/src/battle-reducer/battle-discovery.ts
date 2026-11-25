@@ -201,7 +201,6 @@ import type {
   BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleState,
-  BattleTargetChoiceHole,
   StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import type { SelfTransformationModeKind } from "./domain-constants.ts";
