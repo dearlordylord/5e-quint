@@ -872,30 +872,16 @@ function characterBattleArmorLoadoutRef(
     : { ...armor, strengthRequirement };
 }
 
-/**
- * The build's selected loadout, with the worn armor's Strength requirement
- * read from its equipment definition.
- */
-export function characterBattleSelectedLoadout(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Result.Result<CharacterBattleLoadoutRef, BattleCreatureInitLeafIssue> {
+export function characterBattleLoadoutFromBuild(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Result.Result<CharacterBattleLoadoutRef, BattleCreatureInitLeafIssue> {
   const armorStrengthRequirement =
-    characterSheetSelectedArmorStrengthRequirement({ build, unitLibrary });
-  return Result.isFailure(armorStrengthRequirement)
-    ? battleCreatureInitIssue(armorStrengthRequirement.failure.message)
-    : Result.succeed(
-        characterBattleLoadoutFromBuild(
-          build,
-          armorStrengthRequirement.success,
-        ),
-      );
-}
-
-export function characterBattleLoadoutFromBuild(
-  build: CharacterBuild,
-  armorStrengthRequirement?: AbilityScore,
-): CharacterBattleLoadoutRef {
+    characterSheetSelectedArmorStrengthRequirement(input);
+  if (Result.isFailure(armorStrengthRequirement)) {
+    return battleCreatureInitIssue(armorStrengthRequirement.failure.message);
+  }
+  const { build } = input;
   const armorUnitId = characterBuildEquipmentItemUnitId(
     build.equipment.loadout.armor,
   );
@@ -910,13 +896,13 @@ export function characterBattleLoadoutFromBuild(
   );
   const loadout = build.equipment.loadout;
 
-  return {
+  return Result.succeed({
     ...(loadout.armor == null || armorUnitId == null
       ? {}
       : {
           armor: characterBattleArmorLoadoutRef(
             { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
-            armorStrengthRequirement,
+            armorStrengthRequirement.success,
           ),
         }),
     ...(loadout.shield == null || shieldUnitId == null
@@ -944,7 +930,7 @@ export function characterBattleLoadoutFromBuild(
             unitId: offHandWeaponUnitId,
           },
         }),
-  };
+  });
 }
 
 function characterBuildEquipmentItemUnitId(

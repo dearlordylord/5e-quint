@@ -83,7 +83,7 @@ import {
   characterBattleWeaponAttackInitProjectionFromWeaponProficiencies,
   characterWeaponProficiencies,
   characterBaseUnarmedStrikeActionOption,
-  characterBattleSelectedLoadout,
+  characterBattleLoadoutFromBuild,
   characterInvocationFeatures,
   characterPactBladeBondedWeaponItemId,
   characterSpellcasting,
@@ -448,10 +448,10 @@ export function battleCreatureInitFromCharacterBuild(
     });
     const supportProjection = weaponAdmission.support;
     const weaponAttackOptions = weaponAdmission.weaponAttackOptions;
-    const selectedLoadout = yield* characterBattleSelectedLoadout(
-      input.build,
-      input.unitLibrary,
-    );
+    const selectedLoadout = yield* characterBattleLoadoutFromBuild({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+    });
     const unitFeatures = yield* characterBattleFeatures(
       input.build,
       input.unitLibrary,
