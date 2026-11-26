@@ -1128,7 +1128,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.actorId,
     input.invocation,
     input.target.objectId,
-    sightFact?.attackerCanSeeObject,
+    sightFact,
     input.target.enemyProximity,
   );
   const rollInput = prepareAttackRollInput({

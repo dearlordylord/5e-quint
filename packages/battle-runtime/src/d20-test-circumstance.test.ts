@@ -1,4 +1,5 @@
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { firstMeleeAttack } from "./attack-roll-spatial.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_ATTACKER_ROLL_MODE
@@ -830,7 +831,7 @@ describe("Table-authored per-test D20 circumstances", () => {
         session.state,
         fighterId,
         requireCombatant(session.state, goblinId),
-        undefined,
+        firstMeleeAttack(session.state, fighterId),
         [],
         null,
       ),

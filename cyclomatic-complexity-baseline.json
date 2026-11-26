@@ -85,12 +85,13 @@
       "module/binding:validateAttackDamageFill": 15,
       "module/binding:validateRolledDiceForWeaponAttack": 11
     },
-    "packages/battle-runtime/src/battle-reducer/attack-roll.ts": {
+    "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts": {
       "module/binding:activeEffectGrantsAttackRollMode": 9,
-      "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17,
+      "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17
+    },
+    "packages/battle-runtime/src/battle-reducer/attack-roll.ts": {
       "module/binding:applyWeaponMasteryToppleSavingThrow": 9,
       "module/binding:attackRollOngoingFeatureActivationProfile": 13,
-      "module/binding:attackRollSourceFlags": 22,
       "module/binding:tacticalMasterReplacementSelection": 9
     },
     "packages/battle-runtime/src/battle-reducer/attack-routes.ts": {
@@ -428,7 +429,7 @@
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts": {
       "module/binding:resolveSpellAttackSequenceAct": 20,
       "module/binding:resolveSpellAttackSequenceCreaturePart": 62,
-      "module/binding:resolveSpellAttackSequenceObjectPart": 22
+      "module/binding:resolveSpellAttackSequenceObjectPart": 21
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts": {
       "module/binding:chainedSpellFillSet": 43,
@@ -448,7 +449,7 @@
       "module/binding:validateObjectContactTargets": 15
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-object-target.ts": {
-      "module/binding:resolveObjectTargetSpellAttackCore": 37
+      "module/binding:resolveObjectTargetSpellAttackCore": 36
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-prepared-slot.ts": {
       "module/binding:resolvePreparedSlotSpellAct": 45
