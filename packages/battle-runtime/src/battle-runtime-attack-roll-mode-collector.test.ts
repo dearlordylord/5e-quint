@@ -351,8 +351,6 @@ describe("attack-roll mode collector: one rule on every route", () => {
     expect(fighterRollModeAgainstObject(hidden)).toBe("advantage");
   });
 
-  // RAW: playing-the-game.md, "Unseen Attackers and Targets", and the outline's
-  // Advantage for an attacker that can see the object.
   // RAW: playing-the-game.md, "Unseen Attackers and Targets": "When you make
   // an attack roll against a target you can't see, you have Disadvantage."
   test("a spell attack at an object the caster can't see has Disadvantage", () => {
@@ -365,6 +363,8 @@ describe("attack-roll mode collector: one rule on every route", () => {
     ).toBeUndefined();
   });
 
+  // RAW: playing-the-game.md, "Unseen Attackers and Targets", and the outline's
+  // Advantage for an attacker that can see the object.
   test("a spell attack at an outlined object asks for sight, and either answer reaches the roll", () => {
     const session = fireBoltBattle();
     const outlined = outlinedByWizard(session, session.state);

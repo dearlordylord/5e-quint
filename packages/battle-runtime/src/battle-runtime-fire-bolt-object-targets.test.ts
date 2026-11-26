@@ -370,7 +370,12 @@ describe("battle runtime: Fire Bolt object targets", () => {
           },
         ],
       }),
-    ).toMatchObject({ tag: "invalid" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied object sight fact.",
+    });
     expect(
       resolveBattleSubject({
         state: state.state,

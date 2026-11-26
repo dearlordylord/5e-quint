@@ -237,16 +237,15 @@ function resolveObjectTargetSpellAttackCore(
     input.fillSet.objectTarget.objectId,
     input.invocation,
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: every spell attack against an object asks the table whether the caster can see it. */
+  // Every spell attack against an object asks the table whether the caster
+  // can see it (SRD "Unseen Attackers and Targets").
   if (sightFact === null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Spell object target must include a matching table-supplied object sight fact.",
     );
   }
-  /* v8 ignore stop -- @preserve */
   const ignitionFact =
     input.invocation.procedure === "spellAttackDamage" &&
     input.invocation.objectHitEffect.kind === "igniteFlammableUnattended"
