@@ -1,4 +1,7 @@
-import { ordinaryMovementPath } from "./battle-reducer/movement-path.ts";
+import {
+  ordinaryMovementPath,
+  plainStepMovementActivity,
+} from "./battle-reducer/movement-path.ts";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
@@ -24,7 +27,7 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
-import { Result } from "effect";
+import { Array, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -119,10 +122,10 @@ const grappledTargetActor = "GrappledTarget";
 const actorId = combatantId("rule-core-mover");
 const observerId = combatantId("rule-core-observer");
 const movementSpeedFeet = 30;
-const movementShortCostFeet = 5;
-const movementFillCostFeet = 10;
-const movementFullCostFeet = 30;
-const movementOverspendCostFeet = 35;
+const movementShortDistanceFeet = 5;
+const movementFillDistanceFeet = 10;
+const movementFullDistanceFeet = 30;
+const movementOverspendDistanceFeet = 35;
 const componentOwner = "RuleCoreMovementGrappleOwner";
 
 const driverSchema = {
@@ -205,17 +208,21 @@ function createRuleCoreMovementDriver() {
     }
 
     function submitMovement(input: {
-      readonly costFeet: number;
+      readonly distanceFeet: number;
       readonly provokesOpportunityAttack: boolean;
     }): void {
       const hole = requireMovementHole(holes);
+      const mover = state.combatants.get(actorId);
+      if (mover === undefined)
+        throw new Error("Expected the fixed Movement fixture actor.");
       recordResult(
         resolveBattleSubject({
           state,
           subject: { tag: "runtimeCommand", actorId, command: "move" },
           fills: [
             movementFill(hole, {
-              distanceFeet: input.costFeet,
+              distanceFeet: input.distanceFeet,
+              activity: plainStepMovementActivity(mover),
               provokedOpportunityAttacks: input.provokesOpportunityAttack
                 ? [
                     {
@@ -258,27 +265,27 @@ function createRuleCoreMovementDriver() {
         resolveSubject({ tag: "runtimeCommand", actorId, command: "move" }),
       doSpendMovement: () =>
         submitMovement({
-          costFeet: movementFillCostFeet,
+          distanceFeet: movementFillDistanceFeet,
           provokesOpportunityAttack: false,
         }),
       doSpendShortMovement: () =>
         submitMovement({
-          costFeet: movementShortCostFeet,
+          distanceFeet: movementShortDistanceFeet,
           provokesOpportunityAttack: false,
         }),
       doSpendFullMovement: () =>
         submitMovement({
-          costFeet: movementFullCostFeet,
+          distanceFeet: movementFullDistanceFeet,
           provokesOpportunityAttack: false,
         }),
       doMoveProvokesOpportunityAttack: () =>
         submitMovement({
-          costFeet: movementFillCostFeet,
+          distanceFeet: movementFillDistanceFeet,
           provokesOpportunityAttack: true,
         }),
       doMoveThreatSuppressedByDisengage: () =>
         submitMovement({
-          costFeet: movementFillCostFeet,
+          distanceFeet: movementFillDistanceFeet,
           provokesOpportunityAttack: true,
         }),
       doDeclineOpportunityAttack: () => {
@@ -294,7 +301,7 @@ function createRuleCoreMovementDriver() {
       },
       doRejectMovementOverspend: () =>
         submitMovement({
-          costFeet: movementOverspendCostFeet,
+          distanceFeet: movementOverspendDistanceFeet,
           provokesOpportunityAttack: false,
         }),
       doDash: () =>
@@ -596,6 +603,7 @@ function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly distanceFeet: number;
+    readonly activity: ReturnType<typeof plainStepMovementActivity>;
     readonly provokedOpportunityAttacks: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -607,7 +615,13 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      path: ordinaryMovementPath(movementFeet(value.distanceFeet)),
+      path: Array.map(
+        ordinaryMovementPath(movementFeet(value.distanceFeet)),
+        (segment) => ({
+          ...segment,
+          activity: value.activity,
+        }),
+      ),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };
@@ -767,14 +781,7 @@ function compareRuleCoreMovementState(
   quint: RuleCoreMovementProjection,
   runtime: RuleCoreMovementProjection,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw error;
-  }
+  expect(runtime).toEqual(quint);
   return true;
 }
 

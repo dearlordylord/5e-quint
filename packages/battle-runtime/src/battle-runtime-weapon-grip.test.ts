@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE
+// KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE BATTLE.DAMAGE.ATTACK_BRANCHES
 import { unitId } from "@dnd/shared/game-facts";
 import type { WeaponGrip } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
@@ -25,10 +25,8 @@ import {
   testDaggerAttack,
   testGreataxeAttack,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleStateWithGroundObjects,
-  heldWeaponPickupTransition,
-} from "./battle-reducer/battle-object-lifecycle.ts";
+import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
+import { pickUpLoadoutWeapon } from "./loadout-weapon-pickup.test-support.ts";
 import { characterEffectiveLoadout } from "./battle-reducer/character-effective-loadout.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
@@ -240,21 +238,16 @@ describe("changing a weapon grip during a battle", () => {
       left: "mainWeapon",
       right: "mainWeapon",
     });
-    expect(
-      heldWeaponPickupTransition(twoHanded, {
-        actorId: fighterId,
-        objectId: daggerId,
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
+    expect(pickUpLoadoutWeapon(twoHanded, fighterId, daggerId)).toMatchObject({
+      tag: "invalid",
+      reason: "handsOccupied",
+    });
 
     const oneHanded = requireResolved(
       changeGrip(twoHanded, "one_handed"),
     ).state;
     expect(hands(oneHanded)).toEqual({ left: "free", right: "mainWeapon" });
-    const pickedUp = heldWeaponPickupTransition(oneHanded, {
-      actorId: fighterId,
-      objectId: daggerId,
-    });
+    const pickedUp = pickUpLoadoutWeapon(oneHanded, fighterId, daggerId);
     if (pickedUp.tag !== "applied") throw new Error(pickedUp.message);
     expect(hands(pickedUp.state)).toEqual({
       left: "offWeapon",
@@ -280,16 +273,10 @@ describe("changing a weapon grip during a battle", () => {
     ).state;
     const bothDropped = withDropped(twoHanded, swordId);
     expect(hands(bothDropped)).toEqual({ left: "free", right: "free" });
-    expect(
-      heldWeaponPickupTransition(bothDropped, {
-        actorId: fighterId,
-        objectId: daggerId,
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
-    const swordBack = heldWeaponPickupTransition(bothDropped, {
-      actorId: fighterId,
-      objectId: swordId,
-    });
+    expect(pickUpLoadoutWeapon(bothDropped, fighterId, daggerId)).toMatchObject(
+      { tag: "invalid", reason: "handsOccupied" },
+    );
+    const swordBack = pickUpLoadoutWeapon(bothDropped, fighterId, swordId);
     if (swordBack.tag !== "applied") throw new Error(swordBack.message);
     expect(hands(swordBack.state)).toEqual({
       left: "mainWeapon",
@@ -297,7 +284,7 @@ describe("changing a weapon grip during a battle", () => {
     });
   });
 
-  it("keeps a Two-Handed weapon in two hands", () => {
+  it("holds a Two-Handed weapon in one hand but attacks only after taking it in both hands", () => {
     const state = startBattleRight({
       battleId: battleId("synthetic-weapon-grip-two-handed"),
       combatants: [
@@ -306,7 +293,32 @@ describe("changing a weapon grip during a battle", () => {
       ],
     });
     expect(hands(state)).toEqual({ left: "mainWeapon", right: "mainWeapon" });
-    expectRefused(state, "one_handed", "twoHandedWeapon");
+    const held = requireResolved(changeGrip(state, "one_handed")).state;
+    expect(hands(held)).toEqual({ left: "free", right: "mainWeapon" });
+    const greataxeAttacks = (candidate: BattleState) =>
+      discoverBattleActCandidates(candidate).filter(
+        ({ subject }) =>
+          subject.tag === "action" &&
+          subject.action === "attack" &&
+          "procedureRef" in subject &&
+          subject.procedureRef ===
+            actor(candidate).origin.attack?.procedureRef &&
+          !("weaponChange" in subject),
+      );
+    expect(greataxeAttacks(held)).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state: held,
+        subject: fighterAttackSubject(state, "Greataxe"),
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    const bothHands = requireResolved(changeGrip(held, "two_handed")).state;
+    expect(greataxeAttacks(bothHands)).not.toEqual([]);
+    expect(hands(bothHands)).toEqual({
+      left: "mainWeapon",
+      right: "mainWeapon",
+    });
   });
 
   it("refuses a grip the weapon already has, a dropped weapon, and another creature's turn", () => {

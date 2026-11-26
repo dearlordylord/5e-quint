@@ -150,6 +150,7 @@ export function attackFillsForAttackHitReplay(
       fill.kind === "targetChoice" ||
       fill.kind === "targetSpatialFacts" ||
       fill.kind === "attackRoll" ||
+      fill.kind === "weaponDropPosition" ||
       (fill.kind === "damageTypeChoice" &&
         fill.holeId === FRENZY_DAMAGE_TYPE_HOLE_ID),
   );

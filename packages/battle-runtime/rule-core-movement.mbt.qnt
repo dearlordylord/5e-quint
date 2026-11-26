@@ -31,10 +31,10 @@ module ruleCoreMovementMbt {
   pure def fighterActor: str = "Fighter"
   pure def grappledTargetActor: str = "GrappledTarget"
   pure def movementSpeedFeet: int = 30
-  pure def movementShortCostFeet: int = 5
-  pure def movementFillCostFeet: int = 10
-  pure def movementFullCostFeet: int = 30
-  pure def movementOverspendCostFeet: int = 35
+  pure def movementShortDistanceFeet: int = 5
+  pure def movementFillDistanceFeet: int = 10
+  pure def movementFullDistanceFeet: int = 30
+  pure def movementOverspendDistanceFeet: int = 35
   pure def runtimeGrappleEscapeDc: int = 10
 
   // The Fighter holds a Versatile main weapon with either grip, and can change
@@ -67,7 +67,6 @@ module ruleCoreMovementMbt {
     ownTurn: qCurrentActor == fighterActor,
     canAct: true,
     holdsWeapon: true,
-    twoHandedWeapon: false,
     heldWithTwoHands: qMainWeaponGrip == "two_handed",
     otherHandFree: qFighterHasFreeHand,
   }
@@ -83,6 +82,11 @@ module ruleCoreMovementMbt {
       .with("actionQuota", if (qActionAvailable) ActionAvailable else ActionSpent)
       .with("dashMovementBonusFeet", qDashBonusFeet)
       .with("disengaged", qDisengaged)
+
+  // Physical distance is priced by the existing RAW path owner: a Prone
+  // mover crawls, including a move resumed after an Opportunity Attack.
+  pure def plainMovementSpendFacts(prone: bool, distanceFeet: int): MovementSpendFacts =
+    movementPathSpendFacts(markedMovementPath(prone, distanceFeet, 0, false, 0))
 
   pure def qFighterMovementState: MovementGrappleState =
     initialMovementGrappleState
@@ -210,46 +214,25 @@ module ruleCoreMovementMbt {
 
   action doSpendMovement = all {
     openHoles == Set("Movement"),
-    canSpendMovement(qFighterMovementState, {
-      distanceFeet: movementFillCostFeet,
-      extraCostFeet: 0,
-    }),
-    recordFighterMovementState(spendMovement(qFighterMovementState, {
-      distanceFeet: movementFillCostFeet,
-      extraCostFeet: 0,
-    })),
+    canSpendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFillDistanceFeet)),
+    recordFighterMovementState(spendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFillDistanceFeet))),
   }
 
   action doSpendShortMovement = all {
     openHoles == Set("Movement"),
-    canSpendMovement(qFighterMovementState, {
-      distanceFeet: movementShortCostFeet,
-      extraCostFeet: 0,
-    }),
-    recordFighterMovementState(spendMovement(qFighterMovementState, {
-      distanceFeet: movementShortCostFeet,
-      extraCostFeet: 0,
-    })),
+    canSpendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementShortDistanceFeet)),
+    recordFighterMovementState(spendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementShortDistanceFeet))),
   }
 
   action doSpendFullMovement = all {
     openHoles == Set("Movement"),
-    canSpendMovement(qFighterMovementState, {
-      distanceFeet: movementFullCostFeet,
-      extraCostFeet: 0,
-    }),
-    recordFighterMovementState(spendMovement(qFighterMovementState, {
-      distanceFeet: movementFullCostFeet,
-      extraCostFeet: 0,
-    })),
+    canSpendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFullDistanceFeet)),
+    recordFighterMovementState(spendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFullDistanceFeet))),
   }
 
   action doMoveProvokesOpportunityAttack = all {
     openHoles == Set("Movement"),
-    canSpendMovement(qFighterMovementState, {
-      distanceFeet: movementFillCostFeet,
-      extraCostFeet: 0,
-    }),
+    canSpendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFillDistanceFeet)),
     opportunityAttackTriggered(qTurnState, {
       hostileCreature: true,
       observerCanSee: true,
@@ -273,34 +256,25 @@ module ruleCoreMovementMbt {
 
   action doMoveThreatSuppressedByDisengage = all {
     openHoles == Set("Movement"),
-    canSpendMovement(qFighterMovementState, {
-      distanceFeet: movementFillCostFeet,
-      extraCostFeet: 0,
-    }),
+    canSpendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFillDistanceFeet)),
     not(opportunityAttackTriggered(qTurnState, {
       hostileCreature: true,
       observerCanSee: true,
       leavesReach: true,
       movementResource: OwnMovementActionBonusReactionOrSpeed,
     })),
-    recordFighterMovementState(spendMovement(qFighterMovementState, {
-      distanceFeet: movementFillCostFeet,
-      extraCostFeet: 0,
-    })),
+    recordFighterMovementState(spendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFillDistanceFeet))),
   }
 
   action doDeclineOpportunityAttack = all {
     openHoles == Set("ReactionDecision"),
     qPendingOpportunityAttack,
-    recordFighterMovementState(spendMovement(qFighterMovementState, {
-      distanceFeet: movementFillCostFeet,
-      extraCostFeet: 0,
-    })),
+    recordFighterMovementState(spendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementFillDistanceFeet))),
   }
 
   action doRejectMovementOverspend = all {
     openHoles == Set("Movement"),
-    qMovementRemainingFeet < movementOverspendCostFeet,
+    not(canSpendMovement(qFighterMovementState, plainMovementSpendFacts(qProne, movementOverspendDistanceFeet))),
     recordInvalid(WInvalidFill),
   }
 

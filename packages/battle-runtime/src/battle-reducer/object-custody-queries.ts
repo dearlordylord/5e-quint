@@ -1,10 +1,11 @@
-// Where a creature's object is when it isn't where its loadout puts it. A leaf
+// A creature's owned objects and their custody outside the loadout. A leaf
 // of reads, so the loadout and hand queries can ask it without the lifecycle
 // transitions that change it.
 import type {
   BattleGroundObjectState,
   BattleObjectCustody,
   BattleState,
+  CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 
@@ -41,4 +42,19 @@ export function battleGroundObjectState(
   return custody?.kind === "onGround"
     ? { positionId: custody.positionId, source: custody.source }
     : undefined;
+}
+
+/** The battle objects of every weapon the character owns: its loadout's, then the rest. */
+export function ownedWeaponObjectIds(
+  actor: CharacterBattleCreatureState,
+): readonly BattleObjectId[] {
+  const { weapon, offHandWeapon } = actor.origin.selectedLoadout;
+  return [
+    ...[weapon?.itemId, offHandWeapon?.itemId].filter(
+      (itemId): itemId is BattleObjectId => itemId !== undefined,
+    ),
+    ...actor.origin.otherOwnedWeaponAttacks.map(
+      ({ weaponObjectId }) => weaponObjectId,
+    ),
+  ];
 }

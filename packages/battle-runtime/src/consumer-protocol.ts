@@ -107,6 +107,7 @@ export type {
   BattleCreatureInit,
   CharacterBattleCreatureInit,
   CharacterBattleCreatureInitWeaponAttack,
+  CharacterBattleOtherOwnedWeaponInit,
   BattleUnitRef,
 } from "./battle-init.ts";
 export {

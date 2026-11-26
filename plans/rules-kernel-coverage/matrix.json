@@ -1102,13 +1102,15 @@
         "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt",
         "packages/battle-runtime/battle-runtime-shape-shifting.qnt"
       ],
+      "reason": "The existing equipment resolution owner also counts fallen carried spare weapons using the same disposition input and leaves their presence out of held-loadout projections. The runtime contract authors fall/merge/wear choices for a carried spare, checks discovery/resolution candidate agreement, no implicit equip or attack, and persistent fallen custody after reversion. Existing focused MBT scopes remain unchanged; no execution is claimed by this mapping.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/battle-runtime/src/battle-reducer/wild-shape-equipment.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3046,6 +3048,10 @@
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-grip.test.ts"
         }
       ],
       "profiles": ["unit-feature.light-extra-attack-damage-ability-modifier"],
@@ -3059,6 +3065,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
       ],
+      "reason": "The attack-roll-damage-dice core also owns Two-Handed attack hand requirements. The weapon-grip contract witnesses holding a Two-Handed weapon in one hand, rejecting its attack (including a stale advertised subject), and admitting its attack after taking the existing two-handed grip. Other mapped MBT scopes retain their existing attack/damage coverage.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -6558,26 +6565,35 @@
         },
         {
           "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-owned-weapons.test.ts"
+        },
+        {
+          "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-change-discovery.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-readied-attack-weapon-change.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-weapon-change-core.qnt"
       ],
-      "reason": "The QNT owner models a loadout weapon held, stowed or on the ground; equipping a weapon that is not in hand into empty hands, and stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle applies a change carried on the attack before it looks up the attack, offers the change after it as its own command, and asks the table where a dropped weapon lands.",
+      "reason": "The QNT owner models a weapon held, stowed or on the ground; equipping a weapon that is not in hand into a hand slot whose weapon is out of hand, with the slot's hands empty, and the slot's previous weapon leaving the loadout where it is; stowing or dropping a held one; and the change after an attack, which an attack without a change before its roll leaves and which ends at the next attack or the end of the turn. Battle binds an attack for every owned weapon it can execute at battle start, moves the bindings with the weapons between the hand slots and the other owned weapons, applies a change carried on the attack, or on a Grapple or Shove in an attack's place, before it looks up the attack or the grappling hand, offers the change after it as its own command, lets a readied attack's release carry its one change before or after the attack, and asks the table where a dropped weapon lands. The focused MBT witnesses one loadout weapon; the owned-weapons contract test witnesses slot admission, the Two-Handed off-hand refusal and the departing weapon's custody for weapons outside the loadout; the readied-attack contract test witnesses a readied attack's change before and after it. The readied release contract also covers Grapple/Shove through the shared before/after owner, preserves preparation without a change and ordinary non-Attack reactions without this permission, checks conditional post-save hand legality, and distinguishes an initially carried spare throw from a held thrown weapon.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-weapon-change.ts",
-        "packages/battle-runtime/src/battle-reducer/loadout-weapon-custody.ts",
+        "packages/battle-runtime/src/battle-reducer/owned-weapon-custody.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/readied-attack-weapon-change.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/rules-glossary.md#Attack [Action]"
       ],
-      "title": "Attack weapon change: each Attack action attack can equip or unequip one loadout weapon, before or after the attack"
+      "title": "Attack weapon change: each Attack action attack, a readied one included, can equip or unequip one owned weapon, before or after the attack"
     },
     {
       "id": "BATTLE.ATTACK.TARGET_COVER",
@@ -6734,7 +6750,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt"
       ],
-      "reason": "The QNT owner models a grip change allowed on the creature's own turn while it can act and holds the weapon, to a different grip, keeping a Two-Handed weapon two-handed and requiring the other hand free for a two-handed grip. The Movement MBT replays both directions and the refusal while a Grapple holds the other hand, projecting the grip, the hands it holds and the Longsword's Versatile damage die against Battle. Battle changes the selected loadout's grip and its hands together and costs nothing; the attack reads the grip when it deals damage.",
+      "reason": "The QNT owner models a grip change allowed on the creature's own turn while it can act and holds the weapon, to a different grip, allowing a Two-Handed weapon to be held in one hand and requiring the other hand free for a two-handed grip. The Movement MBT replays both directions and the refusal while a Grapple holds the other hand, projecting the grip, the hands it holds and the Longsword's Versatile damage die against Battle. Battle changes the selected loadout's grip and its hands together and costs nothing; the attack reads the grip when it deals damage.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/weapon-grip.ts"
@@ -17591,7 +17607,9 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "pattern-match"
+        "pattern-match",
+        "fold",
+        "list"
       ],
       "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
       "proofOnly": [],

@@ -1,9 +1,11 @@
-import type { SupportedAttackActionOption } from "./battle-action-options.ts";
+import type {
+  BoundCharacterWeaponAttackActionOption,
+  SupportedAttackActionOption,
+} from "./battle-action-options.ts";
 import { UNARMED_STRIKE_NAME } from "./battle-action-options.ts";
 import type {
   AttackPresentationJoinIssue,
   BattleState,
-  CharacterBattleCreatureState,
 } from "./battle-state-execution.ts";
 import {
   characterWeaponPresentationSource,
@@ -11,6 +13,10 @@ import {
   type BattleRuntimeContext,
 } from "./battle-runtime-context.ts";
 import { activeDruidWildShape } from "./battle-reducer/druid-wild-shape.ts";
+import {
+  characterBoundWeaponAttacks,
+  isCharacterBattleCreatureState,
+} from "./battle-reducer/creature-state-queries.ts";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import type { CombatantId } from "./identity.ts";
 import { Match, Result } from "effect";
@@ -55,10 +61,7 @@ type CharacterWeaponAttackActionOption = Extract<
   { readonly kind: "weapon" }
 >;
 
-type CharacterBaseAttack = NonNullable<
-  | CharacterBattleCreatureState["origin"]["attack"]
-  | CharacterBattleCreatureState["origin"]["offHandAttack"]
->;
+type CharacterBaseAttack = BoundCharacterWeaponAttackActionOption;
 
 type ProcedureCoordinate = {
   readonly section: StatBlockActionProjectionSection;
@@ -431,7 +434,7 @@ export function attackActionOptionPresentationName(
     const baseAttack = characterWeaponBaseAttack(
       state,
       actorId,
-      attack.weapon.weaponUnitId,
+      attack.weaponObjectId,
     );
     const suffixes = characterWeaponPresentationSuffixes(
       attack,
@@ -445,16 +448,19 @@ export function attackActionOptionPresentationName(
   return statBlockAttackPresentationName(state, context, actorId, attack);
 }
 
+/** The attack Battle bound for this weapon, whichever owned weapon it is. */
 function characterWeaponBaseAttack(
   state: BattleState,
   actorId: CombatantId,
-  weaponUnitId: CharacterWeaponAttackActionOption["weapon"]["weaponUnitId"],
+  weaponObjectId: CharacterWeaponAttackActionOption["weaponObjectId"],
 ): CharacterBaseAttack | undefined {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") return undefined;
-  return actor.origin.attack?.weapon.weaponUnitId === weaponUnitId
-    ? actor.origin.attack
-    : actor.origin.offHandAttack;
+  if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
+    return undefined;
+  }
+  return characterBoundWeaponAttacks(actor).find(
+    (bound) => bound.weaponObjectId === weaponObjectId,
+  );
 }
 
 function characterWeaponPresentationSuffixes(

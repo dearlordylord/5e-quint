@@ -151,7 +151,7 @@ import {
   resolveDodge,
   resolveEscapeGrapple,
   resolveEscapeSpellRestraint,
-  resolveGrapple,
+  resolveGrappleWithWeaponChange,
   resolveHelpAttack,
   resolveHide,
   resolveMultiattack,
@@ -160,7 +160,7 @@ import {
   resolveSearch,
   resolveShakeAwakeFromSaveGatedAreaControl,
   resolveShakeAwakeFromHitPointBudgetCondition,
-  resolveShove,
+  resolveShoveWithWeaponChange,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
 import { resolveHelpAbilityCheck } from "./help-ability-check.ts";
@@ -922,10 +922,10 @@ function resolveBattleSubjectAfterD20TestRerolls(
         });
       }
       if (subject.action === "grapple") {
-        return resolveGrapple({ ...input, subject });
+        return resolveGrappleWithWeaponChange({ ...input, subject });
       }
       if (subject.action === "shove") {
-        return resolveShove({ ...input, subject });
+        return resolveShoveWithWeaponChange({ ...input, subject });
       }
       if (subject.action === "escapeGrapple") {
         return resolveEscapeGrapple({ ...input, subject });

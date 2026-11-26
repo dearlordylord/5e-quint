@@ -144,6 +144,13 @@ function missedAttack(
   ).state;
 }
 
+/** The Longsword's change of this kind; equip puts it back in its main slot. */
+function longswordChange(kind: AttackWeaponChange["kind"]): AttackWeaponChange {
+  return kind === "equip"
+    ? { kind, objectId: longswordId, slot: "mainWeapon" }
+    : { kind, objectId: longswordId };
+}
+
 function createAttackWeaponChangeDriver() {
   return defineDriver(attackWeaponChangeDriverSchema, () => {
     let state = fighterVsGoblinBattle();
@@ -151,12 +158,12 @@ function createAttackWeaponChangeDriver() {
     function attack(kind: AttackWeaponChange["kind"] | undefined): void {
       state = missedAttack(
         state,
-        kind === undefined ? undefined : { kind, objectId: longswordId },
+        kind === undefined ? undefined : longswordChange(kind),
       );
     }
 
     function changeAfter(kind: AttackWeaponChange["kind"]): void {
-      const weaponChange = { kind, objectId: longswordId };
+      const weaponChange = longswordChange(kind);
       state = requireResolved(
         resolveBattleSubject({
           state,

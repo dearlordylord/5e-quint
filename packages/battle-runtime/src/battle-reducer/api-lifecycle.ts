@@ -65,6 +65,7 @@ import {
   isCharacterBattleCreatureState,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
+import { characterBoundWeaponAttacks } from "./creature-state-queries.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
 import { spellProcedureMapNonEmpty } from "./spell-procedure-profiles/spell-mechanics-admission.ts";
 import type {
@@ -1119,11 +1120,7 @@ function appendCharacterWeaponPresentationIssues(input: {
   readonly ownerPath: readonly (string | number)[];
   readonly initializationIssues: BattleInitializationLeafIssue[];
 }): void {
-  for (const attack of [
-    input.combatant.origin.attack,
-    input.combatant.origin.offHandAttack,
-  ]) {
-    if (attack == null) continue;
+  for (const attack of characterBoundWeaponAttacks(input.combatant)) {
     const presentationSource = characterWeaponPresentationSource(
       input.characterContext,
       attack.weapon.weaponUnitId,

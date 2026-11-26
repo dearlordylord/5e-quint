@@ -2029,9 +2029,9 @@ function parseStoredEquipment(
   if (structuralIssue !== undefined) {
     const message = Match.value(structuralIssue).pipe(
       Match.when(
-        { tag: "weaponCannotBeHeldOneHanded" },
+        { tag: "twoHandedWeaponInOffHand" },
         ({ itemId }) =>
-          `Character Build loadout weapon ${itemId} cannot be held one-handed.`,
+          `Character Build loadout weapon ${itemId} cannot be held in the off-hand slot.`,
       ),
       Match.when(
         { tag: "twoHandedGripHandConflict" },

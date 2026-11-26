@@ -365,6 +365,8 @@ export {
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
   BattleInterruptSubjectSchema,
+  READIED_WEAPON_CHANGE_ACTIONS,
+  isReadiedWeaponChangeActionSubject,
   BattleSubjectSchema,
   BattleReadyResponseSchema,
   ReadyTriggerDescription,
@@ -720,10 +722,12 @@ export { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runti
 export {
   validateWildShapeEquipmentDispositionFill,
   wildShapeLoadoutObjectRefs,
+  wildShapeEquipmentObjectRefs,
   type ActiveWildShapeEquipmentDisposition,
   type WildShapeEquipmentDispositionChoice,
   type WildShapeEquipmentDispositionFillValue,
   type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
   battleStateWithGroundObjects,

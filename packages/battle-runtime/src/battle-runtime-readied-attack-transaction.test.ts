@@ -21,22 +21,39 @@ import {
   interruptDecisionFill,
   battleFrontierInterruptDecisionForState,
   battleObjectId,
+  battleTablePositionId,
   characterBattleFeatureInitForTest,
   combatantId,
   findHole,
   reactionModifierChoice,
   reactionModifierUnitRef,
+  requireCharacterSpellProcedureRefForTest,
+  spellSlotInvocationRef,
+  cuttingWordsDamageOnlyUnit,
+  cuttingWordsResource,
   testDaggerAttack,
+  testShortswordAttack,
   uncannyDodgeUnit,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-events.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import type { BattleSubject } from "./battle-subjects.ts";
+import type {
+  BattleSubject,
+  ReadiedAttackWeaponChange,
+} from "./battle-subjects.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
+import { weaponDropPositionHole } from "./battle-reducer/attack-weapon-change.ts";
+import { battleGroundObjectState } from "./battle-reducer/object-custody-queries.ts";
+import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 import type { CombatantId } from "./identity.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+
+const dropPositionId = battleTablePositionId("dropped-after-readied-attack");
+const offHandDaggerId = battleObjectId("off:weapon_dagger");
 
 type TransactionOperation = Parameters<
   typeof settleBattleRuntimeTransaction
@@ -156,7 +173,21 @@ function releaseReadiedAttack(
   readied: ReturnType<typeof readyAttackAndReportTrigger>,
   targetId: CombatantId,
   spatialFill = targetSpatialFactsFill(targetId, readied.response.selection, 5),
+  weaponChange?: ReadiedAttackWeaponChange,
 ) {
+  const changeFills: BattleFill[] =
+    weaponChange?.change.kind === "drop"
+      ? [
+          {
+            kind: "weaponDropPosition",
+            holeId: weaponDropPositionHole(
+              fighterId,
+              weaponChange.change.objectId,
+            ).holeId,
+            value: { positionId: dropPositionId },
+          },
+        ]
+      : [];
   const released = pendingFrontier(
     driver.settle({
       kind: "interruptDecision",
@@ -167,7 +198,8 @@ function releaseReadiedAttack(
           kind: "releaseReadiedAttack",
           targetId,
           procedureRef: readied.response.selection.procedureRef,
-          fills: [spatialFill],
+          ...(weaponChange === undefined ? {} : { weaponChange }),
+          fills: [...changeFills, spatialFill],
         },
       }),
     }),
@@ -307,7 +339,8 @@ test("direct readied attack continuation accepts reordered facts but rejects rep
  */
 function readiedDaggerHitOnUncannyDodgeRogue(
   rogueAnswer: "useUncannyDodge" | "decline",
-): number {
+  weaponChange?: ReadiedAttackWeaponChange,
+) {
   const rogueId = combatantId("readied-attack-rogue");
   const driver = transactionDriver(
     startBattleSessionRight({
@@ -316,11 +349,19 @@ function readiedDaggerHitOnUncannyDodgeRogue(
         characterSeed({
           initiative: 20,
           attack: testDaggerAttack(),
+          offHandAttack: {
+            ...testDaggerAttack(),
+            weaponObjectId: offHandDaggerId,
+          },
           selectedLoadout: {
             weapon: {
               itemId: battleObjectId("main:weapon_dagger"),
               unitId: unitId("weapon_dagger"),
               grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: offHandDaggerId,
+              unitId: unitId("weapon_dagger"),
             },
           },
         }),
@@ -346,7 +387,13 @@ function readiedDaggerHitOnUncannyDodgeRogue(
     [fighterId, goblinId],
     rogueId,
   );
-  const attackRoll = releaseReadiedAttack(driver, readied, rogueId);
+  const attackRoll = releaseReadiedAttack(
+    driver,
+    readied,
+    rogueId,
+    targetSpatialFactsFill(rogueId, readied.response.selection, 5),
+    weaponChange,
+  );
   const hit = pendingFrontier(
     driver.subject(attackRoll.replaySubject, [
       attackRollFill(findHole(attackRoll.holes, "attackRoll"), {
@@ -392,18 +439,255 @@ function readiedDaggerHitOnUncannyDodgeRogue(
   const finished = driver.subject(damage.replaySubject, [
     damageRollFill(findHole(damage.holes, "rolledDice"), 4),
   ]);
-  expect(finished.tag).toBe("settled");
+  if (finished.tag !== "settled")
+    throw new Error("Expected the release to settle");
   const state = driver.session().state;
   expect(state.readiedResponses.has(fighterId)).toBe(false);
-  return hpBefore - (state.combatants.get(rogueId)?.hp ?? 0);
+  return {
+    hpLost: hpBefore - (state.combatants.get(rogueId)?.hp ?? 0),
+    state,
+    droppedObjects: finished.resolution.droppedObjects,
+  };
 }
 
 test("a readied attack resumes to its damage after a Reaction to its hit, used or declined", () => {
-  const declinedDamage = readiedDaggerHitOnUncannyDodgeRogue("decline");
-  const dodgedDamage = readiedDaggerHitOnUncannyDodgeRogue("useUncannyDodge");
+  const declinedDamage = readiedDaggerHitOnUncannyDodgeRogue("decline").hpLost;
+  const dodgedDamage =
+    readiedDaggerHitOnUncannyDodgeRogue("useUncannyDodge").hpLost;
 
   expect(declinedDamage).toBeGreaterThan(0);
   expect(dodgedDamage).toBe(Math.floor(declinedDamage / 2));
+});
+
+test("a readied attack resumed after a Reaction to its hit makes its weapon change after it once it's over", () => {
+  const daggerId = battleObjectId("main:weapon_dagger");
+  const dropped = readiedDaggerHitOnUncannyDodgeRogue("decline", {
+    timing: "afterAttack",
+    change: { kind: "drop", objectId: daggerId },
+  });
+
+  expect(dropped.hpLost).toBeGreaterThan(0);
+  expect(battleGroundObjectState(dropped.state, fighterId, daggerId)).toEqual({
+    positionId: dropPositionId,
+    source: { kind: "attackWeaponChange" },
+  });
+});
+
+/** A target whose Reaction a readied attack's damage offers. */
+type DamageReactionTarget = "hellishRebuke" | "cuttingWords";
+
+function damageReactionTargetInit(
+  reaction: DamageReactionTarget,
+  targetId: CombatantId,
+) {
+  return reaction === "hellishRebuke"
+    ? characterSeed({
+        combatantId: targetId,
+        displayName: "Hellish Rebuke caster",
+        initiative: 10,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("hellish_rebuke")],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+      })
+    : characterSeed({
+        combatantId: targetId,
+        displayName: "Bard Target",
+        initiative: 10,
+        classLevels: [{ className: "bard", level: 3 }],
+        attack: null,
+        resources: [
+          cuttingWordsResource({ unit: cuttingWordsDamageOnlyUnit() }),
+        ],
+        characterUnitRefs: [
+          {
+            unit: cuttingWordsDamageOnlyUnit(),
+            supportProfiles: ["reactionRollOrDamageReduction"],
+          },
+        ],
+      });
+}
+
+/**
+ * A Fighter with a Shortsword and a Dagger readies an attack for when the
+ * target moves, releases it at the target with `weaponChange`, and hits. The
+ * target's Reaction to the damage is offered and declined: Hellish Rebuke
+ * once the damage is dealt, or Cutting Words on the damage roll. Returns the
+ * battle and the drops the release reports once that window closes.
+ */
+function readiedHitBehindDamageReaction(
+  reaction: DamageReactionTarget,
+  weaponChange: ReadiedAttackWeaponChange,
+) {
+  const targetId = combatantId("readied-attack-damage-reactor");
+  const mainAttack = testShortswordAttack();
+  const session = startBattleSessionRight({
+    battleId: battleId("readied-attack-damage-reaction"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: mainAttack,
+        offHandAttack: {
+          ...testDaggerAttack(),
+          weaponObjectId: offHandDaggerId,
+        },
+        selectedLoadout: {
+          weapon: {
+            itemId: mainAttack.weaponObjectId,
+            unitId: unitId("weapon_shortsword"),
+            grip: "one_handed",
+          },
+          offHandWeapon: {
+            itemId: offHandDaggerId,
+            unitId: unitId("weapon_dagger"),
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 15 }),
+      damageReactionTargetInit(reaction, targetId),
+    ],
+  });
+  const driver = transactionDriver(session);
+  const readied = readyAttackAndReportTrigger(
+    driver,
+    [fighterId, goblinId],
+    targetId,
+  );
+  const distance = targetSpatialFactsFill(
+    targetId,
+    readied.response.selection,
+    5,
+  );
+  const attackRoll = releaseReadiedAttack(
+    driver,
+    readied,
+    targetId,
+    reaction === "hellishRebuke"
+      ? {
+          ...distance,
+          spatialFacts: [
+            ...distance.spatialFacts,
+            {
+              kind: "reactionSpellDamagerVisibleWithinRange",
+              reactorId: targetId,
+              damageSourceId: fighterId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                targetId,
+                spellSlotInvocationRef("hellish_rebuke", 2, "saveGatedDamage"),
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        }
+      : distance,
+    weaponChange,
+  );
+  const damage = pendingFrontier(
+    driver.subject(attackRoll.replaySubject, [
+      attackRollFill(findHole(attackRoll.holes, "attackRoll"), {
+        total: 20,
+        naturalD20: 15,
+      }),
+    ]),
+  );
+  if (damage.kind !== "holes") throw new Error("Expected damage roll");
+  const reactionWindow = pendingFrontier(
+    driver.subject(damage.replaySubject, [
+      damageRollFill(findHole(damage.holes, "rolledDice"), 4),
+    ]),
+  );
+  if (reactionWindow.kind !== "interruptDecision")
+    throw new Error("Expected the damage Reaction window");
+  expect(reactionWindow.trigger).toBe(
+    reaction === "hellishRebuke" ? "afterDamage" : "attackDamage",
+  );
+  // Only a change before the attack has been made while the window is open.
+  expect(
+    battleGroundObjectState(driver.session().state, fighterId, offHandDaggerId)
+      ?.source,
+  ).toEqual(
+    weaponChange.timing === "beforeAttack" &&
+      weaponChange.change.kind === "drop"
+      ? { kind: "attackWeaponChange" }
+      : undefined,
+  );
+  const declined = driver.settle({
+    kind: "interruptDecision",
+    fill: interruptDecisionFill(reactionWindow.decisionHole, {
+      kind: "decline",
+      responderId: targetId,
+    }),
+  });
+  if (declined.tag !== "settled")
+    throw new Error("Expected the release to settle");
+  return {
+    state: driver.session().state,
+    droppedObjects: declined.resolution.droppedObjects,
+  };
+}
+
+test.each(["hellishRebuke", "cuttingWords"] as const)(
+  "a readied attack's weapon change after it is made once a Reaction to its damage (%s) is over, and a drop is reported once",
+  (reaction) => {
+    const daggerId = offHandDaggerId;
+    const droppedBefore = readiedHitBehindDamageReaction(reaction, {
+      timing: "beforeAttack",
+      change: { kind: "drop", objectId: daggerId },
+    });
+    const droppedAfter = readiedHitBehindDamageReaction(reaction, {
+      timing: "afterAttack",
+      change: { kind: "drop", objectId: daggerId },
+    });
+    const stowedAfter = readiedHitBehindDamageReaction(reaction, {
+      timing: "afterAttack",
+      change: { kind: "stow", objectId: daggerId },
+    });
+    const drop = {
+      kind: "objectDropped",
+      actorId: fighterId,
+      objectId: daggerId,
+      source: { kind: "attackWeaponChange" },
+    };
+
+    expect(droppedBefore.droppedObjects).toEqual([drop]);
+    expect(droppedAfter.droppedObjects).toEqual([drop]);
+    expect(
+      battleGroundObjectState(droppedAfter.state, fighterId, daggerId),
+    ).toEqual({
+      positionId: dropPositionId,
+      source: { kind: "attackWeaponChange" },
+    });
+    expect(stowedAfter.droppedObjects).toBeUndefined();
+    expect(loadoutWeaponIsStowed(stowedAfter.state, fighterId, daggerId)).toBe(
+      true,
+    );
+  },
+);
+
+test("a readied attack resumed after a Reaction to its hit makes its weapon change before it once", () => {
+  const dropped = readiedDaggerHitOnUncannyDodgeRogue("decline", {
+    timing: "beforeAttack",
+    change: { kind: "drop", objectId: offHandDaggerId },
+  });
+
+  expect(dropped.hpLost).toBeGreaterThan(0);
+  expect(dropped.droppedObjects).toEqual([
+    {
+      kind: "objectDropped",
+      actorId: fighterId,
+      objectId: offHandDaggerId,
+      source: { kind: "attackWeaponChange" },
+    },
+  ]);
+  expect(
+    battleGroundObjectState(dropped.state, fighterId, offHandDaggerId),
+  ).toEqual({
+    positionId: dropPositionId,
+    source: { kind: "attackWeaponChange" },
+  });
 });
 
 test("the attack-hit replay keeps a fixed target's spatial facts and compares them by value, in any order", () => {

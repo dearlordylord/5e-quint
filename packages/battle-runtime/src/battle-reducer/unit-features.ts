@@ -111,13 +111,12 @@ import {
   type ResolvedWildShapeEquipmentDisposition,
   validateWildShapeEquipmentDispositionFill,
   wildShapeActiveEquipmentDispositions,
-  wildShapeLoadoutObjectRefs,
+  wildShapeEquipmentObjectRefs,
 } from "./wild-shape-equipment.ts";
 import {
   battleStateWithGroundObjects,
   wildShapeGroundObjectPlacement,
 } from "./battle-object-lifecycle.ts";
-import { characterEffectiveLoadout } from "./character-effective-loadout.ts";
 import type {
   BardicInspirationFailedD20TestResolutionInput,
   BardicInspirationFailedD20TestResolutionResult,
@@ -1225,9 +1224,7 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape form is not battle-available.",
     );
   }
-  const equipmentCandidates = wildShapeLoadoutObjectRefs(
-    characterEffectiveLoadout(input.state, actor),
-  );
+  const equipmentCandidates = wildShapeEquipmentObjectRefs(input.state, actor);
   const expectedEquipmentDispositionHole = wildShapeEquipmentDispositionHole({
     actorId: actor.combatantId,
     formExecutionRef: formAdmission.execution.scopeRef,

@@ -50,6 +50,17 @@ Specialized boundaries:
 - Wild Shape separates [presentation](src/druid-wild-shape-known-form-execution.ts)
   from [known-form runtime facts](src/druid-wild-shape-known-form-runtime.ts).
 
+## Weapon slot implementation restrictions
+
+These are Battle implementation restrictions, not SRD rules. Another owned
+weapon can enter the off-hand slot only while the selected main weapon is held.
+A Two-Handed weapon is unsupported in the off-hand slot, even though it can be
+held with one hand in the main slot. Restoring a slot's own weapon uses the
+hands allocated by the selected loadout grip: an off-hand weapon has no hand
+under a selected two-handed main grip, including while that main weapon is
+stowed. Changing these slot restrictions requires extending the supported
+attack and hand-occupancy contracts together.
+
 ## Runtime protocol
 
 1. Initialize Battle, then call `discoverBattleActCandidates(state)` for

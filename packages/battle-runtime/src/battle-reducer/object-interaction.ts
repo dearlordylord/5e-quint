@@ -34,8 +34,8 @@ import type {
 import type { CombatantId } from "../identity.ts";
 import {
   groundedLoadoutWeaponPickups,
-  stateWithLoadoutWeaponChange,
-} from "./loadout-weapon-custody.ts";
+  stateWithOwnedWeaponChange,
+} from "./owned-weapon-custody.ts";
 import {
   combatantCanTakeActions,
   currentActorId,
@@ -115,7 +115,7 @@ export function objectInteractionActs(
       initialHoles: [objectInteractionRulingHole(state, actorId)],
     },
     ...groundedLoadoutWeaponPickups(state, actor).map(
-      (objectId): BattleActDiscoveryCandidate => ({
+      ({ objectId }): BattleActDiscoveryCandidate => ({
         subject: {
           tag: "runtimeCommand",
           actorId,
@@ -186,19 +186,17 @@ export function resolveObjectInteraction(
       resolvedResult(chargedState),
     ),
     Match.when({ command: "pickUpHeldWeapon" }, (subject) => {
-      const pickedUp = groundedLoadoutWeaponPickups(
-        input.state,
-        actor,
-      ).includes(subject.objectId)
-        ? stateWithLoadoutWeaponChange(chargedState, subject.actorId, {
-            kind: "equip",
-            objectId: subject.objectId,
-          })
-        : {
-            tag: "invalid" as const,
-            message:
-              "That weapon is not on the ground for this creature to pick up.",
-          };
+      const pickup = groundedLoadoutWeaponPickups(input.state, actor).find(
+        ({ objectId }) => objectId === subject.objectId,
+      );
+      const pickedUp =
+        pickup === undefined
+          ? {
+              tag: "invalid" as const,
+              message:
+                "That weapon is not on the ground for this creature to pick up.",
+            }
+          : stateWithOwnedWeaponChange(chargedState, subject.actorId, pickup);
       return pickedUp.tag === "applied"
         ? resolvedResult(pickedUp.state)
         : invalidResult(input.state, "staleSubject", pickedUp.message);

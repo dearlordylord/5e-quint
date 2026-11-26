@@ -42,6 +42,11 @@ import { INITIAL_TURN_RESOURCES } from "./battle-runtime-protocol.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
+import {
+  readiedReleaseFills,
+  resolveReadiedReleaseWithWeaponChange,
+} from "./readied-attack-weapon-change.ts";
+
 function readiedActionCheckpointMatches(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -101,39 +106,55 @@ export function resolveReleaseReadiedActionCommand(
       "No readied action is currently held by this responder.",
     );
   }
-  const interruptedTurnResources = input.state.currentTurnResources;
-  const actionResult = resolveAction({
-    state: {
-      ...input.state,
-      currentTurnResources: READIED_ACTION_RELEASE_RESOURCES,
-    },
-    subject: readied.response.subject,
-    fills: input.fills,
-  });
-  if (actionResult.tag === "invalid") return actionResult;
-  const readiedResponses = new Map(actionResult.state.readiedResponses);
-  if (actionResult.tag === "resolved") {
-    readiedResponses.delete(input.subject.reactorId);
+  const heldSubject = readied.response.subject;
+  if (
+    input.subject.weaponChange !== undefined &&
+    !(
+      heldSubject.tag === "action" &&
+      (heldSubject.action === "grapple" || heldSubject.action === "shove")
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Only a readied Attack's attack can carry a weapon change.",
+    );
   }
-  const state = {
-    ...actionResult.state,
-    currentTurnResources: interruptedTurnResources,
-    readiedResponses,
-  };
-  return actionResult.tag === "needsHoles"
-    ? {
-        ...actionResult,
-        state,
-        frontier:
-          actionResult.frontier.kind === "holes"
-            ? {
-                ...actionResult.frontier,
-                replaySubject: battleSubjectForReplay(input.subject),
-              }
-            : actionResult.frontier,
-        snapshot: snapshotBattle(state),
-      }
-    : { ...actionResult, state, snapshot: snapshotBattle(state) };
+  return resolveReadiedReleaseWithWeaponChange(input, (releaseInput) => {
+    const interruptedTurnResources = releaseInput.state.currentTurnResources;
+    const actionResult = resolveAction({
+      state: {
+        ...releaseInput.state,
+        currentTurnResources: READIED_ACTION_RELEASE_RESOURCES,
+      },
+      subject: heldSubject,
+      fills: readiedReleaseFills(releaseInput.subject, releaseInput.fills),
+    });
+    if (actionResult.tag === "invalid") return actionResult;
+    const readiedResponses = new Map(actionResult.state.readiedResponses);
+    if (actionResult.tag === "resolved") {
+      readiedResponses.delete(releaseInput.subject.reactorId);
+    }
+    const state = {
+      ...actionResult.state,
+      currentTurnResources: interruptedTurnResources,
+      readiedResponses,
+    };
+    return actionResult.tag === "needsHoles"
+      ? {
+          ...actionResult,
+          state,
+          frontier:
+            actionResult.frontier.kind === "holes"
+              ? {
+                  ...actionResult.frontier,
+                  replaySubject: battleSubjectForReplay(releaseInput.subject),
+                }
+              : actionResult.frontier,
+          snapshot: snapshotBattle(state),
+        }
+      : { ...actionResult, state, snapshot: snapshotBattle(state) };
+  });
 }
 
 export function resolveReleaseReadiedSpellCommand(

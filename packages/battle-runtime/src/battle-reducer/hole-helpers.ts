@@ -778,6 +778,22 @@ export function searchTargetHole(
   };
 }
 
+/** The target contract shared by Attack and readied Unarmed Strike options. */
+export function unarmedStrikeOptionTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+  action: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "grapple" | "shove" }
+  >["action"],
+): BattleTargetChoiceHole {
+  return Match.value(action).pipe(
+    Match.when("grapple", () => grappleTargetHole(state, actorId)),
+    Match.when("shove", () => shoveTargetHole(state, actorId)),
+    Match.exhaustive,
+  );
+}
+
 export function grappleTargetHole(
   state: BattleState,
   actorId: CombatantId,

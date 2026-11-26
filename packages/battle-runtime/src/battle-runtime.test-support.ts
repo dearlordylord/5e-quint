@@ -26,7 +26,13 @@ import {
   resolveSpawnedCompanionForm,
   resolvePactOfTheChainSpawnedCompanionForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Result, Schema, SchemaIssue } from "effect";
+import {
+  Array as EffectArray,
+  Match,
+  Result,
+  Schema,
+  SchemaIssue,
+} from "effect";
 import { expect } from "vitest";
 import {
   battleStatBlockCombatantSource,
@@ -87,6 +93,7 @@ import {
   resourceCount,
   type Condition,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
   statBlockId,
@@ -180,7 +187,7 @@ import {
   BattleProcedureExecutionRef,
   spellId,
 } from "./identity.ts";
-import type { BattleEffectExecutionRef } from "./identity.ts";
+import type { BattleEffectExecutionRef, BattleObjectId } from "./identity.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
   type BattleRuntimeContext,
@@ -4136,6 +4143,11 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["unarmedStrike"];
   readonly offHandAttack?: TestCharacterWeaponAttack;
+  /** Weapons the character carries outside its loadout, each its own object. */
+  readonly otherOwnedWeapons?: ReadonlyNonEmptyArray<{
+    readonly itemId: BattleObjectId;
+    readonly attack: TestCharacterWeaponAttack;
+  }>;
   readonly resources?: Extract<
     CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
@@ -4285,19 +4297,20 @@ export function characterSeed(input: {
       supportProfiles: supportProfiles.success,
     };
   });
-  const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
-    (candidate) => {
-      if (candidate === null || candidate === undefined) return [];
-      const unit = unitLibrary
-        .listUnits()
-        .find(
-          (entry) =>
-            entry.kind === "weapon" &&
-            entry.id === candidate.weapon.weaponUnitId,
-        );
-      return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
-    },
-  );
+  const weaponPresentationUnitRefs = [
+    attack,
+    input.offHandAttack,
+    ...(input.otherOwnedWeapons ?? []).map((owned) => owned.attack),
+  ].flatMap((candidate) => {
+    if (candidate === null || candidate === undefined) return [];
+    const unit = unitLibrary
+      .listUnits()
+      .find(
+        (entry) =>
+          entry.kind === "weapon" && entry.id === candidate.weapon.weaponUnitId,
+      );
+    return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
+  });
   const characterUnitRefs = [
     ...new Map(
       [
@@ -4357,6 +4370,22 @@ export function characterSeed(input: {
         : {
             offHandAttack: characterBattleCreatureInitWeaponAttack(
               admittedOffHandAttack,
+            ),
+          }),
+      ...(input.otherOwnedWeapons === undefined
+        ? {}
+        : {
+            otherOwnedWeapons: EffectArray.map(
+              input.otherOwnedWeapons,
+              ({ itemId, attack: ownedAttack }) => ({
+                itemId,
+                attack: characterBattleCreatureInitWeaponAttack(
+                  admitSelectedWeaponMasteryForCharacterSeed(
+                    ownedAttack,
+                    weaponMasteries,
+                  ),
+                ),
+              }),
             ),
           }),
       ...(input.unitFeatures === undefined

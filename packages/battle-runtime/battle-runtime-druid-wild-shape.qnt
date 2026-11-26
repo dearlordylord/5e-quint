@@ -44,6 +44,7 @@ module battleRuntimeDruidWildShape {
     shield: DruidWildShapeWearableEquipmentResolution,
     mainWeapon: DruidWildShapeHeldEquipmentResolution,
     offHandWeapon: DruidWildShapeHeldEquipmentResolution,
+    carriedWeapons: List[DruidWildShapeWearableEquipmentResolution],
   }
   type DruidWildShapeProjection = {
     bonusActionAvailable: bool,
@@ -76,6 +77,7 @@ module battleRuntimeDruidWildShape {
     shield: EquipmentMerged,
     mainWeapon: HeldEquipmentMerged,
     offHandWeapon: HeldEquipmentMerged,
+    carriedWeapons: List(),
   }
 
   pure def wornShieldEquipmentDisposition: DruidWildShapeEquipmentResolution = {
@@ -83,6 +85,7 @@ module battleRuntimeDruidWildShape {
     shield: EquipmentWorn,
     mainWeapon: HeldEquipmentMerged,
     offHandWeapon: HeldEquipmentMerged,
+    carriedWeapons: List(),
   }
 
   pure def wornArmorEquipmentDisposition: DruidWildShapeEquipmentResolution = {
@@ -90,6 +93,7 @@ module battleRuntimeDruidWildShape {
     shield: EquipmentMerged,
     mainWeapon: HeldEquipmentMerged,
     offHandWeapon: HeldEquipmentMerged,
+    carriedWeapons: List(),
   }
 
   pure def fallenShieldEquipmentDisposition: DruidWildShapeEquipmentResolution = {
@@ -97,6 +101,7 @@ module battleRuntimeDruidWildShape {
     shield: EquipmentFell,
     mainWeapon: HeldEquipmentMerged,
     offHandWeapon: HeldEquipmentMerged,
+    carriedWeapons: List(),
   }
 
   pure def wornMainWeaponEquipmentDisposition: DruidWildShapeEquipmentResolution = {
@@ -104,6 +109,7 @@ module battleRuntimeDruidWildShape {
     shield: EquipmentMerged,
     mainWeapon: HeldEquipmentWorn,
     offHandWeapon: HeldEquipmentMerged,
+    carriedWeapons: List(),
   }
 
   pure def initialProjection: DruidWildShapeProjection = {
@@ -221,6 +227,7 @@ module battleRuntimeDruidWildShape {
       + wearableEquipmentFell(disposition.shield)
       + heldEquipmentFell(disposition.mainWeapon)
       + heldEquipmentFell(disposition.offHandWeapon)
+      + disposition.carriedWeapons.foldl(0, (count, choice) => count + wearableEquipmentFell(choice))
 
   pure def activeEquipmentDisposition(
     resolution: DruidWildShapeEquipmentResolution,

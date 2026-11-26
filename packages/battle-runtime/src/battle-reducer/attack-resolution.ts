@@ -20,6 +20,7 @@
 import {
   stateWithWeaponChangeAfterAttackAllowance,
   stateWithWeaponChangeAfterUnarmedStrikeOption,
+  resolveAttackWithWeaponChange,
 } from "./attack-weapon-change.ts";
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import type {
@@ -1361,7 +1362,17 @@ export function resolveStatBlockBonusActionHide(
   };
 }
 
-export function resolveGrapple(
+/**
+ * Resolves a Grapple, first making the weapon change it carries when it takes
+ * the place of an attack of the Attack action.
+ */
+export function resolveGrappleWithWeaponChange(
+  input: GrappleBattleResolutionInput,
+): BattleResolutionResult {
+  return resolveAttackWithWeaponChange(input, resolveGrapple);
+}
+
+function resolveGrapple(
   input: GrappleBattleResolutionInput,
 ): BattleResolutionResult {
   const fillSet = grappleFillSet(input.fills);
@@ -1449,7 +1460,7 @@ export function resolveGrapple(
   const nextState = applyGrappleSavingThrowOutcome({
     state: stateWithWeaponChangeAfterUnarmedStrikeOption(
       { ...input.state, currentTurnResources: spent.success.state },
-      input.subject.actorId,
+      input.subject,
       spent.success.spentResource,
     ),
     link: link.link,
@@ -1486,7 +1497,17 @@ export function applyGrappleSavingThrowOutcome(input: {
   });
 }
 
-export function resolveShove(
+/**
+ * Resolves a Shove, first making the weapon change it carries when it takes
+ * the place of an attack of the Attack action.
+ */
+export function resolveShoveWithWeaponChange(
+  input: ShoveBattleResolutionInput,
+): BattleResolutionResult {
+  return resolveAttackWithWeaponChange(input, resolveShove);
+}
+
+function resolveShove(
   input: ShoveBattleResolutionInput,
 ): BattleResolutionResult {
   const fillSet = shoveFillSet(input.fills);
@@ -1602,7 +1623,7 @@ export function resolveShove(
         ...savingThrowExtendedState,
         currentTurnResources: spent.success.state,
       },
-      input.subject.actorId,
+      input.subject,
       spent.success.spentResource,
     ),
     targetId: fillSet.targetId,

@@ -333,46 +333,81 @@ readied interaction take only the action Ready held.
 ## A63: A weapon change after an attack comes before the next attack
 
 **Assumption:** Each attack a character makes as part of its Attack action on
-its own turn can equip or unequip one of its selected loadout's weapons. The
+its own turn can equip or unequip one of the weapons it owns. The
 change can come before the attack, carried on the attack itself, or after it.
 A change after the attack must come before the character's next attack as part
 of the Attack action. If that next attack carries its own change before its
 roll, any change still left from the attack before it is gone. A Grapple or
-Shove that takes the place of one of these attacks also leaves a change after
-it and ends the window of the attack before it. Other attacks, such as an
-off-hand attack with a Bonus Action, or a Grapple or Shove with a Flurry of
-Blows Unarmed Strike, leave a change still left as it was. Any change still
-left at the end of the turn is also gone.
+Shove that takes the place of one of these attacks is such an attack too: it
+can carry its own change before it, such as stowing a weapon to free the hand
+a Grapple grabs with, or leave one after it, and it ends the window of the
+attack before it. Other attacks, such as an off-hand attack with a Bonus
+Action, or a Grapple or Shove with a Flurry of Blows Unarmed Strike, carry no
+change and leave a change still left as it was. Preparing Ready grants no
+change before its trigger, so the Grapple or Shove that Ready holds carries
+none. Any change still left at the end of the turn is also gone.
 
-Equipping draws a stowed weapon, or picks up one lying on the ground, and puts
-it back in hand with its loadout grip. The hands the grip uses must be empty.
-Unequipping either sheathes or stows a held weapon, which Battle treats the
-same, or drops it. A dropped weapon lands where the table places it, and stays
-on the ground for its owner to pick up again. As with A60, whether the creature
-can reach a fallen weapon is the table's call.
+A readied Attack is the Attack action taken with a Reaction when its trigger
+occurs, so its one attack gets the one change too, on another creature's turn.
+The reactor chooses it when releasing the readied attack: a change before the
+attack, after which the readied attack must still be there, or a change after
+it. A change after the attack is chosen before the roll, against the hands as
+the attack will leave them. Battle makes it once the readied attack is over,
+after any Reaction to its hit or damage, and only if the reactor can still
+take actions, the required hand is free, and the weapon is still where the
+change needs it. A Grapple that grabs with that hand can therefore prevent a
+preselected equip after it; a resisted Grapple leaves that hand free. Where a weapon
+dropped after the attack lands is asked when the attack is released. Preparing Ready grants no change, and no other Reaction attack, such
+as an Opportunity Attack, carries one.
+
+Equipping draws a carried weapon, or picks up one lying on the ground, into
+one hand slot of the character's loadout: the main hand or the off hand. The
+slot's own weapon prefers its loadout grip, using one hand if the other hand is occupied. Another weapon takes the
+slot once the slot's weapon, if any, is out of hand; that weapon then leaves
+the loadout, still carried or lying where it fell. In the main hand a
+Two-Handed weapon takes a two-handed grip when both hands are free, otherwise
+it is held in one hand. Any other weapon takes a one-handed grip. A65's grip
+change can then change this holding grip; attacking with a Two-Handed weapon
+still requires two hands. The hands the slot gives the
+weapon must be empty. Unequipping either sheathes or stows a
+held weapon, which Battle treats the same, or drops it. A dropped weapon lands
+where the table places it, and stays on the ground for its owner to pick up
+again. As with A60, whether the creature can reach a fallen weapon is the
+table's call.
 
 **Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Attack
 [Action]," Equipping and Unequipping Weapons, says "You can either equip or
 unequip one weapon when you make an attack as part of this action. You do so
 either before or after the attack." It also says "Equipping a weapon includes
 drawing it from a sheath or picking it up. Unequipping a weapon includes
-sheathing, stowing, or dropping it." The SRD doesn't say how long after the
-attack the change may wait, or where a dropped weapon lands. The change belongs
-to the Attack action, so the model ends the window at the action's next attack,
-which keeps each change to one attack, and asks the table where the weapon
-lands.
+sheathing, stowing, or dropping it." "Unarmed Strike" calls an Unarmed Strike
+"a melee attack" whose options include Grapple and Shove, and a Grapple is
+"possible only if ... you have a hand free to grab it." "Ready [Action]" lets
+the creature choose "the action you will take in response to that trigger" and
+"take your Reaction right after the trigger finishes"; an Opportunity Attack is
+"one melee attack" with the Reaction, not the Attack action. The SRD doesn't say
+how long after the attack the change may wait, when a readied attack's change
+after it is chosen, or where a dropped weapon lands. The change belongs to the
+Attack action, so the model ends the window at the action's next attack, which
+keeps each change to one attack, and asks the table where the weapon lands. A
+readied attack's Reaction ends with the attack, so its change after the attack
+is chosen with the release.
 
-**Temporary implementation restriction (not a rules assumption):** Battle can
-change only the selected loadout's main-hand and off-hand weapons. Other owned
-weapons don't enter the battle yet (#230), and a weapon goes back to the hands
-and grip its loadout gives it (#669). A Grapple or Shove can't carry a change
-before it yet: a character makes that change after the attack before it, or
-with another attack.
+**Temporary implementation restriction (not a rules assumption):** Battle
+brings into the battle only owned weapons it can execute; one it can't stays
+out, as if left behind. The object interaction that picks a fallen weapon up
+puts back only a loadout weapon, into its own slot. The supported weapon-slot
+restrictions are owned by
+[Battle's implementation boundaries](packages/battle-runtime/README.md#weapon-slot-implementation-restrictions).
+A change after a readied throw can't name the thrown weapon, which rests
+wherever it lands. Wild Shape's equipment choice also includes carried spare
+owned weapons; weapons already on the ground remain there.
 
 ## A58: Any weapon may be held with both hands
 
 **Assumption:** A loadout's main weapon has a grip. Any weapon may take the
-`two_handed` grip, and a Two-Handed weapon needs it. A `two_handed` grip
+`two_handed` grip. A Two-Handed weapon needs that grip when attacking with it,
+but may be held with the `one_handed` grip. A `two_handed` grip
 occupies both hands, so the same loadout can't also hold a shield or an
 off-hand weapon, and neither hand is free for a grapple or a held object. A
 Versatile weapon deals its Versatile damage on a melee attack while it is held
@@ -412,7 +447,8 @@ Bonus Action, movement or object interaction. Battle offers it on the
 creature's own turn while it can act (it isn't Incapacitated), including while
 Command's Halt applies, since a change of grip is neither a move nor an action.
 A `two_handed` grip needs the other hand free of any shield, off-hand weapon,
-grapple or held object. A Two-Handed weapon keeps its `two_handed` grip (A58).
+grapple or held object. A Two-Handed weapon may be held in one hand; attacking
+with it requires its `two_handed` grip (A58).
 Changing grip off the creature's turn is the table's ruling, outside Battle.
 
 **Rules basis / gap:** `.references/srd-5.2.1/equipment.md`, "Versatile," says

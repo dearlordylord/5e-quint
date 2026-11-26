@@ -22,7 +22,7 @@
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
-import { WeaponGripSchema } from "@dnd/shared/types";
+import { WeaponGripSchema, type HandUse } from "@dnd/shared/types";
 import {
   RULED_COVER_TYPES,
   MovementFeet,
@@ -102,18 +102,75 @@ export type BattleSubjectBonusAction =
   (typeof BATTLE_SUBJECT_BONUS_ACTIONS)[number];
 
 /**
- * The one weapon an Attack action attack equips or unequips: equip draws a
- * stowed loadout weapon or picks a fallen one up, stow sheathes or stows a
- * held one, and drop lets a held one fall.
+ * The hand slots of a character's loadout a weapon goes in: the main hand,
+ * held with the loadout's grip, or the off hand.
  */
-export const ATTACK_WEAPON_CHANGE_KINDS = ["equip", "stow", "drop"] as const;
-export type AttackWeaponChangeKind =
-  (typeof ATTACK_WEAPON_CHANGE_KINDS)[number];
-export const AttackWeaponChangeSchema = Schema.Struct({
-  kind: Schema.Literals(ATTACK_WEAPON_CHANGE_KINDS),
-  objectId: BattleObjectId,
-});
+export const LOADOUT_WEAPON_SLOTS = [
+  "mainWeapon",
+  "offWeapon",
+] as const satisfies readonly HandUse[];
+export type LoadoutWeaponSlot = (typeof LOADOUT_WEAPON_SLOTS)[number];
+/**
+ * The one weapon an Attack action attack equips or unequips: equip draws a
+ * carried weapon the character owns, or picks a fallen one up, into a hand
+ * slot; stow sheathes or stows a held one, and drop lets a held one fall.
+ */
+export const AttackWeaponChangeSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("equip"),
+    objectId: BattleObjectId,
+    slot: Schema.Literals(LOADOUT_WEAPON_SLOTS),
+  }),
+  Schema.Struct({ kind: Schema.Literal("stow"), objectId: BattleObjectId }),
+  Schema.Struct({ kind: Schema.Literal("drop"), objectId: BattleObjectId }),
+]);
 export type AttackWeaponChange = typeof AttackWeaponChangeSchema.Type;
+
+/**
+ * When a readied Attack's one weapon change happens: right before the attack
+ * or right after it ("Attack [Action]": "You do so either before or after the
+ * attack").
+ */
+export const READIED_ATTACK_WEAPON_CHANGE_TIMINGS = [
+  "beforeAttack",
+  "afterAttack",
+] as const;
+
+/**
+ * The one weapon change a readied Attack carries when its reactor releases
+ * it, and whether it comes before or after the attack.
+ */
+export const ReadiedAttackWeaponChangeSchema = Schema.Struct({
+  timing: Schema.Literals(READIED_ATTACK_WEAPON_CHANGE_TIMINGS),
+  change: AttackWeaponChangeSchema,
+});
+export type ReadiedAttackWeaponChange =
+  typeof ReadiedAttackWeaponChangeSchema.Type;
+
+/** Whether two weapon changes equip or unequip the same weapon the same way. */
+function attackWeaponChangesEqual(
+  left: AttackWeaponChange,
+  right: AttackWeaponChange,
+): boolean {
+  return (
+    left.kind === right.kind &&
+    left.objectId === right.objectId &&
+    (left.kind !== "equip" ||
+      (right.kind === "equip" && left.slot === right.slot))
+  );
+}
+
+/** Whether two readied Attack releases carry the same weapon change, if any. */
+export function readiedAttackWeaponChangesEqual(
+  left: ReadiedAttackWeaponChange | undefined,
+  right: ReadiedAttackWeaponChange | undefined,
+): boolean {
+  if (left === undefined || right === undefined) return left === right;
+  return (
+    left.timing === right.timing &&
+    attackWeaponChangesEqual(left.change, right.change)
+  );
+}
 
 export const BATTLE_RUNTIME_COMMANDS = [
   "startTurn",
@@ -661,11 +718,32 @@ const BattleInterruptReleaseReadiedMovementSubjectSchema = Schema.Struct({
   readiedMovementActorId: CombatantId,
 });
 
+export const READIED_WEAPON_CHANGE_ACTIONS = ["grapple", "shove"] as const;
+export type ReadiedWeaponChangeAction =
+  (typeof READIED_WEAPON_CHANGE_ACTIONS)[number];
+export function isReadiedWeaponChangeActionSubject<
+  Subject extends BattleSubject,
+>(
+  subject: Subject,
+): subject is Subject &
+  Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: ReadiedWeaponChangeAction }
+  > {
+  return (
+    subject.tag === "action" &&
+    READIED_WEAPON_CHANGE_ACTIONS.some(
+      (candidate) => candidate === subject.action,
+    )
+  );
+}
+
 const BattleInterruptReleaseReadiedActionSubjectSchema = Schema.Struct({
   tag: Schema.Literal("runtimeCommand"),
   actorId: CombatantId,
   command: Schema.Literal("releaseReadiedAction"),
   reactorId: CombatantId,
+  weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
 });
 
 const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
@@ -680,6 +758,7 @@ const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
   ]),
   attackAbility: Schema.optionalKey(Schema.Never),
   attackDamageType: Schema.optionalKey(Schema.Never),
+  weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
 });
 
 const BattleInterruptCastTriggeredReactionSpellSubjectSchema = Schema.Struct({
@@ -731,6 +810,13 @@ export const BattleInterruptSubjectSchema = Schema.Union([
   BattleInterruptRetaliationAttackSubjectSchema,
 ]);
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
+export type BattleReleaseReadiedActionSubject =
+  typeof BattleInterruptReleaseReadiedActionSubjectSchema.Type;
+
+/** The release of a readied attack at one target, with its weapon change. */
+export type BattleReleaseReadiedAttackSubject =
+  typeof BattleInterruptReleaseReadiedAttackSubjectSchema.Type;
 
 // SRD 5.2.1 "Your Turn", Interacting with Things, and "Utilize [Action]": an
 // object interaction, charged as the turn's free interaction or the Utilize
@@ -805,11 +891,13 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("grapple"),
+    weaponChange: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("shove"),
+    weaponChange: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -839,6 +927,28 @@ export const BattleReadyActionSubjectSchema = Schema.Union([
 ]);
 export type BattleReadyActionSubject =
   typeof BattleReadyActionSubjectSchema.Type;
+
+// SRD 5.2.1 Rules Glossary, "Unarmed Strike": a Grapple or Shove can take the
+// place of an attack of the Attack action, and "Attack [Action]", Equipping
+// and Unequipping Weapons, lets that attack equip or unequip one weapon
+// before it. Preparing Ready grants no change before the trigger, so the
+// Grapple or Shove that Ready holds carries none (ASSUMPTIONS.md A63).
+const BattleUnarmedStrikeOptionWithWeaponChangeSubjectSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("grapple"),
+    weaponChange: AttackWeaponChangeSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shove"),
+    weaponChange: AttackWeaponChangeSchema,
+  }),
+]);
+export type BattleUnarmedStrikeOptionWithWeaponChangeSubject =
+  typeof BattleUnarmedStrikeOptionWithWeaponChangeSubjectSchema.Type;
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
@@ -876,6 +986,7 @@ export const BattleSubjectSchema = Schema.Union([
     statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   BattleReadyActionSubjectSchema,
+  BattleUnarmedStrikeOptionWithWeaponChangeSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
@@ -1953,7 +2064,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       (action) => JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "shove" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
+      JSON.stringify([
+        action.tag,
+        action.actorId,
+        action.action,
+        "weaponChange" in action ? (action.weaponChange ?? null) : null,
+      ]),
     ),
     Match.when({ tag: "bonusActionDashSpell" }, (spell) =>
       JSON.stringify([
@@ -2096,7 +2212,12 @@ function battleSubjectKey(subject: BattleSubject): string {
           JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "grapple" }, (action) =>
-          JSON.stringify([action.tag, action.actorId, action.action]),
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.action,
+            "weaponChange" in action ? (action.weaponChange ?? null) : null,
+          ]),
         ),
         Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
           JSON.stringify([action.tag, action.actorId, action.action]),

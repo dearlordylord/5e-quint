@@ -65,7 +65,7 @@ export type CharacterSheetEquipmentLoadoutIssue =
       readonly itemId: CharacterEquipmentItemId<"shield">;
     }
   | {
-      readonly tag: "weaponCannotBeHeldOneHanded";
+      readonly tag: "twoHandedWeaponInOffHand";
       readonly itemId: CharacterEquipmentItemId;
     }
   | {
@@ -192,7 +192,7 @@ export function characterSheetEquipmentLoadoutIssueMessage(
         `Wielding shield ${matched.itemId} requires shield training.`,
     ),
     Match.when(
-      { tag: "weaponCannotBeHeldOneHanded" },
+      { tag: "twoHandedWeaponInOffHand" },
       equipmentLoadoutStructureIssueMessage,
     ),
     Match.when(

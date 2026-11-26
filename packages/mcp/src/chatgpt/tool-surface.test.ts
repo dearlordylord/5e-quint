@@ -532,6 +532,41 @@ describe("ChatGPT tool surface", () => {
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
+  it("limits readied action weapon changes to Grapple and Shove tool inputs", () => {
+    for (const name of ["grapple", "shove", "dash", "dodge"] as const) {
+      const validate = createDraft2020JsonSchemaValidator().getValidator(
+        requireJsonSchema(
+          CHATGPT_EXECUTION_TOOLS[name].definition.inputSchema,
+          `${name} input`,
+        ),
+      );
+      const choice = { kind: "releaseReadiedAction", fills: [] };
+      const fill = {
+        kind: "interruptDecision",
+        holeId: "synthetic-hole",
+        value: { kind: "resolve", responderId: "synthetic-responder", choice },
+      };
+      expect(validate({ fill }).valid).toBe(true);
+      expect(
+        validate({
+          fill: {
+            ...fill,
+            value: {
+              ...fill.value,
+              choice: {
+                ...choice,
+                weaponChange: {
+                  timing: "beforeAttack",
+                  change: { kind: "stow", objectId: "synthetic-weapon" },
+                },
+              },
+            },
+          },
+        }).valid,
+      ).toBe(name === "grapple" || name === "shove");
+    }
+  });
+
   it("limits decline to its owned Reaction decision schema", () => {
     const validator = createDraft2020JsonSchemaValidator().getValidator(
       requireJsonSchema(

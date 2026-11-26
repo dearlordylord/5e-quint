@@ -3,7 +3,10 @@
 
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
-import { sameBattleSubject } from "../battle-subjects.ts";
+import {
+  readiedAttackWeaponChangesEqual,
+  sameBattleSubject,
+} from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
   AdmittedBattleResolutionInput,
@@ -52,6 +55,7 @@ import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { releasePendingSpellSlotUseThisTurn } from "./spell-turn-resources.ts";
 import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
+import { readiedReleaseWeaponChangeEnd } from "./readied-attack-weapon-change.ts";
 import { handledInterruptRouteProjection } from "./replay-continuation.ts";
 import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 
@@ -438,8 +442,23 @@ export function resolveActiveInterruptProcedure(input: {
     .filter((fill) =>
       fill.spatialFacts.some((fact) => fact.kind === "attackTargetDistance"),
     );
+  // A readied attack's weapon change after it is made once the attack is
+  // over, at the landing position the selection or a later answer gave a
+  // dropped weapon.
+  const recorded = stateRecordingWeaponDropFills(
+    input.resolution.state,
+    input.resolution.fills,
+  );
+  const continuationWeaponDropFills = activeInterrupt.fills.filter(
+    (fill) =>
+      fill.kind === "weaponDropPosition" &&
+      !input.resolution.fills.some(
+        (submitted) => submitted.holeId === fill.holeId,
+      ),
+  );
   const continuationResolution = {
     ...input.resolution,
+    state: recorded,
     // The transaction owner may already carry the initial spatial fill in its
     // replay vector. Retain it exactly once; duplicate submitted fills still
     // reach native validation unchanged.
@@ -452,6 +471,7 @@ export function resolveActiveInterruptProcedure(input: {
               battleContinuationFillEquals(retained, submitted),
           ),
       ),
+      ...continuationWeaponDropFills,
       ...input.resolution.fills,
     ],
   };
@@ -487,6 +507,42 @@ export function resolveActiveInterruptProcedure(input: {
     interruptResult,
     input.execution,
   );
+}
+
+/**
+ * Record on the active interrupt each weapon landing position answered after
+ * its selection, so the procedure's completion finds it whatever path the
+ * procedure resumed by.
+ */
+function stateRecordingWeaponDropFills(
+  state: BattleState,
+  submitted: readonly BattleFill[],
+): BattleState {
+  const frame = currentInterruptCheckpoint(state);
+  const activeInterrupt = frame?.activeInterrupt;
+  /* v8 ignore next -- @preserve -- The caller resolves only an active interrupt. */
+  if (frame === null || activeInterrupt === undefined) return state;
+  const answered = submitted.filter(
+    (fill) =>
+      fill.kind === "weaponDropPosition" &&
+      !activeInterrupt.fills.some((kept) => kept.holeId === fill.holeId),
+  );
+  if (answered.length === 0) return state;
+  const recordedFrame: BattleInterruptCheckpoint = {
+    ...frame,
+    activeInterrupt: {
+      ...activeInterrupt,
+      fills: [...activeInterrupt.fills, ...answered],
+    },
+  };
+  copyInterruptCheckpointIdentity(frame, recordedFrame);
+  return {
+    ...state,
+    interruptStack: [
+      ...state.interruptStack.slice(0, -1),
+      interruptCheckpointFrame(recordedFrame),
+    ],
+  };
 }
 
 function resolveReactionRollOrDamageReduction(input: {
@@ -854,12 +910,24 @@ function completeActiveInterruptProcedure(
       "No active interrupt procedure is pending completion.",
     );
   }
+  const ended = readiedReleaseWeaponChangeEnd(state, activeInterrupt);
   return advanceInterruptCheckpointAfterResponder({
-    state,
+    state: ended.state,
     frame,
     responderId: activeInterrupt.responderId,
     execution,
-    ...optionalProperty("objectOutcomes", objectOutcomes),
+    ...optionalProperty(
+      "objectOutcomes",
+      ended.droppedObjects.length === 0
+        ? objectOutcomes
+        : {
+            ...objectOutcomes,
+            droppedObjects: [
+              ...(objectOutcomes?.droppedObjects ?? []),
+              ...ended.droppedObjects,
+            ],
+          },
+    ),
   });
 }
 
@@ -1116,10 +1184,14 @@ function sameInterruptProcedureChoice(
     ),
     Match.when(
       { kind: "releaseReadiedAction" },
-      () =>
+      (decision) =>
         choice.kind === "nestedProcedure" &&
         choice.subject.command === "releaseReadiedAction" &&
-        choice.subject.reactorId === responderId,
+        choice.subject.reactorId === responderId &&
+        readiedAttackWeaponChangesEqual(
+          choice.subject.weaponChange,
+          decision.weaponChange,
+        ),
     ),
     Match.when(
       { kind: "releaseReadiedAttack" },
@@ -1128,7 +1200,11 @@ function sameInterruptProcedureChoice(
         choice.subject.command === "releaseReadiedAttack" &&
         choice.subject.reactorId === responderId &&
         choice.subject.targetId === decision.targetId &&
-        choice.subject.procedureRef === decision.procedureRef,
+        choice.subject.procedureRef === decision.procedureRef &&
+        readiedAttackWeaponChangesEqual(
+          choice.subject.weaponChange,
+          decision.weaponChange,
+        ),
     ),
     Match.when(
       { kind: "castTriggeredReactionSpell" },

@@ -20,6 +20,7 @@ import {
 import {
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_RUNTIME_COMMANDS,
+  BattleReadyResponseSchema,
   battleSubjectBoundExecutionReferences,
   battleSubjectProcedureRefs,
   battleSubjectProcedureRefsBelongToOwners,
@@ -892,6 +893,44 @@ describe("BattleSubject identity", () => {
 
     for (const subject of authoredSelectors) {
       expect(() => decode(subject)).toThrow();
+    }
+  });
+});
+
+// SRD 5.2.1 Rules Glossary, "Unarmed Strike" and "Attack [Action]",
+// Equipping and Unequipping Weapons; ASSUMPTIONS.md A63.
+describe("a weapon change on a Grapple or Shove", () => {
+  const actorId = combatantId("unarmed-strike-option-actor");
+  const weaponChange = {
+    kind: "stow",
+    objectId: battleObjectId("unarmed-strike-option-weapon"),
+  } as const;
+
+  test("keys a Grapple or Shove by the weapon change it carries", () => {
+    for (const action of ["grapple", "shove"] as const) {
+      const plain = { tag: "action", actorId, action } as const;
+      const changed = { ...plain, weaponChange } as const;
+      expectStableBattleSubjectRoundtrip(changed);
+      expect(
+        sameBattleSubject(
+          decodeBattleSubject(plain),
+          decodeBattleSubject(changed),
+        ),
+      ).toBe(false);
+    }
+  });
+
+  test("holds no weapon change in the Grapple or Shove that Ready prepares", () => {
+    const decode = Schema.decodeUnknownSync(BattleReadyResponseSchema);
+    for (const action of ["grapple", "shove"] as const) {
+      const subject = { tag: "action", actorId, action } as const;
+      expect(decode({ kind: "action", subject })).toEqual({
+        kind: "action",
+        subject,
+      });
+      expect(() =>
+        decode({ kind: "action", subject: { ...subject, weaponChange } }),
+      ).toThrow();
     }
   });
 });

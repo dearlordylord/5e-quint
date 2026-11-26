@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleObjectId } from "./identity.ts";
@@ -832,6 +833,7 @@ function resolveDeathReversionWithRoute(
       casterId: opponentId,
       targetId: druidId,
       sourceProcedureRef: act.subject.procedureRef,
+      distanceFeet: movementFeet(20),
     },
   ]);
   const needsAttack = requireNeedsHoles(
