@@ -2591,8 +2591,11 @@ const BattleHolePayloadMembers = [
         casterId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
         rangeFeet: MovementFeet,
-        requiresExactDistance: Schema.Literal(true),
-        requiresEnemyProximityQualification: Schema.Literal(true),
+        requiresAttackerSight: Schema.Literal(true),
+        requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+        requiresEnemyProximityQualification: Schema.optionalKey(
+          Schema.Literal(true),
+        ),
       }),
     ),
   }),

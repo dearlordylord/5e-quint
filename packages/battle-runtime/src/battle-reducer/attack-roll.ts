@@ -177,7 +177,6 @@ import {
   attackRollModeFromContributions,
   collectedAttackRollMode,
   objectAttackRangedCircumstances,
-  objectTargetSight,
   rangedAttackRollCircumstances,
   type AttackRollModeContribution,
   type AttackRollModeMeans,
@@ -263,7 +262,7 @@ export function requiredSpellObjectTargetAttackRollMode(
   attackerId: CombatantId,
   invocation: RuntimeSpellProcedure,
   targetObjectId: BattleObjectId,
-  sightFact: { readonly attackerCanSeeObject: boolean } | null,
+  sightFact: { readonly attackerCanSeeObject: boolean },
   enemyProximity: RangedAttackEnemyProximityEvidence | null,
 ): AttackRollMode | undefined | SpatialQualificationIssue {
   const means = { kind: "spell" as const, invocation };
@@ -280,7 +279,7 @@ export function requiredSpellObjectTargetAttackRollMode(
     target: {
       kind: "object",
       objectId: targetObjectId,
-      sight: objectTargetSight(sightFact),
+      attackerCanSeeObject: sightFact.attackerCanSeeObject,
     },
     means,
     targetSpatialFacts: [],
@@ -302,21 +301,12 @@ export function requiredOrdinaryObjectAttackRollMode(
     target: {
       kind: "object",
       objectId: fact.objectId,
-      sight: objectTargetSight(fact),
+      attackerCanSeeObject: fact.attackerCanSeeObject,
     },
     means: { kind: "attack", attack, opportunityAttack: false },
     targetSpatialFacts: [],
     ranged: objectAttackRangedCircumstances(fact.range),
   });
-}
-
-export function objectTargetAttackNeedsSightFact(
-  state: BattleState,
-  targetObjectId: BattleObjectId,
-): boolean {
-  return state.objectOutlines.some(
-    (outline) => outline.objectId === targetObjectId,
-  );
 }
 
 export function objectInvisibleBenefitDenied(

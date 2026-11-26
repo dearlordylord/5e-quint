@@ -385,6 +385,24 @@ export function rangedSpellTargetSchema(
                   },
                   maxContains: 1,
                 },
+                // SRD "Unseen Attackers and Targets": the table answers
+                // whether the caster can see the object.
+                {
+                  contains: {
+                    anyOf: facts
+                      .filter((fact) =>
+                        hasKind(fact, "spellObjectTargetSight", definitions),
+                      )
+                      .map((fact) =>
+                        pinFact(fact, {
+                          kind: "spellObjectTargetSight",
+                          casterId: request.casterId,
+                          sourceProcedureRef: request.sourceProcedureRef,
+                        }),
+                      ),
+                  },
+                  maxContains: 1,
+                },
               ]
             : []),
         ],

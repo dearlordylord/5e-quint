@@ -35,6 +35,7 @@ import {
   type BattleTeleportDestinationHole,
   type BattleWeaponEnhancementTargetItemHole,
   type BattleObjectTargetChoiceHole,
+  type BattleSpellObjectTargetSpatialFactRequest,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type TargetListSpellInvocation,
@@ -385,15 +386,37 @@ export function spellObjectTargetHole(
     label: `Spell object target`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
+    ...("attackKind" in invocation
+      ? {
+          spellObjectTargetSpatialFactRequest:
+            spellObjectAttackSpatialFactRequest(actorId, invocation),
+        }
+      : {}),
+  };
+}
+
+/**
+ * The table facts a spell attack against an object asks for. SRD "Unseen
+ * Attackers and Targets": an attack roll against a target you can't see has
+ * Disadvantage, so every such attack asks whether the caster can see the
+ * object; the engine never infers sight from geometry. A ranged spell attack
+ * also asks for the exact distance and the enemies near the caster.
+ */
+function spellObjectAttackSpatialFactRequest(
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SingleObjectSpellInvocation, { readonly attackKind: unknown }>
+  >,
+): BattleSpellObjectTargetSpatialFactRequest {
+  return {
+    casterId: actorId,
+    sourceProcedureRef: invocation.sourceProcedureRef,
+    rangeFeet: invocation.rangeFeet,
+    requiresAttackerSight: true,
     ...(spellAttackRequiresExactDistance(invocation)
       ? {
-          spellObjectTargetSpatialFactRequest: {
-            casterId: actorId,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            rangeFeet: invocation.rangeFeet,
-            requiresExactDistance: true as const,
-            requiresEnemyProximityQualification: true as const,
-          },
+          requiresExactDistance: true as const,
+          requiresEnemyProximityQualification: true as const,
         }
       : {}),
   };
@@ -416,13 +439,10 @@ export function spellAttackSequencePartObjectTargetHole(
     label: `Spell ${partName} ${partIndex + 1} object target`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
-    spellObjectTargetSpatialFactRequest: {
-      casterId: actorId,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      rangeFeet: invocation.rangeFeet,
-      requiresExactDistance: true,
-      requiresEnemyProximityQualification: true,
-    },
+    spellObjectTargetSpatialFactRequest: spellObjectAttackSpatialFactRequest(
+      actorId,
+      invocation,
+    ),
   };
 }
 

@@ -454,13 +454,28 @@ describe("ChatGPT newcomer battle recovery", () => {
       objectId: "practice-object",
       disposition: { kind: "notFlammable" },
     };
+    const objectSight = {
+      kind: "spellObjectTargetSight",
+      casterId: request.casterId,
+      sourceProcedureRef: request.sourceProcedureRef,
+      objectId: "practice-object",
+      attackerCanSeeObject: true,
+    };
     const objectFill = {
       kind: objectHole.kind,
       holeId: objectHole.holeId,
       value: "practice-object",
-      spatialFacts: [objectFact, objectIgnition, qualification],
+      spatialFacts: [objectFact, objectIgnition, objectSight, qualification],
     };
     expect(validateObject(objectFill).valid).toBe(true);
+    // RAW: playing-the-game.md, "Unseen Attackers and Targets": the table says
+    // whether the caster can see the object.
+    expect(
+      validateObject({
+        ...objectFill,
+        spatialFacts: [objectFact, objectIgnition, qualification],
+      }).valid,
+    ).toBe(false);
     for (const change of [
       { attackerId: spellTargetId },
       { procedureRef: "synthetic-foreign-spell" },

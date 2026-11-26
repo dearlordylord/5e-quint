@@ -3041,13 +3041,31 @@ function objectTargetDistanceFeet(input: {
 
 function qualifySpellObjectTargetFactsForTest(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  objectId: ObjectTargetChoiceFill["value"],
   facts: ObjectTargetChoiceFill["spatialFacts"],
 ): ObjectTargetChoiceFill["spatialFacts"] {
   const request = hole.spellObjectTargetSpatialFactRequest;
-  return request?.requiresEnemyProximityQualification === true &&
-    !facts.some((fact) => fact.kind === "rangedAttackEnemyProximity")
-    ? [
+  if (request === undefined) {
+    return facts;
+  }
+  const withSight: ObjectTargetChoiceFill["spatialFacts"] = facts.some(
+    (fact) => fact.kind === "spellObjectTargetSight",
+  )
+    ? facts
+    : [
         ...facts,
+        {
+          kind: "spellObjectTargetSight",
+          casterId: request.casterId,
+          objectId,
+          sourceProcedureRef: request.sourceProcedureRef,
+          attackerCanSeeObject: true,
+        },
+      ];
+  return request.requiresEnemyProximityQualification === true &&
+    !withSight.some((fact) => fact.kind === "rangedAttackEnemyProximity")
+    ? [
+        ...withSight,
         {
           kind: "rangedAttackEnemyProximity",
           attackerId: request.casterId,
@@ -3055,7 +3073,7 @@ function qualifySpellObjectTargetFactsForTest(
           enemies: [],
         },
       ]
-    : facts;
+    : withSight;
 }
 
 export function objectTargetFill(input: {
@@ -3079,6 +3097,7 @@ export function objectTargetFill(input: {
     value: objectId,
     spatialFacts: qualifySpellObjectTargetFactsForTest(
       input.hole,
+      objectId,
       input.spatialFacts ?? [
         {
           kind: "spellObjectTarget",

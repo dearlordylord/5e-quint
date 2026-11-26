@@ -449,7 +449,7 @@
       "module/binding:validateObjectContactTargets": 15
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-object-target.ts": {
-      "module/binding:resolveObjectTargetSpellAttackCore": 36
+      "module/binding:resolveObjectTargetSpellAttackCore": 35
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-prepared-slot.ts": {
       "module/binding:resolvePreparedSlotSpellAct": 45

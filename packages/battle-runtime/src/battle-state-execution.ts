@@ -5089,13 +5089,16 @@ export type BattleSpellLeapTargetSpatialFactRequest = {
   readonly previousTargetId: CombatantId;
   readonly rangeFeet: MovementFeet;
 };
+/** The table facts a spell attack against an object asks for. */
 export type BattleSpellObjectTargetSpatialFactRequest = {
   readonly casterId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly rangeFeet: MovementFeet;
+  /** Every spell attack against an object asks whether the caster sees it. */
+  readonly requiresAttackerSight: true;
   /** Ranged spell attacks must carry the exact caster-to-object distance. */
-  readonly requiresExactDistance: true;
-  readonly requiresEnemyProximityQualification: true;
+  readonly requiresExactDistance?: true;
+  readonly requiresEnemyProximityQualification?: true;
 };
 export type BattleAttackTargetRequest = {
   readonly actorId: CombatantId;
