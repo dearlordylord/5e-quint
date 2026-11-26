@@ -3746,8 +3746,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "failedAbilityCheckResourceBoost",
       at(
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
-        "resolveFailedAbilityCheckResourceBoost",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "failedAbilityCheckResourceBoostDecisionIssue",
       ),
       REASONS.unitContinuation,
     ),
@@ -4247,8 +4247,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "failedAbilityCheckResourceBoost",
       at(
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
-        "resolveFailedAbilityCheckResourceBoost",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "failedAbilityCheckResourceBoostDecisionIssue",
       ),
       REASONS.unitContinuation,
     ),

@@ -136,8 +136,6 @@ import type {
   BattleUnitFeatureRollHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
   CharacterBattleCreatureState,
-  FailedAbilityCheckResourceBoostResolutionInput,
-  FailedAbilityCheckResourceBoostResolutionResult,
   SuccessfulAbilityCheckReactionReductionResolutionInput,
   SuccessfulAbilityCheckReactionReductionResolutionResult,
   UnitFeatureBattleResolutionInput,
@@ -1668,59 +1666,46 @@ function bardicInspirationD20TestOutcome(
       };
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  if (input.d20Test.kind === "attackRoll") {
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollResultIsValid(input.d20Test.attackRoll)) {
-      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
-      return {
-        tag: "invalid",
-        message: "Attack roll result is outside the d20 attack-roll protocol.",
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-      input.d20Test.attackRoll,
-    );
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (spellAttackRerollIssue !== null) {
-      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
-      return {
-        tag: "invalid",
-        message: spellAttackRerollIssue,
-      };
-    }
-    /* v8 ignore stop -- @preserve */
-    const criticalThreshold = input.d20Test.criticalThreshold ?? 20;
-    const boostedRoll = {
-      ...input.d20Test.attackRoll,
-      total: input.d20Test.attackRoll.total + input.bardicInspirationRoll,
-    };
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (!attackRollResultIsValid(input.d20Test.attackRoll)) {
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
-      tag: "ok",
-      value: {
-        originalSucceeded: attackRollHitsWithCriticalThreshold(
-          input.d20Test.attackRoll,
-          input.d20Test.armorClass,
-          criticalThreshold,
-        ),
-        boostedTotal: boostedRoll.total,
-        boostedSucceeded: attackRollHitsWithCriticalThreshold(
-          boostedRoll,
-          input.d20Test.armorClass,
-          criticalThreshold,
-        ),
-      },
+      tag: "invalid",
+      message: "Attack roll result is outside the d20 attack-roll protocol.",
     };
   }
-
-  const boostedTotal =
-    input.d20Test.originalTotal + input.bardicInspirationRoll;
+  /* v8 ignore stop -- @preserve */
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    input.d20Test.attackRoll,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (spellAttackRerollIssue !== null) {
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    return {
+      tag: "invalid",
+      message: spellAttackRerollIssue,
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const criticalThreshold = input.d20Test.criticalThreshold ?? 20;
+  const boostedRoll = {
+    ...input.d20Test.attackRoll,
+    total: input.d20Test.attackRoll.total + input.bardicInspirationRoll,
+  };
   return {
     tag: "ok",
     value: {
-      originalSucceeded: input.d20Test.originalTotal >= input.d20Test.dc,
-      boostedTotal,
-      boostedSucceeded: boostedTotal >= input.d20Test.dc,
+      originalSucceeded: attackRollHitsWithCriticalThreshold(
+        input.d20Test.attackRoll,
+        input.d20Test.armorClass,
+        criticalThreshold,
+      ),
+      boostedTotal: boostedRoll.total,
+      boostedSucceeded: attackRollHitsWithCriticalThreshold(
+        boostedRoll,
+        input.d20Test.armorClass,
+        criticalThreshold,
+      ),
     },
   };
 }
@@ -3213,105 +3198,6 @@ function magicActionAreaSaveDamageHealingAreaFact(
         unitFeature.damageHealing.area.origin.rangeFeet &&
       fact.radiusFeet === unitFeature.damageHealing.area.shape.radiusFeet,
   );
-}
-
-export function resolveFailedAbilityCheckResourceBoost(
-  input: FailedAbilityCheckResourceBoostResolutionInput,
-): FailedAbilityCheckResourceBoostResolutionResult {
-  const actor = input.state.combatants.get(input.abilityCheck.actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Failed ability-check resource boost is no longer available for the current actor.",
-    );
-  }
-
-  const procedure = characterUnitProcedure(
-    actor.origin.execution,
-    input.procedureRef,
-    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  );
-  const unitFeature =
-    procedure?.kind === "unitFeature" &&
-    procedure.execution.kind === "failedAbilityCheckResourceBoost"
-      ? procedure.execution
-      : undefined;
-  const resource = actor.origin.resources.find(
-    (resource) =>
-      resource.resourcePoolRef ===
-      unitFeature?.abilityCheck.spends.resourcePoolRef,
-  );
-  if (
-    unitFeature === undefined ||
-    resource === undefined ||
-    !resourceHasUsesRemaining(resource)
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Failed ability-check resource boost is no longer available for the current actor.",
-    );
-  }
-
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.boostRoll < 1 ||
-    input.boostRoll > unitFeature.abilityCheck.bonus.dieSize ||
-    !Number.isInteger(input.boostRoll)
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Failed ability-check resource boost roll is outside its projected die range.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.abilityCheck.originalTotal >= input.abilityCheck.dc) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Failed ability-check resource boost requires an already-failed ability check.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const boostedTotal = input.abilityCheck.originalTotal + input.boostRoll;
-  const boostedSucceeded = boostedTotal >= input.abilityCheck.dc;
-  const nextActor: BattleCreatureState = {
-    ...actor,
-    origin: {
-      ...actor.origin,
-      resources: actor.origin.resources.map((resource) =>
-        boostedSucceeded &&
-        resource.resourcePoolRef ===
-          unitFeature.abilityCheck.spends.resourcePoolRef &&
-        resourceHasUsesRemaining(resource)
-          ? spendCharacterResourceUse(resource)
-          : resource,
-      ),
-    },
-  };
-  const nextState = {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(
-      input.abilityCheck.actorId,
-      nextActor,
-    ),
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-    abilityCheckBoost: {
-      boostedTotal,
-      boostedSucceeded,
-    },
-  };
 }
 
 export function resolveSuccessfulAbilityCheckReactionReduction(

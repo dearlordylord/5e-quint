@@ -27,17 +27,17 @@ import {
   type D20TestRollRerollMessages,
 } from "./d20-test-roll-reroll.ts";
 import {
-  battleStateWithD20TestRerollPaid,
-  d20TestRerollPaidOnRoll,
-  d20TestRerollSpendAvailability,
-  d20TestRerollSpendGate,
-  type D20TestRerollSpendAvailability,
-  type D20TestRerollSpendRecord,
-  type D20TestRerollSpendScope,
-} from "./d20-test-reroll-spend.ts";
+  battleStateWithD20TestSourcePaid,
+  d20TestSourcePaidOnRoll,
+  d20TestSpendAvailability,
+  d20TestSpendGate,
+  type D20TestSpendAvailability,
+  type D20TestSpendRecord,
+  type D20TestSpendScope,
+} from "./d20-test-source-spend.ts";
 
 const HEROIC_INSPIRATION_SPEND_RECORD =
-  "acceptedHeroicInspirationRerolls" satisfies D20TestRerollSpendRecord;
+  "acceptedHeroicInspirationRerolls" satisfies D20TestSpendRecord;
 
 export const HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE =
   "Heroic Inspiration reroll needs a player character who has Heroic Inspiration.";
@@ -94,10 +94,10 @@ export function d20TestRerollDecisionTakesReroll(decision: {
  */
 export function heroicInspirationRerollAvailabilityForRoll(
   state: BattleState,
-  scope: D20TestRerollSpendScope,
+  scope: D20TestSpendScope,
   roll: BattleD20TestRollKey,
-): D20TestRerollSpendAvailability {
-  return d20TestRerollSpendAvailability({
+): D20TestSpendAvailability {
+  return d20TestSpendAvailability({
     state,
     scope,
     record: HEROIC_INSPIRATION_SPEND_RECORD,
@@ -117,7 +117,7 @@ export type HeroicInspirationUse = Brand.Branded<
   | { readonly spends: false }
   | {
       readonly spends: true;
-      readonly scope: D20TestRerollSpendScope;
+      readonly scope: D20TestSpendScope;
       readonly roll: BattleD20TestRollKey;
     },
   "HeroicInspirationUse"
@@ -135,12 +135,12 @@ export const NO_HEROIC_INSPIRATION_USE: HeroicInspirationUse =
  */
 export function heroicInspirationUseForRoll(input: {
   readonly state: BattleState;
-  readonly scope: D20TestRerollSpendScope;
+  readonly scope: D20TestSpendScope;
   readonly roll: BattleD20TestRollKey;
   readonly rerolledWithHeroicInspiration: boolean;
 }): HeroicInspirationUse {
   return input.rerolledWithHeroicInspiration &&
-    !d20TestRerollPaidOnRoll({
+    !d20TestSourcePaidOnRoll({
       ...input,
       record: HEROIC_INSPIRATION_SPEND_RECORD,
     })
@@ -163,7 +163,7 @@ export function battleStateAfterHeroicInspirationReroll(
 ): BattleState {
   if (
     !use.spends ||
-    d20TestRerollPaidOnRoll({
+    d20TestSourcePaidOnRoll({
       state,
       scope: use.scope,
       record: HEROIC_INSPIRATION_SPEND_RECORD,
@@ -184,11 +184,11 @@ export function battleStateAfterHeroicInspirationReroll(
       origin: { ...actor.origin, heroicInspiration: NO_HEROIC_INSPIRATION },
     }),
   };
-  return battleStateWithD20TestRerollPaid({
+  return battleStateWithD20TestSourcePaid({
     state: spent,
     scope: use.scope,
     record: HEROIC_INSPIRATION_SPEND_RECORD,
-    roll: use.roll,
+    paid: use.roll,
   });
 }
 
@@ -197,7 +197,7 @@ export function battleStateAfterHeroicInspirationReroll(
  * attack roll or an ability check), if any.
  */
 export function heroicInspirationRerollRollIssue(input: {
-  readonly availability: D20TestRerollSpendAvailability;
+  readonly availability: D20TestSpendAvailability;
   readonly total: number;
   /** The roll as it stands: the original roll, or another source's reroll of it. */
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
@@ -205,7 +205,7 @@ export function heroicInspirationRerollRollIssue(input: {
   readonly requiredRollMode?: AttackRollMode | undefined;
 }): string | null {
   const decision = input.decision;
-  const gate = d20TestRerollSpendGate({
+  const gate = d20TestSpendGate({
     availability: input.availability,
     decision,
     unavailableMessage: HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
@@ -246,13 +246,13 @@ export function heroicInspirationRerollRollIssue(input: {
  * whether it succeeds; under Advantage or Disadvantage it rerolls one die.
  */
 export function heroicInspirationRerollOutcomeIssue(input: {
-  readonly availability: D20TestRerollSpendAvailability;
+  readonly availability: D20TestSpendAvailability;
   /** The roll as it stands: the original roll, or another source's reroll of it. */
   readonly originalD20TestRoll: BattleD20TestRoll;
   readonly decision: BattleHeroicInspirationOutcomeRerollDecision;
 }): string | null {
   const decision = input.decision;
-  const gate = d20TestRerollSpendGate({
+  const gate = d20TestSpendGate({
     availability: input.availability,
     decision,
     unavailableMessage: HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,
@@ -270,11 +270,11 @@ export function heroicInspirationRerollOutcomeIssue(input: {
 
 /** The issue with a Heroic Inspiration decision on a bare d20 roll, if any. */
 export function heroicInspirationRerollDieIssue(input: {
-  readonly availability: D20TestRerollSpendAvailability;
+  readonly availability: D20TestSpendAvailability;
   readonly decision: BattleHeroicInspirationDieRerollDecision;
 }): string | null {
   const decision = input.decision;
-  const gate = d20TestRerollSpendGate({
+  const gate = d20TestSpendGate({
     availability: input.availability,
     decision,
     unavailableMessage: HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE,

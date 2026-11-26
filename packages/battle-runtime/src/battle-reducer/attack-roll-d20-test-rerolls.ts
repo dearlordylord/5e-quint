@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
 // Every D20 Test reroll source on one attack roll: the natural-1 reroll,
 // Heroic Inspiration and, on a spell attack, Seeking Spell, taken in the order
-// d20-test-reroll-sequence.ts sets (ASSUMPTIONS.md A55).
+// d20-test-decision-sequence.ts sets (ASSUMPTIONS.md A55).
 
 import type {
   AttackRollMode,
@@ -27,10 +27,10 @@ import {
   d20TestNaturalOneRerollRollIssue,
 } from "./d20-test-natural-one-reroll.ts";
 import {
-  d20TestRerolls,
-  d20TestRollAfterRerolls,
-  type D20TestRerollSourceFlags,
-} from "./d20-test-reroll-sequence.ts";
+  d20TestDecisions,
+  d20TestRollAfterDecisions,
+  type D20TestSourceFlags,
+} from "./d20-test-decision-sequence.ts";
 import { d20TestRollAfterReroll } from "./d20-test-roll-reroll.ts";
 import {
   d20TestHoleWithHeroicInspirationRerollOption,
@@ -54,7 +54,7 @@ type AttackRollD20TestRerollSource =
 
 /** The reroll sources an attack roll is asked again with. */
 export type AttackRollD20TestRerollOptions =
-  D20TestRerollSourceFlags<AttackRollD20TestRerollSource>;
+  D20TestSourceFlags<AttackRollD20TestRerollSource>;
 
 /**
  * Seeking Spell on a spell attack roll: whether it may reroll a roll as it
@@ -110,7 +110,7 @@ export function attackRollD20TestRerolls(
   const heroicInspirationAvailability =
     heroicInspirationRerollAvailabilityForRoll(input.state, scope, roll);
   const actor = input.state.combatants.get(input.attackerId);
-  const rerolls = d20TestRerolls<
+  const rerolls = d20TestDecisions<
     BattleAttackRollResult,
     BattleAttackRollD20TestRerollDecision,
     AttackRollD20TestRerollSource
@@ -154,7 +154,7 @@ export function attackRollD20TestRerolls(
             }),
           }),
         ),
-      takesReroll: d20TestRerollDecisionTakesReroll,
+      takes: d20TestRerollDecisionTakesReroll,
       rollAfter: d20TestRollAfterReroll,
       offered: {
         naturalOne: (attackRoll) =>
@@ -173,9 +173,9 @@ export function attackRollD20TestRerolls(
       state: input.state,
       scope,
       roll,
-      rerolledWithHeroicInspiration: rerolls.rerolled.heroicInspiration,
+      rerolledWithHeroicInspiration: rerolls.taken.heroicInspiration,
     }),
-    missedSpellAttackRerollTaken: rerolls.rerolled.missedSpellAttack,
+    missedSpellAttackRerollTaken: rerolls.taken.missedSpellAttack,
   };
 }
 
@@ -186,7 +186,7 @@ export function attackRollD20TestRerolls(
 export function attackRollAfterD20TestRerolls(
   attackRoll: BattleAttackRollResult,
 ): BattleAttackRollResult {
-  return d20TestRollAfterRerolls(
+  return d20TestRollAfterDecisions(
     attackRoll,
     attackRoll.d20TestRerolls ?? [],
     d20TestRollAfterReroll,

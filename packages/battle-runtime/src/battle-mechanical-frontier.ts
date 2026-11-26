@@ -11,6 +11,8 @@ import {
 } from "./battle-reducer/battle-codecs.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
+  BattleAbilityCheckAddedDieHoleOptions,
+  BattleD20TestAddedDieHoleOptions,
   BattleSavingThrowRerollHoleOptions,
   BattleHole,
   BattleInputFrontier,
@@ -351,7 +353,41 @@ function projectMechanicalD20Hole(
     ...("failedSavingThrowRerolls" in hole
       ? mechanicalFailedSavingThrowRerollOptions(hole)
       : {}),
+    ...("bardicInspirationDice" in hole
+      ? mechanicalBardicInspirationDieOptions(hole)
+      : {}),
+    ...("failedAbilityCheckResourceBoosts" in hole
+      ? mechanicalFailedAbilityCheckResourceBoostOptions(hole)
+      : {}),
   };
+}
+
+/** A D20 Test hole's Bardic Inspiration die option, without its label. */
+function mechanicalBardicInspirationDieOptions(
+  options: BattleD20TestAddedDieHoleOptions,
+) {
+  return options.bardicInspirationDice === undefined
+    ? {}
+    : {
+        bardicInspirationDice: [
+          projectNestedPresentationLabel(options.bardicInspirationDice[0]),
+        ] as const,
+      };
+}
+
+/** An ability check hole's failed ability check resource boost option, without its label. */
+function mechanicalFailedAbilityCheckResourceBoostOptions(
+  options: BattleAbilityCheckAddedDieHoleOptions,
+) {
+  return options.failedAbilityCheckResourceBoosts === undefined
+    ? {}
+    : {
+        failedAbilityCheckResourceBoosts: [
+          projectNestedPresentationLabel(
+            options.failedAbilityCheckResourceBoosts[0],
+          ),
+        ] as const,
+      };
 }
 
 /** A saving throw hole's failed saving throw reroll option, without its label. */
@@ -465,6 +501,7 @@ function projectMechanicalSavingThrowHole(
   const mechanical = {
     ...withoutLabel,
     ...mechanicalFailedSavingThrowRerollOptions(hole),
+    ...mechanicalBardicInspirationDieOptions(hole),
   };
   if (
     "d20TestNaturalOneRerolls" in hole &&

@@ -257,46 +257,6 @@ module unitFeaturePoolCostCoreExamples {
     }
   }
 
-  run test_tactical_mind_spends_second_wind_only_on_converted_success = {
-    val converted = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 2, maximumUses: 2 },
-      { originalTotal: 13, dc: 15, boostRoll: 3 }
-    )
-    val stillFailed = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 2, maximumUses: 2 },
-      { originalTotal: 10, dc: 15, boostRoll: 4 }
-    )
-    all {
-      assert(not(converted.originalSucceeded)),
-      assert(converted.boostedSucceeded),
-      assert(converted.boostedTotal == 16),
-      assert(converted.pool.usesRemaining == 1),
-      assert(not(stillFailed.originalSucceeded)),
-      assert(not(stillFailed.boostedSucceeded)),
-      assert(stillFailed.boostedTotal == 14),
-      assert(stillFailed.pool.usesRemaining == 2),
-    }
-  }
-
-  run test_tactical_mind_requires_failed_ability_check_and_second_wind_use = {
-    val originalSuccess = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 2, maximumUses: 2 },
-      { originalTotal: 15, dc: 15, boostRoll: 1 }
-    )
-    val depleted = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 0, maximumUses: 2 },
-      { originalTotal: 14, dc: 15, boostRoll: 1 }
-    )
-    all {
-      assert(originalSuccess.originalSucceeded),
-      assert(originalSuccess.boostedSucceeded),
-      assert(originalSuccess.pool.usesRemaining == 2),
-      assert(not(depleted.originalSucceeded)),
-      assert(depleted.boostedSucceeded),
-      assert(depleted.pool.usesRemaining == 0),
-    }
-  }
-
   run test_cunning_action_spends_bonus_action_for_dash_disengage_or_hide = {
     val dash = resolveCunningAction(initialTurnProcedureState, {
       choice: CunningDash,

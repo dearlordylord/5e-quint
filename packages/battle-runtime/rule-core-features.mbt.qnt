@@ -233,11 +233,13 @@ module ruleCoreFeaturesMbt {
     ),
   }
 
+  // Tactical Mind's failed ability check is a Hide check, which takes the
+  // actor's action; the boost that turns it leaves the actor Hidden.
   action doTacticalMindConvertedSuccess = all {
     openHoles == Set(),
     recordAbilityCheckBoostProjection(
-      true, true, true, 0, NoActionSurgeActionGrant,
-      12, 12, 0, false, false, false, false, false, false, 0,
+      false, true, true, 0, NoActionSurgeActionGrant,
+      12, 12, 0, false, true, false, false, false, false, 0,
       16, true, false, featureMbtBaselineArmorClass, Set(), false, WResolved
     ),
   }
@@ -245,7 +247,7 @@ module ruleCoreFeaturesMbt {
   action doTacticalMindStillFailed = all {
     openHoles == Set(),
     recordAbilityCheckBoostProjection(
-      true, true, true, 1, NoActionSurgeActionGrant,
+      false, true, true, 1, NoActionSurgeActionGrant,
       12, 12, 0, false, false, false, false, false, false, 0,
       14, false, false, featureMbtBaselineArmorClass, Set(), false, WResolved
     ),

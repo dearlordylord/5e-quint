@@ -86,7 +86,6 @@ import {
   abilityModifier,
   attackBonus,
   classLevel,
-  difficultyClass,
   DieRollResult,
   Hp,
   movementFeet,
@@ -107,6 +106,7 @@ import type {
 import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -120,7 +120,6 @@ import {
   discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveFailedAbilityCheckResourceBoost,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -141,6 +140,7 @@ import { unitSupportProfileKind } from "./character-execution-queries.ts";
 import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-fixtures.test-support.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { frenzyDamageTypeSelection } from "./battle-reducer/statblock-attacks.ts";
+import { abilityCheckValueThatStands } from "./battle-reducer/d20-test-rolls-that-stand.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -613,7 +613,9 @@ const selectedUnitIdentityReplays = [
         name: "converted-success",
         actions: ["doTacticalMindConvertedSuccess"],
         expected: expectedProjection({
+          actionAvailable: false,
           featureUsesRemaining: 0,
+          hidden: true,
           abilityCheckBoostedTotal: 16,
           abilityCheckBoostedSucceeded: true,
           lastResult: "resolved",
@@ -623,6 +625,7 @@ const selectedUnitIdentityReplays = [
         name: "still-failed",
         actions: ["doTacticalMindStillFailed"],
         expected: expectedProjection({
+          actionAvailable: false,
           featureUsesRemaining: 1,
           abilityCheckBoostedTotal: 14,
           abilityCheckBoostedSucceeded: false,
@@ -1505,28 +1508,44 @@ function createRuleCoreFeatureDriver(
       const unit = tacticalMindUnit();
       state = tacticalMindBattle(unit);
       resetProjection();
-      const result = resolveFailedAbilityCheckResourceBoost({
-        state,
-        procedureRef: requireUnitProcedureRef(
-          state,
-          actorId,
-          "failedAbilityCheckResourceBoost",
+      const subject = {
+        tag: "action",
+        actorId,
+        action: "hide",
+      } satisfies BattleSubject;
+      const check = abilityCheckFill(
+        requireHoleFromList(
+          findAct(state, subject).initialHoles,
+          "abilityCheck",
         ),
-        abilityCheck: {
-          actorId,
-          ability: "int",
-          skillOrToolLabel: "Investigation",
-          originalTotal: input.originalTotal,
-          dc: difficultyClass(15),
+        input.originalTotal,
+      );
+      if (check.kind !== "abilityCheck") {
+        throw new Error("Expected the Hide ability check fill.");
+      }
+      const boosted = {
+        ...check,
+        value: {
+          ...check.value,
+          d20TestAddedDice: [
+            {
+              kind: "addDie",
+              effectKind: FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
+              dieRoll: DieRollResult(input.boostRoll),
+            },
+          ],
         },
-        boostRoll: input.boostRoll,
-      });
+      } as const;
+      const result = resolveBattleSubject({ state, subject, fills: [boosted] });
       recordResult(result);
       featureUsesRemaining = resourceUsesRemaining(state);
       if (result.tag === "resolved") {
-        abilityCheckBoostedTotal = result.abilityCheckBoost.boostedTotal;
+        abilityCheckBoostedTotal = abilityCheckValueThatStands(
+          boosted.value,
+        ).total;
+        // The Hide check succeeds when the actor is Hidden after it.
         abilityCheckBoostedSucceeded =
-          result.abilityCheckBoost.boostedSucceeded;
+          (result.state.combatants.get(actorId)?.hidden ?? null) !== null;
       }
     }
 
@@ -1978,6 +1997,13 @@ function tacticalMindBattle(
       }),
       featureTarget(10),
     ],
+    // Out of the enemy's sight, so the Tactical Mind check is a Hide check.
+    hidePrerequisites: new Map([
+      [
+        actorId,
+        { kind: "coverOutOfEnemyLineOfSight" as const, cover: "total" },
+      ],
+    ]),
   });
 }
 

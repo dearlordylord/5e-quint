@@ -1,10 +1,12 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
-// What a reroll source that costs something (Heroic Inspiration, a use of a
-// failed saving throw reroll) shares: where its cost stands for one roll, and
-// the record of the rolls that paid it while the subject they belong to can
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
+// What a D20 Test source that costs something (Heroic Inspiration, a use of a
+// failed saving throw reroll, a Bardic Inspiration die, a use of a failed
+// ability check boost) shares: where its cost stands for one roll, and the
+// record of the rolls that paid it while the subject they belong to can
 // replay. A replay after a reaction window resolves the subject's rolls again
-// from the state after a spend, so the roll that paid can take its reroll
+// from the state after a spend, so the roll that paid can take its source
 // again without paying twice.
 
 import { Match } from "effect";
@@ -24,29 +26,36 @@ import { subjectContinuationPhaseFor } from "./subject-continuation-phase.ts";
  *   so a decline made before that spend still stands;
  * - "unavailable": it has nothing to decide about.
  */
-export const D20_TEST_REROLL_SPEND_AVAILABILITIES = [
+export const D20_TEST_SPEND_AVAILABILITIES = [
   "available",
   "spentOnAnotherRoll",
   "unavailable",
 ] as const;
-/** One of {@link D20_TEST_REROLL_SPEND_AVAILABILITIES}. */
-export type D20TestRerollSpendAvailability =
-  (typeof D20_TEST_REROLL_SPEND_AVAILABILITIES)[number];
+/** One of {@link D20_TEST_SPEND_AVAILABILITIES}. */
+export type D20TestSpendAvailability =
+  (typeof D20_TEST_SPEND_AVAILABILITIES)[number];
 
 /**
  * Where a roll's spend is remembered while its resolution can replay: the
  * subject the roll belongs to, or nowhere for a roll whose resolution takes
  * one step (a Glyph of Warding release the table witnesses).
  */
-export type D20TestRerollSpendScope =
+export type D20TestSpendScope =
   | { readonly kind: "subject"; readonly subject: BattleSubject }
   | { readonly kind: "oneStep" };
 
-/** The replay record each costed reroll source keeps its paid rolls in. */
-export type D20TestRerollSpendRecord = keyof Pick<
+/** The replay record each costed source keeps its paid rolls in. */
+export type D20TestSpendRecord = keyof Pick<
   BattleAcceptedSubjectReplayEvidence,
-  "acceptedHeroicInspirationRerolls" | "acceptedFailedSavingThrowRerolls"
+  | "acceptedHeroicInspirationRerolls"
+  | "acceptedFailedSavingThrowRerolls"
+  | "acceptedBardicInspirationDice"
+  | "acceptedFailedAbilityCheckResourceBoosts"
 >;
+
+/** What one record keeps for each roll that paid: the roll, and what the source needs on a replay. */
+export type D20TestSpendRecordEntry<Record extends D20TestSpendRecord> =
+  NonNullable<BattleAcceptedSubjectReplayEvidence[Record]>[number];
 
 function sameD20TestRoll(
   left: BattleD20TestRollKey,
@@ -55,15 +64,15 @@ function sameD20TestRoll(
   return left.rollerId === right.rollerId && left.holeId === right.holeId;
 }
 
-function paidRolls(
+function paidRolls<Record extends D20TestSpendRecord>(
   state: BattleState,
-  scope: D20TestRerollSpendScope,
-  record: D20TestRerollSpendRecord,
-): readonly BattleD20TestRollKey[] {
+  scope: D20TestSpendScope,
+  record: Record,
+): readonly D20TestSpendRecordEntry<Record>[] {
   return Match.value(scope).pipe(
     Match.when(
       { kind: "subject" },
-      ({ subject }) =>
+      ({ subject }): readonly D20TestSpendRecordEntry<Record>[] =>
         subjectContinuationPhaseFor(state, subject)[record] ?? [],
     ),
     Match.when({ kind: "oneStep" }, () => []),
@@ -71,28 +80,40 @@ function paidRolls(
   );
 }
 
-/** Whether an earlier pass of the subject already paid for this roll's reroll. */
-export function d20TestRerollPaidOnRoll(input: {
+/** The record an earlier pass of the subject kept for this roll's payment, if it paid. */
+export function d20TestSourcePaymentOnRoll<
+  Record extends D20TestSpendRecord,
+>(input: {
   readonly state: BattleState;
-  readonly scope: D20TestRerollSpendScope;
-  readonly record: D20TestRerollSpendRecord;
+  readonly scope: D20TestSpendScope;
+  readonly record: Record;
   readonly roll: BattleD20TestRollKey;
-}): boolean {
-  return paidRolls(input.state, input.scope, input.record).some((paid) =>
+}): D20TestSpendRecordEntry<Record> | undefined {
+  return paidRolls(input.state, input.scope, input.record).find((paid) =>
     sameD20TestRoll(paid, input.roll),
   );
 }
 
-/** Where the roller's cost stands for this roll. */
-export function d20TestRerollSpendAvailability(input: {
+/** Whether an earlier pass of the subject already paid for this roll's source. */
+export function d20TestSourcePaidOnRoll(input: {
   readonly state: BattleState;
-  readonly scope: D20TestRerollSpendScope;
-  readonly record: D20TestRerollSpendRecord;
+  readonly scope: D20TestSpendScope;
+  readonly record: D20TestSpendRecord;
+  readonly roll: BattleD20TestRollKey;
+}): boolean {
+  return d20TestSourcePaymentOnRoll(input) !== undefined;
+}
+
+/** Where the roller's cost stands for this roll. */
+export function d20TestSpendAvailability(input: {
+  readonly state: BattleState;
+  readonly scope: D20TestSpendScope;
+  readonly record: D20TestSpendRecord;
   readonly roll: BattleD20TestRollKey;
   /** Whether the roller can pay now, in the state as it stands. */
   readonly rollerCanPay: boolean;
-}): D20TestRerollSpendAvailability {
-  if (d20TestRerollPaidOnRoll(input)) return "available";
+}): D20TestSpendAvailability {
+  if (d20TestSourcePaidOnRoll(input)) return "available";
   if (input.rollerCanPay) return "available";
   return paidRolls(input.state, input.scope, input.record).some(
     (paid) => paid.rollerId === input.roll.rollerId,
@@ -102,52 +123,55 @@ export function d20TestRerollSpendAvailability(input: {
 }
 
 /** The state with this roll recorded as paid for the rest of its subject. */
-export function battleStateWithD20TestRerollPaid(input: {
+export function battleStateWithD20TestSourcePaid<
+  Record extends D20TestSpendRecord,
+>(input: {
   readonly state: BattleState;
-  readonly scope: D20TestRerollSpendScope;
-  readonly record: D20TestRerollSpendRecord;
-  readonly roll: BattleD20TestRollKey;
+  readonly scope: D20TestSpendScope;
+  readonly record: Record;
+  /** The roll, and what the source needs on a replay. */
+  readonly paid: D20TestSpendRecordEntry<Record>;
 }): BattleState {
   const scope = input.scope;
   if (scope.kind === "oneStep") return input.state;
   const phase = subjectContinuationPhaseFor(input.state, scope.subject);
+  const paid: readonly D20TestSpendRecordEntry<Record>[] =
+    phase[input.record] ?? [];
   return {
     ...input.state,
     subjectResolutionPhase: {
       ...phase,
-      [input.record]: [...(phase[input.record] ?? []), input.roll],
+      [input.record]: [...paid, input.paid],
     },
   };
 }
 
 /**
  * Whether the roller's cost lets it make this decision: a decline needs only
- * that it once had the choice; a reroll needs the cost now.
+ * that it once had the choice; any other decision needs the cost now.
  */
-export function d20TestRerollSpendGate(input: {
-  readonly availability: D20TestRerollSpendAvailability;
-  readonly decision: {
-    readonly kind: "decline" | "reroll" | "rerollRolledDie";
-  };
+export function d20TestSpendGate(input: {
+  readonly availability: D20TestSpendAvailability;
+  readonly decision: { readonly kind: string };
   readonly unavailableMessage: string;
-}): D20TestRerollSpendGate {
+}): D20TestSpendGate {
   return Match.value(input.availability).pipe(
     Match.when(
       "unavailable",
-      (): D20TestRerollSpendGate => ({
+      (): D20TestSpendGate => ({
         tag: "finished",
         issue: input.unavailableMessage,
       }),
     ),
     Match.when(
       "spentOnAnotherRoll",
-      (): D20TestRerollSpendGate => ({
+      (): D20TestSpendGate => ({
         tag: "finished",
         issue:
           input.decision.kind === "decline" ? null : input.unavailableMessage,
       }),
     ),
-    Match.when("available", (): D20TestRerollSpendGate => ({ tag: "decide" })),
+    Match.when("available", (): D20TestSpendGate => ({ tag: "decide" })),
     Match.exhaustive,
   );
 }
@@ -156,6 +180,6 @@ export function d20TestRerollSpendGate(input: {
  * Whether the decision's own facts decide it (`decide`), or its roller's cost
  * already settles it with this issue, or none.
  */
-export type D20TestRerollSpendGate =
+export type D20TestSpendGate =
   | { readonly tag: "decide" }
   | { readonly tag: "finished"; readonly issue: string | null };

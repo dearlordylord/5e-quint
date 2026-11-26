@@ -643,13 +643,16 @@
       "id": "unit-feature.bardic-inspiration-failed-d20-test",
       "profileKind": "resource",
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
         "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
       ],
-      "sourceBoundary": "Separate public helper boundary, not a BattleSubject replay path; consumes an existing Bardic Inspiration die effect after the caller supplies an already-failed attack roll, Saving Throw, or Ability Check total.",
+      "sourceBoundary": "On ability checks and saving throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
       "taskRefs": [
         "SRDINV72B"
       ],
@@ -662,6 +665,14 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
         }
       ]
     },
@@ -757,16 +768,18 @@
       "id": "unit-feature.failed-ability-check-resource-boost",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
       ],
       "taskRefs": [
         "QMBT62"
       ],
-      "title": "Unit feature adds 1d10 to an already-failed ability check using the Second Wind pool",
+      "title": "Unit feature adds its die to an already-failed ability check, spending a use of its resource only if the check then succeeds",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -775,6 +788,14 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
         }
       ]
     },
@@ -8626,6 +8647,12 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+          },
+          {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
             "runtime": "battle",
             "status": "covered",
@@ -8635,7 +8662,8 @@
         "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+          "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+          "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
         ]
       },
       {
@@ -8691,6 +8719,12 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+          },
+          {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
             "runtime": "battle",
             "status": "covered",
@@ -8700,7 +8734,7 @@
         "profileId": "unit-feature.failed-ability-check-resource-boost",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+          "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
         ]
       },
       {
@@ -12761,6 +12795,12 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                },
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -12770,7 +12810,8 @@
               "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
               "profileKind": "resource",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+                "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+                "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
               ]
             }
           ],
@@ -14462,6 +14503,12 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                },
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -14471,7 +14518,7 @@
               "profileId": "unit-feature.failed-ability-check-resource-boost",
               "profileKind": "resource",
               "qntOwners": [
-                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+                "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
               ]
             }
           ],
@@ -24878,16 +24925,18 @@
           "id": "unit-feature.failed-ability-check-resource-boost",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+            "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
           ],
           "taskRefs": [
             "QMBT62"
           ],
-          "title": "Unit feature adds 1d10 to an already-failed ability check using the Second Wind pool",
+          "title": "Unit feature adds its die to an already-failed ability check, spending a use of its resource only if the check then succeeds",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -24896,6 +24945,14 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
             }
           ]
         }
@@ -26434,13 +26491,16 @@
           "id": "unit-feature.bardic-inspiration-failed-d20-test",
           "profileKind": "resource",
           "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
             "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+            "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
           ],
-          "sourceBoundary": "Separate public helper boundary, not a BattleSubject replay path; consumes an existing Bardic Inspiration die effect after the caller supplies an already-failed attack roll, Saving Throw, or Ability Check total.",
+          "sourceBoundary": "On ability checks and saving throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
           "taskRefs": [
             "SRDINV72B"
           ],
@@ -26453,6 +26513,14 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
             }
           ]
         }

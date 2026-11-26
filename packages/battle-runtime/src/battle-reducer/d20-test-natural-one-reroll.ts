@@ -34,7 +34,7 @@ export const D20_TEST_REROLL_DECISION_REQUIRED_MESSAGE =
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE =
   "D20 Test natural-1 reroll support requires the triggering natural d20 face.";
 export const D20_TEST_REROLL_WITHOUT_ROLL_MESSAGE =
-  "Saving Throw outcomes without a roll cannot include d20 roll or reroll facts.";
+  "Saving Throw outcomes without a roll cannot include d20 roll, reroll or added die facts.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE =
   "D20 Test natural-1 rolled-die reroll requires an explicit raw die selection.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_MESSAGE =

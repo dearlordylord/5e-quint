@@ -523,3 +523,24 @@ with or without the cover of one attack. Cover belongs to the attack's
 geometry, not the creature, so the model adds it to the creature's AC after
 the floor: a Barkskin creature with AC 12 behind Half Cover has AC 19 against
 that attack.
+
+## A67: Dice added to a failed D20 Test come after its rerolls
+
+**Assumption:** A D20 Test's rerolls are decided before any die is added to
+it. Once every reroll source has decided, a source that adds a die to a failed
+test may add it to the roll that stands, in the order the roller chooses,
+while the test still fails. Every added die counts before the test is judged,
+so a cost that depends on the result (Tactical Mind's use of Second Wind)
+follows the result with all the dice added.
+
+**Rules basis / gap:** `.references/srd-5.2.1/classes.md`, "Bardic
+Inspiration": "when the creature fails a D20 Test, the creature can roll the
+Bardic Inspiration die and add the number rolled to the d20". "Tactical Mind":
+"When you fail an ability check, you can expend a use of your Second Wind ...
+roll 1d10 and add the number rolled to the ability check ... If the check
+still fails, this use of Second Wind isn't expended." Both answer a failure,
+and a reroll replaces the d20 that an added die would add to, so the SRD
+doesn't say what an added die does to a later reroll. The model takes the
+rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
+reads the check before or after another added die; the model judges the check
+once with every added die.
