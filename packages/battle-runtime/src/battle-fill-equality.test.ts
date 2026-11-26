@@ -607,6 +607,18 @@ describe("battle fill equality", () => {
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
+        deathSavingThrow(naturalDecline),
+        deathSavingThrow(deathReroll),
+      ),
+    ).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        deathSavingThrow(naturalDecline),
+        deathSavingThrow({ ...naturalDecline }),
+      ),
+    ).toBe(true);
+    expect(
+      battleContinuationFillEquals(
         deathSavingThrow(deathReroll),
         deathSavingThrow({
           ...deathReroll,

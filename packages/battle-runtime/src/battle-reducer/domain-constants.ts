@@ -21,6 +21,29 @@ export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
 /** Ordinary creature melee reach from the SRD default reach rule. */
 export const STANDARD_CREATURE_MELEE_REACH_FEET = movementFeet(5);
 export const GRAPPLE_TARGET_REACH_FEET = movementFeet(5);
+/** Why one combatant can't take hold of another in a grapple. */
+export const BATTLE_GRAPPLE_HOLD_REJECTIONS = [
+  "unknownGrappler",
+  "unknownTarget",
+  "selfGrapple",
+  "targetAlreadyGrappled",
+  "grapplerInBeastForm",
+  "noFreeHand",
+  "targetImmune",
+] as const;
+/** Why a grapple that holds ends on its own (SRD Grappling, "Ending a Grapple"). */
+export const BATTLE_GRAPPLE_ENDING_CAUSES = [
+  "grapplerIncapacitated",
+  "combatantDead",
+] as const;
+/**
+ * Why a battle can't start with a grapple: no grapple could take hold, or one
+ * that did would already have ended.
+ */
+export const BATTLE_INITIAL_GRAPPLE_REJECTIONS = [
+  ...BATTLE_GRAPPLE_HOLD_REJECTIONS,
+  ...BATTLE_GRAPPLE_ENDING_CAUSES,
+] as const;
 export const SHOVE_TARGET_REACH_FEET = movementFeet(5);
 export const SHOVE_PUSH_DISTANCE_FEET = movementFeet(5);
 export const PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET = movementFeet(5);
@@ -313,6 +336,12 @@ export const SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO = {
   denominator: 2,
 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA = -2;
+/** equipment.md, "Strength": the armor "reduces the wearer's speed by 10 feet". */
+export const HEAVY_ARMOR_STRENGTH_SPEED_REDUCTION_FEET = 10;
+/** equipment.md, "Slow": "you can reduce its Speed by 10 feet". */
+export const WEAPON_MASTERY_SPEED_REDUCTION_FEET = 10;
+/** A Speed that is halved. */
+export const SPEED_HALVED_RATIO = { numerator: 1, denominator: 2 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA = -2;
 export const SaveGatedTurnConstraintMaxAttacksSchema = Schema.Literal(1).pipe(
   Schema.brand("PositiveInteger"),

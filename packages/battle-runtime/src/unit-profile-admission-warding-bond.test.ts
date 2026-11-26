@@ -41,7 +41,7 @@ import {
   linkedDefenseResistanceDamageShareConcentrationSavingThrowHoles,
 } from "./battle-reducer/damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
-import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   attackExecutionSelectionForSubjectForTest,
@@ -640,7 +640,13 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         },
       }),
     ]);
-    expect(savingThrowFlatBonusProjections(resolved.state, "wis")).toEqual([
+    expect(
+      savingThrowTargetModifiers(
+        resolved.state,
+        { ability: "wis" },
+        "everyCombatant",
+      ).targetFlatBonuses,
+    ).toEqual([
       {
         kind: "effect",
         targetId: spellTargetId,

@@ -68,6 +68,7 @@ import type {
 } from "./wild-shape-equipment.ts";
 import { wildShapeEquipmentDispositionWearsKind } from "./wild-shape-equipment.ts";
 import type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
+import { SKILL_ABILITIES } from "../skill-abilities.ts";
 export type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
 
 const WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES = [
@@ -75,27 +76,6 @@ const WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES = [
   "dex",
   "con",
 ] as const satisfies ReadonlyArray<Ability>;
-
-const SKILL_ABILITIES = {
-  acrobatics: "dex",
-  animal_handling: "wis",
-  arcana: "int",
-  athletics: "str",
-  deception: "cha",
-  history: "int",
-  insight: "wis",
-  intimidation: "cha",
-  investigation: "int",
-  medicine: "wis",
-  nature: "int",
-  perception: "wis",
-  performance: "cha",
-  persuasion: "cha",
-  religion: "int",
-  sleight_of_hand: "dex",
-  stealth: "dex",
-  survival: "wis",
-} as const satisfies Record<Skill, Ability>;
 
 export function druidWildShapeAvailableFormsIssueForProfile(
   forms: readonly BattleDruidWildShapeKnownFormRuntime[] | undefined,

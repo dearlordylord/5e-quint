@@ -3,14 +3,11 @@ import type {
   BattleState,
   BattleUnitFeatureSavingThrowOutcomeHole,
 } from "../battle-state-execution.ts";
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import type { CombatantId } from "../identity.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 
 type UnitFeatureSavingThrowProjection = Pick<
   BattleUnitFeatureSavingThrowOutcomeHole,
@@ -20,6 +17,7 @@ type UnitFeatureSavingThrowProjection = Pick<
   | "targetIds"
   | "targetRollModes"
   | "targetFlatBonuses"
+  | "targetAutomaticFailures"
 >;
 
 export function unitFeatureSingleTargetSavingThrowProjection(input: {
@@ -45,14 +43,9 @@ export function unitFeatureSingleTargetSavingThrowProjection(input: {
     ability: input.ability,
     dc: input.dc,
     targetIds: [input.targetId],
-    targetRollModes: savingThrowRollModeProjections(
-      input.state,
-      input.ability,
-    ).filter((projection) => projection.targetId === input.targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      input.state,
-      input.ability,
-    ).filter((projection) => projection.targetId === input.targetId),
+    ...savingThrowTargetModifiers(input.state, { ability: input.ability }, [
+      input.targetId,
+    ]),
   };
 }
 

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 186,
-    "covered": 175,
+    "total": 190,
+    "covered": 179,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 146,
+      "battle": 150,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 175,
+      "covered": 179,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -74,6 +74,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-initial-grapple.test.ts"
         }
       ],
       "profiles": [
@@ -87,7 +91,7 @@
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
         "packages/battle-runtime/battle-runtime-movement-bridge.qnt"
       ],
-      "reason": "The rule core and battle bridge own Movement cost/resource and Opportunity Attack interruption semantics. Battle discovery admits ordinary Move from actor movement capacity, the turn movement resource, and the remaining movement budget, including after a Bonus Action and independently of active-roster cardinality. For the composed direct-SDK route boundary, ScenarioSession owns exact tactical transitions and projects typed threats only when a declared directed enemy leaves a visible reactor's surfaced executable melee reach while the reactor can take a Reaction and the mover has not Disengaged. The battle runtime revalidates those threats and owns the interrupt. Focused rule-core proof cases cover the exact in-reach to outside-reach predicate; Runtime, MCP, and Scenario contract witnesses cover one-combatant candidate discovery after a Bonus Action, canonical route projection, blinded-viewer suppression, and replay without caller-authored threat facts. Geometry remains outside BattleState.",
+      "reason": "The rule core and battle bridge own Movement cost/resource and Opportunity Attack interruption semantics. Battle discovery admits ordinary Move from actor movement capacity, the turn movement resource, and the remaining movement budget, including after a Bonus Action and independently of active-roster cardinality. For the composed direct-SDK route boundary, ScenarioSession owns exact tactical transitions and projects typed threats only when a declared directed enemy leaves a visible reactor's surfaced executable melee reach while the reactor can take a Reaction and the mover has not Disengaged. The battle runtime revalidates those threats and owns the interrupt. Focused rule-core proof cases cover the exact in-reach to outside-reach predicate; Runtime, MCP, and Scenario contract witnesses cover one-combatant candidate discovery after a Bonus Action, canonical route projection, blinded-viewer suppression, and replay without caller-authored threat facts. Geometry remains outside BattleState. Initial hand-held 5-foot grapples carry the table's escape DC into the canonical link without repeating initiation-only size or save rules. The initial-grapple contract witness covers hand admission, DC, Speed 0, attacks against another target, Escape and release; preexisting_grapple_retains_dc_and_shared_lifecycle in the existing movement-spatial-grapple-inductive-tests proof owner exercises those same DC and lifecycle projections directly from an already active Grappled value.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -99,7 +103,8 @@
         "scripts/raw-swarm/sdk-player/scenario-session.ts",
         "packages/battle-runtime/src/battle-reducer/drop-prone-policy.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
-        "packages/battle-runtime/src/battle-reducer/movement-path.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-path.ts",
+        "packages/battle-runtime/src/battle-reducer/initial-grapples.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -108,7 +113,9 @@
         ".references/srd-5.2.1/playing-the-game.md#Opportunity-Attacks",
         ".references/srd-5.2.1/rules-glossary.md#Opportunity-Attacks",
         "UBIQUITOUS_LANGUAGE.md#Movement",
-        "UBIQUITOUS_LANGUAGE.md#Combat"
+        "UBIQUITOUS_LANGUAGE.md#Combat",
+        ".references/srd-5.2.1/rules-glossary.md#Grappling",
+        ".references/srd-5.2.1/rules-glossary.md#Grappled [Condition]"
       ],
       "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
     },
@@ -5358,6 +5365,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/attack-spatial.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts",
         "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts",
         "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
@@ -5397,7 +5405,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/d20-test-circumstance.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5442,7 +5451,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/ranged-attack-close-combat.ts",
         "packages/battle-runtime/src/battle-reducer/attack-spatial.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5478,7 +5488,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/d20-test-circumstance.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5491,6 +5502,38 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "Restrained, Paralyzed, Petrified and Stunned supply their attack-roll sources from canonical condition state, composed with every other source before cancellation"
+    },
+    {
+      "id": "BATTLE.ATTACK.ROLL_MODE_COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-attack-roll-mode-collector.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models which general sources reach an attack roll by its target kind: the attacker's own conditions, Grappled, not seeing the target, the hidden or Invisible attacker's Advantage and the Ranged Attacks rules reach a creature or an object, while sources whose RAW names a creature on the other side (the target's conditions, Prone and Unconscious, its sight of the attacker, a hidden target, Dodge and Help) reach only a creature. The circumstances carry no means, so a weapon and a spell attack agree. The runtime collector writes each source once, names it in each contribution, and is called by the creature and object routes for weapon, Unarmed Strike, Stat Block, spell and Opportunity Attack rolls. The parity test checks a Grappled attacker's Disadvantage against an object by weapon and by spell, none against its grappler, named contributions cancelling, an unseen object's Disadvantage, an outlined object's Advantage and Disadvantage for a spell attack, the attacker's ongoing feature on a spell attack against an object, a hidden attacker's Advantage against an object, and Help reaching no object.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/playing-the-game.md#Unseen Attackers and Targets",
+        ".references/srd-5.2.1/playing-the-game.md#Ranged Attacks",
+        ".references/srd-5.2.1/rules-glossary.md#Grappled",
+        ".references/srd-5.2.1/rules-glossary.md#Dodge [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Help [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Invisible",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
+      ],
+      "title": "Every attack-roll route asks one collector for its Advantage and Disadvantage sources, each named, so a source reaches every attack roll its RAW text covers whatever the target or means"
     },
     {
       "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
@@ -6527,13 +6570,17 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-help-ability-check.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-escape-grapple-help.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/help-ability-check-core.qnt"
       ],
-      "reason": "The QNT owner models Help's ability-check admission (another live creature, one of the helper's skill proficiencies, and the table's decision that the helper can assist that ally), Advantage on the ally's next check with the chosen skill, every matching benefit used by that check, and expiry at the start of the helper's next turn. Wild Shape joins the character's skill proficiencies with the form's, and a Stat Block's Skills entry lists its proficiencies. help-ability-check owns the decision hole, admission and benefit state; hole-helpers adds the Advantage source to every skill-named ability check hole; attack-resolution uses the benefit when Hide, Search or escaping a spell's Restraint resolves its check; turn-boundary-lifecycle expires it. Battle Runtime has no tool proficiency facts or tool checks, so the choice is among skills. The parity witness covers discovery, admission and its rejections, the Hide and Search routes, a check with another skill, two helpers, expiry and a Stat Block's skills.",
+      "reason": "The QNT owner models Help's ability-check admission (another live creature, one of the helper's skill proficiencies, and the table's decision that the helper can assist that ally), Advantage on the ally's next check with the chosen skill, every matching benefit used by that check, and expiry at the start of the helper's next turn. Wild Shape joins the character's skill proficiencies with the form's, and a Stat Block's Skills entry lists its proficiencies. help-ability-check owns the decision hole, admission and benefit state; hole-helpers' one skill-check operation adds the Advantage source to every check with a skill, including the Escape Grapple check with the skill the escaper chose; attack-resolution uses the benefit when Hide, Search, Escape Grapple or escaping a spell's Restraint resolves its check; turn-boundary-lifecycle expires it. Battle Runtime has no tool proficiency facts or tool checks, so the choice is among skills. The parity witnesses cover discovery, admission and its rejections, the Hide, Search and Escape Grapple routes (both escape skills, success and failure), a check with another skill, two helpers, Disadvantage cancelling the Advantage, expiry and a Stat Block's skills.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/help-ability-check.ts",
@@ -6608,11 +6655,11 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/cover-defense-core.qnt"
       ],
-      "reason": "The QNT owner models the three degrees' AC bonuses and Total Cover's refusal of direct targeting; the ordinary object Attack owner imports it. The table adjudicates the degree from the geometry and supplies it, when it rules some, as an optional cover field on the attack and spell target geometry facts; a fact without one gets no cover. The facts are attackTargetDistance, an Opportunity Attack threat, spellTarget, a spatial melee spell attack proxy target, a chained spell leap, a familiar's touch delivery, and the creature and spell object target facts. attack-spatial and spell targeting refuse a target with Total Cover; attack-target-cover adds the bonus at every creature attack-roll hit decision, and object attacks add it through the same algebra. The executable parity witness covers weapon attacks with each degree and with no degree, Total Cover refusal, the reported attack total of 19 missing AC 19 behind Half Cover, an Opportunity Attack threat with Total Cover, and a Spell Attack with each degree.",
+      "reason": "The QNT owner models the three degrees' AC bonuses and Total Cover's refusal of direct targeting; the ordinary object Attack owner imports it. The table adjudicates the degree from the geometry and supplies it, when it rules some, as an optional cover field on the attack and spell target geometry facts; a fact without one gets no cover. The facts are attackTargetDistance, an Opportunity Attack threat, spellTarget, a spatial melee spell attack proxy target, a chained spell leap, a familiar's touch delivery, and the creature and spell object target facts. attack-spatial and spell targeting refuse a target with Total Cover; the armor class collector adds the bonus at every creature attack-roll hit decision, and object attacks add it through the same algebra. The executable parity witness covers weapon attacks with each degree and with no degree, Total Cover refusal, the reported attack total of 19 missing AC 19 behind Half Cover, an Opportunity Attack threat with Total Cover, and a Spell Attack with each degree.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/shared-algebras/src/cover-algebra.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-target-cover.ts",
+        "packages/battle-runtime/src/battle-reducer/armor-class-collector.ts",
         "packages/battle-runtime/src/battle-reducer/attack-spatial.ts"
       ],
       "status": "covered",
@@ -6623,6 +6670,38 @@
         "UBIQUITOUS_LANGUAGE.md#Combat"
       ],
       "title": "An attack roll on a creature or object, with a weapon, a Stat Block attack, an Opportunity Attack or a spell, meets the target's AC plus the bonus of the table-supplied degree of cover, and Total Cover refuses direct targeting by attacks and spells"
+    },
+    {
+      "id": "BATTLE.ARMOR_CLASS.COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-armor-class-collector.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/armor-class-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models how the parts of a creature's AC combine: Battle's accepted highest-only base selection restriction (RAW permits a lower eligible choice), a spell's base calculation is a candidate only without armor, bonuses and penalties add to it, the highest floor raises the result, and the attack's cover adds after the floor. The runtime collector names each part as a contribution (the creature's own base, Mage Armor's base, Shield, armor and unarmored feature bonuses, spell bonuses, Warding Bond's linked defense, Slow's penalty, feature and spell floors, and cover), and both the snapshot and every creature attack-roll hit decision read it. The parity test checks Mage Armor against a higher and a lower base calculation, a spell bonus on Mage Armor, and Barkskin's floor with Half Cover, each through the collector, the snapshot and a weapon attack.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/armor-class-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Armor Class",
+        ".references/srd-5.2.1/rules-glossary.md#Armor Class",
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/spells.md#Mage Armor",
+        ".references/srd-5.2.1/spells.md#Barkskin",
+        ".references/srd-5.2.1/spells.md#Shield of Faith",
+        ".references/srd-5.2.1/spells.md#Slow",
+        "ASSUMPTIONS.md#a66-cover-adds-after-an-ac-floor",
+        "packages/battle-runtime/README.md#armor-class-base-selection-restriction"
+      ],
+      "title": "Every route that reads a creature's AC asks one collector for its named parts, so the base calculation in effect, each bonus, penalty and floor, and the attack's cover combine the same way for the snapshot and every attack roll"
     },
     {
       "id": "BATTLE.SAVE.DEXTERITY_COVER",
@@ -6763,6 +6842,82 @@
         "ASSUMPTIONS.md#a65-a-creature-changes-its-weapon-grip-for-free-on-its-own-turn"
       ],
       "title": "Weapon grip change: a character changes its held main weapon between one and two hands on its own turn at no cost, a two-handed grip needs the other hand free, and the grip sets the hands held and the Versatile damage die"
+    },
+    {
+      "id": "BATTLE.SAVING_THROW.MODIFIER_COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-saving-throw-modifier-collector.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-grapple-shove-saving-throw-choices.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models how the sources that reach one target's saving throw combine: Dodge's Advantage and Restrained's Disadvantage on Dexterity saves, the other counted Advantage and Disadvantage sources with one of each cancelling, the sum of the bonuses, the Strength and Dexterity saves that Paralyzed, Petrified, Stunned and Unconscious fail without a roll, and the Strength or Dexterity choice a Grapple or Shove target makes. The runtime collector names each source as a contribution (Dodge, Restrained, passive features, active effects, the spell's own save rule, the procedure's own Advantage or Disadvantage, Warding Bond's linked defense, Slow's penalty, cover, and the conditions that fail Strength and Dexterity saves), and every saving throw outcome hole reads it, including the turn-boundary repeat saves that used to carry none. A Concentration save reads the sources the concentrating creature carries, with Eldritch Mind and the spell's own maintenance Advantage as its procedure's sources; its type admits no Dexterity save or spell rule, the only sources that read the battle around a target. Each hole lists the targets that fail without rolling, and the resolution refuses any other outcome for them. Grapple and Shove holes carry the collector's answer for each of the target's two choices, and refuse a success when both fail without rolling. The parity test checks Restrained through Acid Splash's hole and the collector, its cancellation with an effect's Advantage, a procedure's own source, and each failing condition's refused success and accepted failure without a roll; a Grapple and Shove test checks Restrained's Disadvantage on the Dexterity choice only and a Paralyzed target's refused success, and a Concentration save takes a Constitution save effect's Advantage but not a Dexterity one.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/saving-throw-modifier-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Dodge [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Restrained [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Paralyzed [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Petrified [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Stunned [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Advantage",
+        ".references/srd-5.2.1/rules-glossary.md#Disadvantage",
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/rules-glossary.md#Unarmed Strike",
+        ".references/srd-5.2.1/spells.md#Haste",
+        ".references/srd-5.2.1/spells.md#Slow",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "Every route that asks for a saving throw asks one collector which Advantage, Disadvantage, bonuses and automatic failures reach each target, so Dodge, Restrained, Paralyzed, features, effects, the spell's own rule and cover combine the same way on every save"
+    },
+    {
+      "id": "BATTLE.MOVEMENT.SPEED_COLLECTOR",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-speed-collector.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt"
+      ],
+      "reason": "The QNT owner models how the sources that change one creature's Speed combine: the deltas add, every Weapon Mastery Slow on the creature together reduces its Speed only by the largest one, heavy armor reduces a wearer below its Strength requirement by 10 feet, the ratios multiply after the deltas, a speed never drops below 0, Speed 0 holds every speed, and a special speed changes by the same amount. The runtime collector names each source as a contribution (passive features, spell deltas, Slow, Hamstring Blow, heavy armor's Strength, spell ratios, the save-gated turn constraint, halving, the grapple link, the Speed 0 conditions and effects) and every Speed reader takes its deltas, ratios and Speed 0 from it, so the grapple link and halving no longer depend on the caller. Character admission projects the worn armor's Strength requirement onto the battle loadout. The parity test checks two attackers' Slow giving -10 feet, heavy armor below and at its Strength, and a grapple link's Speed 0.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/speed-collector.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/rules-glossary.md#Speed",
+        ".references/srd-5.2.1/rules-glossary.md#Grappled [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Paralyzed [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Petrified [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Restrained [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious [Condition]",
+        ".references/srd-5.2.1/equipment.md#Strength",
+        ".references/srd-5.2.1/equipment.md#Slow",
+        ".references/srd-5.2.1/classes.md#Hamstring Blow",
+        ".references/srd-5.2.1/classes.md#Stunning Strike",
+        ".references/srd-5.2.1/spells.md#Haste",
+        ".references/srd-5.2.1/spells.md#Slow",
+        "UBIQUITOUS_LANGUAGE.md#Movement"
+      ],
+      "title": "Every reader of a creature's Speed asks one collector which sources change it, so features, spells, Weapon Mastery Slow, Hamstring Blow, heavy armor's Strength, halving and Speed 0 combine the same way for every speed"
     }
   ],
   "battleHoleFrontier": [
@@ -13187,6 +13342,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns which general attack-roll Advantage and Disadvantage sources reach a creature or an object target, independently of the means of the attack, over the D20 Test circumstance core's sources and combination.",
+      "obligationIds": ["BATTLE.ATTACK.ROLL_MODE_COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover Grappled, an unseen target and the Ranged Attacks sources reaching an object, creature-side sources not reaching one, and combination before cancellation.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt is the covered obligation QNT owner carrying the identity-free Stat Block initial-condition and condition-immunity admission matching predicate.",
       "obligationIds": ["BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt",
@@ -13821,6 +13988,42 @@
       "evidence": "Executable closed examples cover a Versatile weapon changing grip both ways with its damage die, a two-handed grip needing the other hand free, a Two-Handed weapon keeping its grip, and no change to the same grip, without the weapon, off-turn or while unable to act.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns how the sources that reach one target's saving throw combine: Dodge and Restrained on Dexterity saves, counted Advantage and Disadvantage with one of each cancelling, summed bonuses, and the Strength and Dexterity saves that Paralyzed, Petrified, Stunned and Unconscious fail without a roll, over the D20 Test circumstance core's combination.",
+      "obligationIds": ["BATTLE.SAVING_THROW.MODIFIER_COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover Restrained and Dodge on Dexterity and other saves, an Advantage and a Disadvantage cancelling, bonuses adding, and a Paralyzed target failing Strength and Dexterity saves but rolling Constitution.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns how the parts of a creature's AC combine: the highest base calculation in effect, a spell's base calculation only without armor, bonuses and penalties, the highest floor, and the attack's cover after the floor, over the cover defense core's degrees.",
+      "obligationIds": ["BATTLE.ARMOR_CLASS.COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/armor-class-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover Mage Armor against a higher and a lower base calculation and against armor, bonuses and Slow's penalty, Barkskin's floor, and cover after the floor.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/armor-class-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns how the sources that change one creature's Speed combine: summed deltas, every Slow together counting only the largest reduction, heavy armor's Strength reduction, ratios after deltas, no speed below 0, Speed 0 holding every speed, and special speeds changing by the same amount.",
+      "obligationIds": ["BATTLE.MOVEMENT.SPEED_COLLECTOR"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover two Slows reducing Speed by 10 feet, heavy armor below and at its Strength, deltas then ratios, Speed 0 holding a special speed, a reduction stopping at 0, and a special speed changing by the same amount.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt",
       "role": "proof-only"
     }
   ],
@@ -15201,6 +15404,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/armor-class-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/armor-class-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt",
       "role": "proof-only"
     },
@@ -15227,6 +15440,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -15457,12 +15680,32 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome-examples.qnt",
       "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -20644,6 +20887,34 @@
       "generatorSubset": [
         "variant",
         "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block",
+        "list",
+        "fold",
+        "set"
+      ],
+      "obligationId": "BATTLE.ATTACK.ROLL_MODE_COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-roll-mode-collector-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
         "pure-def",
         "bool",
         "comparison",
@@ -21458,6 +21729,85 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "variant",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "arithmetic",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.SAVING_THROW.MODIFIER_COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/saving-throw-modifier-collector-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.ARMOR_CLASS.COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/armor-class-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/armor-class-collector-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "arithmetic",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.MOVEMENT.SPEED_COLLECTOR",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

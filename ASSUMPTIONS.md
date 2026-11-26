@@ -508,3 +508,18 @@ foot for each foot it passes over. The SRD doesn't say whether a surcharge for
 each foot moved, such as Gust of Wind's, changes the fixed spend. The model
 treats every such surcharge alike and leaves the spend at 10 feet. The QNT
 owner is `battle-runtime-jump-movement.qnt`, which admits only that spend.
+
+## A66: Cover adds after an AC floor
+
+**Assumption:** A floor on a creature's AC, such as Barkskin's, applies to the
+creature's own AC: its base calculation with its bonuses and penalties. The
+bonus of the cover a target has against an attack adds after that floor.
+
+**Rules basis / gap:** `.references/srd-5.2.1/spells.md`, "Barkskin": "the
+target has an Armor Class of 17 if its AC is lower than that." `.references/srd-5.2.1/rules-glossary.md`,
+"Cover": Half Cover gives a "+2 bonus to AC" and Three-Quarters Cover a "+5
+bonus to AC". The SRD doesn't say whether the floor compares the creature's AC
+with or without the cover of one attack. Cover belongs to the attack's
+geometry, not the creature, so the model adds it to the creature's AC after
+the floor: a Barkskin creature with AC 12 behind Half Cover has AC 19 against
+that attack.

@@ -17,6 +17,7 @@ import {
   requireSuccess,
   unitLibrary,
 } from "./test-support.test-support.ts";
+import { characterSheetSelectedArmorStrengthRequirement } from "./armor-class.ts";
 
 describe("Character Sheet runtime / armor class", () => {
   test("derives default unarmored Armor Class from Dexterity", () => {
@@ -223,6 +224,45 @@ describe("Character Sheet runtime / armor class", () => {
       category: "heavy",
     });
     expect(currentArmorClass(state)).toBe(16);
+  });
+
+  test("reads the worn armor's Strength requirement", () => {
+    expect(
+      characterSheetSelectedArmorStrengthRequirement({
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          armor: "armor_chain_mail",
+        }),
+        unitLibrary,
+      }),
+    ).toEqual(Result.succeed(13));
+    expect(
+      characterSheetSelectedArmorStrengthRequirement({
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          armor: "armor_leather",
+        }),
+        unitLibrary,
+      }),
+    ).toEqual(Result.succeed(undefined));
+    expect(
+      characterSheetSelectedArmorStrengthRequirement({
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        unitLibrary,
+      }),
+    ).toEqual(Result.succeed(undefined));
+    expect(
+      characterSheetSelectedArmorStrengthRequirement({
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          armor: "synthetic_missing_armor",
+        }),
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { message: expect.stringContaining("Unknown Unit") },
+    });
   });
 
   test("retains main-hand and off-hand weapon use in Armor Class state", () => {

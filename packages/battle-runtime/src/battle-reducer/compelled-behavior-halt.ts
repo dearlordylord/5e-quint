@@ -76,13 +76,10 @@ function combatantsWithCompelledHaltMovementSpent(
   const actor = state.combatants.get(actorId);
   if (actor === undefined) return state.combatants;
 
-  const isGrappled = state.grapples.some(
-    (grapple) => grapple.targetId === actorId,
-  );
   const spentFeet = Math.max(
     Number(actor.movementSpentFeet),
     ...representedMovementSpeedKinds(actor).map((kind) =>
-      Number(effectiveMovementSpeed(state, actor, kind, isGrappled)),
+      Number(effectiveMovementSpeed(state, actor, kind)),
     ),
   );
 

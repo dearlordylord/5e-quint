@@ -19,11 +19,7 @@ export function standFromProneCostFeet(
   if (saveGatedConditionWithRepeatEffects(state, actor).length > 0) {
     return null;
   }
-  const speed = effectiveWalkSpeed(
-    state,
-    actor,
-    state.grapples.some((grapple) => grapple.targetId === actorId),
-  );
+  const speed = effectiveWalkSpeed(state, actor);
   const cost = Math.floor(Number(speed) / 2);
   const remaining = battleMovementBudgetForActor(state, actorId).remainingFeet;
   return cost <= 0 || Number(remaining) < cost ? null : cost;

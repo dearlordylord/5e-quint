@@ -1,4 +1,4 @@
-import type { MovementFeet, WeaponGrip } from "@dnd/shared/types";
+import type { AbilityScore, MovementFeet, WeaponGrip } from "@dnd/shared/types";
 import type { UnitId } from "@dnd/shared/game-facts";
 import type {
   Ability,
@@ -18,7 +18,12 @@ export type CharacterBattleInvocationFeature = {
 };
 
 export type CharacterBattleLoadoutRef = {
-  readonly armor?: { readonly itemId: BattleObjectId; readonly unitId: UnitId };
+  readonly armor?: {
+    readonly itemId: BattleObjectId;
+    readonly unitId: UnitId;
+    /** The Strength score the armor requires, when its table lists one. */
+    readonly strengthRequirement?: AbilityScore;
+  };
   readonly shield?: {
     readonly itemId: BattleObjectId;
     readonly unitId: UnitId;

@@ -1,4 +1,5 @@
 import { optionalProperty } from "../optional-property.ts";
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -81,8 +82,6 @@ import {
 import {
   applyPreparedSlotSpellDamage,
   applySaveDamageResult,
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
@@ -1791,20 +1790,20 @@ function persistentAreaSavingThrowHoleFacts(
     | TranslatingPersistentAreaAreaHazardEffect,
 ): Pick<
   BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole,
-  "ability" | "dc" | "areaChoices" | "targetRollModes" | "targetFlatBonuses"
+  | "ability"
+  | "dc"
+  | "areaChoices"
+  | "targetRollModes"
+  | "targetFlatBonuses"
+  | "targetAutomaticFailures"
 > {
   return {
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ...savingThrowTargetModifiers(state, { ability: effect.save.ability }, [
+      targetId,
+    ]),
   };
 }
 

@@ -15,7 +15,15 @@ Call `startBattle(BattleCreatureInit[])` with caller-supplied Initiative scores.
 Battle orders combatants and preserves caller order for ties; it does not roll
 or derive Initiative. Stat Block inputs carry explicit supported initial
 conditions; initialization rejects forbidden conditions and applies the canonical
-condition algebra.
+condition algebra. No input starts Grappled through its conditions: a grapple
+already in place can enter through `BattleStartInput.initialHandGrapples`.
+This input supports only a hand-held grapple within 5 feet. The table declares
+that supported hold and supplies the participants and its actual escape DC;
+initialization uses the grappler's first free hand or rejects the hold with the
+reason. Tentacles, maws and longer-range holds are not represented. This is a
+bounded implementation contract, not a claim that all SRD grapples use a hand
+or a 5-foot range. Entry does not repeat initiation's save or size requirement;
+the canonical Grappled condition, Escape, release and ending owners then apply.
 
 Do not import character-creation runtimes or monster catalogs to reconstruct
 composition-owned facts. Spell components, equipment access, focus/pouch
@@ -60,6 +68,17 @@ hands allocated by the selected loadout grip: an off-hand weapon has no hand
 under a selected two-handed main grip, including while that main weapon is
 stowed. Changing these slot restrictions requires extending the supported
 attack and hand-occupancy contracts together.
+
+### Armor Class base selection restriction
+
+The SRD lets a creature choose among eligible base AC calculations. Battle
+Runtime currently selects the highest base among the creature's already selected
+own calculation and its active eligible spell calculations; a tie keeps its own
+calculation. It does not reselect between the character's class calculations or
+offer a lower eligible calculation. This is an accepted implementation
+restriction, not an ambiguity in RAW. The AC collector and its focused rule core
+model this supported automatic selection. Bonuses, penalties, floors and
+attack-specific Cover are then applied by their existing owners.
 
 ## Runtime protocol
 

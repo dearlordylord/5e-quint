@@ -2,11 +2,8 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import { CombatantId } from "../identity.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 import type {
   BattleActiveEffect,
   BattlePersistentAreaSaveDamageRamMovementHole,
@@ -86,7 +83,10 @@ type HazardSavingThrow =
   | MovablePersistentAreaEffect["save"];
 type SingleTargetSavingThrowProjections<Save extends HazardSavingThrow> = Pick<
   BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole,
-  "areaChoices" | "targetRollModes" | "targetFlatBonuses"
+  | "areaChoices"
+  | "targetRollModes"
+  | "targetFlatBonuses"
+  | "targetAutomaticFailures"
 > & {
   readonly ability: Save["ability"];
   readonly dc: Save["dc"];
@@ -102,16 +102,18 @@ function singleTargetSavingThrowProjections<Save extends HazardSavingThrow>(
     ability: save.ability,
     dc: save.dc,
     areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
+    ...savingThrowTargetModifiers(
       state,
-      save.ability,
-      undefined,
-      heightenedRollMode,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+      {
+        ability: save.ability,
+        procedureSources: {
+          rollModes:
+            heightenedRollMode === undefined ? [] : [heightenedRollMode],
+          bonuses: [],
+        },
+      },
+      [targetId],
+    ),
   };
 }
 export function persistentAreaSaveConditionSavingThrowOutcomeHole(

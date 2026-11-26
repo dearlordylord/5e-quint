@@ -30,7 +30,7 @@ import { Result } from "effect";
 
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   battleId,
   battleTablePositionId,
@@ -403,12 +403,16 @@ function projectDwarvenResilience(
   if (target === undefined) {
     throw new Error("Expected Dwarven Resilience target combatant.");
   }
-  const poisonedSaveTargets = savingThrowRollModeProjections(state, "con", {
-    condition: "poisoned",
-  }).map((projection) => projection.targetId);
-  const charmedSaveTargets = savingThrowRollModeProjections(state, "con", {
-    condition: "charmed",
-  }).map((projection) => projection.targetId);
+  const poisonedSaveTargets = savingThrowTargetModifiers(
+    state,
+    { ability: "con", avoidsCondition: "poisoned" },
+    "everyCombatant",
+  ).targetRollModes.map((projection) => projection.targetId);
+  const charmedSaveTargets = savingThrowTargetModifiers(
+    state,
+    { ability: "con", avoidsCondition: "charmed" },
+    "everyCombatant",
+  ).targetRollModes.map((projection) => projection.targetId);
   return expectedProjection({
     dwarfPoisonDamageAfter: damageAmountAfterTargetAdjustments(
       state,
@@ -473,19 +477,21 @@ function projectHalflingBrave(
   if (target === undefined) {
     throw new Error("Expected Halfling Brave target combatant.");
   }
-  const frightenedAvoidSaveTargets = savingThrowRollModeProjections(
+  const frightenedAvoidSaveTargets = savingThrowTargetModifiers(
     state,
-    "wis",
-    { condition: "frightened" },
-  ).map((projection) => projection.targetId);
-  const frightenedEndSaveTargets = savingThrowRollModeProjections(
+    { ability: "wis", avoidsCondition: "frightened" },
+    "everyCombatant",
+  ).targetRollModes.map((projection) => projection.targetId);
+  const frightenedEndSaveTargets = savingThrowTargetModifiers(
     state,
-    "con",
-    { condition: "frightened" },
-  ).map((projection) => projection.targetId);
-  const poisonedSaveTargets = savingThrowRollModeProjections(state, "con", {
-    condition: "poisoned",
-  }).map((projection) => projection.targetId);
+    { ability: "con", avoidsCondition: "frightened" },
+    "everyCombatant",
+  ).targetRollModes.map((projection) => projection.targetId);
+  const poisonedSaveTargets = savingThrowTargetModifiers(
+    state,
+    { ability: "con", avoidsCondition: "poisoned" },
+    "everyCombatant",
+  ).targetRollModes.map((projection) => projection.targetId);
   return expectedProjection({
     halflingFrightenedAvoidSaveAdvantage:
       frightenedAvoidSaveTargets.includes(targetId),
@@ -582,7 +588,12 @@ function escapeGrappleRollMode(input: {
   const escape = requireHole(
     resolveBattleSubject({
       state: actorTurn,
-      subject: { tag: "action", actorId, action: "escapeGrapple" },
+      subject: {
+        tag: "action",
+        actorId,
+        action: "escapeGrapple",
+        skill: "athletics",
+      },
       fills: [],
     }),
     "grappleOutcome",
@@ -923,6 +934,7 @@ function requirePassiveAbilityCheckRollModeRoute(
     tag: "action",
     actorId,
     action: "escapeGrapple",
+    skill: "athletics",
   };
   const escapeAct = discoverBattleActCandidates(actorTurn).find(
     (act) =>

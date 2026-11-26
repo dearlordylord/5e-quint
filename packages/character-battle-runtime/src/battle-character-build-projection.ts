@@ -59,6 +59,7 @@ import {
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   characterSheetArmorClassState,
+  characterSheetSelectedArmorStrengthRequirement,
   characterSheetUnarmoredArmorClassBase,
   characterSheetSpellbookRitualAccessesForBuild,
   characterSheetSpellAccessesForBuild,
@@ -79,6 +80,7 @@ import {
   characterLevel,
   classLevel,
   type AbilityModifier,
+  type AbilityScore,
   proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
@@ -163,6 +165,10 @@ export type CharacterBattleInitIssueReason =
         | "notAboveMaximum";
     }
   | {
+      readonly kind: "characterBattleInitialConditions";
+      readonly constraint: "grappledNeedsInitialGrapple";
+    }
+  | {
       readonly kind: "characterBattleInvariant";
       readonly invariant:
         | "characterOriginRequired"
@@ -211,6 +217,10 @@ export function characterBattleInitIssueFactFields(
         field,
         constraint,
       }),
+      characterBattleInitialConditions: ({ kind, constraint }) => ({
+        reason: kind,
+        constraint,
+      }),
       characterBattleInvariant: ({ kind, invariant }) => ({
         reason: kind,
         invariant,
@@ -247,6 +257,10 @@ export function characterBattleInitIssueReasonFromFact(
       characterBattleInput: ({ reason, field, constraint }) => ({
         kind: reason,
         field,
+        constraint,
+      }),
+      characterBattleInitialConditions: ({ reason, constraint }) => ({
+        kind: reason,
         constraint,
       }),
       characterBattleInvariant: ({ reason, invariant }) => ({
@@ -845,9 +859,24 @@ function ownedWeaponCopyObjectId(
   return battleObjectId(copy === 1 ? itemId : `${itemId}#${copy}`);
 }
 
-export function characterBattleLoadoutFromBuild(
-  build: CharacterBuild,
-): CharacterBattleLoadoutRef {
+type CharacterBattleArmorLoadoutRef = NonNullable<
+  CharacterBattleLoadoutRef["armor"]
+>;
+
+function characterBattleArmorLoadoutRef(
+  armor: Omit<CharacterBattleArmorLoadoutRef, "strengthRequirement">,
+  strengthRequirement: AbilityScore | undefined,
+): CharacterBattleArmorLoadoutRef {
+  return strengthRequirement === undefined
+    ? armor
+    : { ...armor, strengthRequirement };
+}
+
+export function characterBattleLoadoutFromBuild(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Result.Result<CharacterBattleLoadoutRef, BattleCreatureInitLeafIssue> {
+  const { build } = input;
   const armorUnitId = characterBuildEquipmentItemUnitId(
     build.equipment.loadout.armor,
   );
@@ -862,38 +891,45 @@ export function characterBattleLoadoutFromBuild(
   );
   const loadout = build.equipment.loadout;
 
-  return {
-    ...(loadout.armor == null || armorUnitId == null
-      ? {}
-      : {
-          armor: { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
-        }),
-    ...(loadout.shield == null || shieldUnitId == null
-      ? {}
-      : {
-          shield: {
-            itemId: battleObjectId(loadout.shield),
-            unitId: shieldUnitId,
-          },
-        }),
-    ...(loadout.weapon == null || weaponUnitId == null
-      ? {}
-      : {
-          weapon: {
-            itemId: battleObjectId(loadout.weapon.itemId),
-            unitId: weaponUnitId,
-            grip: loadout.weapon.grip,
-          },
-        }),
-    ...(loadout.offHandWeapon == null || offHandWeaponUnitId == null
-      ? {}
-      : {
-          offHandWeapon: {
-            itemId: battleObjectId(loadout.offHandWeapon.itemId),
-            unitId: offHandWeaponUnitId,
-          },
-        }),
-  };
+  return Result.match(characterSheetSelectedArmorStrengthRequirement(input), {
+    onFailure: ({ message }) => battleCreatureInitIssue(message),
+    onSuccess: (armorStrengthRequirement) =>
+      Result.succeed({
+        ...(loadout.armor == null || armorUnitId == null
+          ? {}
+          : {
+              armor: characterBattleArmorLoadoutRef(
+                { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
+                armorStrengthRequirement,
+              ),
+            }),
+        ...(loadout.shield == null || shieldUnitId == null
+          ? {}
+          : {
+              shield: {
+                itemId: battleObjectId(loadout.shield),
+                unitId: shieldUnitId,
+              },
+            }),
+        ...(loadout.weapon == null || weaponUnitId == null
+          ? {}
+          : {
+              weapon: {
+                itemId: battleObjectId(loadout.weapon.itemId),
+                unitId: weaponUnitId,
+                grip: loadout.weapon.grip,
+              },
+            }),
+        ...(loadout.offHandWeapon == null || offHandWeaponUnitId == null
+          ? {}
+          : {
+              offHandWeapon: {
+                itemId: battleObjectId(loadout.offHandWeapon.itemId),
+                unitId: offHandWeaponUnitId,
+              },
+            }),
+      }),
+  });
 }
 
 function characterBuildEquipmentItemUnitId(

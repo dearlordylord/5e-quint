@@ -31,7 +31,7 @@ import {
   passiveSavingThrowRollModeRouteEvents,
 } from "./battle-reducer/passive-projection-routes.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   barbarianFrenzyUnitId,
@@ -1043,14 +1043,29 @@ describe("L3MSPEC species battle support", () => {
     const targetId = combatantId("dwarven-resilience-target");
 
     expect(
-      savingThrowRollModeProjections(state, "con", { condition: "poisoned" }),
+      savingThrowTargetModifiers(
+        state,
+        { ability: "con", avoidsCondition: "poisoned" },
+        "everyCombatant",
+      ).targetRollModes,
     ).toEqual([{ targetId, rollMode: "advantage" }]);
-    expect(savingThrowRollModeProjections(state, "con")).toEqual([]);
     expect(
-      savingThrowRollModeProjections(state, "con", { condition: "charmed" }),
+      savingThrowTargetModifiers(state, { ability: "con" }, "everyCombatant")
+        .targetRollModes,
     ).toEqual([]);
     expect(
-      savingThrowRollModeProjections(state, "wis", { condition: "poisoned" }),
+      savingThrowTargetModifiers(
+        state,
+        { ability: "con", avoidsCondition: "charmed" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([]);
+    expect(
+      savingThrowTargetModifiers(
+        state,
+        { ability: "wis", avoidsCondition: "poisoned" },
+        "everyCombatant",
+      ).targetRollModes,
     ).toEqual([{ targetId, rollMode: "advantage" }]);
     expect(
       passiveSavingThrowRollModeRouteEvents({
@@ -1188,11 +1203,16 @@ describe("L3MSPEC species battle support", () => {
     const targetId = combatantId("halfling-brave-target");
 
     expect(
-      savingThrowRollModeProjections(state, "wis", {
-        condition: "frightened",
-      }),
+      savingThrowTargetModifiers(
+        state,
+        { ability: "wis", avoidsCondition: "frightened" },
+        "everyCombatant",
+      ).targetRollModes,
     ).toEqual([{ targetId, rollMode: "advantage" }]);
-    expect(savingThrowRollModeProjections(state, "wis")).toEqual([]);
+    expect(
+      savingThrowTargetModifiers(state, { ability: "wis" }, "everyCombatant")
+        .targetRollModes,
+    ).toEqual([]);
   });
 
   test("Brave projects Advantage for Frightened ending Saving Throws without broadening to unrelated conditions", () => {
@@ -1200,12 +1220,18 @@ describe("L3MSPEC species battle support", () => {
     const targetId = combatantId("halfling-brave-target");
 
     expect(
-      savingThrowRollModeProjections(state, "con", {
-        condition: "frightened",
-      }),
+      savingThrowTargetModifiers(
+        state,
+        { ability: "con", avoidsCondition: "frightened" },
+        "everyCombatant",
+      ).targetRollModes,
     ).toEqual([{ targetId, rollMode: "advantage" }]);
     expect(
-      savingThrowRollModeProjections(state, "con", { condition: "poisoned" }),
+      savingThrowTargetModifiers(
+        state,
+        { ability: "con", avoidsCondition: "poisoned" },
+        "everyCombatant",
+      ).targetRollModes,
     ).toEqual([]);
   });
 
@@ -1429,6 +1455,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
     tag: "action",
     actorId: goliathId,
     action: "escapeGrapple",
+    skill: "athletics",
   } as const;
   const goliathTurn = requireResolved(
     endTurn({ state: grappled.state, actorId: grapplerId }),

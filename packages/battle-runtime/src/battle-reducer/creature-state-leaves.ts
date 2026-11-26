@@ -25,6 +25,7 @@ import {
   type BattleSeeInvisibleEtherealWitness,
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
+  type BattleGrappleEndingCause,
   type BattleGrappleLink,
   type BattleHand,
   type BattleState,
@@ -394,14 +395,32 @@ export function normalizeBattleGrapples(state: BattleState): BattleState {
     return (
       grappler !== undefined &&
       target !== undefined &&
-      !isIncapacitated(grappler.conditions) &&
-      !zeroHpLifecycleIsTerminal(grappler) &&
-      !zeroHpLifecycleIsTerminal(target)
+      grappleEndingCause(grappler, target) === null
     );
   });
   return grapples.length === state.grapples.length
     ? state
     : { ...state, grapples };
+}
+
+/**
+ * Why a grapple between these two combatants ends on its own, or null if it
+ * holds. SRD Grappling, "Ending a Grapple": the condition ends if the grappler
+ * has the Incapacitated condition. A dead creature is an object, so neither a
+ * dead grappler nor a dead target is in a grapple.
+ */
+export function grappleEndingCause(
+  grappler: BattleCreatureState,
+  target: BattleCreatureState,
+): BattleGrappleEndingCause | null {
+  if (isIncapacitated(grappler.conditions)) return "grapplerIncapacitated";
+  if (
+    zeroHpLifecycleIsTerminal(grappler) ||
+    zeroHpLifecycleIsTerminal(target)
+  ) {
+    return "combatantDead";
+  }
+  return null;
 }
 
 export function zeroHpLifecycleIsTerminal(

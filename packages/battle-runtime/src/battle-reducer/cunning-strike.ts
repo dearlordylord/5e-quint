@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -65,10 +66,6 @@ import {
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "./spell-condition-effects-helpers.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 
 const byCunningStrikeEffectKind = Match.discriminator("kind");
@@ -732,15 +729,16 @@ function cunningStrikeSavingThrowHole(
     ability: save.ability,
     dc: requireCunningStrikeSaveDc(state, context),
     targetIds: [context.targetId],
-    targetRollModes: savingThrowRollModeProjections(
+    ...savingThrowTargetModifiers(
       state,
-      save.ability,
-      save.condition === undefined ? undefined : { condition: save.condition },
-    ).filter((projection) => projection.targetId === context.targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      save.ability,
-    ).filter((projection) => projection.targetId === context.targetId),
+      {
+        ability: save.ability,
+        ...(save.condition === undefined
+          ? {}
+          : { avoidsCondition: save.condition }),
+      },
+      [context.targetId],
+    ),
   };
 }
 

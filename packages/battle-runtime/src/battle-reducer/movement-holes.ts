@@ -35,20 +35,12 @@ export function readiedMovementHole(
   actorId: CombatantId,
 ): BattleMovementHole {
   const actor = state.combatants.get(actorId);
-  const isGrappled = state.grapples.some(
-    (grapple) => grapple.targetId === actorId,
-  );
   const speedKinds =
     actor === undefined
       ? []
       : representedMovementSpeedKinds(actor).map((kind) => ({
           kind,
-          movementBudgetFeet: effectiveMovementSpeed(
-            state,
-            actor,
-            kind,
-            isGrappled,
-          ),
+          movementBudgetFeet: effectiveMovementSpeed(state, actor, kind),
         }));
   return movementHoleWithBudget(
     actorId,
@@ -84,10 +76,5 @@ export function readiedMovementBudgetForActor(
   const actor = state.combatants.get(actorId);
   return actor === undefined
     ? movementFeet(0)
-    : effectiveMovementSpeed(
-        state,
-        actor,
-        speedKind,
-        state.grapples.some((grapple) => grapple.targetId === actorId),
-      );
+    : effectiveMovementSpeed(state, actor, speedKind);
 }

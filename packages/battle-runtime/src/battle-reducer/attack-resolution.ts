@@ -91,16 +91,12 @@ import {
   type ResolvedAttackDamageAbilityModifierChoice,
 } from "./attack-damage-ability-modifier-choice.ts";
 
-import {
-  extendSavingThrowOngoingFeatures,
-  ongoingFeatureEnemyRelationshipDecisionRequired,
-} from "./attack-roll.ts";
+import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 
 import {
   grappledBy,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
-import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -122,7 +118,7 @@ import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
   canHideInCurrentCircumstances,
-  escapeGrappleOutcomeHole,
+  escapeGrappleCheck,
   escapeSpellRestraintSkillCheck,
   grappleOutcomeHole,
   grappleTargetHole,
@@ -134,6 +130,7 @@ import {
   shoveTargetHole,
   hitPointBudgetConditionShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
+import { admitStrengthOrDexteritySaveOutcome } from "./saving-throw-outcome-check.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY } from "../battle-state-execution.ts";
 
@@ -1425,26 +1422,16 @@ function resolveGrapple(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const relationshipFacts = parseSavingThrowRelationshipFacts(
-    fillSet.outcome.relationshipFacts ?? [],
-    link.link.grapplerId,
-    [link.link.targetId],
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      link.link.grapplerId,
-      "enemySavingThrow",
-    ),
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (relationshipFacts === null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
+  const admission = admitStrengthOrDexteritySaveOutcome({
+    hole: grappleOutcomeHole(input.state, link.link),
+    outcome: fillSet.outcome,
+    relationshipFactsIssue:
       "Grapple relationship facts must answer the saving-throw hole request.",
-    );
+  });
+  if (Result.isFailure(admission)) {
+    return invalidResult(input.state, "invalidFill", admission.failure);
   }
-  /* v8 ignore stop -- @preserve */
+  const relationshipFacts = admission.success;
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
@@ -1579,26 +1566,21 @@ function resolveShove(
     }
     /* v8 ignore stop -- @preserve */
   }
-  const relationshipFacts = parseSavingThrowRelationshipFacts(
-    fillSet.outcome.relationshipFacts ?? [],
-    input.subject.actorId,
-    [fillSet.targetId],
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      input.subject.actorId,
-      "enemySavingThrow",
-    ),
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (relationshipFacts === null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
+  const admission = admitStrengthOrDexteritySaveOutcome({
+    hole: shoveOutcomeHole({
+      state: input.state,
+      actorId: input.subject.actorId,
+      targetId: fillSet.targetId,
+      dc: shove.dc,
+    }),
+    outcome: fillSet.outcome,
+    relationshipFactsIssue:
       "Shove relationship facts must answer the saving-throw hole request.",
-    );
+  });
+  if (Result.isFailure(admission)) {
+    return invalidResult(input.state, "invalidFill", admission.failure);
   }
-  /* v8 ignore stop -- @preserve */
+  const relationshipFacts = admission.success;
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
@@ -1665,10 +1647,14 @@ export function resolveEscapeGrapple(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const check = escapeGrappleCheck(
+    input.state,
+    grapple,
+    input.subject.actorId,
+    input.subject.skill,
+  );
   if (fillSet.outcome === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      escapeGrappleOutcomeHole(input.state, grapple, input.subject.actorId),
-    ]);
+    return needsHolesResult(input.state, input.subject, [check.hole]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.outcome.holeId !== ESCAPE_GRAPPLE_OUTCOME_HOLE_ID) {
@@ -1694,11 +1680,13 @@ export function resolveEscapeGrapple(
   }
   /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
-    ...input.state,
+    ...check.stateAfterCheck,
     currentTurnResources: spent.success,
     grapples: fillSet.outcome.value.succeeded
-      ? input.state.grapples.filter((candidate) => candidate !== grapple)
-      : input.state.grapples,
+      ? check.stateAfterCheck.grapples.filter(
+          (candidate) => candidate !== grapple,
+        )
+      : check.stateAfterCheck.grapples,
   });
   return {
     tag: "resolved",

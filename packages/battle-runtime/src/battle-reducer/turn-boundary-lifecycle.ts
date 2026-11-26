@@ -4,6 +4,7 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
+import { savingThrowTargetModifiersWhenStateKnown } from "./saving-throw-modifier-collector.ts";
 import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
@@ -56,12 +57,7 @@ import {
   holeInstanceKey,
   type HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import {
-  type Ability,
-  Hp,
-  movementFeet,
-  type Round as RoundType,
-} from "@dnd/shared/types";
+import { Hp, movementFeet, type Round as RoundType } from "@dnd/shared/types";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
@@ -85,7 +81,6 @@ import type {
   BattleResolutionInput,
   BattleResolutionResult,
   BattleStartTurnOccurrenceSequenceCheckpoint,
-  BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowRollModeProjection,
   BattleStagedConditionRepeatSavingThrowOutcomeHole,
@@ -218,11 +213,7 @@ import {
   resetAllPersistentAreaSaveConditionEscapeSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
-import {
-  applyPreparedSlotSpellDamage,
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
+import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import type { SaveGatedConditionWithRepeatEffect } from "./staged-condition-repeat-save.ts";
 import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
@@ -1758,7 +1749,7 @@ function spellTurnStartSavingThrowOutcomeHole(
     BattleActiveEffect,
     { readonly kind: "spellTurnStartDamageAndSave" }
   >,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+  state?: BattleState,
 ): BattleSpellTurnStartSavingThrowOutcomeHole {
   const key = spellTurnStartSavingThrowOutcomeHoleKey(sourceTurn, effect);
   return {
@@ -1776,8 +1767,11 @@ function spellTurnStartSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: [],
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      { ability: effect.save.ability },
+      [sourceTurn.actorId],
+    ),
   };
 }
 
@@ -1917,7 +1911,7 @@ function stagedSaveConditionPendingRepeatEffects(
 function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: StagedSaveConditionPendingRepeatEffect,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+  state?: BattleState,
 ): BattleStagedConditionRepeatSavingThrowOutcomeHole {
   const key = `battle:hit-point-budget-condition-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
   return {
@@ -1934,8 +1928,11 @@ function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: [],
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      { ability: effect.save.ability },
+      [targetId],
+    ),
   };
 }
 
@@ -1947,19 +1944,6 @@ function hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
   hole: BattleStagedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return savingThrowOutcomeFillThatStandsFor(fills, hole);
-}
-
-function endTurnSavingThrowFlatBonuses(
-  state: BattleState,
-  actorId: CombatantId,
-  ability: Ability,
-): readonly BattleSavingThrowFlatBonusProjection[] {
-  const actor = state.combatants.get(actorId);
-  return actor === undefined
-    ? []
-    : savingThrowFlatBonusProjections(state, ability).filter(
-        (projection) => projection.targetId === actorId,
-      );
 }
 
 export function hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
@@ -1978,7 +1962,7 @@ export function hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
         hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
-          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+          state,
         ),
       ),
     ].map((hole) => hole.holeId),
@@ -1997,23 +1981,17 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
           actorId,
           effect,
           { trigger: "endTurn" },
-          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+          state,
         ),
       ),
       ...spellConditionEndTurnSaveEffects(actor).map((effect) =>
-        spellConditionEndTurnSavingThrowOutcomeHole(
-          actorId,
-          effect,
-          state,
-          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
-        ),
+        spellConditionEndTurnSavingThrowOutcomeHole(actorId, effect, state),
       ),
       ...spellConditionCountedEndTurnSaveEffects(actor).map((effect) =>
         spellConditionCountedEndTurnSavingThrowOutcomeHole(
           actorId,
           effect,
           state,
-          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
         ),
       ),
     ].map((hole) => hole.holeId),
@@ -2044,7 +2022,6 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SpellConditionEndTurnSaveEffect,
   state?: BattleState,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSpellConditionEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:spell-condition-end-turn-save",
@@ -2070,31 +2047,31 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      state === undefined
-        ? []
-        : savingThrowRollModeProjections(
-            state,
-            effect.save.ability,
-            {
-              condition: effect.condition,
-            },
-            spellConditionEndTurnSaveHeightenedRollModeProjection(
-              effect,
-              targetId,
-            ),
-          ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      {
+        ability: effect.save.ability,
+        avoidsCondition: effect.condition,
+        procedureSources: {
+          rollModes: spellConditionEndTurnSaveHeightenedRollModeProjection(
+            effect,
+            targetId,
+          ),
+          bonuses: [],
+        },
+      },
+      [targetId],
+    ),
   };
 }
 
 function spellConditionEndTurnSaveHeightenedRollModeProjection(
   effect: SpellConditionEndTurnSaveEffect,
   targetId: CombatantId,
-): BattleSavingThrowRollModeProjection | undefined {
+): readonly BattleSavingThrowRollModeProjection[] {
   return effect.heightenedSpellTargetDisadvantage === null
-    ? undefined
-    : { targetId, rollMode: "disadvantage" };
+    ? []
+    : [{ targetId, rollMode: "disadvantage" }];
 }
 
 function spellConditionEndTurnSavingThrowOutcomeFor(
@@ -2111,7 +2088,6 @@ function spellConditionCountedEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SpellConditionCountedEndTurnSaveEffect,
   state?: BattleState,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:spell-condition-counted-end-turn-save",
@@ -2141,13 +2117,11 @@ function spellConditionCountedEndTurnSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      state === undefined
-        ? []
-        : savingThrowRollModeProjections(state, effect.save.ability).filter(
-            (projection) => projection.targetId === targetId,
-          ),
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      { ability: effect.save.ability, avoidsCondition: effect.condition },
+      [targetId],
+    ),
   };
 }
 
@@ -2175,7 +2149,6 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: UnitFeatureConditionEndTurnSaveEffect,
   state?: BattleState,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole {
   const key =
     UNIT_FEATURE_CONDITION_END_TURN_SAVE_HOLE_KEY_PREFIX +
@@ -2202,13 +2175,11 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      state === undefined
-        ? []
-        : savingThrowRollModeProjections(state, effect.save.ability, {
-            condition: effect.condition,
-          }).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      { ability: effect.save.ability, avoidsCondition: effect.condition },
+      [targetId],
+    ),
   };
 }
 
@@ -2226,7 +2197,6 @@ function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SaveGatedTurnConstraintBundleEffect,
   state?: BattleState,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleTurnConstraintEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:slow-active-penalties-end-turn-save",
@@ -2250,13 +2220,11 @@ function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      state === undefined
-        ? []
-        : savingThrowRollModeProjections(state, effect.save.ability).filter(
-            (projection) => projection.targetId === targetId,
-          ),
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      { ability: effect.save.ability },
+      [targetId],
+    ),
   };
 }
 
@@ -2284,7 +2252,6 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: AbilityD20TestRollModeEndTurnSaveEffect,
   state?: BattleState,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:ability-d20-test-end-turn-save",
@@ -2310,13 +2277,11 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      state === undefined
-        ? []
-        : savingThrowRollModeProjections(state, effect.save.ability).filter(
-            (projection) => projection.targetId === targetId,
-          ),
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      { ability: effect.save.ability },
+      [targetId],
+    ),
   };
 }
 
@@ -3381,12 +3346,7 @@ function resolveStartTurnDamageEndingSave(input: {
   const hole = spellTurnStartSavingThrowOutcomeHole(
     input.input.sourceTurn,
     input.effect,
-    savingThrowFlatBonusProjections(
-      input.input.state,
-      input.effect.save.ability,
-    ).filter(
-      (projection) => projection.targetId === input.input.sourceTurn.actorId,
-    ),
+    input.input.state,
   );
   const exactSaveFills = input.savingThrowFills.filter(
     (fill) => fill.holeId === hole.holeId,
@@ -5246,11 +5206,7 @@ function resolveEndTurnCommandForParent(
       hole: hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
         actorId,
         effect,
-        endTurnSavingThrowFlatBonuses(
-          input.state,
-          actorId,
-          effect.save.ability,
-        ),
+        input.state,
       ),
     }));
   const hitPointBudgetConditionRepeatSaveHoles =
@@ -5262,11 +5218,7 @@ function resolveEndTurnCommandForParent(
         actorId,
         effect,
         { trigger: "endTurn" },
-        endTurnSavingThrowFlatBonuses(
-          input.state,
-          actorId,
-          effect.save.ability,
-        ),
+        input.state,
       ),
     }));
   const saveGatedConditionWithRepeatRepeatSaveHoles =
@@ -5281,7 +5233,6 @@ function resolveEndTurnCommandForParent(
       actorId,
       effect,
       input.state,
-      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
     ),
   }));
   const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
@@ -5294,11 +5245,6 @@ function resolveEndTurnCommandForParent(
         actorId,
         effect,
         input.state,
-        endTurnSavingThrowFlatBonuses(
-          input.state,
-          actorId,
-          effect.save.ability,
-        ),
       ),
     }));
   const unitFeatureConditionEndTurnSaveRequests =
@@ -5308,11 +5254,6 @@ function resolveEndTurnCommandForParent(
         actorId,
         effect,
         input.state,
-        endTurnSavingThrowFlatBonuses(
-          input.state,
-          actorId,
-          effect.save.ability,
-        ),
       ),
     }));
   const unitFeatureConditionEndTurnSaveHoles =
@@ -5324,11 +5265,6 @@ function resolveEndTurnCommandForParent(
         actorId,
         effect,
         input.state,
-        endTurnSavingThrowFlatBonuses(
-          input.state,
-          actorId,
-          effect.save.ability,
-        ),
       ),
     }));
   const saveGatedTurnConstraintBundleEndTurnSaveHoles =
@@ -5342,11 +5278,6 @@ function resolveEndTurnCommandForParent(
         actorId,
         effect,
         input.state,
-        endTurnSavingThrowFlatBonuses(
-          input.state,
-          actorId,
-          effect.save.ability,
-        ),
       ),
     }));
   const abilityD20TestEndTurnSaveHoles = abilityD20TestEndTurnSaveRequests.map(

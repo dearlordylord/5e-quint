@@ -51,7 +51,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { armorClassAgainstAttack } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 import {
   applyMovableLightSpellEffect,
   applySpatialMeleeSpellAttackProxyEffect,

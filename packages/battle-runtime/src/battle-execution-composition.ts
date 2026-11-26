@@ -1,6 +1,6 @@
 import { acceptedSubjectReplayEvidence } from "./battle-reducer/subject-continuation-phase.ts";
 import { optionalProperty } from "./optional-property.ts";
-import { resolveWithSavingThrowCoverCheck } from "./battle-reducer/saving-throw-cover.ts";
+import { resolveWithSavingThrowOutcomeCheck } from "./battle-reducer/saving-throw-outcome-check.ts";
 import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
@@ -116,14 +116,14 @@ export function endTurn(input: {
   readonly actorId: CombatantId;
   readonly fills?: readonly BattleFill[];
 }): BattleResolutionResult {
-  return resolveWithSavingThrowCoverCheck({
+  return resolveWithSavingThrowOutcomeCheck({
     fills: input.fills ?? [],
     resolveFills: (fills) => endTurnWithFills({ ...input, fills }),
-    invalid: (message) => invalidCoverFill(input.state, message),
+    invalid: (message) => invalidSavingThrowFill(input.state, message),
   });
 }
 
-function invalidCoverFill(
+function invalidSavingThrowFill(
   state: BattleState,
   message: string,
 ): BattleResolutionResult {
@@ -185,11 +185,11 @@ export function deliverTouchSpellThroughSpawnedCompanion(input: {
   readonly fills: BattleResolutionInput["fills"];
   readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
 }): BattleResolutionResult {
-  return resolveWithSavingThrowCoverCheck({
+  return resolveWithSavingThrowOutcomeCheck({
     fills: input.fills,
     resolveFills: (fills) =>
       deliverTouchSpellThroughSpawnedCompanionWithFills({ ...input, fills }),
-    invalid: (message) => invalidCoverFill(input.state, message),
+    invalid: (message) => invalidSavingThrowFill(input.state, message),
   });
 }
 

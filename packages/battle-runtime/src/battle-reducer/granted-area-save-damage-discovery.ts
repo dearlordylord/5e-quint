@@ -1,4 +1,5 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -13,10 +14,6 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
 import {
@@ -92,8 +89,7 @@ export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(state, "dex"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, "dex"),
+    ...savingThrowTargetModifiers(state, { ability: "dex" }, "everyCombatant"),
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       actorId,

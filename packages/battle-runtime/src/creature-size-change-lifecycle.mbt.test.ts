@@ -43,7 +43,7 @@ import {
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -594,7 +594,11 @@ function creatureSizeChangeProjection(
     (candidate) => candidate.kind === "spellCreatureSizeChange",
   );
   const strengthSavingThrowRollMode =
-    savingThrowRollModeProjections(state.battle, "str").find(
+    savingThrowTargetModifiers(
+      state.battle,
+      { ability: "str" },
+      "everyCombatant",
+    ).targetRollModes.find(
       (projection) => projection.targetId === spellTargetId,
     )?.rollMode ?? "normal";
   return {

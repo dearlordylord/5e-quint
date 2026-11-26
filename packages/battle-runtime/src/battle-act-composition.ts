@@ -15,7 +15,10 @@ import type { AuthoredSelectedSpellInvocation } from "./character-execution-admi
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Match, Result } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import {
+  ESCAPE_GRAPPLE_SKILL_NAMES,
+  isCharacterProcedureBattleSubject,
+} from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
@@ -836,7 +839,11 @@ function intrinsicActPresentationLabel(
   subject: IntrinsicBattleSubject,
 ): string {
   return Match.value(subject).pipe(
-    byTag("action", (value) => INTRINSIC_ACTION_LABELS[value.action]),
+    byTag("action", (value) =>
+      value.action === "escapeGrapple"
+        ? `${INTRINSIC_ACTION_LABELS.escapeGrapple} (${ESCAPE_GRAPPLE_SKILL_NAMES[value.skill]})`
+        : INTRINSIC_ACTION_LABELS[value.action],
+    ),
     byTag(
       "runtimeCommand",
       (value) => INTRINSIC_RUNTIME_COMMAND_LABELS[value.command],

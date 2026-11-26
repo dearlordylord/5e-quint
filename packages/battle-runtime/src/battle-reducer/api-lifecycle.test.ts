@@ -227,6 +227,17 @@ describe("battle lifecycle admission issue aggregation", () => {
         condition: "blinded",
       },
       {
+        kind: "initialGrappledWithoutGrapple",
+        combatantId: factCombatantId,
+      },
+      {
+        kind: "initialGrappleInvalid",
+        grappleIndex: 2,
+        grapplerId: factCombatantId,
+        targetId: otherFactCombatantId,
+        rejection: "noFreeHand",
+      },
+      {
         kind: "statBlockSourceInvalid",
         statBlockId: factStatBlockId,
         constraint: "literalArmorClassRequired",

@@ -18,7 +18,7 @@ import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { breakBattleConcentration } from "./battle-reducer/damage-apply.ts";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import {
@@ -255,7 +255,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       "disadvantage",
     );
     expect(
-      savingThrowRollModeProjections(cast.state, "str").some(
+      savingThrowTargetModifiers(
+        cast.state,
+        { ability: "str" },
+        "everyCombatant",
+      ).targetRollModes.some(
         (projection) =>
           projection.targetId === spellTargetId &&
           projection.rollMode === "disadvantage",

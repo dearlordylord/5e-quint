@@ -2,13 +2,13 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { savingThrowTargetModifiersWhenStateKnown } from "./saving-throw-modifier-collector.ts";
 import { Brand, Match } from "effect";
 import type {
   BattleCreatureState,
   BattleFill,
   BattleHoleId,
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
-  BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   BattleSavingThrowOutcomeValue,
   BattleState,
@@ -25,7 +25,6 @@ import {
   STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
 } from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 import {
   boundSaveGatedConditionWithRepeatEffect,
   type BoundSaveGatedConditionWithRepeatEffect,
@@ -220,7 +219,7 @@ export function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SaveGatedConditionWithRepeatEffect,
   occurrence: SaveGatedConditionRepeatSaveOccurrence,
-  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+  state?: BattleState,
 ): BattleSaveGatedConditionRepeatSavingThrowOutcomeHole {
   const key = [
     saveGatedConditionRepeatSaveHoleKeyPrefix(occurrence.trigger),
@@ -249,13 +248,22 @@ export function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
-        targetId,
-        effect,
-        occurrence.trigger,
-      ),
-    targetFlatBonuses,
+    ...savingThrowTargetModifiersWhenStateKnown(
+      state,
+      {
+        ability: effect.save.ability,
+        procedureSources: {
+          rollModes:
+            saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
+              targetId,
+              effect,
+              occurrence.trigger,
+            ),
+          bonuses: [],
+        },
+      },
+      [targetId],
+    ),
   };
 }
 
@@ -290,9 +298,7 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
             target.combatantId,
             boundEffect,
             { trigger: "damage", occurrenceKey },
-            linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
-              target,
-            ),
+            state,
           ),
         ]
       : [];
