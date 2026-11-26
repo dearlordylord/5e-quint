@@ -195,8 +195,8 @@ import {
 } from "./attack-weapon-change.ts";
 import {
   isStartTurnSubject,
-  isTurnBoundaryCommandSubject,
-  type TurnBoundaryCommandSubject,
+  isTurnBoundarySubject,
+  type TurnBoundarySubject,
 } from "./reducer-route-subject-query.ts";
 import {
   isObjectInteractionSubject,
@@ -708,9 +708,9 @@ function battleSubjectHasWrongActor(
   );
 }
 
-function resolveTurnBoundaryCommand(
+function resolveTurnBoundarySubject(
   input: Parameters<typeof resolveEndTurnCommand>[0] & {
-    readonly subject: TurnBoundaryCommandSubject;
+    readonly subject: TurnBoundarySubject;
   },
 ): BattleResolutionResult {
   const { subject } = input;
@@ -1038,8 +1038,8 @@ function resolveBattleSubjectAfterD20TestRerolls(
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
-    if (isTurnBoundaryCommandSubject(subject)) {
-      return resolveTurnBoundaryCommand({
+    if (isTurnBoundarySubject(subject)) {
+      return resolveTurnBoundarySubject({
         ...input,
         subject,
         ...handledInterruptRouteOption,

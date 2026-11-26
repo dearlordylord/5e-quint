@@ -10,7 +10,7 @@ export function isEndTurnSubject(
 }
 
 /** Start Turn and End Turn: the runtime commands that own a turn boundary. */
-export type TurnBoundaryCommandSubject = Extract<
+export type TurnBoundarySubject = Extract<
   BattleResolutionInput["subject"],
   {
     readonly tag: "runtimeCommand";
@@ -18,9 +18,9 @@ export type TurnBoundaryCommandSubject = Extract<
   }
 >;
 
-export function isTurnBoundaryCommandSubject(
+export function isTurnBoundarySubject(
   subject: BattleResolutionInput["subject"],
-): subject is TurnBoundaryCommandSubject {
+): subject is TurnBoundarySubject {
   return isStartTurnSubject(subject) || isEndTurnSubject(subject);
 }
 
