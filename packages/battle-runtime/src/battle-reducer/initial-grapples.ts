@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // SRD 5.2.1 Grappling: an already established hold follows the shared
 // condition and ending rules. This admission supports hand-held 5-foot
 // grapples only; it does not reconstruct arbitrary initiation or anatomy.
