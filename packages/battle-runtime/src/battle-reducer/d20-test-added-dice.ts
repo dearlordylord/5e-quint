@@ -29,12 +29,12 @@ import {
   battleStateAfterBardicInspirationDie,
   bardicInspirationDieDecisionIssue,
   bardicInspirationDieForRoll,
-  bardicInspirationDieOffered,
   bardicInspirationDieOption,
   bardicInspirationDieUseForRoll,
   NO_BARDIC_INSPIRATION_DIE_USE,
   type BardicInspirationDieUse,
 } from "./bardic-inspiration-failed-d20-test.ts";
+import { d20TestAddedDieOffered } from "./d20-test-added-die.ts";
 import {
   abilityCheckAfterAddedDie,
   d20TestAddedDieDecisionTakesDie,
@@ -50,14 +50,13 @@ import {
   battleStateAfterFailedAbilityCheckResourceBoost,
   failedAbilityCheckResourceBoostDecisionIssue,
   failedAbilityCheckResourceBoostForRoll,
-  failedAbilityCheckResourceBoostOffered,
   failedAbilityCheckResourceBoostOption,
   failedAbilityCheckResourceBoostUseForRoll,
   NO_FAILED_ABILITY_CHECK_RESOURCE_BOOST_USE,
   type FailedAbilityCheckResourceBoostUse,
 } from "./failed-ability-check-resource-boost.ts";
 
-export const D20_TEST_ADDED_DIE_HOLE_REQUIRED_MESSAGE =
+const D20_TEST_ADDED_DIE_HOLE_REQUIRED_MESSAGE =
   "Dice added to an ability check need the discovered hole that states its DC.";
 
 /** The sources that may add a die to an ability check. */
@@ -92,7 +91,7 @@ export type AbilityCheckAddedDieUses = SavingThrowAddedDieUses & {
 };
 
 /** What a test that took no die costs. */
-export const NO_SAVING_THROW_ADDED_DIE_USES: SavingThrowAddedDieUses = {
+const NO_SAVING_THROW_ADDED_DIE_USES: SavingThrowAddedDieUses = {
   bardicInspiration: NO_BARDIC_INSPIRATION_DIE_USE,
 };
 
@@ -187,8 +186,8 @@ export function rolledOutcomeAddedDice<T extends BattleD20TestOutcome>(
       rollAfter: rolledOutcomeAfterAddedDie,
       offered: {
         bardicInspiration: (outcome) =>
-          bardicInspirationDieOffered({
-            die,
+          d20TestAddedDieOffered({
+            source: die,
             standsFailed: !outcome.succeeded,
           }),
       },
@@ -198,9 +197,10 @@ export function rolledOutcomeAddedDice<T extends BattleD20TestOutcome>(
     Match.discriminatorsExhaustive("tag")({
       invalid: (invalid) => invalid,
       decisionsRequired: ({ options }) => {
-        const bardicInspirationDie = options.bardicInspiration
-          ? bardicInspirationDieOption(die, input.roll)
-          : undefined;
+        const bardicInspirationDie =
+          options.bardicInspiration && die.availability === "available"
+            ? bardicInspirationDieOption(die, input.roll)
+            : undefined;
         return {
           tag: "decisionsRequired" as const,
           options:
@@ -287,10 +287,10 @@ export function abilityCheckAddedDice<T extends D20TestAbilityCheckValue>(
       rollAfter: abilityCheckAfterAddedDie,
       offered: {
         bardicInspiration: (check) =>
-          bardicInspirationDieOffered({ die, standsFailed: fails(check) }),
+          d20TestAddedDieOffered({ source: die, standsFailed: fails(check) }),
         failedAbilityCheckResourceBoost: (check) =>
-          failedAbilityCheckResourceBoostOffered({
-            boost,
+          d20TestAddedDieOffered({
+            source: boost,
             standsFailed: fails(check),
           }),
       },
@@ -300,11 +300,13 @@ export function abilityCheckAddedDice<T extends D20TestAbilityCheckValue>(
     Match.discriminatorsExhaustive("tag")({
       invalid: (invalid) => invalid,
       decisionsRequired: ({ options }) => {
-        const bardicInspirationDie = options.bardicInspiration
-          ? bardicInspirationDieOption(die, input.roll)
-          : undefined;
+        const bardicInspirationDie =
+          options.bardicInspiration && die.availability === "available"
+            ? bardicInspirationDieOption(die, input.roll)
+            : undefined;
         const failedAbilityCheckResourceBoost =
-          options.failedAbilityCheckResourceBoost
+          options.failedAbilityCheckResourceBoost &&
+          boost.availability === "available"
             ? failedAbilityCheckResourceBoostOption(boost, input.roll)
             : undefined;
         return {
@@ -330,6 +332,7 @@ export function abilityCheckAddedDice<T extends D20TestAbilityCheckValue>(
           failedAbilityCheckResourceBoost:
             failedAbilityCheckResourceBoostUseForRoll({
               ...input,
+              boost,
               added: resolved.taken.failedAbilityCheckResourceBoost,
               succeeded: !fails(resolved.roll),
             }),

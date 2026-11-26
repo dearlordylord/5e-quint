@@ -21,18 +21,18 @@ import {
 import {
   d20TestAddedDieDecisionIssue,
   type D20TestAddedDieMessages,
+  type D20TestAddedDieSourceForRoll,
 } from "./d20-test-added-die.ts";
 import {
   battleStateWithD20TestSourcePaid,
   d20TestSourcePaymentOnRoll,
-  d20TestSpendAvailability,
-  type D20TestSpendAvailability,
+  d20TestSpendUnavailability,
   type D20TestSpendRecord,
   type D20TestSpendScope,
 } from "./d20-test-source-spend.ts";
 
 const BARDIC_INSPIRATION_DIE_SPEND_RECORD =
-  "acceptedBardicInspirationDice" satisfies D20TestSpendRecord;
+  "acceptedBardicInspirationDice" as const satisfies D20TestSpendRecord;
 
 export const BARDIC_INSPIRATION_DIE_MESSAGES = {
   unavailable:
@@ -56,62 +56,33 @@ function heldBardicInspirationDieSize(
  * The roller's Bardic Inspiration die for this roll: the die it holds, or on
  * a replay of the roll that expended it, the die it expended.
  */
-function bardicInspirationDieSizeForRoll(
-  state: BattleState,
-  scope: D20TestSpendScope,
-  roll: BattleD20TestRollKey,
-): DamageDieSize | undefined {
-  return (
-    d20TestSourcePaymentOnRoll({
-      state,
-      scope,
-      record: BARDIC_INSPIRATION_DIE_SPEND_RECORD,
-      roll,
-    })?.dieSize ??
-    heldBardicInspirationDieSize(state.combatants.get(roll.rollerId))
-  );
-}
-
-/** Where the roller's Bardic Inspiration die stands for one roll, and its size. */
-export type BardicInspirationDieForRoll = {
-  readonly availability: D20TestSpendAvailability;
-  readonly dieSize: DamageDieSize | undefined;
-};
-
-/** The roller's Bardic Inspiration die for this roll. */
 export function bardicInspirationDieForRoll(
   state: BattleState,
   scope: D20TestSpendScope,
   roll: BattleD20TestRollKey,
-): BardicInspirationDieForRoll {
-  return {
-    availability: d20TestSpendAvailability({
-      state,
-      scope,
-      record: BARDIC_INSPIRATION_DIE_SPEND_RECORD,
-      roll,
-      rollerCanPay:
-        heldBardicInspirationDieSize(state.combatants.get(roll.rollerId)) !==
-        undefined,
-    }),
-    dieSize: bardicInspirationDieSizeForRoll(state, scope, roll),
+): D20TestAddedDieSourceForRoll {
+  const spend = {
+    state,
+    scope,
+    record: BARDIC_INSPIRATION_DIE_SPEND_RECORD,
+    roll,
   };
+  const dieSize =
+    d20TestSourcePaymentOnRoll(spend)?.dieSize ??
+    heldBardicInspirationDieSize(state.combatants.get(roll.rollerId));
+  return dieSize === undefined
+    ? { availability: d20TestSpendUnavailability(spend) }
+    : { availability: "available", dieSize };
 }
 
-/** Whether the die is offered on the test as it stands: it fails and the roller holds a die. */
-export function bardicInspirationDieOffered(input: {
-  readonly die: BardicInspirationDieForRoll;
-  readonly standsFailed: boolean;
-}): boolean {
-  return input.die.availability === "available" && input.standsFailed;
-}
-
-/** The option a D20 Test hole is asked again with for this roller. */
+/** The option a D20 Test hole is asked again with for this roller's die. */
 export function bardicInspirationDieOption(
-  die: BardicInspirationDieForRoll,
+  die: Extract<
+    D20TestAddedDieSourceForRoll,
+    { readonly availability: "available" }
+  >,
   roll: BattleD20TestRollKey,
-): BattleBardicInspirationDieOption | undefined {
-  if (die.dieSize === undefined) return undefined;
+): BattleBardicInspirationDieOption {
   return {
     effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
     label: "Bardic Inspiration die",
@@ -122,16 +93,15 @@ export function bardicInspirationDieOption(
 
 /** The issue with a Bardic Inspiration decision on a D20 Test as it stands, if any. */
 export function bardicInspirationDieDecisionIssue(input: {
-  readonly die: BardicInspirationDieForRoll;
+  readonly die: D20TestAddedDieSourceForRoll;
   readonly standsFailed: boolean;
   readonly decision:
     | { readonly kind: "decline" }
     | { readonly kind: "addDie"; readonly dieRoll: number };
 }): string | null {
   return d20TestAddedDieDecisionIssue({
-    availability: input.die.availability,
+    source: input.die,
     standsFailed: input.standsFailed,
-    dieSize: input.die.dieSize,
     decision: input.decision,
     messages: BARDIC_INSPIRATION_DIE_MESSAGES,
   });

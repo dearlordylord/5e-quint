@@ -468,7 +468,7 @@ export {
   type BattleAcrobaticMovementPath,
   type BattleAttackRollHole,
   type BattleAttackRollResult,
-  type BattleBardicInspirationFailedD20TestFacts,
+  type BattleBardicInspirationFailedAttackRollFacts,
   type BattleConcentration,
   type BattleConcentrationSavingThrowHole,
   type BattleCreatureSnapshot,
@@ -589,8 +589,8 @@ export {
   type BattleUnitFeatureRollHole,
   type BattleWildShapeEquipmentDispositionHole,
   type EndedFlySpeedGrant,
-  type BardicInspirationFailedD20TestResolutionInput,
-  type BardicInspirationFailedD20TestResolutionResult,
+  type BardicInspirationFailedAttackRollResolutionInput,
+  type BardicInspirationFailedAttackRollResolutionResult,
   type LegendaryActionWindow,
   type OngoingFeatureExpiration,
   type OngoingFeatureSourceKey,
@@ -705,7 +705,7 @@ export {
 } from "./battle-execution-composition.ts";
 export {
   resolveSuccessfulAbilityCheckReactionReduction,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
 } from "./battle-reducer/unit-features.ts";
 export {
   PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET,

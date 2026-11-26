@@ -29,10 +29,10 @@ import {
   grantBardicInspirationToGoblin,
   interruptDecisionFill,
   reactionModifierChoice,
-  requireBardicInspirationD20TestResolved,
+  requireBardicInspirationAttackRollResolved,
   requireElapsedHours,
   requireResolved,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveBattleSubjectUncheckedForTest,
@@ -589,11 +589,10 @@ describe("battle runtime: Bardic Inspiration", () => {
   });
 
   test("Bardic Inspiration on a missed attack roll can turn it into a hit", () => {
-    const attackRoll = requireBardicInspirationD20TestResolved(
-      resolveBardicInspirationFailedD20Test({
+    const attackRoll = requireBardicInspirationAttackRollResolved(
+      resolveBardicInspirationFailedAttackRoll({
         state: grantBardicInspirationToGoblin(),
-        d20Test: {
-          kind: "attackRoll",
+        failedAttackRoll: {
           actorId: goblinId,
           attackRoll: {
             total: 14,
@@ -605,7 +604,7 @@ describe("battle runtime: Bardic Inspiration", () => {
       }),
     );
 
-    expect(attackRoll.bardicInspirationD20Test).toEqual({
+    expect(attackRoll.bardicInspirationAttackRoll).toEqual({
       boostedTotal: 16,
       boostedSucceeded: true,
     });
@@ -615,11 +614,10 @@ describe("battle runtime: Bardic Inspiration", () => {
   });
 
   test("Bardic Inspiration on a missed attack roll expends the die even when the attack still misses", () => {
-    const result = requireBardicInspirationD20TestResolved(
-      resolveBardicInspirationFailedD20Test({
+    const result = requireBardicInspirationAttackRollResolved(
+      resolveBardicInspirationFailedAttackRoll({
         state: grantBardicInspirationToGoblin(),
-        d20Test: {
-          kind: "attackRoll",
+        failedAttackRoll: {
           actorId: goblinId,
           attackRoll: {
             total: 9,
@@ -631,7 +629,7 @@ describe("battle runtime: Bardic Inspiration", () => {
       }),
     );
 
-    expect(result.bardicInspirationD20Test).toEqual({
+    expect(result.bardicInspirationAttackRoll).toEqual({
       boostedTotal: 13,
       boostedSucceeded: false,
     });
@@ -643,7 +641,6 @@ describe("battle runtime: Bardic Inspiration", () => {
   test("Bardic Inspiration on an attack roll rejects hits, invalid die rolls, double spend, and missing actors", () => {
     const state = grantBardicInspirationToGoblin();
     const missedAttack = {
-      kind: "attackRoll",
       actorId: goblinId,
       attackRoll: {
         total: 12,
@@ -653,9 +650,9 @@ describe("battle runtime: Bardic Inspiration", () => {
     } as const;
 
     expect(
-      resolveBardicInspirationFailedD20Test({
+      resolveBardicInspirationFailedAttackRoll({
         state,
-        d20Test: {
+        failedAttackRoll: {
           ...missedAttack,
           attackRoll: {
             total: 15,
@@ -672,9 +669,9 @@ describe("battle runtime: Bardic Inspiration", () => {
     expect(combatantHasBardicInspirationDie(state, goblinId)).toBe(true);
 
     expect(
-      resolveBardicInspirationFailedD20Test({
+      resolveBardicInspirationFailedAttackRoll({
         state,
-        d20Test: missedAttack,
+        failedAttackRoll: missedAttack,
         bardicInspirationRoll: 7,
       }),
     ).toMatchObject({
@@ -684,18 +681,18 @@ describe("battle runtime: Bardic Inspiration", () => {
     });
     expect(combatantHasBardicInspirationDie(state, goblinId)).toBe(true);
 
-    const spent = requireBardicInspirationD20TestResolved(
-      resolveBardicInspirationFailedD20Test({
+    const spent = requireBardicInspirationAttackRollResolved(
+      resolveBardicInspirationFailedAttackRoll({
         state,
-        d20Test: missedAttack,
+        failedAttackRoll: missedAttack,
         bardicInspirationRoll: 1,
       }),
     );
 
     expect(
-      resolveBardicInspirationFailedD20Test({
+      resolveBardicInspirationFailedAttackRoll({
         state: spent.state,
-        d20Test: missedAttack,
+        failedAttackRoll: missedAttack,
         bardicInspirationRoll: 1,
       }),
     ).toMatchObject({
@@ -706,9 +703,9 @@ describe("battle runtime: Bardic Inspiration", () => {
     });
 
     expect(
-      resolveBardicInspirationFailedD20Test({
+      resolveBardicInspirationFailedAttackRoll({
         state,
-        d20Test: {
+        failedAttackRoll: {
           ...missedAttack,
           actorId: combatantId("missing-bardic-inspiration-actor"),
         },

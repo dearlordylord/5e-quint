@@ -80,7 +80,7 @@ function paidRolls<Record extends D20TestSpendRecord>(
   );
 }
 
-/** The record an earlier pass of the subject kept for this roll's payment, if it paid. */
+/** The record an earlier pass of the subject kept for this roll taking its source, if it did. */
 export function d20TestSourcePaymentOnRoll<
   Record extends D20TestSpendRecord,
 >(input: {
@@ -94,7 +94,7 @@ export function d20TestSourcePaymentOnRoll<
   );
 }
 
-/** Whether an earlier pass of the subject already paid for this roll's source. */
+/** Whether an earlier pass of the subject recorded this roll as taking its source. */
 export function d20TestSourcePaidOnRoll(input: {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
@@ -102,6 +102,41 @@ export function d20TestSourcePaidOnRoll(input: {
   readonly roll: BattleD20TestRollKey;
 }): boolean {
   return d20TestSourcePaymentOnRoll(input) !== undefined;
+}
+
+/** Where a roller's cost stands for a roll it cannot pay for: {@link D20_TEST_SPEND_AVAILABILITIES} but "available". */
+export type D20TestSpendUnavailability = Exclude<
+  D20TestSpendAvailability,
+  "available"
+>;
+
+/**
+ * Whether a recorded roll paid its source. Every record keeps only rolls
+ * that paid, but the failed ability check boost's, which also keeps the rolls
+ * it was added to that still failed and so kept the use.
+ */
+function recordedRollPaid(
+  entry: D20TestSpendRecordEntry<D20TestSpendRecord>,
+): boolean {
+  return !("useSpent" in entry) || entry.useSpent;
+}
+
+/**
+ * Where the roller's cost stands for a roll that has nothing recorded and
+ * that it cannot pay for now: spent on another roll of the subject, or never
+ * there.
+ */
+export function d20TestSpendUnavailability(input: {
+  readonly state: BattleState;
+  readonly scope: D20TestSpendScope;
+  readonly record: D20TestSpendRecord;
+  readonly roll: BattleD20TestRollKey;
+}): D20TestSpendUnavailability {
+  return paidRolls(input.state, input.scope, input.record).some(
+    (paid) => paid.rollerId === input.roll.rollerId && recordedRollPaid(paid),
+  )
+    ? "spentOnAnotherRoll"
+    : "unavailable";
 }
 
 /** Where the roller's cost stands for this roll. */
@@ -115,11 +150,7 @@ export function d20TestSpendAvailability(input: {
 }): D20TestSpendAvailability {
   if (d20TestSourcePaidOnRoll(input)) return "available";
   if (input.rollerCanPay) return "available";
-  return paidRolls(input.state, input.scope, input.record).some(
-    (paid) => paid.rollerId === input.roll.rollerId,
-  )
-    ? "spentOnAnotherRoll"
-    : "unavailable";
+  return d20TestSpendUnavailability(input);
 }
 
 /** The state with this roll recorded as paid for the rest of its subject. */
@@ -146,32 +177,50 @@ export function battleStateWithD20TestSourcePaid<
   };
 }
 
+/** The kinds of decision a roller makes on a costed D20 Test source. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for D20TestDecisionKind.
+const D20_TEST_DECISION_KINDS = [
+  "decline",
+  "reroll",
+  "rerollRolledDie",
+  "addDie",
+] as const;
+/** One of {@link D20_TEST_DECISION_KINDS}. */
+export type D20TestDecisionKind = (typeof D20_TEST_DECISION_KINDS)[number];
+
 /**
  * Whether the roller's cost lets it make this decision: a decline needs only
  * that it once had the choice; any other decision needs the cost now.
  */
 export function d20TestSpendGate(input: {
   readonly availability: D20TestSpendAvailability;
-  readonly decision: { readonly kind: string };
+  readonly decision: { readonly kind: D20TestDecisionKind };
   readonly unavailableMessage: string;
 }): D20TestSpendGate {
+  const availability = input.availability;
+  return availability === "available"
+    ? { tag: "decide" }
+    : {
+        tag: "finished",
+        issue: d20TestUnavailableDecisionIssue({ ...input, availability }),
+      };
+}
+
+/**
+ * The issue with a decision on a source the roller cannot pay for: a decline
+ * stands when another roll of the subject spent what it had, since the
+ * roller once had the choice; anything else is refused.
+ */
+export function d20TestUnavailableDecisionIssue(input: {
+  readonly availability: D20TestSpendUnavailability;
+  readonly decision: { readonly kind: D20TestDecisionKind };
+  readonly unavailableMessage: string;
+}): string | null {
   return Match.value(input.availability).pipe(
-    Match.when(
-      "unavailable",
-      (): D20TestSpendGate => ({
-        tag: "finished",
-        issue: input.unavailableMessage,
-      }),
+    Match.when("unavailable", () => input.unavailableMessage),
+    Match.when("spentOnAnotherRoll", () =>
+      input.decision.kind === "decline" ? null : input.unavailableMessage,
     ),
-    Match.when(
-      "spentOnAnotherRoll",
-      (): D20TestSpendGate => ({
-        tag: "finished",
-        issue:
-          input.decision.kind === "decline" ? null : input.unavailableMessage,
-      }),
-    ),
-    Match.when("available", (): D20TestSpendGate => ({ tag: "decide" })),
     Match.exhaustive,
   );
 }

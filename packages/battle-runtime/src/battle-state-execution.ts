@@ -4583,6 +4583,14 @@ export type BattleExpendedBardicInspirationDie = BattleD20TestRollKey & {
   readonly dieSize: DamageDieSize;
 };
 
+/** A roll that took its roller's failed ability check resource boost. */
+export type BattleTakenFailedAbilityCheckResourceBoost =
+  BattleD20TestRollKey & {
+    readonly dieSize: DamageDieSize;
+    /** Whether the check succeeded with every added die, so the use is spent. */
+    readonly useSpent: boolean;
+  };
+
 /** Accepted roll and attack outcomes owned by a subject while its resolution can replay. */
 export type BattleAcceptedSubjectReplayEvidence = {
   /** The rolls of this subject that spent their roller's Heroic Inspiration. */
@@ -4594,8 +4602,13 @@ export type BattleAcceptedSubjectReplayEvidence = {
    * die, with the die's size, which the roller no longer holds.
    */
   readonly acceptedBardicInspirationDice?: ReadonlyNonEmptyArray<BattleExpendedBardicInspirationDie>;
-  /** The rolls of this subject that spent a use of a failed ability check resource boost. */
-  readonly acceptedFailedAbilityCheckResourceBoosts?: ReadonlyNonEmptyArray<BattleD20TestRollKey>;
+  /**
+   * The rolls of this subject that took a failed ability check resource
+   * boost: the die it added, and whether the check succeeded and so spent a
+   * use. A roll that still failed keeps the use and is recorded too, so a
+   * replay finds the boost decided on it.
+   */
+  readonly acceptedFailedAbilityCheckResourceBoosts?: ReadonlyNonEmptyArray<BattleTakenFailedAbilityCheckResourceBoost>;
   readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
   readonly acceptedThrownWeaponRelease?: BattleAcceptedThrownWeaponRelease;
 };
@@ -4662,8 +4675,7 @@ export type BattleState = {
  * hit. Ability checks and saving throws take the die in battle, through the
  * D20 Test's added-die step.
  */
-export type BattleBardicInspirationFailedD20TestFacts = {
-  readonly kind: "attackRoll";
+export type BattleBardicInspirationFailedAttackRollFacts = {
   readonly actorId: CombatantId;
   readonly attackRoll: BattleAttackRollResult;
   readonly armorClass: ArmorClass;
@@ -4679,9 +4691,9 @@ export type BattleSuccessfulAbilityCheckFacts = {
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 };
 
-export type BardicInspirationFailedD20TestResolutionInput = {
+export type BardicInspirationFailedAttackRollResolutionInput = {
   readonly state: BattleState;
-  readonly d20Test: BattleBardicInspirationFailedD20TestFacts;
+  readonly failedAttackRoll: BattleBardicInspirationFailedAttackRollFacts;
   readonly bardicInspirationRoll: number;
 };
 
@@ -4693,9 +4705,9 @@ export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
   readonly reductionRoll: number;
 };
 
-export type BardicInspirationFailedD20TestResolutionResult =
+export type BardicInspirationFailedAttackRollResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
-      readonly bardicInspirationD20Test: {
+      readonly bardicInspirationAttackRoll: {
         readonly boostedTotal: number;
         readonly boostedSucceeded: boolean;
       };

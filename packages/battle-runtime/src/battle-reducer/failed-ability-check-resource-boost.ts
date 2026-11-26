@@ -11,7 +11,6 @@
 // roller has a use left, and spends the use only when the check succeeds once
 // every added die is in (ASSUMPTIONS.md A67).
 
-import type { DamageDieSize } from "@dnd/shared/types";
 import { Brand } from "effect";
 
 import {
@@ -26,22 +25,25 @@ import {
   type BattleD20TestRollKey,
   type BattleFailedAbilityCheckResourceBoostOption,
   type BattleState,
+  type BattleTakenFailedAbilityCheckResourceBoost,
 } from "../battle-state-execution.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   d20TestAddedDieDecisionIssue,
   type D20TestAddedDieMessages,
+  type D20TestAddedDieSourceForRoll,
 } from "./d20-test-added-die.ts";
 import {
   battleStateWithD20TestSourcePaid,
   d20TestSourcePaidOnRoll,
-  d20TestSpendAvailability,
-  type D20TestSpendAvailability,
+  d20TestSourcePaymentOnRoll,
+  d20TestSpendUnavailability,
   type D20TestSpendRecord,
   type D20TestSpendScope,
 } from "./d20-test-source-spend.ts";
 
 const FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD =
-  "acceptedFailedAbilityCheckResourceBoosts" satisfies D20TestSpendRecord;
+  "acceptedFailedAbilityCheckResourceBoosts" as const satisfies D20TestSpendRecord;
 
 export const FAILED_ABILITY_CHECK_RESOURCE_BOOST_MESSAGES = {
   unavailable:
@@ -87,50 +89,39 @@ function payableFailedAbilityCheckResourceBoost(
   );
 }
 
-/** Where the roller's failed ability check resource boost stands for one roll, and its die. */
-export type FailedAbilityCheckResourceBoostForRoll = {
-  readonly availability: D20TestSpendAvailability;
-  readonly dieSize: DamageDieSize | undefined;
-};
-
 /**
- * The roller's failed ability check resource boost for this roll: the feature
- * it can pay for, or on a replay of the roll that paid, the feature it has.
+ * The roller's failed ability check resource boost for this roll: the die of
+ * the feature it can pay for, or on a replay of the roll that took the
+ * boost, the die it added then, whether or not it spent a use.
  */
 export function failedAbilityCheckResourceBoostForRoll(
   state: BattleState,
   scope: D20TestSpendScope,
   roll: BattleD20TestRollKey,
-): FailedAbilityCheckResourceBoostForRoll {
-  const actor = state.combatants.get(roll.rollerId);
-  const payable = payableFailedAbilityCheckResourceBoost(actor);
-  const execution = payable ?? rollerFailedAbilityCheckResourceBoosts(actor)[0];
-  return {
-    availability: d20TestSpendAvailability({
-      state,
-      scope,
-      record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
-      roll,
-      rollerCanPay: payable !== undefined,
-    }),
-    dieSize: execution?.abilityCheck.bonus.dieSize,
+): D20TestAddedDieSourceForRoll {
+  const spend = {
+    state,
+    scope,
+    record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
+    roll,
   };
+  const dieSize =
+    d20TestSourcePaymentOnRoll(spend)?.dieSize ??
+    payableFailedAbilityCheckResourceBoost(state.combatants.get(roll.rollerId))
+      ?.abilityCheck.bonus.dieSize;
+  return dieSize === undefined
+    ? { availability: d20TestSpendUnavailability(spend) }
+    : { availability: "available", dieSize };
 }
 
-/** Whether the boost is offered on the check as it stands: it fails and the roller can pay. */
-export function failedAbilityCheckResourceBoostOffered(input: {
-  readonly boost: FailedAbilityCheckResourceBoostForRoll;
-  readonly standsFailed: boolean;
-}): boolean {
-  return input.boost.availability === "available" && input.standsFailed;
-}
-
-/** The option an ability check hole is asked again with for this roller. */
+/** The option an ability check hole is asked again with for this roller's boost. */
 export function failedAbilityCheckResourceBoostOption(
-  boost: FailedAbilityCheckResourceBoostForRoll,
+  boost: Extract<
+    D20TestAddedDieSourceForRoll,
+    { readonly availability: "available" }
+  >,
   roll: BattleD20TestRollKey,
-): BattleFailedAbilityCheckResourceBoostOption | undefined {
-  if (boost.dieSize === undefined) return undefined;
+): BattleFailedAbilityCheckResourceBoostOption {
   return {
     effectKind: FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
     label: "Failed ability check resource boost",
@@ -141,81 +132,89 @@ export function failedAbilityCheckResourceBoostOption(
 
 /** The issue with a boost decision on an ability check as it stands, if any. */
 export function failedAbilityCheckResourceBoostDecisionIssue(input: {
-  readonly boost: FailedAbilityCheckResourceBoostForRoll;
+  readonly boost: D20TestAddedDieSourceForRoll;
   readonly standsFailed: boolean;
   readonly decision:
     | { readonly kind: "decline" }
     | { readonly kind: "addDie"; readonly dieRoll: number };
 }): string | null {
   return d20TestAddedDieDecisionIssue({
-    availability: input.boost.availability,
+    source: input.boost,
     standsFailed: input.standsFailed,
-    dieSize: input.boost.dieSize,
     decision: input.decision,
     messages: FAILED_ABILITY_CHECK_RESOURCE_BOOST_MESSAGES,
   });
 }
 
 /**
- * Whether an admitted check spends a use of its roller's failed ability
- * check resource boost. Only {@link failedAbilityCheckResourceBoostUseForRoll}
- * makes one, so the spend follows a checked decision.
+ * What an admitted check's failed ability check resource boost leaves to
+ * record: nothing, or the roll that took the boost, its die, and whether the
+ * check succeeded and so spends a use. Only
+ * {@link failedAbilityCheckResourceBoostUseForRoll} makes one, so the record
+ * follows a checked decision.
  */
 export type FailedAbilityCheckResourceBoostUse = Brand.Branded<
-  | { readonly spends: false }
+  | { readonly taken: false }
   | {
-      readonly spends: true;
+      readonly taken: true;
       readonly scope: D20TestSpendScope;
-      readonly roll: BattleD20TestRollKey;
+      readonly roll: BattleTakenFailedAbilityCheckResourceBoost;
     },
   "FailedAbilityCheckResourceBoostUse"
 >;
 const FailedAbilityCheckResourceBoostUse =
   Brand.nominal<FailedAbilityCheckResourceBoostUse>();
 
-/** A check that doesn't spend a failed ability check resource boost. */
+/** A check that doesn't take a failed ability check resource boost. */
 export const NO_FAILED_ABILITY_CHECK_RESOURCE_BOOST_USE: FailedAbilityCheckResourceBoostUse =
-  FailedAbilityCheckResourceBoostUse({ spends: false });
+  FailedAbilityCheckResourceBoostUse({ taken: false });
 
 /**
- * The boost's use of a check whose added-die decisions were checked: it
- * spends when the boost added its die and the check succeeds with every added
- * die, unless an earlier pass of the subject already paid on this check. A
- * check that still fails keeps the use.
+ * The boost's use of a check whose added-die decisions were checked: when the
+ * boost added its die, the roll is recorded with that die, and it spends a use
+ * only when the check succeeds with every added die. A check that still fails
+ * keeps the use. An earlier pass of the subject that recorded the roll
+ * already settled it.
  */
 export function failedAbilityCheckResourceBoostUseForRoll(input: {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
   readonly roll: BattleD20TestRollKey;
+  readonly boost: D20TestAddedDieSourceForRoll;
   readonly added: boolean;
   readonly succeeded: boolean;
 }): FailedAbilityCheckResourceBoostUse {
+  const boost = input.boost;
   return input.added &&
-    input.succeeded &&
+    boost.availability === "available" &&
     !d20TestSourcePaidOnRoll({
       ...input,
       record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
     })
     ? FailedAbilityCheckResourceBoostUse({
-        spends: true,
+        taken: true,
         scope: input.scope,
-        roll: input.roll,
+        roll: {
+          ...input.roll,
+          dieSize: boost.dieSize,
+          useSpent: input.succeeded,
+        },
       })
     : NO_FAILED_ABILITY_CHECK_RESOURCE_BOOST_USE;
 }
 
 /**
- * Spends one use of the roller's failed ability check resource boost for an
- * admitted check that succeeded with it, and records the check for the rest
- * of the subject. On a replay of the subject the same check finds it already
- * paid and changes nothing.
+ * Records the roll that took the roller's failed ability check resource
+ * boost for the rest of the subject, and spends one use when the check
+ * succeeded with it. On a replay of the subject the same check finds it
+ * recorded and changes nothing.
  */
 export function battleStateAfterFailedAbilityCheckResourceBoost(
   state: BattleState,
   use: FailedAbilityCheckResourceBoostUse,
 ): BattleState {
   if (
-    !use.spends ||
+    !use.taken ||
     d20TestSourcePaidOnRoll({
       state,
       scope: use.scope,
@@ -224,15 +223,30 @@ export function battleStateAfterFailedAbilityCheckResourceBoost(
     })
   )
     return state;
-  const actor = state.combatants.get(use.roll.rollerId);
+  return battleStateWithD20TestSourcePaid({
+    state: use.roll.useSpent
+      ? battleStateWithResourceBoostUseSpent(state, use.roll.rollerId)
+      : state,
+    scope: use.scope,
+    record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
+    paid: use.roll,
+  });
+}
+
+/** The state with one use of the roller's payable boost spent. */
+function battleStateWithResourceBoostUseSpent(
+  state: BattleState,
+  rollerId: CombatantId,
+): BattleState {
+  const actor = state.combatants.get(rollerId);
   const execution = payableFailedAbilityCheckResourceBoost(actor);
-  /* v8 ignore next -- @preserve -- A validated boost belongs to a character who could pay for it. */
+  /* v8 ignore next -- @preserve -- A validated boost that succeeded belongs to a character who could pay for it. */
   if (actor?.origin.kind !== "character" || execution === undefined)
     return state;
   const resourcePoolRef = execution.abilityCheck.spends.resourcePoolRef;
-  const spent: BattleState = {
+  return {
     ...state,
-    combatants: new Map(state.combatants).set(use.roll.rollerId, {
+    combatants: new Map(state.combatants).set(rollerId, {
       ...actor,
       origin: {
         ...actor.origin,
@@ -245,10 +259,4 @@ export function battleStateAfterFailedAbilityCheckResourceBoost(
       },
     }),
   };
-  return battleStateWithD20TestSourcePaid({
-    state: spent,
-    scope: use.scope,
-    record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
-    paid: use.roll,
-  });
 }

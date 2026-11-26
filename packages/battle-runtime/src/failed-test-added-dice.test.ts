@@ -19,6 +19,7 @@ import {
   goblinId,
   grantBardicInspirationToGoblin,
   hidePrerequisites,
+  holeId,
   requireResolved,
   resolveBattleSubject,
   resource,
@@ -35,14 +36,21 @@ import {
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleActiveEffect,
+  type BattleD20TestRoll,
   type BattleFill,
+  type BattleTakenFailedAbilityCheckResourceBoost,
 } from "./battle-state-execution.ts";
 import { D20_TEST_ADDED_DIE_BEFORE_REROLLS_MESSAGE } from "./battle-reducer/d20-test-after-roll-decisions.ts";
 import { BARDIC_INSPIRATION_DIE_MESSAGES } from "./battle-reducer/bardic-inspiration-failed-d20-test.ts";
 import { FAILED_ABILITY_CHECK_RESOURCE_BOOST_MESSAGES } from "./battle-reducer/failed-ability-check-resource-boost.ts";
+import {
+  exhaleOnConcentratingCaster,
+  exhaleSaveFill,
+} from "./dragons-breath-exhale.test-support.ts";
 import { viciousMockeryUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
+  requireCombatant,
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
@@ -186,6 +194,94 @@ describe("the failed ability check resource boost on a Hide check", () => {
     ).toMatchObject({
       tag: "invalid",
       message: FAILED_ABILITY_CHECK_RESOURCE_BOOST_MESSAGES.dieRoll,
+    });
+  });
+
+  test("a replay accepts a boost the first pass took though the check still failed", () => {
+    const { state, subject, check } = hideCheck({ tacticalMindUses: 0 });
+    const fill = withAddedDice(abilityCheckFill(check, 10), [boost(4)]);
+    const replaying = withTakenBoost(state, subject, {
+      holeId: check.holeId,
+      useSpent: false,
+    });
+
+    const failed = requireResolved(
+      resolveBattleSubject({ state: replaying, subject, fills: [fill] }),
+    ).state;
+
+    expect(failed.combatants.get(fighterId)?.hidden).toBeNull();
+    expect(characterResourceUses(failed, fighterId)).toEqual([
+      resourceCount(0),
+    ]);
+  });
+
+  test("a replay accepts the boost that turned the check without spending a second use", () => {
+    const { state, subject, check } = hideCheck({ tacticalMindUses: 0 });
+    const replaying = withTakenBoost(state, subject, {
+      holeId: check.holeId,
+      useSpent: true,
+    });
+
+    const hidden = requireResolved(
+      resolveBattleSubject({
+        state: replaying,
+        subject,
+        fills: [withAddedDice(abilityCheckFill(check, 13), [boost(3)])],
+      }),
+    ).state;
+
+    expect(hidden.combatants.get(fighterId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(16),
+    });
+    expect(characterResourceUses(hidden, fighterId)).toEqual([
+      resourceCount(0),
+    ]);
+  });
+
+  test("a use spent on another roll of the subject lets a decline stand and refuses the boost", () => {
+    const { state, subject, check } = hideCheck({ tacticalMindUses: 0 });
+    const replaying = withTakenBoost(state, subject, {
+      holeId: holeId("another-ability-check"),
+      useSpent: true,
+    });
+
+    expect(
+      requireResolved(
+        resolveBattleSubject({
+          state: replaying,
+          subject,
+          fills: [withAddedDice(abilityCheckFill(check, 13), [declineBoost()])],
+        }),
+      ).state.combatants.get(fighterId)?.hidden,
+    ).toBeNull();
+    expect(
+      resolveBattleSubject({
+        state: replaying,
+        subject,
+        fills: [withAddedDice(abilityCheckFill(check, 13), [boost(3)])],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: FAILED_ABILITY_CHECK_RESOURCE_BOOST_MESSAGES.unavailable,
+    });
+  });
+
+  test("a boost taken on another roll without spending its use doesn't count as the spend", () => {
+    const { state, subject, check } = hideCheck({ tacticalMindUses: 0 });
+    const replaying = withTakenBoost(state, subject, {
+      holeId: holeId("another-ability-check"),
+      useSpent: false,
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: replaying,
+        subject,
+        fills: [withAddedDice(abilityCheckFill(check, 13), [declineBoost()])],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: FAILED_ABILITY_CHECK_RESOURCE_BOOST_MESSAGES.unavailable,
     });
   });
 });
@@ -506,13 +602,19 @@ describe("a Bardic Inspiration die on a saving throw", () => {
       subject,
       fills: [targetSelection, save],
     });
+    if (needsDamage.tag !== "needsHoles") throw new Error("Expected damage.");
+    expect(
+      combatantHasBardicInspirationDie(needsDamage.state, spellTargetId),
+    ).toBe(false);
     const damage = damageRollFillWithGroups(
       requireResultHole(needsDamage, "rolledDice"),
       [[3]],
     );
+    // The replay starts from the suspended state, where the die is gone, so
+    // the save's die is read from the record of its spend.
     const damaged = requireResolved(
       resolveBattleSubject({
-        state,
+        state: needsDamage.state,
         subject,
         fills: [targetSelection, save, damage],
       }),
@@ -546,6 +648,82 @@ describe("a Bardic Inspiration die on a saving throw", () => {
         "savingThrowOutcome",
       ),
     ).not.toHaveProperty("failedAbilityCheckResourceBoosts");
+  });
+});
+
+describe("a Bardic Inspiration die on a Concentration save", () => {
+  test("a failed Concentration save is asked again with the die, which keeps Concentration", () => {
+    const exhale = exhaleOnConcentratingCaster({});
+    const state = withBardicInspirationDie(exhale.state, spellCasterId);
+    const save = exhaleSaveFill(exhale.saveHole, {
+      succeeded: true,
+      d20TestRoll: single(15),
+    });
+    const damage = damageRollFillWithGroups(
+      requireResultHole(
+        resolveBattleSubject({ state, subject: exhale.subject, fills: [save] }),
+        "rolledDice",
+      ),
+      [[3, 3, 3]],
+    );
+    const concentration = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: exhale.subject,
+        fills: [save, damage],
+      }),
+      "concentrationSavingThrow",
+    );
+    const concentrationFill = (
+      value: ConcentrationSaveFill["value"],
+    ): ConcentrationSaveFill => ({
+      kind: "concentrationSavingThrow",
+      holeId: concentration.holeId,
+      value,
+    });
+
+    expect(
+      requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: exhale.subject,
+          fills: [
+            save,
+            damage,
+            concentrationFill({ succeeded: false, d20TestRoll: single(8) }),
+          ],
+        }),
+        "concentrationSavingThrow",
+      ),
+    ).toMatchObject({
+      bardicInspirationDice: [
+        {
+          effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+          rollerId: spellCasterId,
+          dieSize: 6,
+        },
+      ],
+    });
+    const kept = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: exhale.subject,
+        fills: [
+          save,
+          damage,
+          concentrationFill({
+            succeeded: false,
+            d20TestRoll: single(8),
+            d20TestAddedDice: [
+              savingThrowBardicDie({ dieRoll: 3, succeeded: true }),
+            ],
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(requireCombatant(kept, spellCasterId).concentration).not.toBeNull();
+    expect(combatantHasBardicInspirationDie(kept, spellCasterId)).toBe(false);
   });
 });
 
@@ -656,6 +834,11 @@ function withAddedDice(
   return { ...fill, value: { ...fill.value, d20TestAddedDice: dice } };
 }
 
+type ConcentrationSaveFill = Extract<
+  BattleFill,
+  { readonly kind: "concentrationSavingThrow" }
+>;
+
 type SavingThrowFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
@@ -681,6 +864,9 @@ function withOutcomeAddedDice(
           : outcome,
       ),
     },
+    // Spreading the value keeps its area or targeted variant, but TypeScript
+    // can't follow a spread of that union, so the fill is asserted back to
+    // the type it was built from.
   } as SavingThrowFill;
 }
 
@@ -719,6 +905,36 @@ function savingThrowBardicDie(input: {
   readonly succeeded: boolean;
 }) {
   return { ...bardicDie(input.dieRoll), succeeded: input.succeeded } as const;
+}
+
+/**
+ * The state replaying the subject after a first pass that took the Fighter's
+ * boost on the named roll, spending its use only where it says so.
+ */
+function withTakenBoost(
+  state: BattleState,
+  subject: BattleSubject,
+  taken: Pick<
+    BattleTakenFailedAbilityCheckResourceBoost,
+    "holeId" | "useSpent"
+  >,
+): BattleState {
+  return {
+    ...state,
+    subjectResolutionPhase: {
+      kind: "subjectContinuation",
+      subject,
+      acceptedFailedAbilityCheckResourceBoosts: [
+        { ...taken, rollerId: fighterId, dieSize: 10 },
+      ],
+    },
+  };
+}
+
+function single(
+  d20: number,
+): Extract<BattleD20TestRoll, { readonly tag: "single" }> {
+  return { tag: "single", naturalD20: DieRollResult(d20) };
 }
 
 function hp(state: BattleState, id: CombatantId): number {

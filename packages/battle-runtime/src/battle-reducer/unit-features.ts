@@ -118,8 +118,8 @@ import {
   wildShapeGroundObjectPlacement,
 } from "./battle-object-lifecycle.ts";
 import type {
-  BardicInspirationFailedD20TestResolutionInput,
-  BardicInspirationFailedD20TestResolutionResult,
+  BardicInspirationFailedAttackRollResolutionInput,
+  BardicInspirationFailedAttackRollResolutionResult,
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
@@ -1575,10 +1575,10 @@ export function resolveBardicInspirationGrantUnitFeature(
   };
 }
 
-export function resolveBardicInspirationFailedD20Test(
-  input: BardicInspirationFailedD20TestResolutionInput,
-): BardicInspirationFailedD20TestResolutionResult {
-  const actor = input.state.combatants.get(input.d20Test.actorId);
+export function resolveBardicInspirationFailedAttackRoll(
+  input: BardicInspirationFailedAttackRollResolutionInput,
+): BardicInspirationFailedAttackRollResolutionResult {
+  const actor = input.state.combatants.get(input.failedAttackRoll.actorId);
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -1612,7 +1612,7 @@ export function resolveBardicInspirationFailedD20Test(
   }
   /* v8 ignore stop -- @preserve */
 
-  const outcome = bardicInspirationD20TestOutcome(input);
+  const outcome = bardicInspirationAttackRollOutcome(input);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcome.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -1639,7 +1639,7 @@ export function resolveBardicInspirationFailedD20Test(
   const nextState = {
     ...input.state,
     combatants: new Map(input.state.combatants).set(
-      input.d20Test.actorId,
+      input.failedAttackRoll.actorId,
       nextActor,
     ),
   };
@@ -1647,15 +1647,15 @@ export function resolveBardicInspirationFailedD20Test(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
-    bardicInspirationD20Test: {
+    bardicInspirationAttackRoll: {
       boostedTotal: outcome.value.boostedTotal,
       boostedSucceeded: outcome.value.boostedSucceeded,
     },
   };
 }
 
-function bardicInspirationD20TestOutcome(
-  input: BardicInspirationFailedD20TestResolutionInput,
+function bardicInspirationAttackRollOutcome(
+  input: BardicInspirationFailedAttackRollResolutionInput,
 ):
   | {
       readonly tag: "ok";
@@ -1667,7 +1667,7 @@ function bardicInspirationD20TestOutcome(
     }
   | { readonly tag: "invalid"; readonly message: string } {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(input.d20Test.attackRoll)) {
+  if (!attackRollResultIsValid(input.failedAttackRoll.attackRoll)) {
     /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
@@ -1676,7 +1676,7 @@ function bardicInspirationD20TestOutcome(
   }
   /* v8 ignore stop -- @preserve */
   const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.d20Test.attackRoll,
+    input.failedAttackRoll.attackRoll,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellAttackRerollIssue !== null) {
@@ -1687,23 +1687,24 @@ function bardicInspirationD20TestOutcome(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const criticalThreshold = input.d20Test.criticalThreshold ?? 20;
+  const criticalThreshold = input.failedAttackRoll.criticalThreshold ?? 20;
   const boostedRoll = {
-    ...input.d20Test.attackRoll,
-    total: input.d20Test.attackRoll.total + input.bardicInspirationRoll,
+    ...input.failedAttackRoll.attackRoll,
+    total:
+      input.failedAttackRoll.attackRoll.total + input.bardicInspirationRoll,
   };
   return {
     tag: "ok",
     value: {
       originalSucceeded: attackRollHitsWithCriticalThreshold(
-        input.d20Test.attackRoll,
-        input.d20Test.armorClass,
+        input.failedAttackRoll.attackRoll,
+        input.failedAttackRoll.armorClass,
         criticalThreshold,
       ),
       boostedTotal: boostedRoll.total,
       boostedSucceeded: attackRollHitsWithCriticalThreshold(
         boostedRoll,
-        input.d20Test.armorClass,
+        input.failedAttackRoll.armorClass,
         criticalThreshold,
       ),
     },

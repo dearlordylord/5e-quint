@@ -24,7 +24,8 @@ export type D20TestRerollSource = (typeof D20_TEST_REROLL_SOURCES)[number];
  * Every source that may add a die to a D20 Test that stands failed, once its
  * rerolls are decided.
  */
-export const D20_TEST_ADDED_DIE_SOURCES = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for D20TestAddedDieSource.
+const D20_TEST_ADDED_DIE_SOURCES = [
   "bardicInspiration",
   "failedAbilityCheckResourceBoost",
 ] as const;
