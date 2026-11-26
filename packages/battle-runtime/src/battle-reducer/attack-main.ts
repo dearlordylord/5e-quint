@@ -26,7 +26,7 @@ import {
   armorClassBehindCover,
   type DirectTargetCover,
 } from "@dnd/shared-algebras/cover-algebra";
-import { armorClassAgainstAttack } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 import { Match } from "effect";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 

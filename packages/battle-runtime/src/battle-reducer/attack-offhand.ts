@@ -40,7 +40,7 @@ import {
 
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
-import { armorClassAgainstAttack } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 import {
   attackRollD20TestRerolls,
   attackRollHoleWithD20TestRerollOptions,

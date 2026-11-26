@@ -124,7 +124,6 @@ import {
 } from "./domain-helpers.ts";
 export {
   activeConditions,
-  activeEffectArmorClass,
   activeOngoingFeatureOccurrencesForCombatant,
   battleCreatureStateWithDamageProjection,
   battleCreatureStateWithKnockOutPreservedConditions,

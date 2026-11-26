@@ -5,12 +5,11 @@
 // for weapon attacks, Opportunity Attacks and Spell Attacks alike. A fact
 // without a degree gets no cover.
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { armorClassDelta } from "@dnd/shared-algebras/armor-class-values";
 import type { RuledCoverType } from "@dnd/shared/types";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { describe, expect, test } from "vitest";
-import { activeEffectArmorClass } from "./battle-reducer/creature-state-execution.ts";
+import { collectedArmorClass } from "./battle-reducer/armor-class-collector.ts";
 import { battleObjectId } from "./identity.ts";
 import type { BattleState, BattleSubject } from "./index.ts";
 import {
@@ -50,7 +49,7 @@ import {
 function armorClassOf(state: BattleState, combatantId: typeof goblinId) {
   const combatant = state.combatants.get(combatantId);
   if (combatant === undefined) throw new Error("Expected the combatant.");
-  return currentArmorClass(activeEffectArmorClass(state, combatant));
+  return collectedArmorClass(state, combatant);
 }
 
 function withCover<Fact extends object>(
