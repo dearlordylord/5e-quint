@@ -2665,6 +2665,7 @@ describe("battle runtime: Stat Block actions", () => {
       tag: "action",
       actorId: goblinId,
       action: "escapeGrapple",
+      skill: "athletics",
     };
     const escape = requireHole(
       resolveBattleSubject({

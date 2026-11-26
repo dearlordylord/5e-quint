@@ -477,6 +477,7 @@ describe("battle subject action eligibility", () => {
           tag: "action" as const,
           actorId: familiarId,
           action: "escapeGrapple" as const,
+          skill: "athletics" as const,
         },
         expectedIssue: null,
       },
@@ -647,7 +648,12 @@ describe("battle subject action eligibility", () => {
         weaponItemId: battleObjectId("exhausted-held-weapon"),
       },
       { tag: "action", actorId: fighterId, action: "grapple" },
-      { tag: "action", actorId: fighterId, action: "escapeGrapple" },
+      {
+        tag: "action",
+        actorId: fighterId,
+        action: "escapeGrapple",
+        skill: "athletics",
+      },
     ] as const satisfies ReadonlyArray<BattleSubject>;
     expect(
       subjects.map((subject) =>
@@ -742,6 +748,7 @@ describe("battle subject action eligibility", () => {
           tag: "action",
           actorId: fighterId,
           action: "escapeGrapple",
+          skill: "athletics",
         },
         expected:
           "The selected action is no longer available for the current actor.",

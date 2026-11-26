@@ -3809,6 +3809,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       tag: "action",
       actorId: goblinId,
       action: "escapeGrapple",
+      skill: "athletics",
     };
     const escape = requireHole(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
@@ -5023,6 +5024,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       tag: "action",
       actorId: goblinId,
       action: "escapeGrapple",
+      skill: "athletics",
     };
 
     expect(

@@ -1,3 +1,4 @@
+import { abilityPresentationName } from "./skill-abilities.ts";
 import type {
   BoundCharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
@@ -20,7 +21,6 @@ import {
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import type { CombatantId } from "./identity.ts";
 import { Match, Result } from "effect";
-import type { Ability } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/stat-block-types";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
@@ -539,18 +539,6 @@ function statBlockAttackPresentationName(
         tag: "attackPresentationJoinIssue",
         reason: "statBlockPresentationMissing",
       });
-}
-
-function abilityPresentationName(ability: Ability): string {
-  return Match.value(ability).pipe(
-    Match.when("str", () => "Strength"),
-    Match.when("dex", () => "Dexterity"),
-    Match.when("con", () => "Constitution"),
-    Match.when("int", () => "Intelligence"),
-    Match.when("wis", () => "Wisdom"),
-    Match.when("cha", () => "Charisma"),
-    Match.exhaustive,
-  );
 }
 
 export function statBlockProcedurePresentationsForActor(

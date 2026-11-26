@@ -355,15 +355,26 @@ function createRuleCoreMovementDriver() {
           tag: "action",
           actorId: observerId,
           action: "escapeGrapple",
+          skill: "athletics",
         }),
       doResolveEscapeSuccess: () =>
         resolveSubject(
-          { tag: "action", actorId: observerId, action: "escapeGrapple" },
+          {
+            tag: "action",
+            actorId: observerId,
+            action: "escapeGrapple",
+            skill: "athletics",
+          },
           [grappleOutcomeFill(requireGrappleOutcomeHole(holes), true)],
         ),
       doResolveEscapeFailure: () =>
         resolveSubject(
-          { tag: "action", actorId: observerId, action: "escapeGrapple" },
+          {
+            tag: "action",
+            actorId: observerId,
+            action: "escapeGrapple",
+            skill: "athletics",
+          },
           [grappleOutcomeFill(requireGrappleOutcomeHole(holes), false)],
         ),
       doReleaseGrapple: () =>

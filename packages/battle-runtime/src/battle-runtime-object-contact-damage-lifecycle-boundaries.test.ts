@@ -46,7 +46,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE } from "./unit-profile-admission.test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { requiredConditionEndAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 
 const heatMetalObjectId = battleObjectId(
   "object-contact-lifecycle-boundary-metal",
@@ -494,11 +494,7 @@ describe("object-contact damage public lifecycle boundaries", () => {
     );
     expect(firstPenalty).toBeDefined();
     expect(
-      requiredConditionEndAbilityCheckRollMode(
-        firstResolved.state,
-        spellTargetId,
-        "grappled",
-      ),
+      requiredAbilityCheckRollMode(firstResolved.state, spellTargetId, "str"),
     ).toBe("disadvantage");
 
     const targetTurn = endTurn({
