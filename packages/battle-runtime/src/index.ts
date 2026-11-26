@@ -794,12 +794,10 @@ export {
 } from "./battle-reducer/spell-condition-effects-helpers.ts";
 
 export {
-  resolveFailedSavingThrowReroll,
-  type FailedSavingThrowRerollInput,
-  type FailedSavingThrowRerollIssue,
-  type FailedSavingThrowRerollIssueReason,
-  type FailedSavingThrowRerollResult,
-} from "./battle-reducer/failed-saving-throw-reroll.ts";
+  FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+  type BattleFailedSavingThrowRerollDecision,
+  type BattleFailedSavingThrowRerollOption,
+} from "./battle-state-execution.ts";
 
 export {
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,

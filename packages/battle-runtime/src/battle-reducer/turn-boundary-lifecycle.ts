@@ -126,11 +126,11 @@ import {
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
+  battleStateAfterD20TestRerollUses,
   d20TestDeathSavingThrowRerolls,
   d20TestHoleWithRerollOptions,
 } from "./d20-test-outcome-rerolls.ts";
 import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
   applyHitPointMaximumIncreaseExpiration,
   applyStartTurnDeathSavingThrow,
@@ -4128,10 +4128,7 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
       result: invalidResult(input.resultState, "invalidFill", rerolls.issue),
     };
   }
-  const spent = battleStateAfterHeroicInspirationReroll(
-    input.state,
-    rerolls.heroicInspirationUse,
-  );
+  const spent = battleStateAfterD20TestRerollUses(input.state, [rerolls.uses]);
   return ordinaryStartTurnOccurrenceAdvance(
     {
       ...spent,

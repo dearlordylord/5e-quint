@@ -13,6 +13,10 @@ const FAILED_SAVING_THROW_REROLL_ROOT_MECHANICS_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
 ]);
 
+/** The class whose level the reroll adds, as the record names it. */
+type FailedSavingThrowRerollBonusClassName =
+  FailedSavingThrowRerollMechanics["reroll"]["bonus"]["className"];
+
 export type FailedSavingThrowRerollProcedureFacts = {
   readonly kind: "failedSavingThrowReroll";
   readonly savingThrow: {
@@ -21,7 +25,7 @@ export type FailedSavingThrowRerollProcedureFacts = {
       readonly use: "newRoll";
       readonly bonus: {
         readonly kind: "classLevel";
-        readonly className: "fighter";
+        readonly className: FailedSavingThrowRerollBonusClassName;
       };
     };
   };
@@ -45,7 +49,7 @@ export type FailedSavingThrowRerollBindingRequirements = {
   readonly resource: { readonly kind: "sameSourceUseCountResource" };
   readonly classLevel: {
     readonly kind: "canonicalClassLevel";
-    readonly className: "fighter";
+    readonly className: FailedSavingThrowRerollBonusClassName;
   };
 };
 
@@ -82,7 +86,10 @@ export type FailedSavingThrowRerollProcedureAdmission =
 
 type FailedSavingThrowRerollInspection =
   | { readonly tag: "notRepresented" }
-  | { readonly tag: "supported" }
+  | {
+      readonly tag: "supported";
+      readonly mechanics: FailedSavingThrowRerollMechanics;
+    }
   | { readonly tag: "unsupported" };
 
 type FailedSavingThrowRerollMechanics = Extract<
@@ -101,10 +108,12 @@ export function admitFailedSavingThrowRerollProcedure(
     Match.discriminatorsExhaustive("tag")({
       notRepresented: () => ({ tag: "notBattleOwned" as const }),
       unsupported: rejectedFailedSavingThrowRerollAdmission,
-      supported: () => ({
+      supported: ({ mechanics }) => ({
         tag: "admitted" as const,
         source: { unitId: unit.id },
-        procedure: admittedFailedSavingThrowRerollProcedure(),
+        procedure: admittedFailedSavingThrowRerollProcedure(
+          mechanics.reroll.bonus.className,
+        ),
       }),
     }),
   );
@@ -121,7 +130,7 @@ function inspectFailedSavingThrowRerollRoot(
   }
   const mechanics = unit.mechanics;
   return failedSavingThrowRerollRootIsSupported(mechanics)
-    ? { tag: "supported" }
+    ? { tag: "supported", mechanics }
     : { tag: "unsupported" };
 }
 
@@ -147,8 +156,7 @@ function failedSavingThrowRerollIsSupported(
 ): boolean {
   return (
     mechanics.reroll.mustUseNewRoll === true &&
-    mechanics.reroll.bonus.kind === "class_level" &&
-    mechanics.reroll.bonus.className === "fighter"
+    mechanics.reroll.bonus.kind === "class_level"
   );
 }
 
@@ -185,7 +193,9 @@ function failedSavingThrowLevelSeventeenTierIsSupported(
   return tier?.atLevel === 17 && tier.value === 3;
 }
 
-function admittedFailedSavingThrowRerollProcedure(): AdmittedFailedSavingThrowRerollProcedure {
+function admittedFailedSavingThrowRerollProcedure(
+  bonusClassName: FailedSavingThrowRerollBonusClassName,
+): AdmittedFailedSavingThrowRerollProcedure {
   return {
     binding: {
       tag: "required",
@@ -193,7 +203,7 @@ function admittedFailedSavingThrowRerollProcedure(): AdmittedFailedSavingThrowRe
         resource: { kind: "sameSourceUseCountResource" },
         classLevel: {
           kind: "canonicalClassLevel",
-          className: "fighter",
+          className: bonusClassName,
         },
       },
     },
@@ -203,7 +213,7 @@ function admittedFailedSavingThrowRerollProcedure(): AdmittedFailedSavingThrowRe
         trigger: "failedSavingThrow",
         reroll: {
           use: "newRoll",
-          bonus: { kind: "classLevel", className: "fighter" },
+          bonus: { kind: "classLevel", className: bonusClassName },
         },
       },
     },
@@ -274,7 +284,7 @@ export type ReadyFailedSavingThrowRerollProcedure = {
         readonly use: "newRoll";
         readonly bonus: {
           readonly kind: "classLevel";
-          readonly className: "fighter";
+          readonly className: FailedSavingThrowRerollBonusClassName;
           readonly level: ClassLevel;
         };
       };
@@ -307,16 +317,17 @@ export function bindFailedSavingThrowRerollProcedure(
     admitted.sourceUnitId,
     input.resourcePoolRefsByUnitId,
   );
-  const fighterLevel = resolveFailedSavingThrowRerollClassLevel(
+  const bonusClassLevel = resolveFailedSavingThrowRerollClassLevel(
     input.classLevels,
+    admitted.facts.savingThrow.reroll.bonus.className,
   );
   if (resource.tag === "issue") {
-    return fighterLevel.tag === "issue"
-      ? { tag: "rejected", issues: [resource.issue, fighterLevel.issue] }
+    return bonusClassLevel.tag === "issue"
+      ? { tag: "rejected", issues: [resource.issue, bonusClassLevel.issue] }
       : { tag: "rejected", issues: [resource.issue] };
   }
-  if (fighterLevel.tag === "issue") {
-    return { tag: "rejected", issues: [fighterLevel.issue] };
+  if (bonusClassLevel.tag === "issue") {
+    return { tag: "rejected", issues: [bonusClassLevel.issue] };
   }
   return {
     tag: "bound",
@@ -330,7 +341,7 @@ export function bindFailedSavingThrowRerollProcedure(
             use: admitted.facts.savingThrow.reroll.use,
             bonus: {
               ...admitted.facts.savingThrow.reroll.bonus,
-              level: fighterLevel.level,
+              level: bonusClassLevel.level,
             },
           },
           spends: {
@@ -378,19 +389,20 @@ type ClassLevelBindingResolution =
 
 function resolveFailedSavingThrowRerollClassLevel(
   classLevels: CharacterBattleClassLevels,
+  className: FailedSavingThrowRerollBonusClassName,
 ): ClassLevelBindingResolution {
-  const fighterClassLevel = classLevels.find(
-    (classLevelEntry) => classLevelEntry.className === "fighter",
+  const bonusClassLevel = classLevels.find(
+    (classLevelEntry) => classLevelEntry.className === className,
   );
-  return fighterClassLevel === undefined
+  return bonusClassLevel === undefined
     ? {
         tag: "issue",
         issue: failedSavingThrowRerollBindingIssue(
           "canonicalClassLevelMissing",
-          "Failed Saving Throw reroll binding requires the canonical Fighter class level.",
+          "Failed Saving Throw reroll binding requires the level of the class its bonus names.",
         ),
       }
-    : { tag: "resolved", level: fighterClassLevel.level };
+    : { tag: "resolved", level: bonusClassLevel.level };
 }
 
 function failedSavingThrowRerollBindingIssue(

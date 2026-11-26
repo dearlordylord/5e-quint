@@ -3756,7 +3756,7 @@ export const OPERATION_ACCOUNTING = {
       "failedSavingThrowReroll",
       at(
         "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
-        "resolveFailedSavingThrowReroll",
+        "failedSavingThrowRerollOutcomeIssue",
       ),
       REASONS.unitContinuation,
     ),
@@ -4257,7 +4257,7 @@ export const OPERATION_ACCOUNTING = {
       "failedSavingThrowReroll",
       at(
         "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
-        "resolveFailedSavingThrowReroll",
+        "failedSavingThrowRerollOutcomeIssue",
       ),
       REASONS.unitContinuation,
     ),

@@ -232,7 +232,7 @@ describe("atomic failed Saving Throw reroll admission", () => {
           tag: "failedSavingThrowRerollProcedureBindingIssue",
           reason: "canonicalClassLevelMissing",
           message:
-            "Failed Saving Throw reroll binding requires the canonical Fighter class level.",
+            "Failed Saving Throw reroll binding requires the level of the class its bonus names.",
         },
       ],
     });

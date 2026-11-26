@@ -27,16 +27,14 @@ import {
   D20_TEST_REROLL_DECISION_REQUIRED_MESSAGE,
 } from "./d20-test-natural-one-reroll.ts";
 import {
+  battleStateAfterD20TestRerollUses,
   d20TestAbilityCheckRerolls,
   d20TestHoleWithRerollOptions,
   d20TestOutcomeRerolls,
   type D20TestOutcomeRerollOptions,
   type D20TestOutcomeRerolls,
+  type D20TestRerollUses,
 } from "./d20-test-outcome-rerolls.ts";
-import {
-  battleStateAfterHeroicInspirationRerolls,
-  type HeroicInspirationUse,
-} from "./heroic-inspiration-reroll.ts";
 import { invalidResult } from "./result-helpers.ts";
 
 export const D20_TEST_REROLL_ROLLER_REQUIRED_MESSAGE =
@@ -173,7 +171,7 @@ function savingThrowOutcomeRollModeIssue(input: {
 
 /** One rolled D20 Test's check, in the shape the fill validation folds. */
 type D20TestRollCheck =
-  | { readonly tag: "admitted"; readonly use: HeroicInspirationUse }
+  | { readonly tag: "admitted"; readonly uses: D20TestRerollUses }
   | Extract<D20TestRerollFillValidation, { readonly tag: "invalid" }>
   | Omit<
       Extract<
@@ -191,7 +189,7 @@ function d20TestRollCheck<Roll>(
   >,
 ): D20TestRollCheck {
   if (rerolls.tag === "resolved")
-    return { tag: "admitted", use: rerolls.heroicInspirationUse };
+    return { tag: "admitted", uses: rerolls.uses };
   if (rerolls.tag === "invalid")
     return { tag: "invalid", message: rerolls.issue };
   return { tag: "decisionsRequired", ...hole, options: rerolls.options };
@@ -330,7 +328,7 @@ function validateD20TestRerollFills(input: {
   // earlier fills spend, so a later roll is not offered a spent reroll.
   let resolutionInput = input.resolutionInput;
   for (const [fillIndex, fill] of input.resolutionInput.fills.entries()) {
-    const fillUses: HeroicInspirationUse[] = [];
+    const fillUses: D20TestRerollUses[] = [];
     for (const check of d20TestRollChecksForFill({
       resolutionInput,
       resolvePrefix: input.resolvePrefix,
@@ -341,14 +339,11 @@ function validateD20TestRerollFills(input: {
         return { ...check, state: resolutionInput.state };
       }
       if (check.tag !== "admitted") return check;
-      fillUses.push(check.use);
+      fillUses.push(check.uses);
     }
     resolutionInput = {
       ...resolutionInput,
-      state: battleStateAfterHeroicInspirationRerolls(
-        resolutionInput.state,
-        fillUses,
-      ),
+      state: battleStateAfterD20TestRerollUses(resolutionInput.state, fillUses),
     };
   }
   return { tag: "ok", state: resolutionInput.state };

@@ -6944,21 +6944,32 @@
     {
       "id": "unit-feature.failed-saving-throw-reroll",
       "profileKind": "battle-support-admission",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt"
+      ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/character-battle-resources.ts",
-        "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts"
+        "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, Fighter-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, admits the existing use-count resource with Fighter-level thresholds, and resolves an explicit failed-save reroll by requiring the original save to have failed, adding Fighter level to the replacement roll, using the new result whether it succeeds or fails, and spending the existing resource. Generic discovery/handoff from every battle Saving Throw hole remains a separate integration owner rather than duplicated in this profile.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, class-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, binds the same-source use-count resource and the level of the class the bonus names, and offers the reroll on every battle Saving Throw and Concentration save hole while the save as it stands is failed and a use is left. It is taken in turn with the natural-1 reroll and Heroic Inspiration; the replacement rerolls the d20, or one chosen d20 under Advantage or Disadvantage, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays. Death Saving Throws are not yet offered it.",
       "taskRefs": [
         "L19D-04-FIGHTER-INDOMITABLE"
       ],
-      "title": "Unit feature admits and resolves failed Saving Throw reroll with class-level bonus",
+      "title": "Unit feature rerolls a failed Saving Throw with a class-level bonus",
       "verificationOwners": [
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/failed-saving-throw-reroll.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts"
         }
       ]
     },
@@ -22742,7 +22753,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover shape-based failed Saving Throw reroll profile admission, Long Rest use-count resource admission with Fighter-level threshold tiers, mandatory replacement-roll resolution with Fighter-level bonus, resource spend whether the new roll succeeds or fails, rejection of non-failed original saves, exhausted resources, wrong resources, and malformed synthetic failed-save reroll shapes without authored-identity dispatch. Generic discovery/handoff from every battle Saving Throw hole remains a future integration owner.",
+      "note": "Focused battle-runtime tests cover shape-based failed Saving Throw reroll profile admission, Long Rest use-count resource admission with class-level threshold tiers, and binding of the same-source resource and the bonus class's level. Battle tests cover the offer with the class-level bonus on a failed save, no offer on a success, the new roll standing whether it succeeds or fails, the use spend, decline, no offer without a use, the roll-mode check, and Heroic Inspiration then the failed-save reroll on one save. A real-catalog Fighter 9 under Burning Hands is offered and spends the reroll; a Fighter 8 is not offered it. Death Saving Throws remain a follow-up.",
       "profileIds": [
         "unit-feature.failed-saving-throw-reroll"
       ],
@@ -24901,17 +24912,17 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "battle failed Saving Throw reroll profile/resource/resolver plus future generic Saving Throw handoff owner",
-          "reason": "The promoted subset executes Indomitable's typed failed-save reroll and resource spend from explicit caller-supplied failed-save facts. Full automatic battle UX remains with the generic Saving Throw handoff owner."
+          "owner": "battle failed Saving Throw reroll profile/resource/reroll fold plus the follow-up Death Saving Throw owner",
+          "reason": "Indomitable is offered and spent on every battle Saving Throw and Concentration save hole. Death Saving Throws remain with the follow-up owner."
         },
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "future generic Saving Throw reroll handoff owner",
-              "reason": "The promoted subset is an executable profile/resource/resolution owner. Threading this optional reroll through every battle Saving Throw fill protocol should be done in the generic Saving Throw hole/handoff owner so spell, feature, concentration, and hazard save reducers consume the same typed reroll continuation without duplicating Saving Throw state."
+              "owner": "follow-up Death Saving Throw failed-save reroll owner",
+              "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll."
             },
-            "mechanic": "automatic opportunity discovery and battle handoff from every reducer-owned Saving Throw hole"
+            "mechanic": "the reroll on a rolled Death Saving Throw"
           }
         ],
         "profileIds": [
@@ -24924,15 +24935,16 @@
           "Battle Unit admission consumes the authored failed_saving_throw_reroll Surface shape without dispatching on Fighter Indomitable authored identity",
           "the support profile preserves the failed Saving Throw trigger, mandatory new roll, Fighter-level bonus, Long Rest reset cadence, and one-use threshold tiers at Fighter levels 9, 13, and 17",
           "battle resource projection admits the existing Indomitable use-count resource and derives max uses from the existing Fighter class level",
-          "the resolver rejects non-failed original Saving Throws, exhausted resources, and mismatched resources",
-          "the resolver adds Fighter level to the replacement roll, requires the replacement roll to be used whether it succeeds or fails, and spends one existing resource use"
+          "every battle Saving Throw and Concentration save hole offers the reroll with the Fighter-level bonus while the save as it stands is failed and a use is left, in turn with the natural-1 reroll and Heroic Inspiration",
+          "the reroll replaces the d20, or one chosen d20 under Advantage or Disadvantage; the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays",
+          "the reroll is refused on a successful save, without a use left, and under the wrong roll mode"
         ],
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "ownerPath": "packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts",
           "tag": "selected-identity-replay",
           "taskId": "L19D-04-FIGHTER-INDOMITABLE"
         },
@@ -24948,21 +24960,32 @@
         {
           "id": "unit-feature.failed-saving-throw-reroll",
           "profileKind": "battle-support-admission",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt"
+          ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/character-battle-resources.ts",
-            "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts"
+            "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, Fighter-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, admits the existing use-count resource with Fighter-level thresholds, and resolves an explicit failed-save reroll by requiring the original save to have failed, adding Fighter level to the replacement roll, using the new result whether it succeeds or fails, and spending the existing resource. Generic discovery/handoff from every battle Saving Throw hole remains a separate integration owner rather than duplicated in this profile.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, class-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, binds the same-source use-count resource and the level of the class the bonus names, and offers the reroll on every battle Saving Throw and Concentration save hole while the save as it stands is failed and a use is left. It is taken in turn with the natural-1 reroll and Heroic Inspiration; the replacement rerolls the d20, or one chosen d20 under Advantage or Disadvantage, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays. Death Saving Throws are not yet offered it.",
           "taskRefs": [
             "L19D-04-FIGHTER-INDOMITABLE"
           ],
-          "title": "Unit feature admits and resolves failed Saving Throw reroll with class-level bonus",
+          "title": "Unit feature rerolls a failed Saving Throw with a class-level bonus",
           "verificationOwners": [
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/failed-saving-throw-reroll.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts"
             }
           ]
         }

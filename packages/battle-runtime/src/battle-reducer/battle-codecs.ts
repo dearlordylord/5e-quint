@@ -63,6 +63,7 @@ import {
   BONUS_COVER_TYPES,
   COVER_TYPES,
   RULED_COVER_TYPES,
+  ClassLevel,
   CreatureId,
   DeathSavingThrowCount,
   D20Roll,
@@ -231,6 +232,7 @@ import {
 import {
   BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
   WEAPON_CHANGE_AFTER_ATTACK_STATES,
+  FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
@@ -1818,12 +1820,38 @@ const D20TestRerollHoleOptionsFields = mergeBattleHoleFieldPairs(
   HeroicInspirationRerollHoleOptionsFields,
 );
 
+const FailedSavingThrowRerollHoleOptionsFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(FAILED_SAVING_THROW_REROLL_EFFECT_KIND),
+    rollerId: CombatantId,
+    bonus: ClassLevel,
+  });
+  return {
+    labeled: {
+      failedSavingThrowRerolls: Schema.optionalKey(
+        Schema.Tuple([member.labeled]),
+      ),
+    },
+    mechanical: {
+      failedSavingThrowRerolls: Schema.optionalKey(
+        Schema.Tuple([member.mechanical]),
+      ),
+    },
+  };
+})();
+
+/** Every reroll a saving throw hole can offer. */
+const SavingThrowRerollHoleOptionsFields = mergeBattleHoleFieldPairs(
+  D20TestRerollHoleOptionsFields,
+  FailedSavingThrowRerollHoleOptionsFields,
+);
+
 /** A labeled D20 Test hole member with the rerolls it can offer. */
 function withD20TestRerollLabeledHoleOptions<
   const Fields extends Schema.Struct.Fields,
 >(schema: Schema.Struct<Fields>) {
   return schema.pipe(
-    Schema.fieldsAssign(D20TestRerollHoleOptionsFields.labeled),
+    Schema.fieldsAssign(SavingThrowRerollHoleOptionsFields.labeled),
   );
 }
 
@@ -1834,7 +1862,7 @@ function withD20TestRerollMechanicalHoleOptions<
   },
 >(schema: Schema.Struct<Fields>) {
   return mechanicalBattleHoleSchemaFromLabeled(schema).pipe(
-    Schema.fieldsAssign(D20TestRerollHoleOptionsFields.mechanical),
+    Schema.fieldsAssign(SavingThrowRerollHoleOptionsFields.mechanical),
     Schema.annotate({}),
   );
 }
@@ -2661,7 +2689,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3226,7 +3254,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3255,7 +3283,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3287,7 +3315,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3313,7 +3341,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3335,7 +3363,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3357,7 +3385,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3392,7 +3420,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3429,7 +3457,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3479,7 +3507,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3508,7 +3536,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3530,7 +3558,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3538,7 +3566,7 @@ const BattleHolePayloadMembers = [
       outcomeTargeting: Schema.Literals(["singleTarget", "targetList"]),
       areaInput: Schema.optionalKey(Schema.Never),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3546,7 +3574,7 @@ const BattleHolePayloadMembers = [
       outcomeTargeting: Schema.Literal("area"),
       areaInput: BattleSpellAreaInputRequestSchema,
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3568,7 +3596,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3592,7 +3620,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3614,7 +3642,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedUnqualifiedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3677,7 +3705,7 @@ const BattleHolePayloadMembers = [
       ),
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleMovementHoleCommonFieldsSchema,
@@ -4069,6 +4097,9 @@ const BattleRolledOutcomeD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
     battleD20TestOutcomeRerollDecisionSchema("d20_test_natural_one_reroll"),
     battleD20TestOutcomeRerollDecisionSchema(
       HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+    ),
+    battleD20TestOutcomeRerollDecisionSchema(
+      FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
     ),
   ]),
 );

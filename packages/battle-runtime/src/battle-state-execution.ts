@@ -183,6 +183,7 @@ import {
   AttackBonus,
   DamageAmount,
   DieRollResult,
+  type ClassLevel,
   type D20Roll,
   DifficultyClass,
   Hp,
@@ -4581,6 +4582,8 @@ export type LegendaryActionWindow = {
 export type BattleAcceptedSubjectReplayEvidence = {
   /** The rolls of this subject that spent their roller's Heroic Inspiration. */
   readonly acceptedHeroicInspirationRerolls?: ReadonlyNonEmptyArray<BattleD20TestRollKey>;
+  /** The rolls of this subject that spent a use of a failed saving throw reroll. */
+  readonly acceptedFailedSavingThrowRerolls?: ReadonlyNonEmptyArray<BattleD20TestRollKey>;
   readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
   readonly acceptedThrownWeaponRelease?: BattleAcceptedThrownWeaponRelease;
 };
@@ -5187,6 +5190,9 @@ export type BattleD20TestRerollHoleOptions = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
+  ];
 };
 export type BattleObjectContactSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5772,10 +5778,38 @@ export type BattleHeroicInspirationOutcomeRerollDecision =
   BattleD20TestOutcomeRerollDecision<
     typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND
   >;
+export const FAILED_SAVING_THROW_REROLL_EFFECT_KIND =
+  "failed_saving_throw_reroll";
+/**
+ * A reroll of a saving throw that stands failed, with a bonus on the new roll
+ * (Indomitable). The hole offers it to one roller at a time.
+ */
+export type BattleFailedSavingThrowRerollOption = {
+  readonly effectKind: typeof FAILED_SAVING_THROW_REROLL_EFFECT_KIND;
+  readonly label: string;
+  /** The creature whose failed saving throw it rerolls. */
+  readonly rollerId: CombatantId;
+  /**
+   * What the new roll adds on top of the saving throw's own modifiers: the
+   * level of the class the feature names. The table adds it when it rules the
+   * new roll.
+   */
+  readonly bonus: ClassLevel;
+};
+/**
+ * A failed saving throw reroll's decision. Under Advantage or Disadvantage it
+ * rerolls one chosen die; each replacement states the new roll and the
+ * table's ruling with the bonus.
+ */
+export type BattleFailedSavingThrowRerollDecision =
+  BattleD20TestOutcomeRerollDecision<
+    typeof FAILED_SAVING_THROW_REROLL_EFFECT_KIND
+  >;
 /** One reroll source's decision on a rolled outcome's d20, named by its effect kind. */
 export type BattleRolledOutcomeD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollOutcomeDecision
-  | BattleHeroicInspirationOutcomeRerollDecision;
+  | BattleHeroicInspirationOutcomeRerollDecision
+  | BattleFailedSavingThrowRerollDecision;
 /**
  * A rolled outcome's D20 Test reroll decisions in the order the roller made
  * them, as on an attack roll (ASSUMPTIONS.md A55).
@@ -6834,6 +6868,9 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 } & (
   | {
@@ -6869,6 +6906,9 @@ export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
+  ];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
@@ -6892,6 +6932,9 @@ export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
+  ];
 };
 export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6907,6 +6950,9 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
+  ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
   ];
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 } & (
@@ -7019,6 +7065,9 @@ export type BattleConcentrationSavingThrowHole = {
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
+  ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
   ];
 };
 export type BattleInterruptDecisionHole = {

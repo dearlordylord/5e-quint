@@ -95,7 +95,7 @@
 {"unitId":"monk_slow_fall","evidence":{"tag":"selected-identity-replay","taskId":"L14G-03A-MONK-SLOW-FALL-RUNTIME","ownerPath":"packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"}}
 {"unitId":"fighter_tactical_mind","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT62","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
 {"unitId":"fighter_tactical_mind","evidence":{"tag":"selected-identity-replay","taskId":"L1H-FIGHTER-TACTICAL-MIND","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
-{"unitId":"fighter_indomitable","evidence":{"tag":"selected-identity-replay","taskId":"L19D-04-FIGHTER-INDOMITABLE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
+{"unitId":"fighter_indomitable","evidence":{"tag":"selected-identity-replay","taskId":"L19D-04-FIGHTER-INDOMITABLE","ownerPath":"packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72B","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"selected-identity-replay","taskId":"L1D2-BARDIC-INSPIRATION-SCALING","ownerPath":"packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts"}}
