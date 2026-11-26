@@ -297,11 +297,21 @@ module unitFeatureFailedSavingThrowRerollCoreExamples {
       ...failedDeathSave,
       decision: DeathSavingThrowRerollSelected({ replacementD20: 1 }),
     })
-    val later = { ...first.effective, naturalD20: 2 }
+    val later = deathSavingThrowRollAfterD20Reroll(first.effective, 2)
+    val result = resolveStartTurnDeathSavingThrow(dyingVitals, dyingWithOneSuccess, later)
     all {
       assert(deathSavingThrowRollFails(first.effective)),
       assert(later == { naturalD20: 2, bonus: 9 }),
-      assert(not(deathSavingThrowRollFails(later))),
+      assert(result.deathSavingThrows == Dying({ successes: 2, failures: 0 })),
+    }
+  }
+
+  run test_a_d20_reroll_without_indomitable_keeps_no_bonus = {
+    val later = deathSavingThrowRollAfterD20Reroll(unmodifiedDeathSavingThrowRoll(1), 2)
+    val result = resolveStartTurnDeathSavingThrow(dyingVitals, dyingWithOneSuccess, later)
+    all {
+      assert(later == unmodifiedDeathSavingThrowRoll(2)),
+      assert(result.deathSavingThrows == Dying({ successes: 1, failures: 1 })),
     }
   }
 

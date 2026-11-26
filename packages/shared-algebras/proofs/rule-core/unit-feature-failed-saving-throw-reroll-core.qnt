@@ -207,6 +207,15 @@ module unitFeatureFailedSavingThrowRerollCore {
         }
     }
 
+  // A reroll of the d20 by another source (the natural-1 reroll, Heroic
+  // Inspiration) replaces only the d20 and keeps the bonus (ASSUMPTIONS.md A68,
+  // A55).
+  pure def deathSavingThrowRollAfterD20Reroll(
+    roll: DeathSavingThrowRoll,
+    replacementD20: int,
+  ): DeathSavingThrowRoll =
+    { naturalD20: replacementD20, bonus: roll.bonus }
+
   pure def resolveDeathSavingThrowReroll(
     facts: DeathSavingThrowRerollFacts,
   ): DeathSavingThrowRerollResult = {

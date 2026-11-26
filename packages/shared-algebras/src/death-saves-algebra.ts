@@ -213,6 +213,18 @@ export function unmodifiedDeathSavingThrowRoll(
 const DEATH_SAVING_THROW_SUCCESS_TOTAL = 10;
 
 /**
+ * The roll after another source rerolls its d20 (the natural-1 reroll, Heroic
+ * Inspiration): the new d20 replaces the old one and the bonus stays
+ * (ASSUMPTIONS.md A68).
+ */
+export function deathSavingThrowRollAfterD20Reroll(
+  roll: DeathSavingThrowRoll,
+  replacementD20: D20Roll,
+): DeathSavingThrowRoll {
+  return { naturalD20: replacementD20, bonus: roll.bonus };
+}
+
+/**
  * Whether the roll fails. The d20's face decides first: a 1 is two failures
  * and a 20 regains a Hit Point, whatever was added. On any other face the
  * total decides: 10 or higher succeeds (ASSUMPTIONS.md A68).

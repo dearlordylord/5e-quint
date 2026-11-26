@@ -13944,7 +13944,7 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Owns the failed saving throw reroll offer on a saving throw that stands failed, its class-level bonus, the whole-roll or chosen-die replacement, the new roll standing whether it succeeds or fails, the use spend, and the rolled Death Saving Throw reroll with its bonus toward 10 after the face rules, independently of battle or authored identity.",
+      "evidence": "Owns the failed saving throw reroll offer on a saving throw that stands failed, its class-level bonus, the whole-roll or chosen-die replacement, the new roll standing whether it succeeds or fails, the use spend, and the rolled Death Saving Throw reroll with its bonus toward 10 after the face rules and kept through a later d20 reroll, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt",
       "role": "semantic-core"

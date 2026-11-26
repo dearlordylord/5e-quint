@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   addDeathFailures,
+  deathSavingThrowRollAfterD20Reroll,
   deathSavingThrowRollFails,
   DEATH_SAVES_RESET,
   deathSavingThrowRegainedHitPoint,
@@ -169,6 +170,21 @@ describe("death-save algebra", () => {
       state: resetDeathSaveRuntimeState(),
       outcome: { tag: "regainedHitPoint" },
     });
+  });
+
+  test("a later reroll of the d20 replaces the d20 and keeps the bonus", () => {
+    expect(
+      deathSavingThrowRollAfterD20Reroll(
+        { naturalD20: d20Roll(1), bonus: 9 },
+        d20Roll(2),
+      ),
+    ).toEqual({ naturalD20: d20Roll(2), bonus: 9 });
+    expect(
+      deathSavingThrowRollAfterD20Reroll(
+        unmodifiedDeathSavingThrowRoll(d20Roll(1)),
+        d20Roll(2),
+      ),
+    ).toEqual(unmodifiedDeathSavingThrowRoll(d20Roll(2)));
   });
 
   test("a roll fails on a 1, or on a total under 10 without a 20", () => {

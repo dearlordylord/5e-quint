@@ -10,6 +10,7 @@
 // reads the roll that stands.
 
 import {
+  deathSavingThrowRollAfterD20Reroll,
   deathSavingThrowRollFails,
   unmodifiedDeathSavingThrowRoll,
   type DeathSavingThrowRoll,
@@ -45,6 +46,7 @@ import {
 import {
   d20TestDecisions,
   type D20TestDecisionRules,
+  type D20TestDecisions,
   type D20TestSourceFlags,
 } from "./d20-test-decision-sequence.ts";
 import {
@@ -332,46 +334,16 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
     decisions: outcome.d20TestRerolls ?? [],
     rules,
   });
-  return Match.value(rerolls).pipe(
-    Match.discriminatorsExhaustive("tag")({
-      invalid: (invalid): SavingThrowRerolls<T> => invalid,
-      decisionsRequired: ({ options }): SavingThrowRerolls<T> => {
-        const failedSavingThrowReroll = options.failedSavingThrow
-          ? failedSavingThrowRerollOption(actor, input.roll)
-          : undefined;
-        return {
-          tag: "decisionsRequired",
-          options: {
-            naturalOne: options.naturalOne,
-            heroicInspiration: options.heroicInspiration,
-            ...(failedSavingThrowReroll === undefined
-              ? {}
-              : { failedSavingThrowReroll }),
-          },
-        };
-      },
-      resolved: (resolved): SavingThrowRerolls<T> => ({
-        tag: "resolved",
-        roll: {
-          ...outcome,
-          succeeded: resolved.roll.succeeded,
-          d20TestRoll: resolved.roll.d20TestRoll,
-        },
-        uses: {
-          heroicInspiration: heroicInspirationUse(
-            facts,
-            resolved.taken.heroicInspiration,
-          ),
-          failedSavingThrow: failedSavingThrowRerollUseForRoll({
-            state: input.state,
-            scope: input.scope,
-            roll: input.roll,
-            rerolled: resolved.taken.failedSavingThrow,
-          }),
-        },
-      }),
+  return savingThrowRerollsAfterDecisions({
+    facts,
+    failedSavingThrowReroll: failedSavingThrowRerollOption(actor, input.roll),
+    rerolls,
+    rollThatStands: (roll) => ({
+      ...outcome,
+      succeeded: roll.succeeded,
+      d20TestRoll: roll.d20TestRoll,
     }),
-  );
+  });
 }
 
 /** An ability check's value after its reroll decisions: the total that stands. */
@@ -497,17 +469,16 @@ export function d20TestDeathSavingThrowRerolls(
     rollAfter: (roll, decision) =>
       Match.value(decision).pipe(
         Match.discriminatorsExhaustive("effectKind")({
-          [D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND]: (naturalOne) => ({
-            ...roll,
-            naturalD20: d20TestDieAfterReroll(roll.naturalD20, naturalOne),
-          }),
-          [HEROIC_INSPIRATION_REROLL_EFFECT_KIND]: (heroicInspiration) => ({
-            ...roll,
-            naturalD20: d20TestDieAfterReroll(
-              roll.naturalD20,
-              heroicInspiration,
+          [D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND]: (naturalOne) =>
+            deathSavingThrowRollAfterD20Reroll(
+              roll,
+              d20TestDieAfterReroll(roll.naturalD20, naturalOne),
             ),
-          }),
+          [HEROIC_INSPIRATION_REROLL_EFFECT_KIND]: (heroicInspiration) =>
+            deathSavingThrowRollAfterD20Reroll(
+              roll,
+              d20TestDieAfterReroll(roll.naturalD20, heroicInspiration),
+            ),
           [FAILED_SAVING_THROW_REROLL_EFFECT_KIND]: (failedSavingThrow) =>
             /* v8 ignore next -- @preserve -- The step refuses a taken reroll from a roller without the feature. */
             failedSavingThrowReroll === undefined
@@ -536,12 +507,33 @@ export function d20TestDeathSavingThrowRerolls(
     decisions: input.fill.d20TestRerolls ?? [],
     rules,
   });
-  return Match.value(rerolls).pipe(
+  return savingThrowRerollsAfterDecisions({
+    facts,
+    failedSavingThrowReroll,
+    rerolls,
+    rollThatStands: (roll) => roll,
+  });
+}
+
+/**
+ * A saving throw's reroll decisions as its hole sees them: asked again with
+ * the sources still offered, or resolved with the roll that stands and what
+ * each source spends. Every saving throw fold, the Death Saving Throw's
+ * included, shares this, so the options and the spends change in one place.
+ */
+function savingThrowRerollsAfterDecisions<Roll, Result>(input: {
+  readonly facts: D20TestRollSourceFacts;
+  readonly failedSavingThrowReroll:
+    | BattleFailedSavingThrowRerollOption
+    | undefined;
+  readonly rerolls: D20TestDecisions<Roll, SavingThrowRerollSource>;
+  readonly rollThatStands: (roll: Roll) => Result;
+}): SavingThrowRerolls<Result> {
+  const { facts, failedSavingThrowReroll } = input;
+  return Match.value(input.rerolls).pipe(
     Match.discriminatorsExhaustive("tag")({
-      invalid: (invalid): SavingThrowRerolls<DeathSavingThrowRoll> => invalid,
-      decisionsRequired: ({
-        options,
-      }): SavingThrowRerolls<DeathSavingThrowRoll> => ({
+      invalid: (invalid): SavingThrowRerolls<Result> => invalid,
+      decisionsRequired: ({ options }): SavingThrowRerolls<Result> => ({
         tag: "decisionsRequired",
         options: {
           naturalOne: options.naturalOne,
@@ -551,18 +543,18 @@ export function d20TestDeathSavingThrowRerolls(
             : {}),
         },
       }),
-      resolved: (resolved): SavingThrowRerolls<DeathSavingThrowRoll> => ({
+      resolved: (resolved): SavingThrowRerolls<Result> => ({
         tag: "resolved",
-        roll: resolved.roll,
+        roll: input.rollThatStands(resolved.roll),
         uses: {
           heroicInspiration: heroicInspirationUse(
             facts,
             resolved.taken.heroicInspiration,
           ),
           failedSavingThrow: failedSavingThrowRerollUseForRoll({
-            state: input.state,
-            scope: input.scope,
-            roll: input.roll,
+            state: facts.context.state,
+            scope: facts.context.scope,
+            roll: facts.context.roll,
             rerolled: resolved.taken.failedSavingThrow,
           }),
         },
