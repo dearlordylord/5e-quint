@@ -202,6 +202,38 @@ export function deathSavingThrowAddedDice(
   });
 }
 
+/** An added-die decision on a rolled saving throw or a Death Saving Throw. */
+type SavingThrowAddedDieDecision =
+  | BattleRolledOutcomeAddedDieDecision
+  | BattleDeathSavingThrowAddedDieDecision;
+
+/**
+ * Checks one saving throw added-die decision against its source. The match is
+ * exhaustive, so a new added-die source on either saving throw must say how
+ * its decision is checked.
+ */
+function savingThrowAddedDieDecisionStep(input: {
+  readonly die: ReturnType<typeof bardicInspirationDieForRoll>;
+  readonly standsFailed: boolean;
+  readonly decision: SavingThrowAddedDieDecision;
+}): {
+  readonly source: (typeof SAVING_THROW_ADDED_DIE_SOURCES)[number];
+  readonly issue: string | null;
+} {
+  return Match.value(input.decision).pipe(
+    Match.discriminatorsExhaustive("effectKind")({
+      [BARDIC_INSPIRATION_DIE_EFFECT_KIND]: (bardicInspiration) => ({
+        source: "bardicInspiration" as const,
+        issue: bardicInspirationDieDecisionIssue({
+          die: input.die,
+          standsFailed: input.standsFailed,
+          decision: bardicInspiration,
+        }),
+      }),
+    }),
+  );
+}
+
 /**
  * The saving throw added-die fold: a Bardic Inspiration die, offered while
  * the save as it stands fails. Each saving throw says what fails and what a
@@ -209,9 +241,7 @@ export function deathSavingThrowAddedDice(
  */
 function savingThrowAddedDice<
   Roll,
-  Decision extends
-    | BattleRolledOutcomeAddedDieDecision
-    | BattleDeathSavingThrowAddedDieDecision,
+  Decision extends SavingThrowAddedDieDecision,
 >(input: {
   readonly context: D20TestAddedDieContext;
   readonly roll: Roll;
@@ -238,14 +268,12 @@ function savingThrowAddedDice<
     decisions: input.decisions,
     rules: {
       sources: SAVING_THROW_ADDED_DIE_SOURCES,
-      step: (roll, decision) => ({
-        source: "bardicInspiration" as const,
-        issue: bardicInspirationDieDecisionIssue({
+      step: (roll, decision) =>
+        savingThrowAddedDieDecisionStep({
           die,
           standsFailed: standsFailed(roll),
           decision,
         }),
-      }),
       takes: d20TestAddedDieDecisionTakesDie,
       rollAfter: input.rollAfter,
       offered: {

@@ -22,6 +22,7 @@ import {
   battleProcedureExecutionRef,
 } from "./identity.ts";
 import {
+  BARDIC_INSPIRATION_DIE_EFFECT_KIND,
   BATTLE_MOVEMENT_PATH_ACTIVITIES,
   BATTLE_MOVEMENT_PATH_DIFFICULT_TERRAIN,
   type BattleAttackRollResult,
@@ -802,6 +803,55 @@ describe("resubmitted fill continuity", () => {
       battleResubmittedFillKeepsAcceptedFill(
         deathSavingThrow(1),
         deathSavingThrow(2, reroll),
+      ),
+    ).toBe(false);
+  });
+
+  test("a death saving throw may add an added-die decision after its rerolls", () => {
+    const reroll = {
+      kind: "reroll",
+      effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+      replacement: d20Roll(5),
+    } as const;
+    const addDie = (dieRoll: number) =>
+      ({
+        kind: "addDie",
+        effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+        dieRoll: DieRollResult(dieRoll),
+      }) as const;
+    const deathSavingThrow = (
+      addedDie?: ReturnType<typeof addDie>,
+    ): DeathSavingThrowFill => ({
+      kind: "deathSavingThrow",
+      holeId: holeId("continuity-hole:death-save-added-die"),
+      value: d20Roll(1),
+      d20TestRerolls: [reroll],
+      ...(addedDie === undefined ? {} : { d20TestAddedDice: [addedDie] }),
+    });
+    // The roll and its accepted reroll stay; the added die is new.
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        deathSavingThrow(),
+        deathSavingThrow(addDie(5)),
+      ),
+    ).toBe(true);
+    // An accepted added die can't be changed or dropped.
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        deathSavingThrow(addDie(5)),
+        deathSavingThrow(addDie(6)),
+      ),
+    ).toBe(false);
+    expect(
+      battleResubmittedFillKeepsAcceptedFill(
+        deathSavingThrow(addDie(5)),
+        deathSavingThrow(),
+      ),
+    ).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        deathSavingThrow(addDie(5)),
+        deathSavingThrow(addDie(6)),
       ),
     ).toBe(false);
   });
