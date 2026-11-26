@@ -6,14 +6,14 @@
       "module/binding:presentationTimelineDetail": 9,
       "module/binding:presentationTimelineTitle": 11
     },
+    "packages/app/src/battle-scene/battle-scene-layout.ts": {
+      "module/binding:computeCreatureLayout": 24
+    },
     "packages/app/src/battle-scene/CreatureToken.tsx": {
       "module/binding:CreatureToken": 25
     },
     "packages/app/src/battle-scene/InitiativeTracker.tsx": {
       "module/binding:InitiativeTracker/call:creatures.map:argument-0": 29
-    },
-    "packages/app/src/battle-scene/battle-scene-layout.ts": {
-      "module/binding:computeCreatureLayout": 24
     },
     "packages/battle-runtime/src/active-effect/lifecycle.ts": {
       "module/binding:activeEffectCondition": 9,
@@ -101,7 +101,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
-      "module/binding:discoverBattleActsWithoutRouteEvents": 58
+      "module/binding:discoverBattleActsWithoutRouteEvents": 53
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -634,7 +634,7 @@
     },
     "packages/character-battle-runtime/src/battle-character-build-projection.ts": {
       "module/binding:bookOfShadowsSpellAccess": 15,
-      "module/binding:characterBattleLoadoutFromBuild": 11,
+      "module/binding:characterBattleLoadoutFromBuild": 9,
       "module/binding:characterPactBladeBondedWeaponItemId": 13,
       "module/binding:characterSpellcasting": 12,
       "module/binding:featurePreparedSpellAccess": 11

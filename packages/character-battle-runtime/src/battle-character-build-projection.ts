@@ -876,11 +876,6 @@ export function characterBattleLoadoutFromBuild(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<CharacterBattleLoadoutRef, BattleCreatureInitLeafIssue> {
-  const armorStrengthRequirement =
-    characterSheetSelectedArmorStrengthRequirement(input);
-  if (Result.isFailure(armorStrengthRequirement)) {
-    return battleCreatureInitIssue(armorStrengthRequirement.failure.message);
-  }
   const { build } = input;
   const armorUnitId = characterBuildEquipmentItemUnitId(
     build.equipment.loadout.armor,
@@ -896,40 +891,44 @@ export function characterBattleLoadoutFromBuild(input: {
   );
   const loadout = build.equipment.loadout;
 
-  return Result.succeed({
-    ...(loadout.armor == null || armorUnitId == null
-      ? {}
-      : {
-          armor: characterBattleArmorLoadoutRef(
-            { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
-            armorStrengthRequirement.success,
-          ),
-        }),
-    ...(loadout.shield == null || shieldUnitId == null
-      ? {}
-      : {
-          shield: {
-            itemId: battleObjectId(loadout.shield),
-            unitId: shieldUnitId,
-          },
-        }),
-    ...(loadout.weapon == null || weaponUnitId == null
-      ? {}
-      : {
-          weapon: {
-            itemId: battleObjectId(loadout.weapon.itemId),
-            unitId: weaponUnitId,
-            grip: loadout.weapon.grip,
-          },
-        }),
-    ...(loadout.offHandWeapon == null || offHandWeaponUnitId == null
-      ? {}
-      : {
-          offHandWeapon: {
-            itemId: battleObjectId(loadout.offHandWeapon.itemId),
-            unitId: offHandWeaponUnitId,
-          },
-        }),
+  return Result.match(characterSheetSelectedArmorStrengthRequirement(input), {
+    onFailure: ({ message }) => battleCreatureInitIssue(message),
+    onSuccess: (armorStrengthRequirement) =>
+      Result.succeed({
+        ...(loadout.armor == null || armorUnitId == null
+          ? {}
+          : {
+              armor: characterBattleArmorLoadoutRef(
+                { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
+                armorStrengthRequirement,
+              ),
+            }),
+        ...(loadout.shield == null || shieldUnitId == null
+          ? {}
+          : {
+              shield: {
+                itemId: battleObjectId(loadout.shield),
+                unitId: shieldUnitId,
+              },
+            }),
+        ...(loadout.weapon == null || weaponUnitId == null
+          ? {}
+          : {
+              weapon: {
+                itemId: battleObjectId(loadout.weapon.itemId),
+                unitId: weaponUnitId,
+                grip: loadout.weapon.grip,
+              },
+            }),
+        ...(loadout.offHandWeapon == null || offHandWeaponUnitId == null
+          ? {}
+          : {
+              offHandWeapon: {
+                itemId: battleObjectId(loadout.offHandWeapon.itemId),
+                unitId: offHandWeaponUnitId,
+              },
+            }),
+      }),
   });
 }
 
