@@ -1296,6 +1296,10 @@ export function unitFeatureProcedureExecution(
         kind: value.kind,
         acrobaticMovement: value.acrobaticMovement,
       }),
+      d20TestDieMinimum: (value) => ({
+        kind: value.kind,
+        dieMinimum: value.dieMinimum,
+      }),
       creatureSpaceMovementPermission: (value) => ({
         kind: value.kind,
         permission: value.permission,
@@ -1627,6 +1631,10 @@ export function unitSupportProcedureExecution(
       acrobaticMovement: (value) => ({
         kind: value.kind,
         acrobaticMovement: value.acrobaticMovement,
+      }),
+      d20TestDieMinimum: (value) => ({
+        kind: value.kind,
+        dieMinimum: value.dieMinimum,
       }),
       creatureSpaceMovementPermission: (value) => ({
         kind: value.kind,

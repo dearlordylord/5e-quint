@@ -92,6 +92,7 @@ const EXPECTED_OBSERVED_ROOT_IDS = [
   "rogue_cunning_strike",
   "rogue_evasion",
   "rogue_fast_hands",
+  "rogue_reliable_talent",
   "rogue_second_story_work",
   "rogue_sneak_attack",
   "rogue_steady_aim",

@@ -1,4 +1,5 @@
 export { RANGED_SPELL_ATTACK_TARGET_SPATIAL_FACT_KINDS } from "./battle-state-execution.ts";
+export { D20_TEST_DIE_MINIMUM_EFFECT_KIND } from "./battle-state-execution.ts";
 export { creatureSpellProcedure } from "./creature-spell-procedure.ts";
 export { characterSpellProcedure } from "./character-execution-queries.ts";
 export * from "./consumer-protocol.ts";
@@ -677,6 +678,8 @@ export type {
 export type {
   BattleAmmunitionKind,
   BattleAmmunitionStock,
+  BattleD20TestDieMinimumDecision,
+  BattleD20TestDieMinimumOption,
 } from "./battle-state-execution.ts";
 export { spellSaveDcForCaster } from "./battle-reducer/spell-save-dc.ts";
 export {

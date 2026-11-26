@@ -1,4 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.DIE_MINIMUM
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // Replacement checks shared by every D20 Test reroll source: the natural-1
 // reroll, Heroic Inspiration and Seeking Spell. Each source supplies its own messages and
 // which rolled faces it may replace. Also the roll after one decision, for each
@@ -18,6 +20,7 @@ import type {
   BattleD20TestRolledDieOutcomeReplacement,
   BattleD20TestRolledDieRollReplacement,
 } from "../battle-state-execution.ts";
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 
 /** The issue messages one D20 Test reroll source reports. */
 export type D20TestRollRerollMessages = {
@@ -32,6 +35,11 @@ export type D20TestRollRerollMessages = {
 export type D20TestRollFacts = {
   readonly total?: number | undefined;
   readonly d20TestRoll: BattleD20TestRoll | undefined;
+  /**
+   * The d20 minimum the roll's totals count, when its roller uses one: each
+   * total counts its d20 as at least this face.
+   */
+  readonly dieMinimum?: D20TestDieMinimumFace | undefined;
 };
 
 /** Whether a source may replace a rolled d20 showing `face`. */
@@ -187,8 +195,9 @@ export function d20TestDieAfterReroll(
 
 /**
  * A reroll replaces only the die: the replacement total keeps everything the
- * original total added to its d20. Without a known original total there is
- * nothing to compare.
+ * original total added to its d20. Each total counts its d20 as the face that
+ * stands under the roll's d20 minimum, if it has one. Without a known
+ * original total there is nothing to compare.
  */
 export function d20TestRollReplacementKeepsModifier(
   facts: D20TestRollFacts,
@@ -199,9 +208,22 @@ export function d20TestRollReplacementKeepsModifier(
   }
   return (
     replacement.total -
-      Number(selectedD20TestNaturalD20(replacement.d20TestRoll)) ===
-    facts.total - Number(selectedD20TestNaturalD20(facts.d20TestRoll))
+      d20TestCountedD20(replacement.d20TestRoll, facts.dieMinimum) ===
+    facts.total - d20TestCountedD20(facts.d20TestRoll, facts.dieMinimum)
   );
+}
+
+/**
+ * The d20 face a D20 Test total counts: the selected die, raised to the
+ * roll's d20 minimum when its roller uses one. A minimum applies to whichever
+ * d20 stands, so under Advantage or Disadvantage it raises the selected die.
+ */
+export function d20TestCountedD20(
+  roll: BattleD20TestRoll,
+  dieMinimum: D20TestDieMinimumFace | undefined,
+): number {
+  const selected = Number(selectedD20TestNaturalD20(roll));
+  return dieMinimum === undefined ? selected : Math.max(selected, dieMinimum);
 }
 
 function d20TestRollReplacementIsValid(

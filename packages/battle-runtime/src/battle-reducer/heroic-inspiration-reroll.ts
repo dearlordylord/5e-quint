@@ -27,6 +27,7 @@ import {
   d20TestRollReplacementRollIssue,
   type D20TestRollRerollMessages,
 } from "./d20-test-roll-reroll.ts";
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 import { subjectContinuationPhaseFor } from "./subject-continuation-phase.ts";
 
 export const HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE =
@@ -254,6 +255,8 @@ export function heroicInspirationRerollRollIssue(input: {
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleHeroicInspirationRerollDecision;
   readonly requiredRollMode?: AttackRollMode | undefined;
+  /** The d20 minimum the roll's totals count, when its roller uses one. */
+  readonly dieMinimum?: D20TestDieMinimumFace | undefined;
 }): string | null {
   const decision = input.decision;
   const gate = heroicInspirationAvailabilityGate(input.availability, decision);
@@ -264,6 +267,7 @@ export function heroicInspirationRerollRollIssue(input: {
   const facts = {
     total: input.total,
     d20TestRoll: input.originalD20TestRoll,
+    dieMinimum: input.dieMinimum,
   };
   return Match.value(decision).pipe(
     Match.discriminatorsExhaustive("kind")({

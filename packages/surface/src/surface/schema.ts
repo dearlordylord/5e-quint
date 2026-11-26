@@ -499,6 +499,7 @@ export {
   FailedAbilityCheckResourceBoostMechanicsSchema,
   SpellSlotHealingModifierMechanicsSchema,
   SteadyAimMechanicsSchema,
+  D20TestDieMinimumMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
   HitPointTriggeredReplacementMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,

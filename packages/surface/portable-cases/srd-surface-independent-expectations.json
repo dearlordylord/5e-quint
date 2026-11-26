@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "schemaSha256": "0fa06455dceff2a1946eaa57d282875572930aba823bff0bbed17fdc53ffbea0",
+  "schemaSha256": "50bdc8a42e0c7b63bc7224c7d8bfb0f7d4c1054d88b41140d5f824692ae37163",
   "dependencyContractSha256": "f00b3d6d5a86a90ac0ba1ac6c1c5edd380d2d5e8a5ed394bae3fa19cb3c1de25",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "c6463a01b8af61584d855857a064ca2a936d332e493003b53b3340a17c382f50",
+      "inputSha256": "c0c823341181c287e0336eafe82e99b8e3609719299917c065ba7312838b2f0a",
       "expected": {
         "tag": "accepted"
       }
@@ -367,7 +367,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "7ef490d1d781c45746f02f92f0c56ccdd3ca0505610e5e362d57bcb6fb605bcb",
+      "inputSha256": "69352af6aebdb257305265fed4b7ab3712cff9010f6a0ed23eebb38b041b5689",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1640,7 +1640,7 @@
           },
           {
             "code": "dangling-authored-dependency",
-            "path": "$.units[8].featureGrants[10].unitId",
+            "path": "$.units[8].featureGrants[11].unitId",
             "targetKind": "unit",
             "targetId": "rogue_ability_score_improvement_l10",
             "relation": "unit-reference"
@@ -1683,6 +1683,13 @@
           {
             "code": "dangling-authored-dependency",
             "path": "$.units[8].featureGrants[8].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_reliable_talent",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[9].unitId",
             "targetKind": "unit",
             "targetId": "rogue_ability_score_improvement_l4",
             "relation": "unit-reference"

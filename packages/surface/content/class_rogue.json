@@ -40,6 +40,10 @@
       "unitId": "rogue_uncanny_dodge"
     },
     {
+      "level": 7,
+      "unitId": "rogue_reliable_talent"
+    },
+    {
       "level": 8,
       "unitId": "rogue_ability_score_improvement_l4"
     },

@@ -20,6 +20,7 @@ import {
   type D20TestRollFacts,
   type D20TestRollRerollMessages,
 } from "./d20-test-roll-reroll.ts";
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 
 export const D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE =
   "D20 Test natural-1 reroll is not available for this actor.";
@@ -155,6 +156,7 @@ export function d20TestNaturalOneRerollRollIssue(input: {
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleD20TestNaturalOneRerollDecision;
   readonly requiredRollMode?: AttackRollMode | undefined;
+  readonly dieMinimum?: D20TestDieMinimumFace | undefined;
 }): string | null {
   const facts = d20TestRollFacts(input);
   const gate = d20TestNaturalOneRerollGate({ actor: input.actor, facts });
@@ -236,10 +238,12 @@ export function d20TestNaturalOneRerollDieIssue(input: {
 function d20TestRollFacts(input: {
   readonly total?: number | undefined;
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
+  readonly dieMinimum?: D20TestDieMinimumFace | undefined;
 }): D20TestRollFacts {
   return {
     total: input.total,
     d20TestRoll: input.originalD20TestRoll,
+    dieMinimum: input.dieMinimum,
   };
 }
 

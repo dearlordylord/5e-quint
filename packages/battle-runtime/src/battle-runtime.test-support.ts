@@ -3344,6 +3344,10 @@ export function abilityCheckFill(
         readonly naturalD20?: number;
         readonly rollMode?: AttackRollMode;
         readonly rolledD20s?: TestD20RolledD20s;
+        readonly d20TestDieMinimum?: Extract<
+          BattleFill,
+          { readonly kind: "abilityCheck" }
+        >["value"]["d20TestDieMinimum"];
         readonly d20TestRerolls?: Extract<
           BattleFill,
           { readonly kind: "abilityCheck" }
@@ -3365,6 +3369,9 @@ export function abilityCheckFill(
       ...(testD20TestRoll(checkValue) === undefined
         ? {}
         : { d20TestRoll: testD20TestRoll(checkValue)! }),
+      ...(checkValue.d20TestDieMinimum === undefined
+        ? {}
+        : { d20TestDieMinimum: checkValue.d20TestDieMinimum }),
       ...(checkValue.d20TestRerolls === undefined
         ? {}
         : { d20TestRerolls: checkValue.d20TestRerolls }),

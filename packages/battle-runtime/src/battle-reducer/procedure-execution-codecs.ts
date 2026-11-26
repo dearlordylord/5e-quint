@@ -1,6 +1,7 @@
 import { AttackRollDefenseSelectionSchema } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 import {
   CLASS_NAMES,
   CONDITIONS,
@@ -457,6 +458,14 @@ export const AcrobaticMovementProcedureExecutionSchema = Schema.Struct({
         withoutFallingDuringMovement: Schema.Literal(true),
       }),
     ]),
+  }),
+});
+
+export const D20TestDieMinimumProcedureExecutionSchema = Schema.Struct({
+  kind: Schema.Literal("d20TestDieMinimum"),
+  dieMinimum: Schema.Struct({
+    appliesTo: Schema.Literal("abilityCheckUsingOwnProficiency"),
+    minimumDieFace: Schema.Literal(10),
   }),
 });
 
@@ -1351,6 +1360,7 @@ export const UnitSupportProcedureExecutionSchema = Schema.Union([
   PassiveSpeedBonusProcedureExecutionSchema,
   PassiveSpeedKindGrantsProcedureExecutionSchema,
   AcrobaticMovementProcedureExecutionSchema,
+  D20TestDieMinimumProcedureExecutionSchema,
   MonkFocusBattleOptionsProcedureExecutionSchema,
   DruidWildShapeKnownFormProcedureExecutionSchema,
   BonusActionDelegatedStandardActionsProcedureExecutionSchema,
@@ -1391,6 +1401,7 @@ export const UnitFeatureProcedureExecutionSchema = Schema.Union([
   UnitFeaturePassiveSpeedBonusProcedureExecutionSchema,
   UnitFeaturePassiveSpeedKindGrantsProcedureExecutionSchema,
   AcrobaticMovementProcedureExecutionSchema,
+  D20TestDieMinimumProcedureExecutionSchema,
   MonkFocusBattleOptionsProcedureExecutionSchema,
   CreatureSpaceMovementPermissionProcedureExecutionSchema,
   HideActionObscurementPermissionProcedureExecutionSchema,

@@ -3706,6 +3706,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitFact,
     ),
+    d20TestDieMinimum: account(
+      "continuation",
+      "d20TestDieMinimum",
+      at(
+        "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+        "abilityCheckD20TestDieMinimum",
+      ),
+      REASONS.unitContinuation,
+    ),
     d20TestNaturalOneReroll: account(
       "continuation",
       "d20TestNaturalOneReroll",
@@ -4204,6 +4213,15 @@ export const OPERATION_ACCOUNTING = {
       at(
         "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
         "eligibleCunningStrikeContexts",
+      ),
+      REASONS.unitContinuation,
+    ),
+    d20TestDieMinimum: account(
+      "continuation",
+      "d20TestDieMinimum",
+      at(
+        "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+        "abilityCheckD20TestDieMinimum",
       ),
       REASONS.unitContinuation,
     ),

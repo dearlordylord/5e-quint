@@ -618,7 +618,7 @@
       "module/binding:parseOngoingFeatureEffects": 40,
       "module/binding:parseOngoingFeatureUnitFeatureProfile": 28,
       "module/binding:parseSelfBonusActionHealingUnitFeatureProfile": 27,
-      "module/binding:parseSupportedUnitFeatureProfile": 48,
+      "module/binding:parseSupportedUnitFeatureProfile": 42,
       "module/binding:passiveAbilityCheckRollModeProfileForUnit": 25,
       "module/binding:passiveArmorClassBonusProfileForUnit": 10,
       "module/binding:passiveRangedAttackRollBonusProfileForUnit": 11,

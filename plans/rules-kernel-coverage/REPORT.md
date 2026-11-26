@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 189
-- Covered obligations: 178
+- Total obligations: 190
+- Covered obligations: 179
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   178 |
+| covered                  |   179 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   149 |
+| battle             |   150 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
@@ -221,6 +221,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE`                             | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.SAVING_THROW.MODIFIER_COLLECTOR`                          | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.MOVEMENT.SPEED_COLLECTOR`                                 | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.D20_TEST.DIE_MINIMUM`                                     | battle             | covered                  | `unit-feature.d20-test-die-minimum`                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Battle Hole Frontier
 
@@ -996,6 +997,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/armor-class-collector-core-examples.qnt`                                 | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt`                                                | semantic-core           | `BATTLE.MOVEMENT.SPEED_COLLECTOR`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt`                                       | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt`                              | semantic-core           | `BATTLE.D20_TEST.DIE_MINIMUM`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt`                     | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1416,6 +1419,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt`                                     | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt`                           | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt`                                    | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt`                     | qnt-owner-role | proof-only                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt`                              | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt`              | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt`                       | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt`                       | qnt-owner-role | proof-only                                                                                                                                                                                               |
@@ -1704,6 +1709,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SAVING_THROW.MODIFIER_COLLECTOR`                          | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `variant`, `if-expression`, `comparison`, `boolean-connective`, `arithmetic`, `all-block`, `list`, `fold`                                                                                                                          |          |           |
 | `BATTLE.ARMOR_CLASS.COLLECTOR`                                    | generation-subset-clean | `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `comparison`, `all-block`, `list`, `fold`                                                                                                                                                                                                   |          |           |
 | `BATTLE.MOVEMENT.SPEED_COLLECTOR`                                 | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `arithmetic`, `all-block`, `list`, `fold`                                                                                                                      |          |           |
+| `BATTLE.D20_TEST.DIE_MINIMUM`                                     | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `pattern-match`, `let-binding`, `list`, `fold`, `arithmetic`                                                                                                                                        |          |           |
 
 ### Generator Readiness Backlog
 

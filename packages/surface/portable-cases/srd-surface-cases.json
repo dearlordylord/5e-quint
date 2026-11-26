@@ -3770,6 +3770,10 @@
                 "level": 5
               },
               {
+                "unitId": "rogue_reliable_talent",
+                "level": 7
+              },
+              {
                 "unitId": "rogue_ability_score_improvement_l4",
                 "level": 8
               },
@@ -9972,6 +9976,26 @@
               "section": "classes.md:7089-7091"
             },
             "rulesExcerpt": "#### Level 7: Evasion\n\nYou can nimbly dodge out of the way of certain dangers. When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You can't use this feature if you have the Incapacitated condition."
+          },
+          {
+            "id": "rogue_reliable_talent",
+            "name": "Reliable Talent",
+            "kind": "class_feature",
+            "acquiredAtLevel": 7,
+            "className": "rogue",
+            "mechanics": {
+              "family": "d20_test_die_minimum",
+              "appliesTo": {
+                "kind": "ability_check_using_own_proficiency"
+              },
+              "minimumDieFace": 10,
+              "optional": true
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "classes.md:7093-7095"
+            },
+            "rulesExcerpt": "#### Level 7: Reliable Talent\n\nWhenever you make an ability check that uses one of your skill or tool proficiencies, you can treat a d20 roll of 9 or lower as a 10."
           },
           {
             "id": "rogue_uncanny_dodge",
@@ -106926,6 +106950,10 @@
                 "level": 5
               },
               {
+                "unitId": "rogue_reliable_talent",
+                "level": 7
+              },
+              {
                 "unitId": "rogue_ability_score_improvement_l4",
                 "level": 8
               },
@@ -111821,12 +111849,19 @@
               "code": "dangling-authored-dependency",
               "path": "$.units[8].featureGrants[8].unitId",
               "targetKind": "unit",
+              "targetId": "rogue_reliable_talent",
+              "relation": "unit-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[8].featureGrants[9].unitId",
+              "targetKind": "unit",
               "targetId": "rogue_ability_score_improvement_l4",
               "relation": "unit-reference"
             },
             {
               "code": "dangling-authored-dependency",
-              "path": "$.units[8].featureGrants[10].unitId",
+              "path": "$.units[8].featureGrants[11].unitId",
               "targetKind": "unit",
               "targetId": "rogue_ability_score_improvement_l10",
               "relation": "unit-reference"
@@ -113924,7 +113959,7 @@
             },
             {
               "code": "dangling-authored-dependency",
-              "path": "$.units[8].featureGrants[10].unitId",
+              "path": "$.units[8].featureGrants[11].unitId",
               "targetKind": "unit",
               "targetId": "rogue_ability_score_improvement_l10",
               "relation": "unit-reference"
@@ -113967,6 +114002,13 @@
             {
               "code": "dangling-authored-dependency",
               "path": "$.units[8].featureGrants[8].unitId",
+              "targetKind": "unit",
+              "targetId": "rogue_reliable_talent",
+              "relation": "unit-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[8].featureGrants[9].unitId",
               "targetKind": "unit",
               "targetId": "rogue_ability_score_improvement_l4",
               "relation": "unit-reference"

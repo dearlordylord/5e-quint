@@ -461,8 +461,8 @@
       "non-runtime": 12
     },
     "levelSevenClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 6,
-      "catalog-only/dead-for-now": 6,
+      "catalog-installed-owner-evidence-present": 7,
+      "catalog-only/dead-for-now": 5,
       "non-runtime": 12
     },
     "levelEightClassRowsByDisposition": {
@@ -523,10 +523,10 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 663,
+      "catalog-installed-owner-evidence-present": 664,
       "non-runtime": 240,
       "class-progression-follow-up-required": 87,
-      "catalog-only/dead-for-now": 352,
+      "catalog-only/dead-for-now": 351,
       "missing-authored-runtime-closed": 23,
       "missing-authored-record": 82,
       "catalog-authored-review-required": 64
@@ -31611,23 +31611,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_reliable_talent",
+        "sourceRecordPath": "packages/surface/content/rogue_reliable_talent.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_reliable_talent"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "character-fact-and-runtime-detached-split",
-        "owner": "future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection",
-        "reason": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future tool-check and non-battle ability check procedure owners",
+        "reason": "Battle ability checks all use a skill; no battle procedure makes a tool check. Tool and non-battle ability check procedures must consume the same Unit profile and their own proficiency facts at their execution boundaries rather than adding battle-owned state."
       },
-      "ownerEvidence": [],
-      "nextAction": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_reliable_talent is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; GH695-D20-TEST-DIE-MINIMUM at packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes:level-7:class-feature-grant:sorcerer_sorcery_incarnate",

@@ -28,6 +28,7 @@ import { registeredSpellProcedureDeclarations } from "./spell-procedure-profiles
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -232,6 +233,7 @@ import {
   BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
   WEAPON_CHANGE_AFTER_ATTACK_STATES,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+  D20_TEST_DIE_MINIMUM_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
   BattleCreatureOriginSnapshot,
@@ -1809,6 +1811,18 @@ const HeroicInspirationRerollHoleOptionsFields = (() => {
         Schema.Tuple([member.mechanical]),
       ),
     },
+  };
+})();
+
+/** The d20 minimum an ability check hole offers its roller. */
+const D20TestDieMinimumHoleOptionFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
+    minimumDieFace: Schema.Literal(10),
+  });
+  return {
+    labeled: { d20TestDieMinimum: Schema.optionalKey(member.labeled) },
+    mechanical: { d20TestDieMinimum: Schema.optionalKey(member.mechanical) },
   };
 })();
 
@@ -3713,7 +3727,10 @@ const BattleHolePayloadMembers = [
       dc: DifficultyClass,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestRerollHoleOptionsFields,
+    mergeBattleHoleFieldPairs(
+      D20TestDieMinimumHoleOptionFields,
+      D20TestRerollHoleOptionsFields,
+    ),
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -6330,6 +6347,12 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.check(Schema.isInt())),
         d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
+        d20TestDieMinimum: Schema.optionalKey(
+          Schema.Struct({
+            kind: Schema.Literals(["use", "decline"]),
+            effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
+          }),
+        ),
         d20TestRerolls: Schema.optionalKey(
           BattleAbilityCheckD20TestRerollDecisionsSchema,
         ),
