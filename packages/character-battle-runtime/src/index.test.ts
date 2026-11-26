@@ -9538,10 +9538,14 @@ describe("Character Build battle projection", () => {
           snapshotBattle(battle.state).combatants[0]?.movement.speedFeet,
         ).toBe(speedFeet);
       }
+      const emptyCatalog = buildUnitCatalog({ collections: [] });
+      if (emptyCatalog.tag !== "ok") {
+        throw new Error("Expected empty test Unit catalog to build.");
+      }
       expect(
         characterBattleLoadoutFromBuild({
           build,
-          unitLibrary: unitCatalogWithoutUnitIds("armor_chain_mail"),
+          unitLibrary: emptyCatalog.catalog,
         }),
       ).toMatchObject({
         _tag: "Failure",
