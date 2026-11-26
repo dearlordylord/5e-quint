@@ -24,6 +24,7 @@ import {
   type BattleD20TestRollKey,
   type BattleFailedSavingThrowRerollDecision,
   type BattleFailedSavingThrowRerollOption,
+  type BattleSavingThrowRerollHoleOptions,
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { BattleResourcePoolExecutionRef } from "../identity.ts";
@@ -172,14 +173,16 @@ export function failedSavingThrowRerollOutcomeIssue(input: {
   readonly decision: BattleFailedSavingThrowRerollDecision;
 }): string | null {
   const decision = input.decision;
+  // Only a save that stands failed is offered the reroll, so any decision on
+  // a save that stands succeeded, a decline too, answers no offer.
+  if (input.roll.succeeded)
+    return FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE;
   const gate = d20TestRerollSpendGate({
     availability: input.availability,
     decision,
     unavailableMessage: FAILED_SAVING_THROW_REROLL_UNAVAILABLE_MESSAGE,
   });
   if (gate.tag === "finished") return gate.issue;
-  if (input.roll.succeeded)
-    return FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE;
   return decision.kind === "decline"
     ? null
     : d20TestOutcomeReplacementIssue({
@@ -288,7 +291,9 @@ export function battleStateAfterFailedSavingThrowReroll(
 }
 
 /** The saving throw hole, asked again with the failed saving throw reroll option. */
-export function d20TestHoleWithFailedSavingThrowRerollOption<T extends object>(
+export function savingThrowHoleWithFailedSavingThrowRerollOption<
+  T extends BattleSavingThrowRerollHoleOptions,
+>(
   hole: T,
   option: BattleFailedSavingThrowRerollOption,
 ): T & {

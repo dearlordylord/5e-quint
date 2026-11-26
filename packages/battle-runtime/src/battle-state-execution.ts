@@ -5190,10 +5190,17 @@ export type BattleD20TestRerollHoleOptions = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
-  readonly failedSavingThrowRerolls?: readonly [
-    BattleFailedSavingThrowRerollOption,
-  ];
 };
+/**
+ * The rerolls a saving throw hole offers its roller: the D20 Test rerolls,
+ * and on a save that stands failed, a failed saving throw reroll.
+ */
+export type BattleSavingThrowRerollHoleOptions =
+  BattleD20TestRerollHoleOptions & {
+    readonly failedSavingThrowRerolls?: readonly [
+      BattleFailedSavingThrowRerollOption,
+    ];
+  };
 export type BattleObjectContactSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5212,7 +5219,7 @@ export type BattleObjectContactSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleObjectDropResolution =
   | {
       readonly targetId: CombatantId;
@@ -6033,7 +6040,7 @@ export type BattleSpellTurnStartSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleStagedConditionRepeatSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6054,7 +6061,7 @@ export type BattleStagedConditionRepeatSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleSaveGatedConditionRepeatTrigger = "endTurn" | "damage";
 export type BattleDamageOccurrenceSource =
   | { readonly kind: "untrackedDamage" }
@@ -6085,7 +6092,7 @@ export type BattleSaveGatedConditionRepeatSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6108,7 +6115,7 @@ export type BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattlePersistentAreaSaveConditionTrigger =
   | "entersArea"
   | "endsTurnInArea";
@@ -6135,7 +6142,7 @@ export type BattlePersistentAreaSaveConditionSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattlePersistentAreaSaveConditionEscapeTrigger =
   | "entersArea"
   | "startsTurnInArea";
@@ -6162,7 +6169,7 @@ export type BattlePersistentAreaSaveConditionEscapeSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattlePersistentAreaSaveCompositeTrigger =
   | "entersArea"
   | "startsTurnInArea";
@@ -6198,7 +6205,7 @@ export type BattlePersistentAreaSaveCompositeSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6223,7 +6230,7 @@ export type BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6248,7 +6255,7 @@ export type BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleStationaryPersistentAreaSaveDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6313,7 +6320,7 @@ export type BattleDirectionalPersistentAreaSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleDirectionalPersistentAreaDirectionChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6344,7 +6351,7 @@ export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6363,7 +6370,7 @@ export type BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleTurnConstraintEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6384,7 +6391,7 @@ export type BattleTurnConstraintEndTurnSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6403,7 +6410,7 @@ export type BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleCollisionRepositionPersistentAreaSaveDamageTrigger =
   | "endsTurnWithinFiveFeetOfSphere"
   | "rammedBySphere";
@@ -6460,7 +6467,7 @@ export type BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeH
     readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
     readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
     readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-  } & BattleD20TestRerollHoleOptions;
+  } & BattleSavingThrowRerollHoleOptions;
 export type BattleCollisionRepositionPersistentAreaSaveDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6505,7 +6512,7 @@ export type BattleDirectedRepositionPersistentAreaSaveDamageSavingThrowOutcomeHo
     readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
     readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
     readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-  } & BattleD20TestRerollHoleOptions;
+  } & BattleSavingThrowRerollHoleOptions;
 export type BattleDirectedRepositionPersistentAreaSaveDamageRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
@@ -6558,7 +6565,7 @@ export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly targetAutomaticFailures: readonly BattleSavingThrowAutomaticFailureProjection[];
-} & BattleD20TestRerollHoleOptions;
+} & BattleSavingThrowRerollHoleOptions;
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }

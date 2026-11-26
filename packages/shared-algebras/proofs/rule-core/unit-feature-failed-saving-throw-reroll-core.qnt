@@ -19,6 +19,11 @@ module unitFeatureFailedSavingThrowRerollCore {
   // ruling: the reroll is offered only on a roll that stands failed, and the
   // new roll states the table's ruling with the bonus added. The bonus is the
   // level of the class the feature names.
+  //
+  // A decision answers an offer, so a decline is invalid too when nothing was
+  // offered: on a roll that stands succeeded, or without a use left. The uses
+  // are those the roller had when the offer was made; a decline made then
+  // still stands after another roll spends the last use.
   import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
 
   // One d20, or both d20s of a roll with Advantage or Disadvantage.
@@ -130,7 +135,9 @@ module unitFeatureFailedSavingThrowRerollCore {
       offered: failedSavingThrowRerollOffered(facts),
       offeredBonus: facts.classLevel,
       admitted: admitted,
-      invalid: failedSavingThrowRerollTaken(facts.decision) and not(admitted),
+      invalid: if (failedSavingThrowRerollTaken(facts.decision))
+        not(admitted)
+      else not(failedSavingThrowRerollOffered(facts)),
       effective: if (admitted)
         failedSavingThrowRerollEffectiveRoll(facts)
       else facts.original,

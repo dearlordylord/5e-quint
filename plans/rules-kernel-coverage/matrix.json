@@ -6515,7 +6515,8 @@
         "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-spend.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6543,11 +6544,13 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt"
       ],
-      "reason": "The QNT owner offers the reroll only while the saving throw as it stands is failed and the roller has a use left, with the class level as its bonus; an admitted reroll replaces the d20, or under Advantage or Disadvantage one chosen d20, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent, while a decline keeps the roll and the use. failed-saving-throw-reroll owns availability, the option, the decision checks and the spend; d20-test-outcome-rerolls takes it in turn with the natural-1 reroll and Heroic Inspiration on every saving throw and Concentration save, and the spend is recorded on the subject so a replay does not spend twice. Death Saving Throws are not yet offered it. The executable parity witnesses cover the offer and its bonus, no offer on a success, a successful and a failed new roll, decline, no use left, the roll mode check, Heroic Inspiration then the failed-save reroll on the same save, and a real-catalog Fighter 9 against a Fighter 8 under Burning Hands.",
+      "reason": "The QNT owner offers the reroll only while the saving throw as it stands is failed and the roller has a use left, with the class level as its bonus; an admitted reroll replaces the d20, or under Advantage or Disadvantage one chosen d20, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent, while a decline keeps the roll and the use; a decision, a decline included, is refused where nothing was offered. failed-saving-throw-reroll owns availability, the option, the decision checks and the spend, with d20-test-reroll-spend owning the paid-roll record it shares with Heroic Inspiration; d20-test-outcome-rerolls takes it in turn with the natural-1 reroll and Heroic Inspiration on every saving throw and Concentration save that d20-test-reroll-fills checks and the Glyph release, and the spend is recorded on the subject so a replay does not spend twice. Death Saving Throws are not yet offered it. The executable parity witnesses cover the offer and its bonus, no offer on a success, a successful and a failed new roll, decline, no use left, the roll mode check, Heroic Inspiration then the failed-save reroll on the same save, and a real-catalog Fighter 9 against a Fighter 8 under Burning Hands.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-spend.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

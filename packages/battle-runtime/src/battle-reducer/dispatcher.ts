@@ -431,7 +431,7 @@ function resolveBattleSubjectInternal(
     ...input,
     state: d20TestRerolls.state,
   });
-  /* v8 ignore start -- @preserve -- Spending Heroic Inspiration changes only the roller's Heroic Inspiration and the subject's accepted rolls, and preserves every admitted procedure binding. */
+  /* v8 ignore start -- @preserve -- Spending a reroll's cost changes only the roller's Heroic Inspiration or resource uses and the subject's accepted rolls; procedure bindings come from the roller's execution, which the spend preserves. */
   if (rerolledAdmission.tag === "staleCharacterProcedure") {
     return invalidResult(
       input.state,

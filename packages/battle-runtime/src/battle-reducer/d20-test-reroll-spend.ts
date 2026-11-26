@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
 // What a reroll source that costs something (Heroic Inspiration, a use of a
 // failed saving throw reroll) shares: where its cost stands for one roll, and
 // the record of the rolls that paid it while the subject they belong to can

@@ -174,10 +174,10 @@ import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellAttackRequiresExactDistance } from "./spells-targeting.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  battleStateAfterD20TestRerollUses,
-  d20TestHoleWithRerollOptions,
+  battleStateAfterSavingThrowRerollUses,
+  savingThrowHoleWithRerollOptions,
   d20TestOutcomeRerolls,
-  type D20TestRerollUses,
+  type SavingThrowRerollUses,
 } from "./d20-test-outcome-rerolls.ts";
 
 const DURABLE_GLYPH_INSCRIPTION_HOURS = 1;
@@ -567,7 +567,7 @@ type GlyphExplosiveRuneSavingThrowCheck =
       readonly tag: "ok";
       /** Each target's outcome that stands after its reroll decisions. */
       readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
-      readonly rerollUses: readonly D20TestRerollUses[];
+      readonly rerollUses: readonly SavingThrowRerollUses[];
     }
   | {
       readonly tag: "needsHoles";
@@ -993,13 +993,13 @@ function releasedGlyphExplosiveRune(input: {
   readonly state: BattleState;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
   readonly effect: StoredGlyphDurableOccurrenceEffect;
-  readonly rerollUses: readonly D20TestRerollUses[];
+  readonly rerollUses: readonly SavingThrowRerollUses[];
   readonly lifecycle: GlyphExplosiveRuneDamageLifecycle;
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
 }): ReleaseGlyphExplosiveRuneResult {
   const sourceEffectId = input.sourceEffectId;
   const lifecycleRerolls = glyphExplosiveRuneDamageLifecycleRerolls({
-    state: battleStateAfterD20TestRerollUses(input.state, input.rerollUses),
+    state: battleStateAfterSavingThrowRerollUses(input.state, input.rerollUses),
     witness: input.witness,
     lifecycle: input.lifecycle,
   });
@@ -2601,7 +2601,7 @@ function glyphExplosiveRuneSavingThrowRerolls(input: {
   readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
 }): GlyphExplosiveRuneSavingThrowCheck {
   const outcomes: GlyphExplosiveRuneSavingThrowOutcomes[number][] = [];
-  const rerollUses: D20TestRerollUses[] = [];
+  const rerollUses: SavingThrowRerollUses[] = [];
   for (const outcome of input.outcomes) {
     const rerolls = d20TestOutcomeRerolls({
       state: input.state,
@@ -2612,7 +2612,7 @@ function glyphExplosiveRuneSavingThrowRerolls(input: {
     if (rerolls.tag === "decisionsRequired") {
       return {
         tag: "needsHoles",
-        holes: [d20TestHoleWithRerollOptions(input.hole, rerolls.options)],
+        holes: [savingThrowHoleWithRerollOptions(input.hole, rerolls.options)],
       };
     }
     if (rerolls.tag === "invalid") {
@@ -2678,13 +2678,13 @@ function glyphExplosiveRuneDamageLifecycleRerolls(input: {
     if (rerolls.tag === "decisionsRequired") {
       return {
         tag: "needsHoles",
-        holes: [d20TestHoleWithRerollOptions(test.hole, rerolls.options)],
+        holes: [savingThrowHoleWithRerollOptions(test.hole, rerolls.options)],
       };
     }
     if (rerolls.tag === "invalid") {
       return { tag: "invalid", reason: test.mismatch };
     }
-    state = battleStateAfterD20TestRerollUses(state, [rerolls.uses]);
+    state = battleStateAfterSavingThrowRerollUses(state, [rerolls.uses]);
   }
   return { tag: "ok", state };
 }

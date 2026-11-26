@@ -13,7 +13,9 @@ import {
 import { DieRollResult } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
+import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 import {
+  endTurn,
   requireResolved,
   resolveBattleSubject,
   type BattleState,
@@ -22,32 +24,45 @@ import {
   FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleD20TestRoll,
+  type BattleHole,
+  type BattleRolledSavingThrowOutcome,
 } from "./battle-state-execution.ts";
 import {
   FAILED_SAVING_THROW_REROLL_MODE_MESSAGE,
   FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE,
   FAILED_SAVING_THROW_REROLL_UNAVAILABLE_MESSAGE,
+  failedSavingThrowRerollOutcomeIssue,
 } from "./battle-reducer/failed-saving-throw-reroll.ts";
 import {
+  dragonsBreathUnitId,
   fighterIndomitableUnitId,
   viciousMockeryUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
+  damageRollFillWithGroups,
+  requireCombatant,
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
+  bonusSpellAct,
+  damageTypeChoiceFill,
+  knownWillingSpellTargetListFill,
   savingThrowOutcomeFill,
   spellAct,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  decodeUnitRecordSync,
+  discoverBattleActCandidates,
   spellCasterId,
   spellTargetId,
   unitLibrary,
+  type BattleFill,
   type CombatantId,
+  type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 
 describe("Indomitable on a failed saving throw", () => {
@@ -214,6 +229,41 @@ describe("Indomitable on a failed saving throw", () => {
     });
   });
 
+  test("a replay of the subject after the reroll doesn't spend a second use", () => {
+    const save = viciousMockerySave();
+    const rerolledSave = save.fill({
+      succeeded: false,
+      d20: 5,
+      d20TestRerolls: [rerollIndomitable({ succeeded: false, d20: 2 })],
+    });
+    const needsDamage = resolveBattleSubject({
+      state: save.state,
+      subject: save.subject,
+      fills: [save.targetSelection, rerolledSave],
+    });
+    if (needsDamage.tag !== "needsHoles") throw new Error("Expected damage.");
+    expect(indomitableUses(needsDamage.state, spellTargetId)).toBe(0);
+
+    const replayed = requireResolved(
+      resolveBattleSubject({
+        state: needsDamage.state,
+        subject: save.subject,
+        fills: [
+          save.targetSelection,
+          rerolledSave,
+          damageRollFillWithGroups(
+            requireResultHole(needsDamage, "rolledDice"),
+            [[3]],
+          ),
+        ],
+      }),
+    );
+    expect(indomitableUses(replayed.state, spellTargetId)).toBe(0);
+    expect(hp(replayed.state, spellTargetId)).toBe(
+      hp(save.state, spellTargetId) - 3,
+    );
+  });
+
   test("the new roll keeps the save's roll mode", () => {
     const save = viciousMockerySave();
 
@@ -248,6 +298,66 @@ describe("Indomitable on a failed saving throw", () => {
       tag: "invalid",
       message: FAILED_SAVING_THROW_REROLL_MODE_MESSAGE,
     });
+  });
+});
+
+describe("Indomitable under Advantage or Disadvantage", () => {
+  const failedPair = (rollMode: "advantage" | "disadvantage") =>
+    ({
+      tag: "multiple",
+      rollMode,
+      first: DieRollResult(4),
+      second: DieRollResult(3),
+    }) as const;
+
+  test.each(["advantage", "disadvantage"] as const)(
+    "under %s the reroll replaces one chosen die",
+    (rollMode) => {
+      expect(
+        failedSavingThrowRerollOutcomeIssue({
+          availability: "available",
+          roll: { succeeded: false, d20TestRoll: failedPair(rollMode) },
+          decision: {
+            kind: "rerollRolledDie",
+            effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+            replacement: {
+              die: "second",
+              result: {
+                succeeded: true,
+                d20TestRoll: {
+                  ...failedPair(rollMode),
+                  second: DieRollResult(18),
+                },
+              },
+            },
+          },
+        }),
+      ).toBeNull();
+    },
+  );
+
+  test("a chosen-die reroll can't change the die it keeps", () => {
+    expect(
+      failedSavingThrowRerollOutcomeIssue({
+        availability: "available",
+        roll: { succeeded: false, d20TestRoll: failedPair("advantage") },
+        decision: {
+          kind: "rerollRolledDie",
+          effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+          replacement: {
+            die: "second",
+            result: {
+              succeeded: true,
+              d20TestRoll: {
+                ...failedPair("advantage"),
+                first: DieRollResult(9),
+                second: DieRollResult(18),
+              },
+            },
+          },
+        },
+      }),
+    ).not.toBeNull();
   });
 });
 
@@ -305,7 +415,228 @@ describe("Indomitable alongside Heroic Inspiration (A55)", () => {
       NO_HEROIC_INSPIRATION,
     );
   });
+
+  test("Indomitable can go first, and Heroic Inspiration then rerolls its new roll", () => {
+    const save = viciousMockerySave({
+      heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+    });
+    const saved = requireResolved(
+      resolveBattleSubject({
+        state: save.state,
+        subject: save.subject,
+        fills: [
+          save.targetSelection,
+          save.fill({
+            succeeded: false,
+            d20: 5,
+            d20TestRerolls: [
+              rerollIndomitable({ succeeded: false, d20: 2 }),
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: { succeeded: true, d20TestRoll: single(17) },
+              },
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(hp(saved.state, spellTargetId)).toBe(hp(save.state, spellTargetId));
+    expect(indomitableUses(saved.state, spellTargetId)).toBe(0);
+    expect(heroicInspiration(saved.state, spellTargetId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
+  });
+
+  test("once Heroic Inspiration turns the save into a success, a decline of Indomitable answers no offer", () => {
+    const save = viciousMockerySave({
+      heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+    });
+    expect(
+      resolveBattleSubject({
+        state: save.state,
+        subject: save.subject,
+        fills: [
+          save.targetSelection,
+          save.fill({
+            succeeded: false,
+            d20: 5,
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: { succeeded: true, d20TestRoll: single(17) },
+              },
+              declineIndomitable(),
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE,
+    });
+  });
 });
+
+describe("Indomitable on a Concentration save", () => {
+  test("a failed Concentration save is asked again with the reroll, which keeps Concentration", () => {
+    const exhale = exhaleOnIndomitableCaster();
+    const save = exhaleSaveFill(exhale.saveHole, {
+      succeeded: true,
+      d20TestRoll: single(15),
+    });
+    const needsDamage = resolveBattleSubject({
+      state: exhale.state,
+      subject: exhale.subject,
+      fills: [save],
+    });
+    const damage = damageRollFillWithGroups(
+      requireResultHole(needsDamage, "rolledDice"),
+      [[3, 3, 3]],
+    );
+    const concentration = requireResultHole(
+      resolveBattleSubject({
+        state: exhale.state,
+        subject: exhale.subject,
+        fills: [save, damage],
+      }),
+      "concentrationSavingThrow",
+    );
+    const concentrationFill = (
+      value: Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >["value"],
+    ): BattleFill => ({
+      kind: "concentrationSavingThrow",
+      holeId: concentration.holeId,
+      value,
+    });
+
+    expect(
+      requireResultHole(
+        resolveBattleSubject({
+          state: exhale.state,
+          subject: exhale.subject,
+          fills: [
+            save,
+            damage,
+            concentrationFill({ succeeded: false, d20TestRoll: single(4) }),
+          ],
+        }),
+        "concentrationSavingThrow",
+      ),
+    ).toMatchObject({
+      failedSavingThrowRerolls: [
+        {
+          effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+          rollerId: spellCasterId,
+          bonus: 9,
+        },
+      ],
+    });
+    const kept = requireResolved(
+      resolveBattleSubject({
+        state: exhale.state,
+        subject: exhale.subject,
+        fills: [
+          save,
+          damage,
+          concentrationFill({
+            succeeded: false,
+            d20TestRoll: single(4),
+            d20TestRerolls: [rerollIndomitable({ succeeded: true, d20: 6 })],
+          }),
+        ],
+      }),
+    );
+    expect(requireCombatant(kept.state, spellCasterId).concentration).not.toBe(
+      null,
+    );
+    expect(indomitableUses(kept.state, spellCasterId)).toBe(0);
+  });
+});
+
+function exhaleOnIndomitableCaster() {
+  const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
+  const session = spellBattle({
+    preparedSpells: [dragonsBreathSpell()],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+    casterClassLevels: [
+      { className: "wizard", level: 3 },
+      { className: "fighter", level: 9 },
+    ],
+    casterSpellcastingSourceClassName: "wizard",
+    casterUnitRefs: [{ unit: indomitable, supportProfiles: [] }],
+    casterResources: [{ unit: indomitable }],
+  });
+  const act = bonusSpellAct({
+    session,
+    spellId: dragonsBreathUnitId,
+    slotLevel: 2,
+  });
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetListFill(
+          requireHole(act.initialHoles, "spellTargetList"),
+          spellCasterId,
+          dragonsBreathUnitId,
+          [spellTargetId],
+        ),
+        damageTypeChoiceFill(
+          requireHole(act.initialHoles, "damageTypeChoice"),
+          "lightning",
+        ),
+      ],
+    }),
+  ).state;
+  const ended = endTurn({ state: cast, actorId: spellCasterId });
+  if (ended.tag !== "resolved") {
+    throw new Error("Expected caster End Turn to resolve.");
+  }
+  const exhaleAct = discoverBattleActCandidates(ended.state).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "grantedAreaSaveDamageAction",
+  );
+  if (exhaleAct === undefined) {
+    throw new Error("Expected Dragon's Breath exhale action.");
+  }
+  return {
+    state: ended.state,
+    subject: exhaleAct.subject,
+    saveHole: requireHole(exhaleAct.initialHoles, "savingThrowOutcome"),
+  };
+}
+
+function dragonsBreathSpell(): SpellRecord {
+  const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
+  }
+  return unit;
+}
+
+function exhaleSaveFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcome: Omit<BattleRolledSavingThrowOutcome, "targetId">,
+): BattleFill {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellCasterId],
+      },
+      outcomes: [{ targetId: spellCasterId, ...outcome }],
+    },
+  };
+}
 
 function viciousMockerySave(
   input: {

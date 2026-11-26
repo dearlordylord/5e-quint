@@ -24,6 +24,7 @@ import {
   type BattleFailedSavingThrowRerollOption,
   type BattleFill,
   type BattleD20TestRerollHoleOptions,
+  type BattleSavingThrowRerollHoleOptions,
   type BattleRolledOutcomeD20TestRerollDecision,
   type BattleState,
 } from "../battle-state-execution.ts";
@@ -57,7 +58,7 @@ import type {
 } from "./d20-test-reroll-spend.ts";
 import {
   battleStateAfterFailedSavingThrowReroll,
-  d20TestHoleWithFailedSavingThrowRerollOption,
+  savingThrowHoleWithFailedSavingThrowRerollOption,
   failedSavingThrowRerollAvailabilityForRoll,
   failedSavingThrowRerollOffered,
   failedSavingThrowRerollOption,
@@ -96,32 +97,56 @@ type SavingThrowRerollSource = (typeof SAVING_THROW_REROLL_SOURCES)[number];
 
 /** The reroll sources a D20 Test hole is asked again with. */
 export type D20TestOutcomeRerollOptions =
-  D20TestRerollSourceFlags<D20TestOutcomeRerollSource> & {
-    /** On a saving throw that stands failed: the reroll its roller can take. */
-    readonly failedSavingThrowReroll?: BattleFailedSavingThrowRerollOption;
-  };
+  D20TestRerollSourceFlags<D20TestOutcomeRerollSource>;
 
-/** What the reroll sources an admitted roll took cost its roller. */
+/**
+ * The reroll sources a saving throw hole is asked again with: the D20 Test
+ * sources, and on a save that stands failed, the reroll its roller can take.
+ */
+export type SavingThrowRerollOptions = D20TestOutcomeRerollOptions & {
+  readonly failedSavingThrowReroll?: BattleFailedSavingThrowRerollOption;
+};
+
+/** What the reroll sources an admitted D20 Test took cost its roller. */
 export type D20TestRerollUses = {
   readonly heroicInspiration: HeroicInspirationUse;
+};
+
+/** What the reroll sources an admitted saving throw took cost its roller. */
+export type SavingThrowRerollUses = D20TestRerollUses & {
   readonly failedSavingThrow: FailedSavingThrowRerollUse;
 };
 
-/** The uses of a roll that took no costed reroll. */
-export const NO_D20_TEST_REROLL_USES: D20TestRerollUses = {
+const NO_D20_TEST_REROLL_USES: D20TestRerollUses = {
   heroicInspiration: NO_HEROIC_INSPIRATION_USE,
+};
+
+const NO_SAVING_THROW_REROLL_USES: SavingThrowRerollUses = {
+  ...NO_D20_TEST_REROLL_USES,
   failedSavingThrow: NO_FAILED_SAVING_THROW_REROLL_USE,
 };
 
-/** Spends what each admitted roll's rerolls cost, in order. */
+/** Spends what each admitted D20 Test's rerolls cost, in order. */
 export function battleStateAfterD20TestRerollUses(
   state: BattleState,
   uses: readonly D20TestRerollUses[],
 ): BattleState {
   return uses.reduce(
     (current, use) =>
+      battleStateAfterHeroicInspirationReroll(current, use.heroicInspiration),
+    state,
+  );
+}
+
+/** Spends what each admitted saving throw's rerolls cost, in order. */
+export function battleStateAfterSavingThrowRerollUses(
+  state: BattleState,
+  uses: readonly SavingThrowRerollUses[],
+): BattleState {
+  return uses.reduce(
+    (current, use) =>
       battleStateAfterFailedSavingThrowReroll(
-        battleStateAfterHeroicInspirationReroll(current, use.heroicInspiration),
+        battleStateAfterD20TestRerollUses(current, [use]),
         use.failedSavingThrow,
       ),
     state,
@@ -129,18 +154,29 @@ export function battleStateAfterD20TestRerollUses(
 }
 
 /** Where one roll's D20 Test rerolls stand. */
-export type D20TestOutcomeRerolls<Roll> =
+export type D20TestOutcomeRerolls<
+  Roll,
+  Options extends D20TestOutcomeRerollOptions = D20TestOutcomeRerollOptions,
+  Uses extends D20TestRerollUses = D20TestRerollUses,
+> =
   | {
       readonly tag: "decisionsRequired";
-      readonly options: D20TestOutcomeRerollOptions;
+      readonly options: Options;
     }
   | { readonly tag: "invalid"; readonly issue: string }
   | {
       readonly tag: "resolved";
       /** The roll that stands. */
       readonly roll: Roll;
-      readonly uses: D20TestRerollUses;
+      readonly uses: Uses;
     };
+
+/** Where one saving throw's rerolls stand. */
+export type SavingThrowRerolls<Roll> = D20TestOutcomeRerolls<
+  Roll,
+  SavingThrowRerollOptions,
+  SavingThrowRerollUses
+>;
 
 /** The roll being checked: where it belongs, and who rolled it for which hole. */
 type D20TestRollContext = {
@@ -187,7 +223,6 @@ function resolvedD20TestOutcomeRerolls<Roll, Decision>(
         facts,
         rerolls.rerolled.heroicInspiration,
       ),
-      failedSavingThrow: NO_FAILED_SAVING_THROW_REROLL_USE,
     },
   };
 }
@@ -210,7 +245,7 @@ function heroicInspirationUse(
  */
 export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
   input: D20TestRollContext & { readonly outcome: T },
-): D20TestOutcomeRerolls<T> {
+): SavingThrowRerolls<T> {
   const outcome = input.outcome;
   if (outcome.withoutRoll === true) {
     // Typed callers cannot build a without-roll outcome that carries a roll or
@@ -221,7 +256,11 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
     ) {
       return { tag: "invalid", issue: D20_TEST_REROLL_WITHOUT_ROLL_MESSAGE };
     }
-    return { tag: "resolved", roll: outcome, uses: NO_D20_TEST_REROLL_USES };
+    return {
+      tag: "resolved",
+      roll: outcome,
+      uses: NO_SAVING_THROW_REROLL_USES,
+    };
   }
   const facts = d20TestRollSourceFacts(input);
   const actor = roller(input);
@@ -287,8 +326,8 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
   });
   return Match.value(rerolls).pipe(
     Match.discriminatorsExhaustive("tag")({
-      invalid: (invalid): D20TestOutcomeRerolls<T> => invalid,
-      decisionsRequired: ({ options }): D20TestOutcomeRerolls<T> => {
+      invalid: (invalid): SavingThrowRerolls<T> => invalid,
+      decisionsRequired: ({ options }): SavingThrowRerolls<T> => {
         const failedSavingThrowReroll = options.failedSavingThrow
           ? failedSavingThrowRerollOption(actor, input.roll)
           : undefined;
@@ -303,7 +342,7 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
           },
         };
       },
-      resolved: (resolved): D20TestOutcomeRerolls<T> => ({
+      resolved: (resolved): SavingThrowRerolls<T> => ({
         tag: "resolved",
         roll: {
           ...outcome,
@@ -450,13 +489,23 @@ export function d20TestHoleWithRerollOptions<
   const withNaturalOne: T = options.naturalOne
     ? d20TestHoleWithNaturalOneRerollOption(hole)
     : hole;
-  const withHeroicInspiration: T = options.heroicInspiration
+  return options.heroicInspiration
     ? d20TestHoleWithHeroicInspirationRerollOption(withNaturalOne)
     : withNaturalOne;
+}
+
+/**
+ * The saving throw hole asked again with the reroll options its roller has
+ * not decided on yet.
+ */
+export function savingThrowHoleWithRerollOptions<
+  T extends BattleSavingThrowRerollHoleOptions,
+>(hole: T, options: SavingThrowRerollOptions): T {
+  const withD20TestRerolls = d20TestHoleWithRerollOptions(hole, options);
   return options.failedSavingThrowReroll === undefined
-    ? withHeroicInspiration
-    : d20TestHoleWithFailedSavingThrowRerollOption(
-        withHeroicInspiration,
+    ? withD20TestRerolls
+    : savingThrowHoleWithFailedSavingThrowRerollOption(
+        withD20TestRerolls,
         options.failedSavingThrowReroll,
       );
 }

@@ -11,7 +11,7 @@ import {
 } from "./battle-reducer/battle-codecs.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
-  BattleD20TestRerollHoleOptions,
+  BattleSavingThrowRerollHoleOptions,
   BattleHole,
   BattleInputFrontier,
   BattleInterruptProcedureChoice,
@@ -356,7 +356,7 @@ function projectMechanicalD20Hole(
 
 /** A saving throw hole's failed saving throw reroll option, without its label. */
 function mechanicalFailedSavingThrowRerollOptions(
-  options: BattleD20TestRerollHoleOptions,
+  options: BattleSavingThrowRerollHoleOptions,
 ) {
   return options.failedSavingThrowRerolls === undefined
     ? {}

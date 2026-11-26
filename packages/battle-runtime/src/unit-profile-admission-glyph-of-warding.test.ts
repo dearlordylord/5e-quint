@@ -92,6 +92,7 @@ import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedur
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+  FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
@@ -107,6 +108,7 @@ import {
   type BattleSpellEffectLevel,
 } from "./battle-reducer/spells-effective-level.ts";
 import {
+  fighterIndomitableUnitId,
   alterSelfUnitId,
   barbarianDangerSenseUnitId,
   blindnessDeafnessUnitId,
@@ -4968,6 +4970,138 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         ? target.origin.heroicInspiration
         : undefined,
     ).toEqual(NO_HEROIC_INSPIRATION);
+  });
+
+  test("explosive-rune release offers Indomitable on a failed Concentration save, and the reroll spends the use", () => {
+    const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const baseState = stateWithTargetConcentration(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        }),
+        glyphBattle({
+          targetHp: 50,
+          targetMaxHp: 50,
+          targetClassLevels: [{ className: "fighter", level: 9 }],
+          targetUnitRefs: [{ unit: indomitable, supportProfiles: [] }],
+          targetResources: [{ unit: indomitable }],
+        }),
+      ),
+      spellTargetId,
+    );
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            { targetId: spellTargetId, succeeded: false, withoutRoll: true },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[4, 4, 4, 4, 4]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
+    };
+    const release = (
+      concentrationSavingThrows: readonly Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >[],
+    ) =>
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(
+            glyphEffectRef(baseState),
+          ),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: { ...areaMembership, concentrationSavingThrows },
+        },
+      });
+    const pending = release([]);
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const concentration = requireReleaseHole(
+      pending.holes,
+      "concentrationSavingThrow",
+    );
+    const failed = {
+      succeeded: false,
+      d20TestRoll: { tag: "single" as const, naturalD20: DieRollResult(4) },
+    };
+    const concentrationFill = (
+      value: Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >["value"],
+    ) => [
+      {
+        kind: "concentrationSavingThrow" as const,
+        holeId: concentration.holeId,
+        value,
+      },
+    ];
+
+    const offered = release(concentrationFill(failed));
+    expect(offered.tag).toBe("needsHoles");
+    if (offered.tag !== "needsHoles") return;
+    expect(
+      requireReleaseHole(offered.holes, "concentrationSavingThrow"),
+    ).toMatchObject({
+      holeId: concentration.holeId,
+      failedSavingThrowRerolls: [
+        {
+          effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+          rollerId: spellTargetId,
+          bonus: 9,
+        },
+      ],
+    });
+
+    const released = release(
+      concentrationFill({
+        ...failed,
+        d20TestRerolls: [
+          {
+            kind: "reroll" as const,
+            effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+            replacement: {
+              succeeded: true,
+              d20TestRoll: {
+                tag: "single" as const,
+                naturalD20: DieRollResult(6),
+              },
+            },
+          },
+        ] as const,
+      }),
+    );
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const target = requireCombatant(released.state, spellTargetId);
+    expect(target.concentration).not.toBeNull();
+    expect(
+      target.origin.kind === "character"
+        ? target.origin.resources.map((resource) =>
+            "usesRemaining" in resource ? resource.usesRemaining : undefined,
+          )
+        : undefined,
+    ).toEqual([0]);
   });
 
   test("explosive-rune release requests and consumes zero-HP damage disposition fills", () => {

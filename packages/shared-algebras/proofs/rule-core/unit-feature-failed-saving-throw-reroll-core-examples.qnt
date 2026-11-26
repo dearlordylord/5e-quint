@@ -92,6 +92,31 @@ module unitFeatureFailedSavingThrowRerollCoreExamples {
     }
   }
 
+  run test_decline_is_refused_on_a_successful_save = {
+    val result = resolveFailedSavingThrowReroll({
+      ...failedSave,
+      original: { naturalD20: 15, succeeded: true },
+    })
+    all {
+      assert(not(result.offered)),
+      assert(result.invalid),
+      assert(result.effective == { naturalD20: 15, succeeded: true }),
+      assert(result.usesRemainingAfter == 1),
+    }
+  }
+
+  run test_decline_is_refused_without_a_use_left = {
+    val result = resolveFailedSavingThrowReroll({
+      ...failedSave,
+      usesRemaining: 0,
+    })
+    all {
+      assert(result.invalid),
+      assert(result.effective == failedSave.original),
+      assert(result.usesRemainingAfter == 0),
+    }
+  }
+
   run test_without_the_feature_nothing_is_offered = {
     val result = resolveFailedSavingThrowReroll({
       ...failedSave,
