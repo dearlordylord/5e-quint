@@ -96,6 +96,18 @@ export function characterSheetBattleInitWithRoute(
       routeEvents: rejectStableRecoveryBattleInitRoute(),
     });
   }
+  const conditions = characterSheetInitialConditions(sheet);
+  if (conditions === null) {
+    return Result.fail({
+      tag: "battleCreatureInitIssue",
+      message: grappledSheetConditionMessage,
+      ...characterBattleInitIssueFactFields({
+        kind: "characterBattleInitialConditions",
+        constraint: "grappledNeedsInitialGrapple",
+      }),
+      routeEvents: rejectCharacterBattleInitProjectionRoute(),
+    });
+  }
   if (hasMixedSpellAndPactSlotState(sheet)) {
     return Result.fail({
       tag: "battleCreatureInitIssue",
@@ -142,7 +154,7 @@ export function characterSheetBattleInitWithRoute(
     hitPointMaximum: hitPointMaximum.success.effectiveHitPointMaximum,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
-    ...withDefinedCharacterBattleSheetState(sheet),
+    ...withDefinedCharacterBattleSheetState(sheet, conditions),
     ...(druidWildShapeAvailableForms === undefined
       ? {}
       : { druidWildShapeAvailableForms }),
@@ -304,17 +316,33 @@ function battleDruidWildShapeAvailableFormsFromSheet(input: {
   return forms;
 }
 
+export const grappledSheetConditionMessage =
+  "A Character Sheet's Grappled condition names no grappler or escape DC, so it can't carry into a battle; a battle that starts with the grapple names it in its initial grapples.";
+
+/**
+ * The sheet's conditions as battle initial conditions, or null when the sheet
+ * says Grappled: a battle starts Grappled only through an initial grapple that
+ * names the grappler and the escape DC.
+ */
 function characterSheetInitialConditions(
   sheet: CharacterSheet,
-): NonNullable<CharacterBuildCreatureInput["conditions"]> {
+): NonNullable<CharacterBuildCreatureInput["conditions"]> | null {
+  const conditions: NonNullable<
+    CharacterBuildCreatureInput["conditions"]
+  >[number][] = [];
+  for (const condition of sheet.conditions) {
+    if (condition === "grappled") return null;
+    conditions.push(condition);
+  }
   return [
-    ...sheet.conditions,
+    ...conditions,
     ...(sheet.hitPoints.tag === "knockedOut" ? (["unconscious"] as const) : []),
   ];
 }
 
 function withDefinedCharacterBattleSheetState(
   sheet: CharacterSheet,
+  conditions: NonNullable<CharacterBuildCreatureInput["conditions"]>,
 ): Pick<
   CharacterBuildCreatureInput,
   "resourceExpenditures" | "heroicInspiration"
@@ -329,7 +357,6 @@ function withDefinedCharacterBattleSheetState(
       | "bookOfShadowsPresence"
     >
   > {
-  const conditions = characterSheetInitialConditions(sheet);
   const positiveHpUnconscious = characterSheetPositiveHpUnconscious(sheet);
   const zeroHpLifecycle = characterSheetZeroHpLifecycle(sheet);
   const spellSlots = characterSheetBattleSpellSlots(sheet);

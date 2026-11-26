@@ -1,16 +1,9 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
-import { Match } from "effect";
-import {
-  movementDeltaFeet,
-  movementFeet,
-  type MovementFeet,
-} from "@dnd/shared/types";
-import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import {
   effectiveSpeed as sharedEffectiveSpeed,
   type CreatureSpeedFacts,
   type SpecialSpeedCandidate,
-  type SpeedChange,
 } from "@dnd/shared-algebras/speed-algebra";
 import type { SpeedType } from "@dnd/shared/game-facts";
 import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
@@ -22,21 +15,19 @@ import {
 } from "../battle-subjects.ts";
 import {
   PASSIVE_SPEED_KIND_GRANT_KINDS,
-  type PassiveSpeedBonusCondition,
   type PassiveSpeedKindGrantKind,
 } from "../unit-feature-execution-constants.ts";
 import type {
   BattleCreatureState,
   BattleState,
 } from "../battle-state-execution.ts";
-import {
-  combatantWearingArmor,
-  combatantWearingArmorCategory,
-  combatantWieldingShield,
-} from "./creature-state-leaves.ts";
 import { activeDruidWildShapeForm } from "./druid-wild-shape.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./self-transformation-speed.ts";
-import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
+import {
+  speedChangesFromContributions,
+  speedContributions,
+  speedIsZeroFromContributions,
+} from "./speed-collector.ts";
 
 type BattleSpecialSpeedCandidate =
   | {
@@ -52,29 +43,21 @@ type BattleSpecialSpeedCandidate =
 export function effectiveWalkSpeed(
   state: BattleState,
   combatant: BattleCreatureState,
-  isGrappled = false,
 ): MovementFeet {
-  return effectiveMovementSpeed(state, combatant, "walk", isGrappled);
+  return effectiveMovementSpeed(state, combatant, "walk");
 }
 
 export function effectiveMovementSpeed(
   state: BattleState,
   combatant: BattleCreatureState,
   speedKind: BattleMovementSpeedKind,
-  isGrappled = false,
 ): MovementFeet {
-  const speedFeet =
+  return (
     sharedEffectiveSpeed(
-      battleCreatureSpeedFacts(state, combatant, isGrappled),
+      battleCreatureSpeedFacts(state, combatant),
       speedKind,
-    ) ?? movementFeet(0);
-  return combatant.activeEffects.some((effect) => effect.kind === "speedHalved")
-    ? halveMovementSpeed(speedFeet)
-    : speedFeet;
-}
-
-function halveMovementSpeed(speedFeet: MovementFeet): MovementFeet {
-  return movementFeet(Math.floor(Number(speedFeet) / 2));
+    ) ?? movementFeet(0)
+  );
 }
 
 export function baseWalkSpeed(combatant: BattleCreatureState): number {
@@ -109,66 +92,14 @@ function literalWalkSpeed(
 export function battleCreatureSpeedFacts(
   state: BattleState,
   combatant: BattleCreatureState,
-  isGrappled = false,
 ): CreatureSpeedFacts {
+  const contributions = speedContributions(state, combatant);
   return {
     ordinarySpeedFeet: movementFeet(baseWalkSpeed(combatant)),
-    speedChanges: battleSpeedChanges(state, combatant),
+    speedChanges: speedChangesFromContributions(contributions),
     specialSpeeds: battleSpecialSpeedCandidates(combatant),
-    terminalSpeedZero: battleTerminalSpeedZero(combatant, isGrappled),
+    terminalSpeedZero: speedIsZeroFromContributions(contributions),
   };
-}
-
-export function battleSpeedChanges(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): readonly SpeedChange[] {
-  const passiveFeatureDelta = passiveSpeedBonusDelta(state, combatant);
-  const activeEffectDelta = combatant.activeEffects
-    .filter(
-      (effect) =>
-        effect.kind === "speedDelta" || effect.kind === "unitFeatureSpeedDelta",
-    )
-    .reduce((total, effect) => total + effect.deltaFeet, 0);
-  const brutalStrikeHamstringDelta = combatant.activeEffects
-    .filter((effect) => effect.kind === "brutalStrikeHamstring")
-    .reduce((total, effect) => total + effect.effect.deltaFeet, 0);
-  return [
-    {
-      kind: "delta",
-      deltaFeet: movementDeltaFeet(
-        passiveFeatureDelta + activeEffectDelta + brutalStrikeHamstringDelta,
-      ),
-    },
-    ...combatant.activeEffects
-      .filter((effect) => effect.kind === "speedRatio")
-      .map((effect) => ({
-        kind: "ratio" as const,
-        numerator: effect.numerator,
-        denominator: effect.denominator,
-      })),
-    ...battleSaveGatedTurnConstraintSpeedChanges(state, combatant),
-  ];
-}
-
-function battleSaveGatedTurnConstraintSpeedChanges(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): readonly SpeedChange[] {
-  const boundEffect = combatant.activeEffects.flatMap((effect) => {
-    if (effect.kind !== "saveGatedTurnConstraintBundle") return [];
-    const boundEffect = boundSaveGatedTurnConstraintBundleEffect(state, effect);
-    return boundEffect === undefined ? [] : [boundEffect];
-  })[0];
-  return boundEffect === undefined
-    ? []
-    : [
-        {
-          kind: "ratio" as const,
-          numerator: boundEffect.constraints.speedRatio.numerator,
-          denominator: boundEffect.constraints.speedRatio.denominator,
-        },
-      ];
 }
 
 export function battleSpecialSpeedCandidates(
@@ -201,27 +132,6 @@ export function battleSpecialSpeedCandidates(
     }
   }
   return candidates;
-}
-
-export function battleTerminalSpeedZero(
-  combatant: BattleCreatureState,
-  isGrappled: boolean,
-): boolean {
-  return (
-    isGrappled ||
-    hasCondition(combatant.conditions, "grappled") ||
-    combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
-    combatant.activeEffects.some(
-      (effect) => effect.kind === "spellSpeedZero",
-    ) ||
-    combatant.activeEffects.some(
-      (effect) => effect.kind === "saveGatedAreaControl",
-    ) ||
-    hasCondition(combatant.conditions, "paralyzed") ||
-    hasCondition(combatant.conditions, "petrified") ||
-    hasCondition(combatant.conditions, "restrained") ||
-    hasCondition(combatant.conditions, "unconscious")
-  );
 }
 
 export function representedMovementSpeedKinds(
@@ -320,64 +230,4 @@ export function passiveSpeedKindGrantKinds(
     }
   }
   return PASSIVE_SPEED_KIND_GRANT_KINDS.filter((kind) => kinds.has(kind));
-}
-
-export function passiveSpeedBonusDelta(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): number {
-  if (combatant.origin.kind !== "character") {
-    return 0;
-  }
-  let total = 0;
-  for (const binding of combatant.origin.execution.procedureBindings) {
-    const procedure = binding.procedure;
-    if (
-      (procedure.kind !== "unitFeature" &&
-        procedure.kind !== "unitSupportProfile") ||
-      typeof procedure.execution !== "object"
-    ) {
-      continue;
-    }
-    const speed =
-      procedure.execution.kind === "passiveSpeedBonus"
-        ? procedure.kind === "unitFeature"
-          ? procedure.execution.speed
-          : procedure.execution
-        : procedure.execution.kind === "passiveSpeedKindGrants"
-          ? procedure.kind === "unitFeature"
-            ? procedure.execution.speedKindGrants.speed
-            : procedure.execution.speed
-          : undefined;
-    if (
-      speed !== undefined &&
-      passiveSpeedBonusConditionApplies(state, combatant, speed.condition)
-    ) {
-      total += Number(speed.deltaFeet);
-    }
-  }
-  return total;
-}
-
-function passiveSpeedBonusConditionApplies(
-  state: BattleState,
-  combatant: BattleCreatureState,
-  condition: PassiveSpeedBonusCondition,
-): boolean {
-  return Match.value(condition).pipe(
-    Match.when(
-      { kind: "notWearingArmor" },
-      ({ categories }) =>
-        !categories.some((category) =>
-          combatantWearingArmorCategory(state, combatant, category),
-        ),
-    ),
-    Match.when(
-      { kind: "unarmoredUnshielded" },
-      () =>
-        !combatantWearingArmor(state, combatant) &&
-        !combatantWieldingShield(state, combatant),
-    ),
-    Match.exhaustive,
-  );
 }

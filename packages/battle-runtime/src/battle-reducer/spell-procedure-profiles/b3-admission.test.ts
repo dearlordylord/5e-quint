@@ -467,6 +467,7 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       areaChoices: [],
       targetRollModes: [],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
     } as const;
     const dragonDamageHole = {
       holeId: "battle:b3-codec:dragon-damage",

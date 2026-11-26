@@ -19,7 +19,6 @@ import {
   grantUnitActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { BattleProcedureExecutionRef } from "@dnd/shared/types";
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -41,17 +40,15 @@ import {
 import { describe, expect, it } from "vitest";
 import { Result } from "effect";
 
-import {
-  activeEffectArmorClass,
-  combatantCanTakeReactions,
-} from "./battle-reducer/creature-state.ts";
+import { collectedArmorClass } from "./battle-reducer/armor-class-collector.ts";
+import { combatantCanTakeReactions } from "./battle-reducer/creature-state.ts";
 import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
   concentrationSavingThrowHole,
 } from "./battle-reducer/damage-apply.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
-import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import {
   discoverBattleActs,
@@ -1679,7 +1676,11 @@ function saveGatedTurnConstraintBundleProjection(
     slowMultiattackTargetId,
   );
   const dexteritySavingThrowDelta =
-    savingThrowFlatBonusProjections(state.battle.state, "dex").find(
+    savingThrowTargetModifiers(
+      state.battle.state,
+      { ability: "dex" },
+      "everyCombatant",
+    ).targetFlatBonuses.find(
       (projection) => projection.targetId === spellTargetId,
     )?.bonus ?? 0;
   const turnResources = state.battle.state.currentTurnResources;
@@ -1745,9 +1746,7 @@ function saveGatedTurnConstraintBundleProjection(
     multiattackTargetSlowed,
     affectedTargetCount,
     targetSpeedFeet: Number(effectiveWalkSpeed(state.battle.state, target)),
-    targetArmorClass: Number(
-      currentArmorClass(activeEffectArmorClass(state.battle.state, target)),
-    ),
+    targetArmorClass: Number(collectedArmorClass(state.battle.state, target)),
     dexteritySavingThrowDelta,
     targetCanReact: combatantCanTakeReactions(target),
     casterConcentrating: affectedTargetCount > 0,

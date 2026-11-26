@@ -12,13 +12,11 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import {
   directTargetCover,
   type DirectTargetCover,
 } from "@dnd/shared-algebras/cover-algebra";
 import { SIZES, type MovementFeet } from "@dnd/shared/types";
-import { battleCreatureType } from "./domain-helpers.ts";
 import {
   type BattleObjectContactTargetsHole,
   type BattleExecutableSpellInvocation,
@@ -37,7 +35,6 @@ import {
   type BattleTeleportDestinationHole,
   type BattleWeaponEnhancementTargetItemHole,
   type BattleObjectTargetChoiceHole,
-  type BattleCreatureState,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type TargetListSpellInvocation,
@@ -66,7 +63,7 @@ import {
   type BattleTablePositionId,
   type CombatantId,
 } from "../identity.ts";
-import { combatantWearingArmor } from "./creature-state-leaves.ts";
+import { spellTargetHasNonSpatialPrerequisites } from "./spell-target-prerequisites.ts";
 import {
   singleTargetSpellRangeFeet,
   spellAttackSequencePartName,
@@ -1232,66 +1229,6 @@ function objectSizeIsAtMost(
   maxSize: ObjectLightTargetSize,
 ): boolean {
   return SIZES.indexOf(objectSize) <= SIZES.indexOf(maxSize);
-}
-
-export function spellTargetHasNonSpatialPrerequisites(
-  state: BattleState,
-  actorId: CombatantId,
-  targetId: CombatantId,
-  invocation: RuntimeSpellProcedure,
-): boolean {
-  const target = state.combatants.get(targetId);
-  if (
-    magicalEffectTargetsInterdictionMessage({
-      state,
-      source: SPELL_MAGICAL_EFFECT_SOURCE,
-      targetIds: [targetId],
-    }) !== null
-  ) {
-    return false;
-  }
-  if (
-    invocation.procedure === "persistentArmorEffect" &&
-    target !== undefined &&
-    combatantWearingArmor(state, target)
-  ) {
-    return false;
-  }
-  if (
-    invocation.procedure === "markedDamageRider" &&
-    invocation.action === "transfer" &&
-    targetId === invocation.activeEffect.targetCombatantId
-  ) {
-    return false;
-  }
-  if (
-    invocation.procedure === "linkedDefenseResistanceDamageShare" &&
-    targetId === actorId
-  ) {
-    return false;
-  }
-  if (invocation.procedure === "makeStable") {
-    return target !== undefined && combatantCanBeMadeStable(target);
-  }
-  const targetCreatureType =
-    target === undefined ? null : battleCreatureType(target);
-  if (
-    invocation.procedure === "saveGatedCondition" &&
-    invocation.targetCreatureTypes !== null &&
-    (targetCreatureType === null ||
-      !invocation.targetCreatureTypes.includes(targetCreatureType))
-  ) {
-    return false;
-  }
-  return target !== undefined;
-}
-
-function combatantCanBeMadeStable(combatant: BattleCreatureState): boolean {
-  return (
-    Number(combatant.hp) === 0 &&
-    combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
-    !deathSaveStateIsDead(combatant.zeroHpLifecycle.deathSaves)
-  );
 }
 
 export function validateSpellTargetAllocation(

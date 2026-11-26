@@ -417,8 +417,8 @@ export type BattleActiveEffect = (
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleUnitFeatureEffectBase & {
-      readonly kind: "unitFeatureSpeedDelta";
-      readonly deltaFeet: MovementDeltaFeet;
+      readonly kind: "weaponMasterySpeedReduction";
+      readonly reductionFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleUnitFeatureEffectBase & {
@@ -1115,7 +1115,7 @@ export const BATTLE_ACTIVE_EFFECT_KINDS = [
   "turnStartTemporaryHitPoints",
   "unitFeatureCondition",
   "unitFeatureConditionEndTurnSave",
-  "unitFeatureSpeedDelta",
+  "weaponMasterySpeedReduction",
   "linkedDefenseResistanceDamageShare",
   "persistentAreaSaveConditionEscape",
 ] as const satisfies readonly BattleActiveEffect["kind"][];

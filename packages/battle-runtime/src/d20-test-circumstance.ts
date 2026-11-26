@@ -8,6 +8,7 @@ import type {
   BattleFill,
   BattleHole,
   BattleOrdinaryHole,
+  BattleSavingThrowChoice,
 } from "./battle-state-execution.ts";
 import { Boolean, Brand, Result, Struct } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
@@ -93,7 +94,7 @@ export function attackerConditionAttackRollModeSources(
  * distance (rules-glossary.md, each "Attacks Affected." entry: "Attack rolls
  * against you have Advantage"): Paralyzed, Petrified, Restrained and Stunned.
  * Two conditions with the same benefit are not listed: Unconscious's
- * Advantage joins the Prone target source in attack-roll.ts, and Blinded's
+ * Advantage is its own source in attack-roll-mode-collector.ts, and Blinded's
  * comes through the table-supplied sight facts
  * (`attackTargetCannotSeeAttacker`).
  */
@@ -138,14 +139,49 @@ const BattleD20TestRequestRef = Brand.nominal<BattleD20TestRequestRef>();
 export type D20TestOrdinal = number & Brand.Brand<"D20TestOrdinal">;
 const D20TestOrdinal = Brand.nominal<D20TestOrdinal>();
 
-export type BattleD20TestCircumstanceRequest = Readonly<{
+type BattleD20TestCircumstanceRequestIdentity = Readonly<{
   readonly requestRef: BattleD20TestRequestRef;
   readonly testKind: D20TestKind;
   readonly testOrdinal: D20TestOrdinal;
   readonly holeInstanceKey: BattleHole["holeInstanceKey"];
   readonly targetId?: CombatantId;
-  readonly mechanicalSources: D20TestRollModeSources;
 }>;
+
+/** A D20 Test whose roll mode comes from one set of mechanical sources. */
+export type BattleSingleD20TestCircumstanceRequest =
+  BattleD20TestCircumstanceRequestIdentity &
+    Readonly<{
+      readonly mechanicalSources: D20TestRollModeSources;
+      readonly savingThrowChoiceSources?: never;
+    }>;
+
+/** One ability a Strength-or-Dexterity save's target may choose. */
+export type BattleSavingThrowChoiceSources<SaveAbility extends "str" | "dex"> =
+  Readonly<{
+    readonly ability: SaveAbility;
+    readonly mechanicalSources: D20TestRollModeSources;
+  }>;
+
+/**
+ * A Grapple or Shove save. Its target chooses a Strength or a Dexterity save,
+ * and each choice has its own mechanical sources; the table's circumstance
+ * combines with whichever the target chooses.
+ */
+export type BattleStrengthOrDexteritySaveCircumstanceRequest =
+  BattleD20TestCircumstanceRequestIdentity &
+    Readonly<{
+      readonly testKind: "savingThrow";
+      readonly targetId: CombatantId;
+      readonly savingThrowChoiceSources: readonly [
+        BattleSavingThrowChoiceSources<"str">,
+        BattleSavingThrowChoiceSources<"dex">,
+      ];
+      readonly mechanicalSources?: never;
+    }>;
+
+export type BattleD20TestCircumstanceRequest =
+  | BattleSingleD20TestCircumstanceRequest
+  | BattleStrengthOrDexteritySaveCircumstanceRequest;
 
 export type TableD20TestCircumstanceDecision = Readonly<{
   readonly requestRef: BattleD20TestRequestRef;
@@ -436,14 +472,16 @@ function abilityCheckRequests(
   ];
 }
 
-function grappleRequests(
+function grappleEscapeCheckRequests(
   input: D20TestRequestProjectionInput,
 ): readonly BattleD20TestCircumstanceRequest[] {
-  if (input.hole.kind !== "grappleOutcome") return [];
-  const testKind =
-    input.hole.mode === "escapeCheck"
-      ? ("abilityCheck" as const)
-      : ("savingThrow" as const);
+  if (
+    input.hole.kind !== "grappleOutcome" ||
+    input.hole.mode !== "escapeCheck"
+  ) {
+    return [];
+  }
+  const testKind = "abilityCheck" as const;
   const testOrdinal = testOrdinalForHole(input.hole, input.resolvedFills);
   return [
     {
@@ -463,23 +501,78 @@ function grappleRequests(
   ];
 }
 
+type StrengthOrDexteritySaveHole =
+  | Extract<
+      BattleHole,
+      { readonly kind: "grappleOutcome"; readonly mode: "grappleSave" }
+    >
+  | Extract<BattleHole, { readonly kind: "shoveOutcome" }>;
+
+function isStrengthOrDexteritySaveHole(
+  hole: BattleHole,
+): hole is StrengthOrDexteritySaveHole {
+  return (
+    (hole.kind === "grappleOutcome" && hole.mode === "grappleSave") ||
+    hole.kind === "shoveOutcome"
+  );
+}
+
+function savingThrowChoiceSources<SaveAbility extends "str" | "dex">(
+  choice: BattleSavingThrowChoice<SaveAbility>,
+  targetId: CombatantId,
+): BattleSavingThrowChoiceSources<SaveAbility> {
+  return {
+    ability: choice.ability,
+    mechanicalSources: mechanicalD20TestRollModeSources(
+      choice.targetRollModes.find(
+        (projection) => projection.targetId === targetId,
+      )?.rollMode,
+    ),
+  };
+}
+
+function strengthOrDexteritySaveRequests(
+  input: D20TestRequestProjectionInput,
+): readonly BattleD20TestCircumstanceRequest[] {
+  const hole = input.hole;
+  if (!isStrengthOrDexteritySaveHole(hole)) return [];
+  const testKind = "savingThrow" as const;
+  const testOrdinal = testOrdinalForHole(hole, input.resolvedFills);
+  const [strength, dexterity] = hole.targetSavingThrowChoices;
+  return [
+    {
+      requestRef: requestRef({
+        resolutionId: input.resolutionId,
+        hole,
+        testKind,
+        testOrdinal,
+        targetId: hole.targetId,
+      }),
+      testKind,
+      testOrdinal,
+      holeInstanceKey: hole.holeInstanceKey,
+      targetId: hole.targetId,
+      savingThrowChoiceSources: [
+        savingThrowChoiceSources(strength, hole.targetId),
+        savingThrowChoiceSources(dexterity, hole.targetId),
+      ],
+    },
+  ];
+}
+
 function singleSavingThrowRequests(
   input: D20TestRequestProjectionInput,
 ): readonly BattleD20TestCircumstanceRequest[] {
   if (
     input.hole.kind !== "deathSavingThrow" &&
-    input.hole.kind !== "concentrationSavingThrow" &&
-    input.hole.kind !== "shoveOutcome"
+    input.hole.kind !== "concentrationSavingThrow"
   ) {
     return [];
   }
   const testKind = "savingThrow" as const;
   const testOrdinal = testOrdinalForHole(input.hole, input.resolvedFills);
   const rollMode = "rollMode" in input.hole ? input.hole.rollMode : undefined;
-  const targetId =
-    input.hole.kind === "shoveOutcome"
-      ? input.hole.targetId
-      : input.hole.combatantId;
+  const targetId = input.hole.combatantId;
   return [
     {
       requestRef: requestRef({
@@ -505,7 +598,8 @@ function d20TestRequestsForHole(
     ...attackRollRequests(input),
     ...savingThrowOutcomeRequests(input),
     ...abilityCheckRequests(input),
-    ...grappleRequests(input),
+    ...grappleEscapeCheckRequests(input),
+    ...strengthOrDexteritySaveRequests(input),
     ...singleSavingThrowRequests(input),
   ];
 }
@@ -584,7 +678,7 @@ export function admitTableD20TestCircumstanceDecisions(input: {
 }
 
 export function effectiveD20TestRollMode(input: {
-  readonly request: BattleD20TestCircumstanceRequest;
+  readonly request: BattleSingleD20TestCircumstanceRequest;
   readonly admitted: ReadonlyMap<
     BattleD20TestRequestRef,
     TableD20TestCircumstanceDecision
@@ -620,40 +714,106 @@ export function battleHolesWithTableD20TestCircumstances(input: {
     TableD20TestCircumstanceDecision
   >;
 }): readonly BattleHole[] {
-  return input.holes.map((hole) => {
-    const requests = input.requests.filter(
-      (request) => request.holeInstanceKey === hole.holeInstanceKey,
+  return input.holes.map((hole) =>
+    holeWithTableD20TestCircumstances({
+      hole,
+      requests: input.requests.filter(
+        (request) => request.holeInstanceKey === hole.holeInstanceKey,
+      ),
+      admitted: input.admitted,
+    }),
+  );
+}
+
+function holeWithTableD20TestCircumstances(input: {
+  readonly hole: BattleHole;
+  readonly requests: readonly BattleD20TestCircumstanceRequest[];
+  readonly admitted: ReadonlyMap<
+    BattleD20TestRequestRef,
+    TableD20TestCircumstanceDecision
+  >;
+}): BattleHole {
+  const hole = input.hole;
+  if (input.requests.length === 0) return hole;
+  const singleRequests = input.requests.filter(
+    (request): request is BattleSingleD20TestCircumstanceRequest =>
+      request.savingThrowChoiceSources === undefined,
+  );
+  if (hole.kind === "savingThrowOutcome") {
+    return {
+      ...hole,
+      targetRollModes: singleRequests.flatMap((request) =>
+        request.targetId === undefined
+          ? []
+          : [
+              {
+                targetId: request.targetId,
+                rollMode: effectiveD20TestRollMode({
+                  request,
+                  admitted: input.admitted,
+                }),
+              },
+            ],
+      ),
+    };
+  }
+  if (isStrengthOrDexteritySaveHole(hole)) {
+    const request = input.requests.find(
+      (
+        candidate,
+      ): candidate is BattleStrengthOrDexteritySaveCircumstanceRequest =>
+        candidate.savingThrowChoiceSources !== undefined,
     );
-    if (requests.length === 0) return hole;
-    if (hole.kind === "savingThrowOutcome") {
-      return {
-        ...hole,
-        targetRollModes: requests.flatMap((request) =>
-          request.targetId === undefined
-            ? []
-            : [
-                {
-                  targetId: request.targetId,
-                  rollMode: effectiveD20TestRollMode({
-                    request,
-                    admitted: input.admitted,
-                  }),
-                },
-              ],
-        ),
-      };
-    }
-    const request = requests[0];
     return request === undefined
       ? hole
-      : {
-          ...hole,
-          rollMode: effectiveD20TestRollMode({
-            request,
-            admitted: input.admitted,
-          }),
-        };
+      : strengthOrDexteritySaveWithTableSource(
+          hole,
+          request,
+          input.admitted.get(request.requestRef)?.source,
+        );
+  }
+  const [request] = singleRequests;
+  if (request === undefined) return hole;
+  const withRollMode = {
+    ...hole,
+    rollMode: effectiveD20TestRollMode({ request, admitted: input.admitted }),
+  };
+  return withRollMode;
+}
+
+// The table's circumstance reaches whichever save the Grapple or Shove target
+// chooses, so it combines with each choice's own mechanical sources.
+function strengthOrDexteritySaveWithTableSource<
+  Hole extends StrengthOrDexteritySaveHole,
+>(
+  hole: Hole,
+  request: BattleStrengthOrDexteritySaveCircumstanceRequest,
+  tableSource: TableD20TestCircumstanceSource | undefined,
+): Hole {
+  const withTableSource = <SaveAbility extends "str" | "dex">(
+    choice: BattleSavingThrowChoice<SaveAbility>,
+    sources: BattleSavingThrowChoiceSources<SaveAbility>,
+  ): BattleSavingThrowChoice<SaveAbility> => ({
+    ...choice,
+    targetRollModes: [
+      {
+        targetId: request.targetId,
+        rollMode: combineD20TestRollMode(
+          sources.mechanicalSources,
+          tableSource,
+        ),
+      },
+    ],
   });
+  const [strength, dexterity] = hole.targetSavingThrowChoices;
+  const [strengthSources, dexteritySources] = request.savingThrowChoiceSources;
+  return {
+    ...hole,
+    targetSavingThrowChoices: [
+      withTableSource(strength, strengthSources),
+      withTableSource(dexterity, dexteritySources),
+    ],
+  };
 }
 
 const admittedAttackRollTableSources = new WeakMap<

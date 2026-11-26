@@ -43,6 +43,27 @@ module movementSpatialGrappleInductiveTests {
     assert(not(opportunityAttackLeavesReach(10, 5, 5))),
   }
 
+  // SRD Grappling: an existing hold follows the same condition and ending
+  // rules; entering Battle does not repeat the initiation's save/size checks.
+  run preexisting_grapple_retains_dc_and_shared_lifecycle = {
+    val held = Grappled({ escapeDc: 15 })
+    val movement = { ...initialMovementGrappleState, grapple: held }
+    val failed = escapeGrapple(movement.turn, held, 14)
+    val escaped = escapeGrapple(movement.turn, held, 15)
+    all {
+      assert(legalMovementGrappleState(movement)),
+      assert(grappleEscapeDc(held) == 15),
+      assert(effectiveSpeedFeet(movement) == 0),
+      assert(grappledAttackRollHasDisadvantage(held, false)),
+      assert(not(grappledAttackRollHasDisadvantage(held, true))),
+      assert(failed.grapple == held),
+      assert(failed.turn.actionQuota == ActionSpent),
+      assert(escaped.grapple == NoGrapple),
+      assert(escaped.turn.actionQuota == ActionSpent),
+      assert(releaseGrapple(held) == NoGrapple),
+    }
+  }
+
   run grapple_attempt_reaches_active_grapple_state = {
     val grapple = applyGrappleAttempt(NoGrapple, {
       grapplerSize: MediumSize,

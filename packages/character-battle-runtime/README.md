@@ -33,6 +33,10 @@ Owned boundary functions:
 - `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
   the build has multiple available class-feature AC formulas; the choice is
   forwarded to Character Sheet AC projection before battle state is created.
+- `characterBattleLoadoutFromBuild` requires the Unit catalog and derives the
+  selected armor's Strength requirement from its definition. Battle initialization
+  uses this same projection; callers cannot supply or omit a separate requirement.
+  Unknown selected armor returns a typed initialization issue.
 - `characterSpellcasting` projects selected Armor of Shadows invocation
   ownership into `armorOfShadowsMageArmor` Spell Access for battle-runtime,
   without adding Mage Armor to ordinary prepared-spell slot access.

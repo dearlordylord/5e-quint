@@ -3,10 +3,7 @@ import { savingThrowOutcomesThatStand } from "./d20-test-rolls-that-stand.ts";
 import { qualifyAttackEnemyProximity } from "./attack-spatial.ts";
 import { isSpatialQualificationIssue } from "./ranged-attack-close-combat.ts";
 import { attackDamageDiceRequest } from "./attack-damage-dice-request.ts";
-import {
-  attackRollDefenseGrantsDisadvantage,
-  recordAttackRollDefenseHit,
-} from "./attack-roll-defense.ts";
+import { recordAttackRollDefenseHit } from "./attack-roll-defense.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // Shared ongoing-feature helpers avoid a cycle between attack rolls and unit
 // features.
@@ -25,23 +22,18 @@ import {
   nonEmptyArrayProperty,
   optionalProperty,
 } from "../optional-property.ts";
-import {
-  applyCondition,
-  hasCondition,
-} from "@dnd/shared-algebras/conditions-algebra";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   d20TestRollMode,
   type AttackRollMode,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
-  movementDeltaFeet,
+  movementFeet,
   SIZES,
-  type Ability,
-  type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import { creatureTypeProtectionGrantsAttackDisadvantage } from "../active-effect/creature-type-protection.ts";
+
 import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
@@ -55,17 +47,12 @@ import {
 import {
   unboundAttackActionOption,
   attackExecutionSelectionForOption,
-  type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type BoundCharacterWeaponAttackActionOption,
   type CharacterWeaponAttackAbilityChoice,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
-import type {
-  OngoingFeatureDamageModifier,
-  OngoingFeatureRollModifier,
-} from "../unit-feature-execution-constants.ts";
+
 import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
@@ -92,7 +79,6 @@ import {
   type BattleTargetChoiceHole,
   type BattleUnitFeatureDecisionHole,
   type BattleLightEmitterMechanicalFacts,
-  type BattleObjectOutline,
   type BattleSavingThrowRelationshipFact,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -117,25 +103,20 @@ import {
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state-queries.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
-import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
+
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   activeRageSourceKeysForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
-import {
-  combatantCanSee,
-  combatantInvisibleBenefitDenied,
-  currentActorId,
-  grappledBy,
-} from "./creature-state-leaves.ts";
-import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./magic-suppression-ongoing-effect.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
+
 import {
   activeOngoingFeatureOccurrenceFromExecution,
   extendOngoingFeatureToEndOfNextTurn,
   ongoingFeatureProfileHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
-import { battleCreatureType } from "./domain-helpers.ts";
+
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
   spellConcentrationEffectSourceFromEffect,
@@ -159,20 +140,18 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
+  WEAPON_MASTERY_SPEED_REDUCTION_FEET,
 } from "./domain-constants.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
   creatureAttackTargetAdmission,
-  attackTargetDistanceFeet,
-  attackTargetRangeBand,
 } from "./attack-spatial.ts";
 import {
-  rangedAttackCloseCombatDisadvantage,
   type SpatialQualificationIssue,
   type RangedAttackEnemyProximityEvidence,
 } from "./ranged-attack-close-combat.ts";
-import { hasDodgeBenefit } from "./dodge-benefit.ts";
+
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 export { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import {
@@ -181,24 +160,28 @@ import {
   savingThrowTargetsEnemy,
 } from "./roll-trigger-relationship-facts.ts";
 import {
-  D20TestRollModeSourcesMonoid,
   admittedAttackRollTableSource,
-  attackerConditionAttackRollModeSources,
   combineD20TestRollMode,
-  mechanicalD20TestRollMode,
   mechanicalD20TestRollModeSources,
-  proneAttackRollModeSources,
-  targetConditionAttackRollModeSources,
-  type D20TestRollModeSources,
 } from "../d20-test-circumstance.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
   attackActionOptionName,
   attackRollMissToHitReplacementHolePayloadForAttacker,
   attackTargetConstraint,
-  targetHasAdjacentNonIncapacitatedAlly,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
+import {
+  attackAbilityMatchesModifier,
+  attackRollModeContributions,
+  attackRollModeFromContributions,
+  collectedAttackRollMode,
+  objectAttackRangedCircumstances,
+  objectTargetSight,
+  rangedAttackRollCircumstances,
+  type AttackRollModeContribution,
+  type AttackRollModeMeans,
+} from "./attack-roll-mode-collector.ts";
 
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
@@ -234,302 +217,45 @@ export function requiredAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
   target: BattleCreatureState,
-  attack: SupportedAttackActionOption | undefined,
+  attack: SupportedAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   enemyProximity: RangedAttackEnemyProximityEvidence | null,
   opportunityAttack = false,
 ): AttackRollMode | undefined | SpatialQualificationIssue {
-  const targetId = target.combatantId;
-  const sources = attackRollSourceFlags(
-    state,
+  const contributions = creatureTargetAttackRollModeContributions(state, {
     attackerId,
     target,
-    attack,
+    means: { kind: "attack", attack, opportunityAttack },
     targetSpatialFacts,
     enemyProximity,
-    null,
-  );
-  if ("tag" in sources) return sources;
-  return attackRollModeFromSources(
-    sources.hasAdvantage,
-    sources.hasDisadvantage ||
-      attackRollDefenseGrantsDisadvantage({
-        state,
-        attackerId,
-        defenderId: targetId,
-        opportunityAttack,
-      }),
-  );
+  });
+  return "tag" in contributions
+    ? contributions
+    : attackRollModeFromContributions(contributions);
 }
 
-type AttackRollSourceFlags = {
-  readonly hasAdvantage: boolean;
-  readonly hasDisadvantage: boolean;
-};
-
-function targetCreatureConditionAttackRollModeSources(
-  attackerId: CombatantId,
-  target: BattleCreatureState,
-  attack: SupportedAttackActionOption | undefined,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  spellTargetDistanceFeet: MovementFeet | null,
-): D20TestRollModeSources {
-  const conditionSources = targetConditionAttackRollModeSources(
-    target.conditions,
-  );
-  if (!hasCondition(target.conditions, "prone")) return conditionSources;
-
-  const distanceFeet =
-    attack === undefined
-      ? spellTargetDistanceFeet
-      : attackTargetDistanceFeet(
-          targetSpatialFacts,
-          attackerId,
-          target.combatantId,
-          attack,
-        );
-  return D20TestRollModeSourcesMonoid.combineAll([
-    conditionSources,
-    distanceFeet === null
-      ? D20TestRollModeSourcesMonoid.initialValue
-      : proneAttackRollModeSources(distanceFeet),
-    {
-      advantage:
-        hasCondition(target.conditions, "unconscious") &&
-        (distanceFeet !== null || attack === undefined),
-      disadvantage: false,
-    },
-  ]);
-}
-
-function combatantHasHiddenAttackRollBenefit(
-  combatant: BattleCreatureState | undefined,
-): boolean {
-  return (
-    combatant?.hidden !== null &&
-    combatant?.hidden !== undefined &&
-    !combatantInvisibleBenefitDenied(combatant)
-  );
-}
-
-// SRD "Ranged Attacks": long range and close combat each impose Disadvantage.
-function rangedAttackDisadvantage(
+function creatureTargetAttackRollModeContributions(
   state: BattleState,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  enemyProximity: RangedAttackEnemyProximityEvidence | null,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption | undefined,
-): boolean | SpatialQualificationIssue {
-  if (
-    attack === undefined ||
-    attackTargetConstraint(attack).kind !== "rangedRange"
-  )
-    return false;
-  if (enemyProximity === null)
-    return {
-      tag: "invalid",
-      message: "Ranged attack requires admitted enemy proximity evidence.",
-    };
-  const proximity = rangedAttackCloseCombatDisadvantage(state, enemyProximity);
-  if (typeof proximity !== "boolean") return proximity;
-  return (
-    (attack !== undefined &&
-      attackTargetRangeBand(
-        targetSpatialFacts,
-        attackerId,
-        targetId,
-        attack,
-      ) === "long") ||
-    proximity
-  );
-}
-
-function attackRollSourceFlags(
-  state: BattleState,
-  attackerId: CombatantId,
-  target: BattleCreatureState,
-  attack: SupportedAttackActionOption | undefined,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  enemyProximity: RangedAttackEnemyProximityEvidence | null,
-  spellTargetDistanceFeet: MovementFeet | null,
-): AttackRollSourceFlags | SpatialQualificationIssue {
-  const targetId = target.combatantId;
-  const attacker = state.combatants.get(attackerId);
-  const grapple = grappledBy(state, attackerId);
-  const hiddenTargetDisadvantage = combatantHasHiddenAttackRollBenefit(target);
-  const dodgeDisadvantage =
-    attacker !== undefined &&
-    hasDodgeAttackRollBenefit(state, target, attacker);
-  const grappleDisadvantage =
-    grapple !== undefined && grapple.grapplerId !== targetId;
-  const rangedDisadvantage = rangedAttackDisadvantage(
-    state,
-    targetSpatialFacts,
-    enemyProximity,
-    attackerId,
-    targetId,
-    attack,
-  );
-  if (typeof rangedDisadvantage !== "boolean") return rangedDisadvantage;
-  const targetConditionRollModeSources =
-    targetCreatureConditionAttackRollModeSources(
-      attackerId,
-      target,
-      attack,
-      targetSpatialFacts,
-      spellTargetDistanceFeet,
-    );
-  const sightAdvantage = hasAttackSightFact(
-    targetSpatialFacts,
-    "attackTargetCannotSeeAttacker",
-    attackerId,
-    targetId,
-  );
-  const sightDisadvantage = hasAttackSightFact(
-    targetSpatialFacts,
-    "attackAttackerCannotSeeTarget",
-    attackerId,
-    targetId,
-  );
-  const attackerCanSeeTarget = attackTargetVisibleToAttacker(
-    state,
-    attacker,
-    target,
-    sightDisadvantage,
-  );
-  const grapplerAttackAdvantage =
-    combatantHasGrapplerSupportProfile(attacker) &&
-    state.grapples.some(
-      (link) => link.grapplerId === attackerId && link.targetId === targetId,
-    );
-  const hasAdvantage =
-    sightAdvantage ||
-    targetConditionRollModeSources.advantage ||
-    grapplerAttackAdvantage ||
-    combatantHasHiddenAttackRollBenefit(attacker) ||
-    state.helpAttacks.some(
-      (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
-    ) ||
-    statBlockTraitGrantsAttackRollAdvantage(
-      state,
-      attackerId,
-      targetId,
-      attack,
-      targetSpatialFacts,
-    ) ||
-    activeEffectGrantsAttackRollMode(state, attacker, target, "advantage", {
-      attackerCanSeeTarget,
-      attack,
-    }) ||
-    ongoingFeatureGrantsAttackRollMode(
-      state,
-      attacker,
-      target,
-      "advantage",
-      attack,
-    );
-  const hasDisadvantage =
-    attackRollDefenseGrantsDisadvantage({
-      state,
-      attackerId,
-      defenderId: targetId,
-      opportunityAttack: false,
-    }) ||
-    sightDisadvantage ||
-    targetConditionRollModeSources.disadvantage ||
-    hiddenTargetDisadvantage ||
-    dodgeDisadvantage ||
-    grappleDisadvantage ||
-    rangedDisadvantage ||
-    attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
-    activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
-      attackerCanSeeTarget,
-      attack,
-      targetSpatialFacts,
-    }) ||
-    ongoingFeatureGrantsAttackRollMode(
-      state,
-      attacker,
-      target,
-      "disadvantage",
-      attack,
-    );
-  return { hasAdvantage, hasDisadvantage };
-}
-
-function statBlockTraitGrantsAttackRollAdvantage(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption | undefined,
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-): boolean {
-  if (attack?.kind !== "statBlockAttack") return false;
-  return (
-    attack.traitAttackRollModes?.some(
-      (mode) =>
-        mode.mode === "advantage" &&
-        mode.predicate === "nonIncapacitatedAllyWithin5FeetOfTarget" &&
-        targetHasAdjacentNonIncapacitatedAlly(
-          state,
-          attackerId,
-          targetId,
-          targetSpatialFacts,
-        ),
-    ) ?? false
-  );
-}
-
-type AttackSightSpatialFactKind =
-  | "attackAttackerCannotSeeTarget"
-  | "attackTargetCannotSeeAttacker";
-
-function hasAttackSightFact(
-  facts: readonly BattleTargetSpatialFact[],
-  kind: AttackSightSpatialFactKind,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-): boolean {
-  return facts.some(
-    (fact) =>
-      fact.kind === kind &&
-      fact.attackerId === attackerId &&
-      fact.targetId === targetId,
-  );
-}
-
-function objectTargetAttackRollSourceFlags(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetObjectId: BattleObjectId,
-  attackerCanSeeObject: boolean | undefined,
-  attack: SupportedAttackActionOption | undefined,
-): AttackRollSourceFlags {
-  const attacker = state.combatants.get(attackerId);
-  const hasAdvantage =
-    activeEffectGrantsAttackRollMode(state, attacker, undefined, "advantage", {
-      attack,
-      ...optionalProperty("attackerCanSeeTarget", attackerCanSeeObject),
-    }) ||
-    objectOutlineGrantsAttackRollAdvantage(
-      state.objectOutlines,
-      targetObjectId,
-      attackerCanSeeObject,
-    );
-  const hasDisadvantage =
-    attackerConditionAttackRollModeSources(attacker?.conditions).disadvantage ||
-    activeEffectGrantsAttackRollMode(
-      state,
-      attacker,
-      undefined,
-      "disadvantage",
-      {
-        attack,
-        ...optionalProperty("attackerCanSeeTarget", attackerCanSeeObject),
-      },
-    );
-  return { hasAdvantage, hasDisadvantage };
+  input: {
+    readonly attackerId: CombatantId;
+    readonly target: BattleCreatureState;
+    readonly means: AttackRollModeMeans;
+    readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+    readonly enemyProximity: RangedAttackEnemyProximityEvidence | null;
+  },
+): readonly AttackRollModeContribution[] | SpatialQualificationIssue {
+  const ranged = rangedAttackRollCircumstances(state, {
+    ...input,
+    targetId: input.target.combatantId,
+  });
+  if ("tag" in ranged) return ranged;
+  return attackRollModeContributions(state, {
+    attackerId: input.attackerId,
+    target: { kind: "creature", creature: input.target },
+    means: input.means,
+    targetSpatialFacts: input.targetSpatialFacts,
+    ranged,
+  });
 }
 
 export function requiredSpellObjectTargetAttackRollMode(
@@ -537,65 +263,29 @@ export function requiredSpellObjectTargetAttackRollMode(
   attackerId: CombatantId,
   invocation: RuntimeSpellProcedure,
   targetObjectId: BattleObjectId,
-  attackerCanSeeObject: boolean | undefined,
+  sightFact: { readonly attackerCanSeeObject: boolean } | null,
   enemyProximity: RangedAttackEnemyProximityEvidence | null,
 ): AttackRollMode | undefined | SpatialQualificationIssue {
-  const attacker = state.combatants.get(attackerId);
-  const sources = objectTargetAttackRollSourceFlags(
-    state,
+  const means = { kind: "spell" as const, invocation };
+  const ranged = rangedAttackRollCircumstances(state, {
     attackerId,
-    targetObjectId,
-    attackerCanSeeObject,
-    undefined,
-  );
-  const hasAdvantage =
-    sources.hasAdvantage ||
-    ongoingFeatureGrantsSpellAttackRollMode(
-      state,
-      attacker,
-      invocation,
-      "advantage",
-    );
-  const proximity = rangedSpellAttackCloseCombatDisadvantage(
-    state,
-    invocation,
+    targetId: null,
+    means,
+    targetSpatialFacts: [],
     enemyProximity,
-  );
-  if (typeof proximity !== "boolean") return proximity;
-  const hasDisadvantage =
-    sources.hasDisadvantage ||
-    proximity ||
-    ongoingFeatureGrantsSpellAttackRollMode(
-      state,
-      attacker,
-      invocation,
-      "disadvantage",
-    );
-  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
-}
-
-function rangedSpellAttackCloseCombatDisadvantage(
-  state: BattleState,
-  invocation: RuntimeSpellProcedure,
-  enemyProximity: RangedAttackEnemyProximityEvidence | null,
-): boolean | SpatialQualificationIssue {
-  if (
-    !(
-      "attackKind" in invocation &&
-      invocation.attackKind === "ranged_spell_attack" &&
-      "rangeFeet" in invocation &&
-      "sourceProcedureRef" in invocation
-    )
-  ) {
-    return false;
-  }
-  if (enemyProximity === null)
-    return {
-      tag: "invalid",
-      message:
-        "Ranged spell attack requires admitted enemy proximity evidence.",
-    };
-  return rangedAttackCloseCombatDisadvantage(state, enemyProximity);
+  });
+  if ("tag" in ranged) return ranged;
+  return collectedAttackRollMode(state, {
+    attackerId,
+    target: {
+      kind: "object",
+      objectId: targetObjectId,
+      sight: objectTargetSight(sightFact),
+    },
+    means,
+    targetSpatialFacts: [],
+    ranged,
+  });
 }
 
 export function requiredOrdinaryObjectAttackRollMode(
@@ -607,38 +297,17 @@ export function requiredOrdinaryObjectAttackRollMode(
     { readonly kind: "attackObjectTarget" }
   >,
 ): AttackRollMode | undefined {
-  const attacker = state.combatants.get(attackerId);
-  const sources = objectTargetAttackRollSourceFlags(
-    state,
+  return collectedAttackRollMode(state, {
     attackerId,
-    fact.objectId,
-    fact.attackerCanSeeObject,
-    attack,
-  );
-  const hasAdvantage =
-    sources.hasAdvantage ||
-    ongoingFeatureGrantsAttackRollMode(
-      state,
-      attacker,
-      undefined,
-      "advantage",
-      attack,
-    );
-  const hasDisadvantage =
-    sources.hasDisadvantage ||
-    !fact.attackerCanSeeObject ||
-    (fact.range.kind === "rangedRange" &&
-      (fact.range.band === "long" ||
-        fact.range.enemyWithin5FeetCanSeeAttacker)) ||
-    ongoingFeatureGrantsAttackRollMode(
-      state,
-      attacker,
-      undefined,
-      "disadvantage",
-      attack,
-    ) ||
-    state.grapples.some((grapple) => grapple.targetId === attackerId);
-  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+    target: {
+      kind: "object",
+      objectId: fact.objectId,
+      sight: objectTargetSight(fact),
+    },
+    means: { kind: "attack", attack, opportunityAttack: false },
+    targetSpatialFacts: [],
+    ranged: objectAttackRangedCircumstances(fact.range),
+  });
 }
 
 export function objectTargetAttackNeedsSightFact(
@@ -674,17 +343,6 @@ function objectLightEmitterDeniesInvisibleBenefit(
   );
 }
 
-function objectOutlineGrantsAttackRollAdvantage(
-  outlines: readonly BattleObjectOutline[],
-  targetObjectId: BattleObjectId,
-  attackerCanSeeObject: boolean | undefined,
-): boolean {
-  return (
-    attackerCanSeeObject === true &&
-    outlines.some((outline) => outline.objectId === targetObjectId)
-  );
-}
-
 export function requiredSpellAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
@@ -693,99 +351,36 @@ export function requiredSpellAttackRollMode(
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   enemyProximity: RangedAttackEnemyProximityEvidence | null,
 ): AttackRollMode | undefined | SpatialQualificationIssue {
-  const targetId = target.combatantId;
-  const attacker = state.combatants.get(attackerId);
-  const sources = attackRollSourceFlags(
-    state,
+  const contributions = creatureTargetAttackRollModeContributions(state, {
     attackerId,
     target,
-    undefined,
+    means: { kind: "spell", invocation },
     targetSpatialFacts,
     enemyProximity,
-    spellAttackTargetDistanceFeet(
-      targetSpatialFacts,
-      attackerId,
-      targetId,
-      invocation,
-    ),
-  );
-  if ("tag" in sources) return sources;
-  const hasAdvantage =
-    sources.hasAdvantage ||
-    ongoingFeatureGrantsSpellAttackRollMode(
-      state,
-      attacker,
-      invocation,
-      "advantage",
-    );
-  const proximity = rangedSpellAttackCloseCombatDisadvantage(
-    state,
-    invocation,
-    enemyProximity,
-  );
-  if (typeof proximity !== "boolean") return proximity;
-  const hasDisadvantage =
-    sources.hasDisadvantage ||
-    proximity ||
-    ongoingFeatureGrantsSpellAttackRollMode(
-      state,
-      attacker,
-      invocation,
-      "disadvantage",
-    );
-  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
-}
-
-function spellAttackTargetDistanceFeet(
-  targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  invocation: RuntimeSpellProcedure,
-): MovementFeet | null {
-  if (!("sourceProcedureRef" in invocation)) return null;
-  const spellTarget = targetSpatialFacts.find(
-    (
-      fact,
-    ): fact is Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "spellTarget" }
-    > =>
-      fact.kind === "spellTarget" &&
-      fact.casterId === attackerId &&
-      fact.targetId === targetId &&
-      fact.sourceProcedureRef === invocation.sourceProcedureRef,
-  );
-  return spellTarget?.distanceFeet ?? null;
-}
-
-function attackRollModeFromSources(
-  hasAdvantage: boolean,
-  hasDisadvantage: boolean,
-): AttackRollMode | undefined {
-  return mechanicalD20TestRollMode({
-    advantage: hasAdvantage,
-    disadvantage: hasDisadvantage,
   });
+  return "tag" in contributions
+    ? contributions
+    : attackRollModeFromContributions(contributions);
 }
 
 export function attackRollHasAdvantageSource(
   state: BattleState,
   attackerId: CombatantId,
   target: BattleCreatureState,
-  attack: SupportedAttackActionOption | undefined,
+  attack: SupportedAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
   enemyProximity: RangedAttackEnemyProximityEvidence | null,
 ): boolean | SpatialQualificationIssue {
-  const sources = attackRollSourceFlags(
-    state,
+  const contributions = creatureTargetAttackRollModeContributions(state, {
     attackerId,
     target,
-    attack,
+    means: { kind: "attack", attack, opportunityAttack: false },
     targetSpatialFacts,
     enemyProximity,
-    null,
-  );
-  return "tag" in sources ? sources : sources.hasAdvantage;
+  });
+  return "tag" in contributions
+    ? contributions
+    : contributions.some((contribution) => contribution.mode === "advantage");
 }
 
 export function attackRollModeWithOptionalOngoingFeature(
@@ -889,217 +484,6 @@ export function attackRollOngoingFeatureActivationProfile(
     return null;
   }
   return activation;
-}
-
-export function ongoingFeatureGrantsAttackRollMode(
-  state: BattleState,
-  attacker: BattleCreatureState | undefined,
-  target: BattleCreatureState | undefined,
-  mode: AttackRollMode,
-  attack?: SupportedAttackActionOption,
-): boolean {
-  const outgoing =
-    isCharacterBattleCreatureState(attacker) &&
-    [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
-      ([key]) =>
-        ongoingFeatureProfileForSourceKey(attacker, key)?.rollModifiers.some(
-          (modifier) =>
-            modifier.mode === mode &&
-            modifier.affects === "selfRoll" &&
-            modifier.on === "attackRoll" &&
-            attackAbilityMatchesModifier(
-              attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
-                ? attack
-                : null,
-              modifier,
-            ),
-        ),
-    );
-  const incoming =
-    isCharacterBattleCreatureState(target) &&
-    [...activeOngoingFeatureOccurrencesForCombatant(state, target)].some(
-      ([key]) =>
-        ongoingFeatureProfileForSourceKey(target, key)?.rollModifiers.some(
-          (modifier) =>
-            modifier.mode === mode &&
-            modifier.affects === "rollsAgainstSelf" &&
-            modifier.on === "attackRoll" &&
-            attackAbilityMatchesModifier(
-              attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
-                ? attack
-                : null,
-              modifier,
-            ),
-        ),
-    );
-  return outgoing || incoming;
-}
-
-function ongoingFeatureGrantsSpellAttackRollMode(
-  state: BattleState,
-  attacker: BattleCreatureState | undefined,
-  invocation: RuntimeSpellProcedure,
-  mode: AttackRollMode,
-): boolean {
-  return (
-    isCharacterBattleCreatureState(attacker) &&
-    spellInvocationIsFromSpellcastingSource(attacker, invocation) &&
-    [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
-      ([key]) => {
-        const profile = ongoingFeatureProfileForSourceKey(attacker, key);
-        const castingSource = spellInvocationCastingSource(invocation);
-        return (
-          profile !== null &&
-          profile.spellModifiers.some(
-            (modifier) =>
-              modifier.attackRollMode === mode &&
-              castingSource.tag === "classSpellcasting" &&
-              modifier.sourceClassName === castingSource.className,
-          )
-        );
-      },
-    )
-  );
-}
-
-function spellInvocationIsFromSpellcastingSource(
-  combatant: BattleCreatureState | undefined,
-  invocation: RuntimeSpellProcedure,
-): boolean {
-  return (
-    isCharacterBattleCreatureState(combatant) &&
-    combatant.origin.spellcasting !== undefined &&
-    spellInvocationIsSpellcasting(invocation) &&
-    spellInvocationCastingSource(invocation).tag === "classSpellcasting"
-  );
-}
-
-function spellInvocationCastingSource(invocation: RuntimeSpellProcedure) {
-  return "spellRuleFacts" in invocation
-    ? invocation.spellRuleFacts.castingSource
-    : invocation.spell.castingSource;
-}
-
-export function activeEffectGrantsAttackRollMode(
-  state: BattleState,
-  attacker: BattleCreatureState | undefined,
-  target: BattleCreatureState | undefined,
-  mode: AttackRollMode,
-  context: {
-    readonly attack?: SupportedAttackActionOption | undefined;
-    readonly attackerCanSeeTarget?: boolean;
-    readonly targetSpatialFacts?: readonly BattleTargetSpatialFact[];
-  } = {},
-): boolean {
-  const attackerCreatureType =
-    attacker === undefined ? null : battleCreatureType(attacker);
-  const attackerCanSeeTarget =
-    context.attackerCanSeeTarget ??
-    (attacker !== undefined &&
-      target !== undefined &&
-      combatantCanSee(state, attacker.combatantId, target.combatantId));
-  return (
-    attacker?.activeEffects.some(
-      (effect) =>
-        (effect.kind === "nextAttackRollBySelf" ||
-          (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
-            attackUsesAbility(context.attack, effect.ability)) ||
-          (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
-              kind: "spellActiveEffect",
-              activeEffectKind: "spellObjectContactDamage",
-              effectRef: effect.sourceEffectRef,
-            }))) &&
-        effect.mode === mode,
-    ) === true ||
-    target?.activeEffects.some(
-      (effect) =>
-        (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
-        (effect.kind === "saveGatedTargetProjection" &&
-          mode === "advantage" &&
-          attackerCanSeeTarget) ||
-        (effect.kind === "afterHitDamageAndIllumination" &&
-          mode === "advantage") ||
-        (effect.kind === "creatureTypeProtection" &&
-          mode === "disadvantage" &&
-          attackerCreatureType !== null &&
-          creatureTypeProtectionGrantsAttackDisadvantage(
-            effect,
-            attackerCreatureType,
-          )) ||
-        (effect.kind === "perceptionGatedAttackRollDefense" &&
-          mode === "disadvantage" &&
-          attacker !== undefined &&
-          target !== undefined &&
-          !attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
-            context.targetSpatialFacts ?? [],
-            attacker.combatantId,
-            target.combatantId,
-          )),
-    ) === true
-  );
-}
-
-function attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
-  facts: readonly BattleTargetSpatialFact[],
-  attackerId: CombatantId,
-  targetId: CombatantId,
-): boolean {
-  return facts.some(
-    (fact) =>
-      fact.kind === "attackerPerceivesObscuredTargetWithSense" &&
-      fact.attackerId === attackerId &&
-      fact.targetId === targetId,
-  );
-}
-
-function attackUsesAbility(
-  attack: SupportedAttackActionOption | undefined,
-  ability: Ability,
-): boolean {
-  if (attack?.kind === "weapon") {
-    return attack.ability === ability;
-  }
-  if (attack?.kind === "unarmedStrike") {
-    return attack.attackAbility === ability;
-  }
-  return false;
-}
-
-export function attackAbilityMatchesModifier(
-  attack:
-    | CharacterWeaponAttackActionOption
-    | CharacterUnarmedStrikeActionOption
-    | null
-    | undefined,
-  modifier: OngoingFeatureRollModifier | OngoingFeatureDamageModifier,
-): boolean {
-  const ability =
-    attack?.kind === "weapon"
-      ? attack.ability
-      : attack?.kind === "unarmedStrike"
-        ? attack.attackAbility
-        : undefined;
-  if (modifier.abilityFilter === undefined) {
-    return true;
-  }
-  return (
-    ability !== undefined &&
-    ability !== "spellcasting" &&
-    modifier.abilityFilter.includes(ability)
-  );
-}
-
-export function hasDodgeAttackRollBenefit(
-  state: BattleState,
-  target: BattleCreatureState,
-  attacker: BattleCreatureState,
-): boolean {
-  return (
-    hasDodgeBenefit(state, target) &&
-    !hasCondition(target.conditions, "blinded") &&
-    attacker.hidden === null
-  );
 }
 
 export function consumeHelpAttackForAttackRoll(
@@ -1379,10 +763,10 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
     effect: {
-      kind: "unitFeatureSpeedDelta",
+      kind: "weaponMasterySpeedReduction",
       sourceProcedureRef: selection.procedureRef,
       sourceCombatantId: attackerId,
-      deltaFeet: movementDeltaFeet(-10),
+      reductionFeet: movementFeet(WEAPON_MASTERY_SPEED_REDUCTION_FEET),
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
     },
   });
@@ -1390,7 +774,7 @@ export function applyWeaponMasterySlowAfterDamage(input: {
     ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
-          effect.kind === "unitFeatureSpeedDelta" &&
+          effect.kind === "weaponMasterySpeedReduction" &&
           "sourceProcedureRef" in effect &&
           effect.sourceProcedureRef === selection.procedureRef
         ),
@@ -2337,18 +1721,5 @@ export function qualifiedAttackRollMode(
     attack,
     facts,
     evidence,
-  );
-}
-
-function attackTargetVisibleToAttacker(
-  state: BattleState,
-  attacker: BattleCreatureState | undefined,
-  target: BattleCreatureState,
-  sightDisadvantage: boolean,
-): boolean {
-  return (
-    attacker !== undefined &&
-    !sightDisadvantage &&
-    combatantCanSee(state, attacker.combatantId, target.combatantId)
   );
 }

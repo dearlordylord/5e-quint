@@ -62,7 +62,7 @@
       "module/binding:brutalStrikeSelection": 10,
       "module/binding:resolveAdditionalWeaponAttackDamage": 9,
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,
-      "module/binding:resolveGrapplerPunchAndGrabAfterHit": 12,
+      "module/binding:resolveGrapplerPunchAndGrabAfterHit": 11,
       "module/binding:resolveHuntersPreyHordeBreakerAfterPrimaryDamage": 21,
       "module/binding:resolveSelectedAttackProcedure": 213,
       "module/binding:resolveWeaponMasteryCleaveAfterPrimaryDamage": 20
@@ -73,24 +73,25 @@
     "packages/battle-runtime/src/battle-reducer/attack-resolution.ts": {
       "module/binding:classFeatureExtraAttackForActor": 10,
       "module/binding:resolveEscapeSpellRestraint": 14,
-      "module/binding:resolveGrapple": 11,
+      "module/binding:resolveGrapple": 10,
       "module/binding:resolveHelpAttack": 15,
       "module/binding:resolveHide": 10,
       "module/binding:resolveSearch": 11,
       "module/binding:resolveShakeAwakeFromHitPointBudgetCondition": 9,
       "module/binding:resolveShakeAwakeFromSaveGatedAreaControl": 9,
-      "module/binding:resolveShove": 14,
+      "module/binding:resolveShove": 13,
       "module/binding:spendAttackAction": 11,
       "module/binding:spendAttackTurnResources": 10,
       "module/binding:validateAttackDamageFill": 15,
       "module/binding:validateRolledDiceForWeaponAttack": 11
     },
-    "packages/battle-runtime/src/battle-reducer/attack-roll.ts": {
+    "packages/battle-runtime/src/battle-reducer/attack-roll-mode-collector.ts": {
       "module/binding:activeEffectGrantsAttackRollMode": 9,
-      "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17,
+      "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17
+    },
+    "packages/battle-runtime/src/battle-reducer/attack-roll.ts": {
       "module/binding:applyWeaponMasteryToppleSavingThrow": 9,
       "module/binding:attackRollOngoingFeatureActivationProfile": 13,
-      "module/binding:attackRollSourceFlags": 22,
       "module/binding:tacticalMasterReplacementSelection": 9
     },
     "packages/battle-runtime/src/battle-reducer/attack-routes.ts": {
@@ -100,7 +101,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
-      "module/binding:discoverBattleActsWithoutRouteEvents": 58
+      "module/binding:discoverBattleActsWithoutRouteEvents": 53
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -241,13 +242,8 @@
     },
     "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts": {
       "module/binding:battleSpecialSpeedCandidates": 10,
-      "module/binding:battleTerminalSpeedZero": 9,
-      "module/binding:passiveSpeedBonusDelta": 12,
       "module/binding:passiveSpeedKindGrantKinds": 9,
       "module/binding:representedMovementSpeedKinds": 9
-    },
-    "packages/battle-runtime/src/battle-reducer/movement-speed.ts": {
-      "module/binding:grappleLinkForTarget": 9
     },
     "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts": {
       "module/binding:openHandTechniqueFlurryHit": 14,
@@ -310,6 +306,9 @@
     "packages/battle-runtime/src/battle-reducer/spatial-effect-routes.ts": {
       "module/binding:spatialEffectCompositionRouteForResolution": 13,
       "module/binding:spatialEffectCompositionRuntimeRouteForResolution": 28
+    },
+    "packages/battle-runtime/src/battle-reducer/speed-collector.ts": {
+      "module/binding:passiveSpeedBonusDelta": 12
     },
     "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts": {
       "module/binding:activeEffectDirectlyAppliesCondition": 24,
@@ -390,11 +389,13 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/temporary-ability-check-roll-mode.ts": {
       "module/binding:resolveTemporaryAbilityCheckRollMode": 9
     },
+    "packages/battle-runtime/src/battle-reducer/spell-target-prerequisites.ts": {
+      "module/binding:spellTargetHasNonSpatialPrerequisites": 17
+    },
     "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts": {
       "module/binding:saveDamageReplacementForInvocation": 11,
-      "module/binding:savingThrowRollModeProjections": 17,
       "module/binding:spellDamageByTypeForTarget": 9,
-      "module/binding:spellSavingThrowOutcomeHole": 16,
+      "module/binding:spellSavingThrowOutcomeHole": 13,
       "module/binding:validateSpellAttackSequencePartDamageFill": 14,
       "module/binding:validateSpellDamageFill": 31
     },
@@ -428,7 +429,7 @@
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts": {
       "module/binding:resolveSpellAttackSequenceAct": 20,
       "module/binding:resolveSpellAttackSequenceCreaturePart": 62,
-      "module/binding:resolveSpellAttackSequenceObjectPart": 22
+      "module/binding:resolveSpellAttackSequenceObjectPart": 21
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts": {
       "module/binding:chainedSpellFillSet": 43,
@@ -448,7 +449,7 @@
       "module/binding:validateObjectContactTargets": 15
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-object-target.ts": {
-      "module/binding:resolveObjectTargetSpellAttackCore": 37
+      "module/binding:resolveObjectTargetSpellAttackCore": 36
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-prepared-slot.ts": {
       "module/binding:resolvePreparedSlotSpellAct": 45
@@ -485,7 +486,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-targeting.ts": {
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
-      "module/binding:spellTargetHasNonSpatialPrerequisites": 17,
       "module/binding:spellTargetRequiresAttackRollRelationshipFact": 9,
       "module/binding:spellTargetSpatialFactMatches": 9,
       "module/binding:validateSpellTargetAllocation": 10,
@@ -634,7 +634,7 @@
     },
     "packages/character-battle-runtime/src/battle-character-build-projection.ts": {
       "module/binding:bookOfShadowsSpellAccess": 15,
-      "module/binding:characterBattleLoadoutFromBuild": 11,
+      "module/binding:characterBattleLoadoutFromBuild": 9,
       "module/binding:characterPactBladeBondedWeaponItemId": 13,
       "module/binding:characterSpellcasting": 12,
       "module/binding:featurePreparedSpellAccess": 11

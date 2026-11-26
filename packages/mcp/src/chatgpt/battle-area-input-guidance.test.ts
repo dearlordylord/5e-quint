@@ -46,6 +46,7 @@ const holeBase = {
   areaChoices: [],
   targetRollModes: [],
   targetFlatBonuses: [],
+  targetAutomaticFailures: [],
 } as const;
 function areaHole(
   kind: BattleSpellAreaInputRequest["kind"],

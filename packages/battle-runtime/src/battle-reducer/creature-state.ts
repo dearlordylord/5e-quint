@@ -19,6 +19,7 @@ import { Match, Result } from "effect";
 import {
   Hp,
   movementFeet,
+  type Condition,
   type ReadonlyNonEmptyArray,
   type WeaponGrip,
 } from "@dnd/shared/types";
@@ -123,7 +124,6 @@ import {
 } from "./domain-helpers.ts";
 export {
   activeConditions,
-  activeEffectArmorClass,
   activeOngoingFeatureOccurrencesForCombatant,
   battleCreatureStateWithDamageProjection,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -514,15 +514,14 @@ export function battleCreatureStateAdmissionFromInit(
     };
   }
   const zeroHpLifecycle = zeroHpLifecycleResult.success;
-  const initialConditionImmunityIssue =
-    initialConditionImmunityIssueForCreatureInit(
-      creatureInit,
-      input.combatantId,
-    );
-  if (initialConditionImmunityIssue !== null) {
+  const initialConditionIssue = initialConditionIssueForCreatureInit(
+    creatureInit,
+    input.combatantId,
+  );
+  if (initialConditionIssue !== null) {
     return {
       tag: "invalid",
-      issues: [initialConditionImmunityIssue],
+      issues: [initialConditionIssue],
     };
   }
   const initialConditions =
@@ -834,6 +833,39 @@ export function battleCreatureStateAdmissionFromInit(
     nextScopeOrdinal: admission.success.cursorTransition.to,
     statBlockPresentation: statBlockCreatureInit.presentation,
   };
+}
+
+/** Why a creature can't start with its initial conditions, if it can't. */
+function initialConditionIssueForCreatureInit(
+  creatureInit: BattleCreatureAdmissionInit["creatureInit"],
+  combatantId: CombatantId,
+): BattleStateInitLeafIssue | null {
+  return (
+    initialGrappledConditionIssue(creatureInit, combatantId) ??
+    initialConditionImmunityIssueForCreatureInit(creatureInit, combatantId)
+  );
+}
+
+/**
+ * The creature input types leave Grappled out, since a grapple needs its
+ * grappler and escape DC (`BattleStartInput.initialHandGrapples`). This rejects
+ * the condition from input that skipped those types, rather than starting a
+ * Grappled combatant with no grapple link.
+ */
+function initialGrappledConditionIssue(
+  creatureInit: BattleCreatureAdmissionInit["creatureInit"],
+  combatantId: CombatantId,
+): BattleStateInitLeafIssue | null {
+  const conditions: readonly Condition[] = creatureInit.conditions ?? [];
+  return conditions.includes("grappled")
+    ? {
+        tag: "battleStateInitIssue",
+        message:
+          "A combatant starts Grappled only through an initial grapple that names its grappler and escape DC.",
+        kind: "initialGrappledWithoutGrapple",
+        combatantId,
+      }
+    : null;
 }
 
 function initialConditionImmunityIssueForCreatureInit(

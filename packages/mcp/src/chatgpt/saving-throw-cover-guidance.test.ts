@@ -1,6 +1,7 @@
 // SRD 5.2.1 "Cover": Half Cover gives +2 and Three-Quarters Cover +5 to a
 // target's Dexterity saving throws. Sacred Flame: "The target gains no
-// benefit from Half Cover or Three-Quarters Cover for this save."
+// benefit from Half Cover or Three-Quarters Cover for this save." Paralyzed:
+// "You automatically fail Strength and Dexterity saving throws."
 import {
   battleExecutionScopeOrdinal,
   battleId,
@@ -42,6 +43,7 @@ const saveHole = {
   areaChoices: [],
   targetRollModes: [],
   targetFlatBonuses: [],
+  targetAutomaticFailures: [],
 } as const satisfies BattleSpellSavingThrowOutcomeHole;
 
 function guidanceFor(hole: BattleSpellSavingThrowOutcomeHole) {
@@ -94,5 +96,19 @@ describe("Saving throw cover guidance", () => {
         "Cover adds nothing to this saving throw. Omit cover on the outcomes.",
       );
     }
+  });
+
+  it("tells the table a target that fails without rolling has no roll", () => {
+    const instruction =
+      "Each target in targetAutomaticFailures fails this saving throw without rolling, because of the conditions listed with it. Give its outcome succeeded false and withoutRoll true, with no d20TestRoll.";
+    expect(guidanceFor(saveHole).instructions).not.toContain(instruction);
+    expect(
+      guidanceFor({
+        ...saveHole,
+        targetAutomaticFailures: [
+          { targetId: combatantId(targetId), conditions: ["paralyzed"] },
+        ],
+      }).instructions,
+    ).toContain(instruction);
   });
 });

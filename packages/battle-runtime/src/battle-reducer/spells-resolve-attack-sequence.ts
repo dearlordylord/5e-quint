@@ -53,7 +53,7 @@ import {
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { armorClassAgainstAttack } from "./attack-target-cover.ts";
+import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -1128,7 +1128,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.actorId,
     input.invocation,
     input.target.objectId,
-    sightFact?.attackerCanSeeObject,
+    sightFact,
     input.target.enemyProximity,
   );
   const rollInput = prepareAttackRollInput({

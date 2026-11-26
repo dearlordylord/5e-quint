@@ -71,6 +71,7 @@ import {
   resolveBattleSubject,
   spendCharacterPointPoolResource,
   startBattle,
+  snapshotBattle,
   battleTablePositionId,
 } from "@dnd/battle-runtime";
 import { spawnedCompanionFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
@@ -8437,6 +8438,10 @@ describe("Character Build battle projection", () => {
         kind: "characterBattleSpellProjection",
         issueIndex: 3,
       },
+      {
+        kind: "characterBattleInitialConditions",
+        constraint: "grappledNeedsInitialGrapple",
+      },
     ] as const satisfies readonly CharacterBattleInitIssueReason[];
 
     for (const reason of reasons) {
@@ -9432,7 +9437,9 @@ describe("Character Build battle projection", () => {
         message: "Off-hand weapon loadout must reference a Weapon Unit.",
       }),
     );
-    expect(characterBattleLoadoutFromBuild(build)).toEqual({});
+    expect(
+      expectSuccess(characterBattleLoadoutFromBuild({ build, unitLibrary })),
+    ).toEqual({});
   });
 
   test("applies Defense Armor Class bonus while wearing eligible armor", () => {
@@ -9468,6 +9475,84 @@ describe("Character Build battle projection", () => {
       sourceUnitId: "defense",
     });
   });
+
+  test.each([
+    { strength: 10, speedFeet: 20 },
+    { strength: 13, speedFeet: 30 },
+  ])(
+    "preserves armor Strength in both public projections at Strength $strength",
+    ({ strength, speedFeet }) => {
+      const build = {
+        ...defenseBuild({ wearingArmor: true }),
+        abilityScores: expectSuccess(
+          abilityScoreAssignment({
+            str: strength,
+            dex: 15,
+            con: 13,
+            int: 8,
+            wis: 14,
+            cha: 12,
+          }),
+        ),
+      };
+      const init = expectSuccess(
+        battleCreatureInitFromCharacterBuild({
+          combatantId: combatantId("chain-mail-fighter"),
+          characterId: characterId("character:chain-mail-fighter"),
+          displayName: "Chain Mail Fighter",
+          build,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          unitLibrary,
+        }),
+      );
+      expect(init.creatureInit.kind).toBe("character");
+      if (init.creatureInit.kind !== "character") return;
+      const selectedLoadout = expectSuccess(
+        characterBattleLoadoutFromBuild({ build, unitLibrary }),
+      );
+      expect(selectedLoadout.armor).toMatchObject({
+        unitId: "armor_chain_mail",
+        strengthRequirement: 13,
+      });
+      expect(selectedLoadout).toEqual(init.creatureInit.selectedLoadout);
+      for (const loadout of [
+        init.creatureInit.selectedLoadout,
+        selectedLoadout,
+      ]) {
+        const battle = expectSuccess(
+          startBattle({
+            battleId: battleId("armor-strength-projection"),
+            combatants: [
+              {
+                ...init,
+                creatureInit: {
+                  ...init.creatureInit,
+                  selectedLoadout: loadout,
+                },
+              },
+            ],
+          }),
+        );
+        expect(
+          snapshotBattle(battle.state).combatants[0]?.movement.speedFeet,
+        ).toBe(speedFeet);
+      }
+      const emptyCatalog = buildUnitCatalog({ collections: [] });
+      if (emptyCatalog.tag !== "ok") {
+        throw new Error("Expected empty test Unit catalog to build.");
+      }
+      expect(
+        characterBattleLoadoutFromBuild({
+          build,
+          unitLibrary: emptyCatalog.catalog,
+        }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { message: expect.stringContaining("Unknown Unit") },
+      });
+    },
+  );
 
   test("threads selected Armor Class base choice through battle initialization", () => {
     const init = expectSuccess(

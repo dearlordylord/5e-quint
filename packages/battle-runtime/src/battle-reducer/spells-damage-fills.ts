@@ -2,7 +2,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -21,6 +20,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
+import {
+  savingThrowTargetModifiers,
+  type SavingThrowContext,
+} from "./saving-throw-modifier-collector.ts";
 import {
   directTargetCover,
   type DirectTargetCover,
@@ -41,7 +44,6 @@ import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import { type Condition, type DieRollResult } from "@dnd/shared/types";
 import type { Ability, DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import { passiveSavingThrowRollModeDisposition } from "../unit-feature-execution-constants.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
   spellBurstDamageExpression,
@@ -67,12 +69,8 @@ import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
 } from "./statblock-attacks.ts";
-import { hasDodgeBenefit } from "./dodge-benefit.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
-import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
-import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.ts";
-import { battleCreatureType } from "./domain-helpers.ts";
-import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
+import { spellTargetHasNonSpatialPrerequisites } from "./spell-target-prerequisites.ts";
 import {
   savingThrowCoverRuling,
   spellTargetSaveCover,
@@ -83,7 +81,6 @@ import {
   attackDamageDieFloorChoiceUnsupportedIssue,
   ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
   ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
-  type BattleActiveEffect,
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
   type BattleDamageRelationshipDecisions,
@@ -141,12 +138,6 @@ import {
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
-import {
-  activeCreatureSizeChangeEffect,
-  creatureSizeChangeStrengthRollMode,
-} from "./creature-size-change-effects.ts";
-import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 type RuntimeDamageSpellProcedureOf<Procedure> = Procedure extends {
@@ -1178,6 +1169,8 @@ export function spellSavingThrowOutcomeHole(
      * Omit it where the save's effect doesn't originate at the caster.
      */
     readonly targetSelection?: SpellSaveTargetSelection | undefined;
+    /** Advantage or Disadvantage that only this spell's procedure gives. */
+    readonly procedureRollModes?: readonly BattleSavingThrowRollModeProjection[];
   } = {},
 ): BattleSpellSavingThrowOutcomeHole {
   const { heightenedSpellTargetId, relationshipFacts = [] } = context;
@@ -1239,27 +1232,21 @@ export function spellSavingThrowOutcomeHole(
           ? (invocation.saveGate?.dc ?? { kind: "caster_spell_save_dc" })
           : invocation.dc,
     areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
+    ...savingThrowTargetModifiers(
       state,
-      ability,
-      invocation.procedure === "saveGatedCondition" ||
-        invocation.procedure === "saveGatedDamage"
-        ? {
-            actorId,
-            invocation,
-            relationshipFacts,
-            ...(invocation.procedure === "saveGatedCondition" &&
-            invocation.effect.kind === "fixed"
-              ? { condition: invocation.effect.condition }
-              : {}),
-          }
-        : undefined,
-      heightenedRollModeProjection(heightenedSpellTargetId),
+      {
+        ability,
+        ...spellSaveRollModeContext(actorId, invocation, relationshipFacts),
+        procedureSources: {
+          rollModes: [
+            ...heightenedRollModeProjections(heightenedSpellTargetId),
+            ...(context.procedureRollModes ?? []),
+          ],
+          bonuses: cover.flatBonuses,
+        },
+      },
+      "everyCombatant",
     ),
-    targetFlatBonuses: [
-      ...savingThrowFlatBonusProjections(state, ability),
-      ...cover.flatBonuses,
-    ],
     ...cover.fact,
   };
 }
@@ -1277,7 +1264,10 @@ function spellSaveCover(input: {
   readonly targetSelection: SpellSaveTargetSelection | undefined;
 }): {
   readonly fact: { readonly saveCover?: BattleSpellSaveCover };
-  readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly flatBonuses: readonly Extract<
+    BattleSavingThrowFlatBonusProjection,
+    { readonly kind: "cover" }
+  >[];
 } {
   if (spellSaveDeniesCoverBenefit(input.invocation)) {
     return { fact: { saveCover: { kind: "denied" } }, flatBonuses: [] };
@@ -1376,15 +1366,34 @@ function spellSavingThrowAreaInput(
   );
 }
 
-function heightenedRollModeProjection(
+// The condition a spell's save avoids, and the spell's own Advantage or
+// Disadvantage rule, for the spells that have them.
+function spellSaveRollModeContext(
+  actorId: CombatantId,
+  invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2],
+  relationshipFacts: readonly BattleSpellTargetListRelationshipFact[],
+): Omit<SavingThrowContext, "ability" | "procedureSources"> {
+  if (
+    invocation.procedure !== "saveGatedCondition" &&
+    invocation.procedure !== "saveGatedDamage"
+  ) {
+    return {};
+  }
+  return {
+    ...(invocation.procedure === "saveGatedCondition" &&
+    invocation.effect.kind === "fixed"
+      ? { avoidsCondition: invocation.effect.condition }
+      : {}),
+    spellSaveRollModeRule: { actorId, invocation, relationshipFacts },
+  };
+}
+
+function heightenedRollModeProjections(
   heightenedSpellTargetId: CombatantId | undefined,
-): BattleSavingThrowRollModeProjection | undefined {
+): readonly BattleSavingThrowRollModeProjection[] {
   return heightenedSpellTargetId === undefined
-    ? undefined
-    : {
-        targetId: heightenedSpellTargetId,
-        rollMode: "disadvantage",
-      };
+    ? []
+    : [{ targetId: heightenedSpellTargetId, rollMode: "disadvantage" }];
 }
 
 export function carefulSpellProtectedTargetsHoleId(invocation: {
@@ -1560,303 +1569,6 @@ export function spellAreaTargetingLabel(
     Match.when({ kind: "targetList" }, () => "target-list"),
     Match.exhaustive,
   );
-}
-
-export function savingThrowRollModeProjections(
-  state: BattleState,
-  ability: Ability,
-  rollModeContext?: SavingThrowRollModeContext,
-  extraProjection?: BattleSavingThrowRollModeProjection,
-): readonly BattleSavingThrowRollModeProjection[] {
-  const dodgeProjections =
-    ability === "dex"
-      ? [...state.combatants]
-          .filter(([, target]) => hasDodgeBenefit(state, target))
-          .map(([targetId]) => ({
-            targetId,
-            rollMode: "advantage" as const,
-          }))
-      : [];
-  const passiveRollModeProjections = passiveSavingThrowRollModeProjections(
-    state,
-    ability,
-    rollModeContext?.condition,
-  );
-  const baseProjections = [
-    ...dodgeProjections,
-    ...passiveRollModeProjections,
-    ...activeAbilityD20TestSavingThrowRollModeProjections(state, ability),
-    ...activeSavingThrowRollModeProjections(state, ability),
-    ...activeCountedConditionSavingThrowRollModeProjections(state, ability),
-    ...creatureSizeChangeSavingThrowRollModeProjections(state, ability),
-    ...conditionSavingThrowRollModeProjections(
-      state,
-      rollModeContext?.condition,
-    ),
-  ];
-  const saveRollModeRule =
-    rollModeContext === undefined || !("invocation" in rollModeContext)
-      ? undefined
-      : rollModeContext.invocation.saveRollModeRule;
-  if (
-    rollModeContext !== undefined &&
-    "invocation" in rollModeContext &&
-    saveRollModeRule?.kind === "hostileTarget"
-  ) {
-    const { actorId, invocation, relationshipFacts } = rollModeContext;
-    return uniqueSavingThrowRollModeProjections([
-      ...baseProjections,
-      ...[...state.combatants]
-        .filter(
-          ([targetId]) =>
-            spellTargetIsHostileToCaster(
-              relationshipFacts,
-              actorId,
-              targetId,
-              invocation,
-            ) &&
-            spellTargetHasNonSpatialPrerequisites(
-              state,
-              actorId,
-              targetId,
-              invocation,
-            ),
-        )
-        .map(([targetId]) => ({
-          targetId,
-          rollMode: saveRollModeRule.mode,
-        })),
-      ...(extraProjection === undefined ? [] : [extraProjection]),
-    ]);
-  }
-  if (
-    rollModeContext !== undefined &&
-    "invocation" in rollModeContext &&
-    saveRollModeRule?.kind === "creatureType"
-  ) {
-    const { actorId, invocation } = rollModeContext;
-    return uniqueSavingThrowRollModeProjections([
-      ...baseProjections,
-      ...[...state.combatants]
-        .filter(
-          ([, target]) =>
-            battleCreatureType(target) === saveRollModeRule.creatureType,
-        )
-        .filter(([targetId]) =>
-          spellTargetHasNonSpatialPrerequisites(
-            state,
-            actorId,
-            targetId,
-            invocation,
-          ),
-        )
-        .map(([targetId]) => ({
-          targetId,
-          rollMode: saveRollModeRule.mode,
-        })),
-      ...(extraProjection === undefined ? [] : [extraProjection]),
-    ]);
-  }
-  return uniqueSavingThrowRollModeProjections([
-    ...baseProjections,
-    ...(extraProjection === undefined ? [] : [extraProjection]),
-  ]);
-}
-
-type SavingThrowRollModeContext =
-  | {
-      readonly condition: Condition;
-    }
-  | {
-      readonly actorId: CombatantId;
-      readonly invocation: BattleExecutableSpellInvocation<
-        Extract<
-          RuntimeSpellProcedure,
-          { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
-        >
-      >;
-      readonly relationshipFacts: readonly BattleSpellTargetListRelationshipFact[];
-      readonly condition?: Condition;
-    };
-
-function creatureSizeChangeSavingThrowRollModeProjections(
-  state: BattleState,
-  ability: Ability,
-): readonly BattleSavingThrowRollModeProjection[] {
-  if (ability !== "str") {
-    return [];
-  }
-  return [...state.combatants].flatMap(([targetId, target]) => {
-    const effect = activeCreatureSizeChangeEffect(target);
-    return effect === null
-      ? []
-      : [{ targetId, rollMode: creatureSizeChangeStrengthRollMode(effect) }];
-  });
-}
-
-function conditionSavingThrowRollModeProjections(
-  state: BattleState,
-  condition: Condition | undefined,
-): readonly BattleSavingThrowRollModeProjection[] {
-  if (condition === undefined) {
-    return [];
-  }
-  return [...state.combatants].flatMap(([targetId, target]) =>
-    target.activeEffects
-      .filter(
-        (
-          effect,
-        ): effect is Extract<
-          BattleActiveEffect,
-          { readonly kind: "conditionSavingThrowRollMode" }
-        > =>
-          effect.kind === "conditionSavingThrowRollMode" &&
-          effect.condition === condition,
-      )
-      .map((effect) => ({ targetId, rollMode: effect.mode })),
-  );
-}
-
-function activeSavingThrowRollModeProjections(
-  state: BattleState,
-  ability: Ability,
-): readonly BattleSavingThrowRollModeProjection[] {
-  return [...state.combatants].flatMap(([targetId, target]) =>
-    target.activeEffects
-      .filter(
-        (
-          effect,
-        ): effect is Extract<
-          BattleActiveEffect,
-          { readonly kind: "savingThrowRollMode" }
-        > =>
-          effect.kind === "savingThrowRollMode" && effect.ability === ability,
-      )
-      .map((effect) => ({ targetId, rollMode: effect.mode })),
-  );
-}
-
-function activeCountedConditionSavingThrowRollModeProjections(
-  state: BattleState,
-  ability: Ability,
-): readonly BattleSavingThrowRollModeProjection[] {
-  return [...state.combatants].flatMap(([targetId, target]) =>
-    target.activeEffects.flatMap((effect) =>
-      effect.kind === "spellConditionCountedEndTurnSave" &&
-      effect.savingThrowDisadvantageAbility === ability
-        ? [{ targetId, rollMode: "disadvantage" as const }]
-        : [],
-    ),
-  );
-}
-
-function activeAbilityD20TestSavingThrowRollModeProjections(
-  state: BattleState,
-  ability: Ability,
-): readonly BattleSavingThrowRollModeProjection[] {
-  return [...state.combatants].flatMap(([targetId, target]) =>
-    target.activeEffects.flatMap((effect) =>
-      effect.kind === "abilityD20TestRollModeEndTurnSave" &&
-      effect.ability === ability
-        ? [{ targetId, rollMode: effect.mode }]
-        : [],
-    ),
-  );
-}
-
-export function savingThrowFlatBonusProjections(
-  state: BattleState,
-  ability: Ability,
-): readonly BattleSavingThrowFlatBonusProjection[] {
-  return [...state.combatants].flatMap(([, target]) => [
-    ...linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
-      target,
-    ),
-    ...saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
-      state,
-      target,
-      ability,
-    ),
-  ]);
-}
-
-function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
-  state: BattleState,
-  target: BattleCreatureState,
-  ability: Ability,
-): readonly BattleSavingThrowFlatBonusProjection[] {
-  if (ability !== "dex") {
-    return [];
-  }
-  const effect = target.activeEffects.flatMap((candidate) => {
-    if (candidate.kind !== "saveGatedTurnConstraintBundle") {
-      return [];
-    }
-    const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
-      state,
-      candidate,
-    );
-    return boundEffect === undefined ? [] : [boundEffect];
-  })[0];
-  return effect === undefined
-    ? []
-    : [
-        {
-          kind: "effect",
-          targetId: target.combatantId,
-          sourceCombatantId: effect.sourceCombatantId,
-          sourceProcedureRef: effect.sourceProcedureRef,
-          bonus: effect.constraints.dexteritySavingThrowDelta,
-        },
-      ];
-}
-
-function passiveSavingThrowRollModeProjections(
-  state: BattleState,
-  ability: Ability,
-  condition: Condition | undefined,
-): readonly BattleSavingThrowRollModeProjection[] {
-  return [...state.combatants].flatMap(([targetId, target]) => {
-    const projection = passiveSavingThrowRollModeProjection(
-      targetId,
-      target,
-      ability,
-      condition,
-    );
-    return projection === null ? [] : [projection];
-  });
-}
-
-function passiveSavingThrowRollModeProjection(
-  targetId: CombatantId,
-  target: BattleCreatureState,
-  ability: Ability,
-  condition: Condition | undefined,
-): BattleSavingThrowRollModeProjection | null {
-  if (target.origin.kind !== "character") {
-    return null;
-  }
-  const binding = characterUnitProcedureBindings(target.origin.execution).find(
-    ({ procedure }) =>
-      procedure.kind === "unitFeature" &&
-      procedure.execution.kind === "passiveSavingThrowRollMode" &&
-      passiveSavingThrowRollModeDisposition(
-        procedure.execution.savingThrow,
-        ability,
-        condition,
-        isIncapacitated(target.conditions),
-      ) === "projected",
-  );
-  const execution =
-    binding?.procedure.kind === "unitFeature"
-      ? binding.procedure.execution
-      : undefined;
-  return execution?.kind !== "passiveSavingThrowRollMode"
-    ? null
-    : {
-        targetId,
-        rollMode: execution.savingThrow.mode,
-      };
 }
 
 export function validateSpellDamageFill(

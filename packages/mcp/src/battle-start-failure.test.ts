@@ -264,6 +264,10 @@ describe("battle start failure projection", () => {
       reason: "characterBattleSpellProjection" as const,
       issueIndex: 11,
     },
+    {
+      reason: "characterBattleInitialConditions" as const,
+      constraint: "grappledNeedsInitialGrapple" as const,
+    },
   ])("retains the $reason Character Sheet initialization fact", (fact) => {
     const issue = {
       ...characterProjectionIdentity,

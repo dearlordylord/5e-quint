@@ -981,6 +981,7 @@ const saving = (
     areaChoices: [],
     targetRollModes: [],
     targetFlatBonuses: [],
+    targetAutomaticFailures: [],
   });
 const rolled = (name: string, value: object) =>
   hole(name, { kind: "rolledDice", ...value });
@@ -1219,6 +1220,7 @@ const savingThrowCases: readonly CodecCase[] = [
       targetIds: [skeletonId],
       targetRollModes: [],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
     }),
   ),
   successCase(
@@ -1268,6 +1270,7 @@ const savingThrowCases: readonly CodecCase[] = [
       areaChoices: [],
       targetRollModes: [],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
     }),
   ),
 ];
@@ -1501,6 +1504,7 @@ const cases: readonly CodecCase[] = [
       areaChoices: [],
       targetRollModes: [],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
     }),
   ),
   failureCase(
@@ -2684,6 +2688,7 @@ describe("battle codec execution-reference boundaries", () => {
       areaChoices: [],
       targetRollModes: [],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
     });
     expect(Result.isFailure(decoded)).toBe(true);
   });

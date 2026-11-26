@@ -2575,6 +2575,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-initial-grapple.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3098,6 +3102,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-initial-grapple.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -4011,6 +4019,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-initial-grapple.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -5475,6 +5487,10 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-drop-prone-eligibility.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-initial-grapple.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",

@@ -48,7 +48,7 @@ import type {
 import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
-import { resolveWithSavingThrowCoverCheck } from "./battle-reducer/saving-throw-cover.ts";
+import { resolveWithSavingThrowOutcomeCheck } from "./battle-reducer/saving-throw-outcome-check.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
   battleD20TestCircumstanceRequests,
@@ -827,7 +827,7 @@ function resolveBattleSubjectWithInterruptRoute(
   input: BattleResolutionInput,
   handledInterruptOccurrence?: BattleHandledInterruptOccurrence,
 ): BattleResolutionResult {
-  return resolveWithSavingThrowCoverCheck({
+  return resolveWithSavingThrowOutcomeCheck({
     fills: input.fills,
     resolveFills: (fills) =>
       resolveBattleSubjectFillsWithInterruptRoute(

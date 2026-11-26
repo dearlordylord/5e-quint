@@ -14,6 +14,12 @@ module battleRuntimeArmorSpellTests {
       assert(activeEffectArmorClass(10, 2, Set(RayOfFrostSpeedDelta)) == 10),
     }
   }
+  run test_mage_armor_does_not_lower_a_higher_base_ac = {
+    all {
+      assert(activeEffectArmorClass(17, 2, Set(mageArmorActiveEffect(mageArmorDurationTicks))) == 17),
+      assert(activeEffectArmorClass(15, 2, Set(mageArmorActiveEffect(mageArmorDurationTicks))) == 15),
+    }
+  }
   run test_armor_of_shadows_mage_armor_spends_action_not_spell_slot = {
     val result = resolveArmorOfShadowsMageArmorSpell(initialState)
     all {

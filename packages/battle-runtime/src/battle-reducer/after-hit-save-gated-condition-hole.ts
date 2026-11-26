@@ -16,16 +16,16 @@ export function afterHitSaveGatedConditionSavingThrowOutcomeHole(
   target: BattleCreatureState,
   invocation: BattleExecutableSpellInvocation<AfterHitSaveGatedConditionSpellInvocation>,
 ): BattleSpellSavingThrowOutcomeHole {
-  const base = spellSavingThrowOutcomeHole(state, casterId, invocation);
+  // Large or larger targets have Advantage on this save.
   return {
-    ...base,
+    ...spellSavingThrowOutcomeHole(state, casterId, invocation, {
+      procedureRollModes: creatureSizeIsLargeOrLarger(
+        combatantEffectiveSize(target),
+      )
+        ? [{ targetId: target.combatantId, rollMode: "advantage" }]
+        : [],
+    }),
     label: "Spell Saving Throw outcome",
-    targetRollModes: [
-      ...base.targetRollModes,
-      ...(creatureSizeIsLargeOrLarger(combatantEffectiveSize(target))
-        ? [{ targetId: target.combatantId, rollMode: "advantage" as const }]
-        : []),
-    ],
   };
 }
 

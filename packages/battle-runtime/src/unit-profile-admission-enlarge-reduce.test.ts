@@ -58,7 +58,7 @@ import {
   EXTENDED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   characterBattleResourceIsPointPool,
   type CharacterBattleMetamagicOptionFact,
@@ -1303,7 +1303,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       requiredAbilityCheckRollMode(resolved.state, spellTargetId, "str"),
     ).toBe("advantage");
     expect(
-      savingThrowRollModeProjections(resolved.state, "str"),
+      savingThrowTargetModifiers(
+        resolved.state,
+        { ability: "str" },
+        "everyCombatant",
+      ).targetRollModes,
     ).toContainEqual({ targetId: spellTargetId, rollMode: "advantage" });
   });
 
@@ -1542,7 +1546,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       combatantEffectiveSize(requireCombatant(reduced.state, spellCasterId)),
     ).toBe("small");
     expect(
-      savingThrowRollModeProjections(reduced.state, "str").filter(
+      savingThrowTargetModifiers(
+        reduced.state,
+        { ability: "str" },
+        "everyCombatant",
+      ).targetRollModes.filter(
         (projection) => projection.targetId === spellCasterId,
       ),
     ).toEqual([{ targetId: spellCasterId, rollMode: "disadvantage" }]);

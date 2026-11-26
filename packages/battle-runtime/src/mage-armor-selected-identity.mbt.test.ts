@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityModifier as armorAbilityModifier,
-  currentArmorClass,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -25,7 +24,11 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import { activeEffectArmorClass } from "./battle-reducer/creature-state.ts";
+import {
+  armorClassContributions,
+  armorClassFromContributions,
+  type ArmorClassContribution,
+} from "./battle-reducer/armor-class-collector.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   mbtSpecPath,
@@ -97,7 +100,6 @@ type MageArmorDurationEffect = Extract<
 
 const mageArmorUnitId = "mage_armor";
 const defaultUnarmoredBaseArmorClass = 10;
-const mageArmorBaseArmorClass = 13;
 const mageArmorDexModifier = 2;
 const initialArmorClass = defaultUnarmoredBaseArmorClass + mageArmorDexModifier;
 const casterId = combatantId("mage-armor-selected-identity-caster");
@@ -365,12 +367,12 @@ function projectBattleState(
       effect.kind === "spellBaseArmorClass" &&
       effect.sourceCombatantId === casterId,
   );
-  const projectedArmorClass = activeEffectArmorClass(state, caster);
+  const projectedArmorClass = armorClassContributions(state, caster, null);
   return {
     mageArmorEffectPresent: mageArmorEffect !== undefined,
     storedArmorBaseStillUnarmored: storedArmorBaseStillUnarmored(caster),
     projectedBaseIsMageArmor: projectedBaseIsMageArmor(projectedArmorClass),
-    armorClass: Number(currentArmorClass(projectedArmorClass)),
+    armorClass: Number(armorClassFromContributions(projectedArmorClass)),
     mageArmorDurationTicks:
       mageArmorEffect?.expiresAt.kind === "duration"
         ? Number(mageArmorEffect.expiresAt.durationTicks)
@@ -637,13 +639,13 @@ function storedArmorBaseStillUnarmored(
   );
 }
 
-function projectedBaseIsMageArmor(armorClass: ArmorClassState): boolean {
-  return (
-    armorClass.base.kind === "ability_sum" &&
-    armorClass.base.source === "spell_base_plus_ability" &&
-    Number(armorClass.base.base) === mageArmorBaseArmorClass &&
-    armorClass.base.abilityModifiers.length === 1 &&
-    armorClass.base.abilityModifiers[0] === "dex"
+function projectedBaseIsMageArmor(
+  contributions: readonly ArmorClassContribution[],
+): boolean {
+  return contributions.some(
+    (contribution) =>
+      contribution.role === "baseCalculation" &&
+      contribution.source === "spellBaseCalculation",
   );
 }
 
