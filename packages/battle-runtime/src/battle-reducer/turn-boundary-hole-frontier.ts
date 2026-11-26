@@ -3,7 +3,7 @@ import { Match } from "effect";
 import type {
   BattlePendingProcedure,
   BattlePendingStartTurnOccurrence,
-  BattlePendingTurnBoundaryRequest,
+  BattlePendingTurnStartRequest,
 } from "../battle-pending-procedure.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
@@ -12,6 +12,7 @@ import type {
   BattleHoleId,
   BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleState,
+  BattleTurnStartEntry,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { needsHolesResultWithProcedure } from "./needs-holes-result.ts";
@@ -40,12 +41,12 @@ export type BattleTurnBoundaryHoleRequest =
     })
   | (BattleTurnBoundaryHoleRequestContext & {
       readonly kind: "startTurnOccurrenceOrder";
-      readonly endingActorId: CombatantId;
+      readonly entry: BattleTurnStartEntry;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
     })
   | (BattleTurnBoundaryHoleRequestContext & {
       readonly kind: "incomingStartTurnOccurrence";
-      readonly endingActorId: CombatantId;
+      readonly entry: BattleTurnStartEntry;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly occurrence: BattleTurnBoundaryStartTurnOccurrence;
     });
@@ -71,31 +72,60 @@ export function turnBoundaryNeedsHolesResult<
 
 function pendingProcedureForTurnBoundaryRequest(
   request: BattleTurnBoundaryHoleRequest,
-): Extract<BattlePendingProcedure, { readonly kind: "turnBoundary" }> {
-  const boundary = {
-    kind: "turnBoundary" as const,
-    endingActorId: request.endingActorId,
-    sourceTurn: request.sourceTurn,
-  };
+): Extract<
+  BattlePendingProcedure,
+  { readonly kind: "turnBoundary" | "turnStart" }
+> {
   return Match.value(request).pipe(
-    Match.when({ kind: "outgoingEndTurn" }, () => ({
-      ...boundary,
-      request: {
-        kind: "outgoingEndTurn" as const,
-      } satisfies BattlePendingTurnBoundaryRequest,
+    Match.when(
+      { kind: "outgoingEndTurn" },
+      ({ endingActorId, sourceTurn }) => ({
+        kind: "turnBoundary" as const,
+        endingActorId,
+        sourceTurn,
+        request: { kind: "outgoingEndTurn" as const },
+      }),
+    ),
+    Match.when({ kind: "startTurnOccurrenceOrder" }, ({ entry, sourceTurn }) =>
+      pendingTurnStartProcedure(entry, sourceTurn, {
+        kind: "startTurnOccurrenceOrder",
+      }),
+    ),
+    Match.when(
+      { kind: "incomingStartTurnOccurrence" },
+      ({ entry, sourceTurn, occurrence }) =>
+        pendingTurnStartProcedure(entry, sourceTurn, {
+          kind: "startTurnOccurrence",
+          occurrence,
+        }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+/**
+ * A turn start's request belongs to End Turn's boundary when an ending actor
+ * reached it, and to the opening turn start otherwise.
+ */
+function pendingTurnStartProcedure(
+  entry: BattleTurnStartEntry,
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  request: BattlePendingTurnStartRequest,
+): Extract<
+  BattlePendingProcedure,
+  { readonly kind: "turnBoundary" | "turnStart" }
+> {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "endTurn" }, ({ endingActorId }) => ({
+      kind: "turnBoundary" as const,
+      endingActorId,
+      sourceTurn,
+      request,
     })),
-    Match.when({ kind: "startTurnOccurrenceOrder" }, () => ({
-      ...boundary,
-      request: {
-        kind: "startTurnOccurrenceOrder" as const,
-      } satisfies BattlePendingTurnBoundaryRequest,
-    })),
-    Match.when({ kind: "incomingStartTurnOccurrence" }, ({ occurrence }) => ({
-      ...boundary,
-      request: {
-        kind: "startTurnOccurrence" as const,
-        occurrence,
-      } satisfies BattlePendingTurnBoundaryRequest,
+    Match.when({ kind: "battleStart" }, () => ({
+      kind: "turnStart" as const,
+      sourceTurn,
+      request,
     })),
     Match.exhaustive,
   );

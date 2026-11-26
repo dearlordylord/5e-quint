@@ -89,6 +89,7 @@ import {
   removeBattleCombatantsRight,
   rageResource,
   readyDeclarationFillForTest,
+  deathSavingThrowFill,
   requireHole,
   requireOrdinaryFrontier,
   requireResolved,
@@ -2876,17 +2877,40 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
-    const acts = discoverBattleActCandidates(
-      startBattleRight({
-        battleId: battleId("battle-unconscious-actor"),
-        combatants: [
-          characterSeed({ initiative: 20, currentHp: 0 }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
+    const opening = startBattleRight({
+      battleId: battleId("battle-unconscious-actor"),
+      combatants: [
+        characterSeed({ initiative: 20, currentHp: 0 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const startTurnSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "startTurn",
+    } as const;
+    expect(
+      discoverBattleActCandidates(opening).map((act) => act.subject),
+    ).toEqual([startTurnSubject]);
+    const deathSave = requireHole(
+      resolveBattleSubject({
+        state: opening,
+        subject: startTurnSubject,
+        fills: [],
       }),
+      "deathSavingThrow",
     );
+    const started = requireResolved(
+      resolveBattleSubject({
+        state: opening,
+        subject: startTurnSubject,
+        fills: [deathSavingThrowFill(deathSave, 12)],
+      }),
+    ).state;
 
-    expect(acts.map((act) => act.subject)).toEqual([
+    expect(
+      discoverBattleActCandidates(started).map((act) => act.subject),
+    ).toEqual([
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
   });

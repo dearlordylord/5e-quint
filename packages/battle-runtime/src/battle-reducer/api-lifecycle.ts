@@ -704,13 +704,18 @@ export type { BattleStartInput } from "../battle-start-protocol.ts";
 export function startBattleWithInitialInitiativeSetup(
   input: BattleStartInput,
 ): Result.Result<InitialInitiativeSetup, BattleInitializationIssue> {
-  const session = startBattle(input);
+  const session = admitBattle(input);
   return Result.isFailure(session)
     ? Result.fail(session.failure)
     : Result.succeed(initialInitiativeSetupState(session.success));
 }
 
-export function finishInitialInitiativeSetup(
+/**
+ * Close initial-initiative setup. The opening turn hasn't started: the
+ * public `finishInitialInitiativeSetup` starts it, now that no swap can change
+ * the first participant.
+ */
+export function closeInitialInitiativeSetup(
   setup: InitialInitiativeSetup,
 ): BattleRuntimeSession {
   return setup[InitialInitiativeSetupFinish]();
@@ -1092,6 +1097,7 @@ function initialBattleState(
     lightEmitters: [],
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
     currentTurnResources: INITIAL_TURN_RESOURCES,
+    currentTurnStart: "pending",
     subjectResolutionPhase: { kind: "subjectSelection" },
     readiedSpells: new Map(),
     readiedResponses: new Map(),
@@ -1246,7 +1252,11 @@ function initializeBattleSpellExecutions(input: {
   return combatantsWithSpellExecutions;
 }
 
-export const startBattle: StartBattle = (input) => {
+/**
+ * Admit a battle with its opening turn not started yet. The public
+ * `startBattle` also starts that turn.
+ */
+export const admitBattle: StartBattle = (input) => {
   if (input.combatants.length === 0) {
     return Result.fail(
       battleInitializationIssue(

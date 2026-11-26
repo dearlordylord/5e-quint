@@ -2,7 +2,7 @@ import { Result } from "effect";
 import { statBlockId } from "../packages/shared/src/game-facts.ts";
 import type { UnitCatalog } from "../packages/surface/src/surface/unit-catalog.ts";
 import type { StatBlockRecord } from "../packages/surface/src/surface/stat-block-types.ts";
-import { startBattle } from "../packages/battle-runtime/src/battle-reducer/api-lifecycle.ts";
+import { startBattle } from "../packages/battle-runtime/src/battle-start.ts";
 import {
   battleId,
   combatantId,

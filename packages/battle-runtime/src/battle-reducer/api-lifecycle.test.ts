@@ -25,14 +25,16 @@ import {
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,
   createInitialInitiativeForCombatants,
-  finishInitialInitiativeSetup as finishInitialInitiativeSetupFromApi,
   removeBattleRuntimeCombatants,
   retainInitialInitiativeSetup,
   restoreInitialInitiativeSetup,
   requiredInitiativeRollModeForCombatant,
-  startBattle,
   startBattleWithInitialInitiativeSetup as startBattleWithInitialInitiativeSetupFromApi,
 } from "./api-lifecycle.ts";
+import {
+  finishInitialInitiativeSetup as finishInitialInitiativeSetupFromApi,
+  startBattle,
+} from "../battle-start.ts";
 import {
   retainBattleRuntimeContinuation,
   restoreBattleRuntimeContinuation,
@@ -973,12 +975,16 @@ describe("battle lifecycle admission issue aggregation", () => {
       },
     });
 
+    expect(setup.state.currentTurnStart).toBe("pending");
     const finished = finishInitialInitiativeSetupFromApi(setup);
-    expect(finished.state).toBe(setup.state);
+    expect(finished.state.currentTurnStart).toBe("started");
     const closedSetup = restoreInitialInitiativeSetup(
       structuredClone(retainInitialInitiativeSetup(setup)),
     );
-    expect(closedSetup.state).toEqual(finished.state);
+    expect(closedSetup.state).toEqual(setup.state);
+    expect(finishInitialInitiativeSetupFromApi(closedSetup).state).toEqual(
+      finished.state,
+    );
     expect(
       applyInitiativeSwap({
         setup: closedSetup,

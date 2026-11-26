@@ -459,8 +459,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "lightEmitterOpaqueCoverBlocksEmission",
     "lightEmitterRefs",
     "lightEmitters",
-    "lightEmittersAfterDurationTick",
-    "lightEmittersAfterEndEffects",
     "lightFact",
     "lightId",
     "lightOperation",
@@ -775,6 +773,8 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "resolveStagedDelegatedEndTurnCommand",
     "resolveDelegatedEndTurnCommandWithReplayState",
     "resolveEndTurnCommandForParent",
+    "resolveStartTurnCommand",
+    "resolveStartTurnCommandForParent",
     "battleRuntimeCommandProcedureRefs",
     "battleRuntimeCommandBoundExecutionReferences",
     "runtimeCommandEffectOccurrenceKey",
@@ -2849,9 +2849,9 @@ EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.push(
 );
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "8a83ee18e9456b24ee5bf1369504a0f078ca3b52bd0e13f8c3a3f6c9d137afff",
-  siteCount: 1739,
-  violationCount: 1859,
+  sha256: "12cf940dbe3cde205cc730d25a24a74810ed56fbbeb7996c85b1a083c8ee2a74",
+  siteCount: 1746,
+  violationCount: 1867,
 };
 
 function escapeForRegExp(text) {

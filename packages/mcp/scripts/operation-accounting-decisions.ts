@@ -1016,6 +1016,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.admittedSubject,
     ),
+    "runtimeCommand.startTurn": account(
+      "operation",
+      "runtimeCommand.startTurn",
+      at(
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "resolveStartTurnCommand",
+      ),
+      REASONS.admittedSubject,
+    ),
     "runtimeCommand.changeWeaponAfterAttack": account(
       "operation",
       "runtimeCommand.changeWeaponAfterAttack",

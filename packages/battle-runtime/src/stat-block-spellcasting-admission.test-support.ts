@@ -7,7 +7,7 @@ import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/stat-block-types";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import { battleId, combatantId, initiativeScore } from "./identity.ts";
 
 type IsolatedSpellcastingAdmissionFailure =

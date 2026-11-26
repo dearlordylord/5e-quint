@@ -228,10 +228,12 @@ function resolvedAction(
   );
   return {
     detail: `${actor} resolved ${pendingProcedureLabel(pending)}.`,
-    summary:
-      pending.pendingProcedure.kind === "subjectResolution"
-        ? "Battle action resolved"
-        : "Turn boundary resolved",
+    summary: Match.value(pending.pendingProcedure.kind).pipe(
+      Match.when("subjectResolution", () => "Battle action resolved"),
+      Match.when("turnBoundary", () => "Turn boundary resolved"),
+      Match.when("turnStart", () => "Turn start resolved"),
+      Match.exhaustive,
+    ),
   };
 }
 
@@ -257,6 +259,10 @@ function pendingProcedureActorId(
         Match.exhaustive,
       ),
     ),
+    Match.when(
+      { kind: "turnStart" },
+      (procedure) => procedure.sourceTurn.actorId,
+    ),
     Match.exhaustive,
   );
 }
@@ -269,16 +275,32 @@ function pendingProcedureLabel(
     Match.when({ kind: "turnBoundary" }, (procedure) =>
       Match.value(procedure.request).pipe(
         Match.when({ kind: "outgoingEndTurn" }, () => "End Turn"),
-        Match.when(
-          { kind: "startTurnOccurrenceOrder" },
-          () => "start-turn occurrence ordering",
-        ),
-        Match.when(
-          { kind: "startTurnOccurrence" },
-          ({ occurrence }) => `${occurrence.kind} start-turn occurrence`,
-        ),
+        Match.when({ kind: "startTurnOccurrenceOrder" }, turnStartRequestLabel),
+        Match.when({ kind: "startTurnOccurrence" }, turnStartRequestLabel),
         Match.exhaustive,
       ),
+    ),
+    Match.when({ kind: "turnStart" }, (procedure) =>
+      turnStartRequestLabel(procedure.request),
+    ),
+    Match.exhaustive,
+  );
+}
+
+type PendingTurnStartRequest = Extract<
+  NonNullable<ReturnType<typeof pendingBattleFrontier>>["pendingProcedure"],
+  { readonly kind: "turnStart" }
+>["request"];
+
+function turnStartRequestLabel(request: PendingTurnStartRequest): string {
+  return Match.value(request).pipe(
+    Match.when(
+      { kind: "startTurnOccurrenceOrder" },
+      () => "start-turn occurrence ordering",
+    ),
+    Match.when(
+      { kind: "startTurnOccurrence" },
+      ({ occurrence }) => `${occurrence.kind} start-turn occurrence`,
     ),
     Match.exhaustive,
   );

@@ -1,4 +1,7 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  NO_HEROIC_INSPIRATION,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 import { describe, expect, test } from "vitest";
@@ -9,6 +12,7 @@ import {
   battleInitiativeProficiencyAndSwapSupportForUnit,
   battleUnitRefWithSupportProfiles,
   combatantId,
+  discoverBattleActs,
   endTurn,
   finishInitialInitiativeSetup,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
@@ -242,6 +246,34 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expect(state.state.combatants.get(alertAllyId)?.initiative).toBe(12);
   });
 
+  test("the opening turn starts for the creature first after the swap", () => {
+    const unswapped = finishInitialInitiativeSetup(
+      alertBattleSetup({ sourceHeroicWarrior: true }),
+    );
+    expect(unswapped.state.initiative.stillToAct[0].creature).toBe(alertAllyId);
+    expect(unswapped.state.currentTurnStart).toBe("started");
+
+    const setup = alertBattleSetup({ sourceHeroicWarrior: true });
+    expect(setup.state.currentTurnStart).toBe("pending");
+    Result.getOrThrow(
+      applyInitiativeSwap({
+        setup,
+        sourceId: alertSourceId,
+        candidateId: alertAllyId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    );
+    const swapped = finishInitialInitiativeSetup(setup);
+
+    // The swapped-in Heroic Warrior starts its turn without Heroic
+    // Inspiration, so the opening waits on that creature's choice.
+    expect(swapped.state.initiative.stillToAct[0].creature).toBe(alertSourceId);
+    expect(swapped.state.currentTurnStart).toBe("pending");
+    expect(discoverBattleActs(swapped).map((act) => act.subject)).toEqual([
+      { tag: "runtimeCommand", actorId: alertSourceId, command: "startTurn" },
+    ]);
+  });
+
   test("Initiative Swap consumes the operation-local ally fact instead of stored creature classification", () => {
     const tableRejectsRelationship = {
       setup: alertBattleSetup(),
@@ -366,6 +398,7 @@ function alertBattleSetup(
   input: {
     readonly sourceConditions?: readonly "incapacitated"[];
     readonly allyConditions?: readonly "incapacitated"[];
+    readonly sourceHeroicWarrior?: boolean;
   } = {},
 ) {
   const unit = unitLibrary.requireUnit(alertUnitId);
@@ -389,7 +422,11 @@ function alertBattleSetup(
         combatantId: alertSourceId,
         displayName: "Alert source",
         initiative: 12,
-        characterUnitRefs: [unitRef.success],
+        characterUnitRefs: [
+          unitRef.success,
+          ...(input.sourceHeroicWarrior === true ? heroicWarriorRefs() : []),
+        ],
+        heroicInspiration: NO_HEROIC_INSPIRATION,
         conditions: input.sourceConditions,
       }),
       characterCreature({
@@ -415,6 +452,15 @@ function alertBattleSetup(
     throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
+}
+
+function heroicWarriorRefs() {
+  const unit = unitLibrary.requireUnit("fighter_heroic_warrior");
+  return [
+    Result.getOrThrow(
+      battleUnitRefWithSupportProfiles({ unit, unitRef: { unitId: unit.id } }),
+    ),
+  ];
 }
 
 function expectSwapRejected(input: Parameters<typeof applyInitiativeSwap>[0]) {
