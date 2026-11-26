@@ -1,4 +1,5 @@
 import { difficultyClass } from "@dnd/shared/types";
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type {
   BattleUnitFeatureSavingThrowOutcomeHole,
@@ -11,10 +12,6 @@ import {
 } from "./domain-constants.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 import { selectedWeaponMasteryProperty } from "./attack-roll.ts";
 import { WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE } from "../unit-feature-execution-constants.ts";
 
@@ -65,7 +62,10 @@ export function weaponMasteryToppleSavingThrowHole({
       ),
     },
     targetIds: [target.combatantId],
-    targetRollModes: savingThrowRollModeProjections(state, "con"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, "con"),
+    ...savingThrowTargetModifiers(
+      state,
+      { ability: "con", avoidsCondition: "prone" },
+      "everyCombatant",
+    ),
   };
 }

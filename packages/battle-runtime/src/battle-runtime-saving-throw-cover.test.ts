@@ -8,10 +8,8 @@ import type { BonusCoverType, RuledCoverType } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
-import {
-  savingThrowCoverRuling,
-  savingThrowFillsCoverIssue,
-} from "./battle-reducer/saving-throw-cover.ts";
+import { savingThrowCoverRuling } from "./battle-reducer/saving-throw-cover.ts";
+import { savingThrowFillsOutcomeIssue } from "./battle-reducer/saving-throw-outcome-check.ts";
 import { admitRegisteredSpellProcedureMechanics } from "./battle-reducer/spell-procedure-profiles/admission-registry.ts";
 import type { BattleHole, BattleSubject } from "./index.ts";
 import {
@@ -706,7 +704,7 @@ describe("battle runtime: Cover on Dexterity saving throws", () => {
     );
     // Without a target fact anywhere in the fill set, the save cannot open.
     expect(
-      savingThrowFillsCoverIssue([fill], (fills) =>
+      savingThrowFillsOutcomeIssue([fill], (fills) =>
         resolveBattleSubject({ state, subject, fills }),
       ),
     ).toBeNull();

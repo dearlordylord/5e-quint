@@ -17,7 +17,6 @@ import type {
   BattleExecutableSpellInvocation,
   BattleFill,
   BattleHole,
-  BattleResolutionResult,
   BattleSavingThrowFlatBonusProjection,
   BattleSpellSaveCover,
   BattleState,
@@ -94,7 +93,10 @@ export function spellTargetSaveCover(input: {
   readonly targetSelection: SpellSaveTargetSelection | undefined;
 }): {
   readonly ruledTargetIds: readonly CombatantId[];
-  readonly flatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly flatBonuses: readonly Extract<
+    BattleSavingThrowFlatBonusProjection,
+    { readonly kind: "cover" }
+  >[];
 } {
   if (
     input.ruling === "noCoverBenefit" ||
@@ -148,62 +150,4 @@ export function savingThrowOutcomeCoverIssue(input: {
   return coveredTargetIds.some((targetId) => ruledTargetIds.has(targetId))
     ? "This target's cover against the effect is ruled on its spellTarget fact; omit cover on its outcome."
     : null;
-}
-
-/** The open saving throw hole a fill answers, when the frontier has it. */
-function frontierSavingThrowHole(
-  result: BattleResolutionResult,
-  fill: SavingThrowOutcomeFill,
-): SavingThrowOutcomeHole | undefined {
-  if (result.tag !== "needsHoles" || result.frontier.kind !== "holes") {
-    return undefined;
-  }
-  return result.frontier.holes.find(
-    (hole): hole is SavingThrowOutcomeHole =>
-      hole.kind === "savingThrowOutcome" && hole.holeId === fill.holeId,
-  );
-}
-
-/**
- * Why a fill's outcome cover doesn't answer the saving throw hole it fills, or
- * null. Resolve all other fills to discover the hole, since a fill set's facts
- * are not ordered by their position in the input array. Duplicate or unrelated
- * fills remain the resolver's responsibility.
- */
-export function savingThrowFillsCoverIssue(
-  fills: readonly BattleFill[],
-  resolveFills: (fills: readonly BattleFill[]) => BattleResolutionResult,
-): string | null {
-  for (const [index, fill] of fills.entries()) {
-    if (fill.kind !== "savingThrowOutcome") continue;
-    if (coveredOutcomeTargetIds(fill).length === 0) continue;
-    const hole = frontierSavingThrowHole(
-      resolveFills(
-        fills.filter((_, candidateIndex) => candidateIndex !== index),
-      ),
-      fill,
-    );
-    if (hole === undefined) continue;
-    const issue = savingThrowOutcomeCoverIssue({ fill, hole });
-    if (issue !== null) return issue;
-  }
-  return null;
-}
-
-/**
- * Resolves fills after checking each saving throw fill's outcome cover against
- * its hole. The check replays only the unchecked resolution, so it never
- * nests.
- */
-export function resolveWithSavingThrowCoverCheck(input: {
-  readonly fills: readonly BattleFill[];
-  readonly resolveFills: (
-    fills: readonly BattleFill[],
-  ) => BattleResolutionResult;
-  readonly invalid: (message: string) => BattleResolutionResult;
-}): BattleResolutionResult {
-  const issue = savingThrowFillsCoverIssue(input.fills, input.resolveFills);
-  return issue === null
-    ? input.resolveFills(input.fills)
-    : input.invalid(issue);
 }

@@ -150,6 +150,7 @@ import {
   saveGatedAreaControlShakeAwakeTargetChoices,
   hitPointBudgetConditionShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
+import { strengthOrDexteritySavingThrowChoices } from "./saving-throw-modifier-collector.ts";
 
 export type BattleHoleFamilyKind = BattleHole["kind"];
 
@@ -871,7 +872,7 @@ export function saveGatedAreaControlShakeAwakeTargetHole(
 export function grappleOutcomeHole(
   state: BattleState,
   link: BattleGrappleLink,
-): BattleGrappleOutcomeHole {
+): Extract<BattleGrappleOutcomeHole, { readonly mode: "grappleSave" }> {
   return {
     kind: "grappleOutcome",
     holeId: GRAPPLE_OUTCOME_HOLE_ID,
@@ -881,6 +882,11 @@ export function grappleOutcomeHole(
     targetId: link.targetId,
     dc: link.escapeDc,
     mode: "grappleSave",
+    targetSavingThrowChoices: strengthOrDexteritySavingThrowChoices(
+      state,
+      link.targetId,
+      "grappled",
+    ),
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       link.grapplerId,
@@ -910,6 +916,10 @@ export function shoveOutcomeHole(input: {
     actorId: input.actorId,
     targetId: input.targetId,
     dc: input.dc,
+    targetSavingThrowChoices: strengthOrDexteritySavingThrowChoices(
+      input.state,
+      input.targetId,
+    ),
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       input.state,
       input.actorId,

@@ -5,6 +5,7 @@ import { spellCastingTimeResourceForSpellCast } from "./spells-resolve-resources
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import {
   nonEmptyArrayProperty,
   optionalProperty,
@@ -85,7 +86,6 @@ import {
 } from "./damage-helpers.ts";
 import {
   applyPreparedSlotSpellDamage,
-  savingThrowRollModeProjections,
   spellDamageByTypeForTarget,
   spellDamageHole,
   validateSpellDamageFill,
@@ -109,7 +109,6 @@ import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./magic-suppression-magical-effect-interdiction.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -1220,9 +1219,10 @@ function objectContactSavingThrowOutcomeHole(input: {
     ability: "con",
     dc: { kind: "caster_spell_save_dc" },
     areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(input.state, "con"),
-    targetFlatBonuses: input.targets.flatMap(
-      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget,
+    ...savingThrowTargetModifiers(
+      input.state,
+      { ability: "con" },
+      input.targets.map((target) => target.combatantId),
     ),
   };
 }

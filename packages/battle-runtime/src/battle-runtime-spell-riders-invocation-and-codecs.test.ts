@@ -848,6 +848,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       areaChoices: [],
       targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
       targetFlatBonuses: [],
+      targetAutomaticFailures: [],
       relationshipFactRequest: {
         kind: "savingThrowTargetIsEnemy",
         actorId: wizardId,

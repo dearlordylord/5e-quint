@@ -4,7 +4,7 @@ import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
@@ -85,9 +85,13 @@ describe("Gnomish Cunning battle admission and Saving Throw Advantage", () => {
   test("starts battle and projects Advantage only on Intelligence, Wisdom, and Charisma saves", () => {
     const state = gnomishCunningBattle();
     for (const ability of ["int", "wis", "cha"] as const) {
-      expect(savingThrowRollModeProjections(state, ability)).toEqual([
-        { targetId: spellTargetId, rollMode: "advantage" },
-      ]);
+      expect(
+        savingThrowTargetModifiers(
+          state,
+          { ability: ability },
+          "everyCombatant",
+        ).targetRollModes,
+      ).toEqual([{ targetId: spellTargetId, rollMode: "advantage" }]);
       expect(
         passiveSavingThrowRollModeRouteEvents({ state, ability }),
       ).toMatchObject([
@@ -97,7 +101,13 @@ describe("Gnomish Cunning battle admission and Saving Throw Advantage", () => {
       ]);
     }
     for (const ability of ["str", "dex", "con"] as const) {
-      expect(savingThrowRollModeProjections(state, ability)).toEqual([]);
+      expect(
+        savingThrowTargetModifiers(
+          state,
+          { ability: ability },
+          "everyCombatant",
+        ).targetRollModes,
+      ).toEqual([]);
       expect(
         passiveSavingThrowRollModeRouteEvents({ state, ability }),
       ).toBeUndefined();
@@ -144,9 +154,13 @@ describe("Gnomish Cunning battle admission and Saving Throw Advantage", () => {
         ),
       }),
     };
-    expect(savingThrowRollModeProjections(incapacitatedState, "dex")).toEqual([
-      { targetId: spellTargetId, rollMode: "advantage" },
-    ]);
+    expect(
+      savingThrowTargetModifiers(
+        incapacitatedState,
+        { ability: "dex" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([{ targetId: spellTargetId, rollMode: "advantage" }]);
     expect(
       passiveSavingThrowRollModeRouteEvents({
         state: incapacitatedState,
@@ -173,14 +187,30 @@ describe("Gnomish Cunning battle admission and Saving Throw Advantage", () => {
         ),
       }),
     };
-    expect(savingThrowRollModeProjections(incapacitatedState, "wis")).toEqual([
-      { targetId: spellTargetId, rollMode: "advantage" },
-    ]);
     expect(
-      savingThrowRollModeProjections(state, "wis", undefined, {
-        targetId: spellTargetId,
-        rollMode: "disadvantage",
-      }),
+      savingThrowTargetModifiers(
+        incapacitatedState,
+        { ability: "wis" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([{ targetId: spellTargetId, rollMode: "advantage" }]);
+    expect(
+      savingThrowTargetModifiers(
+        state,
+        {
+          ability: "wis",
+          procedureSources: {
+            rollModes: [
+              {
+                targetId: spellTargetId,
+                rollMode: "disadvantage",
+              },
+            ],
+            bonuses: [],
+          },
+        },
+        "everyCombatant",
+      ).targetRollModes,
     ).toEqual([{ targetId: spellTargetId, rollMode: "normal" }]);
   });
 });

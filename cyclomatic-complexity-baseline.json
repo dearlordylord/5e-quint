@@ -6,14 +6,14 @@
       "module/binding:presentationTimelineDetail": 9,
       "module/binding:presentationTimelineTitle": 11
     },
-    "packages/app/src/battle-scene/battle-scene-layout.ts": {
-      "module/binding:computeCreatureLayout": 24
-    },
     "packages/app/src/battle-scene/CreatureToken.tsx": {
       "module/binding:CreatureToken": 25
     },
     "packages/app/src/battle-scene/InitiativeTracker.tsx": {
       "module/binding:InitiativeTracker/call:creatures.map:argument-0": 29
+    },
+    "packages/app/src/battle-scene/battle-scene-layout.ts": {
+      "module/binding:computeCreatureLayout": 24
     },
     "packages/battle-runtime/src/active-effect/lifecycle.ts": {
       "module/binding:activeEffectCondition": 9,
@@ -62,7 +62,7 @@
       "module/binding:brutalStrikeSelection": 10,
       "module/binding:resolveAdditionalWeaponAttackDamage": 9,
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,
-      "module/binding:resolveGrapplerPunchAndGrabAfterHit": 12,
+      "module/binding:resolveGrapplerPunchAndGrabAfterHit": 11,
       "module/binding:resolveHuntersPreyHordeBreakerAfterPrimaryDamage": 21,
       "module/binding:resolveSelectedAttackProcedure": 213,
       "module/binding:resolveWeaponMasteryCleaveAfterPrimaryDamage": 20
@@ -73,13 +73,13 @@
     "packages/battle-runtime/src/battle-reducer/attack-resolution.ts": {
       "module/binding:classFeatureExtraAttackForActor": 10,
       "module/binding:resolveEscapeSpellRestraint": 14,
-      "module/binding:resolveGrapple": 11,
+      "module/binding:resolveGrapple": 10,
       "module/binding:resolveHelpAttack": 15,
       "module/binding:resolveHide": 10,
       "module/binding:resolveSearch": 11,
       "module/binding:resolveShakeAwakeFromHitPointBudgetCondition": 9,
       "module/binding:resolveShakeAwakeFromSaveGatedAreaControl": 9,
-      "module/binding:resolveShove": 14,
+      "module/binding:resolveShove": 13,
       "module/binding:spendAttackAction": 11,
       "module/binding:spendAttackTurnResources": 10,
       "module/binding:validateAttackDamageFill": 15,
@@ -391,11 +391,13 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/temporary-ability-check-roll-mode.ts": {
       "module/binding:resolveTemporaryAbilityCheckRollMode": 9
     },
+    "packages/battle-runtime/src/battle-reducer/spell-target-prerequisites.ts": {
+      "module/binding:spellTargetHasNonSpatialPrerequisites": 17
+    },
     "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts": {
       "module/binding:saveDamageReplacementForInvocation": 11,
-      "module/binding:savingThrowRollModeProjections": 17,
       "module/binding:spellDamageByTypeForTarget": 9,
-      "module/binding:spellSavingThrowOutcomeHole": 16,
+      "module/binding:spellSavingThrowOutcomeHole": 13,
       "module/binding:validateSpellAttackSequencePartDamageFill": 14,
       "module/binding:validateSpellDamageFill": 31
     },
@@ -486,7 +488,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-targeting.ts": {
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
-      "module/binding:spellTargetHasNonSpatialPrerequisites": 17,
       "module/binding:spellTargetRequiresAttackRollRelationshipFact": 9,
       "module/binding:spellTargetSpatialFactMatches": 9,
       "module/binding:validateSpellTargetAllocation": 10,

@@ -1,6 +1,7 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -46,10 +47,6 @@ import {
 } from "./creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   OTHER_MAGICAL_EFFECT_SOURCE,
@@ -893,13 +890,10 @@ export function attackActionAreaSaveDamageReplacementSavingThrowHole(
           targetIds: [targetId],
         }) === null,
     ),
-    targetRollModes: savingThrowRollModeProjections(
+    ...savingThrowTargetModifiers(
       state,
-      unitFeature.breath.save.ability,
-    ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      unitFeature.breath.save.ability,
+      { ability: unitFeature.breath.save.ability },
+      "everyCombatant",
     ),
   };
 }
@@ -1025,14 +1019,11 @@ export function magicActionSaveGatedConditionSavingThrowHole(
     ability: unitFeature.condition.save.ability,
     dc: { kind: "fixed", dc: spellSaveDc },
     targetIds,
-    targetRollModes: savingThrowRollModeProjections(
+    ...savingThrowTargetModifiers(
       state,
-      unitFeature.condition.save.ability,
-    ).filter((projection) => targetIds.includes(projection.targetId)),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      unitFeature.condition.save.ability,
-    ).filter((projection) => targetIds.includes(projection.targetId)),
+      { ability: unitFeature.condition.save.ability },
+      targetIds,
+    ),
   };
 }
 
@@ -1120,13 +1111,10 @@ export function magicActionAreaSaveDamageHealingSavingThrowHole(
           targetIds: [targetId],
         }) === null,
     ),
-    targetRollModes: savingThrowRollModeProjections(
+    ...savingThrowTargetModifiers(
       state,
-      unitFeature.damageHealing.save.ability,
-    ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      unitFeature.damageHealing.save.ability,
+      { ability: unitFeature.damageHealing.save.ability },
+      "everyCombatant",
     ),
   };
 }

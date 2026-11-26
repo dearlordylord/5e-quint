@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { Result } from "effect";
 
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -112,9 +112,16 @@ function dangerSenseDexterityAdvantageProjection(): DangerSenseProjection {
   return {
     lastResult: "danger-sense-dexterity-advantage",
     sourceUnitId: BARBARIAN_DANGER_SENSE_UNIT_ID,
-    dexterityRollModeCount: savingThrowRollModeProjections(state, "dex").length,
-    constitutionRollModeCount: savingThrowRollModeProjections(state, "con")
-      .length,
+    dexterityRollModeCount: savingThrowTargetModifiers(
+      state,
+      { ability: "dex" },
+      "everyCombatant",
+    ).targetRollModes.length,
+    constitutionRollModeCount: savingThrowTargetModifiers(
+      state,
+      { ability: "con" },
+      "everyCombatant",
+    ).targetRollModes.length,
     suppressed: false,
     accepted: true,
   };
@@ -125,9 +132,16 @@ function dangerSenseSuppressedProjection(): DangerSenseProjection {
   return {
     lastResult: "danger-sense-incapacitated-suppressed",
     sourceUnitId: BARBARIAN_DANGER_SENSE_UNIT_ID,
-    dexterityRollModeCount: savingThrowRollModeProjections(state, "dex").length,
-    constitutionRollModeCount: savingThrowRollModeProjections(state, "con")
-      .length,
+    dexterityRollModeCount: savingThrowTargetModifiers(
+      state,
+      { ability: "dex" },
+      "everyCombatant",
+    ).targetRollModes.length,
+    constitutionRollModeCount: savingThrowTargetModifiers(
+      state,
+      { ability: "con" },
+      "everyCombatant",
+    ).targetRollModes.length,
     suppressed: true,
     accepted: true,
   };

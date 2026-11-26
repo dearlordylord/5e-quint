@@ -64,6 +64,7 @@ import {
   type BattleConcentration,
   type BattleConcentrationSavingThrowHole,
   type BattleCreatureState,
+  type BattleSavingThrowRollModeProjection,
   type BattleDeathSavingThrowHole,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleFill,
@@ -153,8 +154,12 @@ import {
 import {
   battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints,
   isLinkedDefenseResistanceDamageShareEffect,
-  linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget,
 } from "./linked-defense-damage-share.ts";
+import {
+  savingThrowFlatBonusesFromContributions,
+  savingThrowRollModeFromContributions,
+  targetCarriedSavingThrowContributions,
+} from "./saving-throw-modifier-collector.ts";
 
 type ConcentrationSavingThrowFill = Extract<
   BattleFill,
@@ -1658,6 +1663,16 @@ export function concentrationSavingThrowHole(
     return null;
   }
   const holeKey = `${CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX}:${combatant.combatantId}`;
+  const contributions = targetCarriedSavingThrowContributions(combatant, {
+    ability: "con",
+    procedureSources: {
+      rollModes: concentrationProcedureRollModes(
+        combatant,
+        combatant.concentration,
+      ),
+      bonuses: [],
+    },
+  });
   return {
     kind: "concentrationSavingThrow",
     damageOccurrence: { kind: "untrackedDamage" },
@@ -1667,15 +1682,23 @@ export function concentrationSavingThrowHole(
     combatantId: combatant.combatantId,
     dc: concentrationSavingThrowDc(effectiveDamage),
     damageAmount: toDamageAmount(effectiveDamage),
-    targetFlatBonuses:
-      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
-        combatant,
-      ),
-    ...(combatantHasEldritchMind(combatant) ||
-    combatant.concentration.maintenanceSavingThrowRollMode === "advantage"
-      ? { rollMode: "advantage" as const }
-      : {}),
+    targetFlatBonuses: savingThrowFlatBonusesFromContributions(contributions),
+    ...optionalProperty(
+      "rollMode",
+      savingThrowRollModeFromContributions(contributions),
+    ),
   };
+}
+
+// Eldritch Mind, or the spell's own Advantage on saves to maintain it.
+function concentrationProcedureRollModes(
+  combatant: BattleCreatureState,
+  concentration: NonNullable<BattleCreatureState["concentration"]>,
+): readonly BattleSavingThrowRollModeProjection[] {
+  return combatantHasEldritchMind(combatant) ||
+    concentration.maintenanceSavingThrowRollMode === "advantage"
+    ? [{ targetId: combatant.combatantId, rollMode: "advantage" }]
+    : [];
 }
 
 function combatantHasEldritchMind(combatant: BattleCreatureState): boolean {

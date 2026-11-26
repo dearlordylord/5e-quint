@@ -43,6 +43,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 import { COVER_BONUS_BY_DEGREE } from "@dnd/shared-algebras/cover-algebra";
+import { STRENGTH_AND_DEXTERITY_SAVE_FAILING_CONDITIONS } from "@dnd/shared-algebras/conditions-algebra";
 import {
   AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   OBJECT_INTERACTION_STATES,
@@ -1489,6 +1490,31 @@ const BattleSavingThrowFlatBonusProjectionSchema = Schema.Union([
   }),
 ]);
 
+const BattleSavingThrowAutomaticFailureProjectionSchema = Schema.Struct({
+  targetId: CombatantId,
+  conditions: Schema.NonEmptyArray(
+    Schema.Literals(STRENGTH_AND_DEXTERITY_SAVE_FAILING_CONDITIONS),
+  ),
+});
+
+function battleSavingThrowChoiceSchema<const SaveAbility extends "str" | "dex">(
+  ability: SaveAbility,
+) {
+  return Schema.Struct({
+    ability: Schema.Literal(ability),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
+  });
+}
+
+const BattleStrengthOrDexteritySavingThrowChoicesSchema = Schema.Tuple([
+  battleSavingThrowChoiceSchema("str"),
+  battleSavingThrowChoiceSchema("dex"),
+]);
+
 const BattleDamageOccurrenceSourceSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("untrackedDamage") }),
   Schema.Struct({
@@ -1986,6 +2012,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: Schema.Tuple([]),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2008,6 +2037,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: Schema.Tuple([]),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2027,6 +2059,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: Schema.Tuple([]),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2047,6 +2082,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2067,6 +2105,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2087,6 +2128,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2112,6 +2156,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2138,6 +2185,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2160,6 +2210,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2175,6 +2228,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2194,6 +2250,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2209,6 +2268,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2226,6 +2288,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2241,6 +2306,9 @@ const GenericSavingThrowHoleBaseMembers = [
     areaChoices: EmptySpellAreaChoicesSchema,
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    targetAutomaticFailures: Schema.Array(
+      BattleSavingThrowAutomaticFailureProjectionSchema,
+    ),
   }),
 ] as const;
 
@@ -2367,6 +2435,9 @@ const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
   targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
   targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  targetAutomaticFailures: Schema.Array(
+    BattleSavingThrowAutomaticFailureProjectionSchema,
+  ),
   saveCover: Schema.optionalKey(BattleSpellSaveCoverSchema),
   relationshipFactRequest: Schema.optionalKey(
     BattleSavingThrowRelationshipFactRequestSchema,
@@ -2585,6 +2656,9 @@ const BattleHolePayloadMembers = [
       targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
     D20TestRerollHoleOptionsFields,
@@ -3148,6 +3222,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
     },
     D20TestRerollHoleOptionsFields,
   ),
@@ -3173,6 +3250,9 @@ const BattleHolePayloadMembers = [
       targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
     D20TestRerollHoleOptionsFields,
@@ -3203,6 +3283,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
     },
     D20TestRerollHoleOptionsFields,
   ),
@@ -3226,6 +3309,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
     },
     D20TestRerollHoleOptionsFields,
   ),
@@ -3245,6 +3331,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
     },
     D20TestRerollHoleOptionsFields,
   ),
@@ -3263,6 +3352,9 @@ const BattleHolePayloadMembers = [
       targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
     D20TestRerollHoleOptionsFields,
@@ -3295,6 +3387,9 @@ const BattleHolePayloadMembers = [
       ),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
     D20TestRerollHoleOptionsFields,
@@ -3329,6 +3424,9 @@ const BattleHolePayloadMembers = [
       ),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
     D20TestRerollHoleOptionsFields,
@@ -3377,6 +3475,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
     },
     D20TestRerollHoleOptionsFields,
   ),
@@ -3400,6 +3501,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
       relationshipFactRequest: Schema.optionalKey(
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
@@ -3421,6 +3525,9 @@ const BattleHolePayloadMembers = [
       targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
     D20TestRerollHoleOptionsFields,
@@ -3454,6 +3561,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
       relationshipFactRequest: Schema.optionalKey(
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
@@ -3475,6 +3585,9 @@ const BattleHolePayloadMembers = [
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
       ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
+      ),
       relationshipFactRequest: Schema.optionalKey(
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
@@ -3493,6 +3606,9 @@ const BattleHolePayloadMembers = [
       targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
       targetFlatBonuses: Schema.Array(
         BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      targetAutomaticFailures: Schema.Array(
+        BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
       relationshipFactRequest: Schema.optionalKey(
         BattleSavingThrowRelationshipFactRequestSchema,
@@ -3643,7 +3759,19 @@ const BattleHolePayloadMembers = [
     relationshipFactRequest: Schema.optionalKey(
       BattleSavingThrowRelationshipFactRequestSchema,
     ),
-    mode: Schema.Literals(["grappleSave", "escapeCheck"]),
+    mode: Schema.Literal("grappleSave"),
+    targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoicesSchema,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("grappleOutcome"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+    dc: DifficultyClass,
+    relationshipFactRequest: Schema.optionalKey(
+      BattleSavingThrowRelationshipFactRequestSchema,
+    ),
+    mode: Schema.Literal("escapeCheck"),
     rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
   }),
   pairedBattleHoleMember({
@@ -3655,6 +3783,7 @@ const BattleHolePayloadMembers = [
     relationshipFactRequest: Schema.optionalKey(
       BattleSavingThrowRelationshipFactRequestSchema,
     ),
+    targetSavingThrowChoices: BattleStrengthOrDexteritySavingThrowChoicesSchema,
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,

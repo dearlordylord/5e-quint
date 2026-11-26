@@ -300,6 +300,20 @@ const projectionHoles = [
     targetId: "projection-target",
     dc: 12,
     mode: "grappleSave",
+    targetSavingThrowChoices: [
+      {
+        ability: "str",
+        targetRollModes: [],
+        targetFlatBonuses: [],
+        targetAutomaticFailures: [],
+      },
+      {
+        ability: "dex",
+        targetRollModes: [],
+        targetFlatBonuses: [],
+        targetAutomaticFailures: [],
+      },
+    ],
   }),
   projectionHole("directionalPersistentAreaDirectionChoice", {
     sourceCombatantId: "projection-actor",
@@ -429,6 +443,7 @@ const projectionHoles = [
     areaChoices: [],
     targetRollModes: [],
     targetFlatBonuses: [],
+    targetAutomaticFailures: [],
     targetIds: ["projection-target"],
     d20TestNaturalOneRerolls: [projectionNestedReroll],
   }),
@@ -440,6 +455,7 @@ const projectionHoles = [
     areaChoices: [],
     targetRollModes: [],
     targetFlatBonuses: [],
+    targetAutomaticFailures: [],
     targetIds: ["projection-target"],
   }),
   projectionHole("selfTransformationModeChoice", {
@@ -450,6 +466,20 @@ const projectionHoles = [
     actorId: "projection-actor",
     targetId: "projection-target",
     dc: 12,
+    targetSavingThrowChoices: [
+      {
+        ability: "str",
+        targetRollModes: [],
+        targetFlatBonuses: [],
+        targetAutomaticFailures: [],
+      },
+      {
+        ability: "dex",
+        targetRollModes: [],
+        targetFlatBonuses: [],
+        targetAutomaticFailures: [],
+      },
+    ],
   }),
   projectionHole("turnConstraintSomaticSpellFailureOutcome", {
     actorId: "projection-actor",

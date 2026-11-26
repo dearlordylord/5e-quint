@@ -17,6 +17,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Spell Effect, Ability Check, Saving Throw,
 //     Damage Type, Area of Effect, Concentration, and table-owned spatial facts.
 
+import { savingThrowTargetModifiers } from "./saving-throw-modifier-collector.ts";
 import { optionalProperty } from "../optional-property.ts";
 import {
   holeId,
@@ -163,11 +164,7 @@ import {
   spellDamageReductionRollHole,
 } from "./damage-helpers.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
-import {
-  applySaveDamageResult,
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
+import { applySaveDamageResult } from "./spells-damage-fills.ts";
 import { sameStringSet } from "./spells-execution-facts.ts";
 import {
   spellTargetHole,
@@ -871,8 +868,11 @@ export function glyphExplosiveRuneSavingThrowOutcomeHole(input: {
     ability: "dex",
     dc: { kind: "fixed", dc: spellSaveDc },
     targetIds: input.targetIds,
-    targetRollModes: savingThrowRollModeProjections(input.state, "dex"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(input.state, "dex"),
+    ...savingThrowTargetModifiers(
+      input.state,
+      { ability: "dex" },
+      "everyCombatant",
+    ),
   };
 }
 

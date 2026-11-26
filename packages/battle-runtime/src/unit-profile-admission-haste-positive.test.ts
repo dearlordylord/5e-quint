@@ -38,7 +38,7 @@ import { describe, expect, test } from "vitest";
 
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { openClassFeatureExtraAttackResource } from "./battle-reducer/attack-resolution.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import {
   extraAttackSupportProfile,
@@ -638,10 +638,20 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         ),
       ).size,
     ).toBe(hasteEffects.length);
-    expect(savingThrowRollModeProjections(resolved.state, "dex")).toEqual([
-      { targetId: spellTargetId, rollMode: "advantage" },
-    ]);
-    expect(savingThrowRollModeProjections(resolved.state, "con")).toEqual([]);
+    expect(
+      savingThrowTargetModifiers(
+        resolved.state,
+        { ability: "dex" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([{ targetId: spellTargetId, rollMode: "advantage" }]);
+    expect(
+      savingThrowTargetModifiers(
+        resolved.state,
+        { ability: "con" },
+        "everyCombatant",
+      ).targetRollModes,
+    ).toEqual([]);
 
     const targetTurn = endTurn({
       state: resolved.state,

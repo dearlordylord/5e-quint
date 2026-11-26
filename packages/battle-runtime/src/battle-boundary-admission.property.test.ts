@@ -812,6 +812,7 @@ describe("battle boundary admission owners", () => {
         areaChoices: [],
         targetRollModes: [],
         targetFlatBonuses: [],
+        targetAutomaticFailures: [],
       });
     const codecRolled = (name: string, value: object) =>
       encodedCodecHole({
@@ -845,6 +846,7 @@ describe("battle boundary admission owners", () => {
         areaChoices: [],
         targetRollModes: [],
         targetFlatBonuses: [],
+        targetAutomaticFailures: [],
       }),
       codecSaving("condition", "spellConditionEndTurnSave", {
         ...codecSource,
@@ -865,6 +867,7 @@ describe("battle boundary admission owners", () => {
         targetIds: [goblinId],
         targetRollModes: [],
         targetFlatBonuses: [],
+        targetAutomaticFailures: [],
       }),
       codecRolled("sourceRider", {
         sourceProcedureRef: codecProcedureRef,

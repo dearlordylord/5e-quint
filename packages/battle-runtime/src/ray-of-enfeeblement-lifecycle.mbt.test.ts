@@ -29,7 +29,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { savingThrowTargetModifiers } from "./battle-reducer/saving-throw-modifier-collector.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -484,10 +484,11 @@ function rayOfEnfeeblementProjection(
   const damagePenaltyActive = target.activeEffects.some(
     (effect) => effect.kind === "sourceDamageRollPenalty",
   );
-  const strSavingThrowDisadvantage = savingThrowRollModeProjections(
+  const strSavingThrowDisadvantage = savingThrowTargetModifiers(
     state.battle.state,
-    "str",
-  ).some(
+    { ability: "str" },
+    "everyCombatant",
+  ).targetRollModes.some(
     (projection) =>
       projection.targetId === spellTargetId &&
       projection.rollMode === "disadvantage",
