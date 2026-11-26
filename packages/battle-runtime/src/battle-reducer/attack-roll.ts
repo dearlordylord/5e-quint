@@ -29,7 +29,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
-  movementDeltaFeet,
+  movementFeet,
   SIZES,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -140,6 +140,7 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
+  WEAPON_MASTERY_SPEED_REDUCTION_FEET,
 } from "./domain-constants.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
@@ -762,10 +763,10 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
     effect: {
-      kind: "unitFeatureSpeedDelta",
+      kind: "weaponMasterySpeedReduction",
       sourceProcedureRef: selection.procedureRef,
       sourceCombatantId: attackerId,
-      deltaFeet: movementDeltaFeet(-10),
+      reductionFeet: movementFeet(WEAPON_MASTERY_SPEED_REDUCTION_FEET),
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
     },
   });
@@ -773,7 +774,7 @@ export function applyWeaponMasterySlowAfterDamage(input: {
     ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
-          effect.kind === "unitFeatureSpeedDelta" &&
+          effect.kind === "weaponMasterySpeedReduction" &&
           "sourceProcedureRef" in effect &&
           effect.sourceProcedureRef === selection.procedureRef
         ),

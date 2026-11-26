@@ -73,12 +73,9 @@ export {
   baseWalkSpeed,
   battleCreatureSpeedFacts,
   battleSpecialSpeedCandidates,
-  battleSpeedChanges,
-  battleTerminalSpeedZero,
   effectiveMovementSpeed,
   effectiveWalkSpeed,
   isBattleLiteralSpecialSpeed,
-  passiveSpeedBonusDelta,
   passiveSpeedKindGrantKinds,
   representedMovementSpeedKinds,
 } from "./movement-speed-facts.ts";
@@ -107,15 +104,10 @@ export function halfCurrentSpeedMovementBudget(
   if (actor === undefined) {
     return { movementBudgetFeet: movementFeet(0), speedKinds: [] };
   }
-  const isGrappled = state.grapples.some(
-    (grapple) => grapple.targetId === actorId,
-  );
   const speedKinds = representedMovementSpeedKinds(actor).map((kind) => ({
     kind,
     movementBudgetFeet: movementFeet(
-      Math.floor(
-        Number(effectiveMovementSpeed(state, actor, kind, isGrappled)) / 2,
-      ),
+      Math.floor(Number(effectiveMovementSpeed(state, actor, kind)) / 2),
     ),
   }));
   return {
@@ -129,7 +121,6 @@ export function halfCurrentSpeedMovementBudget(
 export function battleMovementBudget(
   state: BattleState,
   combatant: BattleCreatureState | undefined,
-  grapples: readonly BattleGrappleLink[] = [],
   movementBonusFeet: MovementFeet = movementFeet(0),
   speedKind: BattleMovementSpeedKind = "walk",
 ): {
@@ -150,26 +141,13 @@ export function battleMovementBudget(
       speedKinds: [],
     };
   }
-  const isGrappled = grapples.some(
-    (grapple) => grapple.targetId === combatant.combatantId,
-  );
-  const speedFeet = effectiveMovementSpeed(
-    state,
-    combatant,
-    speedKind,
-    isGrappled,
-  );
+  const speedFeet = effectiveMovementSpeed(state, combatant, speedKind);
   const movementBudgetFeet = Number(speedFeet) + Number(movementBonusFeet);
   const remainingFeet = movementFeet(
     Math.max(0, movementBudgetFeet - Number(combatant.movementSpentFeet)),
   );
   const speedKinds = representedMovementSpeedKinds(combatant).map((kind) => {
-    const kindSpeedFeet = effectiveMovementSpeed(
-      state,
-      combatant,
-      kind,
-      isGrappled,
-    );
+    const kindSpeedFeet = effectiveMovementSpeed(state, combatant, kind);
     return {
       kind,
       speedFeet: kindSpeedFeet,
@@ -203,7 +181,6 @@ export function battleMovementBudgetForActor(
   return battleMovementBudget(
     state,
     state.combatants.get(actorId),
-    state.grapples,
     bonus,
     speedKind,
   );
@@ -702,4 +679,4 @@ export function grappleTargetExemptFromDragCost(
       grapplerFastWrestlerDragCostExempt(grapplerSize, targetSize))
   );
 }
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-speed-kind-grants

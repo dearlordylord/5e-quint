@@ -19,6 +19,7 @@ export {
 } from "./spell-slots.ts";
 export {
   characterSheetArmorClassState,
+  characterSheetSelectedArmorStrengthRequirement,
   characterSheetUnarmoredArmorClassBase,
 } from "./armor-class.ts";
 export { characterSheetSpellbookRitualAccessesForBuild } from "./spell-invocation.ts";

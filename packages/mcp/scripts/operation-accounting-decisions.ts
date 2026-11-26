@@ -3912,7 +3912,7 @@ export const OPERATION_ACCOUNTING = {
       "internal",
       "passiveSpeedBonus",
       at(
-        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
+        "packages/battle-runtime/src/battle-reducer/speed-collector.ts",
         "passiveSpeedBonusDelta",
       ),
       REASONS.unitFact,
@@ -3921,7 +3921,7 @@ export const OPERATION_ACCOUNTING = {
       "internal",
       "passiveSpeedKindGrants",
       at(
-        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
+        "packages/battle-runtime/src/battle-reducer/speed-collector.ts",
         "passiveSpeedBonusDelta",
       ),
       REASONS.unitFact,
@@ -4426,7 +4426,7 @@ export const OPERATION_ACCOUNTING = {
       "internal",
       "passiveSpeedBonus",
       at(
-        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
+        "packages/battle-runtime/src/battle-reducer/speed-collector.ts",
         "passiveSpeedBonusDelta",
       ),
       REASONS.unitFact,
@@ -4435,7 +4435,7 @@ export const OPERATION_ACCOUNTING = {
       "internal",
       "passiveSpeedKindGrants",
       at(
-        "packages/battle-runtime/src/battle-reducer/movement-speed-facts.ts",
+        "packages/battle-runtime/src/battle-reducer/speed-collector.ts",
         "passiveSpeedBonusDelta",
       ),
       REASONS.unitFact,

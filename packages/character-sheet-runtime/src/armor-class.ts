@@ -27,7 +27,8 @@ import type {
   EquipmentPredicate,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Result, Option } from "effect";
+import { Result, Option, Schema } from "effect";
+import { AbilityScore } from "@dnd/shared/types";
 
 import {
   projectCharacterSheetClassFeature,
@@ -224,6 +225,33 @@ function projectSelectedEquipmentDefinition(
     : characterSheetIssue(
         `The selected ${expectedKind} loadout root must project ${expectedKind} facts.`,
       );
+}
+
+/**
+ * The Strength score the selected armor requires, when it lists one.
+ * RAW: .references/srd-5.2.1/equipment.md, "Strength": "that armor reduces
+ * the wearer's speed by 10 feet unless the wearer has a Strength score equal
+ * to or higher than the listed score."
+ */
+export function characterSheetSelectedArmorStrengthRequirement(
+  input: CharacterSheetArmorClassStateInput,
+): Result.Result<AbilityScore | undefined, CharacterSheetIssue> {
+  const equipment = selectedLoadoutEquipmentDefinitions(
+    input.unitLibrary,
+    input.build.equipment.loadout.armor,
+    undefined,
+  );
+  if (Result.isFailure(equipment)) return Result.fail(equipment.failure);
+  const strengthRequirement = equipment.success.armorFacts?.strengthRequirement;
+  if (strengthRequirement === undefined) return Result.succeed(undefined);
+  /* v8 ignore start -- @preserve -- The equipment projection admits only positive integer requirements; one above the highest ability score is malformed catalog data. */
+  if (!Schema.is(AbilityScore)(strengthRequirement)) {
+    return characterSheetIssue(
+      `Armor Strength requirement ${strengthRequirement} is not an ability score.`,
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return Result.succeed(strengthRequirement);
 }
 
 export function characterSheetUnarmoredArmorClassBase(

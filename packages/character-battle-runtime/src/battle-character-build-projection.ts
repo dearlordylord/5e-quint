@@ -59,6 +59,7 @@ import {
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   characterSheetArmorClassState,
+  characterSheetSelectedArmorStrengthRequirement,
   characterSheetUnarmoredArmorClassBase,
   characterSheetSpellbookRitualAccessesForBuild,
   characterSheetSpellAccessesForBuild,
@@ -79,6 +80,7 @@ import {
   characterLevel,
   classLevel,
   type AbilityModifier,
+  type AbilityScore,
   proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
@@ -857,8 +859,42 @@ function ownedWeaponCopyObjectId(
   return battleObjectId(copy === 1 ? itemId : `${itemId}#${copy}`);
 }
 
+type CharacterBattleArmorLoadoutRef = NonNullable<
+  CharacterBattleLoadoutRef["armor"]
+>;
+
+function characterBattleArmorLoadoutRef(
+  armor: Omit<CharacterBattleArmorLoadoutRef, "strengthRequirement">,
+  strengthRequirement: AbilityScore | undefined,
+): CharacterBattleArmorLoadoutRef {
+  return strengthRequirement === undefined
+    ? armor
+    : { ...armor, strengthRequirement };
+}
+
+/**
+ * The build's selected loadout, with the worn armor's Strength requirement
+ * read from its equipment definition.
+ */
+export function characterBattleSelectedLoadout(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Result.Result<CharacterBattleLoadoutRef, BattleCreatureInitLeafIssue> {
+  const armorStrengthRequirement =
+    characterSheetSelectedArmorStrengthRequirement({ build, unitLibrary });
+  return Result.isFailure(armorStrengthRequirement)
+    ? battleCreatureInitIssue(armorStrengthRequirement.failure.message)
+    : Result.succeed(
+        characterBattleLoadoutFromBuild(
+          build,
+          armorStrengthRequirement.success,
+        ),
+      );
+}
+
 export function characterBattleLoadoutFromBuild(
   build: CharacterBuild,
+  armorStrengthRequirement?: AbilityScore,
 ): CharacterBattleLoadoutRef {
   const armorUnitId = characterBuildEquipmentItemUnitId(
     build.equipment.loadout.armor,
@@ -878,7 +914,10 @@ export function characterBattleLoadoutFromBuild(
     ...(loadout.armor == null || armorUnitId == null
       ? {}
       : {
-          armor: { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
+          armor: characterBattleArmorLoadoutRef(
+            { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
+            armorStrengthRequirement,
+          ),
         }),
     ...(loadout.shield == null || shieldUnitId == null
       ? {}
