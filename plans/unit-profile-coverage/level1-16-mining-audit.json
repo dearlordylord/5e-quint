@@ -122,8 +122,8 @@
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 183,
-      "profile-subset-supported": 141,
-      "supported-profile": 379,
+      "profile-subset-supported": 139,
+      "supported-profile": 381,
       "unsupported-profile": 672
     }
   },
@@ -11327,11 +11327,7 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "follow-up Death Saving Throw failed-save reroll owner",
-          "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -11339,7 +11335,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -26464,11 +26460,7 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "follow-up Death Saving Throw failed-save reroll owner",
-          "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -26476,7 +26468,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }

@@ -78,11 +78,16 @@ module zeroHitPointLifecycleInductive {
 
   action doResolveStartTurnDeathSavingThrow = {
     nondet d20Roll = 1.to(20).oneOf()
+    nondet bonus = 0.to(20).oneOf()
     all {
       canUseDeathSavingThrowLifecycle(qVitals, qDeathSavingThrows),
       not(qStable),
       recordZeroHitPointLifecycleResult(
-        resolveStartTurnDeathSavingThrow(qVitals, qDeathSavingThrows, d20Roll)
+        resolveStartTurnDeathSavingThrow(
+          qVitals,
+          qDeathSavingThrows,
+          { naturalD20: d20Roll, bonus: bonus },
+        )
       ),
     }
   }

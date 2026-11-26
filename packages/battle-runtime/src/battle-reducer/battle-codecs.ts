@@ -3795,7 +3795,7 @@ const BattleHolePayloadMembers = [
       combatantId: CombatantId,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowRerollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -4219,6 +4219,9 @@ const BattleDeathSavingThrowD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
   Schema.Union([
     battleD20TestDieRerollDecisionSchema("d20_test_natural_one_reroll"),
     battleD20TestDieRerollDecisionSchema(HEROIC_INSPIRATION_REROLL_EFFECT_KIND),
+    battleD20TestDieRerollDecisionSchema(
+      FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+    ),
   ]),
 );
 

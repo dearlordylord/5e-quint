@@ -7,9 +7,16 @@
 // The saving throw reroll fold (d20-test-outcome-rerolls.ts) offers it while
 // the roll stands failed, takes it in the order the roller chooses among the
 // other reroll sources (ASSUMPTIONS.md A55), and spends one use when the
-// reroll is taken.
+// reroll is taken. On a Death Saving Throw the engine judges the new roll:
+// the bonus counts toward 10, but a 1 or a 20 on the new d20 decides first
+// (playing-the-game.md, "Rolling a 1 or 20"; ASSUMPTIONS.md A68). A later
+// reroll of that d20 keeps the bonus.
 
-import { Brand } from "effect";
+import {
+  deathSavingThrowRollFails,
+  type DeathSavingThrowRoll,
+} from "@dnd/shared-algebras/death-saves-algebra";
+import { Brand, Match } from "effect";
 
 import {
   resourceHasUsesRemaining,
@@ -22,12 +29,14 @@ import {
   type BattleCreatureState,
   type BattleD20TestRoll,
   type BattleD20TestRollKey,
+  type BattleFailedSavingThrowDieRerollDecision,
   type BattleFailedSavingThrowRerollDecision,
   type BattleFailedSavingThrowRerollOption,
   type BattleSavingThrowRerollHoleOptions,
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { BattleResourcePoolExecutionRef } from "../identity.ts";
+import { d20DieFaceIsValid } from "./d20-test-natural-one-reroll.ts";
 import {
   d20TestOutcomeReplacementIssue,
   type D20TestRollRerollMessages,
@@ -61,6 +70,9 @@ const FAILED_SAVING_THROW_REROLL_MESSAGES = {
   modifier:
     "Failed saving throw replacement roll must keep the saving throw's modifiers; only the d20 changes.",
 } as const satisfies D20TestRollRerollMessages;
+/** The message for a Death Saving Throw reroll whose new d20 is not a face of a d20. */
+export const FAILED_SAVING_THROW_REROLL_DEATH_SAVE_DIE_MESSAGE =
+  "Failed saving throw reroll of a Death Saving Throw must roll a d20 face.";
 /** The message for a replacement under the wrong roll mode. */
 export const FAILED_SAVING_THROW_REROLL_MODE_MESSAGE =
   FAILED_SAVING_THROW_REROLL_MESSAGES.mode;
@@ -195,6 +207,60 @@ export function failedSavingThrowRerollOutcomeIssue(input: {
 
 function anyD20Face(): boolean {
   return true;
+}
+
+/**
+ * The issue with a failed saving throw reroll decision on a Death Saving
+ * Throw as it stands, if any. It rerolls the d20; the engine adds the bonus
+ * and judges the new roll.
+ */
+export function failedSavingThrowRerollDeathSaveIssue(input: {
+  readonly availability: D20TestSpendAvailability;
+  /** The death save as it stands: the original roll, or another source's reroll of it. */
+  readonly roll: DeathSavingThrowRoll;
+  readonly decision: BattleFailedSavingThrowDieRerollDecision;
+}): string | null {
+  const decision = input.decision;
+  // Only a death save that stands failed is offered the reroll, so any
+  // decision on one that stands succeeded, a decline too, answers no offer.
+  if (!deathSavingThrowRollFails(input.roll))
+    return FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE;
+  const gate = d20TestSpendGate({
+    availability: input.availability,
+    decision,
+    unavailableMessage: FAILED_SAVING_THROW_REROLL_UNAVAILABLE_MESSAGE,
+  });
+  if (gate.tag === "finished") return gate.issue;
+  return Match.value(decision).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      decline: () => null,
+      reroll: ({ replacement }) =>
+        d20DieFaceIsValid(Number(replacement))
+          ? null
+          : FAILED_SAVING_THROW_REROLL_DEATH_SAVE_DIE_MESSAGE,
+    }),
+  );
+}
+
+/**
+ * The Death Saving Throw after a failed saving throw reroll: the new d20,
+ * with the reroll's bonus added to what the roll already had ("reroll it
+ * with a bonus equal to your Fighter level").
+ */
+export function deathSavingThrowRollAfterFailedSavingThrowReroll(
+  roll: DeathSavingThrowRoll,
+  decision: BattleFailedSavingThrowDieRerollDecision,
+  option: BattleFailedSavingThrowRerollOption,
+): DeathSavingThrowRoll {
+  return Match.value(decision).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      decline: () => roll,
+      reroll: ({ replacement }) => ({
+        naturalD20: replacement,
+        bonus: roll.bonus + option.bonus,
+      }),
+    }),
+  );
 }
 
 /**

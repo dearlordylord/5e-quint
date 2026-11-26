@@ -36,6 +36,7 @@ import {
   deathSavingThrowRegainedHitPoint,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
+  type DeathSavingThrowRoll,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import {
   holeId,
@@ -47,7 +48,6 @@ import {
   type ReadonlyNonEmptyArray,
   type DamageAmount,
   deathSaveCount,
-  type D20Roll,
   type DeathSaveCount,
 } from "@dnd/shared/types";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
@@ -1558,7 +1558,7 @@ export function startTurnDeathSavingThrowRequired(
 export function applyStartTurnDeathSavingThrow(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
-  roll: D20Roll,
+  roll: DeathSavingThrowRoll,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const combatant = combatants.get(actorId);
   if (!startTurnDeathSavingThrowRequired(combatant)) {

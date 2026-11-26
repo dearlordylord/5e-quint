@@ -59,6 +59,7 @@ import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
+  unmodifiedDeathSavingThrowRoll,
 } from "./death-saves-algebra.ts";
 import {
   createInitiativeStack,
@@ -858,10 +859,16 @@ describe("death-saves-algebra", () => {
   it("marks the creature Stable and resets counters after three successes", () => {
     const first = resolveDeathSavingThrow(
       resetDeathSaveRuntimeState(),
-      d20Roll(10),
+      unmodifiedDeathSavingThrowRoll(d20Roll(10)),
     ).state;
-    const second = resolveDeathSavingThrow(first, d20Roll(10)).state;
-    const third = resolveDeathSavingThrow(second, d20Roll(10));
+    const second = resolveDeathSavingThrow(
+      first,
+      unmodifiedDeathSavingThrowRoll(d20Roll(10)),
+    ).state;
+    const third = resolveDeathSavingThrow(
+      second,
+      unmodifiedDeathSavingThrowRoll(d20Roll(10)),
+    );
 
     expect(third).toEqual({
       state: { tag: "stable" },
@@ -872,7 +879,7 @@ describe("death-saves-algebra", () => {
   it("records natural 1 as two failures and three failures as dead", () => {
     const nat1 = resolveDeathSavingThrow(
       resetDeathSaveRuntimeState(),
-      d20Roll(1),
+      unmodifiedDeathSavingThrowRoll(d20Roll(1)),
     );
     const dead = addDeathFailures(nat1.state, deathSaveCount(1));
 
@@ -886,7 +893,7 @@ describe("death-saves-algebra", () => {
   it("records natural 20 as an outcome and resets the lifecycle", () => {
     const naturalTwenty = resolveDeathSavingThrow(
       resetDeathSaveRuntimeState(),
-      d20Roll(20),
+      unmodifiedDeathSavingThrowRoll(d20Roll(20)),
     );
 
     expect(naturalTwenty).toEqual({
@@ -898,7 +905,10 @@ describe("death-saves-algebra", () => {
       deathSaves: { successes: 0, failures: 2 },
     });
     expect(
-      resolveDeathSavingThrow(naturalTwenty.state, d20Roll(1)).state,
+      resolveDeathSavingThrow(
+        naturalTwenty.state,
+        unmodifiedDeathSavingThrowRoll(d20Roll(1)),
+      ).state,
     ).toEqual({
       tag: "dying",
       deathSaves: { successes: 0, failures: 2 },
@@ -908,13 +918,18 @@ describe("death-saves-algebra", () => {
   it("handles ordinary failed rolls", () => {
     const failed = resolveDeathSavingThrow(
       resetDeathSaveRuntimeState(),
-      d20Roll(5),
+      unmodifiedDeathSavingThrowRoll(d20Roll(5)),
     );
     expect(failed.state).toEqual({
       tag: "dying",
       deathSaves: { successes: 0, failures: 1 },
     });
-    expect(resolveDeathSavingThrow(failed.state, d20Roll(5))).toEqual({
+    expect(
+      resolveDeathSavingThrow(
+        failed.state,
+        unmodifiedDeathSavingThrowRoll(d20Roll(5)),
+      ),
+    ).toEqual({
       state: {
         tag: "dying",
         deathSaves: { successes: 0, failures: 2 },

@@ -304,6 +304,7 @@ function d20FaceIsNaturalOne(face: number): boolean {
   return face === 1;
 }
 
-function d20DieFaceIsValid(face: number): boolean {
+/** Whether the number is a face of a d20. */
+export function d20DieFaceIsValid(face: number): boolean {
   return Number.isInteger(face) && face >= 1 && face <= 20;
 }

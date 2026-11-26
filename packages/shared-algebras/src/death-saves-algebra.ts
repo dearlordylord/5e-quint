@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
 
 import { Match } from "effect";
 
@@ -193,10 +194,40 @@ function unchangedDeathSavingThrowResult(
   };
 }
 
+/**
+ * A Death Saving Throw's roll: the d20 that stands, and what a reroll of it
+ * added (a failed saving throw reroll's bonus), or 0.
+ */
+export type DeathSavingThrowRoll = {
+  readonly naturalD20: D20Roll;
+  readonly bonus: number;
+};
+
+/** The roll of a Death Saving Throw nothing added to. */
+export function unmodifiedDeathSavingThrowRoll(
+  naturalD20: D20Roll,
+): DeathSavingThrowRoll {
+  return { naturalD20, bonus: 0 };
+}
+
+const DEATH_SAVING_THROW_SUCCESS_TOTAL = 10;
+
+/**
+ * Whether the roll fails. The d20's face decides first: a 1 is two failures
+ * and a 20 regains a Hit Point, whatever was added. On any other face the
+ * total decides: 10 or higher succeeds (ASSUMPTIONS.md A68).
+ */
+export function deathSavingThrowRollFails(roll: DeathSavingThrowRoll): boolean {
+  if (roll.naturalD20 === 20) return false;
+  if (roll.naturalD20 === 1) return true;
+  return roll.naturalD20 + roll.bonus < DEATH_SAVING_THROW_SUCCESS_TOTAL;
+}
+
 export function resolveDeathSavingThrow(
   state: DeathSaveRuntimeState,
-  d20Roll: D20Roll,
+  roll: DeathSavingThrowRoll,
 ): DeathSavingThrowResult {
+  const d20Roll = roll.naturalD20;
   return Match.value(state).pipe(
     Match.when({ tag: "dead" }, () => unchangedDeathSavingThrowResult(state)),
     Match.when({ tag: "stable" }, () => unchangedDeathSavingThrowResult(state)),
@@ -215,7 +246,7 @@ export function resolveDeathSavingThrow(
         };
       }
 
-      if (d20Roll >= 10) {
+      if (!deathSavingThrowRollFails(roll)) {
         const successes = deathSaveCount(
           deathSaves.successes + ONE_DEATH_SAVE_COUNT,
         );

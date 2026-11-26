@@ -49,6 +49,7 @@ import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
+  unmodifiedDeathSavingThrowRoll,
   type DeathSavingThrowOutcome,
   type DeathSaveRuntimeState,
 } from "./death-saves-algebra.ts";
@@ -298,7 +299,10 @@ function createDeathSavesDriver() {
     }
 
     function resolve(rawD20Roll: number): void {
-      const result = resolveDeathSavingThrow(state, d20Roll(rawD20Roll));
+      const result = resolveDeathSavingThrow(
+        state,
+        unmodifiedDeathSavingThrowRoll(d20Roll(rawD20Roll)),
+      );
       state = result.state;
       outcome = result.outcome;
     }

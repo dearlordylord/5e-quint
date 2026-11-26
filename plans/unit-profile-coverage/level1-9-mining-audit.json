@@ -92,8 +92,8 @@
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 14,
-      "profile-subset-supported": 137,
-      "supported-profile": 367,
+      "profile-subset-supported": 136,
+      "supported-profile": 368,
       "unsupported-profile": 536
     }
   },
@@ -17223,11 +17223,7 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "follow-up Death Saving Throw failed-save reroll owner",
-          "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -17235,7 +17231,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }

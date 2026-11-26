@@ -14846,14 +14846,8 @@
         "state": "installed",
         "unitId": "fighter_indomitable"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "follow-up Death Saving Throw failed-save reroll owner",
-        "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -19322,14 +19316,8 @@
         "state": "installed",
         "unitId": "fighter_indomitable"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "follow-up Death Saving Throw failed-save reroll owner",
-        "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -33906,14 +33894,8 @@
         "state": "installed",
         "unitId": "fighter_indomitable"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "follow-up Death Saving Throw failed-save reroll owner",
-        "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

@@ -544,3 +544,24 @@ doesn't say what an added die does to a later reroll. The model takes the
 rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
+
+## A68: A bonus to a Death Saving Throw counts toward 10 after the d20's 1 or 20
+
+**Assumption:** A Death Saving Throw rerolled with a bonus (Indomitable) adds
+the bonus to the new d20, and the total succeeds at 10 or higher. A 1 or a 20
+on the d20 decides first, whatever the bonus: a 1 is two failures and a 20
+regains 1 Hit Point. A later reroll of that d20 by another source replaces only
+the d20 and keeps the bonus, as a reroll keeps a save's other modifiers.
+
+**Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Death
+Saving Throws": "Roll 1d20. If the roll is 10 or higher, you succeed" and "When
+you roll a 1 on the d20 for a Death Saving Throw, you suffer two failures. If
+you roll a 20 on the d20, you regain 1 Hit Point." `.references/srd-5.2.1/classes.md`,
+"Indomitable": "If you fail a saving throw, you can reroll it with a bonus equal
+to your Fighter level." The core rule adds nothing to the d20, so it doesn't
+say whether "the roll" that must reach 10 includes a bonus; the model counts
+the bonus, since the feature grants it to this saving throw. The 1 and the 20
+are read from the d20 ("on the d20"), so a bonus doesn't change them. The SRD
+doesn't say whether a reroll of the d20 by another source keeps a bonus
+Indomitable added; the model keeps it, since the reroll replaces the die and
+not the saving throw's modifiers.

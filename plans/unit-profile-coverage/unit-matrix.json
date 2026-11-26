@@ -62,8 +62,8 @@
       "value": 454
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 244,
-      "numerator": 236,
+      "denominator": 245,
+      "numerator": 237,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 207,
-      "numerator": 202,
+      "denominator": 208,
+      "numerator": 203,
       "percent": "97.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 399,
-      "numerator": 244,
-      "percent": "61.2%"
+      "numerator": 245,
+      "percent": "61.4%"
     }
   },
   "metricSemantics": [
@@ -6972,9 +6972,10 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/character-battle-resources.ts",
         "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, class-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, binds the same-source use-count resource and the level of the class the bonus names, and offers the reroll on every battle Saving Throw and Concentration save hole while the save as it stands is failed and a use is left. It is taken in turn with the natural-1 reroll and Heroic Inspiration; the replacement rerolls the d20, or one chosen d20 under Advantage or Disadvantage, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays. Death Saving Throws are not yet offered it.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, class-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, binds the same-source use-count resource and the level of the class the bonus names, and offers the reroll on every battle Saving Throw and Concentration save hole while the save as it stands is failed and a use is left. It is taken in turn with the natural-1 reroll and Heroic Inspiration; the replacement rerolls the d20, or one chosen d20 under Advantage or Disadvantage, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays. A rolled Death Saving Throw that fails is offered it too, with the class level added to the new d20 toward 10 and a 1 or a 20 on the new d20 deciding first; a failure from damage at 0 Hit Points has no roll and is not offered.",
       "taskRefs": [
         "L19D-04-FIGHTER-INDOMITABLE"
       ],
@@ -22800,7 +22801,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover shape-based failed Saving Throw reroll profile admission, Long Rest use-count resource admission with class-level threshold tiers, and binding of the same-source resource and the bonus class's level. Battle tests cover the offer with the class-level bonus on a failed save, no offer on a success, the new roll standing whether it succeeds or fails, the use spend, decline, no offer without a use, the roll-mode check, and Heroic Inspiration then the failed-save reroll on one save. A real-catalog Fighter 9 under Burning Hands is offered and spends the reroll; a Fighter 8 is not offered it. Death Saving Throws remain a follow-up.",
+      "note": "Focused battle-runtime tests cover shape-based failed Saving Throw reroll profile admission, Long Rest use-count resource admission with class-level threshold tiers, and binding of the same-source resource and the bonus class's level. Battle tests cover the offer with the class-level bonus on a failed save, no offer on a success, the new roll standing whether it succeeds or fails, the use spend, decline, no offer without a use, the roll-mode check, and Heroic Inspiration then the failed-save reroll on one save. A real-catalog Fighter 9 under Burning Hands is offered and spends the reroll; a Fighter 8 is not offered it. Battle tests on a dying Fighter 9 cover the death save offer, a reroll whose bonus turns the save, a 1 and a 20 on the new d20, decline, no offer on a success or without a use, and the order with Heroic Inspiration both ways.",
       "profileIds": [
         "unit-feature.failed-saving-throw-reroll"
       ],
@@ -23691,12 +23692,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 180,
-        "profileSubsetSupportedUnits": 10,
+        "profileSubsetSupportedUnits": 9,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 91,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 91,
-        "supportedProfileUnits": 116,
+        "supportedProfileUnits": 117,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -24967,21 +24968,6 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "battle failed Saving Throw reroll profile/resource/reroll fold plus the follow-up Death Saving Throw owner",
-          "reason": "Indomitable is offered and spent on every battle Saving Throw and Concentration save hole. Death Saving Throws remain with the follow-up owner."
-        },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "follow-up Death Saving Throw failed-save reroll owner",
-              "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll."
-            },
-            "mechanic": "the reroll on a rolled Death Saving Throw"
-          }
-        ],
         "profileIds": [
           "unit-feature.failed-saving-throw-reroll"
         ],
@@ -24994,9 +24980,10 @@
           "battle resource projection admits the existing Indomitable use-count resource and derives max uses from the existing Fighter class level",
           "every battle Saving Throw and Concentration save hole offers the reroll with the Fighter-level bonus while the save as it stands is failed and a use is left, in turn with the natural-1 reroll and Heroic Inspiration",
           "the reroll replaces the d20, or one chosen d20 under Advantage or Disadvantage; the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays",
-          "the reroll is refused on a successful save, without a use left, and under the wrong roll mode"
+          "a rolled Death Saving Throw that fails is offered the reroll; the Fighter level is added to the new d20 toward 10, a 1 on it is two failures and a 20 regains 1 Hit Point whatever the bonus, and a later reroll of the d20 keeps the bonus",
+          "the reroll is refused on a successful save or death save, without a use left, and under the wrong roll mode; a Death Saving Throw failure from damage has no roll and is not offered"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -25024,9 +25011,10 @@
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/character-battle-resources.ts",
             "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
-            "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts"
+            "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, class-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, binds the same-source use-count resource and the level of the class the bonus names, and offers the reroll on every battle Saving Throw and Concentration save hole while the save as it stands is failed and a use is left. It is taken in turn with the natural-1 reroll and Heroic Inspiration; the replacement rerolls the d20, or one chosen d20 under Advantage or Disadvantage, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays. Death Saving Throws are not yet offered it.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface failed_saving_throw_reroll shape: failed Saving Throw trigger, mandatory new roll, class-level bonus, one use, threshold-tier class-level cap, and Long Rest reset cadence. The runtime projects a typed support profile without authored-identity dispatch, binds the same-source use-count resource and the level of the class the bonus names, and offers the reroll on every battle Saving Throw and Concentration save hole while the save as it stands is failed and a use is left. It is taken in turn with the natural-1 reroll and Heroic Inspiration; the replacement rerolls the d20, or one chosen d20 under Advantage or Disadvantage, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent once per roll across subject replays. A rolled Death Saving Throw that fails is offered it too, with the class level added to the new d20 toward 10 and a 1 or a 20 on the new d20 deciding first; a failure from damage at 0 Hit Points has no roll and is not offered.",
           "taskRefs": [
             "L19D-04-FIGHTER-INDOMITABLE"
           ],

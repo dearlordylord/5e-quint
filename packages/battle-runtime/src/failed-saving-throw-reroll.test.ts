@@ -10,10 +10,12 @@ import {
   NO_HEROIC_INSPIRATION,
   type HeroicInspiration,
 } from "@dnd/shared/game-facts";
-import { DieRollResult } from "@dnd/shared/types";
+import { d20Roll, DieRollResult } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import {
+  deathSavingThrowFill,
+  endTurn,
   requireResolved,
   resolveBattleSubject,
   type BattleState,
@@ -559,6 +561,268 @@ describe("Indomitable on a Concentration save", () => {
     expect(indomitableUses(kept.state, spellCasterId)).toBe(0);
   });
 });
+
+describe("Indomitable on a Death Saving Throw", () => {
+  test("a failed death save is asked again with the Fighter-level reroll", () => {
+    const dying = dyingFighter();
+
+    expect(
+      requireResultHole(
+        endTurn({
+          state: dying.state,
+          actorId: spellCasterId,
+          fills: [deathSavingThrowFill(dying.deathSave, 6)],
+        }),
+        "deathSavingThrow",
+      ),
+    ).toMatchObject({
+      failedSavingThrowRerolls: [
+        {
+          effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+          rollerId: spellTargetId,
+          bonus: 9,
+        },
+      ],
+    });
+  });
+
+  test("the bonus counts toward 10, and the reroll spends the use", () => {
+    const dying = dyingFighter();
+    const saved = dying.resolve({
+      roll: 6,
+      d20TestRerolls: [rerollIndomitableDeathSave(2)],
+    });
+
+    expect(deathSaves(saved, spellTargetId)).toEqual({
+      successes: 1,
+      failures: 0,
+    });
+    expect(indomitableUses(saved, spellTargetId)).toBe(0);
+  });
+
+  test("a 1 on the new d20 is two failures and a 20 regains a Hit Point, whatever the bonus", () => {
+    const dying = dyingFighter();
+    const failed = dying.resolve({
+      roll: 6,
+      d20TestRerolls: [rerollIndomitableDeathSave(1)],
+    });
+    expect(deathSaves(failed, spellTargetId)).toEqual({
+      successes: 0,
+      failures: 2,
+    });
+    expect(indomitableUses(failed, spellTargetId)).toBe(0);
+
+    const revived = dying.resolve({
+      roll: 6,
+      d20TestRerolls: [rerollIndomitableDeathSave(20)],
+    });
+    expect(hp(revived, spellTargetId)).toBe(1);
+  });
+
+  test("a decline keeps the failure and the use", () => {
+    const dying = dyingFighter();
+    const failed = dying.resolve({
+      roll: 6,
+      d20TestRerolls: [declineIndomitable()],
+    });
+
+    expect(deathSaves(failed, spellTargetId)).toEqual({
+      successes: 0,
+      failures: 1,
+    });
+    expect(indomitableUses(failed, spellTargetId)).toBe(1);
+  });
+
+  test("a natural 1 is offered the reroll, which can turn it into a success", () => {
+    const dying = dyingFighter();
+    const saved = dying.resolve({
+      roll: 1,
+      d20TestRerolls: [rerollIndomitableDeathSave(5)],
+    });
+
+    expect(deathSaves(saved, spellTargetId)).toEqual({
+      successes: 1,
+      failures: 0,
+    });
+  });
+
+  test("a death save that succeeds is not offered the reroll, and a decision on it is refused", () => {
+    const dying = dyingFighter();
+
+    expect(deathSaves(dying.resolve({ roll: 12 }), spellTargetId)).toEqual({
+      successes: 1,
+      failures: 0,
+    });
+    expect(
+      endTurn({
+        state: dying.state,
+        actorId: spellCasterId,
+        fills: [
+          deathSavingThrowFill(dying.deathSave, {
+            roll: 12,
+            d20TestRerolls: [declineIndomitable()],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE,
+    });
+  });
+
+  test("a Fighter without a use left is not offered the reroll, and it is refused", () => {
+    const dying = dyingFighter({ usesRemaining: 0 });
+
+    expect(deathSaves(dying.resolve({ roll: 6 }), spellTargetId)).toEqual({
+      successes: 0,
+      failures: 1,
+    });
+    expect(
+      endTurn({
+        state: dying.state,
+        actorId: spellCasterId,
+        fills: [
+          deathSavingThrowFill(dying.deathSave, {
+            roll: 6,
+            d20TestRerolls: [rerollIndomitableDeathSave(15)],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: FAILED_SAVING_THROW_REROLL_UNAVAILABLE_MESSAGE,
+    });
+  });
+
+  test("a Heroic Inspiration reroll after Indomitable keeps the bonus", () => {
+    const dying = dyingFighter({
+      heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+    });
+    const saved = dying.resolve({
+      roll: 6,
+      d20TestRerolls: [
+        rerollIndomitableDeathSave(1),
+        rerollHeroicInspirationDeathSave(2),
+      ],
+    });
+
+    expect(deathSaves(saved, spellTargetId)).toEqual({
+      successes: 1,
+      failures: 0,
+    });
+    expect(indomitableUses(saved, spellTargetId)).toBe(0);
+    expect(heroicInspiration(saved, spellTargetId)).toEqual(
+      NO_HEROIC_INSPIRATION,
+    );
+  });
+
+  test("Indomitable after a Heroic Inspiration reroll that still fails", () => {
+    const dying = dyingFighter({
+      heroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
+    });
+
+    expect(
+      requireResultHole(
+        endTurn({
+          state: dying.state,
+          actorId: spellCasterId,
+          fills: [
+            deathSavingThrowFill(dying.deathSave, {
+              roll: 4,
+              d20TestRerolls: [rerollHeroicInspirationDeathSave(5)],
+            }),
+          ],
+        }),
+        "deathSavingThrow",
+      ),
+    ).toMatchObject({
+      failedSavingThrowRerolls: [{ bonus: 9 }],
+    });
+    const saved = dying.resolve({
+      roll: 4,
+      d20TestRerolls: [
+        rerollHeroicInspirationDeathSave(5),
+        rerollIndomitableDeathSave(3),
+      ],
+    });
+    expect(deathSaves(saved, spellTargetId)).toEqual({
+      successes: 1,
+      failures: 0,
+    });
+  });
+});
+
+/**
+ * A Fighter 9 with Indomitable at 0 Hit Points, whose turn starts when the
+ * caster ends theirs, with the Death Saving Throw hole that start asks.
+ */
+function dyingFighter(
+  input: {
+    readonly usesRemaining?: number;
+    readonly heroicInspiration?: HeroicInspiration;
+  } = {},
+) {
+  const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
+  const session = spellBattle({
+    targetHp: 0,
+    targetClassLevels: [{ className: "fighter", level: 9 }],
+    targetUnitRefs: [{ unit: indomitable, supportProfiles: [] }],
+    targetResources: [
+      {
+        unit: indomitable,
+        ...(input.usesRemaining === undefined
+          ? {}
+          : { usesRemaining: input.usesRemaining }),
+      },
+    ],
+    ...(input.heroicInspiration === undefined
+      ? {}
+      : { targetHeroicInspiration: input.heroicInspiration }),
+  });
+  const state = session.state;
+  const deathSave = requireResultHole(
+    endTurn({ state, actorId: spellCasterId }),
+    "deathSavingThrow",
+  );
+  return {
+    state,
+    deathSave,
+    resolve: (roll: Parameters<typeof deathSavingThrowFill>[1]) =>
+      requireResolved(
+        endTurn({
+          state,
+          actorId: spellCasterId,
+          fills: [deathSavingThrowFill(deathSave, roll)],
+        }),
+      ).state,
+  };
+}
+
+function rerollIndomitableDeathSave(d20: number) {
+  return {
+    kind: "reroll",
+    effectKind: FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+    replacement: d20Roll(d20),
+  } as const;
+}
+
+function rerollHeroicInspirationDeathSave(d20: number) {
+  return {
+    kind: "reroll",
+    effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+    replacement: d20Roll(d20),
+  } as const;
+}
+
+function deathSaves(state: BattleState, id: CombatantId) {
+  const lifecycle = state.combatants.get(id)?.zeroHpLifecycle;
+  if (lifecycle === undefined || !("deathSaves" in lifecycle)) {
+    throw new Error("Expected a creature that makes Death Saving Throws.");
+  }
+  return lifecycle.deathSaves.tag === "dying"
+    ? lifecycle.deathSaves.deathSaves
+    : lifecycle.deathSaves;
+}
 
 function viciousMockerySave(
   input: {

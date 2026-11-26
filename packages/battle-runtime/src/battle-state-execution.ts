@@ -5937,10 +5937,17 @@ export type BattleD20TestNaturalOneRerollDieDecision =
   >;
 export type BattleHeroicInspirationDieRerollDecision =
   BattleD20TestDieRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+/**
+ * A failed saving throw reroll's decision on a Death Saving Throw's d20: the
+ * engine adds the reroll's bonus to the new d20 and judges the result.
+ */
+export type BattleFailedSavingThrowDieRerollDecision =
+  BattleD20TestDieRerollDecision<typeof FAILED_SAVING_THROW_REROLL_EFFECT_KIND>;
 /** One reroll source's decision on a Death Saving Throw's d20. */
 export type BattleDeathSavingThrowD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDieDecision
-  | BattleHeroicInspirationDieRerollDecision;
+  | BattleHeroicInspirationDieRerollDecision
+  | BattleFailedSavingThrowDieRerollDecision;
 /** A Death Saving Throw's D20 Test reroll decisions in the order the roller made them. */
 export type BattleDeathSavingThrowD20TestRerollDecisions = readonly [
   BattleDeathSavingThrowD20TestRerollDecision,
@@ -7143,6 +7150,9 @@ export type BattleDeathSavingThrowHole = {
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
+  ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
   ];
 };
 export type BattleStatBlockRechargeRollHole = {

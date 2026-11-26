@@ -3,6 +3,8 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-CONCENTRATION-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spell-invocation.unrestricted
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.failed-saving-throw-reroll
 import { savingThrowTargetModifiersWhenStateKnown } from "./saving-throw-modifier-collector.ts";
 import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -126,9 +128,9 @@ import {
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
-  battleStateAfterD20TestRerollUses,
+  battleStateAfterSavingThrowRerollUses,
   d20TestDeathSavingThrowRerolls,
-  d20TestHoleWithRerollOptions,
+  savingThrowHoleWithRerollOptions,
 } from "./d20-test-outcome-rerolls.ts";
 import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
 import {
@@ -4101,7 +4103,7 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
   }
   const fill = fills[0]!;
   // The start-turn occurrence resolves in one step with the turn boundary, so
-  // a Heroic Inspiration spend needs no replay record.
+  // a reroll's spend needs no replay record.
   const rerolls = d20TestDeathSavingThrowRerolls({
     state: input.state,
     scope: { kind: "oneStep" },
@@ -4118,7 +4120,7 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
         endingActorId: input.input.endingActorId,
         sourceTurn: input.input.sourceTurn,
         occurrence: input.occurrence,
-        holes: [d20TestHoleWithRerollOptions(hole, rerolls.options)],
+        holes: [savingThrowHoleWithRerollOptions(hole, rerolls.options)],
       }),
     };
   }
@@ -4128,7 +4130,9 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
       result: invalidResult(input.resultState, "invalidFill", rerolls.issue),
     };
   }
-  const spent = battleStateAfterD20TestRerollUses(input.state, [rerolls.uses]);
+  const spent = battleStateAfterSavingThrowRerollUses(input.state, [
+    rerolls.uses,
+  ]);
   return ordinaryStartTurnOccurrenceAdvance(
     {
       ...spent,
