@@ -27,7 +27,7 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
-import { Result } from "effect";
+import { Array, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -615,7 +615,8 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       speedKind: "walk",
-      path: ordinaryMovementPath(movementFeet(value.distanceFeet)).map(
+      path: Array.map(
+        ordinaryMovementPath(movementFeet(value.distanceFeet)),
         (segment) => ({
           ...segment,
           activity: value.activity,
