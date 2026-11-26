@@ -2141,12 +2141,15 @@ export const SteadyAimMechanicsSchema: SteadyAimMechanicsCodec = Schema.Struct(
   steadyAimMechanicsFields,
 );
 
+/** The d20 face every authored D20 Test die minimum sets. */
+export const D20_TEST_DIE_MINIMUM_FACE = 10;
+
 const d20TestDieMinimumMechanicsFields = codecFields({
   family: Schema.Literal("d20_test_die_minimum"),
   appliesTo: Schema.Struct({
     kind: Schema.Literal("ability_check_using_own_proficiency"),
   }),
-  minimumDieFace: Schema.Literal(10),
+  minimumDieFace: Schema.Literal(D20_TEST_DIE_MINIMUM_FACE),
   optional: Schema.Literal(true),
 });
 type D20TestDieMinimumMechanicsCodec = Schema.Struct<

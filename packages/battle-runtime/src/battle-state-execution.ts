@@ -5709,6 +5709,8 @@ export type BattleHeroicInspirationRerollOption = {
 export type BattleHeroicInspirationRerollDecision =
   BattleD20TestRollRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
 export const D20_TEST_DIE_MINIMUM_EFFECT_KIND = "d20_test_die_minimum";
+/** What a roller may decide on an offered d20 minimum. */
+export const D20_TEST_DIE_MINIMUM_DECISION_KINDS = ["use", "decline"] as const;
 /**
  * A d20 minimum the roller may use on this D20 Test: a d20 that shows less
  * than `minimumDieFace` counts as that face. The table's totals count it.
@@ -5727,7 +5729,7 @@ export type BattleD20TestDieMinimumOption = {
  * minimum as the minimum.
  */
 export type BattleD20TestDieMinimumDecision = {
-  readonly kind: "use" | "decline";
+  readonly kind: (typeof D20_TEST_DIE_MINIMUM_DECISION_KINDS)[number];
   readonly effectKind: typeof D20_TEST_DIE_MINIMUM_EFFECT_KIND;
 };
 /** One reroll source's decision on an ability check's d20, named by its effect kind. */

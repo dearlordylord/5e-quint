@@ -80,6 +80,7 @@ import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
   CreatureAttackRollMechanicsSchema,
   CreatureRechargeMinimumRollSchema,
+  D20_TEST_DIE_MINIMUM_FACE,
   DiceExprSchema,
   StatBlockProcedureOrdinalSchema,
   UnitRecordSchema,
@@ -233,6 +234,7 @@ import {
   BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
   WEAPON_CHANGE_AFTER_ATTACK_STATES,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+  D20_TEST_DIE_MINIMUM_DECISION_KINDS,
   D20_TEST_DIE_MINIMUM_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
@@ -1818,7 +1820,7 @@ const HeroicInspirationRerollHoleOptionsFields = (() => {
 const D20TestDieMinimumHoleOptionFields = (() => {
   const member = pairedBattleHoleNestedMember({
     effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
-    minimumDieFace: Schema.Literal(10),
+    minimumDieFace: Schema.Literal(D20_TEST_DIE_MINIMUM_FACE),
   });
   return {
     labeled: { d20TestDieMinimum: Schema.optionalKey(member.labeled) },
@@ -6349,7 +6351,7 @@ export const BattleFillSchema: Schema.Codec<
         d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
         d20TestDieMinimum: Schema.optionalKey(
           Schema.Struct({
-            kind: Schema.Literals(["use", "decline"]),
+            kind: Schema.Literals(D20_TEST_DIE_MINIMUM_DECISION_KINDS),
             effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
           }),
         ),

@@ -12,6 +12,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import {
   AbilitySchema,
   ActionRestrictionSchema,
+  D20_TEST_DIE_MINIMUM_FACE,
   WeaponUsageSchema,
 } from "@dnd/surface/surface/schema";
 import {
@@ -465,7 +466,7 @@ export const D20TestDieMinimumProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("d20TestDieMinimum"),
   dieMinimum: Schema.Struct({
     appliesTo: Schema.Literal("abilityCheckUsingOwnProficiency"),
-    minimumDieFace: Schema.Literal(10),
+    minimumDieFace: Schema.Literal(D20_TEST_DIE_MINIMUM_FACE),
   }),
 });
 

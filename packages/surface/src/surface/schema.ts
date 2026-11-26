@@ -500,6 +500,7 @@ export {
   SpellSlotHealingModifierMechanicsSchema,
   SteadyAimMechanicsSchema,
   D20TestDieMinimumMechanicsSchema,
+  D20_TEST_DIE_MINIMUM_FACE,
   TriggeredReplacementMechanicsSchema,
   HitPointTriggeredReplacementMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
