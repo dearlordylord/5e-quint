@@ -3452,6 +3452,10 @@ export function deathSavingThrowFill(
           BattleFill,
           { readonly kind: "deathSavingThrow" }
         >["d20TestRerolls"];
+        readonly d20TestAddedDice?: Extract<
+          BattleFill,
+          { readonly kind: "deathSavingThrow" }
+        >["d20TestAddedDice"];
       },
 ): BattleFill {
   if (hole.kind !== "deathSavingThrow") {
@@ -3465,6 +3469,9 @@ export function deathSavingThrowFill(
     ...(value.d20TestRerolls === undefined
       ? {}
       : { d20TestRerolls: value.d20TestRerolls }),
+    ...(value.d20TestAddedDice === undefined
+      ? {}
+      : { d20TestAddedDice: value.d20TestAddedDice }),
   };
 }
 

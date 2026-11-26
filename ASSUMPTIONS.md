@@ -551,7 +551,10 @@ once with every added die.
 the bonus to the new d20, and the total succeeds at 10 or higher. A 1 or a 20
 on the d20 decides first, whatever the bonus: a 1 is two failures and a 20
 regains 1 Hit Point. A later reroll of that d20 by another source replaces only
-the d20 and keeps the bonus, as a reroll keeps a save's other modifiers.
+the d20 and keeps the bonus, as a reroll keeps a save's other modifiers. A die
+added to a failed Death Saving Throw (Bardic Inspiration, after its rerolls as
+A67 sets) is a bonus the same way: it counts toward 10, and it can't change a 1
+or a 20.
 
 **Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Death
 Saving Throws": "Roll 1d20. If the roll is 10 or higher, you succeed" and "When
@@ -564,4 +567,6 @@ the bonus, since the feature grants it to this saving throw. The 1 and the 20
 are read from the d20 ("on the d20"), so a bonus doesn't change them. The SRD
 doesn't say whether a reroll of the d20 by another source keeps a bonus
 Indomitable added; the model keeps it, since the reroll replaces the die and
-not the saving throw's modifiers.
+not the saving throw's modifiers. Bardic Inspiration adds "the number rolled to
+the d20", which the model reads the same way as any bonus: it adds to the roll's
+total, and the d20 still shows its face.

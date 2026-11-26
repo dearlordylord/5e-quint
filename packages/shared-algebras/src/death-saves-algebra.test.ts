@@ -5,6 +5,7 @@ import {
   addDeathFailures,
   deathSavingThrowRollAfterD20Reroll,
   deathSavingThrowRollFails,
+  deathSavingThrowRollWithAddedDie,
   DEATH_SAVES_RESET,
   deathSavingThrowRegainedHitPoint,
   deathSaveStateFailures,
@@ -185,6 +186,20 @@ describe("death-save algebra", () => {
         d20Roll(2),
       ),
     ).toEqual(unmodifiedDeathSavingThrowRoll(d20Roll(2)));
+  });
+
+  test("an added die adds to what was added to the d20, which stays", () => {
+    expect(
+      deathSavingThrowRollWithAddedDie({ naturalD20: d20Roll(2), bonus: 9 }, 4),
+    ).toEqual({ naturalD20: d20Roll(2), bonus: 13 });
+    expect(
+      deathSavingThrowRollFails(
+        deathSavingThrowRollWithAddedDie(
+          unmodifiedDeathSavingThrowRoll(d20Roll(1)),
+          6,
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("a roll fails on a 1, or on a total under 10 without a 20", () => {

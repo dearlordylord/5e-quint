@@ -650,9 +650,10 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts",
         "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
-      "sourceBoundary": "On ability checks and saving throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
+      "sourceBoundary": "On ability checks, saving throws and rolled Death Saving Throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
       "taskRefs": [
         "SRDINV72B"
       ],
@@ -26486,9 +26487,10 @@
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/unit-features.ts",
             "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
-            "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
+            "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
-          "sourceBoundary": "On ability checks and saving throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
+          "sourceBoundary": "On ability checks, saving throws and rolled Death Saving Throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
           "taskRefs": [
             "SRDINV72B"
           ],

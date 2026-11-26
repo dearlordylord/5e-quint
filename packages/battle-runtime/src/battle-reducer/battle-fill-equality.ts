@@ -157,6 +157,11 @@ export function battleContinuationFillEquals(
           left.d20TestRerolls,
           b.d20TestRerolls,
           d20TestDieRerollDecisionsEqual,
+        ) &&
+        rerollDecisionListsEqual(
+          left.d20TestAddedDice,
+          b.d20TestAddedDice,
+          d20TestAddedDieDecisionsEqual,
         ),
       statBlockRechargeRoll: (left) =>
         b.kind === "statBlockRechargeRoll" &&
@@ -299,12 +304,18 @@ function resubmittedFillAtAcceptedDecisions(
           : { ...fill, value: { ...fill.value, outcomes } };
       },
       deathSavingThrow: (fill) =>
-        valueAtAcceptedRerolls(
-          fill,
+        valueAtAcceptedAddedDice(
+          valueAtAcceptedRerolls(
+            fill,
+            accepted.kind === "deathSavingThrow"
+              ? accepted.d20TestRerolls
+              : undefined,
+            d20TestDieRerollDecisionsEqual,
+          ),
           accepted.kind === "deathSavingThrow"
-            ? accepted.d20TestRerolls
+            ? accepted.d20TestAddedDice
             : undefined,
-          d20TestDieRerollDecisionsEqual,
+          d20TestAddedDieDecisionsEqual,
         ),
     }),
   );

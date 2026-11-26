@@ -6950,7 +6950,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
       ],
-      "reason": "The QNT owner offers each source only while the test as it stands fails and the roller has it, a Bardic Inspiration die on ability checks and saving throws and the failed ability check resource boost on ability checks only; each source decides once on each roll and adds its die at most once, an ability check adds the die to its total and compares it with the DC while a saving throw carries the table's ruling with the die, and on that roll a decision, a decline included, is refused where nothing was offered. The Bardic Inspiration die is expended when it is rolled; the boost's use is spent only when the check succeeds with every added die. d20-test-after-roll-decisions asks for the added dice only once d20-test-outcome-rerolls has decided every reroll, so the dice go on the roll the rerolls leave (A67), and refuses added dice sent before that; d20-test-added-dice folds the sources on that roll for every saving throw, Concentration save and ability check that d20-test-reroll-fills checks and the Glyph release; each source owns its availability, option, decision checks and spend, recorded on the subject so a replay does not spend twice. A take of the boost is recorded with whether it spent the use, so a replay accepts the boost its first pass took on a check that still failed, and only a spent use makes the roller's other rolls spentOnAnotherRoll. The QNT core models one roll: on a roll of a multi-roll subject whose source was spent on another roll, the runtime lets a decline stand and refuses a die, which the core's single-roll offer does not reach. Attack rolls and Death Saving Throws are not yet offered the dice. The executable parity witnesses cover the offer, a die that turns the test and one that falls short, decline, no die or use left, a face outside the die, both dice in either order, a die after the test succeeded, the order after a Heroic Inspiration reroll, a saving throw with the table's ruling and a replay across its damage, a Concentration save, boost replays with and without the use spent, and a real-catalog Champion Fighter's Hide check.",
+      "reason": "The QNT owner offers each source only while the test as it stands fails and the roller has it, a Bardic Inspiration die on ability checks and saving throws and the failed ability check resource boost on ability checks only; each source decides once on each roll and adds its die at most once, an ability check adds the die to its total and compares it with the DC while a saving throw carries the table's ruling with the die, and a rolled Death Saving Throw adds the Bardic Inspiration die to its d20 toward 10 with a 1 or a 20 on the d20 deciding first (A68), and on that roll a decision, a decline included, is refused where nothing was offered. The Bardic Inspiration die is expended when it is rolled; the boost's use is spent only when the check succeeds with every added die. d20-test-after-roll-decisions asks for the added dice only once d20-test-outcome-rerolls has decided every reroll, so the dice go on the roll the rerolls leave (A67), and refuses added dice sent before that; d20-test-added-dice folds the sources on that roll for every saving throw, Concentration save and ability check that d20-test-reroll-fills checks, the Glyph release and the start-turn Death Saving Throw that turn-boundary-lifecycle resolves in one step, where death-saves-algebra judges the roll with the die; each source owns its availability, option, decision checks and spend, recorded on the subject so a replay does not spend twice. A take of the boost is recorded with whether it spent the use, so a replay accepts the boost its first pass took on a check that still failed, and only a spent use makes the roller's other rolls spentOnAnotherRoll. The QNT core models one roll: on a roll of a multi-roll subject whose source was spent on another roll, the runtime lets a decline stand and refuses a die, which the core's single-roll offer does not reach. Attack rolls are not yet offered the dice. The executable parity witnesses cover the offer, a die that turns the test and one that falls short, decline, no die or use left, a face outside the die, both dice in either order, a die after the test succeeded, the order after a Heroic Inspiration reroll, a saving throw with the table's ruling and a replay across its damage, a Concentration save, boost replays with and without the use spent, a real-catalog Champion Fighter's Hide check, and on a death save the offer, a die that turns it and one that falls short, a 1 on the d20, decline, no offer on a success, no die or a face outside it, and the die after a Heroic Inspiration reroll.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
@@ -6958,14 +6958,18 @@
         "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
         "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-added-die.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/shared-algebras/src/death-saves-algebra.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/classes.md#Level-1-Bardic-Inspiration",
         ".references/srd-5.2.1/classes.md#Level-2-Tactical-Mind",
         "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
-        "ASSUMPTIONS.md#A67-Dice-added-to-a-failed-D20-Test-come-after-its-rerolls"
+        "ASSUMPTIONS.md#A67-Dice-added-to-a-failed-D20-Test-come-after-its-rerolls",
+        ".references/srd-5.2.1/playing-the-game.md#Death-Saving-Throws",
+        "ASSUMPTIONS.md#A68-A-bonus-to-a-Death-Saving-Throw-counts-toward-10-after-the-d20s-1-or-20"
       ],
       "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
     }
@@ -7776,12 +7780,13 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
-        "BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL"
+        "BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
       ],
       "followUpTaskIds": [],
       "holeKind": "deathSavingThrow",
       "id": "BattleDeathSavingThrowHole",
-      "reason": "Death Saving Throw fills mutate shared death-save success/failure counters, Stable, death, or natural-20 1-HP recovery through the battle start-turn lifecycle obligation; a failed rolled save may be rerolled by the failed saving throw reroll obligation.",
+      "reason": "Death Saving Throw fills mutate shared death-save success/failure counters, Stable, death, or natural-20 1-HP recovery through the battle start-turn lifecycle obligation; a failed rolled save may be rerolled by the failed saving throw reroll obligation, and a Bardic Inspiration die may be added to it by the failed D20 Test added die obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -8158,12 +8163,13 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
-        "BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL"
+        "BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
       ],
       "fillKind": "deathSavingThrow",
       "followUpTaskIds": [],
       "id": "deathSavingThrow",
-      "reason": "Death Saving Throw fills mutate shared death-save success/failure counters, Stable, death, or natural-20 1-HP recovery through the battle start-turn lifecycle obligation; a failed rolled save may be rerolled by the failed saving throw reroll obligation.",
+      "reason": "Death Saving Throw fills mutate shared death-save success/failure counters, Stable, death, or natural-20 1-HP recovery through the battle start-turn lifecycle obligation; a failed rolled save may be rerolled by the failed saving throw reroll obligation, and a Bardic Inspiration die may be added to it by the failed D20 Test added die obligation.",
       "subject": "battle-fill-kind"
     },
     {

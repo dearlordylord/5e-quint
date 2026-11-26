@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 
 import { Match } from "effect";
 
@@ -195,8 +196,8 @@ function unchangedDeathSavingThrowResult(
 }
 
 /**
- * A Death Saving Throw's roll: the d20 that stands, and what a reroll of it
- * added (a failed saving throw reroll's bonus), or 0.
+ * A Death Saving Throw's roll: the d20 that stands, and what was added to it
+ * (a failed saving throw reroll's bonus, an added die), or 0.
  */
 export type DeathSavingThrowRoll = {
   readonly naturalD20: D20Roll;
@@ -222,6 +223,18 @@ export function deathSavingThrowRollAfterD20Reroll(
   replacementD20: D20Roll,
 ): DeathSavingThrowRoll {
   return { naturalD20: replacementD20, bonus: roll.bonus };
+}
+
+/**
+ * The roll after a die is added to it (a Bardic Inspiration die): the number
+ * rolled adds to what was added to the d20, and the d20 stays
+ * (ASSUMPTIONS.md A68).
+ */
+export function deathSavingThrowRollWithAddedDie(
+  roll: DeathSavingThrowRoll,
+  dieRoll: number,
+): DeathSavingThrowRoll {
+  return { naturalD20: roll.naturalD20, bonus: roll.bonus + dieRoll };
 }
 
 /**

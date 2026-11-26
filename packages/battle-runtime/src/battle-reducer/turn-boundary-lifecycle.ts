@@ -5,6 +5,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_CONCENTRATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.failed-saving-throw-reroll
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bardic-inspiration-failed-d20-test
 import { savingThrowTargetModifiersWhenStateKnown } from "./saving-throw-modifier-collector.ts";
 import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -128,10 +130,10 @@ import {
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
-  battleStateAfterSavingThrowRerollUses,
-  d20TestDeathSavingThrowRerolls,
-  savingThrowHoleWithRerollOptions,
-} from "./d20-test-outcome-rerolls.ts";
+  battleStateAfterSavingThrowAfterRollUses,
+  deathSavingThrowAfterRollDecisions,
+  savingThrowHoleAskedAfterRoll,
+} from "./d20-test-after-roll-decisions.ts";
 import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts";
 import {
   applyHitPointMaximumIncreaseExpiration,
@@ -4103,14 +4105,14 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
   }
   const fill = fills[0]!;
   // The start-turn occurrence resolves in one step with the turn boundary, so
-  // a reroll's spend needs no replay record.
-  const rerolls = d20TestDeathSavingThrowRerolls({
+  // a reroll's or an added die's spend needs no replay record.
+  const afterRoll = deathSavingThrowAfterRollDecisions({
     state: input.state,
     scope: { kind: "oneStep" },
     roll: { rollerId: input.input.sourceTurn.actorId, holeId: hole.holeId },
     fill,
   });
-  if (rerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: turnBoundaryNeedsHolesResult({
@@ -4120,18 +4122,18 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
         endingActorId: input.input.endingActorId,
         sourceTurn: input.input.sourceTurn,
         occurrence: input.occurrence,
-        holes: [savingThrowHoleWithRerollOptions(hole, rerolls.options)],
+        holes: [savingThrowHoleAskedAfterRoll(hole, afterRoll.ask)],
       }),
     };
   }
-  if (rerolls.tag === "invalid") {
+  if (afterRoll.tag === "invalid") {
     return {
       tag: "result",
-      result: invalidResult(input.resultState, "invalidFill", rerolls.issue),
+      result: invalidResult(input.resultState, "invalidFill", afterRoll.issue),
     };
   }
-  const spent = battleStateAfterSavingThrowRerollUses(input.state, [
-    rerolls.uses,
+  const spent = battleStateAfterSavingThrowAfterRollUses(input.state, [
+    afterRoll.uses,
   ]);
   return ordinaryStartTurnOccurrenceAdvance(
     {
@@ -4139,7 +4141,7 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
       combatants: applyStartTurnDeathSavingThrow(
         spent.combatants,
         input.input.sourceTurn.actorId,
-        rerolls.roll,
+        afterRoll.roll,
       ),
     },
     new Set([hole.holeId]),

@@ -4,14 +4,16 @@
 // the rerolls leave (d20-test-added-dice.ts, ASSUMPTIONS.md A67). A roller
 // with a reroll source to decide on is asked for that first; the hole asks
 // for the added dice only once every reroll is decided. Each owner that
-// checks a saving throw or an ability check before it resolves goes through
-// here, so the two stages can't be taken out of order.
+// checks a saving throw, a Death Saving Throw or an ability check before it
+// resolves goes through here, so the two stages can't be taken out of order.
 
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { DifficultyClass } from "@dnd/shared/types";
+import type { DeathSavingThrowRoll } from "@dnd/shared-algebras/death-saves-algebra";
 
 import type {
   BattleAbilityCheckAddedDieHoleOptions,
+  BattleFill,
   BattleD20TestOutcome,
   BattleD20TestRerollHoleOptions,
   BattleD20TestRollKey,
@@ -23,6 +25,7 @@ import {
   abilityCheckHoleWithAddedDieOptions,
   battleStateAfterAbilityCheckAddedDieUses,
   battleStateAfterSavingThrowAddedDieUses,
+  deathSavingThrowAddedDice,
   rolledOutcomeAddedDice,
   savingThrowHoleWithAddedDieOptions,
   type AbilityCheckAddedDieOptions,
@@ -35,6 +38,7 @@ import {
   battleStateAfterD20TestRerollUses,
   battleStateAfterSavingThrowRerollUses,
   d20TestAbilityCheckRerolls,
+  d20TestDeathSavingThrowRerolls,
   d20TestHoleWithRerollOptions,
   d20TestOutcomeRerolls,
   savingThrowHoleWithRerollOptions,
@@ -154,6 +158,31 @@ export function savingThrowAfterRollDecisions<T extends BattleD20TestOutcome>(
     d20TestOutcomeRerolls(input),
     input.outcome.d20TestAddedDice !== undefined,
     (outcome) => rolledOutcomeAddedDice({ ...input, outcome }),
+  );
+}
+
+/**
+ * A rolled Death Saving Throw after its after-roll decisions: the roll that
+ * stands, which the engine judges.
+ */
+export function deathSavingThrowAfterRollDecisions(
+  input: D20TestAfterRollContext & {
+    readonly fill: Extract<BattleFill, { readonly kind: "deathSavingThrow" }>;
+  },
+): D20TestAfterRoll<
+  DeathSavingThrowRoll,
+  SavingThrowAfterRollAsk,
+  SavingThrowAfterRollUses
+> {
+  return afterRollDecisions(
+    d20TestDeathSavingThrowRerolls(input),
+    input.fill.d20TestAddedDice !== undefined,
+    (deathSavingThrowRoll) =>
+      deathSavingThrowAddedDice({
+        ...input,
+        deathSavingThrowRoll,
+        decisions: input.fill.d20TestAddedDice ?? [],
+      }),
   );
 }
 
