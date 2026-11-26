@@ -4,7 +4,7 @@ import type { BattleCreatureInit } from "./battle-init.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import type {
   BattleHidePrerequisite,
-  BattleInitialGrapple,
+  BattleInitialHandGrapple,
 } from "./battle-state-execution.ts";
 import type { BattleInitializationIssue } from "./battle-initialization-issue.ts";
 import type { BattleId, CombatantId } from "./identity.ts";
@@ -15,12 +15,12 @@ export type BattleStartInput = {
   readonly combatants: readonly BattleCreatureInit[];
   readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   /**
-   * Grapples already in place when the battle starts. A combatant starts
-   * Grappled only through one of these, never through its initial conditions,
-   * so the battle always knows the grappler and the escape DC. Omission means
-   * no combatant starts Grappled.
+   * Hand-held grapples already in place within 5 feet. The table declares
+   * this supported hold and its escape DC; other anatomy/ranges are outside
+   * this contract. A combatant starts Grappled only through one of these,
+   * never through its initial conditions. Omission means no initial hold.
    */
-  readonly initialGrapples?: ReadonlyNonEmptyArray<BattleInitialGrapple>;
+  readonly initialHandGrapples?: ReadonlyNonEmptyArray<BattleInitialHandGrapple>;
   readonly ownerPathForCombatant?: (
     combatant: BattleCreatureInit,
     index: number,

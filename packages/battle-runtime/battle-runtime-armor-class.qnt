@@ -44,8 +44,9 @@ module battleRuntimeArmorClass {
   pure def combatantArmorClass(combatant: Combatant): int =
     activeEffectArmorClass(combatant.ac, combatant.dexMod, combatant.activeEffects)
 
-  // Mage Armor gives another base AC calculation; only the highest is in
-  // effect (rules-glossary.md#Armor Class, ASSUMPTIONS.md A67).
+  // Mage Armor gives another eligible base. This bridge follows Battle's
+  // accepted automatic highest-base restriction (README.md, "Armor Class base
+  // selection restriction"); RAW leaves the creature a choice.
   pure def activeEffectArmorClass(baseAc: int, dexMod: int, effects: Set[ActiveEffect]): int =
     {
       val base = if (effects.exists(effect => match effect {

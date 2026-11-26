@@ -82,7 +82,7 @@ import {
 } from "./domain-helpers.ts";
 
 import { removeBattleCombatants } from "./combatant-removal.ts";
-import { admitInitialGrapples } from "./initial-grapples.ts";
+import { admitInitialHandGrapples } from "./initial-grapples.ts";
 export { removeBattleCombatants } from "./combatant-removal.ts";
 
 import type {
@@ -1282,16 +1282,16 @@ export const startBattle: StartBattle = (input) => {
     characterContexts: admission.characterContexts,
     initializationIssues: admission.initializationIssues,
   });
-  const initialGrapples = admitInitialGrapples(
+  const initialHandGrapples = admitInitialHandGrapples(
     { ...state.success, combatants: combatantsWithSpellExecutions },
-    input.initialGrapples,
+    input.initialHandGrapples,
   );
   admission.initializationIssues.push(
-    ...initialGrapples.rejections.map(({ message, ...facts }) =>
+    ...initialHandGrapples.rejections.map(({ message, ...facts }) =>
       battleInitializationIssue(
         { kind: "initialGrappleInvalid", ...facts },
         message,
-        ["battleInitialization", "initialGrapples", facts.grappleIndex],
+        ["battleInitialization", "initialHandGrapples", facts.grappleIndex],
       ),
     ),
   );
@@ -1305,7 +1305,7 @@ export const startBattle: StartBattle = (input) => {
       {
         ...state.success,
         combatants: combatantsWithSpellExecutions,
-        grapples: initialGrapples.grapples,
+        grapples: initialHandGrapples.grapples,
       },
       battleRuntimeContextFromCharacterAdmission(
         admission.characterContexts,

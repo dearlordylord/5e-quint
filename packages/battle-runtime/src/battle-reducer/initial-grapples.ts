@@ -1,15 +1,14 @@
-// SRD 5.2.1 Grappling: "However a grapple is initiated, it follows these
-// rules." A battle can start with a grapple already in place. It is the same
-// grapple link an in-battle Grapple makes, so Speed, attack Disadvantage,
-// Escape Grapple, release and the ways a grapple ends all follow from it.
+// SRD 5.2.1 Grappling: an already established hold follows the shared
+// condition and ending rules. This admission supports hand-held 5-foot
+// grapples only; it does not reconstruct arbitrary initiation or anatomy.
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
 import type {
   BattleGrappleEndingCause,
   BattleGrappleLink,
-  BattleInitialGrapple,
-  BattleInitialGrappleRejection,
+  BattleInitialHandGrapple,
+  BattleInitialHandGrappleRejection,
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
@@ -21,27 +20,27 @@ export type InitialGrappleRejectionFact = {
   readonly grappleIndex: number;
   readonly grapplerId: CombatantId;
   readonly targetId: CombatantId;
-  readonly rejection: BattleInitialGrappleRejection;
+  readonly rejection: BattleInitialHandGrappleRejection;
   readonly message: string;
 };
 
 /**
- * The grapple links a battle starts with, from the table's initial grapples in
- * order. Each one follows the rules every grapple follows, however it began,
- * with the grappler's first free hand left after the grapples before it, and
- * keeps the escape DC the table gives. A grapple that couldn't hold, or that would
- * already have ended, is rejected rather than dropped.
+ * Admit table-declared hand-held 5-foot grapples in order, using each first
+ * free hand and the actual supplied escape DC. Reject a hold that cannot be
+ * maintained or would already have ended; do not repeat initiation checks.
  */
-export function admitInitialGrapples(
+export function admitInitialHandGrapples(
   state: BattleState,
-  initialGrapples: ReadonlyNonEmptyArray<BattleInitialGrapple> | undefined,
+  initialHandGrapples:
+    | ReadonlyNonEmptyArray<BattleInitialHandGrapple>
+    | undefined,
 ): {
   readonly grapples: readonly BattleGrappleLink[];
   readonly rejections: readonly InitialGrappleRejectionFact[];
 } {
   const grapples: BattleGrappleLink[] = [...state.grapples];
   const rejections: InitialGrappleRejectionFact[] = [];
-  for (const [grappleIndex, initial] of (initialGrapples ?? []).entries()) {
+  for (const [grappleIndex, initial] of (initialHandGrapples ?? []).entries()) {
     const admitted = initialGrappleLink({ ...state, grapples }, initial);
     if (admitted.tag === "ok") {
       grapples.push(admitted.link);
@@ -60,12 +59,12 @@ export function admitInitialGrapples(
 
 function initialGrappleLink(
   state: BattleState,
-  initial: BattleInitialGrapple,
+  initial: BattleInitialHandGrapple,
 ):
   | { readonly tag: "ok"; readonly link: BattleGrappleLink }
   | {
       readonly tag: "rejected";
-      readonly rejection: BattleInitialGrappleRejection;
+      readonly rejection: BattleInitialHandGrappleRejection;
       readonly message: string;
     } {
   const hold = grappleHoldForTarget(

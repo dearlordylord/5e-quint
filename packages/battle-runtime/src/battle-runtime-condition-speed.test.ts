@@ -40,7 +40,7 @@ function battleWithCondition(condition: Condition): BattleState {
     ],
     ...(condition === "grappled"
       ? {
-          initialGrapples: [
+          initialHandGrapples: [
             {
               grapplerId: goblinId,
               targetId: fighterId,

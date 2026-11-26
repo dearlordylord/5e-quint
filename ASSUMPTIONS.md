@@ -523,19 +523,3 @@ with or without the cover of one attack. Cover belongs to the attack's
 geometry, not the creature, so the model adds it to the creature's AC after
 the floor: a Barkskin creature with AC 12 behind Half Cover has AC 19 against
 that attack.
-
-## A67: A creature uses its highest base AC calculation
-
-**Assumption:** When a creature has more than one base AC calculation, such as
-Mage Armor's and its own unarmored calculation, the one in effect is the
-highest. On a tie, its own stays.
-
-**Rules basis / gap:** `.references/srd-5.2.1/rules-glossary.md`, "Armor
-Class": "If a rule gives you another base AC calculation, you choose which
-calculation to use; you can't use more than one." `.references/srd-5.2.1/playing-the-game.md`,
-"Armor Class", "Only One Base AC": "only one base calculation can be in effect
-for a creature." The SRD leaves the choice to the creature and asks no
-question of the table. A higher AC is never worse for the creature, so the
-model makes that choice without asking. A spell's base calculation is a
-candidate only while the creature isn't wearing armor, as Mage Armor's target
-"isn't wearing armor".

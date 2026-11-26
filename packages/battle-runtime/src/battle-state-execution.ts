@@ -1531,20 +1531,19 @@ export type BattleGrappleHoldRejection =
 export type BattleGrappleEndingCause =
   (typeof BATTLE_GRAPPLE_ENDING_CAUSES)[number];
 /**
- * A grapple that is already in place when the battle starts. The table says
- * who holds whom, and that the target is within the grapple's reach. The
- * escape DC comes from however the grapple began, which the battle didn't see
- * (SRD Grappling: "However a grapple is initiated, it follows these rules"),
- * so the table gives it too. The grappler holds the target with its first free
- * hand, as an in-battle grapple does.
+ * A hand-held grapple already in place within 5 feet when Battle starts.
+ * The table supplies the participants and actual escape DC and declares this
+ * supported hold. Battle uses the first free hand and the canonical 5-foot
+ * link; other anatomy and longer-range holds are outside this input contract.
+ * Initiation's save and size restriction are not reapplied to an existing hold.
  */
-export type BattleInitialGrapple = {
+export type BattleInitialHandGrapple = {
   readonly grapplerId: CombatantId;
   readonly targetId: CombatantId;
   readonly escapeDc: DifficultyClass;
 };
 /** Why a battle can't start with an initial grapple. */
-export type BattleInitialGrappleRejection =
+export type BattleInitialHandGrappleRejection =
   (typeof BATTLE_INITIAL_GRAPPLE_REJECTIONS)[number];
 export type BattleHiddenState = {
   readonly discoveryDc: DifficultyClass;
@@ -4767,7 +4766,7 @@ export type BattleStateInitIssueFacts =
   | {
       /**
        * A creature input named the Grappled condition: a combatant starts
-       * Grappled only through `BattleStartInput.initialGrapples`.
+       * Grappled only through `BattleStartInput.initialHandGrapples`.
        */
       readonly kind: "initialGrappledWithoutGrapple";
       readonly combatantId: CombatantId;
@@ -4777,7 +4776,7 @@ export type BattleStateInitIssueFacts =
       readonly grappleIndex: number;
       readonly grapplerId: CombatantId;
       readonly targetId: CombatantId;
-      readonly rejection: BattleInitialGrappleRejection;
+      readonly rejection: BattleInitialHandGrappleRejection;
     }
   | {
       readonly kind: "statBlockSourceInvalid";

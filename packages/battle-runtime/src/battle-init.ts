@@ -658,7 +658,7 @@ type RuntimeStatBlockBattleInitInput = {
 /**
  * Conditions a character can start a battle with. Grappled is left out: it
  * needs its grappler and escape DC, so a battle starts with it only through
- * `BattleStartInput.initialGrapples`.
+ * `BattleStartInput.initialHandGrapples`.
  */
 export type CharacterInitialCondition = Exclude<Condition, "grappled">;
 

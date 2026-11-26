@@ -1,14 +1,18 @@
-// SRD 5.2.1 Grappling: "However a grapple is initiated, it follows these
-// rules." A battle that starts with a grapple in place holds it as the grapple
-// link an in-battle Grapple makes, so every Grappled rule follows from it.
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// SRD 5.2.1 Grappling: already established hand-held 5-foot grapples enter
+// the shared condition/ending lifecycle without repeating initiation checks.
 import { describe, expect, test } from "vitest";
-import { difficultyClass, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  movementFeet,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { Result } from "effect";
 import type {
-  BattleInitialGrapple,
-  BattleInitialGrappleRejection,
+  BattleInitialHandGrapple,
+  BattleInitialHandGrappleRejection,
 } from "./index.ts";
 import {
   attackRollFill,
@@ -49,7 +53,9 @@ function goblinGrappledByFighter(): BattleState {
         initiative: 5,
       }),
     ],
-    initialGrapples: [{ grapplerId: fighterId, targetId: goblinId, escapeDc }],
+    initialHandGrapples: [
+      { grapplerId: fighterId, targetId: goblinId, escapeDc },
+    ],
   });
 }
 
@@ -62,17 +68,17 @@ function goblinCombatant(state: BattleState) {
 }
 
 function initialGrappleRejections(
-  initialGrapples: ReadonlyNonEmptyArray<BattleInitialGrapple>,
+  initialHandGrapples: ReadonlyNonEmptyArray<BattleInitialHandGrapple>,
   fighter: Parameters<typeof characterSeed>[0] = { initiative: 20 },
   goblin: Parameters<typeof statBlockCreatureInit>[0] = { initiative: 10 },
 ): readonly {
   readonly grappleIndex: number;
-  readonly rejection: BattleInitialGrappleRejection;
+  readonly rejection: BattleInitialHandGrappleRejection;
 }[] {
   const started = startBattle({
     battleId: battleId("initial-grapple-rejected"),
     combatants: [characterSeed(fighter), statBlockCreatureInit(goblin)],
-    initialGrapples,
+    initialHandGrapples,
   });
   if (Result.isSuccess(started)) {
     throw new Error("Expected the initial grapple to be rejected.");
@@ -115,6 +121,8 @@ describe("initial grapples", () => {
         grapplerId: fighterId,
         targetId: goblinId,
         escapeDc,
+        reachFeet: movementFeet(5),
+        hand: "left",
       }),
     ]);
     expect(goblinCombatant(state)).toMatchObject({
@@ -172,6 +180,7 @@ describe("initial grapples", () => {
       tag: "action",
       actorId: goblinId,
       action: "escapeGrapple",
+      skill: "athletics",
     };
     expect(
       discoverBattleActCandidates(goblinTurn).map((act) => act.subject),
@@ -234,7 +243,7 @@ describe("initial grapples", () => {
         statBlockCreatureInit({ combatantId: secondGoblinId, initiative: 9 }),
         statBlockCreatureInit({ combatantId: thirdGoblinId, initiative: 8 }),
       ],
-      initialGrapples: [
+      initialHandGrapples: [
         { grapplerId: fighterId, targetId: goblinId, escapeDc },
         { grapplerId: fighterId, targetId: secondGoblinId, escapeDc },
         { grapplerId: fighterId, targetId: thirdGoblinId, escapeDc },
@@ -250,7 +259,7 @@ describe("initial grapples", () => {
         grapplerId: fighterId,
         targetId: thirdGoblinId,
         rejection: "noFreeHand",
-        ownerPath: ["battleInitialization", "initialGrapples", 2],
+        ownerPath: ["battleInitialization", "initialHandGrapples", 2],
       },
     });
   });
@@ -302,7 +311,7 @@ describe("initial grapples", () => {
         characterSeed({ initiative: 20 }),
         statBlockCreatureInit(hugeTarget),
       ],
-      initialGrapples: [
+      initialHandGrapples: [
         { grapplerId: fighterId, targetId: goblinId, escapeDc },
       ],
     });

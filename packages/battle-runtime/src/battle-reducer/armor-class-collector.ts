@@ -236,7 +236,9 @@ function baseCalculations(
 /**
  * SRD Rules Glossary, "Armor Class": "If a rule gives you another base AC
  * calculation, you choose which calculation to use; you can't use more than
- * one." The creature uses its highest (A67). On a tie its own stays.
+ * one." Battle's accepted support restriction automatically selects the highest
+ * eligible base here; on a tie its own stays. See this package's README,
+ * "Armor Class base selection restriction"; RAW permits a lower choice.
  */
 function baseCalculationInEffect(calculations: {
   readonly own: BaseCalculation;

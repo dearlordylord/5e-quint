@@ -8,8 +8,9 @@
 //   Base AC": "only one base calculation can be in effect for a creature."
 // - .references/srd-5.2.1/rules-glossary.md#Armor Class: "If a rule gives you
 //   another base AC calculation, you choose which calculation to use; you
-//   can't use more than one." The creature uses its highest (ASSUMPTIONS.md
-//   A67).
+//   can't use more than one." This core models Battle's restricted automatic
+//   highest-base selection; see packages/battle-runtime/README.md, "Armor Class
+//   base selection restriction". RAW permits a lower eligible choice.
 // - .references/srd-5.2.1/spells.md#Mage Armor: "a willing creature who isn't
 //   wearing armor ... the target's base AC becomes 13 plus its Dexterity
 //   modifier." A spell's base calculation is a candidate only without armor.

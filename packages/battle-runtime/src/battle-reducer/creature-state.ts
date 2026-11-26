@@ -848,7 +848,7 @@ function initialConditionIssueForCreatureInit(
 
 /**
  * The creature input types leave Grappled out, since a grapple needs its
- * grappler and escape DC (`BattleStartInput.initialGrapples`). This rejects
+ * grappler and escape DC (`BattleStartInput.initialHandGrapples`). This rejects
  * the condition from input that skipped those types, rather than starting a
  * Grappled combatant with no grapple link.
  */
