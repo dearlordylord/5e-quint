@@ -8437,6 +8437,10 @@ describe("Character Build battle projection", () => {
         kind: "characterBattleSpellProjection",
         issueIndex: 3,
       },
+      {
+        kind: "characterBattleInitialConditions",
+        constraint: "grappledNeedsInitialGrapple",
+      },
     ] as const satisfies readonly CharacterBattleInitIssueReason[];
 
     for (const reason of reasons) {

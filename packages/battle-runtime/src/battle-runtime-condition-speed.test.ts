@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { describe, expect, test } from "vitest";
-import type { Condition } from "@dnd/shared/types";
+import { difficultyClass, type Condition } from "@dnd/shared/types";
 import {
   battleId,
   characterSeed,
@@ -26,13 +26,29 @@ const speedZeroConditions = [
   "restrained",
 ] as const satisfies readonly Condition[];
 
+// A battle starts Grappled only through an initial grapple, which names the
+// grappler and escape DC; every other condition is an initial condition.
 function battleWithCondition(condition: Condition): BattleState {
   return startBattleRight({
     battleId: battleId(`condition-speed-${condition}`),
     combatants: [
-      characterSeed({ initiative: 20, conditions: [condition] }),
+      characterSeed({
+        initiative: 20,
+        conditions: condition === "grappled" ? [] : [condition],
+      }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
+    ...(condition === "grappled"
+      ? {
+          initialGrapples: [
+            {
+              grapplerId: goblinId,
+              targetId: fighterId,
+              escapeDc: difficultyClass(13),
+            },
+          ],
+        }
+      : {}),
   });
 }
 
@@ -98,7 +114,12 @@ describe("condition Speed projection", () => {
         }),
       ).toMatchObject({ tag: "invalid" });
       if (condition === "grappled") {
-        expect(state.grapples).toEqual([]);
+        expect(state.grapples).toEqual([
+          expect.objectContaining({
+            grapplerId: goblinId,
+            targetId: fighterId,
+          }),
+        ]);
       }
     },
   );

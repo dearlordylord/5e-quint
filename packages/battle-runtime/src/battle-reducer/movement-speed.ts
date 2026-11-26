@@ -34,6 +34,7 @@ import {
   type BattleAttackHitTriggerKind,
   type BattleAttackKindForRedirect,
   type BattleCreatureState,
+  type BattleGrappleHoldRejection,
   type BattleGrappleLink,
   type BattleMovementHole,
   type BattleOpportunityAttackThreat,
@@ -55,6 +56,7 @@ import {
 } from "./creature-state-leaves.ts";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { GRAPPLE_TARGET_REACH_FEET } from "./domain-constants.ts";
+import { conditionApplicationPreventedByConditionImmunity } from "./spell-condition-effects-helpers.ts";
 import {
   activeDruidWildShapeForm,
   combatantD20AbilityModifier,
@@ -448,50 +450,23 @@ export function grappleLinkForTarget(
 ):
   | { readonly tag: "ok"; readonly link: BattleGrappleLink }
   | { readonly tag: "invalid"; readonly message: string } {
-  const grappler = state.combatants.get(grapplerId);
-  const target = state.combatants.get(targetId);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  const hold = grappleHoldForTarget(state, grapplerId, targetId);
+  if (hold.tag === "rejected") {
+    return { tag: "invalid", message: hold.message };
+  }
+  // SRD 5.2.1 Unarmed Strike, Grapple: "This grapple is possible only if the
+  // target is no more than one size larger than you".
   if (
-    grappler === undefined ||
-    target === undefined ||
-    grapplerId === targetId
+    !targetIsNoMoreThanOneSizeLarger(
+      combatantEffectiveSize(hold.grappler),
+      combatantEffectiveSize(hold.target),
+    )
   ) {
-    return {
-      tag: "invalid",
-      message: "Grapple target must be another combatant in this battle.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (grappledBy(state, targetId) !== undefined) {
-    return { tag: "invalid", message: "Grapple target is already Grappled." };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (activeDruidWildShapeForm(grappler) !== null) {
-    return {
-      tag: "invalid",
-      message:
-        "Grapple while using a Beast form requires unsupported form anatomy and free-hand projection.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const hand = firstFreeHand(state, grappler, state.grapples);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hand === undefined) {
-    return { tag: "invalid", message: "Grapple requires a free hand." };
-  }
-  /* v8 ignore stop -- @preserve */
-  const grapplerSize = combatantEffectiveSize(grappler);
-  const targetSize = combatantEffectiveSize(target);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!targetIsNoMoreThanOneSizeLarger(grapplerSize, targetSize)) {
     return {
       tag: "invalid",
       message: "Grapple target cannot be more than one size larger.",
     };
   }
-  /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !facts.some(
@@ -507,6 +482,86 @@ export function grappleLinkForTarget(
     };
   }
   /* v8 ignore stop -- @preserve */
+  return { tag: "ok", link: hold.link };
+}
+
+/**
+ * The grapple `grapplerId` would hold `targetId` in, however it began: another
+ * combatant, not already Grappled, able to have the Grappled condition, held
+ * with the grappler's first free hand (SRD 5.2.1 Grappling, "However a grapple
+ * is initiated, it follows these rules" and "One Grapple per Hand"; Immunity).
+ * How the grapple began sets its other limits, such as the Unarmed Strike's
+ * size limit, and its reach, which each caller supplies as a table fact.
+ */
+export function grappleHoldForTarget(
+  state: BattleState,
+  grapplerId: CombatantId,
+  targetId: CombatantId,
+):
+  | {
+      readonly tag: "ok";
+      readonly link: BattleGrappleLink;
+      readonly grappler: BattleCreatureState;
+      readonly target: BattleCreatureState;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly rejection: BattleGrappleHoldRejection;
+      readonly message: string;
+    } {
+  const grappler = state.combatants.get(grapplerId);
+  if (grappler === undefined) {
+    return {
+      tag: "rejected",
+      rejection: "unknownGrappler",
+      message: "Grappler must be a combatant in this battle.",
+    };
+  }
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return {
+      tag: "rejected",
+      rejection: "unknownTarget",
+      message: "Grapple target must be a combatant in this battle.",
+    };
+  }
+  if (grapplerId === targetId) {
+    return {
+      tag: "rejected",
+      rejection: "selfGrapple",
+      message: "Grapple target must be a creature other than the grappler.",
+    };
+  }
+  if (grappledBy(state, targetId) !== undefined) {
+    return {
+      tag: "rejected",
+      rejection: "targetAlreadyGrappled",
+      message: "Grapple target is already Grappled.",
+    };
+  }
+  if (activeDruidWildShapeForm(grappler) !== null) {
+    return {
+      tag: "rejected",
+      rejection: "grapplerInBeastForm",
+      message:
+        "Grapple while using a Beast form requires unsupported form anatomy and free-hand projection.",
+    };
+  }
+  const hand = firstFreeHand(state, grappler, state.grapples);
+  if (hand === undefined) {
+    return {
+      tag: "rejected",
+      rejection: "noFreeHand",
+      message: "Grapple requires a free hand.",
+    };
+  }
+  if (conditionApplicationPreventedByConditionImmunity(target, "grappled")) {
+    return {
+      tag: "rejected",
+      rejection: "targetImmune",
+      message: "Grapple target is immune to the Grappled condition.",
+    };
+  }
   return {
     tag: "ok",
     link: {
@@ -516,6 +571,8 @@ export function grappleLinkForTarget(
       reachFeet: GRAPPLE_TARGET_REACH_FEET,
       hand,
     },
+    grappler,
+    target,
   };
 }
 
